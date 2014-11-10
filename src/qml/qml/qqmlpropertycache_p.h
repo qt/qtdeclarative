@@ -160,8 +160,14 @@ public:
     inline int getValueTypeCoreIndex() const;
 
     // Returns the "encoded" index for use with bindings.  Encoding is:
-    //     coreIndex | (valueTypeCoreIndex << 16)
+    //     coreIndex | ((valueTypeCoreIndex + 1) << 16)
     inline int encodedIndex() const;
+    static int encodeValueTypePropertyIndex(int coreIndex, int valueTypeCoreIndex)
+    { return coreIndex | ((valueTypeCoreIndex + 1) << 16); }
+    static int decodeValueTypePropertyIndex(int index, int *coreIndex = 0) {
+        if (coreIndex) *coreIndex = index & 0xffff;
+        return (index >> 16) - 1;
+    }
 
     union {
         int propType;             // When !NotFullyResolved
@@ -464,7 +470,7 @@ int QQmlPropertyRawData::getValueTypeCoreIndex() const
 
 int QQmlPropertyRawData::encodedIndex() const
 {
-    return isValueTypeVirtual()?(coreIndex | (valueTypeCoreIndex << 16)):coreIndex;
+    return isValueTypeVirtual()?QQmlPropertyData::encodeValueTypePropertyIndex(coreIndex, valueTypeCoreIndex):coreIndex;
 }
 
 QQmlPropertyData *

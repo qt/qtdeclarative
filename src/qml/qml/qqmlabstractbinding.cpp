@@ -75,14 +75,11 @@ void QQmlAbstractBinding::addToObject()
     QObject *obj = object();
     Q_ASSERT(obj);
 
-    int index = propertyIndex();
-
     QQmlData *data = QQmlData::get(obj, true);
 
-    if (index & 0xFFFF0000) {
+    int coreIndex;
+    if (QQmlPropertyData::decodeValueTypePropertyIndex(propertyIndex(), &coreIndex) != -1) {
         // Value type
-
-        int coreIndex = index & 0x0000FFFF;
 
         // Find the value type proxy (if there is one)
         QQmlValueTypeProxyBinding *proxy = 0;
@@ -110,7 +107,7 @@ void QQmlAbstractBinding::addToObject()
         setNextBinding(data->bindings);
         data->bindings = this;
 
-        data->setBindingBit(obj, index);
+        data->setBindingBit(obj, coreIndex);
     }
 
     setAddedToObject(true);
@@ -123,16 +120,15 @@ void QQmlAbstractBinding::removeFromObject()
 {
     if (isAddedToObject()) {
         QObject *obj = object();
-        int index = propertyIndex();
-
         QQmlData *data = QQmlData::get(obj, false);
         Q_ASSERT(data);
 
-        if (index & 0xFFFF0000) {
+        int coreIndex;
+        if (QQmlPropertyData::decodeValueTypePropertyIndex(propertyIndex(), &coreIndex) != -1) {
 
             // Find the value type binding
             QQmlAbstractBinding *vtbinding = data->bindings;
-            while (vtbinding->propertyIndex() != (index & 0x0000FFFF)) {
+            while (vtbinding->propertyIndex() != coreIndex) {
                 vtbinding = vtbinding->nextBinding();
                 Q_ASSERT(vtbinding);
             }
@@ -169,7 +165,7 @@ void QQmlAbstractBinding::removeFromObject()
                 binding->setNextBinding(nextBinding());
             }
 
-            data->clearBindingBit(index);
+            data->clearBindingBit(coreIndex);
         }
 
         setNextBinding(0);

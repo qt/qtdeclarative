@@ -90,19 +90,21 @@ struct QQmlVMEMetaData
             return propertyIdx == -1;
         }
         bool isPropertyAlias() const {
-            return !isObjectAlias() && !(propertyIdx & 0xFFFF0000);
+            return !isObjectAlias() && valueTypeIndex() == -1;
         }
         bool isValueTypeAlias() const {
-            return !isObjectAlias() && (propertyIdx & 0xFFFF0000);
+            return !isObjectAlias() && valueTypeIndex() != -1;
         }
         int propertyIndex() const {
-            return propertyIdx & 0x0000FFFF;
+            int index;
+            QQmlPropertyData::decodeValueTypePropertyIndex(propertyIdx, &index);
+            return index;
         }
         int valueTypeIndex() const {
-            return (propertyIdx & 0xFFFF0000) >> 16;
+            return QQmlPropertyData::decodeValueTypePropertyIndex(propertyIdx);
         }
         int valueType() const {
-            return (propertyIdx & 0xFFFF0000) ? propType : 0;
+            return (valueTypeIndex() != -1) ? propType : 0;
         }
     };
 

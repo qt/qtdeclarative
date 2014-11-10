@@ -65,9 +65,8 @@ struct ActiveOCRestorer
 
 static void removeBindingOnProperty(QObject *o, int index)
 {
-    int coreIndex = index & 0x0000FFFF;
-    int valueTypeIndex = (index & 0xFFFF0000 ? index >> 16 : -1);
-
+    int coreIndex;
+    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
     QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
     if (binding) binding->destroy();
 }

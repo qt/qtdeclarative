@@ -123,7 +123,8 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
     QQmlAbstractBinding *lastBinding = 0;
 
     while (binding) {
-        if (mask & (1 << (binding->propertyIndex() >> 16))) {
+        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(binding->propertyIndex());
+        if (valueTypeIndex != -1 && (mask & (1 << valueTypeIndex))) {
             QQmlAbstractBinding *remove = binding;
             binding = remove->nextBinding();
 

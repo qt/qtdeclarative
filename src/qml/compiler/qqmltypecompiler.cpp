@@ -1646,7 +1646,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                     }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
-                    propIdx |= (valueTypeIndex << 16);
+                    propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
                     if (valueType->metaObject()->property(valueTypeIndex).isEnumType())
                         type = QVariant::Int;
                     else
