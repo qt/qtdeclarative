@@ -1941,8 +1941,8 @@ static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4
                         initMetaObjectResolver(resolver, cache);
                         return QV4::IR::QObjectType;
                     }
-                } else if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property->propType)) {
-                    if (QQmlPropertyCache *cache = qmlEngine->cache(valueType->metaObject())) {
+                } else if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType)) {
+                    if (QQmlPropertyCache *cache = qmlEngine->cache(valueTypeMetaObject)) {
                         initMetaObjectResolver(resolver, cache);
                         resolver->flags |= ResolveTypeInformationOnly;
                         return QV4::IR::QObjectType;

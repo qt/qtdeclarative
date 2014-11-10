@@ -413,8 +413,8 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
                 break;
         }
 
-        if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
-            return QV4::QmlValueTypeWrapper::create(this, variant, vt);
+        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
+            return QV4::QmlValueTypeWrapper::create(this, variant, vtmo, type);
     } else {
         QV4::Scope scope(m_v4Engine);
         if (type == qMetaTypeId<QQmlListReference>()) {
@@ -454,8 +454,8 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
         if (succeeded)
             return retn.asReturnedValue();
 
-        if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(type))
-            return QV4::QmlValueTypeWrapper::create(this, variant, vt);
+        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
+            return QV4::QmlValueTypeWrapper::create(this, variant, vtmo, type);
     }
 
     // XXX TODO: To be compatible, we still need to handle:

@@ -215,7 +215,6 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 }
 
 
-class QQmlValueType;
 class QV8Engine;
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
 {
@@ -223,7 +222,7 @@ public:
     QQmlValueTypeProvider();
     virtual ~QQmlValueTypeProvider();
 
-    QQmlValueType *createValueType(int);
+    const QMetaObject *metaObjectForMetaType(int);
 
     bool initValueType(int, void *, size_t);
     bool destroyValueType(int, void *, size_t);
@@ -243,8 +242,7 @@ public:
     bool writeValueType(int, const void *, void *, size_t);
 
 private:
-    virtual bool create(int, QQmlValueType *&);
-
+    virtual const QMetaObject *getMetaObjectForMetaType(int);
     virtual bool init(int, void *, size_t);
     virtual bool destroy(int, void *, size_t);
     virtual bool copy(int, const void *, void *, size_t);

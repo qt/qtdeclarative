@@ -201,16 +201,16 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
         ReadFunction(object, property, &v, notifier);
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
-            if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(v.userType()))
-                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType); // VariantReference value-type.
+            if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(v.userType()))
+                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, v.userType()); // VariantReference value-type.
         }
 
         return engine->fromVariant(v);
     } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
         Q_ASSERT(notifier == 0);
 
-        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(property.propType))
-            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueType);
+        if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property.propType))
+            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, property.propType);
     } else {
         Q_ASSERT(notifier == 0);
 
@@ -1134,17 +1134,6 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
                                         int *argTypes, QV8Engine *engine, QV4::CallData *callArgs)
 {
     if (argCount > 0) {
-
-        // Special handling is required for value types.
-        // We need to save the current value in a temporary,
-        // and reapply it after converting all arguments.
-        // This avoids the "overwriting copy-value-type-value"
-        // problem during Q_INVOKABLE function invocation.
-        QQmlValueType *valueTypeObject = qobject_cast<QQmlValueType*>(object);
-        QVariant valueTypeValue;
-        if (valueTypeObject)
-            valueTypeValue = valueTypeObject->value();
-
         // Convert all arguments.
         QVarLengthArray<CallArgument, 9> args(argCount + 1);
         args[0].initAsType(returnType);
@@ -1153,10 +1142,6 @@ static QV4::ReturnedValue CallMethod(QObject *object, int index, int returnType,
         QVarLengthArray<void *, 9> argData(args.count());
         for (int ii = 0; ii < args.count(); ++ii)
             argData[ii] = args[ii].dataPtr();
-
-        // Reinstate saved value type object value if required.
-        if (valueTypeObject)
-            valueTypeObject->setValue(valueTypeValue);
 
         QMetaObject::metacall(object, QMetaObject::InvokeMetaMethod, index, argData.data());
 
@@ -1443,16 +1428,6 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
     int bestParameterScore = INT_MAX;
     int bestMatchScore = INT_MAX;
 
-    // Special handling is required for value types.
-    // We need to save the current value in a temporary,
-    // and reapply it after converting all arguments.
-    // This avoids the "overwriting copy-value-type-value"
-    // problem during Q_INVOKABLE function invocation.
-    QQmlValueType *valueTypeObject = qobject_cast<QQmlValueType*>(object);
-    QVariant valueTypeValue;
-    if (valueTypeObject)
-        valueTypeValue = valueTypeObject->value();
-
     QQmlPropertyData dummy;
     const QQmlPropertyData *attempt = &data;
 
@@ -1496,8 +1471,6 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
     } while((attempt = RelatedMethod(object, attempt, dummy)) != 0);
 
     if (best.isValid()) {
-        if (valueTypeObject)
-            valueTypeObject->setValue(valueTypeValue);
         return CallPrecise(object, best, engine, callArgs);
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");

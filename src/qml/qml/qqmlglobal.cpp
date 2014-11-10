@@ -50,14 +50,12 @@ QQmlValueTypeProvider::~QQmlValueTypeProvider()
     QQml_removeValueTypeProvider(this);
 }
 
-QQmlValueType *QQmlValueTypeProvider::createValueType(int type)
+const QMetaObject *QQmlValueTypeProvider::metaObjectForMetaType(int type)
 {
-    QQmlValueType *value = 0;
-
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->create(type, value))
-            return value;
+        if (const QMetaObject *mo = p->getMetaObjectForMetaType(type))
+            return mo;
     } while ((p = p->next));
 
     return 0;
@@ -245,7 +243,7 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, void *dst,
     return false;
 }
 
-bool QQmlValueTypeProvider::create(int, QQmlValueType *&) { return false; }
+const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return 0; }
 bool QQmlValueTypeProvider::init(int, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::destroy(int, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::copy(int, const void *, void *, size_t) { return false; }

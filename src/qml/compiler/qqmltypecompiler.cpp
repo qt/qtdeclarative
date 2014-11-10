@@ -463,8 +463,8 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
             if (instantiatingProperty->isQObject()) {
                 baseTypeCache = enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType);
                 Q_ASSERT(baseTypeCache);
-            } else if (QQmlValueType *vt = QQmlValueTypeFactory::valueType(instantiatingProperty->propType)) {
-                baseTypeCache = enginePrivate->cache(vt->metaObject());
+            } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType)) {
+                baseTypeCache = enginePrivate->cache(vtmo);
                 Q_ASSERT(baseTypeCache);
             }
         }
@@ -1630,8 +1630,8 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 notifySignal = targetProperty->notifyIndex;
 
                 if (!subProperty.isEmpty()) {
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
-                    if (!valueType) {
+                    const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
+                    if (!valueTypeMetaObject) {
                         recordError(p->aliasLocation, tr("Invalid alias location"));
                         return false;
                     }
@@ -1639,7 +1639,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                     propType = type;
 
                     int valueTypeIndex =
-                        valueType->metaObject()->indexOfProperty(subProperty.toString().toUtf8().constData());
+                        valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
                     if (valueTypeIndex == -1) {
                         recordError(p->aliasLocation, tr("Invalid alias location"));
                         return false;
@@ -1647,10 +1647,10 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);
 
                     propIdx = QQmlPropertyData::encodeValueTypePropertyIndex(propIdx, valueTypeIndex);
-                    if (valueType->metaObject()->property(valueTypeIndex).isEnumType())
+                    if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
                         type = QVariant::Int;
                     else
-                        type = valueType->metaObject()->property(valueTypeIndex).userType();
+                        type = valueTypeMetaObject->property(valueTypeIndex).userType();
 
                 } else {
                     if (targetProperty->isEnum()) {
@@ -1887,7 +1887,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object && !customParser) {
             qSwap(_seenObjectWithId, seenSubObjectWithId);
-            const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::valueType(pd->propType));
+            const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType));
             qSwap(_seenObjectWithId, seenSubObjectWithId);
             if (!subObjectValid)
                 return false;
@@ -1961,7 +1961,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                     return false;
             } else if (binding->isGroupProperty()) {
                 if (QQmlValueTypeFactory::isValueType(pd->propType)) {
-                    if (QQmlValueTypeFactory::valueType(pd->propType)) {
+                    if (QQmlValueTypeFactory::metaObjectForMetaType(pd->propType)) {
                         if (!pd->isWritable()) {
                             recordError(binding->location, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                             return false;

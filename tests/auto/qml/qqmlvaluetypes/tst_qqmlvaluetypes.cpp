@@ -79,7 +79,6 @@ private slots:
     void deletedObject();
     void bindingVariantCopy();
     void scriptVariantCopy();
-    void cppClasses();
     void enums();
     void conflictingBindings();
     void returnValues();
@@ -1164,26 +1163,6 @@ void tst_qqmlvaluetypes::scriptVariantCopy()
     QCOMPARE(object->rect(), QRect(19, 33, 5, 99));
 
     delete object;
-}
-
-
-// Test that the value type classes can be used manually
-void tst_qqmlvaluetypes::cppClasses()
-{
-    CPP_TEST(QQmlPointValueType, QPoint(19, 33));
-    CPP_TEST(QQmlPointFValueType, QPointF(33.6, -23));
-    CPP_TEST(QQmlSizeValueType, QSize(-100, 18));
-    CPP_TEST(QQmlSizeFValueType, QSizeF(-100.7, 18.2));
-    CPP_TEST(QQmlRectValueType, QRect(13, 39, 10928, 88));
-    CPP_TEST(QQmlRectFValueType, QRectF(88.2, -90.1, 103.2, 118));
-    CPP_TEST(QQuickVector2DValueType, QVector2D(19.7f, 1002));
-    CPP_TEST(QQuickVector3DValueType, QVector3D(18.2f, 19.7f, 1002));
-    CPP_TEST(QQuickVector4DValueType, QVector4D(18.2f, 19.7f, 1002, 54));
-    CPP_TEST(QQuickQuaternionValueType, QQuaternion(18.2f, 19.7f, 1002, 54));
-    CPP_TEST(QQuickMatrix4x4ValueType,
-             QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
-    CPP_TEST(QQuickFontValueType, QFont("Helvetica"));
-
 }
 
 void tst_qqmlvaluetypes::enums()

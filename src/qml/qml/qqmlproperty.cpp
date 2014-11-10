@@ -284,13 +284,13 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
         if (ii == (path.count() - 2) && QQmlValueTypeFactory::isValueType(property->propType)) {
             // We're now at a value type property
-            QObject *typeObject = QQmlValueTypeFactory::valueType(property->propType);
-            if (!typeObject) return; // Not a value type
+            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType);
+            if (!valueTypeMetaObject) return; // Not a value type
 
-            int idx = typeObject->metaObject()->indexOfProperty(path.last().toUtf8().constData());
+            int idx = valueTypeMetaObject->indexOfProperty(path.last().toUtf8().constData());
             if (idx == -1) return; // Value type property does not exist
 
-            QMetaProperty vtProp = typeObject->metaObject()->property(idx);
+            QMetaProperty vtProp = valueTypeMetaObject->property(idx);
 
             Q_ASSERT(QQmlPropertyData::flagsForProperty(vtProp) <= QQmlPropertyData::ValueTypeFlagMask);
             Q_ASSERT(vtProp.userType() <= 0x0000FFFF);
@@ -463,9 +463,9 @@ const char *QQmlProperty::propertyTypeName() const
     if (!d)
         return 0;
     if (d->isValueType()) {
-        QQmlValueType *valueType = QQmlValueTypeFactory::valueType(d->core.propType);
-        Q_ASSERT(valueType);
-        return valueType->metaObject()->property(d->core.valueTypeCoreIndex).typeName();
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType);
+        Q_ASSERT(valueTypeMetaObject);
+        return valueTypeMetaObject->property(d->core.valueTypeCoreIndex).typeName();
     } else if (d->object && type() & Property && d->core.isValid()) {
         return d->object->metaObject()->property(d->core.coreIndex).typeName();
     } else {
@@ -642,10 +642,10 @@ QString QQmlProperty::name() const
         } else if (d->isValueType()) {
             QString rv = d->core.name(d->object) + QLatin1Char('.');
 
-            QQmlValueType *valueType = QQmlValueTypeFactory::valueType(d->core.propType);
-            Q_ASSERT(valueType);
+            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType);
+            Q_ASSERT(valueTypeMetaObject);
 
-            const char *vtName = valueType->metaObject()->property(d->core.valueTypeCoreIndex).name();
+            const char *vtName = valueTypeMetaObject->property(d->core.valueTypeCoreIndex).name();
             rv += QString::fromUtf8(vtName);
 
             d->nameCache = rv;

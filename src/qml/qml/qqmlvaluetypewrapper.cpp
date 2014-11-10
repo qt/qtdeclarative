@@ -120,7 +120,10 @@ static bool readReferenceValue(const QmlValueTypeReference *reference)
             // We need to modify this reference to the updated value type, if
             // possible, or return false if it is not a value type.
             if (QQmlValueTypeFactory::isValueType(variantReferenceType)) {
-                reference->d()->type = QQmlValueTypeFactory::valueType(variantReferenceType);
+                QQmlValueType *vt = 0;
+                if (const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType))
+                    vt = new QQmlValueType(variantReferenceType, mo);
+                reference->d()->type.reset(vt);
                 if (!reference->d()->type) {
                     return false;
                 }
@@ -147,7 +150,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     v4->qmlExtensions()->valueTypeWrapperPrototype = o->d();
 }
 
-ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
+ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, const QMetaObject *metaObject, int typeId)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
@@ -156,11 +159,11 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int pr
     Scoped<QmlValueTypeReference> r(scope, v4->memoryManager->alloc<QmlValueTypeReference>(v8));
     ScopedObject proto(scope, v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
-    r->d()->type = type; r->d()->object = object; r->d()->property = property;
+    r->d()->type.reset(new QQmlValueType(typeId, metaObject)); r->d()->object = object; r->d()->property = property;
     return r->asReturnedValue();
 }
 
-ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, QQmlValueType *type)
+ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value,  const QMetaObject *metaObject, int typeId)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
@@ -169,7 +172,7 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, 
     Scoped<QmlValueTypeCopy> r(scope, v4->memoryManager->alloc<QmlValueTypeCopy>(v8));
     ScopedObject proto(scope, v4->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
-    r->d()->type = type; r->d()->value = value;
+    r->d()->type.reset(new QQmlValueType(typeId, metaObject)); r->d()->value = value;
     return r->asReturnedValue();
 }
 
@@ -220,11 +223,11 @@ PropertyAttributes QmlValueTypeWrapper::query(const Managed *m, String *name)
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
-        QQmlData *ddata = QQmlData::get(r->d()->type, false);
+        QQmlData *ddata = QQmlData::get(r->d()->type.data(), false);
         if (ddata && ddata->propertyCache)
             result = ddata->propertyCache->property(name, 0, 0);
         else
-            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type, name, 0, local);
+            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type.data(), name, 0, local);
     }
     return result ? Attr_Data : Attr_Invalid;
 }
@@ -278,6 +281,10 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     QmlValueTypeWrapper *r = static_cast<QmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = m->engine();
 
+    // ### Remove this once we can do proper this calls.
+    if (name == v4->id_toString)
+        return Object::get(m, name, hasProperty);
+
     // Note: readReferenceValue() can change the reference->type.
     if (r->d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
         QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r);
@@ -296,11 +303,11 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
-        QQmlData *ddata = QQmlData::get(r->d()->type, false);
+        QQmlData *ddata = QQmlData::get(r->d()->type.data(), false);
         if (ddata && ddata->propertyCache)
             result = ddata->propertyCache->property(name, 0, 0);
         else
-            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type, name, 0, local);
+            result = QQmlPropertyCache::property(r->d()->v8->engine(), r->d()->type.data(), name, 0, local);
     }
 
     if (!result)
@@ -313,14 +320,14 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
         // calling a Q_INVOKABLE function of a value type
         Scope scope(v4);
         ScopedContext c(scope, v4->rootContext());
-        return QV4::QObjectMethod::create(c, r->d()->type, result->coreIndex);
+        return QV4::QObjectMethod::create(c, r->d()->type.data(), result->coreIndex);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     if (result->propType == metatype) { \
         cpptype v; \
         void *args[] = { &v, 0 }; \
-        r->d()->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args); \
+        QMetaObject::metacall(r->d()->type.data(), QMetaObject::ReadProperty, result->coreIndex, args); \
         return constructor(v); \
     }
 
@@ -332,7 +339,7 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
 
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
-    r->d()->type->qt_metacall(QMetaObject::ReadProperty, result->coreIndex, args);
+    QMetaObject::metacall(r->d()->type.data(), QMetaObject::ReadProperty, result->coreIndex, args);
     return r->d()->v8->fromVariant(v);
 #undef VALUE_TYPE_ACCESSOR
 }
@@ -402,7 +409,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
             if (p.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
                 v = v.toInt();
 
-            p.write(reference->d()->type, v);
+            p.write(reference->d()->type.data(), v);
 
             if (writebackProperty.userType() == QMetaType::QVariant) {
                 QVariant variantReferenceValue = r->d()->type->value();
@@ -425,7 +432,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 
         r->d()->type->setValue(copy->d()->value);
         QMetaProperty p = r->d()->type->metaObject()->property(index);
-        p.write(r->d()->type, v);
+        p.write(r->d()->type.data(), v);
         copy->d()->value = r->d()->type->value();
     }
 }

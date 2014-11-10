@@ -36,6 +36,7 @@
 
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
+#include <private/qmetaobjectbuilder_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,7 +49,7 @@ struct QQmlValueTypeFactoryImpl
 
     bool isValueType(int idx);
 
-    QQmlValueType *createValueType(int);
+    const QMetaObject *metaObjectForMetaType(int);
     QQmlValueType *valueType(int);
 
     QQmlValueType *valueTypes[QVariant::UserType];
@@ -83,39 +84,30 @@ bool QQmlValueTypeFactoryImpl::isValueType(int idx)
     return false;
 }
 
-QQmlValueType *QQmlValueTypeFactoryImpl::createValueType(int t)
+const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
 {
-    QQmlValueType *rv = 0;
-
     switch (t) {
     case QVariant::Point:
-        rv = new QQmlPointValueType;
-        break;
+        return &QQmlPointValueType::staticMetaObject;
     case QVariant::PointF:
-        rv = new QQmlPointFValueType;
-        break;
+        return &QQmlPointFValueType::staticMetaObject;
     case QVariant::Size:
-        rv = new QQmlSizeValueType;
-        break;
+        return &QQmlSizeValueType::staticMetaObject;
     case QVariant::SizeF:
-        rv = new QQmlSizeFValueType;
-        break;
+        return &QQmlSizeFValueType::staticMetaObject;
     case QVariant::Rect:
-        rv = new QQmlRectValueType;
-        break;
+        return &QQmlRectValueType::staticMetaObject;
     case QVariant::RectF:
-        rv = new QQmlRectFValueType;
-        break;
+        return &QQmlRectFValueType::staticMetaObject;
     case QVariant::EasingCurve:
-        rv = new QQmlEasingValueType;
-        break;
+        return &QQmlEasingValueType::staticMetaObject;
     default:
-        rv = QQml_valueTypeProvider()->createValueType(t);
+        if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
+            return mo;
         break;
     }
 
-    Q_ASSERT(!rv || rv->metaObject()->propertyCount() < 32);
-    return rv;
+    return 0;
 }
 
 QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
@@ -126,7 +118,10 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 
         QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
         if (it == userTypes.end()) {
-            it = userTypes.insert(idx, createValueType(idx));
+            QQmlValueType *vt = 0;
+            if (const QMetaObject *mo = metaObjectForMetaType(idx))
+                vt = new QQmlValueType(idx, mo);
+            it = userTypes.insert(idx, vt);
         }
 
         mutex.unlock();
@@ -139,7 +134,8 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 
         // TODO: Investigate the performance/memory characteristics of
         // removing the preallocated array
-        if ((rv = createValueType(idx))) {
+        if (const QMetaObject *mo = metaObjectForMetaType(idx)) {
+            rv = new QQmlValueType(idx, mo);
             valueTypes[idx] = rv;
         }
     }
@@ -161,20 +157,116 @@ QQmlValueType *QQmlValueTypeFactory::valueType(int idx)
     return factoryImpl()->valueType(idx);
 }
 
+const QMetaObject *QQmlValueTypeFactory::metaObjectForMetaType(int type)
+{
+    return factoryImpl()->metaObjectForMetaType(type);
+}
+
 void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
 {
     qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
 }
 
+QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
+    : typeId(typeId)
+    , gadgetPtr(QMetaType::create(typeId))
+{
+    QObjectPrivate *op = QObjectPrivate::get(this);
+    Q_ASSERT(!op->metaObject);
+    op->metaObject = this;
 
-QQmlValueType::QQmlValueType(int userType, QObject *parent)
-: QObject(parent), m_userType(userType)
+    QMetaObjectBuilder builder(gadgetMetaObject);
+    _metaObject = builder.toMetaObject();
+
+    *static_cast<QMetaObject*>(this) = *_metaObject;
+}
+
+QQmlValueType::~QQmlValueType()
+{
+    QObjectPrivate *op = QObjectPrivate::get(this);
+    Q_ASSERT(op->metaObject == this);
+    op->metaObject = 0;
+    ::free((void*)_metaObject);
+    QMetaType::destroy(typeId, gadgetPtr);
+}
+
+void QQmlValueType::read(QObject *obj, int idx)
+{
+    readProperty(obj, idx, gadgetPtr);
+}
+
+void QQmlValueType::readVariantValue(QObject *obj, int idx, QVariant *into)
+{
+    // important: must not change the userType of the variant
+    readProperty(obj, idx, into);
+}
+
+void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
+{
+    Q_ASSERT(gadgetPtr);
+    writeProperty(obj, idx, flags, gadgetPtr);
+}
+
+void QQmlValueType::writeVariantValue(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags, QVariant *from)
+{
+    writeProperty(obj, idx, flags, from);
+}
+
+QVariant QQmlValueType::value()
+{
+    Q_ASSERT(gadgetPtr);
+    return QVariant(typeId, gadgetPtr);
+}
+
+void QQmlValueType::setValue(const QVariant &value)
+{
+    Q_ASSERT(typeId == value.userType());
+    QMetaType::destruct(typeId, gadgetPtr);
+    QMetaType::construct(typeId, gadgetPtr, value.constData());
+}
+
+bool QQmlValueType::isEqual(const QVariant &other) const
+{
+    Q_ASSERT(gadgetPtr);
+    return QVariant(typeId, gadgetPtr) == other;
+}
+
+QString QQmlValueType::toString() const
+{
+    const QMetaObject *mo = metaObject();
+    const int toStringIndex = mo->indexOfMethod("toString()");
+    if (toStringIndex != -1) {
+        QString result;
+        void *args[] = { &result, 0 };
+        _metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), QMetaObject::InvokeMetaMethod, toStringIndex, args);
+        return result;
+    }
+    QString result = QString::fromUtf8(QMetaType::typeName(typeId));
+    result += QLatin1Char('(');
+    const int propCount = mo->propertyCount();
+    for (int i = 0; i < propCount; ++i) {
+        QVariant value = mo->property(i).read(this);
+        result += value.toString();
+        if (i < propCount - 1)
+            result += QStringLiteral(", ");
+    }
+    result += QLatin1Char(')');
+    return result;
+}
+
+QAbstractDynamicMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)
+{
+    return this;
+}
+
+void QQmlValueType::objectDestroyed(QObject *)
 {
 }
 
-QQmlPointFValueType::QQmlPointFValueType(QObject *parent)
-    : QQmlValueTypeBase<QPointF>(QMetaType::QPointF, parent)
+int QQmlValueType::metaCall(QObject *, QMetaObject::Call type, int _id, void **argv)
 {
+    d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), type, _id, argv);
+    return _id;
 }
 
 QString QQmlPointFValueType::toString() const
@@ -203,16 +295,6 @@ void QQmlPointFValueType::setY(qreal y)
 }
 
 
-QQmlPointValueType::QQmlPointValueType(QObject *parent)
-    : QQmlValueTypeBase<QPoint>(QMetaType::QPoint, parent)
-{
-}
-
-QString QQmlPointValueType::toString() const
-{
-    return QString(QLatin1String("QPoint(%1, %2)")).arg(v.x()).arg(v.y());
-}
-
 int QQmlPointValueType::x() const
 {
     return v.x();
@@ -233,11 +315,6 @@ void QQmlPointValueType::setY(int y)
     v.setY(y);
 }
 
-
-QQmlSizeFValueType::QQmlSizeFValueType(QObject *parent)
-    : QQmlValueTypeBase<QSizeF>(QMetaType::QSizeF, parent)
-{
-}
 
 QString QQmlSizeFValueType::toString() const
 {
@@ -265,16 +342,6 @@ void QQmlSizeFValueType::setHeight(qreal h)
 }
 
 
-QQmlSizeValueType::QQmlSizeValueType(QObject *parent)
-    : QQmlValueTypeBase<QSize>(QMetaType::QSize, parent)
-{
-}
-
-QString QQmlSizeValueType::toString() const
-{
-    return QString(QLatin1String("QSize(%1, %2)")).arg(v.width()).arg(v.height());
-}
-
 int QQmlSizeValueType::width() const
 {
     return v.width();
@@ -293,12 +360,6 @@ void QQmlSizeValueType::setWidth(int w)
 void QQmlSizeValueType::setHeight(int h)
 {
     v.setHeight(h);
-}
-
-
-QQmlRectFValueType::QQmlRectFValueType(QObject *parent)
-    : QQmlValueTypeBase<QRectF>(QMetaType::QRectF, parent)
-{
 }
 
 QString QQmlRectFValueType::toString() const
@@ -346,17 +407,6 @@ void QQmlRectFValueType::setHeight(qreal h)
     v.setHeight(h);
 }
 
-
-QQmlRectValueType::QQmlRectValueType(QObject *parent)
-    : QQmlValueTypeBase<QRect>(QMetaType::QRect, parent)
-{
-}
-
-QString QQmlRectValueType::toString() const
-{
-    return QString(QLatin1String("QRect(%1, %2, %3, %4)")).arg(v.x()).arg(v.y()).arg(v.width()).arg(v.height());
-}
-
 int QQmlRectValueType::x() const
 {
     return v.x();
@@ -397,16 +447,6 @@ void QQmlRectValueType::setHeight(int h)
     v.setHeight(h);
 }
 
-
-QQmlEasingValueType::QQmlEasingValueType(QObject *parent)
-    : QQmlValueTypeBase<QEasingCurve>(QMetaType::QEasingCurve, parent)
-{
-}
-
-QString QQmlEasingValueType::toString() const
-{
-    return QString(QLatin1String("QEasingCurve(%1, %2, %3, %4)")).arg(v.type()).arg(v.amplitude()).arg(v.overshoot()).arg(v.period());
-}
 
 QQmlEasingValueType::Type QQmlEasingValueType::type() const
 {

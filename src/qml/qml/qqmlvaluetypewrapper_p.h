@@ -65,7 +65,7 @@ struct QmlValueTypeWrapper : Object {
     QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
     QV8Engine *v8;
     ObjectType objectType;
-    mutable QQmlValueType *type;
+    mutable QScopedPointer<QQmlValueType> type;
 };
 
 }
@@ -77,8 +77,8 @@ struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 
 public:
 
-    static ReturnedValue create(QV8Engine *v8, QObject *, int, QQmlValueType *);
-    static ReturnedValue create(QV8Engine *v8, const QVariant &, QQmlValueType *);
+    static ReturnedValue create(QV8Engine *v8, QObject *, int, const QMetaObject *metaObject, int typeId);
+    static ReturnedValue create(QV8Engine *v8, const QVariant &, const QMetaObject *metaObject, int typeId);
 
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);

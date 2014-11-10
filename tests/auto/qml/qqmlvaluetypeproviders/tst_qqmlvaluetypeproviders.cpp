@@ -199,6 +199,8 @@ public:
     bool operator==(const TestValue &other) const { return (m_p1 == other.m_p1) && (m_p2 == other.m_p2); }
     bool operator!=(const TestValue &other) const { return !operator==(other); }
 
+    bool operator<(const TestValue &other) const { if (m_p1 < other.m_p1) return true; return m_p2 < other.m_p2; }
+
 private:
     int m_p1;
     double m_p2;
@@ -210,16 +212,14 @@ Q_DECLARE_METATYPE(TestValue);
 
 namespace {
 
-class TestValueType : public QQmlValueTypeBase<TestValue>
+class TestValueType
 {
-    Q_OBJECT
+    TestValue v;
+    Q_GADGET
     Q_PROPERTY(int property1 READ property1 WRITE setProperty1)
     Q_PROPERTY(double property2 READ property2 WRITE setProperty2)
 public:
-    TestValueType(QObject *parent = 0) : QQmlValueTypeBase<TestValue>(qMetaTypeId<TestValue>(), parent) {}
-
-    virtual QString toString() const { return QString::number(property1()) + QLatin1Char(',') + QString::number(property2()); }
-    virtual bool isEqual(const QVariant &other) const { return (other.userType() == qMetaTypeId<TestValue>()) && (v == other.value<TestValue>()); }
+    Q_INVOKABLE QString toString() const { return QString::number(property1()) + QLatin1Char(',') + QString::number(property2()); }
 
     int property1() const { return v.property1(); }
     void setProperty1(int p1) { v.setProperty1(p1); }
@@ -231,14 +231,12 @@ public:
 class TestValueTypeProvider : public QQmlValueTypeProvider
 {
 public:
-    bool create(int type, QQmlValueType *&v)
+    const QMetaObject *getMetaObjectForMetaType(int type)
     {
-        if (type == qMetaTypeId<TestValue>()) {
-            v = new TestValueType;
-            return true;
-        }
+        if (type == qMetaTypeId<TestValue>())
+            return &TestValueType::staticMetaObject;
 
-        return false;
+        return 0;
     }
 
 };
@@ -279,6 +277,7 @@ void tst_qqmlvaluetypeproviders::userType()
     Q_ASSERT(qMetaTypeId<TestValue>() >= QMetaType::User);
 
     qRegisterMetaType<TestValue>();
+    QMetaType::registerComparators<TestValue>();
     qmlRegisterType<TestValueExporter>("Test", 1, 0, "TestValueExporter");
 
     TestValueExporter exporter;
