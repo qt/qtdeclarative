@@ -189,6 +189,8 @@ public slots:
         m_mutex.unlock();
         if (newId) {
             delete m_texture;
+            // note: include QQuickWindow::TextureHasAlphaChannel if the rendered content
+            // has alpha.
             m_texture = m_window->createTextureFromId(newId, size);
             setTexture(m_texture);
 
