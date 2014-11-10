@@ -62,7 +62,7 @@ struct RegExpObject : Object {
     RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re);
     RegExpObject(InternalClass *ic);
 
-    QV4::RegExp *value;
+    RegExp *value;
     bool global;
 };
 
@@ -98,7 +98,7 @@ struct RegExpObject: Object {
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
-    RegExp *value() const { return d()->value; }
+    Heap::RegExp *value() const { return d()->value; }
     bool global() const { return d()->global; }
 
     void init(ExecutionEngine *engine);

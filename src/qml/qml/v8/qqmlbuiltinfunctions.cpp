@@ -1168,7 +1168,7 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
 
 Heap::QQmlBindingFunction::QQmlBindingFunction(QV4::FunctionObject *originalFunction)
     : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
-    , originalFunction(originalFunction)
+    , originalFunction(originalFunction->d())
 {
     setVTable(QV4::QQmlBindingFunction::staticVTable());
     bindingKeyFlag = true;
@@ -1183,8 +1183,9 @@ void QQmlBindingFunction::initBindingLocation()
 
 ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
 {
-    QQmlBindingFunction *This = static_cast<QQmlBindingFunction*>(that);
-    return This->d()->originalFunction->call(callData);
+    Scope scope(that->engine());
+    Scoped<FunctionObject> function(scope, static_cast<QQmlBindingFunction*>(that)->d()->originalFunction);
+    return function->call(callData);
 }
 
 void QQmlBindingFunction::markObjects(Heap::Base *that, ExecutionEngine *e)

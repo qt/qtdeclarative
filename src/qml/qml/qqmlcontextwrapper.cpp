@@ -434,15 +434,17 @@ DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
 
 Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper)
     : Heap::Object(engine)
-    , contextWrapper(contextWrapper)
+    , contextWrapper(contextWrapper->d())
 {
     setVTable(QV4::QQmlIdObjectsArray::staticVTable());
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    QQmlIdObjectsArray *This = static_cast<QV4::QQmlIdObjectsArray*>(m);
-    QQmlContextData *context = This->d()->contextWrapper->getContext();
+    Scope scope(m->engine());
+    Scoped<QQmlIdObjectsArray> This(scope, static_cast<QV4::QQmlIdObjectsArray*>(m));
+    Scoped<QmlContextWrapper> contextWrapper(scope, This->d()->contextWrapper);
+    QQmlContextData *context = contextWrapper->getContext();
     if (!context) {
         if (hasProperty)
             *hasProperty = false;

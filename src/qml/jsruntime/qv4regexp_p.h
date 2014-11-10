@@ -70,6 +70,8 @@ struct RegExp : Base {
     int subPatternCount;
     bool ignoreCase;
     bool multiLine;
+
+    int captureCount() const { return subPatternCount + 1; }
 };
 
 }

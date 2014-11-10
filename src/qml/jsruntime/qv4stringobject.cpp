@@ -606,8 +606,9 @@ ReturnedValue StringPrototype::method_search(CallContext *ctx)
         regExp = regExpValue->as<RegExpObject>();
         Q_ASSERT(regExp);
     }
+    Scoped<RegExp> re(scope, regExp->value());
     uint* matchOffsets = (uint*)alloca(regExp->value()->captureCount() * 2 * sizeof(uint));
-    uint result = regExp->value()->match(string, /*offset*/0, matchOffsets);
+    uint result = re->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
         return Encode(-1);
     return Encode(result);
@@ -670,7 +671,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
 
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
-        if (re->value()->pattern().isEmpty()) {
+        if (re->value()->pattern.isEmpty()) {
             re = (RegExpObject *)0;
             separatorValue = ctx->d()->engine->newString(QString());
         }
@@ -681,7 +682,8 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
         uint offset = 0;
         uint* matchOffsets = (uint*)alloca(re->value()->captureCount() * 2 * sizeof(uint));
         while (true) {
-            uint result = re->value()->match(text, offset, matchOffsets);
+            Scoped<RegExp> regexp(scope, re->value());
+            uint result = regexp->match(text, offset, matchOffsets);
             if (result == JSC::Yarr::offsetNoMatch)
                 break;
 

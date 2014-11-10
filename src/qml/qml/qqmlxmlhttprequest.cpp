@@ -1623,7 +1623,7 @@ struct QQmlXMLHttpRequestWrapper : Object {
 struct QQmlXMLHttpRequestCtor : FunctionObject {
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine);
 
-    QV4::Object *proto;
+    Object *proto;
 };
 
 }
@@ -1663,7 +1663,8 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, that->engine()->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(that->engine(), r));
-        w->setPrototype(ctor->d()->proto);
+        Scoped<Object> proto(scope, ctor->d()->proto);
+        w->setPrototype(proto);
         return w.asReturnedValue();
     }
 
@@ -1716,29 +1717,29 @@ void QQmlXMLHttpRequestCtor::setupProto()
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
     Scoped<Object> p(scope, v4->newObject());
-    d()->proto = p.getPointer();
+    d()->proto = p.getPointer()->d();
 
     // Methods
-    d()->proto->defineDefaultProperty(QStringLiteral("open"), method_open);
-    d()->proto->defineDefaultProperty(QStringLiteral("setRequestHeader"), method_setRequestHeader);
-    d()->proto->defineDefaultProperty(QStringLiteral("send"), method_send);
-    d()->proto->defineDefaultProperty(QStringLiteral("abort"), method_abort);
-    d()->proto->defineDefaultProperty(QStringLiteral("getResponseHeader"), method_getResponseHeader);
-    d()->proto->defineDefaultProperty(QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
+    p->defineDefaultProperty(QStringLiteral("open"), method_open);
+    p->defineDefaultProperty(QStringLiteral("setRequestHeader"), method_setRequestHeader);
+    p->defineDefaultProperty(QStringLiteral("send"), method_send);
+    p->defineDefaultProperty(QStringLiteral("abort"), method_abort);
+    p->defineDefaultProperty(QStringLiteral("getResponseHeader"), method_getResponseHeader);
+    p->defineDefaultProperty(QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
 
     // Read-only properties
-    d()->proto->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, 0);
-    d()->proto->defineAccessorProperty(QStringLiteral("status"),method_get_status, 0);
-    d()->proto->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, 0);
-    d()->proto->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, 0);
-    d()->proto->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
+    p->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, 0);
+    p->defineAccessorProperty(QStringLiteral("status"),method_get_status, 0);
+    p->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, 0);
+    p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, 0);
+    p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
 
     // State values
-    d()->proto->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
-    d()->proto->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
-    d()->proto->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
-    d()->proto->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
-    d()->proto->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
+    p->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
+    p->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
+    p->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
+    p->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
+    p->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
 }
 
 

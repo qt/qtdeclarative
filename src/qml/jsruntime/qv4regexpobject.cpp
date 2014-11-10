@@ -71,14 +71,14 @@ Heap::RegExpObject::RegExpObject(InternalClass *ic)
 
     Scope scope(ic->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false)->getPointer();
+    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false)->getPointer()->d();
     o->d()->global = false;
     o->init(ic->engine);
 }
 
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
     : Heap::Object(engine->regExpClass)
-    , value(value)
+    , value(value->d())
     , global(global)
 {
     setVTable(QV4::RegExpObject::staticVTable());
@@ -139,7 +139,7 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re
     Scope scope(engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer();
+    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer()->d();
 
     o->init(engine);
 }
@@ -155,7 +155,7 @@ void RegExpObject::init(ExecutionEngine *engine)
     if (!this->value())
         return;
 
-    QString p = this->value()->pattern();
+    QString p = this->value()->pattern;
     if (p.isEmpty()) {
         p = QStringLiteral("(?:)");
     } else {
@@ -165,8 +165,8 @@ void RegExpObject::init(ExecutionEngine *engine)
 
     defineReadonlyProperty(QStringLiteral("source"), (v = engine->newString(p)));
     defineReadonlyProperty(QStringLiteral("global"), Primitive::fromBoolean(global()));
-    defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value()->ignoreCase()));
-    defineReadonlyProperty(QStringLiteral("multiline"), Primitive::fromBoolean(this->value()->multiLine()));
+    defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value()->ignoreCase));
+    defineReadonlyProperty(QStringLiteral("multiline"), Primitive::fromBoolean(this->value()->multiLine));
 }
 
 
@@ -190,8 +190,8 @@ Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 // have different semantics/flags, but we try to do our best.
 QRegExp RegExpObject::toQRegExp() const
 {
-    Qt::CaseSensitivity caseSensitivity = value()->ignoreCase() ? Qt::CaseInsensitive : Qt::CaseSensitive;
-    return QRegExp(value()->pattern(), caseSensitivity, QRegExp::RegExp2);
+    Qt::CaseSensitivity caseSensitivity = value()->ignoreCase ? Qt::CaseInsensitive : Qt::CaseSensitive;
+    return QRegExp(value()->pattern, caseSensitivity, QRegExp::RegExp2);
 }
 
 QString RegExpObject::toString() const
@@ -200,9 +200,9 @@ QString RegExpObject::toString() const
     result += QLatin1Char('/');
     if (global())
         result += QLatin1Char('g');
-    if (value()->ignoreCase())
+    if (value()->ignoreCase)
         result += QLatin1Char('i');
-    if (value()->multiLine())
+    if (value()->multiLine)
         result += QLatin1Char('m');
     return result;
 }
@@ -220,9 +220,9 @@ uint RegExpObject::flags() const
     uint f = 0;
     if (global())
         f |= QV4::RegExpObject::RegExp_Global;
-    if (value()->ignoreCase())
+    if (value()->ignoreCase)
         f |= QV4::RegExpObject::RegExp_IgnoreCase;
-    if (value()->multiLine())
+    if (value()->multiLine)
         f |= QV4::RegExpObject::RegExp_Multiline;
     return f;
 }
@@ -256,7 +256,8 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         if (!f->isUndefined())
             return ctx->engine()->throwTypeError();
 
-        return Encode(ctx->d()->engine->newRegExpObject(re->value(), re->global()));
+        Scoped<RegExp> regexp(scope, re->value());
+        return Encode(ctx->d()->engine->newRegExpObject(regexp, re->global()));
     }
 
     QString pattern;
@@ -368,7 +369,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     uint* matchOffsets = (uint*)alloca(r->value()->captureCount() * 2 * sizeof(uint));
-    const int result = r->value()->match(s, offset, matchOffsets);
+    const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
 
     Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
     regExpCtor->d()->clearLastMatch();
