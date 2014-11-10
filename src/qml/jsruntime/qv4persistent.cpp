@@ -89,6 +89,16 @@ PersistentValue &PersistentValue::operator =(ReturnedValue other)
     return *this;
 }
 
+PersistentValue &PersistentValue::operator=(Heap::Base *obj)
+{
+    if (!d) {
+        d = new PersistentValuePrivate(Value::fromHeapObject(obj).asReturnedValue());
+        return *this;
+    }
+    d = d->detach(Value::fromHeapObject(obj).asReturnedValue());
+    return *this;
+}
+
 PersistentValue::~PersistentValue()
 {
     if (d)

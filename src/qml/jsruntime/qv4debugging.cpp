@@ -152,7 +152,6 @@ public:
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
-    , m_currentContext(0)
     , m_agent(0)
     , m_state(Running)
     , m_stepping(NotStepping)
@@ -219,7 +218,7 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue = Encode::undefined();
 
-    m_currentContext = m_engine->currentContext();
+    m_currentContext = m_engine->currentContext()->d();
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -524,7 +523,7 @@ void Debugger::maybeBreakAtInstruction()
 
     switch (m_stepping) {
     case StepOver:
-        if (m_currentContext != m_engine->currentContext())
+        if (m_currentContext.asManaged()->d() != m_engine->currentContext()->d())
             break;
         // fall through
     case StepIn:
@@ -550,7 +549,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_currentContext = m_engine->currentContext();
+        m_currentContext = m_engine->currentContext()->d();
     }
 }
 
@@ -563,8 +562,8 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     Scope scope(m_engine);
-    if (m_stepping != NotStepping && m_currentContext == m_engine->currentContext()) {
-        m_currentContext = Scoped<ExecutionContext>(scope, m_engine->currentContext()->d()->parent).getPointer();
+    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()->d()) {
+        m_currentContext = m_engine->currentContext()->d()->parent;
         m_stepping = StepOver;
         m_returnedValue = retVal;
     }

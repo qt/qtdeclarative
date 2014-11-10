@@ -196,7 +196,7 @@ private:
 
 private:
     QV4::ExecutionEngine *m_engine;
-    QV4::ExecutionContext *m_currentContext;
+    QV4::PersistentValue m_currentContext;
     DebuggerAgent *m_agent;
     QMutex m_lock;
     QWaitCondition m_runningCondition;

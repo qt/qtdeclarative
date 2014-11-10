@@ -81,10 +81,16 @@ public:
     PersistentValue &operator =(ReturnedValue other);
     template<typename T>
     PersistentValue &operator=(Returned<T> *obj);
+    PersistentValue &operator=(Heap::Base *obj);
     ~PersistentValue();
 
     ReturnedValue value() const {
         return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
+    }
+    Managed *asManaged() const {
+        if (!d)
+            return 0;
+        return d->value.asManaged();
     }
 
     ExecutionEngine *engine() {
