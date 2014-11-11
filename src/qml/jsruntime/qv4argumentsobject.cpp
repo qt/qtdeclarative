@@ -83,7 +83,7 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
-    if (md)
+    if (!md || md->size() < numAccessors)
         d()->mappedArguments = md->reallocate(engine(), d()->mappedArguments, numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments()->data[i] = context()->d()->callData->args[i];
