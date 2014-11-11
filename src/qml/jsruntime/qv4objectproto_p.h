@@ -91,7 +91,7 @@ struct ObjectPrototype: Object
     static void toPropertyDescriptor(ExecutionContext *ctx, const ValueRef v, Property *desc, PropertyAttributes *attrs);
     static ReturnedValue fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
 
-    static Returned<ArrayObject> *getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o);
+    static Heap::ArrayObject *getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o);
 };
 
 

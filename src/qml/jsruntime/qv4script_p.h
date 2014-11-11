@@ -90,8 +90,8 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
 
     Heap::CallContext *context() const { return d()->qmlContext; }
 
-    static Returned<FunctionObject> *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
-                                                                  const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
+    static Heap::FunctionObject *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
+                                                              const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
 private:
 };

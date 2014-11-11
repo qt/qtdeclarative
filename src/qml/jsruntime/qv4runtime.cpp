@@ -1133,7 +1133,7 @@ void Runtime::pushCatchScope(NoThrowEngine *engine, String *exceptionVarName)
 {
     Scope scope(engine);
     ScopedValue v(scope, engine->catchException(engine->currentContext(), 0));
-    engine->currentContext()->newCatchContext(exceptionVarName, v)->getPointer();
+    engine->currentContext()->newCatchContext(exceptionVarName, v);
 }
 
 void Runtime::popScope(ExecutionEngine *engine)

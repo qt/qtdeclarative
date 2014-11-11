@@ -81,9 +81,9 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 {
     V4_OBJECT2(DelegateModelGroupFunction, FunctionObject)
 
-    static QV4::Returned<DelegateModelGroupFunction> *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
+    static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
     {
-        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
+        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code)->getPointer()->d();
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
@@ -3236,8 +3236,8 @@ struct QQmlDelegateModelGroupChange : QV4::Object
 {
     V4_OBJECT2(QQmlDelegateModelGroupChange, QV4::Object)
 
-    static QV4::Returned<QQmlDelegateModelGroupChange> *create(QV4::ExecutionEngine *e) {
-        return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e);
+    static QV4::Heap::QQmlDelegateModelGroupChange *create(QV4::ExecutionEngine *e) {
+        return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e)->getPointer()->d();
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3277,9 +3277,9 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 {
     V4_OBJECT2(QQmlDelegateModelGroupChangeArray, QV4::Object)
 public:
-    static QV4::Returned<QQmlDelegateModelGroupChangeArray> *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
+    static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
-        return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes);
+        return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes)->getPointer()->d();
     }
 
     quint32 count() const { return d()->changes.count(); }

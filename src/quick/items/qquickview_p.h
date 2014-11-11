@@ -109,7 +109,7 @@ struct QQuickRootItemMarker : public Object
 {
     V4_OBJECT2(QQuickRootItemMarker, Object)
 
-    static QV4::Returned<QQuickRootItemMarker> *create(QQmlEngine *engine, QQuickWindow *window);
+    static Heap::QQuickRootItemMarker *create(QQmlEngine *engine, QQuickWindow *window);
 
     static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
 

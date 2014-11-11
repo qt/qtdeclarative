@@ -670,7 +670,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, con
 }
 
 
-Returned<ArrayObject> *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o)
+Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o)
 {
     Scope scope(v4);
     Scoped<ArrayObject> array(scope, v4->newArrayObject());
@@ -685,5 +685,5 @@ Returned<ArrayObject> *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4,
             array->push_back(name);
         }
     }
-    return array->asReturned<ArrayObject>();
+    return array->d();
 }

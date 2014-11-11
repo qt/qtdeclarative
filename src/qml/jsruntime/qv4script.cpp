@@ -109,7 +109,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer()->d();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
     s.engine->popContext();
 }
 
@@ -127,7 +127,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml)->getPointer()->d();
+    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
     s.engine->popContext();
 }
 
@@ -168,7 +168,7 @@ static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameter
     return signalEmittingContext->argument(parameterIndex);
 }
 
-Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
+Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
 {
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
@@ -192,7 +192,7 @@ Returned<FunctionObject> *QmlBindingWrapper::createQmlCallableForFunction(QQmlCo
     }
 
     QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction));
-    return function->asReturned<FunctionObject>();
+    return function->d();
 }
 
 Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)

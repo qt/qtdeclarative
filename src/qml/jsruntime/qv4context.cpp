@@ -81,22 +81,22 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
     return Returned<CallContext>::create(c);
 }
 
-Returned<WithContext> *ExecutionContext::newWithContext(Object *with)
+Heap::WithContext *ExecutionContext::newWithContext(Object *with)
 {
-    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
+    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with)->getPointer()->d();
 }
 
-Returned<CatchContext> *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
+Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
 {
-    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
+    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue)->getPointer()->d();
 }
 
-Returned<CallContext> *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
+Heap::CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
     Scope scope(this);
     Scoped<CallContext> c(scope, static_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
     new (c->d()) Heap::CallContext(d()->engine, qml, f);
-    return c.asReturned();
+    return c->d();
 }
 
 

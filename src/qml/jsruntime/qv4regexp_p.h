@@ -91,7 +91,7 @@ struct RegExp : public Managed
     bool ignoreCase() const { return d()->ignoreCase; }
     bool multiLine() const { return d()->multiLine; }
 
-    static Returned<RegExp> *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
+    static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
 
     bool isValid() const { return d()->byteCode.get(); }
 

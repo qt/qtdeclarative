@@ -71,7 +71,7 @@ Heap::RegExpObject::RegExpObject(InternalClass *ic)
 
     Scope scope(ic->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false)->getPointer()->d();
+    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false);
     o->d()->global = false;
     o->init(ic->engine);
 }
@@ -139,7 +139,7 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re
     Scope scope(engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false)->getPointer()->d();
+    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
 
     o->init(engine);
 }

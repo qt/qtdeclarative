@@ -131,9 +131,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Q_MANAGED_TYPE(ExecutionContext)
 
     Returned<CallContext> *newCallContext(FunctionObject *f, CallData *callData);
-    Returned<WithContext> *newWithContext(Object *with);
-    Returned<CatchContext> *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
-    Returned<CallContext> *newQmlContext(FunctionObject *f, Object *qml);
+    Heap::WithContext *newWithContext(Object *with);
+    Heap::CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
+    Heap::CallContext *newQmlContext(FunctionObject *f, Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 
