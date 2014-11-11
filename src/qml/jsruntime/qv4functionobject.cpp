@@ -213,9 +213,9 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
         for (int i = 0; i < callData->argc - 1; ++i) {
             if (i)
                 arguments += QLatin1String(", ");
-            arguments += callData->args[i].toString(ctx)->toQString();
+            arguments += callData->args[i].toQString();
         }
-        body = callData->args[callData->argc - 1].toString(ctx)->toQString();
+        body = callData->args[callData->argc - 1].toQString();
     }
     if (ctx->d()->engine->hasException)
         return Encode::undefined();

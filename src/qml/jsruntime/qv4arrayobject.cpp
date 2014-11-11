@@ -205,7 +205,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
             if (scope.hasException())
                 return Encode::undefined();
             if (!e->isNullOrUndefined())
-                R += e->toString(ctx)->toQString();
+                R += e->toQString();
         }
     } else {
         //
@@ -214,7 +214,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
         ScopedString name(scope, ctx->d()->engine->newString(QStringLiteral("0")));
         ScopedValue r6(scope, self->get(name.getPointer()));
         if (!r6->isNullOrUndefined())
-            R = r6->toString(ctx)->toQString();
+            R = r6->toQString();
 
         ScopedValue r12(scope);
         for (quint32 k = 1; k < r2; ++k) {
@@ -226,7 +226,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
                 return Encode::undefined();
 
             if (!r12->isNullOrUndefined())
-                R += r12->toString(ctx)->toQString();
+                R += r12->toQString();
         }
     }
 

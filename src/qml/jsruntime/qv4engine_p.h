@@ -269,6 +269,7 @@ public:
     StringValue id_byteLength;
     StringValue id_byteOffset;
     StringValue id_buffer;
+    StringValue id_lastIndex;
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
 
@@ -308,8 +309,8 @@ public:
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass);
 
-    Returned<String> *newString(const QString &s);
-    String *newIdentifier(const QString &text);
+    Heap::String *newString(const QString &s);
+    Heap::String *newIdentifier(const QString &text);
 
     Heap::Object *newStringObject(const ValueRef value);
     Heap::Object *newNumberObject(const ValueRef value);

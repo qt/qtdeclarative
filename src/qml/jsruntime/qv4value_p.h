@@ -343,8 +343,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     double toNumberImpl() const;
     QString toQStringNoThrow() const;
     QString toQString() const;
-    String *toString(ExecutionEngine *e) const;
-    String *toString(ExecutionContext *ctx) const;
+    Heap::String *toString(ExecutionEngine *e) const;
+    Heap::String *toString(ExecutionContext *ctx) const;
     Heap::Object *toObject(ExecutionEngine *e) const;
     Heap::Object *toObject(ExecutionContext *ctx) const;
 
@@ -466,6 +466,7 @@ struct TypedValue : public Value
 #if QT_POINTER_SIZE == 4
         tag = Managed_Type;
 #endif
+        return *this;
     }
     TypedValue &operator =(T *t);
     TypedValue &operator =(const Scoped<T> &v);

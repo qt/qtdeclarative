@@ -260,6 +260,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_byteLength = newIdentifier(QStringLiteral("byteLength"));
     id_byteOffset = newIdentifier(QStringLiteral("byteOffset"));
     id_buffer = newIdentifier(QStringLiteral("buffer"));
+    id_lastIndex = newIdentifier(QStringLiteral("lastIndex"));
 
     memberDataClass = InternalClass::create(this, MemberData::staticVTable(), 0);
 
@@ -532,13 +533,13 @@ Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass)
     return object->d();
 }
 
-Returned<String> *ExecutionEngine::newString(const QString &s)
+Heap::String *ExecutionEngine::newString(const QString &s)
 {
     Scope scope(this);
-    return ScopedString(scope, memoryManager->alloc<String>(this, s))->asReturned<String>();
+    return ScopedString(scope, memoryManager->alloc<String>(this, s))->d();
 }
 
-String *ExecutionEngine::newIdentifier(const QString &text)
+Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 {
     return identifierTable->insertString(text);
 }
@@ -929,6 +930,7 @@ void ExecutionEngine::markObjects()
     id_byteLength->mark(this);
     id_byteOffset->mark(this);
     id_buffer->mark(this);
+    id_lastIndex->mark(this);
 
     objectCtor.mark(this);
     stringCtor.mark(this);

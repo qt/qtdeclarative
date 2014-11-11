@@ -49,36 +49,39 @@ struct IdentifierTable
     int alloc;
     int size;
     int numBits;
-    String **entries;
+    Heap::String **entries;
 
-    void addEntry(String *str);
+    void addEntry(Heap::String *str);
 
 public:
 
     IdentifierTable(ExecutionEngine *engine);
     ~IdentifierTable();
 
-    String *insertString(const QString &s);
+    Heap::String *insertString(const QString &s);
 
-    Identifier *identifier(const String *str) {
-        if (str->d()->identifier)
-            return str->d()->identifier;
+    Identifier *identifier(const Heap::String *str) {
+        if (str->identifier)
+            return str->identifier;
         return identifierImpl(str);
+    }
+    Identifier *identifier(const QV4::String *str) {
+        return identifier(str->d());
     }
 
     Identifier *identifier(const QString &s);
     Identifier *identifier(const char *s, int len);
 
-    Identifier *identifierImpl(const String *str);
+    Identifier *identifierImpl(const Heap::String *str);
 
     void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i) {
-            String *entry = entries[i];
-            if (!entry || entry->markBit())
+            Heap::String *entry = entries[i];
+            if (!entry || entry->markBit)
                 continue;
-            entry->d()->markBit = 1;
-            Q_ASSERT(entry->internalClass()->vtable->markObjects);
-            entry->internalClass()->vtable->markObjects(entry->d(), e);
+            entry->markBit = 1;
+            Q_ASSERT(entry->internalClass->vtable->markObjects);
+            entry->internalClass->vtable->markObjects(entry, e);
         }
     }
 };

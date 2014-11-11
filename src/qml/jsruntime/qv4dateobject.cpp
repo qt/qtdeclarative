@@ -773,7 +773,7 @@ ReturnedValue DatePrototype::method_parse(CallContext *ctx)
 {
     if (!ctx->d()->callData->argc)
         return Encode(qSNaN());
-    return Encode(ParseString(ctx->d()->callData->args[0].toString(ctx)->toQString()));
+    return Encode(ParseString(ctx->d()->callData->args[0].toQString()));
 }
 
 ReturnedValue DatePrototype::method_UTC(CallContext *ctx)

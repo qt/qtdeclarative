@@ -435,13 +435,12 @@ static inline int toInt(const QChar &qc, int R)
 ReturnedValue GlobalFunctions::method_parseInt(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue string(scope, ctx->argument(0));
+    ScopedValue inputString(scope, ctx->argument(0));
     ScopedValue radix(scope, ctx->argument(1));
     int R = radix->isUndefined() ? 0 : radix->toInt32();
 
     // [15.1.2.2] step by step:
-    String *inputString = string->toString(ctx); // 1
-    QString trimmed = inputString->toQString().trimmed(); // 2
+    QString trimmed = inputString->toQString().trimmed(); // 1 + 2
 
     if (ctx->d()->engine->hasException)
         return Encode::undefined();
@@ -578,7 +577,7 @@ ReturnedValue GlobalFunctions::method_decodeURI(CallContext *context)
     if (context->d()->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->d()->callData->args[0].toString(context)->toQString();
+    QString uriString = context->d()->callData->args[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok) {
@@ -596,7 +595,7 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(CallContext *context)
     if (context->d()->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->d()->callData->args[0].toString(context)->toQString();
+    QString uriString = context->d()->callData->args[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
     if (!ok) {
@@ -614,7 +613,7 @@ ReturnedValue GlobalFunctions::method_encodeURI(CallContext *context)
     if (context->d()->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->d()->callData->args[0].toString(context)->toQString();
+    QString uriString = context->d()->callData->args[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok) {
@@ -632,7 +631,7 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(CallContext *context)
     if (context->d()->callData->argc == 0)
         return Encode::undefined();
 
-    QString uriString = context->d()->callData->args[0].toString(context)->toQString();
+    QString uriString = context->d()->callData->args[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok) {
@@ -649,7 +648,7 @@ ReturnedValue GlobalFunctions::method_escape(CallContext *context)
     if (!context->d()->callData->argc)
         return context->d()->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
 
-    QString str = context->d()->callData->args[0].toString(context)->toQString();
+    QString str = context->d()->callData->args[0].toQString();
     return context->d()->engine->newString(escape(str))->asReturnedValue();
 }
 
@@ -658,6 +657,6 @@ ReturnedValue GlobalFunctions::method_unescape(CallContext *context)
     if (!context->d()->callData->argc)
         return context->d()->engine->newString(QStringLiteral("undefined"))->asReturnedValue();
 
-    QString str = context->d()->callData->args[0].toString(context)->toQString();
+    QString str = context->d()->callData->args[0].toQString();
     return context->d()->engine->newString(unescape(str))->asReturnedValue();
 }

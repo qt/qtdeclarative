@@ -401,7 +401,7 @@ bool JsonParser::parseValue(ValueRef val)
             return false;
         DEBUG << "value: string";
         END;
-        val = context->d()->engine->newString(value);
+        val = Value::fromHeapObject(context->d()->engine->newString(value));
         return true;
     }
     case BeginArray: {
@@ -709,7 +709,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
-            callData->args[0] = ctx->d()->engine->newString(key);
+            callData->args[0] = Value::fromHeapObject(ctx->d()->engine->newString(key));
             value = toJSON->call(callData);
         }
     }
@@ -718,7 +718,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
         ScopedObject holder(scope, ctx->d()->engine->newObject());
         holder->put(ctx, QString(), value);
         ScopedCallData callData(scope, 2);
-        callData->args[0] = ctx->d()->engine->newString(key);
+        callData->args[0] = Value::fromHeapObject(ctx->d()->engine->newString(key));
         callData->args[1] = value;
         callData->thisObject = holder;
         value = replacerFunction->call(callData);
@@ -743,7 +743,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
 
     if (value->isNumber()) {
         double d = value->toNumber();
-        return std::isfinite(d) ? value->toString(ctx)->toQString() : QStringLiteral("null");
+        return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
     }
 
     o = value.asReturnedValue();
@@ -892,7 +892,7 @@ ReturnedValue JsonObject::method_parse(CallContext *ctx)
 {
     Scope scope(ctx);
     ScopedValue v(scope, ctx->argument(0));
-    QString jtext = v->toString(ctx)->toQString();
+    QString jtext = v->toQString();
 
     DEBUG << "parsing source = " << jtext;
     JsonParser parser(ctx, jtext.constData(), jtext.length());

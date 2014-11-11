@@ -39,6 +39,10 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+    struct String;
+}
+
 struct String;
 struct IdentifierTable;
 struct ExecutionEngine;
@@ -102,7 +106,7 @@ protected:
     const IdentifierHashEntry *lookup(const QString &str) const;
     const IdentifierHashEntry *lookup(String *str) const;
     const Identifier *toIdentifier(const QString &str) const;
-    const Identifier *toIdentifier(String *str) const;
+    const Identifier *toIdentifier(Heap::String *str) const;
 };
 
 

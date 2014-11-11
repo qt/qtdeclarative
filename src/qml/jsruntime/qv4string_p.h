@@ -67,6 +67,35 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
                  len == (uint)text->size);
         return len;
     }
+    void createHashValue() const;
+    inline unsigned hashValue() const {
+        if (subtype == StringType_Unknown)
+            createHashValue();
+        Q_ASSERT(!largestSubLength);
+
+        return stringHash;
+    }
+    inline QString toQString() const {
+        if (largestSubLength)
+            simplifyString();
+        QStringDataPtr ptr = { text };
+        text->ref.ref();
+        return QString(ptr);
+    }
+    inline bool isEqualTo(const String *other) const {
+        if (this == other)
+            return true;
+        if (hashValue() != other->hashValue())
+            return false;
+        Q_ASSERT(!largestSubLength);
+        if (identifier && identifier == other->identifier)
+            return true;
+        if (subtype >= Heap::String::StringType_UInt && subtype == other->subtype)
+            return true;
+
+        return toQString() == other->toQString();
+    }
+
     union {
         mutable QStringData *text;
         mutable String *left;
@@ -96,17 +125,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     bool equals(String *other) const;
     inline bool isEqualTo(const String *other) const {
-        if (this == other)
-            return true;
-        if (hashValue() != other->hashValue())
-            return false;
-        Q_ASSERT(!d()->largestSubLength);
-        if (d()->identifier && d()->identifier == other->d()->identifier)
-            return true;
-        if (subtype() >= Heap::String::StringType_UInt && subtype() == other->subtype())
-            return true;
-
-        return toQString() == other->toQString();
+        return d()->isEqualTo(other->d());
     }
 
     inline bool compare(const String *other) {
@@ -114,23 +133,15 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
 
     inline QString toQString() const {
-        if (d()->largestSubLength)
-            d()->simplifyString();
-        QStringDataPtr ptr = { d()->text };
-        d()->text->ref.ref();
-        return QString(ptr);
+        return d()->toQString();
     }
 
     inline unsigned hashValue() const {
-        if (subtype() == Heap::String::StringType_Unknown)
-            createHashValue();
-        Q_ASSERT(!d()->largestSubLength);
-
-        return d()->stringHash;
+        return d()->hashValue();
     }
     uint asArrayIndex() const {
         if (subtype() == Heap::String::StringType_Unknown)
-            createHashValue();
+            d()->createHashValue();
         Q_ASSERT(!d()->largestSubLength);
         if (subtype() == Heap::String::StringType_ArrayIndex)
             return d()->stringHash;
@@ -146,7 +157,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     void makeIdentifierImpl() const;
 
-    void createHashValue() const;
     static uint createHashValue(const QChar *ch, int length);
     static uint createHashValue(const char *ch, int length);
 

@@ -136,6 +136,7 @@ void QV4Include::finished()
 
     QV4::Scope scope(v4);
     QV4::ScopedObject resultObj(scope, m_resultObject.value());
+    QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
     if (m_reply->error() == QNetworkReply::NoError) {
         QByteArray data = m_reply->readAll();
 
@@ -146,19 +147,19 @@ void QV4Include::finished()
         QV4::Script script(v4, qmlglobal, code, m_url.toString());
 
         QV4::ExecutionContext *ctx = v4->currentContext();
-        QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
         script.parse();
         if (!scope.engine->hasException)
             script.run();
         if (scope.engine->hasException) {
             QV4::ScopedValue ex(scope, ctx->catchException());
             resultObj->put(status.getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Exception)));
-            resultObj->put(v4->newString(QStringLiteral("exception"))->getPointer(), ex);
+            QV4::ScopedString exception(scope, v4->newString(QStringLiteral("exception")));
+            resultObj->put(exception.getPointer(), ex);
         } else {
             resultObj->put(status.getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Ok)));
         }
     } else {
-        resultObj->put(v4->newString(QStringLiteral("status"))->getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
+        resultObj->put(status.getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
     }
 
     QV4::ScopedValue cb(scope, m_callbackFunction.value());
@@ -226,7 +227,8 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
             if (scope.engine->hasException) {
                 QV4::ScopedValue ex(scope, ctx->catchException());
                 result = resultValue(scope.engine, Exception);
-                result->asObject()->put(scope.engine->newString(QStringLiteral("exception"))->getPointer(), ex);
+                QV4::ScopedString exception(scope, scope.engine->newString(QStringLiteral("exception")));
+                result->asObject()->put(exception.getPointer(), ex);
             } else {
                 result = resultValue(scope.engine, Ok);
             }

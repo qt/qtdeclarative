@@ -68,8 +68,10 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeStrings = (QV4::String **)malloc(data->stringTableSize * sizeof(QV4::String*));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::String*));
-    for (uint i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
+    for (uint i = 0; i < data->stringTableSize; ++i) {
+        // #### GC
+        runtimeStrings[i] = reinterpret_cast<QV4::String*>(engine->newIdentifier(data->stringAt(i)));
+    }
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below

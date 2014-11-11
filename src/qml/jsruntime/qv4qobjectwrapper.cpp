@@ -731,7 +731,10 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&na
         const QMetaObject *mo = that->d()->object->metaObject();
         const int propertyCount = mo->propertyCount();
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            name = that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name()))->getPointer();
+            // #### GC
+            Scope scope(that->engine());
+            ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
+            name = propName.getPointer();
             ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
             p->value = that->get(name);
@@ -744,7 +747,10 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&na
             ++it->arrayIndex;
             if (method.access() == QMetaMethod::Private || index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)
                 continue;
-            name = that->engine()->newString(QString::fromUtf8(method.name()))->getPointer();
+            // #### GC
+            Scope scope(that->engine());
+            ScopedString methodName(scope, that->engine()->newString(QString::fromUtf8(method.name())));
+            name = methodName.getPointer();
             *attributes = QV4::Attr_Data;
             p->value = that->get(name);
             return;

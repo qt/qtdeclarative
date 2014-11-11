@@ -359,7 +359,7 @@ double RuntimeHelpers::stringToNumber(const QString &string)
     return d;
 }
 
-Returned<String> *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double number)
+Heap::String *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double number)
 {
     QString qstr;
     RuntimeHelpers::numberToString(&qstr, number, 10);
@@ -430,23 +430,23 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     }
 }
 
-Returned<String> *RuntimeHelpers::convertToString(ExecutionEngine *engine, const ValueRef value)
+Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined.ret();
+        return engine->id_undefined.getPointer()->d();
     case Value::Null_Type:
-        return engine->id_null.ret();
+        return engine->id_null.getPointer()->d();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return engine->id_true.ret();
+            return engine->id_true.getPointer()->d();
         else
-            return engine->id_false.ret();
+            return engine->id_false.getPointer()->d();
     case Value::Managed_Type:
         if (value->isString())
-            return value->stringValue()->asReturned<String>();
+            return value->stringValue()->d();
         {
             Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, STRING_HINT));
@@ -461,23 +461,23 @@ Returned<String> *RuntimeHelpers::convertToString(ExecutionEngine *engine, const
 
 // This is slightly different from the method above, as
 // the + operator requires a slightly different conversion
-static Returned<String> *convert_to_string_add(ExecutionEngine *engine, const ValueRef value)
+static Heap::String *convert_to_string_add(ExecutionEngine *engine, const ValueRef value)
 {
     switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined.ret();
+        return engine->id_undefined.getPointer()->d();
     case Value::Null_Type:
-        return engine->id_null.ret();
+        return engine->id_null.getPointer()->d();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return engine->id_true.ret();
+            return engine->id_true.getPointer()->d();
         else
-            return engine->id_false.ret();
+            return engine->id_false.getPointer()->d();
     case Value::Managed_Type:
         if (value->isString())
-            return value->stringValue()->asReturned<String>();
+            return value->stringValue()->d();
         {
             Scope scope(engine);
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));

@@ -310,7 +310,8 @@ InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes d
     // The incoming string can come from anywhere, so make sure to
     // store a string in the nameMap that's guaranteed to get
     // marked properly during GC.
-    String *name = engine->newIdentifier(string->toQString());
+    // #### GC
+    String *name = reinterpret_cast<String*>(engine->newIdentifier(string->toQString()));
     newClass->nameMap.add(newClass->size, name);
     newClass->propertyData.add(newClass->size, data);
     ++newClass->size;

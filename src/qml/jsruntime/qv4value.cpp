@@ -267,14 +267,14 @@ double Primitive::toInteger(double number)
 }
 
 #ifndef V4_BOOTSTRAP
-String *Value::toString(ExecutionEngine *e) const
+Heap::String *Value::toString(ExecutionEngine *e) const
 {
     if (isString())
-        return stringValue();
-    return RuntimeHelpers::convertToString(e, ValueRef::fromRawValue(this))->getPointer();
+        return stringValue()->d();
+    return RuntimeHelpers::convertToString(e, ValueRef::fromRawValue(this));
 }
 
-String *Value::toString(ExecutionContext *ctx) const
+Heap::String *Value::toString(ExecutionContext *ctx) const
 {
     return toString(ctx->engine());
 }

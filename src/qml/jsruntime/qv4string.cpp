@@ -282,7 +282,7 @@ uint String::toUInt(bool *ok) const
     *ok = true;
 
     if (subtype() == Heap::String::StringType_Unknown)
-        createHashValue();
+        d()->createHashValue();
     if (subtype() >= Heap::String::StringType_UInt)
         return d()->stringHash;
 
@@ -331,6 +331,32 @@ void Heap::String::simplifyString() const
     largestSubLength = 0;
 }
 
+void Heap::String::createHashValue() const
+{
+    if (largestSubLength)
+        simplifyString();
+    Q_ASSERT(!largestSubLength);
+    const QChar *ch = reinterpret_cast<const QChar *>(text->data());
+    const QChar *end = ch + text->size;
+
+    // array indices get their number as hash value
+    bool ok;
+    stringHash = ::toArrayIndex(ch, end, &ok);
+    if (ok) {
+        subtype = (stringHash == UINT_MAX) ? Heap::String::StringType_UInt : Heap::String::StringType_ArrayIndex;
+        return;
+    }
+
+    uint h = 0xffffffff;
+    while (ch < end) {
+        h = 31 * h + ch->unicode();
+        ++ch;
+    }
+
+    stringHash = h;
+    subtype = Heap::String::StringType_Regular;
+}
+
 void Heap::String::append(const String *data, QChar *ch)
 {
     std::vector<const String *> worklist;
@@ -352,31 +378,7 @@ void Heap::String::append(const String *data, QChar *ch)
 }
 
 
-void String::createHashValue() const
-{
-    if (d()->largestSubLength)
-        d()->simplifyString();
-    Q_ASSERT(!d()->largestSubLength);
-    const QChar *ch = reinterpret_cast<const QChar *>(d()->text->data());
-    const QChar *end = ch + d()->text->size;
 
-    // array indices get their number as hash value
-    bool ok;
-    d()->stringHash = ::toArrayIndex(ch, end, &ok);
-    if (ok) {
-        setSubtype((d()->stringHash == UINT_MAX) ? Heap::String::StringType_UInt : Heap::String::StringType_ArrayIndex);
-        return;
-    }
-
-    uint h = 0xffffffff;
-    while (ch < end) {
-        h = 31 * h + ch->unicode();
-        ++ch;
-    }
-
-    d()->stringHash = h;
-    setSubtype(Heap::String::StringType_Regular);
-}
 
 uint String::createHashValue(const QChar *ch, int length)
 {

@@ -740,7 +740,7 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
         if (value->isUndefined() || value->isNull())
             *reinterpret_cast<QString*>(data) = QString();
         else
-            *reinterpret_cast<QString*>(data) = value->toString(m_v4Engine->currentContext())->toQString();
+            *reinterpret_cast<QString*>(data) = value->toQString();
         return true;
     case QMetaType::Float:
         *reinterpret_cast<float*>(data) = value->toNumber();

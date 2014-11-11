@@ -309,7 +309,7 @@ ReturnedValue StringPrototype::method_indexOf(CallContext *context)
 
     QString searchString;
     if (context->d()->callData->argc)
-        searchString = context->d()->callData->args[0].toString(context)->toQString();
+        searchString = context->d()->callData->args[0].toQString();
 
     int pos = 0;
     if (context->d()->callData->argc > 1)
@@ -480,7 +480,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     if (StringObject *thisString = ctx->d()->callData->thisObject.asStringObject())
         string = thisString->d()->value.stringValue()->toQString();
     else
-        string = ctx->d()->callData->thisObject.toString(ctx)->toQString();
+        string = ctx->d()->callData->thisObject.toQString();
 
     int numCaptures = 0;
     int numStringMatches = 0;
@@ -522,7 +522,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
         numCaptures = regExp->value()->captureCount();
     } else {
         numCaptures = 1;
-        QString searchString = searchValue->toString(ctx)->toQString();
+        QString searchString = searchValue->toQString();
         int idx = string.indexOf(searchString);
         if (idx != -1) {
             numStringMatches = 1;
@@ -556,16 +556,16 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            callData->args[numCaptures + 1] = ctx->d()->engine->newString(string);
+            callData->args[numCaptures + 1] = Value::fromHeapObject(ctx->d()->engine->newString(string));
 
             replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
-            result += replacement->toString(ctx)->toQString();
+            result += replacement->toQString();
             lastEnd = matchEnd;
         }
         result += string.midRef(lastEnd);
     } else {
-        QString newString = replaceValue->toString(ctx)->toQString();
+        QString newString = replaceValue->toQString();
         result.reserve(string.length() + numStringMatches*newString.size());
 
         int lastEnd = 0;
@@ -704,7 +704,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
         if (array->getLength() < limit)
             array->push_back((s = ctx->d()->engine->newString(text.mid(offset))));
     } else {
-        QString separator = separatorValue->toString(ctx)->toQString();
+        QString separator = separatorValue->toQString();
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
                 array->push_back((s = ctx->d()->engine->newString(text.mid(i, 1))));

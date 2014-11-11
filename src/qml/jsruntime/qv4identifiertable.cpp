@@ -53,41 +53,41 @@ IdentifierTable::IdentifierTable(ExecutionEngine *engine)
     , numBits(8)
 {
     alloc = primeForNumBits(numBits);
-    entries = (String **)malloc(alloc*sizeof(String *));
-    memset(entries, 0, alloc*sizeof(String *));
+    entries = (Heap::String **)malloc(alloc*sizeof(Heap::String *));
+    memset(entries, 0, alloc*sizeof(Heap::String *));
 }
 
 IdentifierTable::~IdentifierTable()
 {
     for (int i = 0; i < alloc; ++i)
         if (entries[i])
-            delete entries[i]->d()->identifier;
+            delete entries[i]->identifier;
     free(entries);
 }
 
-void IdentifierTable::addEntry(String *str)
+void IdentifierTable::addEntry(Heap::String *str)
 {
     uint hash = str->hashValue();
 
-    if (str->subtype() == Heap::String::StringType_ArrayIndex)
+    if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->d()->identifier = new Identifier;
-    str->d()->identifier->string = str->toQString();
-    str->d()->identifier->hashValue = hash;
+    str->identifier = new Identifier;
+    str->identifier->string = str->toQString();
+    str->identifier->hashValue = hash;
 
     bool grow = (alloc <= size*2);
 
     if (grow) {
         ++numBits;
         int newAlloc = primeForNumBits(numBits);
-        String **newEntries = (String **)malloc(newAlloc*sizeof(String *));
-        memset(newEntries, 0, newAlloc*sizeof(String *));
+        Heap::String **newEntries = (Heap::String **)malloc(newAlloc*sizeof(Heap::String *));
+        memset(newEntries, 0, newAlloc*sizeof(Heap::String *));
         for (int i = 0; i < alloc; ++i) {
-            String *e = entries[i];
+            Heap::String *e = entries[i];
             if (!e)
                 continue;
-            uint idx = e->d()->stringHash % newAlloc;
+            uint idx = e->stringHash % newAlloc;
             while (newEntries[idx]) {
                 ++idx;
                 idx %= newAlloc;
@@ -110,49 +110,48 @@ void IdentifierTable::addEntry(String *str)
 
 
 
-String *IdentifierTable::insertString(const QString &s)
+Heap::String *IdentifierTable::insertString(const QString &s)
 {
     uint hash = String::createHashValue(s.constData(), s.length());
     uint idx = hash % alloc;
-    while (String *e = entries[idx]) {
-        if (e->d()->stringHash == hash && e->toQString() == s)
+    while (Heap::String *e = entries[idx]) {
+        if (e->stringHash == hash && e->toQString() == s)
             return e;
         ++idx;
         idx %= alloc;
     }
 
-    Returned<String> *_s = engine->newString(s);
-    String *str = _s->getPointer();
+    Heap::String *str = engine->newString(s);
     addEntry(str);
     return str;
 }
 
 
-Identifier *IdentifierTable::identifierImpl(const String *str)
+Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
 {
-    if (str->d()->identifier)
-        return str->d()->identifier;
+    if (str->identifier)
+        return str->identifier;
     uint hash = str->hashValue();
-    if (str->subtype() == Heap::String::StringType_ArrayIndex)
+    if (str->subtype == Heap::String::StringType_ArrayIndex)
         return 0;
 
     uint idx = hash % alloc;
-    while (String *e = entries[idx]) {
-        if (e->d()->stringHash == hash && e->isEqualTo(str)) {
-            str->d()->identifier = e->d()->identifier;
-            return e->d()->identifier;
+    while (Heap::String *e = entries[idx]) {
+        if (e->stringHash == hash && e->isEqualTo(str)) {
+            str->identifier = e->identifier;
+            return e->identifier;
         }
         ++idx;
         idx %= alloc;
     }
 
-    addEntry(const_cast<QV4::String *>(str));
-    return str->d()->identifier;
+    addEntry(const_cast<QV4::Heap::String *>(str));
+    return str->identifier;
 }
 
 Identifier *IdentifierTable::identifier(const QString &s)
 {
-    return insertString(s)->d()->identifier;
+    return insertString(s)->identifier;
 }
 
 Identifier *IdentifierTable::identifier(const char *s, int len)
@@ -163,16 +162,16 @@ Identifier *IdentifierTable::identifier(const char *s, int len)
 
     QLatin1String latin(s, len);
     uint idx = hash % alloc;
-    while (String *e = entries[idx]) {
-        if (e->d()->stringHash == hash && e->toQString() == latin)
-            return e->d()->identifier;
+    while (Heap::String *e = entries[idx]) {
+        if (e->stringHash == hash && e->toQString() == latin)
+            return e->identifier;
         ++idx;
         idx %= alloc;
     }
 
-    String *str = engine->newString(QString::fromLatin1(s, len))->getPointer();
+    Heap::String *str = engine->newString(QString::fromLatin1(s, len));
     addEntry(str);
-    return str->d()->identifier;
+    return str->identifier;
 }
 
 }

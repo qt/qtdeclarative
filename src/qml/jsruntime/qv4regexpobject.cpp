@@ -181,7 +181,7 @@ void RegExpObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 Property *RegExpObject::lastIndexProperty(ExecutionContext *ctx)
 {
     Q_UNUSED(ctx);
-    Q_ASSERT(0 == internalClass()->find(ctx->d()->engine->newIdentifier(QStringLiteral("lastIndex"))));
+    Q_ASSERT(0 == internalClass()->find(ctx->d()->engine->id_lastIndex));
     return propertyAt(0);
 }
 
@@ -262,7 +262,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
 
     QString pattern;
     if (!r->isUndefined())
-        pattern = r->toString(ctx)->toQString();
+        pattern = r->toQString();
     if (scope.hasException())
         return Encode::undefined();
 

@@ -152,7 +152,7 @@ const Identifier *IdentifierHashBase::toIdentifier(const QString &str) const
     return d->identifierTable->identifier(str);
 }
 
-const Identifier *IdentifierHashBase::toIdentifier(String *str) const
+const Identifier *IdentifierHashBase::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);

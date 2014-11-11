@@ -221,12 +221,12 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue toPrimitive(const ValueRef value, int typeHint);
 
     static double stringToNumber(const QString &s);
-    static Returned<String> *stringFromNumber(ExecutionEngine *engine, double number);
+    static Heap::String *stringFromNumber(ExecutionEngine *engine, double number);
     static double toNumber(const ValueRef value);
     static void numberToString(QString *result, double num, int radix = 10);
 
     static ReturnedValue toString(ExecutionEngine *engine, const ValueRef value);
-    static Returned<String> *convertToString(ExecutionEngine *engine, const ValueRef value);
+    static Heap::String *convertToString(ExecutionEngine *engine, const ValueRef value);
 
     static ReturnedValue toObject(ExecutionEngine *engine, const ValueRef value);
     static Heap::Object *convertToObject(ExecutionEngine *engine, const ValueRef value);
