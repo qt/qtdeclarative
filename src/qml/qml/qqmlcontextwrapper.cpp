@@ -97,7 +97,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
 QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
 {
     Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject(), QV4::Scoped<QmlContextWrapper>::Cast);
+    QV4::Scoped<QmlContextWrapper> c(scope, v4->qmlContextObject());
 
     return !!c ? c->getContext() : 0;
 }
@@ -368,7 +368,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         return;
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject(), QV4::Scoped<QmlContextWrapper>::Cast);
+    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject());
     QQmlContextData *qmlContext = contextWrapper->getContext();
 
     const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();

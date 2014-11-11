@@ -112,7 +112,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             CallContext *c = static_cast<CallContext *>(ctx.getPointer());
             if (!c->d()->activation)
-                c->d()->activation = d()->engine->newObject()->getPointer()->d();
+                c->d()->activation = d()->engine->newObject();
             activation = c->d()->activation;
             break;
         }

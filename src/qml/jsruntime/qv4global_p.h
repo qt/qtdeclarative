@@ -137,6 +137,7 @@ namespace Heap {
     struct ErrorObject;
     struct ArgumentsObject;
     struct QObjectWrapper;
+    struct RegExpObject;
 
     struct ArrayBuffer;
     struct DataView;

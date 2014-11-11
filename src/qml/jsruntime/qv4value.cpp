@@ -279,14 +279,14 @@ String *Value::toString(ExecutionContext *ctx) const
     return toString(ctx->engine());
 }
 
-Object *Value::toObject(ExecutionEngine *e) const
+Heap::Object *Value::toObject(ExecutionEngine *e) const
 {
     if (isObject())
-        return objectValue();
-    return RuntimeHelpers::convertToObject(e, ValueRef::fromRawValue(this))->getPointer();
+        return objectValue()->d();
+    return RuntimeHelpers::convertToObject(e, ValueRef::fromRawValue(this));
 }
 
-Object *Value::toObject(ExecutionContext *ctx) const
+Heap::Object *Value::toObject(ExecutionContext *ctx) const
 {
     return toObject(ctx->engine());
 }

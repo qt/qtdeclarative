@@ -411,7 +411,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
 
 
 
-Returned<Object> *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const ValueRef value)
+Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const ValueRef value)
 {
     Q_ASSERT(!value->isObject());
     switch (value->type()) {
@@ -1248,7 +1248,7 @@ QV4::ReturnedValue RuntimeHelpers::toObject(ExecutionEngine *engine, const QV4::
     if (value->isObject())
         return value.asReturnedValue();
 
-    Returned<Object> *o = RuntimeHelpers::convertToObject(engine, value);
+    Heap::Object *o = RuntimeHelpers::convertToObject(engine, value);
     if (!o) // type error
         return Encode::undefined();
 
@@ -1296,8 +1296,10 @@ ReturnedValue Runtime::regexpLiteral(ExecutionEngine *engine, int id)
 
 ReturnedValue Runtime::getQmlIdArray(NoThrowEngine *engine)
 {
-    Q_ASSERT(engine->qmlContextObject()->getPointer()->as<QmlContextWrapper>());
-    return static_cast<QmlContextWrapper *>(engine->qmlContextObject()->getPointer())->idObjectsArray();
+    Q_ASSERT(engine->qmlContextObject());
+    Scope scope(engine);
+    Scoped<QmlContextWrapper> wrapper(scope, engine->qmlContextObject());
+    return wrapper->idObjectsArray();
 }
 
 ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
@@ -1311,7 +1313,7 @@ ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
 ReturnedValue Runtime::getQmlScopeObject(NoThrowEngine *engine)
 {
     Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject(), Scoped<QmlContextWrapper>::Cast);
+    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject());
     return QObjectWrapper::wrap(engine, c->getScopeObject());
 }
 
@@ -1329,7 +1331,7 @@ ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Valu
 QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex)
 {
     Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject(), Scoped<QmlContextWrapper>::Cast);
+    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject());
     QObject *scopeObject = c->getScopeObject();
     QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
 
@@ -1370,7 +1372,9 @@ ReturnedValue Runtime::getQmlImportedScripts(NoThrowEngine *engine)
 
 QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowEngine *engine, String *name)
 {
-    return static_cast<QmlContextWrapper *>(engine->qmlContextObject()->getPointer())->qmlSingletonWrapper(engine->v8Engine, name);
+    Scope scope(engine);
+    Scoped<QmlContextWrapper> wrapper(scope, engine->qmlContextObject());
+    return wrapper->qmlSingletonWrapper(engine->v8Engine, name);
 }
 
 void Runtime::convertThisToObject(ExecutionEngine *engine)

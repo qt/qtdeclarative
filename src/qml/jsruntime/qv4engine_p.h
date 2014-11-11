@@ -305,41 +305,41 @@ public:
     void pushContext(CallContext *context);
     ExecutionContext *popContext();
 
-    Returned<Object> *newObject();
-    Returned<Object> *newObject(InternalClass *internalClass);
+    Heap::Object *newObject();
+    Heap::Object *newObject(InternalClass *internalClass);
 
     Returned<String> *newString(const QString &s);
     String *newIdentifier(const QString &text);
 
-    Returned<Object> *newStringObject(const ValueRef value);
-    Returned<Object> *newNumberObject(const ValueRef value);
-    Returned<Object> *newBooleanObject(const ValueRef value);
+    Heap::Object *newStringObject(const ValueRef value);
+    Heap::Object *newNumberObject(const ValueRef value);
+    Heap::Object *newBooleanObject(const ValueRef value);
 
-    Returned<ArrayObject> *newArrayObject(int count = 0);
-    Returned<ArrayObject> *newArrayObject(const QStringList &list);
-    Returned<ArrayObject> *newArrayObject(InternalClass *ic);
+    Heap::ArrayObject *newArrayObject(int count = 0);
+    Heap::ArrayObject *newArrayObject(const QStringList &list);
+    Heap::ArrayObject *newArrayObject(InternalClass *ic);
 
-    Returned<DateObject> *newDateObject(const ValueRef value);
-    Returned<DateObject> *newDateObject(const QDateTime &dt);
+    Heap::DateObject *newDateObject(const ValueRef value);
+    Heap::DateObject *newDateObject(const QDateTime &dt);
 
-    Returned<RegExpObject> *newRegExpObject(const QString &pattern, int flags);
-    Returned<RegExpObject> *newRegExpObject(RegExp *re, bool global);
-    Returned<RegExpObject> *newRegExpObject(const QRegExp &re);
+    Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
+    Heap::RegExpObject *newRegExpObject(RegExp *re, bool global);
+    Heap::RegExpObject *newRegExpObject(const QRegExp &re);
 
-    Returned<Object> *newErrorObject(const ValueRef value);
-    Returned<Object> *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
-    Returned<Object> *newSyntaxErrorObject(const QString &message);
-    Returned<Object> *newReferenceErrorObject(const QString &message);
-    Returned<Object> *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
-    Returned<Object> *newTypeErrorObject(const QString &message);
-    Returned<Object> *newRangeErrorObject(const QString &message);
-    Returned<Object> *newURIErrorObject(const ValueRef message);
+    Heap::Object *newErrorObject(const ValueRef value);
+    Heap::Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
+    Heap::Object *newSyntaxErrorObject(const QString &message);
+    Heap::Object *newReferenceErrorObject(const QString &message);
+    Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
+    Heap::Object *newTypeErrorObject(const QString &message);
+    Heap::Object *newRangeErrorObject(const QString &message);
+    Heap::Object *newURIErrorObject(const ValueRef message);
 
-    Returned<Object> *newVariantObject(const QVariant &v);
+    Heap::Object *newVariantObject(const QVariant &v);
 
-    Returned<Object> *newForEachIteratorObject(Object *o);
+    Heap::Object *newForEachIteratorObject(Object *o);
 
-    Returned<Object> *qmlContextObject() const;
+    Heap::Object *qmlContextObject() const;
 
     StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;

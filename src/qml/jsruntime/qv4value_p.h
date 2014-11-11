@@ -345,8 +345,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     QString toQString() const;
     String *toString(ExecutionEngine *e) const;
     String *toString(ExecutionContext *ctx) const;
-    Object *toObject(ExecutionEngine *e) const;
-    Object *toObject(ExecutionContext *ctx) const;
+    Heap::Object *toObject(ExecutionEngine *e) const;
+    Heap::Object *toObject(ExecutionContext *ctx) const;
 
     inline bool isPrimitive() const;
     inline bool tryIntegerConversion() {
@@ -522,6 +522,11 @@ struct Encode {
     template<typename T>
     Encode(Returned<T> *t) {
         val = t->getPointer()->asReturnedValue();
+    }
+
+    Encode(Heap::Base *o) {
+        Q_ASSERT(o);
+        val = Value::fromHeapObject(o).asReturnedValue();
     }
 
     operator ReturnedValue() const {

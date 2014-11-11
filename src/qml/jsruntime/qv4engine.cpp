@@ -394,7 +394,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    globalObject = newObject()->getPointer();
+    ScopedObject global(scope, newObject());
+    globalObject = global;
     rootContext->d()->global = globalObject->d();
     rootContext->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->internalClass()->vtable);
@@ -517,18 +518,18 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
 }
 
 
-Returned<Object> *ExecutionEngine::newObject()
+Heap::Object *ExecutionEngine::newObject()
 {
     Scope scope(this);
     ScopedObject object(scope, memoryManager->alloc<Object>(this));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
-Returned<Object> *ExecutionEngine::newObject(InternalClass *internalClass)
+Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass)
 {
     Scope scope(this);
     ScopedObject object(scope, memoryManager->alloc<Object>(internalClass));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
 Returned<String> *ExecutionEngine::newString(const QString &s)
@@ -542,28 +543,28 @@ String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Returned<Object> *ExecutionEngine::newStringObject(const ValueRef value)
+Heap::Object *ExecutionEngine::newStringObject(const ValueRef value)
 {
     Scope scope(this);
     Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, value));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
-Returned<Object> *ExecutionEngine::newNumberObject(const ValueRef value)
+Heap::Object *ExecutionEngine::newNumberObject(const ValueRef value)
 {
     Scope scope(this);
     Scoped<NumberObject> object(scope, memoryManager->alloc<NumberObject>(this, value));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
-Returned<Object> *ExecutionEngine::newBooleanObject(const ValueRef value)
+Heap::Object *ExecutionEngine::newBooleanObject(const ValueRef value)
 {
     Scope scope(this);
     ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, value));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
-Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
     ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this));
@@ -573,39 +574,39 @@ Returned<ArrayObject> *ExecutionEngine::newArrayObject(int count)
             object->arrayReserve(count);
         object->setArrayLengthUnchecked(count);
     }
-    return object->asReturned<ArrayObject>();
+    return object->d();
 }
 
-Returned<ArrayObject> *ExecutionEngine::newArrayObject(const QStringList &list)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
     ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this, list));
-    return object->asReturned<ArrayObject>();
+    return object->d();
 }
 
-Returned<ArrayObject> *ExecutionEngine::newArrayObject(InternalClass *ic)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic)
 {
     Scope scope(this);
     ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(ic));
-    return object->asReturned<ArrayObject>();
+    return object->d();
 }
 
 
-Returned<DateObject> *ExecutionEngine::newDateObject(const ValueRef value)
+Heap::DateObject *ExecutionEngine::newDateObject(const ValueRef value)
 {
     Scope scope(this);
     Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, value));
-    return object->asReturned<DateObject>();
+    return object->d();
 }
 
-Returned<DateObject> *ExecutionEngine::newDateObject(const QDateTime &dt)
+Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
     Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, dt));
-    return object->asReturned<DateObject>();
+    return object->d();
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
+Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
     bool global = (flags & IR::RegExp::RegExp_Global);
     bool ignoreCase = false;
@@ -620,94 +621,94 @@ Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QString &pattern,
     return newRegExpObject(re, global);
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
+Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
     Scope scope(this);
     Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re, global));
-    return object->asReturned<RegExpObject>();
+    return object->d();
 }
 
-Returned<RegExpObject> *ExecutionEngine::newRegExpObject(const QRegExp &re)
+Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
     Scope scope(this);
     Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re));
-    return object->asReturned<RegExpObject>();
+    return object->d();
 }
 
-Returned<Object> *ExecutionEngine::newErrorObject(const ValueRef value)
+Heap::Object *ExecutionEngine::newErrorObject(const ValueRef value)
 {
     Scope scope(this);
     ScopedObject object(scope, memoryManager->alloc<ErrorObject>(errorClass, value));
-    return object->asReturned<Object>();
+    return object->d();
 }
 
-Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message)
+Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedString s(scope, newString(message));
     ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, s));
-    return error->asReturned<Object>();
+    return error->d();
 }
 
-Returned<Object> *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
+Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
     ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, message, fileName, line, column));
-    return error->asReturned<Object>();
+    return error->d();
 }
 
 
-Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message)
+Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
-Returned<Object> *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
+Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message, fileName, lineNumber, columnNumber));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
 
-Returned<Object> *ExecutionEngine::newTypeErrorObject(const QString &message)
+Heap::Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<TypeErrorObject>(this, message));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
-Returned<Object> *ExecutionEngine::newRangeErrorObject(const QString &message)
+Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<RangeErrorObject>(this, message));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
-Returned<Object> *ExecutionEngine::newURIErrorObject(const ValueRef message)
+Heap::Object *ExecutionEngine::newURIErrorObject(const ValueRef message)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<URIErrorObject>(this, message));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
-Returned<Object> *ExecutionEngine::newVariantObject(const QVariant &v)
+Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 {
     Scope scope(this);
     ScopedObject o(scope, memoryManager->alloc<VariantObject>(this, v));
-    return o->asReturned<Object>();
+    return o->d();
 }
 
-Returned<Object> *ExecutionEngine::newForEachIteratorObject(Object *o)
+Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
     Scope scope(this);
     ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(this, o));
-    return obj->asReturned<Object>();
+    return obj->d();
 }
 
-Returned<Object> *ExecutionEngine::qmlContextObject() const
+Heap::Object *ExecutionEngine::qmlContextObject() const
 {
     Heap::ExecutionContext *ctx = currentContext()->d();
 
@@ -724,11 +725,8 @@ Returned<Object> *ExecutionEngine::qmlContextObject() const
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
-    Scope scope(currentContext());
-    ScopedObject activation(scope, static_cast<Heap::CallContext *>(ctx)->activation);
-    Q_ASSERT(activation);
-
-    return activation->asReturned<Object>();
+    Q_ASSERT(static_cast<Heap::CallContext *>(ctx)->activation);
+    return static_cast<Heap::CallContext *>(ctx)->activation;
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const

@@ -229,7 +229,7 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static Returned<String> *convertToString(ExecutionEngine *engine, const ValueRef value);
 
     static ReturnedValue toObject(ExecutionEngine *engine, const ValueRef value);
-    static Returned<Object> *convertToObject(ExecutionEngine *engine, const ValueRef value);
+    static Heap::Object *convertToObject(ExecutionEngine *engine, const ValueRef value);
 
     static Bool equalHelper(const ValueRef x, const ValueRef y);
     static Bool strictEqual(const ValueRef x, const ValueRef y);

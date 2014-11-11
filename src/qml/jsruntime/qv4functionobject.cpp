@@ -468,7 +468,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     InternalClass *ic = f->internalClassForConstructor();
-    callData->thisObject = v4->newObject(ic);
+    callData->thisObject = Value::fromHeapObject(v4->newObject(ic));
 
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);

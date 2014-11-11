@@ -83,7 +83,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             flags |= IR::RegExp::RegExp_IgnoreCase;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             flags |= IR::RegExp::RegExp_Multiline;
-        runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        runtimeRegularExpressions[i] = QV4::Value::fromHeapObject(engine->newRegExpObject(data->stringAt(re->stringIndex), flags));
     }
 
     if (data->lookupTableSize) {
