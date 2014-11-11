@@ -83,20 +83,6 @@ struct Q_QML_EXPORT Base {
 
 }
 
-template <typename T>
-struct Returned : private Heap::Base
-{
-    static Returned<T> *create(T *t) { Q_ASSERT((void *)&t->data == (void *)t); return static_cast<Returned<T> *>(static_cast<Heap::Base*>(t ? &t->data : 0)); }
-    static Returned<T> *create(typename T::Data *t) { return static_cast<Returned<T> *>(static_cast<Heap::Base*>(t)); }
-    T *getPointer() { return reinterpret_cast<T *>(this); }
-    template<typename X>
-    static T *getPointer(Returned<X> *x) { return x->getPointer(); }
-    template<typename X>
-    Returned<X> *as() { return Returned<X>::create(Returned<X>::getPointer(this)); }
-
-    inline ReturnedValue asReturnedValue();
-};
-
 struct Q_QML_PRIVATE_EXPORT Value
 {
     /*
@@ -390,8 +376,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { val = v; return *this; }
     template<typename T>
-    Value &operator=(Returned<T> *t);
-    template<typename T>
     Value &operator=(T *t) {
         val = Value::fromManaged(t).val;
         return *this;
@@ -408,8 +392,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         val = v.val;
         return *this;
     }
-    template<typename T>
-    inline Returned<T> *as();
 };
 
 inline Managed *Value::asManaged() const
@@ -471,7 +453,6 @@ struct TypedValue : public Value
     TypedValue &operator =(T *t);
     TypedValue &operator =(const Scoped<T> &v);
 //    TypedValue &operator =(const ManagedRef<T> &v);
-    TypedValue &operator =(Returned<T> *t);
 
     TypedValue &operator =(const TypedValue<T> &t);
 
@@ -481,7 +462,6 @@ struct TypedValue : public Value
     T *operator->() { return static_cast<T *>(managed()); }
     const T *operator->() const { return static_cast<T *>(managed()); }
     T *getPointer() const { return static_cast<T *>(managed()); }
-    Returned<T> *ret() const;
 
     void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
 };
@@ -520,11 +500,6 @@ struct Encode {
         val = v;
     }
 
-    template<typename T>
-    Encode(Returned<T> *t) {
-        val = t->getPointer()->asReturnedValue();
-    }
-
     Encode(Heap::Base *o) {
         Q_ASSERT(o);
         val = Value::fromHeapObject(o).asReturnedValue();
@@ -554,11 +529,6 @@ struct ValueRef {
     { *ptr = v; return *this; }
     ValueRef &operator=(const ReturnedValue &v) {
         ptr->val = v;
-        return *this;
-    }
-    template <typename T>
-    ValueRef &operator=(Returned<T> *v) {
-        ptr->val = v->asReturnedValue();
         return *this;
     }
 
@@ -606,9 +576,6 @@ T *value_cast(const Value &v)
 
 template<typename T>
 ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
-
-template <typename T>
-ReturnedValue Returned<T>::asReturnedValue() { return Value::fromHeapObject(this).asReturnedValue(); }
 
 }
 

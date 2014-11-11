@@ -48,7 +48,7 @@ DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
 
-Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
+Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
 {
     Q_ASSERT(function->function());
 
@@ -78,7 +78,7 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
         std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
     c->callData->argc = qMax((uint)callData->argc, compiledFunction->nFormals);
 
-    return Returned<CallContext>::create(c);
+    return c;
 }
 
 Heap::WithContext *ExecutionContext::newWithContext(Object *with)

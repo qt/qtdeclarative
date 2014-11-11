@@ -130,7 +130,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
-    Returned<CallContext> *newCallContext(FunctionObject *f, CallData *callData);
+    Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
     Heap::CallContext *newQmlContext(FunctionObject *f, Object *qml);

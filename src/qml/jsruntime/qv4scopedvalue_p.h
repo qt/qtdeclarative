@@ -140,16 +140,6 @@ struct ScopedValue
 #endif
     }
 
-    template<typename T>
-    ScopedValue(const Scope &scope, Returned<T> *t)
-    {
-        ptr = scope.engine->jsStackTop++;
-        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Primitive::undefinedValue();
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
-    }
-
     ScopedValue &operator=(const Value &v) {
         *ptr = v;
         return *this;
@@ -170,12 +160,6 @@ struct ScopedValue
 
     ScopedValue &operator=(const ReturnedValue &v) {
         ptr->val = v;
-        return *this;
-    }
-
-    template<typename T>
-    ScopedValue &operator=(Returned<T> *t) {
-        *ptr = t->getPointer() ? Value::fromManaged(t->getPointer()) : Primitive::undefinedValue();
         return *this;
     }
 
@@ -287,26 +271,6 @@ struct Scoped
 #endif
     }
 
-    template<typename X>
-    Scoped(const Scope &scope, Returned<X> *x)
-    {
-        ptr = scope.engine->jsStackTop++;
-        setPointer(Returned<T>::getPointer(x));
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
-    }
-
-    template<typename X>
-    Scoped(const Scope &scope, Returned<X> *x, _Cast)
-    {
-        ptr = scope.engine->jsStackTop++;
-        setPointer(managed_cast<T>(x->getPointer()));
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
-    }
-
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
@@ -359,12 +323,6 @@ struct Scoped
         return *this;
     }
 
-    template<typename X>
-    Scoped<T> &operator=(Returned<X> *x) {
-        setPointer(Returned<T>::getPointer(x));
-        return *this;
-    }
-
     operator T *() {
         return static_cast<T *>(ptr->managed());
     }
@@ -391,8 +349,6 @@ struct Scoped
         return ptr->val;
 #endif
     }
-
-    Returned<T> *asReturned() const { return Returned<T>::create(static_cast<typename T::Data*>(ptr->heapObject())); }
 
     Value *ptr;
 };
@@ -458,13 +414,6 @@ inline Scoped<T> &Scoped<T>::operator=(const ValueRef &v)
     return *this;
 }
 
-template <typename T>
-inline Value &Value::operator=(Returned<T> *t)
-{
-    val = t->getPointer()->asReturnedValue();
-    return *this;
-}
-
 inline Value &Value::operator =(const ScopedValue &v)
 {
     val = v.ptr->val;
@@ -482,12 +431,6 @@ inline Value &Value::operator=(const ValueRef v)
 {
     val = v.asReturnedValue();
     return *this;
-}
-
-template<typename T>
-inline Returned<T> *Value::as()
-{
-    return Returned<T>::create(value_cast<T>(*this));
 }
 
 template<typename T>
@@ -510,13 +453,6 @@ inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
     return *this;
 }
 
-template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator=(Returned<T> *t)
-{
-    val = t->getPointer()->asReturnedValue();
-    return *this;
-}
-
 //template<typename T>
 //inline TypedValue<T> &TypedValue<T>::operator =(const ManagedRef<T> &v)
 //{
@@ -531,45 +467,14 @@ inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
     return *this;
 }
 
-template<typename T>
-inline Returned<T> * TypedValue<T>::ret() const
-{
-    return Returned<T>::create(static_cast<typename T::Data *>(heapObject()));
-}
-
 inline Primitive::operator ValueRef()
 {
     return ValueRef(this);
 }
 
-
-template<typename T>
-PersistentValue::PersistentValue(Returned<T> *obj)
-    : d(new PersistentValuePrivate(QV4::Value::fromManaged(obj->getPointer())))
-{
-}
-
-template<typename T>
-inline PersistentValue &PersistentValue::operator=(Returned<T> *obj)
-{
-    return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
-}
-
 inline PersistentValue &PersistentValue::operator=(const ScopedValue &other)
 {
     return operator=(other.asReturnedValue());
-}
-
-template<typename T>
-inline WeakValue::WeakValue(Returned<T> *obj)
-    : d(new PersistentValuePrivate(QV4::Value::fromManaged(obj->getPointer()), /*engine*/0, /*weak*/true))
-{
-}
-
-template<typename T>
-inline WeakValue &WeakValue::operator=(Returned<T> *obj)
-{
-    return operator=(QV4::Value::fromManaged(obj->getPointer()).asReturnedValue());
 }
 
 inline ValueRef::ValueRef(const ScopedValue &v)

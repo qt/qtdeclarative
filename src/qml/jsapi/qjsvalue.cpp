@@ -1091,11 +1091,14 @@ bool QJSValue::hasOwnProperty(const QString &name) const
  */
 QObject *QJSValue::toQObject() const
 {
-    Returned<QV4::QObjectWrapper> *o = d->value.as<QV4::QObjectWrapper>();
-    if (!o)
+    if (!d->engine)
+        return 0;
+    QV4::Scope scope(d->engine);
+    QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, d->value);
+    if (!wrapper)
         return 0;
 
-    return o->getPointer()->object();
+    return wrapper->object();
 }
 
 /*!

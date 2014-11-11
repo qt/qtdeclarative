@@ -74,13 +74,9 @@ public:
 
     PersistentValue(const ValueRef val);
     PersistentValue(ReturnedValue val);
-    template<typename T>
-    PersistentValue(Returned<T> *obj);
     PersistentValue &operator=(const ValueRef other);
     PersistentValue &operator=(const ScopedValue &other);
     PersistentValue &operator =(ReturnedValue other);
-    template<typename T>
-    PersistentValue &operator=(Returned<T> *obj);
     PersistentValue &operator=(Heap::Base *obj);
     ~PersistentValue();
 
@@ -120,13 +116,9 @@ public:
     WeakValue(const ValueRef val);
     WeakValue(const WeakValue &other);
     WeakValue(ReturnedValue val);
-    template<typename T>
-    WeakValue(Returned<T> *obj);
     WeakValue &operator=(const WeakValue &other);
     WeakValue &operator=(const ValueRef other);
     WeakValue &operator =(const ReturnedValue &other);
-    template<typename T>
-    WeakValue &operator=(Returned<T> *obj);
 
     ~WeakValue();
 

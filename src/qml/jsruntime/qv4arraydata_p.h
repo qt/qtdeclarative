@@ -47,8 +47,6 @@ namespace QV4 {
         Q_MANAGED_CHECK \
         static const QV4::ArrayVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
-        template <typename T> \
-        QV4::Returned<T> *asReturned() { return QV4::Returned<T>::create(this); } \
         V4_MANAGED_SIZE_TEST \
         const QV4::Heap::Data *d() const { return &static_cast<const QV4::Heap::Data &>(Managed::data); } \
         QV4::Heap::Data *d() { return &static_cast<QV4::Heap::Data &>(Managed::data); }

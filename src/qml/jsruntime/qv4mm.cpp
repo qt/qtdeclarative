@@ -301,12 +301,12 @@ void MemoryManager::mark()
     // managed objects in the loop down there doesn't make then end up as leftovers
     // on the stack and thus always get collected.
     for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
-        if (!weak->refcount)
+        if (!weak->refcount || !weak->value.isManaged())
             continue;
-        Returned<QObjectWrapper> *qobjectWrapper = weak->value.as<QObjectWrapper>();
+        QObjectWrapper *qobjectWrapper = weak->value.managed()->as<QObjectWrapper>();
         if (!qobjectWrapper)
             continue;
-        QObject *qobject = qobjectWrapper->getPointer()->object();
+        QObject *qobject = qobjectWrapper->object();
         if (!qobject)
             continue;
         bool keepAlive = QQmlData::keepAliveDuringGarbageCollection(qobject);
@@ -321,7 +321,7 @@ void MemoryManager::mark()
         }
 
         if (keepAlive)
-            qobjectWrapper->getPointer()->mark(m_d->engine);
+            qobjectWrapper->mark(m_d->engine);
 
         if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
             drainMarkStack(m_d->engine, markBase);
