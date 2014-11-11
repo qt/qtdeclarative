@@ -83,7 +83,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 
     static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::ValueRef arg))
     {
-        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code)->getPointer()->d();
+        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
     }
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
@@ -3237,7 +3237,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     V4_OBJECT2(QQmlDelegateModelGroupChange, QV4::Object)
 
     static QV4::Heap::QQmlDelegateModelGroupChange *create(QV4::ExecutionEngine *e) {
-        return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e)->getPointer()->d();
+        return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e);
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3279,7 +3279,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 public:
     static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
-        return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes)->getPointer()->d();
+        return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes);
     }
 
     quint32 count() const { return d()->changes.count(); }

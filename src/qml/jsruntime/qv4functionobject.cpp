@@ -189,8 +189,8 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
-        return scope->d()->engine->memoryManager->alloc<ScriptFunction>(scope, function)->getPointer()->d();
-    return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto)->getPointer()->d();
+        return scope->d()->engine->memoryManager->alloc<ScriptFunction>(scope, function);
+    return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);

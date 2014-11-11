@@ -94,57 +94,57 @@ public:
     }
 
     template <typename ManagedType>
-    Returned<ManagedType> *alloc()
+    typename ManagedType::Data *alloc()
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data();
-        return t.asReturned();
+        return t->d();
     }
 
     template <typename ManagedType, typename Arg1>
-    Returned<ManagedType> *alloc(Arg1 arg1)
+    typename ManagedType::Data *alloc(Arg1 arg1)
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1);
-        return t.asReturned();
+        return t->d();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2>
-    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2)
+    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
-        return t.asReturned();
+        return t->d();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
-    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
-        return t.asReturned();
+        return t->d();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
-        return t.asReturned();
+        return t->d();
     }
 
     template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    Returned<ManagedType> *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         Scope scope(engine());
         Scoped<ManagedType> t(scope, static_cast<ManagedType*>(allocManaged(sizeof(typename ManagedType::Data))));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
-        return t.asReturned();
+        return t->d();
     }
 
     bool isGCBlocked() const;

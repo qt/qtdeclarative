@@ -179,7 +179,7 @@ struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
 
     static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
-        return scope->engine()->memoryManager->alloc<BuiltinFunction>(scope, name, code)->getPointer()->d();
+        return scope->engine()->memoryManager->alloc<BuiltinFunction>(scope, name, code);
     }
 
     static ReturnedValue construct(Managed *, CallData *);
@@ -230,7 +230,7 @@ struct BoundFunction: FunctionObject {
 
     static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, QV4::MemberData *boundArgs)
     {
-        return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs)->getPointer()->d();
+        return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     Heap::FunctionObject *target() { return d()->target; }

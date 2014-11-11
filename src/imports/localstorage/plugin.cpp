@@ -117,7 +117,7 @@ class QQmlSqlDatabaseWrapper : public Object
 public:
     V4_OBJECT2(QQmlSqlDatabaseWrapper, Object)
 
-    static QV4::Returned<QQmlSqlDatabaseWrapper> *create(QV8Engine *engine)
+    static Heap::QQmlSqlDatabaseWrapper *create(QV8Engine *engine)
     {
         QV4::ExecutionEngine *e = QV8Engine::getV4(engine);
         return e->memoryManager->alloc<QQmlSqlDatabaseWrapper>(e);

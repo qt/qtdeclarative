@@ -53,7 +53,7 @@ DEFINE_OBJECT_VTABLE(QV4::QQuickRootItemMarker);
 QV4::Heap::QQuickRootItemMarker *QV4::QQuickRootItemMarker::create(QQmlEngine *engine, QQuickWindow *window)
 {
     QV4::ExecutionEngine *e = QQmlEnginePrivate::getV4Engine(engine);
-    return e->memoryManager->alloc<QQuickRootItemMarker>(e, window)->getPointer()->d();
+    return e->memoryManager->alloc<QQuickRootItemMarker>(e, window);
 }
 
 void QV4::QQuickRootItemMarker::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)

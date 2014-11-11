@@ -83,12 +83,12 @@ Returned<CallContext> *ExecutionContext::newCallContext(FunctionObject *function
 
 Heap::WithContext *ExecutionContext::newWithContext(Object *with)
 {
-    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with)->getPointer()->d();
+    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
 }
 
 Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
 {
-    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue)->getPointer()->d();
+    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
 }
 
 Heap::CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)

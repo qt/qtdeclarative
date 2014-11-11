@@ -121,6 +121,8 @@ struct QtObject : Object
 struct ConsoleObject : Object
 {
     typedef Heap::ConsoleObject Data;
+    const Data *d() const { return static_cast<const Data *>(Object::d()); }
+    Data *d() { return static_cast<Data *>(Object::d()); }
 
     static ReturnedValue method_error(CallContext *ctx);
     static ReturnedValue method_log(CallContext *ctx);

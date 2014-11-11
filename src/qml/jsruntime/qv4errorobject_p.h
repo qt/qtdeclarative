@@ -145,14 +145,20 @@ inline ErrorObject *value_cast(const Value &v) {
 
 struct EvalErrorObject: ErrorObject {
     typedef Heap::EvalErrorObject Data;
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct RangeErrorObject: ErrorObject {
     typedef Heap::RangeErrorObject Data;
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
     typedef Heap::ReferenceErrorObject Data;
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct SyntaxErrorObject: ErrorObject {
@@ -161,10 +167,14 @@ struct SyntaxErrorObject: ErrorObject {
 
 struct TypeErrorObject: ErrorObject {
     typedef Heap::TypeErrorObject Data;
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct URIErrorObject: ErrorObject {
     typedef Heap::URIErrorObject Data;
+    const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
+    Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct ErrorCtor: FunctionObject
