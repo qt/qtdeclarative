@@ -391,7 +391,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scoped<CallContext> ctx(scope, context->newCallContext(f.getPointer(), callData));
 
     ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
@@ -418,7 +418,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
     ExecutionContextSaver ctxSaver(context);
-    ScopedValue result(scope, Q_V4_PROFILE(v4, ctx, f->function()));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(ctx->d()->engine, f->function()->compiledFunction);
@@ -487,7 +487,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    Scoped<Object> result(scope, Q_V4_PROFILE(v4, reinterpret_cast<CallContext *>(&ctx), f->function()));
+    Scoped<Object> result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
@@ -524,7 +524,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext()->d() == &ctx);
 
-    ScopedValue result(scope, Q_V4_PROFILE(v4, reinterpret_cast<CallContext *>(&ctx), f->function()));
+    ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);

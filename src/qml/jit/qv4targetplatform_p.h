@@ -71,7 +71,7 @@ public:
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::edi;
-    static const JSC::MacroAssembler::RegisterID ContextRegister      = JSC::X86Registers::esi;
+    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::esi;
     static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
     static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::ecx;
     static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
@@ -140,7 +140,7 @@ public:
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID ContextRegister      = JSC::X86Registers::r14;
+    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
     static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
     static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
     static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
@@ -205,7 +205,7 @@ public:
     static const JSC::MacroAssembler::RegisterID StackFrameRegister   = JSC::X86Registers::ebp;
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::X86Registers::esp;
     static const JSC::MacroAssembler::RegisterID LocalsRegister       = JSC::X86Registers::r12;
-    static const JSC::MacroAssembler::RegisterID ContextRegister      = JSC::X86Registers::r14;
+    static const JSC::MacroAssembler::RegisterID EngineRegister      = JSC::X86Registers::r14;
     static const JSC::MacroAssembler::RegisterID ReturnValueRegister  = JSC::X86Registers::eax;
     static const JSC::MacroAssembler::RegisterID ScratchRegister      = JSC::X86Registers::r10;
     static const JSC::MacroAssembler::FPRegisterID FPGpr0             = JSC::X86Registers::xmm0;
@@ -277,7 +277,7 @@ public:
 #endif
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
     static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const JSC::MacroAssembler::RegisterID ContextRegister = JSC::ARMRegisters::r5;
+    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARMRegisters::r5;
     static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
     static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;

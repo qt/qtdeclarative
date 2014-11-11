@@ -82,67 +82,67 @@ enum TypeHint {
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't
 // throw exceptions and therefore don't need a check after the call.
-struct NoThrowContext : public ExecutionContext
+struct NoThrowEngine : public ExecutionEngine
 {
 };
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
     // call
-    static ReturnedValue callGlobalLookup(ExecutionContext *context, uint index, CallData *callData);
-    static ReturnedValue callActivationProperty(ExecutionContext *, String *name, CallData *callData);
-    static ReturnedValue callProperty(ExecutionContext *context, String *name, CallData *callData);
-    static ReturnedValue callPropertyLookup(ExecutionContext *context, uint index, CallData *callData);
-    static ReturnedValue callElement(ExecutionContext *context, const ValueRef index, CallData *callData);
-    static ReturnedValue callValue(ExecutionContext *context, const ValueRef func, CallData *callData);
+    static ReturnedValue callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
+    static ReturnedValue callActivationProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue callProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
+    static ReturnedValue callElement(ExecutionEngine *engine, const ValueRef index, CallData *callData);
+    static ReturnedValue callValue(ExecutionEngine *engine, const ValueRef func, CallData *callData);
 
     // construct
-    static ReturnedValue constructGlobalLookup(ExecutionContext *context, uint index, CallData *callData);
-    static ReturnedValue constructActivationProperty(ExecutionContext *, String *name, CallData *callData);
-    static ReturnedValue constructProperty(ExecutionContext *context, String *name, CallData *callData);
-    static ReturnedValue constructPropertyLookup(ExecutionContext *context, uint index, CallData *callData);
-    static ReturnedValue constructValue(ExecutionContext *context, const ValueRef func, CallData *callData);
+    static ReturnedValue constructGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
+    static ReturnedValue constructActivationProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue constructProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
+    static ReturnedValue constructValue(ExecutionEngine *engine, const ValueRef func, CallData *callData);
 
     // set & get
-    static void setActivationProperty(ExecutionContext *ctx, String *name, const ValueRef value);
-    static void setProperty(ExecutionContext *ctx, const ValueRef object, String *name, const ValueRef value);
-    static void setElement(ExecutionContext *ctx, const ValueRef object, const ValueRef index, const ValueRef value);
-    static ReturnedValue getProperty(ExecutionContext *ctx, const ValueRef object, String *name);
-    static ReturnedValue getActivationProperty(ExecutionContext *ctx, String *name);
-    static ReturnedValue getElement(ExecutionContext *ctx, const ValueRef object, const ValueRef index);
+    static void setActivationProperty(ExecutionEngine *engine, String *name, const ValueRef value);
+    static void setProperty(ExecutionEngine *engine, const ValueRef object, String *name, const ValueRef value);
+    static void setElement(ExecutionEngine *engine, const ValueRef object, const ValueRef index, const ValueRef value);
+    static ReturnedValue getProperty(ExecutionEngine *engine, const ValueRef object, String *name);
+    static ReturnedValue getActivationProperty(ExecutionEngine *engine, String *name);
+    static ReturnedValue getElement(ExecutionEngine *engine, const ValueRef object, const ValueRef index);
 
     // typeof
-    static ReturnedValue typeofValue(ExecutionContext *ctx, const ValueRef val);
-    static ReturnedValue typeofName(ExecutionContext *context, String *name);
-    static ReturnedValue typeofMember(ExecutionContext* context, const ValueRef base, String *name);
-    static ReturnedValue typeofElement(ExecutionContext* context, const ValueRef base, const ValueRef index);
+    static ReturnedValue typeofValue(ExecutionEngine *engine, const ValueRef val);
+    static ReturnedValue typeofName(ExecutionEngine *engine, String *name);
+    static ReturnedValue typeofMember(ExecutionEngine *engine, const ValueRef base, String *name);
+    static ReturnedValue typeofElement(ExecutionEngine *engine, const ValueRef base, const ValueRef index);
 
     // delete
-    static ReturnedValue deleteElement(ExecutionContext *ctx, const ValueRef base, const ValueRef index);
-    static ReturnedValue deleteMember(ExecutionContext *ctx, const ValueRef base, String *name);
-    static ReturnedValue deleteName(ExecutionContext *ctx, String *name);
+    static ReturnedValue deleteElement(ExecutionEngine *engine, const ValueRef base, const ValueRef index);
+    static ReturnedValue deleteMember(ExecutionEngine *engine, const ValueRef base, String *name);
+    static ReturnedValue deleteName(ExecutionEngine *engine, String *name);
 
     // exceptions & scopes
-    static void throwException(ExecutionContext*, const ValueRef value);
-    static ReturnedValue unwindException(ExecutionContext *ctx);
-    static ExecutionContext *pushWithScope(const ValueRef o, ExecutionContext *ctx);
-    static ExecutionContext *pushCatchScope(ExecutionContext *ctx, String *exceptionVarName);
-    static ExecutionContext *popScope(ExecutionContext *ctx);
+    static void throwException(ExecutionEngine *engine, const ValueRef value);
+    static ReturnedValue unwindException(ExecutionEngine *engine);
+    static void pushWithScope(const ValueRef o, NoThrowEngine *engine);
+    static void pushCatchScope(NoThrowEngine *engine, String *exceptionVarName);
+    static void popScope(ExecutionEngine *engine);
 
     // closures
-    static ReturnedValue closure(ExecutionContext *ctx, int functionId);
+    static ReturnedValue closure(ExecutionEngine *engine, int functionId);
 
     // function header
-    static void declareVar(ExecutionContext *ctx, bool deletable, String *name);
-    static ReturnedValue setupArgumentsObject(ExecutionContext *ctx);
-    static void convertThisToObject(ExecutionContext *ctx);
+    static void declareVar(ExecutionEngine *engine, bool deletable, String *name);
+    static ReturnedValue setupArgumentsObject(ExecutionEngine *engine);
+    static void convertThisToObject(ExecutionEngine *engine);
 
     // literals
-    static ReturnedValue arrayLiteral(ExecutionContext *ctx, Value *values, uint length);
-    static ReturnedValue objectLiteral(ExecutionContext *ctx, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags);
-    static ReturnedValue regexpLiteral(ExecutionContext *ctx, int id);
+    static ReturnedValue arrayLiteral(ExecutionEngine *engine, Value *values, uint length);
+    static ReturnedValue objectLiteral(ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags);
+    static ReturnedValue regexpLiteral(ExecutionEngine *engine, int id);
 
     // foreach
-    static ReturnedValue foreachIterator(ExecutionContext *ctx, const ValueRef in);
+    static ReturnedValue foreachIterator(ExecutionEngine *engine, const ValueRef in);
     static ReturnedValue foreachNextPropertyName(const ValueRef foreach_iterator);
 
     // unary operators
@@ -156,12 +156,12 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 
     // binary operators
     typedef ReturnedValue (*BinaryOperation)(const ValueRef left, const ValueRef right);
-    typedef ReturnedValue (*BinaryOperationContext)(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
+    typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
 
-    static ReturnedValue instanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
-    static ReturnedValue in(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
-    static ReturnedValue add(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
-    static ReturnedValue addString(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
+    static ReturnedValue instanceof(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
+    static ReturnedValue in(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
+    static ReturnedValue add(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
+    static ReturnedValue addString(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
     static ReturnedValue bitOr(const ValueRef left, const ValueRef right);
     static ReturnedValue bitXor(const ValueRef left, const ValueRef right);
     static ReturnedValue bitAnd(const ValueRef left, const ValueRef right);
@@ -192,9 +192,9 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static Bool compareStrictEqual(const ValueRef left, const ValueRef right);
     static Bool compareStrictNotEqual(const ValueRef left, const ValueRef right);
 
-    typedef Bool (*CompareOperationContext)(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
-    static Bool compareInstanceof(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
-    static Bool compareIn(ExecutionContext *ctx, const ValueRef left, const ValueRef right);
+    typedef Bool (*CompareOperationContext)(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
+    static Bool compareInstanceof(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
+    static Bool compareIn(ExecutionEngine *engine, const ValueRef left, const ValueRef right);
 
     // conversions
     static Bool toBoolean(const ValueRef value);
@@ -205,15 +205,15 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static unsigned doubleToUInt(const double &d);
 
     // qml
-    static ReturnedValue getQmlIdArray(NoThrowContext *ctx);
-    static ReturnedValue getQmlImportedScripts(NoThrowContext *ctx);
-    static ReturnedValue getQmlContextObject(NoThrowContext *ctx);
-    static ReturnedValue getQmlScopeObject(NoThrowContext *ctx);
-    static ReturnedValue getQmlSingleton(NoThrowContext *ctx, String *name);
-    static ReturnedValue getQmlAttachedProperty(ExecutionContext *ctx, int attachedPropertiesId, int propertyIndex);
-    static ReturnedValue getQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
-    static ReturnedValue getQmlSingletonQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, bool captureRequired);
-    static void setQmlQObjectProperty(ExecutionContext *ctx, const ValueRef object, int propertyIndex, const ValueRef value);
+    static ReturnedValue getQmlIdArray(NoThrowEngine *ctx);
+    static ReturnedValue getQmlImportedScripts(NoThrowEngine *ctx);
+    static ReturnedValue getQmlContextObject(NoThrowEngine *ctx);
+    static ReturnedValue getQmlScopeObject(NoThrowEngine *ctx);
+    static ReturnedValue getQmlSingleton(NoThrowEngine *ctx, String *name);
+    static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
+    static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const ValueRef object, int propertyIndex, bool captureRequired);
+    static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const ValueRef object, int propertyIndex, bool captureRequired);
+    static void setQmlQObjectProperty(ExecutionEngine *engine, const ValueRef object, int propertyIndex, const ValueRef value);
 };
 
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
@@ -325,7 +325,7 @@ inline ReturnedValue Runtime::bitAnd(const ValueRef left, const ValueRef right)
 }
 
 #ifndef V4_BOOTSTRAP
-inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, const ValueRef right)
+inline ReturnedValue Runtime::add(ExecutionEngine *engine, const ValueRef left, const ValueRef right)
 {
     TRACE2(left, right);
 
@@ -334,7 +334,7 @@ inline ReturnedValue Runtime::add(ExecutionContext *ctx, const ValueRef left, co
     if (left->isNumber() && right->isNumber())
         return Primitive::fromDouble(left->asDouble() + right->asDouble()).asReturnedValue();
 
-    return RuntimeHelpers::addHelper(ctx->engine(), left, right);
+    return RuntimeHelpers::addHelper(engine, left, right);
 }
 #endif // V4_BOOTSTRAP
 

@@ -117,8 +117,8 @@ private:
     friend struct ExecutionContextSaver;
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
-    ExecutionContext *current;
 public:
+    ExecutionContext *current;
     ExecutionContext *currentContext() const { return current; }
 
     Value *jsStackTop;

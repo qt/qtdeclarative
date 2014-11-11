@@ -404,7 +404,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ctx->d()->strictMode = strictMode();
     ctx->d()->compilationUnit = function->compilationUnit;
 
-    return function->code(ctx, function->codeData);
+    return function->code(ctx->engine(), function->codeData);
 }
 
 

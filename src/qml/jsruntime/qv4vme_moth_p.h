@@ -45,14 +45,14 @@ namespace Moth {
 class VME
 {
 public:
-    static QV4::ReturnedValue exec(QV4::ExecutionContext *, const uchar *);
+    static QV4::ReturnedValue exec(QV4::ExecutionEngine *, const uchar *);
 
 #ifdef MOTH_THREADED_INTERPRETER
     static void **instructionJumpTable();
 #endif
 
 private:
-    QV4::ReturnedValue run(QV4::ExecutionContext *, const uchar *code
+    QV4::ReturnedValue run(QV4::ExecutionEngine *, const uchar *code
 #ifdef MOTH_THREADED_INTERPRETER
             , void ***storeJumpTable = 0
 #endif

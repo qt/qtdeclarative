@@ -50,7 +50,7 @@ struct Lookup {
         ReturnedValue (*indexedGetter)(Lookup *l, const ValueRef object, const ValueRef index);
         void (*indexedSetter)(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
         ReturnedValue (*getter)(Lookup *l, const ValueRef object);
-        ReturnedValue (*globalGetter)(Lookup *l, ExecutionContext *ctx);
+        ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
         void (*setter)(Lookup *l, const ValueRef object, const ValueRef v);
     };
     union {
@@ -99,13 +99,13 @@ struct Lookup {
     static ReturnedValue stringLengthGetter(Lookup *l, const ValueRef object);
     static ReturnedValue arrayLengthGetter(Lookup *l, const ValueRef object);
 
-    static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetter0(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetter1(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetter2(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetterAccessor0(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionContext *ctx);
-    static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionContext *ctx);
+    static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetter0(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetter1(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetter2(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterAccessor0(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionEngine *engine);
 
     static void setterGeneric(Lookup *l, const ValueRef object, const ValueRef value);
     static void setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef value);

@@ -120,11 +120,11 @@ private:
             (engine->profiler->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
         engine->profiler->trackDealloc(pointer, size, type) : pointer)
 
-#define Q_V4_PROFILE(engine, ctx, function)\
+#define Q_V4_PROFILE(engine, function)\
     (engine->profiler &&\
             (engine->profiler->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler, ctx, function) :\
-        function->code(ctx, function->codeData))
+        Profiling::FunctionCallProfiler::profileCall(engine->profiler, engine, function) :\
+        function->code(engine, function->codeData))
 
 class Q_QML_EXPORT Profiler : public QObject {
     Q_OBJECT
@@ -182,10 +182,10 @@ public:
         profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
     }
 
-    static ReturnedValue profileCall(Profiler *profiler, ExecutionContext *ctx, Function *function)
+    static ReturnedValue profileCall(Profiler *profiler, ExecutionEngine *engine, Function *function)
     {
         FunctionCallProfiler callProfiler(profiler, function);
-        return function->code(ctx, function->codeData);
+        return function->code(engine, function->codeData);
     }
 
     Profiler *profiler;

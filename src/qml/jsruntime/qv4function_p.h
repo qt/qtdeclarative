@@ -44,14 +44,14 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue (*code)(ExecutionContext *, const uchar *);
+    ReturnedValue (*code)(ExecutionEngine *, const uchar *);
     const uchar *codeData;
 
     // first nArguments names in internalClass are the actual arguments
     InternalClass *internalClass;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             ReturnedValue (*codePtr)(ExecutionContext *, const uchar *));
+             ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
     ~Function();
 
     inline String *name() {

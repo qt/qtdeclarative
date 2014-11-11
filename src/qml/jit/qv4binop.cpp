@@ -125,7 +125,7 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
                                      Assembler::PointerToValue(rhs));
     } else if (info.contextImplementation) {
         as->generateFunctionCallImp(target, info.name, info.contextImplementation,
-                                     Assembler::ContextRegister,
+                                     Assembler::EngineRegister,
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));
     } else {

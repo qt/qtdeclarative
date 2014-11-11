@@ -144,7 +144,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     Scoped<CallContext> ctx(scope, This->d()->qmlContext);
     std::fill(ctx->d()->locals, ctx->d()->locals + ctx->d()->function->varCount(), Primitive::undefinedValue());
     engine->pushContext(ctx);
-    ScopedValue result(scope, This->function()->code(ctx, This->function()->codeData));
+    ScopedValue result(scope, This->function()->code(engine, This->function()->codeData));
     engine->popContext();
 
     return result.asReturnedValue();
@@ -307,7 +307,7 @@ ReturnedValue Script::run()
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
         scope->d()->compilationUnit = vmFunction->compilationUnit;
 
-        return vmFunction->code(scope, vmFunction->codeData);
+        return vmFunction->code(engine, vmFunction->codeData);
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
         ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));

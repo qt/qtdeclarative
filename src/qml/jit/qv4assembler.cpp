@@ -68,7 +68,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         const CompiledData::Function *compiledFunction = data->functionAt(i);
 
         QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (ReturnedValue (*)(QV4::ExecutionContext *, const uchar *)) codeRefs[i].code().executableAddress());
+                                                           (ReturnedValue (*)(QV4::ExecutionEngine *, const uchar *)) codeRefs[i].code().executableAddress());
         runtimeFunctions[i] = runtimeFunction;
     }
 }
@@ -182,25 +182,24 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
 {
     int32_t offset = 0;
     int scope = al->scope;
-    RegisterID context = ContextRegister;
+    loadPtr(Address(EngineRegister, qOffsetOf(ExecutionEngine, current)), baseReg);
     if (scope) {
-        loadPtr(Address(ContextRegister, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
+        loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
         --scope;
-        context = baseReg;
         while (scope) {
-            loadPtr(Address(context, qOffsetOf(ExecutionContext::Data, outer)), context);
+            loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, outer)), baseReg);
             --scope;
         }
     }
     switch (al->kind) {
     case IR::ArgLocal::Formal:
     case IR::ArgLocal::ScopedFormal: {
-        loadPtr(Address(context, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
+        loadPtr(Address(baseReg, qOffsetOf(ExecutionContext::Data, callData)), baseReg);
         offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
     } break;
     case IR::ArgLocal::Local:
     case IR::ArgLocal::ScopedLocal: {
-        loadPtr(Address(context, qOffsetOf(CallContext::Data, locals)), baseReg);
+        loadPtr(Address(baseReg, qOffsetOf(CallContext::Data, locals)), baseReg);
         offset = al->index * sizeof(Value);
     } break;
     default:
@@ -211,7 +210,8 @@ Assembler::Pointer Assembler::loadArgLocalAddress(RegisterID baseReg, IR::ArgLoc
 
 Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
+    loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
+    loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), Assembler::ScratchRegister);
     loadPtr(Address(Assembler::ScratchRegister, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     return Pointer(reg, id * sizeof(QV4::String*));
@@ -219,7 +219,8 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::ContextRegister, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), reg);
+    loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), reg);
+    loadPtr(Address(reg, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), reg);
     loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
     loadPtr(Address(reg, id * sizeof(QV4::String*)), reg);

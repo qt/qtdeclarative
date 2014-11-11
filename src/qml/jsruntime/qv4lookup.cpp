@@ -572,9 +572,9 @@ ReturnedValue Lookup::arrayLengthGetter(Lookup *l, const ValueRef object)
 }
 
 
-ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     PropertyAttributes attrs;
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
@@ -596,35 +596,35 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionContext *ctx)
             return v;
         }
     }
-    Scope scope(ctx);
+    Scope scope(engine);
     Scoped<String> n(scope, l->name);
-    return ctx->engine()->throwReferenceError(n);
+    return engine->throwReferenceError(n);
 }
 
-ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass())
         return o->memberData()->data()[l->index].asReturnedValue();
 
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass() &&
         l->classList[1] == o->prototype()->internalClass())
         return o->prototype()->memberData()->data()[l->index].asReturnedValue();
 
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass()) {
         o = o->prototype();
         if (l->classList[1] == o->internalClass()) {
@@ -635,12 +635,12 @@ ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionContext *ctx)
         }
     }
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass()) {
         Scope scope(o->engine());
         FunctionObject *getter = o->propertyAt(l->index)->getter();
@@ -652,12 +652,12 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionContext *ctx)
         return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass() &&
         l->classList[1] == o->prototype()->internalClass()) {
         Scope scope(o->engine());
@@ -670,12 +670,12 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionContext *ctx)
         return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx)
+ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = ctx->d()->engine->globalObject;
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass()) {
         o = o->prototype();
         if (l->classList[1] == o->internalClass()) {
@@ -693,7 +693,7 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionContext *ctx)
         }
     }
     l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, ctx);
+    return globalGetterGeneric(l, engine);
 }
 
 void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef value)
