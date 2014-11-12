@@ -171,9 +171,9 @@ struct CallContext : public ExecutionContext
     V4_MANAGED(CallContext, ExecutionContext)
 
     // formals are in reverse order
-    String * const *formals() const;
+    Identifier * const *formals() const;
     unsigned int formalCount() const;
-    String * const *variables() const;
+    Identifier * const *variables() const;
     unsigned int variableCount() const;
 
     inline ReturnedValue argument(int i);

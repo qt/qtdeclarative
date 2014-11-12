@@ -42,6 +42,7 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4identifier_p.h"
 
 #include <stdint.h>
 
@@ -553,7 +554,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint
     }
 
     while (it->memberIndex < o->internalClass()->size) {
-        String *n = o->internalClass()->nameMap.at(it->memberIndex);
+        Identifier *n = o->internalClass()->nameMap.at(it->memberIndex);
         if (!n) {
             // accessor properties have a dummy entry with n == 0
             ++it->memberIndex;
@@ -564,7 +565,8 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            name = n;
+            // #### GC
+            name = reinterpret_cast<QV4::String*>(m->engine()->newString(n->string));
             *attrs = a;
             pd->copy(*p, a);
             return;

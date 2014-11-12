@@ -71,11 +71,8 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     }
 
     const quint32 *localsIndices = compiledFunction->localsTable();
-    ScopedString local(scope);
-    for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
-        local = compilationUnit->runtimeStrings[localsIndices[i]];
-        internalClass = internalClass->addMember(local, Attr_NotConfigurable);
-    }
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
+        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 }
 
 Function::~Function()

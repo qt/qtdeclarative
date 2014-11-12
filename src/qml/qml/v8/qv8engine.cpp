@@ -496,7 +496,7 @@ void QV8Engine::initializeGlobal()
     {
         for (uint i = 0; i < m_v4Engine->globalObject->internalClass()->size; ++i) {
             if (m_v4Engine->globalObject->internalClass()->nameMap.at(i))
-                m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->toQString());
+                m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->string);
         }
     }
 

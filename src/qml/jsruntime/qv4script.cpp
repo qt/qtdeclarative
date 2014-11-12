@@ -261,8 +261,8 @@ void Script::parse()
         if (inheritContext) {
             CallContext *ctx = scope->asCallContext();
             if (ctx) {
-                for (String * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
-                    inheritedLocals.append(*i ? (*i)->toQString() : QString());
+                for (Identifier * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
+                    inheritedLocals.append(*i ? (*i)->string : QString());
             }
         }
 

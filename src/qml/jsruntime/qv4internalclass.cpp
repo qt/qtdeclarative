@@ -147,7 +147,7 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
-    InternalClass *newClass = object->internalClass()->changeMember(string, data, &idx);
+    InternalClass *newClass = object->internalClass()->changeMember(string->identifier(), data, &idx);
     if (index)
         *index = idx;
 
@@ -161,10 +161,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
     object->setInternalClass(newClass);
 }
 
-InternalClass *InternalClass::changeMember(String *string, PropertyAttributes data, uint *index)
+InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttributes data, uint *index)
 {
     data.resolve();
-    uint idx = find(string);
+    uint idx = find(identifier);
     Q_ASSERT(idx != UINT_MAX);
 
     if (index)
@@ -173,7 +173,7 @@ InternalClass *InternalClass::changeMember(String *string, PropertyAttributes da
     if (data == propertyData.at(idx))
         return this;
 
-    Transition t = { { string->d()->identifier }, (int)data.flags() };
+    Transition t = { { identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
     if (tit != transitions.constEnd())
         return tit.value();
@@ -273,28 +273,32 @@ void InternalClass::addMember(Object *object, String *string, PropertyAttributes
     }
 
     uint idx;
-    InternalClass *newClass = object->internalClass()->addMemberImpl(string, data, &idx);
+    InternalClass *newClass = object->internalClass()->addMemberImpl(string->identifier(), data, &idx);
     if (index)
         *index = idx;
 
     object->setInternalClass(newClass);
 }
 
-
 InternalClass *InternalClass::addMember(String *string, PropertyAttributes data, uint *index)
 {
-    data.resolve();
     engine->identifierTable->identifier(string);
-
-    if (propertyTable.lookup(string->d()->identifier) < size)
-        return changeMember(string, data, index);
-
-    return addMemberImpl(string, data, index);
+    return addMember(string->identifier(), data, index);
 }
 
-InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes data, uint *index)
+InternalClass *InternalClass::addMember(Identifier *identifier, PropertyAttributes data, uint *index)
 {
-    Transition t = { { string->d()->identifier }, (int)data.flags() };
+    data.resolve();
+
+    if (propertyTable.lookup(identifier) < size)
+        return changeMember(identifier, data, index);
+
+    return addMemberImpl(identifier, data, index);
+}
+
+InternalClass *InternalClass::addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index)
+{
+    Transition t = { { identifier }, (int)data.flags() };
     QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
 
     if (index)
@@ -304,15 +308,10 @@ InternalClass *InternalClass::addMemberImpl(String *string, PropertyAttributes d
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
-    PropertyHash::Entry e = { string->d()->identifier, newClass->size };
+    PropertyHash::Entry e = { identifier, newClass->size };
     newClass->propertyTable.addEntry(e, newClass->size);
 
-    // The incoming string can come from anywhere, so make sure to
-    // store a string in the nameMap that's guaranteed to get
-    // marked properly during GC.
-    // #### GC
-    String *name = reinterpret_cast<String*>(engine->newIdentifier(string->toQString()));
-    newClass->nameMap.add(newClass->size, name);
+    newClass->nameMap.add(newClass->size, identifier);
     newClass->propertyData.add(newClass->size, data);
     ++newClass->size;
     if (data.isAccessor()) {
@@ -369,6 +368,15 @@ uint InternalClass::find(const String *string)
     return UINT_MAX;
 }
 
+uint InternalClass::find(const Identifier *id)
+{
+    uint index = propertyTable.lookup(id);
+    if (index < size)
+        return index;
+
+    return UINT_MAX;
+}
+
 InternalClass *InternalClass::sealed()
 {
     if (m_sealed)
@@ -418,7 +426,7 @@ void InternalClass::destroy()
     engine = 0;
 
     propertyTable.~PropertyHash();
-    nameMap.~SharedInternalClassData<String *>();
+    nameMap.~SharedInternalClassData<Identifier *>();
     propertyData.~SharedInternalClassData<PropertyAttributes>();
 
     if (m_sealed)

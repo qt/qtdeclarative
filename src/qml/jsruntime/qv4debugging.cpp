@@ -39,6 +39,7 @@
 #include "qv4runtime_p.h"
 #include "qv4script_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4identifier_p.h"
 #include <iostream>
 
 #include <algorithm>
@@ -327,8 +328,8 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
             int nFormals = ctxt->formalCount();
             for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
                 QString qName;
-                if (String *name = ctxt->formals()[nFormals - i - 1])
-                    qName = name->toQString();
+                if (Identifier *name = ctxt->formals()[nFormals - i - 1])
+                    qName = name->string;
                 v = ctxt->argument(i);
                 collector->collect(qName, v);
             }
@@ -373,8 +374,8 @@ void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int sco
             ScopedValue v(scope);
             for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
                 QString qName;
-                if (String *name = ctxt->variables()[i])
-                    qName = name->toQString();
+                if (Identifier *name = ctxt->variables()[i])
+                    qName = name->string;
                 v = ctxt->d()->locals[i];
                 collector->collect(qName, v);
             }

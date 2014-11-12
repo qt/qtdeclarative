@@ -182,7 +182,7 @@ Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::F
         std::fill(locals, locals + function->varCount(), Primitive::undefinedValue());
 }
 
-String * const *CallContext::formals() const
+Identifier * const *CallContext::formals() const
 {
     return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() : 0;
 }
@@ -192,7 +192,7 @@ unsigned int CallContext::formalCount() const
     return d()->function ? d()->function->formalParameterCount() : 0;
 }
 
-String * const *CallContext::variables() const
+Identifier * const *CallContext::variables() const
 {
     return (d()->function && d()->function->function) ? d()->function->function->internalClass->nameMap.constData() + d()->function->formalParameterCount() : 0;
 }

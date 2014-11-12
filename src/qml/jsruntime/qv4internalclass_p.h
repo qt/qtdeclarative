@@ -212,7 +212,7 @@ struct InternalClass : public QQmlJS::Managed {
     const ManagedVTable *vtable;
 
     PropertyHash propertyTable; // id to valueIndex
-    SharedInternalClassData<String *> nameMap;
+    SharedInternalClassData<Identifier *> nameMap;
     SharedInternalClassData<PropertyAttributes> propertyData;
 
     typedef InternalClassTransition Transition;
@@ -228,10 +228,12 @@ struct InternalClass : public QQmlJS::Managed {
     InternalClass *changeVTable(const ManagedVTable *vt);
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
-    InternalClass *changeMember(String *string, PropertyAttributes data, uint *index = 0);
+    InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
+    InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
     static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
     static void removeMember(Object *object, Identifier *id);
     uint find(const String *s);
+    uint find(const Identifier *id);
 
     InternalClass *sealed();
     InternalClass *frozen();
@@ -239,7 +241,7 @@ struct InternalClass : public QQmlJS::Managed {
     void destroy();
 
 private:
-    InternalClass *addMemberImpl(String *string, PropertyAttributes data, uint *index);
+    InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);

@@ -42,8 +42,7 @@ using namespace QV4;
 ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs)
 {
     ExecutionEngine *engine = obj->engine();
-    Scope scope(engine);
-    ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]);
+    Identifier *name = engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass();
@@ -76,8 +75,7 @@ ReturnedValue Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 {
     Object *thisObject = obj;
     ExecutionEngine *engine = obj->engine();
-    Scope scope(engine);
-    ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]);
+    Identifier *name = engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass();
