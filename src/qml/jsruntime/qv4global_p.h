@@ -138,10 +138,13 @@ namespace Heap {
     struct ArgumentsObject;
     struct QObjectWrapper;
     struct RegExpObject;
+    struct RegExp;
+    struct EvalFunction;
 
     struct ArrayBuffer;
     struct DataView;
     struct TypedArray;
+
 }
 
 class MemoryManager;
@@ -171,6 +174,9 @@ struct ArgumentsObject;
 struct Managed;
 struct ExecutionEngine;
 struct QObjectWrapper;
+struct RegExpObject;
+struct RegExp;
+struct EvalFunction;
 
 struct ArrayBuffer;
 struct DataView;
@@ -196,6 +202,10 @@ struct PersistentValuePrivate;
 class PersistentValue;
 class WeakValue;
 
+struct IdentifierTable;
+class RegExpCache;
+class MultiplyWrappedQObjectMap;
+struct QmlExtensions;
 
 namespace Global {
     enum {

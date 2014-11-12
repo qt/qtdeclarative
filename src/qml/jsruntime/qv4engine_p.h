@@ -59,52 +59,6 @@ namespace CompiledData {
 struct CompilationUnit;
 }
 
-struct Function;
-struct Object;
-struct BooleanObject;
-struct NumberObject;
-struct StringObject;
-struct ArrayObject;
-struct DateObject;
-struct FunctionObject;
-struct BoundFunction;
-struct RegExpObject;
-struct ErrorObject;
-struct SyntaxErrorObject;
-struct ArgumentsObject;
-struct ExecutionContext;
-struct ExecutionEngine;
-class MemoryManager;
-class ExecutableAllocator;
-
-struct ObjectPrototype;
-struct StringPrototype;
-struct NumberPrototype;
-struct BooleanPrototype;
-struct ArrayPrototype;
-struct FunctionPrototype;
-struct DatePrototype;
-struct RegExpPrototype;
-struct ErrorPrototype;
-struct EvalErrorPrototype;
-struct RangeErrorPrototype;
-struct ReferenceErrorPrototype;
-struct SyntaxErrorPrototype;
-struct TypeErrorPrototype;
-struct URIErrorPrototype;
-struct VariantPrototype;
-struct SequencePrototype;
-struct EvalFunction;
-struct IdentifierTable;
-struct InternalClass;
-struct InternalClassPool;
-class MultiplyWrappedQObjectMap;
-struct RegExp;
-class RegExpCache;
-struct QmlExtensions;
-struct Exception;
-struct ExecutionContextSaver;
-
 #define CHECK_STACK_LIMITS(v4) \
     if ((v4->jsStackTop <= v4->jsStackLimit) && (reinterpret_cast<quintptr>(&v4) >= v4->cStackLimit || v4->recheckCStackLimits())) {}  \
     else \
