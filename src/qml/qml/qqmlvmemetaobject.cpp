@@ -948,10 +948,9 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::ScopedValue result(scope);
-                QV4::ExecutionContext *ctx = function->engine()->currentContext();
                 result = function->call(callData);
                 if (scope.hasException()) {
-                    QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+                    QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();

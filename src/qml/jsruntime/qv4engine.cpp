@@ -998,11 +998,9 @@ ReturnedValue ExecutionEngine::throwError(const ValueRef value)
     return Encode::undefined();
 }
 
-ReturnedValue ExecutionEngine::catchException(ExecutionContext *catchingContext, StackTrace *trace)
+ReturnedValue ExecutionEngine::catchException(StackTrace *trace)
 {
     Q_ASSERT(hasException);
-    Q_UNUSED(catchingContext);
-    Q_ASSERT(currentContext() == catchingContext);
     if (trace)
         *trace = exceptionStackTrace;
     exceptionStackTrace.clear();
@@ -1098,11 +1096,11 @@ ReturnedValue ExecutionEngine::throwUnimplemented(const QString &message)
 }
 
 
-QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
+QQmlError ExecutionEngine::catchExceptionAsQmlError()
 {
     QV4::StackTrace trace;
-    QV4::Scope scope(context);
-    QV4::ScopedValue exception(scope, context->catchException(&trace));
+    QV4::Scope scope(this);
+    QV4::ScopedValue exception(scope, catchException(&trace));
     QQmlError error;
     if (!trace.isEmpty()) {
         QV4::StackFrame frame = trace.first();
@@ -1112,7 +1110,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError(ExecutionContext *context)
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
     if (!!errorObj && errorObj->asSyntaxError()) {
-        QV4::ScopedString m(scope, errorObj->engine()->newString(QStringLiteral("message")));
+        QV4::ScopedString m(scope, newString(QStringLiteral("message")));
         QV4::ScopedValue v(scope, errorObj->get(m.getPointer()));
         error.setDescription(v->toQStringNoThrow());
     } else

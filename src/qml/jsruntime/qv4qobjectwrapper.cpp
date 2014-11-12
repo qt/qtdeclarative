@@ -795,7 +795,6 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
             QV4::Scope scope(v4);
             QV4::ScopedFunctionObject f(scope, This->function.value());
-            QV4::ExecutionContext *ctx = v4->currentContext();
 
             QV4::ScopedCallData callData(scope, argCount);
             callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
@@ -811,7 +810,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             f->call(callData);
             if (scope.hasException() && v4->v8Engine) {
                 if (QQmlEngine *qmlEngine = v4->v8Engine->engine()) {
-                    QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+                    QQmlError error = v4->catchExceptionAsQmlError();
                     if (error.description().isEmpty()) {
                         QV4::ScopedString name(scope, f->name());
                         error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(name->toQString()));

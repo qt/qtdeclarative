@@ -307,7 +307,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     if (!scope.engine->hasException)
         result = script.run();
     if (scope.engine->hasException)
-        result = ctx->catchException();
+        result = v4->catchException();
     if (ctx != v4->rootContext)
         v4->popContext();
     return new QJSValuePrivate(v4, result);

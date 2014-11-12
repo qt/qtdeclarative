@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
                     result = script.run();
                 if (scope.engine->hasException) {
                     QV4::StackTrace trace;
-                    QV4::ScopedValue ex(scope, ctx->catchException(&trace));
+                    QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
                     showException(ctx, ex, trace);
                     return EXIT_FAILURE;
                 }

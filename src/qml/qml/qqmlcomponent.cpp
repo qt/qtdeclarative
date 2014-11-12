@@ -1535,13 +1535,12 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 
     QV4::ScopedFunctionObject f(scope, d()->statusChanged);
     if (f) {
-        QV4::ExecutionContext *ctx = scope.engine->currentContext();
         QV4::ScopedCallData callData(scope, 1);
         callData->thisObject = this;
         callData->args[0] = QV4::Primitive::fromUInt32(s);
         f->call(callData);
         if (scope.hasException()) {
-            QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+            QQmlError error = scope.engine->catchExceptionAsQmlError();
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(d()->v8->engine()), error);
         }
     }

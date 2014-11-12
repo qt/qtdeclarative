@@ -394,10 +394,9 @@ double QJSValue::toNumber() const
             return std::numeric_limits<double>::quiet_NaN();
     }
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     double dbl = d->value.toNumber();
-    if (ctx && ctx->d()->engine->hasException) {
-        ctx->catchException();
+    if (d->engine && d->engine->hasException) {
+        d->engine->catchException();
         return 0;
     }
     return dbl;
@@ -424,10 +423,9 @@ bool QJSValue::toBool() const
             return d->unboundData.toBool();
     }
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     bool b = d->value.toBoolean();
-    if (ctx && ctx->d()->engine->hasException) {
-        ctx->catchException();
+    if (d->engine && d->engine->hasException) {
+        d->engine->catchException();
         return false;
     }
     return b;
@@ -454,10 +452,9 @@ qint32 QJSValue::toInt() const
             return d->unboundData.toInt();
     }
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     qint32 i = d->value.toInt32();
-    if (ctx && ctx->d()->engine->hasException) {
-        ctx->catchException();
+    if (d->engine && d->engine->hasException) {
+        d->engine->catchException();
         return 0;
     }
     return i;
@@ -484,10 +481,9 @@ quint32 QJSValue::toUInt() const
             return d->unboundData.toUInt();
     }
 
-    QV4::ExecutionContext *ctx = d->engine ? d->engine->currentContext() : 0;
     quint32 u = d->value.toUInt32();
-    if (ctx && ctx->d()->engine->hasException) {
-        ctx->catchException();
+    if (d->engine && d->engine->hasException) {
+        d->engine->catchException();
         return 0;
     }
     return u;
@@ -558,11 +554,9 @@ QJSValue QJSValue::call(const QJSValueList &args)
         callData->args[i] = args.at(i).d->getValue(engine);
     }
 
-    ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->currentContext();
-    result = f->call(callData);
-    if (scope.hasException())
-        result = ctx->catchException();
+    ScopedValue result(scope, f->call(callData));
+    if (d->engine->hasException)
+        result = d->engine->catchException();
 
     return new QJSValuePrivate(engine, result);
 }
@@ -612,11 +606,9 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         callData->args[i] = args.at(i).d->getValue(engine);
     }
 
-    ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->currentContext();
-    result = f->call(callData);
-    if (scope.hasException())
-        result = ctx->catchException();
+    ScopedValue result(scope, f->call(callData));
+    if (d->engine->hasException)
+        result = d->engine->catchException();
 
     return new QJSValuePrivate(engine, result);
 }
@@ -658,11 +650,9 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
         callData->args[i] = args.at(i).d->getValue(engine);
     }
 
-    ScopedValue result(scope);
-    QV4::ExecutionContext *ctx = engine->currentContext();
-    result = f->construct(callData);
-    if (scope.hasException())
-        result = ctx->catchException();
+    ScopedValue result(scope, f->construct(callData));
+    if (d->engine->hasException)
+        result = d->engine->catchException();
 
     return new QJSValuePrivate(engine, result);
 }
@@ -886,11 +876,9 @@ QJSValue QJSValue::property(const QString& name) const
         return property(idx);
 
     s->makeIdentifier();
-    QV4::ExecutionContext *ctx = engine->currentContext();
-    QV4::ScopedValue result(scope);
-    result = o->get(s.getPointer());
-    if (scope.hasException())
-        result = ctx->catchException();
+    QV4::ScopedValue result(scope, o->get(s));
+    if (d->engine->hasException)
+        result = d->engine->catchException();
 
     return new QJSValuePrivate(engine, result);
 }
@@ -918,11 +906,9 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QV4::ExecutionContext *ctx = engine->currentContext();
-    QV4::ScopedValue result(scope);
-    result = arrayIndex == UINT_MAX ? o->get(engine->id_uintMax.getPointer()) : o->getIndexed(arrayIndex);
-    if (scope.hasException())
-        result = ctx->catchException();
+    QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax.getPointer()) : o->getIndexed(arrayIndex));
+    if (d->engine->hasException)
+        d->engine->catchException();
     return new QJSValuePrivate(engine, result);
 }
 
@@ -960,12 +946,11 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    QV4::ExecutionContext *ctx = engine->currentContext();
     s->makeIdentifier();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     o->put(s.getPointer(), v);
-    if (scope.hasException())
-        ctx->catchException();
+    if (d->engine->hasException)
+        d->engine->catchException();
 }
 
 /*!
@@ -991,14 +976,13 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (!o)
         return;
 
-    QV4::ExecutionContext *ctx = engine->currentContext();
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     if (arrayIndex != UINT_MAX)
         o->putIndexed(arrayIndex, v);
     else
         o->put(engine->id_uintMax.getPointer(), v);
-    if (scope.hasException())
-        ctx->catchException();
+    if (d->engine->hasException)
+        d->engine->catchException();
 }
 
 /*!
@@ -1024,7 +1008,6 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 bool QJSValue::deleteProperty(const QString &name)
 {
     ExecutionEngine *engine = d->engine;
-    ExecutionContext *ctx = engine->currentContext();
     Scope scope(engine);
     ScopedObject o(scope, d->value.asObject());
     if (!o)
@@ -1032,8 +1015,8 @@ bool QJSValue::deleteProperty(const QString &name)
 
     ScopedString s(scope, engine->newString(name));
     bool b = o->deleteProperty(s.getPointer());
-    if (scope.hasException())
-        ctx->catchException();
+    if (d->engine->hasException)
+        d->engine->catchException();
     return b;
 }
 

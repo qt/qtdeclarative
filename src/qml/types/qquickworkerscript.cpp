@@ -244,7 +244,6 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
 
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, createsend.value());
-    QV4::ExecutionContext *ctx = v4->currentContext();
 
     QV4::ScopedValue v(scope);
     QV4::ScopedCallData callData(scope, 1);
@@ -252,7 +251,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     callData->thisObject = global();
     v = f->call(callData);
     if (scope.hasException())
-        v = ctx->catchException();
+        v = scope.engine->catchException();
     return v.asReturnedValue();
 }
 
@@ -352,7 +351,6 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
-    QV4::ExecutionContext *ctx = v4->currentContext();
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
 
@@ -362,7 +360,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     callData->args[1] = value;
     f->call(callData);
     if (scope.hasException()) {
-        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+        QQmlError error = scope.engine->catchExceptionAsQmlError();
         reportScriptException(script, error);
     }
 }
@@ -409,8 +407,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         program->run();
 
     if (v4->hasException) {
-        QV4::ExecutionContext *ctx = v4->currentContext();
-        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+        QQmlError error = v4->catchExceptionAsQmlError();
         reportScriptException(script, error);
     }
 }

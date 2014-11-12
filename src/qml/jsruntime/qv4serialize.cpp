@@ -271,11 +271,10 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             s = properties->getIndexed(ii);
             serialize(data, s, engine);
 
-            QV4::ExecutionContext *ctx = v4->currentContext();
             str = s;
             val = o->get(str.getPointer());
             if (scope.hasException())
-                ctx->catchException();
+                scope.engine->catchException();
 
             serialize(data, val, engine);
         }

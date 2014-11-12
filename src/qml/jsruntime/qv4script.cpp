@@ -395,13 +395,12 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
     QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());
 
-    QV4::ExecutionContext *ctx = engine->currentContext();
     qmlScript.parse();
     QV4::ScopedValue result(scope);
     if (!scope.engine->hasException)
         result = qmlScript.run();
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return Encode::undefined();
     }
     return result.asReturnedValue();

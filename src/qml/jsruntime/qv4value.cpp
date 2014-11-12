@@ -130,7 +130,7 @@ QString Value::toQStringNoThrow() const
             bool caughtException = false;
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
             if (scope.hasException()) {
-                ex = ctx->catchException();
+                ex = scope.engine->catchException();
                 caughtException = true;
             } else if (prim->isPrimitive()) {
                     return prim->toQStringNoThrow();
@@ -139,7 +139,7 @@ QString Value::toQStringNoThrow() const
             if (caughtException) {
                 ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ex, STRING_HINT));
                 if (scope.hasException()) {
-                    ex = ctx->catchException();
+                    ex = scope.engine->catchException();
                 } else if (prim->isPrimitive()) {
                     return prim->toQStringNoThrow();
                 }

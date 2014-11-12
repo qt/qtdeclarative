@@ -1592,10 +1592,9 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 
 void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
 {
-    ExecutionContext *ctx = v4->currentContext();
     dispatchCallbackImpl(me);
     if (v4->hasException) {
-        QQmlError error = QV4::ExecutionEngine::catchExceptionAsQmlError(ctx);
+        QQmlError error = v4->catchExceptionAsQmlError();
         QQmlEnginePrivate::warning(QQmlEnginePrivate::get(v4->v8Engine->engine()), error);
     }
 }

@@ -190,13 +190,12 @@ QJSValue QJSValueIterator::value() const
     if (!obj)
         return QJSValue();
 
-    QV4::ExecutionContext *ctx = engine->currentContext();
     if (!d_ptr->currentName && d_ptr->currentIndex == UINT_MAX)
         return QJSValue();
 
     QV4::ScopedValue v(scope, obj->getValue(obj, &d_ptr->currentProperty, d_ptr->currentAttributes));
     if (scope.hasException()) {
-        ctx->catchException();
+        engine->catchException();
         return QJSValue();
     }
     return new QJSValuePrivate(engine, v);

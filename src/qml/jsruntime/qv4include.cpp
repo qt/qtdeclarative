@@ -100,13 +100,12 @@ void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef stat
     if (!f)
         return;
 
-    QV4::ExecutionContext *ctx = v4->currentContext();
     QV4::ScopedCallData callData(scope, 1);
     callData->thisObject = v4->globalObject->asReturnedValue();
     callData->args[0] = status;
     f->call(callData);
     if (scope.hasException())
-        ctx->catchException();
+        scope.engine->catchException();
 }
 
 QV4::ReturnedValue QV4Include::result()
@@ -146,12 +145,11 @@ void QV4Include::finished()
         QV4::ScopedObject qmlglobal(scope, m_qmlglobal.value());
         QV4::Script script(v4, qmlglobal, code, m_url.toString());
 
-        QV4::ExecutionContext *ctx = v4->currentContext();
         script.parse();
         if (!scope.engine->hasException)
             script.run();
         if (scope.engine->hasException) {
-            QV4::ScopedValue ex(scope, ctx->catchException());
+            QV4::ScopedValue ex(scope, scope.engine->catchException());
             resultObj->put(status.getPointer(), QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Exception)));
             QV4::ScopedString exception(scope, v4->newString(QStringLiteral("exception")));
             resultObj->put(exception.getPointer(), ex);
@@ -220,12 +218,11 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         }
 
         if (!script.isNull()) {
-            QV4::ExecutionContext *ctx = scope.engine->currentContext();
             script->parse();
             if (!scope.engine->hasException)
                 script->run();
             if (scope.engine->hasException) {
-                QV4::ScopedValue ex(scope, ctx->catchException());
+                QV4::ScopedValue ex(scope, scope.engine->catchException());
                 result = resultValue(scope.engine, Exception);
                 QV4::ScopedString exception(scope, scope.engine->newString(QStringLiteral("exception")));
                 result->asObject()->put(exception.getPointer(), ex);

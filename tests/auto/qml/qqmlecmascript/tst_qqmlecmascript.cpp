@@ -2308,7 +2308,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
 
     QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return true;
     }
     QV4::ScopedCallData d(scope, 1);
@@ -2316,7 +2316,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
     d->thisObject = engine->global();
     function->call(d);
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return true;
     }
     return false;
@@ -2336,7 +2336,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
 
     QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return false;
     }
     if (!function)
@@ -2348,7 +2348,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
     d->thisObject = engine->global();
     value = function->call(d);
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return false;
     }
     return QV4::Runtime::strictEqual(value, result);
@@ -2368,7 +2368,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
 
     QV4::Scoped<QV4::FunctionObject> function(scope, program.run());
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return QV4::Encode::undefined();
     }
     if (!function)
@@ -2378,7 +2378,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef
     d->thisObject = engine->global();
     QV4::ScopedValue result(scope, function->call(d));
     if (scope.engine->hasException) {
-        ctx->catchException();
+        scope.engine->catchException();
         return QV4::Encode::undefined();
     }
     return result.asReturnedValue();

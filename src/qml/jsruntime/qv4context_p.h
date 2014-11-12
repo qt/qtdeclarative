@@ -142,9 +142,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue getPropertyAndBase(String *name, Object *&base);
     bool deleteProperty(String *name);
 
-    // Can only be called from within catch(...), rethrows if no JS exception.
-    ReturnedValue catchException(StackTrace *trace = 0);
-
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
 

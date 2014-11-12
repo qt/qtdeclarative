@@ -1126,13 +1126,13 @@ ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
 {
     if (!engine->hasException)
         return Primitive::emptyValue().asReturnedValue();
-    return engine->catchException(engine->currentContext(), 0);
+    return engine->catchException(0);
 }
 
 void Runtime::pushCatchScope(NoThrowEngine *engine, String *exceptionVarName)
 {
     Scope scope(engine);
-    ScopedValue v(scope, engine->catchException(engine->currentContext(), 0));
+    ScopedValue v(scope, engine->catchException(0));
     engine->currentContext()->newCatchContext(exceptionVarName, v);
 }
 

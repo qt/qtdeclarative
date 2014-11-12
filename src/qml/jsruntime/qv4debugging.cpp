@@ -72,7 +72,7 @@ public:
         if (!scope.engine->hasException)
             result = script.run();
         if (scope.engine->hasException)
-            result = ctx->catchException();
+            result = scope.engine->catchException();
         handleResult(result);
     }
 

@@ -473,8 +473,3 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
     ScopedValue n(scope, name);
     return engine()->throwReferenceError(n);
 }
-
-ReturnedValue ExecutionContext::catchException(StackTrace *trace)
-{
-    return d()->engine->catchException(this, trace);
-}

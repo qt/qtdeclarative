@@ -363,7 +363,7 @@ public:
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwError(const ValueRef value);
-    ReturnedValue catchException(ExecutionContext *catchingContext, StackTrace *trace);
+    ReturnedValue catchException(StackTrace *trace = 0);
 
     ReturnedValue throwError(const QString &message);
     ReturnedValue throwSyntaxError(const QString &message);
@@ -378,7 +378,7 @@ public:
     ReturnedValue throwUnimplemented(const QString &message);
 
     // Use only inside catch(...) -- will re-throw if no JS exception
-    static QQmlError catchExceptionAsQmlError(QV4::ExecutionContext *context);
+    QQmlError catchExceptionAsQmlError();
 
 private:
     QmlExtensions *m_qmlExtensions;
