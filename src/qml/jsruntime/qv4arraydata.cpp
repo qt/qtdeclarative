@@ -647,13 +647,13 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionContext *context, Object *thisObject, const ValueRef comparefn)
-        : m_context(context), thisObject(thisObject), m_comparefn(comparefn) {}
+    inline ArrayElementLessThan(ExecutionEngine *engine, Object *thisObject, const ValueRef comparefn)
+        : m_engine(engine), thisObject(thisObject), m_comparefn(comparefn) {}
 
     bool operator()(Value v1, Value v2) const;
 
 private:
-    ExecutionContext *m_context;
+    ExecutionEngine *m_engine;
     Object *thisObject;
     const ValueRef m_comparefn;
 };
@@ -661,7 +661,7 @@ private:
 
 bool ArrayElementLessThan::operator()(Value v1, Value v2) const
 {
-    Scope scope(m_context);
+    Scope scope(m_engine);
 
     if (v1.isUndefined() || v1.isEmpty())
         return false;
@@ -738,7 +738,7 @@ top:
 }
 
 
-void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueRef comparefn, uint len)
+void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const ValueRef comparefn, uint len)
 {
     if (!len)
         return;
@@ -747,7 +747,7 @@ void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueR
         return;
 
     if (!(comparefn->isUndefined() || comparefn->asObject())) {
-        context->engine()->throwTypeError();
+        engine->throwTypeError();
         return;
     }
 
@@ -826,7 +826,7 @@ void ArrayData::sort(ExecutionContext *context, Object *thisObject, const ValueR
     }
 
 
-    ArrayElementLessThan lessThan(context, thisObject, comparefn);
+    ArrayElementLessThan lessThan(engine, thisObject, comparefn);
 
     Value *begin = thisObject->arrayData()->d()->arrayData;
     sortHelper(begin, begin + len, *begin, lessThan);

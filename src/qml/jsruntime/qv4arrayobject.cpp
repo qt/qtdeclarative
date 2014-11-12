@@ -445,7 +445,7 @@ ReturnedValue ArrayPrototype::method_sort(CallContext *ctx)
     uint len = instance->getLength();
 
     ScopedValue comparefn(scope, ctx->argument(0));
-    ArrayData::sort(ctx, instance, comparefn, len);
+    ArrayData::sort(scope.engine, instance, comparefn, len);
     return ctx->d()->callData->thisObject.asReturnedValue();
 }
 
