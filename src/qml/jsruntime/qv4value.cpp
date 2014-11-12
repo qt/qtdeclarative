@@ -274,21 +274,11 @@ Heap::String *Value::toString(ExecutionEngine *e) const
     return RuntimeHelpers::convertToString(e, ValueRef::fromRawValue(this));
 }
 
-Heap::String *Value::toString(ExecutionContext *ctx) const
-{
-    return toString(ctx->engine());
-}
-
 Heap::Object *Value::toObject(ExecutionEngine *e) const
 {
     if (isObject())
         return objectValue()->d();
     return RuntimeHelpers::convertToObject(e, ValueRef::fromRawValue(this));
-}
-
-Heap::Object *Value::toObject(ExecutionContext *ctx) const
-{
-    return toObject(ctx->engine());
 }
 
 #endif // V4_BOOTSTRAP

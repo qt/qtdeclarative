@@ -330,9 +330,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     QString toQStringNoThrow() const;
     QString toQString() const;
     Heap::String *toString(ExecutionEngine *e) const;
-    Heap::String *toString(ExecutionContext *ctx) const;
     Heap::Object *toObject(ExecutionEngine *e) const;
-    Heap::Object *toObject(ExecutionContext *ctx) const;
 
     inline bool isPrimitive() const;
     inline bool tryIntegerConversion() {

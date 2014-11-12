@@ -140,7 +140,7 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
     Scope scope(ctx);
     ScopedObject result(scope, ctx->d()->engine->newArrayObject());
 
-    ScopedObject thisObject(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject thisObject(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!thisObject)
         return Encode::undefined();
     ScopedArrayObject instance(scope, thisObject);
@@ -220,7 +220,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
         for (quint32 k = 1; k < r2; ++k) {
             R += r4;
 
-            name = Primitive::fromDouble(k).toString(ctx);
+            name = Primitive::fromDouble(k).toString(scope.engine);
             r12 = self->get(name.getPointer());
             if (scope.hasException())
                 return Encode::undefined();
@@ -236,7 +236,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
     uint len = instance->getLength();
@@ -264,7 +264,7 @@ ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -278,7 +278,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         double l = len;
         ScopedString s(scope);
         for (int i = 0; i < ctx->d()->callData->argc; ++i) {
-            s = Primitive::fromDouble(l + i).toString(ctx);
+            s = Primitive::fromDouble(l + i).toString(scope.engine);
             instance->put(s.getPointer(), ctx->d()->callData->args[i]);
         }
         double newLen = l + ctx->d()->callData->argc;
@@ -312,7 +312,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_reverse(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
     uint length = instance->getLength();
@@ -344,7 +344,7 @@ ReturnedValue ArrayPrototype::method_reverse(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -396,7 +396,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!o)
         return Encode::undefined();
 
@@ -438,7 +438,7 @@ ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_sort(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -452,7 +452,7 @@ ReturnedValue ArrayPrototype::method_sort(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
     uint len = instance->getLength();
@@ -532,7 +532,7 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -571,7 +571,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
     uint len = instance->getLength();
@@ -639,7 +639,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
     uint len = instance->getLength();
@@ -684,7 +684,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -718,7 +718,7 @@ ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -752,7 +752,7 @@ ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -783,7 +783,7 @@ ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -820,7 +820,7 @@ ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -861,7 +861,7 @@ ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -911,7 +911,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 

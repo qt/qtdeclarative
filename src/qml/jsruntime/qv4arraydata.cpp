@@ -679,8 +679,8 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
 
         return result->toNumber() < 0;
     }
-    ScopedString p1s(scope, v1.toString(m_context));
-    ScopedString p2s(scope, v2.toString(m_context));
+    ScopedString p1s(scope, v1.toString(scope.engine));
+    ScopedString p2s(scope, v2.toString(scope.engine));
     return p1s->toQString() < p2s->toQString();
 }
 

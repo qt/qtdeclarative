@@ -135,7 +135,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
         Scoped<ArgumentsObject>(scope, O)->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
-    Scoped<String> name(scope, v->toString(ctx));
+    Scoped<String> name(scope, v->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
@@ -402,7 +402,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!o)
         return Encode::undefined();
     Scoped<FunctionObject> f(scope, o->get(ctx->d()->engine->id_toString));
@@ -416,7 +416,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue v(scope, ctx->d()->callData->thisObject.toObject(ctx));
+    ScopedValue v(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (ctx->d()->engine->hasException)
         return Encode::undefined();
     return v.asReturnedValue();

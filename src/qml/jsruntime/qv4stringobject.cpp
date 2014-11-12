@@ -171,7 +171,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = callData->args[0].toString(v4->currentContext());
+        value = callData->args[0].toString(v4);
     else
         value = v4->newString(QString());
     return Encode(v4->newStringObject(value));
@@ -183,7 +183,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
-        value = callData->args[0].toString(v4->currentContext());
+        value = callData->args[0].toString(v4);
     else
         value = v4->newString(QString());
     return value.asReturnedValue();
@@ -368,7 +368,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
         return context->engine()->throwTypeError();
 
     Scope scope(context);
-    ScopedString s(scope, context->d()->callData->thisObject.toString(context));
+    ScopedString s(scope, context->d()->callData->thisObject.toString(scope.engine));
 
     ScopedValue regexp(scope, context->d()->callData->argument(0));
     Scoped<RegExpObject> rx(scope, regexp);

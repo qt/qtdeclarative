@@ -148,7 +148,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
         return o->getIndexed(idx);
     }
 
-    ScopedString name(scope, index->toString(ctx));
+    ScopedString name(scope, index->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
     return o->get(name.getPointer());
@@ -190,7 +190,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
 {
     ExecutionContext *ctx = l->engine->currentContext();
     Scope scope(ctx);
-    ScopedObject o(scope, object->toObject(ctx));
+    ScopedObject o(scope, object->toObject(scope.engine));
     if (scope.engine->hasException)
         return;
 
@@ -207,7 +207,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
         return;
     }
 
-    ScopedString name(scope, index->toString(ctx));
+    ScopedString name(scope, index->toString(scope.engine));
     o->put(name.getPointer(), value);
 }
 
@@ -320,7 +320,7 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, const ValueRef object)
 ReturnedValue Lookup::getterFallback(Lookup *l, const ValueRef object)
 {
     QV4::Scope scope(l->name->engine());
-    QV4::ScopedObject o(scope, object->toObject(scope.engine->currentContext()));
+    QV4::ScopedObject o(scope, object->toObject(scope.engine));
     if (!o)
         return Encode::undefined();
     QV4::ScopedString s(scope, l->name);
@@ -733,7 +733,7 @@ void Lookup::setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef v
 void Lookup::setterFallback(Lookup *l, const ValueRef object, const ValueRef value)
 {
     QV4::Scope scope(l->name->engine());
-    QV4::ScopedObject o(scope, object->toObject(scope.engine->currentContext()));
+    QV4::ScopedObject o(scope, object->toObject(scope.engine));
     if (o) {
         QV4::ScopedString s(scope, l->name);
         o->put(s.getPointer(), value);

@@ -463,7 +463,7 @@ ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
     Scoped<TypedArray> srcTypedArray(scope, ctx->d()->callData->args[0]);
     if (!srcTypedArray) {
         // src is a regular object
-        ScopedObject o(scope, ctx->d()->callData->args[0].toObject(ctx));
+        ScopedObject o(scope, ctx->d()->callData->args[0].toObject(scope.engine));
         if (scope.engine->hasException || !o)
             return scope.engine->throwTypeError();
 

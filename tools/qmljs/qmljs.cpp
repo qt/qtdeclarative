@@ -116,7 +116,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef except
     QV4::ScopedValue ex(scope, *exception);
     QV4::ErrorObject *e = ex->asErrorObject();
     if (!e) {
-        std::cerr << "Uncaught exception: " << qPrintable(ex->toString(ctx)->toQString()) << std::endl;
+        std::cerr << "Uncaught exception: " << qPrintable(ex->toQString()) << std::endl;
     } else {
         QV4::ScopedString m(scope, scope.engine->newString(QStringLiteral("message")));
         QV4::ScopedValue message(scope, e->get(m.getPointer()));
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
                 }
                 if (!result->isUndefined()) {
                     if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                        std::cout << "exit value: " << qPrintable(result->toString(ctx)->toQString()) << std::endl;
+                        std::cout << "exit value: " << qPrintable(result->toQString()) << std::endl;
                 }
             } else {
                 std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
