@@ -112,8 +112,7 @@ ReturnedValue Lookup::indexedGetterGeneric(Lookup *l, const ValueRef object, con
 ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, const ValueRef index)
 {
     Q_UNUSED(l);
-    ExecutionContext *ctx = l->engine->currentContext();
-    Scope scope(ctx);
+    Scope scope(l->engine);
     uint idx = index->asArrayIndex();
 
     Scoped<Object> o(scope, object);
@@ -130,7 +129,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
 
         if (object->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index->toQStringNoThrow()).arg(object->toQStringNoThrow());
-            return ctx->engine()->throwTypeError(message);
+            return l->engine->throwTypeError(message);
         }
 
         o = RuntimeHelpers::convertToObject(scope.engine, object);
@@ -188,8 +187,7 @@ void Lookup::indexedSetterGeneric(Lookup *l, const ValueRef object, const ValueR
 
 void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef value)
 {
-    ExecutionContext *ctx = l->engine->currentContext();
-    Scope scope(ctx);
+    Scope scope(l->engine);
     ScopedObject o(scope, object->toObject(scope.engine));
     if (scope.engine->hasException)
         return;

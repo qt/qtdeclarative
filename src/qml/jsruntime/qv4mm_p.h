@@ -44,9 +44,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct ExecutionEngine;
-struct ExecutionContext;
-struct Managed;
 struct GCDeletable;
 
 class Q_QML_EXPORT MemoryManager

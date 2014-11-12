@@ -88,8 +88,8 @@ struct ObjectPrototype: Object
     static ReturnedValue method_get_proto(CallContext *ctx);
     static ReturnedValue method_set_proto(CallContext *ctx);
 
-    static void toPropertyDescriptor(ExecutionContext *ctx, const ValueRef v, Property *desc, PropertyAttributes *attrs);
-    static ReturnedValue fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs);
+    static void toPropertyDescriptor(ExecutionEngine *engine, const ValueRef v, Property *desc, PropertyAttributes *attrs);
+    static ReturnedValue fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs);
 
     static Heap::ArrayObject *getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o);
 };

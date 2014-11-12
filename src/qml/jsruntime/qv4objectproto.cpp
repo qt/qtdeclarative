@@ -140,7 +140,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
         return Encode::undefined();
     PropertyAttributes attrs;
     Property *desc = O->__getOwnProperty__(name.getPointer(), &attrs);
-    return fromPropertyDescriptor(ctx, desc, attrs);
+    return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
@@ -186,7 +186,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
     ScopedValue attributes(scope, ctx->argument(2));
     Property pd;
     PropertyAttributes attrs;
-    toPropertyDescriptor(ctx, attributes, &pd, &attrs);
+    toPropertyDescriptor(scope.engine, attributes, &pd, &attrs);
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -222,7 +222,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
         Property n;
         PropertyAttributes nattrs;
         val = o->getValue(&pd, attrs);
-        toPropertyDescriptor(ctx, val, &n, &nattrs);
+        toPropertyDescriptor(scope.engine, val, &n, &nattrs);
         if (scope.engine->hasException)
             return Encode::undefined();
         bool ok;
@@ -563,12 +563,12 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
     return Encode::undefined();
 }
 
-void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef v, Property *desc, PropertyAttributes *attrs)
+void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const ValueRef v, Property *desc, PropertyAttributes *attrs)
 {
-    Scope scope(ctx);
+    Scope scope(engine);
     ScopedObject o(scope, v);
     if (!o) {
-        ctx->engine()->throwTypeError();
+        engine->throwTypeError();
         return;
     }
 
@@ -577,52 +577,52 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
     desc->set = Primitive::emptyValue();
     ScopedValue tmp(scope);
 
-    if (o->hasProperty(ctx->d()->engine->id_enumerable))
-        attrs->setEnumerable((tmp = o->get(ctx->d()->engine->id_enumerable))->toBoolean());
+    if (o->hasProperty(engine->id_enumerable))
+        attrs->setEnumerable((tmp = o->get(engine->id_enumerable))->toBoolean());
 
-    if (o->hasProperty(ctx->d()->engine->id_configurable))
-        attrs->setConfigurable((tmp = o->get(ctx->d()->engine->id_configurable))->toBoolean());
+    if (o->hasProperty(engine->id_configurable))
+        attrs->setConfigurable((tmp = o->get(engine->id_configurable))->toBoolean());
 
-    if (o->hasProperty(ctx->d()->engine->id_get)) {
-        ScopedValue get(scope, o->get(ctx->d()->engine->id_get));
+    if (o->hasProperty(engine->id_get)) {
+        ScopedValue get(scope, o->get(engine->id_get));
         FunctionObject *f = get->asFunctionObject();
         if (f || get->isUndefined()) {
             desc->value = get;
         } else {
-            ctx->engine()->throwTypeError();
+            engine->throwTypeError();
             return;
         }
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->hasProperty(ctx->d()->engine->id_set)) {
-        ScopedValue set(scope, o->get(ctx->d()->engine->id_set));
+    if (o->hasProperty(engine->id_set)) {
+        ScopedValue set(scope, o->get(engine->id_set));
         FunctionObject *f = set->asFunctionObject();
         if (f || set->isUndefined()) {
             desc->set = set;
         } else {
-            ctx->engine()->throwTypeError();
+            engine->throwTypeError();
             return;
         }
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->hasProperty(ctx->d()->engine->id_writable)) {
+    if (o->hasProperty(engine->id_writable)) {
         if (attrs->isAccessor()) {
-            ctx->engine()->throwTypeError();
+            engine->throwTypeError();
             return;
         }
-        attrs->setWritable((tmp = o->get(ctx->d()->engine->id_writable))->toBoolean());
+        attrs->setWritable((tmp = o->get(engine->id_writable))->toBoolean());
         // writable forces it to be a data descriptor
         desc->value = Primitive::undefinedValue();
     }
 
-    if (o->hasProperty(ctx->d()->engine->id_value)) {
+    if (o->hasProperty(engine->id_value)) {
         if (attrs->isAccessor()) {
-            ctx->engine()->throwTypeError();
+            engine->throwTypeError();
             return;
         }
-        desc->value = o->get(ctx->d()->engine->id_value);
+        desc->value = o->get(engine->id_value);
         attrs->setType(PropertyAttributes::Data);
     }
 
@@ -631,12 +631,11 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionContext *ctx, const ValueRef
 }
 
 
-ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionContext *ctx, const Property *desc, PropertyAttributes attrs)
+ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs)
 {
     if (!desc)
         return Encode::undefined();
 
-    ExecutionEngine *engine = ctx->d()->engine;
     Scope scope(engine);
     // Let obj be the result of creating a new object as if by the expression new Object() where Object
     // is the standard built-in constructor with that name.
