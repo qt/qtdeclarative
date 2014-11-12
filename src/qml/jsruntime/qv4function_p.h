@@ -54,7 +54,7 @@ struct Q_QML_EXPORT Function {
              ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
     ~Function();
 
-    inline String *name() {
+    inline Heap::String *name() {
         return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
     }
     inline QString sourceFile() const { return compilationUnit->fileName(); }

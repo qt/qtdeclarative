@@ -316,8 +316,8 @@ public:
         {}
         IR::Expr *value;
     };
-    struct PointerToString {
-        explicit PointerToString(const QString &string) : string(string) {}
+    struct StringToIndex {
+        explicit StringToIndex(const QString &string) : string(string) {}
         QString string;
     };
     struct Reference {
@@ -446,7 +446,7 @@ public:
             loadArgumentInRegister(addr, dest, argumentNumber);
         }
     }
-    void loadArgumentInRegister(PointerToString temp, RegisterID dest, int argumentNumber)
+    void loadArgumentInRegister(StringToIndex temp, RegisterID dest, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
         loadStringRef(dest, temp.string);
@@ -662,7 +662,7 @@ public:
     }
 
     template <int StackSlot>
-    void loadArgumentOnStack(PointerToString temp, int argumentNumber)
+    void loadArgumentOnStack(StringToIndex temp, int argumentNumber)
     {
         Q_UNUSED(argumentNumber);
         loadStringRef(ScratchRegister, temp.string);

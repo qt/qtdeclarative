@@ -41,6 +41,9 @@ using namespace QV4;
 
 ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs)
 {
+    ExecutionEngine *engine = obj->engine();
+    Scope scope(engine);
+    ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]);
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass();
@@ -72,6 +75,9 @@ ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttribute
 ReturnedValue Lookup::lookup(Object *obj, PropertyAttributes *attrs)
 {
     Object *thisObject = obj;
+    ExecutionEngine *engine = obj->engine();
+    Scope scope(engine);
+    ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]);
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass();
@@ -228,12 +234,11 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const Valu
     indexedSetterFallback(l, object, index, v);
 }
 
-ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (Object *o = object->asObject())
         return o->getLookup(l);
 
-    ExecutionEngine *engine = l->name->engine();
     Object *proto;
     switch (object->type()) {
     case Value::Undefined_Type:
@@ -242,15 +247,18 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     case Value::Boolean_Type:
         proto = engine->booleanClass->prototype;
         break;
-    case Value::Managed_Type:
+    case Value::Managed_Type: {
         Q_ASSERT(object->isString());
         proto = engine->stringObjectClass->prototype;
-        if (l->name->equals(engine->id_length.getPointer())) {
+        Scope scope(engine);
+        ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+        if (name->equals(engine->id_length.getPointer())) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;
-            return stringLengthGetter(l, object);
+            return stringLengthGetter(l, engine, object);
         }
         break;
+    }
     case Value::Integer_Type:
     default: // Number
         proto = engine->numberClass->prototype;
@@ -279,7 +287,7 @@ ReturnedValue Lookup::getterGeneric(QV4::Lookup *l, const ValueRef object)
     return Encode::undefined();
 }
 
-ReturnedValue Lookup::getterTwoClasses(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     Lookup l1 = *l;
 
@@ -312,20 +320,20 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, const ValueRef object)
     }
 
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getterFallback(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterFallback(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
-    QV4::Scope scope(l->name->engine());
+    QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, object->toObject(scope.engine));
     if (!o)
         return Encode::undefined();
-    QV4::ScopedString s(scope, l->name);
-    return o->get(s.getPointer());
+    ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+    return o->get(name);
 }
 
-ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter0(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -334,10 +342,10 @@ ReturnedValue Lookup::getter0(Lookup *l, const ValueRef object)
         if (l->classList[0] == o->internalClass())
             return o->memberData()->data()[l->index].asReturnedValue();
     }
-    return getterTwoClasses(l, object);
+    return getterTwoClasses(l, engine, object);
 }
 
-ReturnedValue Lookup::getter1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -347,10 +355,10 @@ ReturnedValue Lookup::getter1(Lookup *l, const ValueRef object)
             l->classList[1] == o->prototype()->internalClass())
             return o->prototype()->memberData()->data()[l->index].asReturnedValue();
     }
-    return getterTwoClasses(l, object);
+    return getterTwoClasses(l, engine, object);
 }
 
-ReturnedValue Lookup::getter2(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -366,10 +374,10 @@ ReturnedValue Lookup::getter2(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getter0getter0(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter0getter0(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -381,10 +389,10 @@ ReturnedValue Lookup::getter0getter0(Lookup *l, const ValueRef object)
             return o->memberData()->data()[l->index2].asReturnedValue();
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getter0getter1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -397,10 +405,10 @@ ReturnedValue Lookup::getter0getter1(Lookup *l, const ValueRef object)
             return o->prototype()->memberData()->data()[l->index2].asReturnedValue();
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getter1getter1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -412,14 +420,14 @@ ReturnedValue Lookup::getter1getter1(Lookup *l, const ValueRef object)
         if (l->classList[2] == o->internalClass() &&
             l->classList[3] == o->prototype()->internalClass())
             return o->prototype()->memberData()->data()[l->index2].asReturnedValue();
-        return getterFallback(l, object);
+        return getterFallback(l, engine, object);
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
 
-ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -437,10 +445,10 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -459,10 +467,10 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::getterAccessor2(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -486,10 +494,10 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterFallback;
-    return getterFallback(l, object);
+    return getterFallback(l, engine, object);
 }
 
-ReturnedValue Lookup::primitiveGetter0(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::primitiveGetter0(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->type() == l->type) {
         Object *o = l->proto;
@@ -497,10 +505,10 @@ ReturnedValue Lookup::primitiveGetter0(Lookup *l, const ValueRef object)
             return o->memberData()->data()[l->index].asReturnedValue();
     }
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
-ReturnedValue Lookup::primitiveGetter1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::primitiveGetter1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->type() == l->type) {
         Object *o = l->proto;
@@ -509,10 +517,10 @@ ReturnedValue Lookup::primitiveGetter1(Lookup *l, const ValueRef object)
             return o->prototype()->memberData()->data()[l->index].asReturnedValue();
     }
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
-ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->type() == l->type) {
         Object *o = l->proto;
@@ -528,10 +536,10 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
-ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (object->type() == l->type) {
         Object *o = l->proto;
@@ -548,25 +556,25 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, const ValueRef object)
         }
     }
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
-ReturnedValue Lookup::stringLengthGetter(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::stringLengthGetter(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (String *s = object->asString())
         return Encode(s->d()->length());
 
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
-ReturnedValue Lookup::arrayLengthGetter(Lookup *l, const ValueRef object)
+ReturnedValue Lookup::arrayLengthGetter(Lookup *l, ExecutionEngine *engine, const ValueRef object)
 {
     if (ArrayObject *a = object->asArrayObject())
         return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
 
     l->getter = getterGeneric;
-    return getterGeneric(l, object);
+    return getterGeneric(l, engine, object);
 }
 
 
@@ -595,7 +603,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
         }
     }
     Scope scope(engine);
-    Scoped<String> n(scope, l->name);
+    Scoped<String> n(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
     return engine->throwReferenceError(n);
 }
 
@@ -694,22 +702,22 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
     return globalGetterGeneric(l, engine);
 }
 
-void Lookup::setterGeneric(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
-    Scope scope(l->name->engine());
+    Scope scope(engine);
     ScopedObject o(scope, object);
     if (!o) {
         o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
             return;
-        ScopedString s(scope, l->name);
-        o->put(s.getPointer(), value);
+        ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+        o->put(name, value);
         return;
     }
     o->setLookup(l, value);
 }
 
-void Lookup::setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Lookup l1 = *l;
 
@@ -725,20 +733,20 @@ void Lookup::setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef v
     }
 
     l->setter = setterFallback;
-    setterFallback(l, object, value);
+    setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterFallback(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
-    QV4::Scope scope(l->name->engine());
+    QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, object->toObject(scope.engine));
     if (o) {
-        QV4::ScopedString s(scope, l->name);
-        o->put(s.getPointer(), value);
+        ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+        o->put(name, value);
     }
 }
 
-void Lookup::setter0(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setter0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
@@ -746,10 +754,10 @@ void Lookup::setter0(Lookup *l, const ValueRef object, const ValueRef value)
         return;
     }
 
-    setterTwoClasses(l, object, value);
+    setterTwoClasses(l, engine, object, value);
 }
 
-void Lookup::setterInsert0(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
@@ -763,10 +771,10 @@ void Lookup::setterInsert0(Lookup *l, const ValueRef object, const ValueRef valu
     }
 
     l->setter = setterFallback;
-    setterFallback(l, object, value);
+    setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert1(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
@@ -781,10 +789,10 @@ void Lookup::setterInsert1(Lookup *l, const ValueRef object, const ValueRef valu
     }
 
     l->setter = setterFallback;
-    setterFallback(l, object, value);
+    setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert2(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
@@ -802,10 +810,10 @@ void Lookup::setterInsert2(Lookup *l, const ValueRef object, const ValueRef valu
     }
 
     l->setter = setterFallback;
-    setterFallback(l, object, value);
+    setterFallback(l, engine, object, value);
 }
 
-void Lookup::setter0setter0(Lookup *l, const ValueRef object, const ValueRef value)
+void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value)
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o) {
@@ -820,7 +828,7 @@ void Lookup::setter0setter0(Lookup *l, const ValueRef object, const ValueRef val
     }
 
     l->setter = setterFallback;
-    setterFallback(l, object, value);
+    setterFallback(l, engine, object, value);
 
 }
 

@@ -556,7 +556,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            callData->args[numCaptures + 1] = Value::fromHeapObject(ctx->d()->engine->newString(string));
+            callData->args[numCaptures + 1] = ctx->d()->engine->newString(string);
 
             replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);

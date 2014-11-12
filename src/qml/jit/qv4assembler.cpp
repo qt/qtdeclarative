@@ -219,11 +219,8 @@ Assembler::Pointer Assembler::loadStringAddress(RegisterID reg, const QString &s
 
 void Assembler::loadStringRef(RegisterID reg, const QString &string)
 {
-    loadPtr(Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), reg);
-    loadPtr(Address(reg, qOffsetOf(QV4::Heap::ExecutionContext, compilationUnit)), reg);
-    loadPtr(Address(reg, qOffsetOf(QV4::CompiledData::CompilationUnit, runtimeStrings)), reg);
     const int id = _isel->registerString(string);
-    loadPtr(Address(reg, id * sizeof(QV4::String*)), reg);
+    move(TrustedImm32(id), reg);
 }
 
 void Assembler::storeValue(QV4::Primitive value, IR::Expr *destination)

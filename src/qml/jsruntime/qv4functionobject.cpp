@@ -71,6 +71,16 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
     f->init(name, createProto);
 }
 
+Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
+    : Heap::Object(scope->d()->engine->functionClass)
+    , scope(scope->d())
+{
+    Scope s(scope->engine());
+    ScopedString name(s, function->name());
+    ScopedFunctionObject f(s, this);
+    f->init(name, createProto);
+}
+
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass)
     , scope(scope->d())
@@ -429,7 +439,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::FunctionObject(scope, function->name(), createProto)
+    : Heap::FunctionObject(scope, function, createProto)
 {
     setVTable(QV4::SimpleScriptFunction::staticVTable());
 
@@ -468,7 +478,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
     InternalClass *ic = f->internalClassForConstructor();
-    callData->thisObject = Value::fromHeapObject(v4->newObject(ic));
+    callData->thisObject = v4->newObject(ic);
 
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);

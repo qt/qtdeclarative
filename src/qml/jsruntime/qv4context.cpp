@@ -387,7 +387,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                     return v.asReturnedValue();
             }
             if (f->function() && f->function()->isNamedExpression()
-                && name->equals(f->function()->name()))
+                && name->equals(ScopedString(scope, f->function()->name())))
                 return f.asReturnedValue();
         }
 
@@ -458,7 +458,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
                 }
             }
             if (f->function() && f->function()->isNamedExpression()
-                && name->equals(f->function()->name()))
+                && name->equals(ScopedString(scope, f->function()->name())))
                 return c->d()->function->asReturnedValue();
         }
 

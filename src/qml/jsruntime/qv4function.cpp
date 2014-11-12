@@ -56,9 +56,9 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     const quint32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
-    ScopedString s(scope);
+    ScopedString arg(scope);
     for (int i = static_cast<int>(compiledFunction->nFormals - 1); i >= 0; --i) {
-        String *arg = compilationUnit->runtimeStrings[formalsIndices[i]];
+        arg = compilationUnit->runtimeStrings[formalsIndices[i]];
         while (1) {
             InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
             if (newClass != internalClass) {
@@ -66,13 +66,14 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                 break;
             }
             // duplicate arguments, need some trick to store them
-            arg = (s = engine->memoryManager->alloc<String>(engine, arg->d(), engine->newString(QString(0xfffe)))).getPointer();
+            arg = engine->memoryManager->alloc<String>(engine, arg->d(), engine->newString(QString(0xfffe)));
         }
     }
 
     const quint32 *localsIndices = compiledFunction->localsTable();
+    ScopedString local(scope);
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
-        String *local = compilationUnit->runtimeStrings[localsIndices[i]];
+        local = compilationUnit->runtimeStrings[localsIndices[i]];
         internalClass = internalClass->addMember(local, Attr_NotConfigurable);
     }
 }

@@ -104,7 +104,7 @@ public:
     }
 
     void pushForGC(Heap::Base *m) {
-        *jsStackTop = Value::fromHeapObject(m);
+        *jsStackTop = m;
         ++jsStackTop;
     }
     Heap::Base *popForGC() {

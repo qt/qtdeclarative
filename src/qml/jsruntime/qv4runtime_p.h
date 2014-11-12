@@ -89,50 +89,51 @@ struct NoThrowEngine : public ExecutionEngine
 struct Q_QML_PRIVATE_EXPORT Runtime {
     // call
     static ReturnedValue callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue callActivationProperty(ExecutionEngine *engine, String *name, CallData *callData);
-    static ReturnedValue callProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
+    static ReturnedValue callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
     static ReturnedValue callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
     static ReturnedValue callElement(ExecutionEngine *engine, const ValueRef index, CallData *callData);
     static ReturnedValue callValue(ExecutionEngine *engine, const ValueRef func, CallData *callData);
 
     // construct
     static ReturnedValue constructGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue constructActivationProperty(ExecutionEngine *engine, String *name, CallData *callData);
-    static ReturnedValue constructProperty(ExecutionEngine *engine, String *name, CallData *callData);
+    static ReturnedValue constructActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
+    static ReturnedValue constructProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
     static ReturnedValue constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
     static ReturnedValue constructValue(ExecutionEngine *engine, const ValueRef func, CallData *callData);
 
     // set & get
-    static void setActivationProperty(ExecutionEngine *engine, String *name, const ValueRef value);
-    static void setProperty(ExecutionEngine *engine, const ValueRef object, String *name, const ValueRef value);
+    static void setActivationProperty(ExecutionEngine *engine, int nameIndex, const ValueRef value);
+    static void setProperty(ExecutionEngine *engine, const ValueRef object, int nameIndex, const ValueRef value);
     static void setElement(ExecutionEngine *engine, const ValueRef object, const ValueRef index, const ValueRef value);
-    static ReturnedValue getProperty(ExecutionEngine *engine, const ValueRef object, String *name);
-    static ReturnedValue getActivationProperty(ExecutionEngine *engine, String *name);
+    static ReturnedValue getProperty(ExecutionEngine *engine, const ValueRef object, int nameIndex);
+    static ReturnedValue getActivationProperty(ExecutionEngine *engine, int nameIndex);
     static ReturnedValue getElement(ExecutionEngine *engine, const ValueRef object, const ValueRef index);
 
     // typeof
     static ReturnedValue typeofValue(ExecutionEngine *engine, const ValueRef val);
-    static ReturnedValue typeofName(ExecutionEngine *engine, String *name);
-    static ReturnedValue typeofMember(ExecutionEngine *engine, const ValueRef base, String *name);
+    static ReturnedValue typeofName(ExecutionEngine *engine, int nameIndex);
+    static ReturnedValue typeofMember(ExecutionEngine *engine, const ValueRef base, int nameIndex);
     static ReturnedValue typeofElement(ExecutionEngine *engine, const ValueRef base, const ValueRef index);
 
     // delete
     static ReturnedValue deleteElement(ExecutionEngine *engine, const ValueRef base, const ValueRef index);
-    static ReturnedValue deleteMember(ExecutionEngine *engine, const ValueRef base, String *name);
-    static ReturnedValue deleteName(ExecutionEngine *engine, String *name);
+    static ReturnedValue deleteMember(ExecutionEngine *engine, const ValueRef base, int nameIndex);
+    static ReturnedValue deleteMemberString(ExecutionEngine *engine, const ValueRef base, String *name);
+    static ReturnedValue deleteName(ExecutionEngine *engine, int nameIndex);
 
     // exceptions & scopes
     static void throwException(ExecutionEngine *engine, const ValueRef value);
     static ReturnedValue unwindException(ExecutionEngine *engine);
     static void pushWithScope(const ValueRef o, NoThrowEngine *engine);
-    static void pushCatchScope(NoThrowEngine *engine, String *exceptionVarName);
+    static void pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex);
     static void popScope(ExecutionEngine *engine);
 
     // closures
     static ReturnedValue closure(ExecutionEngine *engine, int functionId);
 
     // function header
-    static void declareVar(ExecutionEngine *engine, bool deletable, String *name);
+    static void declareVar(ExecutionEngine *engine, bool deletable, int nameIndex);
     static ReturnedValue setupArgumentsObject(ExecutionEngine *engine);
     static void convertThisToObject(ExecutionEngine *engine);
 
@@ -209,7 +210,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue getQmlImportedScripts(NoThrowEngine *ctx);
     static ReturnedValue getQmlContextObject(NoThrowEngine *ctx);
     static ReturnedValue getQmlScopeObject(NoThrowEngine *ctx);
-    static ReturnedValue getQmlSingleton(NoThrowEngine *ctx, String *name);
+    static ReturnedValue getQmlSingleton(NoThrowEngine *ctx, int nameIndex);
     static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const ValueRef object, int propertyIndex, bool captureRequired);
     static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const ValueRef object, int propertyIndex, bool captureRequired);

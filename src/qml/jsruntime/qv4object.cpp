@@ -458,9 +458,10 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
 {
     Scope scope(m->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
+    ScopedString name(scope, scope.engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
 
     InternalClass *c = o->internalClass();
-    uint idx = c->find(l->name);
+    uint idx = c->find(name);
     if (!o->isArrayObject() || idx != Heap::ArrayObject::LengthPropertyIndex) {
         if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
             l->classList[0] = o->internalClass();
@@ -476,12 +477,11 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
         }
     }
 
-    ScopedString s(scope, l->name);
-    o->put(s.getPointer(), value);
+    o->put(name, value);
 
     if (o->internalClass() == c)
         return;
-    idx = o->internalClass()->find(l->name);
+    idx = o->internalClass()->find(name);
     if (idx == UINT_MAX)
         return;
     l->classList[0] = c;
@@ -1150,7 +1150,9 @@ Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 
 ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 {
-    if (l->name->equals(m->engine()->id_length)) {
+    Scope scope(m->engine());
+    ScopedString name(scope, m->engine()->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+    if (name->equals(m->engine()->id_length)) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);

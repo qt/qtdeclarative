@@ -373,13 +373,15 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { val = v; return *this; }
-    template<typename T>
-    Value &operator=(T *t) {
-        val = Value::fromManaged(t).val;
+    Value &operator=(Managed *m) {
+        val = Value::fromManaged(m).val;
         return *this;
     }
     Value &operator=(Heap::Base *o) {
         m = o;
+#if QT_POINTER_SIZE == 4
+        tag = Managed_Type;
+#endif
         return *this;
     }
 

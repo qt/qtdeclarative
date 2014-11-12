@@ -709,7 +709,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
-            callData->args[0] = Value::fromHeapObject(ctx->d()->engine->newString(key));
+            callData->args[0] = ctx->d()->engine->newString(key);
             value = toJSON->call(callData);
         }
     }
@@ -718,7 +718,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
         ScopedObject holder(scope, ctx->d()->engine->newObject());
         holder->put(scope.engine, QString(), value);
         ScopedCallData callData(scope, 2);
-        callData->args[0] = Value::fromHeapObject(ctx->d()->engine->newString(key));
+        callData->args[0] = ctx->d()->engine->newString(key);
         callData->args[1] = value;
         callData->thisObject = holder;
         value = replacerFunction->call(callData);

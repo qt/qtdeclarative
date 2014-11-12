@@ -58,6 +58,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     };
 
     FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto = false);
+    FunctionObject(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);

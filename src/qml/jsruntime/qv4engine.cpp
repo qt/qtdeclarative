@@ -337,21 +337,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass));
 
-    objectCtor = Value::fromHeapObject(memoryManager->alloc<ObjectCtor>(rootContext));
-    stringCtor = Value::fromHeapObject(memoryManager->alloc<StringCtor>(rootContext));
-    numberCtor = Value::fromHeapObject(memoryManager->alloc<NumberCtor>(rootContext));
-    booleanCtor = Value::fromHeapObject(memoryManager->alloc<BooleanCtor>(rootContext));
-    arrayCtor = Value::fromHeapObject(memoryManager->alloc<ArrayCtor>(rootContext));
-    functionCtor = Value::fromHeapObject(memoryManager->alloc<FunctionCtor>(rootContext));
-    dateCtor = Value::fromHeapObject(memoryManager->alloc<DateCtor>(rootContext));
-    regExpCtor = Value::fromHeapObject(memoryManager->alloc<RegExpCtor>(rootContext));
-    errorCtor = Value::fromHeapObject(memoryManager->alloc<ErrorCtor>(rootContext));
-    evalErrorCtor = Value::fromHeapObject(memoryManager->alloc<EvalErrorCtor>(rootContext));
-    rangeErrorCtor = Value::fromHeapObject(memoryManager->alloc<RangeErrorCtor>(rootContext));
-    referenceErrorCtor = Value::fromHeapObject(memoryManager->alloc<ReferenceErrorCtor>(rootContext));
-    syntaxErrorCtor = Value::fromHeapObject(memoryManager->alloc<SyntaxErrorCtor>(rootContext));
-    typeErrorCtor = Value::fromHeapObject(memoryManager->alloc<TypeErrorCtor>(rootContext));
-    uRIErrorCtor = Value::fromHeapObject(memoryManager->alloc<URIErrorCtor>(rootContext));
+    objectCtor = memoryManager->alloc<ObjectCtor>(rootContext);
+    stringCtor = memoryManager->alloc<StringCtor>(rootContext);
+    numberCtor = memoryManager->alloc<NumberCtor>(rootContext);
+    booleanCtor = memoryManager->alloc<BooleanCtor>(rootContext);
+    arrayCtor = memoryManager->alloc<ArrayCtor>(rootContext);
+    functionCtor = memoryManager->alloc<FunctionCtor>(rootContext);
+    dateCtor = memoryManager->alloc<DateCtor>(rootContext);
+    regExpCtor = memoryManager->alloc<RegExpCtor>(rootContext);
+    errorCtor = memoryManager->alloc<ErrorCtor>(rootContext);
+    evalErrorCtor = memoryManager->alloc<EvalErrorCtor>(rootContext);
+    rangeErrorCtor = memoryManager->alloc<RangeErrorCtor>(rootContext);
+    referenceErrorCtor = memoryManager->alloc<ReferenceErrorCtor>(rootContext);
+    syntaxErrorCtor = memoryManager->alloc<SyntaxErrorCtor>(rootContext);
+    typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(rootContext);
+    uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(rootContext);
 
     static_cast<ObjectPrototype *>(objectPrototype.getPointer())->init(this, objectCtor.asObject());
     static_cast<StringPrototype *>(stringPrototype.getPointer())->init(this, stringCtor.asObject());
@@ -375,18 +375,18 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // typed arrays
 
-    arrayBufferCtor = Value::fromHeapObject(memoryManager->alloc<ArrayBufferCtor>(rootContext));
+    arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(rootContext);
     Scoped<ArrayBufferPrototype> arrayBufferPrototype(scope, memoryManager->alloc<ArrayBufferPrototype>(objectClass));
     arrayBufferPrototype->init(this, arrayBufferCtor.asObject());
     arrayBufferClass = InternalClass::create(this, ArrayBuffer::staticVTable(), arrayBufferPrototype);
 
-    dataViewCtor = Value::fromHeapObject(memoryManager->alloc<DataViewCtor>(rootContext));
+    dataViewCtor = memoryManager->alloc<DataViewCtor>(rootContext);
     Scoped<DataViewPrototype> dataViewPrototype(scope, memoryManager->alloc<DataViewPrototype>(objectClass));
     dataViewPrototype->init(this, dataViewCtor.asObject());
     dataViewClass = InternalClass::create(this, DataView::staticVTable(), dataViewPrototype);
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        typedArrayCtors[i] = Value::fromHeapObject(memoryManager->alloc<TypedArrayCtor>(rootContext, Heap::TypedArray::Type(i)));
+        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(rootContext, Heap::TypedArray::Type(i));
         Scoped<TypedArrayPrototype> typedArrayPrototype(scope, memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i)));
         typedArrayPrototype->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
         typedArrayClasses[i] = InternalClass::create(this, TypedArray::staticVTable(), typedArrayPrototype);

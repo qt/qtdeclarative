@@ -49,9 +49,9 @@ struct Lookup {
     union {
         ReturnedValue (*indexedGetter)(Lookup *l, const ValueRef object, const ValueRef index);
         void (*indexedSetter)(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
-        ReturnedValue (*getter)(Lookup *l, const ValueRef object);
+        ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const ValueRef object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
-        void (*setter)(Lookup *l, const ValueRef object, const ValueRef v);
+        void (*setter)(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef v);
     };
     union {
         ExecutionEngine *engine;
@@ -68,7 +68,7 @@ struct Lookup {
         uint index2;
     };
     uint index;
-    String *name;
+    uint nameIndex;
 
     static ReturnedValue indexedGetterGeneric(Lookup *l, const ValueRef object, const ValueRef index);
     static ReturnedValue indexedGetterFallback(Lookup *l, const ValueRef object, const ValueRef index);
@@ -78,26 +78,26 @@ struct Lookup {
     static void indexedSetterFallback(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef value);
     static void indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v);
 
-    static ReturnedValue getterGeneric(Lookup *l, const ValueRef object);
-    static ReturnedValue getterTwoClasses(Lookup *l, const ValueRef object);
-    static ReturnedValue getterFallback(Lookup *l, const ValueRef object);
+    static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getterFallback(Lookup *l, ExecutionEngine *engine, const ValueRef object);
 
-    static ReturnedValue getter0(Lookup *l, const ValueRef object);
-    static ReturnedValue getter1(Lookup *l, const ValueRef object);
-    static ReturnedValue getter2(Lookup *l, const ValueRef object);
-    static ReturnedValue getter0getter0(Lookup *l, const ValueRef object);
-    static ReturnedValue getter0getter1(Lookup *l, const ValueRef object);
-    static ReturnedValue getter1getter1(Lookup *l, const ValueRef object);
-    static ReturnedValue getterAccessor0(Lookup *l, const ValueRef object);
-    static ReturnedValue getterAccessor1(Lookup *l, const ValueRef object);
-    static ReturnedValue getterAccessor2(Lookup *l, const ValueRef object);
+    static ReturnedValue getter0(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getter2(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getter0getter0(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getter0getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getter1getter1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getterAccessor0(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getterAccessor1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue getterAccessor2(Lookup *l, ExecutionEngine *engine, const ValueRef object);
 
-    static ReturnedValue primitiveGetter0(Lookup *l, const ValueRef object);
-    static ReturnedValue primitiveGetter1(Lookup *l, const ValueRef object);
-    static ReturnedValue primitiveGetterAccessor0(Lookup *l, const ValueRef object);
-    static ReturnedValue primitiveGetterAccessor1(Lookup *l, const ValueRef object);
-    static ReturnedValue stringLengthGetter(Lookup *l, const ValueRef object);
-    static ReturnedValue arrayLengthGetter(Lookup *l, const ValueRef object);
+    static ReturnedValue primitiveGetter0(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue primitiveGetter1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue stringLengthGetter(Lookup *l, ExecutionEngine *engine, const ValueRef object);
+    static ReturnedValue arrayLengthGetter(Lookup *l, ExecutionEngine *engine, const ValueRef object);
 
     static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionEngine *engine);
     static ReturnedValue globalGetter0(Lookup *l, ExecutionEngine *engine);
@@ -107,14 +107,14 @@ struct Lookup {
     static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionEngine *engine);
     static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionEngine *engine);
 
-    static void setterGeneric(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setterTwoClasses(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setterFallback(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setter0(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setterInsert0(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setterInsert1(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setterInsert2(Lookup *l, const ValueRef object, const ValueRef value);
-    static void setter0setter0(Lookup *l, const ValueRef object, const ValueRef value);
+    static void setterGeneric(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setterTwoClasses(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setterFallback(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setter0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setterInsert0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setterInsert1(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setterInsert2(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
+    static void setter0setter0(Lookup *l, ExecutionEngine *engine, const ValueRef object, const ValueRef value);
 
     ReturnedValue lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs);
     ReturnedValue lookup(Object *obj, PropertyAttributes *attrs);

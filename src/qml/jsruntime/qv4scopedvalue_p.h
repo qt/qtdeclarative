@@ -256,7 +256,7 @@ struct Scoped
     Scoped(const Scope &scope, typename T::Data *t)
     {
         ptr = scope.engine->jsStackTop++;
-        *ptr = Value::fromHeapObject(t);
+        *ptr = t;
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -298,7 +298,7 @@ struct Scoped
         return *this;
     }
     Scoped<T> &operator=(typename T::Data *t) {
-        *ptr = Value::fromHeapObject(t);
+        *ptr = t;
         return *this;
     }
     Scoped<T> &operator=(const Value &v) {
