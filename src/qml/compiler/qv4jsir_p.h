@@ -70,10 +70,6 @@ class QQmlPropertyCache;
 class QQmlEnginePrivate;
 
 namespace QV4 {
-struct ExecutionContext;
-}
-
-namespace QV4 {
 
 inline bool isNegative(double d)
 {

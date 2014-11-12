@@ -47,10 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-struct ExecutionContext;
-}
-
 namespace QQmlJS {
 namespace AST {
 class UiParameterList;
@@ -526,15 +522,15 @@ protected:
 class RuntimeCodegen : public Codegen
 {
 public:
-    RuntimeCodegen(QV4::ExecutionContext *ctx, bool strict)
+    RuntimeCodegen(QV4::ExecutionEngine *engine, bool strict)
         : Codegen(strict)
-        , context(ctx)
+        , engine(engine)
     {}
 
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
 private:
-    QV4::ExecutionContext *context;
+    QV4::ExecutionEngine *engine;
 };
 #endif // V4_BOOTSTRAP
 

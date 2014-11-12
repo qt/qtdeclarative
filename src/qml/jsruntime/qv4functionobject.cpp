@@ -239,7 +239,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 
     IR::Module module(v4->debugger != 0);
 
-    QQmlJS::RuntimeCodegen cg(v4->currentContext(), f->strictMode());
+    QQmlJS::RuntimeCodegen cg(v4, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QV4::Compiler::JSUnitGenerator jsGenerator(&module);

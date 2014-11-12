@@ -53,7 +53,6 @@ struct Function;
 }
 
 struct Function;
-struct ExecutionContext;
 
 namespace CompiledData {
 

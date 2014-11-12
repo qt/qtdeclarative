@@ -266,7 +266,7 @@ void Script::parse()
             }
         }
 
-        RuntimeCodegen cg(scope, strictMode);
+        RuntimeCodegen cg(v4, strictMode);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
         if (v4->hasException)
             return;
