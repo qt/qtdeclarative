@@ -116,7 +116,7 @@ Component {
                             drag.maximumY: page.height - 80
                             drag.minimumX: 100
                             drag.maximumX: page.width - 140
-                            onClicked: { myText.focus = true; Qt.inputMethod.show(); }
+                            onClicked: myText.forceActiveFocus()
                         }
                     }
                 }
