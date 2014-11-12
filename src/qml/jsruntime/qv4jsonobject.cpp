@@ -65,7 +65,7 @@ DEFINE_OBJECT_VTABLE(JsonObject);
 class JsonParser
 {
 public:
-    JsonParser(ExecutionContext *context, const QChar *json, int length);
+    JsonParser(ExecutionEngine *engine, const QChar *json, int length);
 
     ReturnedValue parse(QJsonParseError *error);
 
@@ -80,7 +80,7 @@ private:
     bool parseValue(ValueRef val);
     bool parseNumber(ValueRef val);
 
-    ExecutionContext *context;
+    ExecutionEngine *engine;
     const QChar *head;
     const QChar *json;
     const QChar *end;
@@ -92,8 +92,8 @@ private:
 static const int nestingLimit = 1024;
 
 
-JsonParser::JsonParser(ExecutionContext *context, const QChar *json, int length)
-    : context(context), head(json), json(json), nestingLevel(0), lastError(QJsonParseError::NoError)
+JsonParser::JsonParser(ExecutionEngine *engine, const QChar *json, int length)
+    : engine(engine), head(json), json(json), nestingLevel(0), lastError(QJsonParseError::NoError)
 {
     end = json + length;
 }
@@ -189,7 +189,7 @@ ReturnedValue JsonParser::parse(QJsonParseError *error)
 
     eatSpace();
 
-    Scope scope(context);
+    Scope scope(engine);
     ScopedValue v(scope);
     if (!parseValue(v)) {
 #ifdef PARSER_DEBUG
@@ -229,9 +229,9 @@ ReturnedValue JsonParser::parseObject()
     }
 
     BEGIN << "parseObject pos=" << json;
-    Scope scope(context);
+    Scope scope(engine);
 
-    ScopedObject o(scope, context->d()->engine->newObject());
+    ScopedObject o(scope, engine->newObject());
 
     QChar token = nextToken();
     while (token == Quote) {
@@ -265,7 +265,7 @@ ReturnedValue JsonParser::parseObject()
 bool JsonParser::parseMember(Object *o)
 {
     BEGIN << "parseMember";
-    Scope scope(context);
+    Scope scope(engine);
 
     QString key;
     if (!parseString(&key))
@@ -279,7 +279,7 @@ bool JsonParser::parseMember(Object *o)
     if (!parseValue(val))
         return false;
 
-    ScopedString s(scope, context->d()->engine->newIdentifier(key));
+    ScopedString s(scope, engine->newIdentifier(key));
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
         o->putIndexed(idx, val);
@@ -296,9 +296,9 @@ bool JsonParser::parseMember(Object *o)
 */
 ReturnedValue JsonParser::parseArray()
 {
-    Scope scope(context);
+    Scope scope(engine);
     BEGIN << "parseArray";
-    Scoped<ArrayObject> array(scope, context->d()->engine->newArrayObject());
+    Scoped<ArrayObject> array(scope, engine->newArrayObject());
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
@@ -401,7 +401,7 @@ bool JsonParser::parseValue(ValueRef val)
             return false;
         DEBUG << "value: string";
         END;
-        val = Value::fromHeapObject(context->d()->engine->newString(value));
+        val = Value::fromHeapObject(engine->newString(value));
         return true;
     }
     case BeginArray: {
@@ -895,7 +895,7 @@ ReturnedValue JsonObject::method_parse(CallContext *ctx)
     QString jtext = v->toQString();
 
     DEBUG << "parsing source = " << jtext;
-    JsonParser parser(ctx, jtext.constData(), jtext.length());
+    JsonParser parser(scope.engine, jtext.constData(), jtext.length());
     QJsonParseError error;
     ScopedValue result(scope, parser.parse(&error));
     if (error.error != QJsonParseError::NoError) {
