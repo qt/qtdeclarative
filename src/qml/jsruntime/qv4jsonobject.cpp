@@ -716,7 +716,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
 
     if (replacerFunction) {
         ScopedObject holder(scope, ctx->d()->engine->newObject());
-        holder->put(ctx, QString(), value);
+        holder->put(scope.engine, QString(), value);
         ScopedCallData callData(scope, 2);
         callData->args[0] = Value::fromHeapObject(ctx->d()->engine->newString(key));
         callData->args[1] = value;

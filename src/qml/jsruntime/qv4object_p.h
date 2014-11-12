@@ -121,16 +121,16 @@ struct Q_QML_EXPORT Object: Managed {
     bool hasOwnProperty(String *name) const;
     bool hasOwnProperty(uint index) const;
 
-    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, String *member, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs);
-    bool defineOwnProperty2(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, String *name, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property &p, PropertyAttributes attrs);
+    bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs);
 
     //
     // helpers
     //
-    void put(ExecutionContext *ctx, const QString &name, const ValueRef value);
+    void put(ExecutionEngine *engine, const QString &name, const ValueRef value);
 
     static ReturnedValue getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs);
     ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {

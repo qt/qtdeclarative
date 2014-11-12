@@ -71,10 +71,10 @@ bool Object::setPrototype(Object *proto)
     return true;
 }
 
-void Object::put(ExecutionContext *ctx, const QString &name, const ValueRef value)
+void Object::put(ExecutionEngine *engine, const QString &name, const ValueRef value)
 {
-    Scope scope(ctx);
-    ScopedString n(scope, ctx->d()->engine->newString(name));
+    Scope scope(engine);
+    ScopedString n(scope, engine->newString(name));
     put(n.getPointer(), value);
 }
 
@@ -827,21 +827,21 @@ bool Object::internalDeleteIndexedProperty(uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const Property &p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __defineOwnProperty__(ctx, idx, p, attrs);
+        return __defineOwnProperty__(engine, idx, p, attrs);
 
     name->makeIdentifier();
 
-    Scope scope(ctx);
+    Scope scope(engine);
     Property *current;
     PropertyAttributes *cattrs;
     uint memberIndex;
 
-    if (isArrayObject() && name->equals(ctx->d()->engine->id_length)) {
-        assert(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(ctx->d()->engine->id_length));
+    if (isArrayObject() && name->equals(engine->id_length)) {
+        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length));
         Property *lp = propertyAt(Heap::ArrayObject::LengthPropertyIndex);
         cattrs = internalClass()->propertyData.constData() + Heap::ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
@@ -854,7 +854,7 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
             uint l = p.value.asArrayLength(&ok);
             if (!ok) {
                 ScopedValue v(scope, p.value);
-                ctx->engine()->throwRangeError(v);
+                engine->throwRangeError(v);
                 return false;
             }
             succeeded = setArrayLength(l);
@@ -885,30 +885,30 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, String *name, const Pr
         return true;
     }
 
-    return __defineOwnProperty__(ctx, memberIndex, name, p, attrs);
+    return __defineOwnProperty__(engine, memberIndex, name, p, attrs);
 reject:
-  if (ctx->d()->strictMode)
-      ctx->engine()->throwTypeError();
+  if (engine->currentContext()->d()->strictMode)
+      engine->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs)
 {
     // 15.4.5.1, 4b
     if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
         goto reject;
 
     if (ArgumentsObject::isNonStrictArgumentsObject(this))
-        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(ctx, index, p, attrs);
+        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(engine, index, p, attrs);
 
-    return defineOwnProperty2(ctx, index, p, attrs);
+    return defineOwnProperty2(engine, index, p, attrs);
 reject:
-  if (ctx->d()->strictMode)
-      ctx->engine()->throwTypeError();
+  if (engine->currentContext()->d()->strictMode)
+      engine->throwTypeError();
   return false;
 }
 
-bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Property &p, PropertyAttributes attrs)
+bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs)
 {
     Property *current = 0;
 
@@ -928,7 +928,7 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
         pp.copy(p, attrs);
         pp.fullyPopulated(&attrs);
         if (attrs == Attr_Data) {
-            Scope scope(ctx);
+            Scope scope(engine);
             ScopedValue v(scope, pp.value);
             arraySet(index, v);
         } else {
@@ -937,14 +937,14 @@ bool Object::defineOwnProperty2(ExecutionContext *ctx, uint index, const Propert
         return true;
     }
 
-    return __defineOwnProperty__(ctx, index, 0, p, attrs);
+    return __defineOwnProperty__(engine, index, 0, p, attrs);
 reject:
-  if (ctx->d()->strictMode)
-      ctx->engine()->throwTypeError();
+  if (engine->currentContext()->d()->strictMode)
+      engine->throwTypeError();
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *member, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property &p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
@@ -1032,17 +1032,17 @@ bool Object::__defineOwnProperty__(ExecutionContext *ctx, uint index, String *me
         setHasAccessorProperty();
     return true;
   reject:
-    if (ctx->d()->strictMode)
-        ctx->engine()->throwTypeError();
+    if (engine->currentContext()->d()->strictMode)
+        engine->throwTypeError();
     return false;
 }
 
 
-bool Object::__defineOwnProperty__(ExecutionContext *ctx, const QString &name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property &p, PropertyAttributes attrs)
 {
-    Scope scope(ctx);
-    ScopedString s(scope, ctx->d()->engine->newString(name));
-    return __defineOwnProperty__(ctx, s.getPointer(), p, attrs);
+    Scope scope(engine);
+    ScopedString s(scope, engine->newString(name));
+    return __defineOwnProperty__(engine, s.getPointer(), p, attrs);
 }
 
 

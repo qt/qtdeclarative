@@ -96,11 +96,11 @@ void ArgumentsObject::fullyCreate()
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const Property &desc, PropertyAttributes attrs)
+bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, const Property &desc, PropertyAttributes attrs)
 {
     fullyCreate();
 
-    Scope scope(ctx);
+    Scope scope(engine);
     Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
     Property map;
     PropertyAttributes mapAttrs;
@@ -118,10 +118,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         pd->value = mappedArguments()->data[index];
     }
 
-    bool strict = ctx->d()->strictMode;
-    ctx->d()->strictMode = false;
-    bool result = Object::defineOwnProperty2(ctx, index, desc, attrs);
-    ctx->d()->strictMode = strict;
+    bool strict = engine->currentContext()->d()->strictMode;
+    engine->currentContext()->d()->strictMode = false;
+    bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
+    engine->currentContext()->d()->strictMode = strict;
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
@@ -137,8 +137,8 @@ bool ArgumentsObject::defineOwnProperty(ExecutionContext *ctx, uint index, const
         }
     }
 
-    if (ctx->d()->strictMode && !result)
-        return ctx->engine()->throwTypeError();
+    if (engine->currentContext()->d()->strictMode && !result)
+        return engine->throwTypeError();
     return result;
 }
 
