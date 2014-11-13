@@ -96,20 +96,18 @@ Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, int length)
     memset(data->data(), 0, length + 1);
 }
 
+Heap::ArrayBuffer::~ArrayBuffer()
+{
+    if (!data->ref.deref())
+        QTypedArrayData<char>::deallocate(data);
+}
+
 QByteArray ArrayBuffer::asByteArray() const
 {
     QByteArrayDataPtr ba = { d()->data };
     ba.ptr->ref.ref();
     return QByteArray(ba);
 }
-
-void ArrayBuffer::destroy(Managed *m)
-{
-    ArrayBuffer *b = static_cast<ArrayBuffer *>(m);
-    if (!b->d()->data->ref.deref())
-        QTypedArrayData<char>::deallocate(b->d()->data);
-}
-
 
 void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {

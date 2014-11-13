@@ -127,7 +127,7 @@ private:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
-    static void destroy(Managed *that);
+    static void destroy(Heap::Base *that);
 
     static ReturnedValue method_connect(CallContext *ctx);
     static ReturnedValue method_disconnect(CallContext *ctx);
@@ -136,6 +136,7 @@ private:
 struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 {
     V4_OBJECT2(QObjectMethod, QV4::FunctionObject)
+    V4_NEEDS_DESTROY
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
@@ -152,26 +153,15 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     ReturnedValue callInternal(CallData *callData);
 
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
-    static void destroy(Managed *that)
-    {
-        static_cast<QObjectMethod *>(that)->d()->~Data();
-    }
 };
 
 struct QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
-
+    V4_NEEDS_DESTROY
 
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object.data(); }
-
-private:
-
-    static void destroy(Managed *that)
-    {
-        static_cast<QmlSignalHandler *>(that)->d()->~Data();
-    }
 };
 
 class MultiplyWrappedQObjectMap : public QObject,

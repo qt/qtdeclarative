@@ -57,6 +57,9 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define V4_MANAGED_SIZE_TEST
 #endif
 
+#define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->~Data(); }
+
+
 #define V4_MANAGED(DataClass, superClass) \
     public: \
         Q_MANAGED_CHECK \
@@ -117,7 +120,7 @@ struct ManagedVTable
     uint unused : 18;
     uint type : 8;
     const char *className;
-    void (*destroy)(Managed *);
+    void (*destroy)(Heap::Base *);
     void (*markObjects)(Heap::Base *, ExecutionEngine *e);
     bool (*isEqualTo)(Managed *m, Managed *other);
 };
@@ -310,7 +313,7 @@ public:
     bool inUse() const { return d()->inUse; }
     bool markBit() const { return d()->markBit; }
 
-    static void destroy(Managed *) {}
+    static void destroy(Heap::Base *) {}
 private:
     friend class MemoryManager;
     friend struct Identifiers;

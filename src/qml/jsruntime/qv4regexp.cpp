@@ -114,11 +114,6 @@ Heap::RegExp::~RegExp()
     }
 }
 
-void RegExp::destroy(Managed *that)
-{
-    static_cast<RegExp*>(that)->d()->~Data();
-}
-
 void RegExp::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Q_UNUSED(that);

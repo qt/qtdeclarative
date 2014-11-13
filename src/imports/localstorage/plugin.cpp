@@ -116,6 +116,7 @@ class QQmlSqlDatabaseWrapper : public Object
 {
 public:
     V4_OBJECT2(QQmlSqlDatabaseWrapper, Object)
+    V4_NEEDS_DESTROY
 
     static Heap::QQmlSqlDatabaseWrapper *create(QV8Engine *engine)
     {
@@ -127,9 +128,6 @@ public:
     }
 
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void destroy(Managed *that) {
-        static_cast<QQmlSqlDatabaseWrapper *>(that)->~QQmlSqlDatabaseWrapper();
-    }
 };
 
 }

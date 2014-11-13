@@ -84,12 +84,6 @@ bool VariantObject::Data::isScarce() const
     return t == QVariant::Pixmap || t == QVariant::Image;
 }
 
-void VariantObject::destroy(Managed *that)
-{
-    VariantObject *v = static_cast<VariantObject *>(that);
-    v->d()->~Data();
-}
-
 bool VariantObject::isEqualTo(Managed *m, Managed *other)
 {
     Q_ASSERT(m->as<QV4::VariantObject>());

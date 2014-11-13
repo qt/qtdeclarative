@@ -377,7 +377,7 @@ void MemoryManager::sweep(bool lastSweep)
             continue;
         }
         if (m->internalClass()->vtable->destroy)
-            m->internalClass()->vtable->destroy(m);
+            m->internalClass()->vtable->destroy(m->d());
 
         *last = i->next;
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
@@ -419,7 +419,7 @@ void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
                 if (m->internalClass()->vtable->destroy)
-                    m->internalClass()->vtable->destroy(m);
+                    m->internalClass()->vtable->destroy(m->d());
 
                 memset(m, 0, size);
                 m->setNextFree(*f);

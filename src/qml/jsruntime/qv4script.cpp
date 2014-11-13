@@ -67,12 +67,7 @@ struct CompilationUnitHolder : Object {
 struct CompilationUnitHolder : public Object
 {
     V4_OBJECT2(CompilationUnitHolder, Object)
-
-    static void destroy(Managed *that)
-    {
-        static_cast<CompilationUnitHolder*>(that)->d()->~Data();
-    }
-
+    V4_NEEDS_DESTROY
 };
 
 inline

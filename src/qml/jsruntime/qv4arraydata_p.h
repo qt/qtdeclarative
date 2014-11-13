@@ -106,6 +106,7 @@ struct SimpleArrayData : public ArrayData {
 
 struct SparseArrayData : public ArrayData {
     inline SparseArrayData(ExecutionEngine *engine);
+    inline ~SparseArrayData();
 };
 
 }
@@ -196,6 +197,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
 {
     V4_ARRAYDATA(SparseArrayData)
+    V4_NEEDS_DESTROY
 
     uint &freeList() { return d()->freeList; }
     uint freeList() const { return d()->freeList; }
@@ -219,7 +221,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         return n->value;
     }
 
-    static void destroy(Managed *d);
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
@@ -241,6 +242,12 @@ inline SparseArrayData::SparseArrayData(ExecutionEngine *engine)
 {
     setVTable(QV4::SparseArrayData::staticVTable());
 }
+
+inline SparseArrayData::~SparseArrayData()
+{
+    delete sparse;
+}
+
 }
 
 inline Property *ArrayData::getProperty(uint index)

@@ -281,11 +281,6 @@ PropertyAttributes QmlTypeWrapper::query(const Managed *m, String *name)
     return hasProperty ? Attr_Data : Attr_Invalid;
 }
 
-void QmlTypeWrapper::destroy(Managed *that)
-{
-    static_cast<QmlTypeWrapper *>(that)->d()->~Data();
-}
-
 bool QmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QV4::QmlTypeWrapper>());

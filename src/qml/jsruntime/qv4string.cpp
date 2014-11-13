@@ -117,11 +117,6 @@ const ObjectVTable String::static_vtbl =
     0 /*advanceIterator*/,
 };
 
-void String::destroy(Managed *that)
-{
-    static_cast<String*>(that)->d()->~Data();
-}
-
 void String::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     String::Data *s = static_cast<String::Data *>(that);

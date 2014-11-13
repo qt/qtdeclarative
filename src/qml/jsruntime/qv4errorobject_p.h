@@ -130,12 +130,12 @@ struct ErrorObject: Object {
 
     V4_OBJECT2(ErrorObject, Object)
     Q_MANAGED_TYPE(ErrorObject)
+    V4_NEEDS_DESTROY
 
     SyntaxErrorObject *asSyntaxError();
 
     static ReturnedValue method_get_stack(CallContext *ctx);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static void destroy(Managed *that) { static_cast<ErrorObject *>(that)->d()->~Data(); }
 };
 
 template<>

@@ -143,12 +143,6 @@ void QmlListWrapper::put(Managed *m, String *name, const ValueRef value)
     Q_UNUSED(value);
 }
 
-void QmlListWrapper::destroy(Managed *that)
-{
-    Q_ASSERT(that->as<QmlListWrapper>());
-    static_cast<QmlListWrapper *>(that)->d()->~Data();
-}
-
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name = (String *)0;

@@ -1089,6 +1089,7 @@ struct QmlIncubatorObject : Object {
 struct QmlIncubatorObject : public QV4::Object
 {
     V4_OBJECT2(QmlIncubatorObject, Object)
+    V4_NEEDS_DESTROY
 
     static QV4::ReturnedValue method_get_statusChanged(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_set_statusChanged(QV4::CallContext *ctx);
@@ -1096,7 +1097,6 @@ struct QmlIncubatorObject : public QV4::Object
     static QV4::ReturnedValue method_get_object(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_forceCompletion(QV4::CallContext *ctx);
 
-    static void destroy(Managed *that);
     static void markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e);
 
     void statusChanged(QQmlIncubator::Status);
@@ -1505,11 +1505,6 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
         callData->args[1] = d()->valuemap;
         f->call(callData);
     }
-}
-
-void QV4::QmlIncubatorObject::destroy(Managed *that)
-{
-    static_cast<QmlIncubatorObject *>(that)->d()->~Data();
 }
 
 void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionEngine *e)

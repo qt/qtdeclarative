@@ -115,6 +115,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
+    V4_NEEDS_DESTROY
 
     Heap::ExecutionContext *scope() { return d()->scope; }
     Function *function() { return d()->function; }
@@ -131,9 +132,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     using Object::call;
     static ReturnedValue construct(Managed *that, CallData *);
     static ReturnedValue call(Managed *that, CallData *d);
-    static void destroy(Managed *m) {
-        static_cast<FunctionObject *>(m)->d()->~Data();
-    }
 
     static FunctionObject *cast(const Value &v) {
         return v.asFunctionObject();

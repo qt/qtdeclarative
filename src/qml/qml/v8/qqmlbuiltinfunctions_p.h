@@ -159,16 +159,13 @@ struct GlobalExtensions {
 struct QQmlBindingFunction : public QV4::FunctionObject
 {
     V4_OBJECT2(QQmlBindingFunction, FunctionObject)
+    V4_NEEDS_DESTROY
 
     void initBindingLocation(); // from caller stack trace
 
     static ReturnedValue call(Managed *that, CallData *callData);
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static void destroy(Managed *that) {
-        static_cast<QQmlBindingFunction *>(that)->d()->~Data();
-    }
-
 };
 
 }

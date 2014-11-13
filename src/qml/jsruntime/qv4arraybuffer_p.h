@@ -48,6 +48,7 @@ struct ArrayBufferCtor : FunctionObject {
 
 struct ArrayBuffer : Object {
     ArrayBuffer(ExecutionEngine *e, int length);
+    ~ArrayBuffer();
     QTypedArrayData<char> *data;
 
     uint byteLength() const { return data->size; }
@@ -69,6 +70,7 @@ struct ArrayBufferCtor: FunctionObject
 struct ArrayBuffer : Object
 {
     V4_OBJECT2(ArrayBuffer, Object)
+    V4_NEEDS_DESTROY
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }
@@ -81,7 +83,6 @@ struct ArrayBuffer : Object
         return d()->data->data();
     }
 
-    static void destroy(Managed *m);
 };
 
 struct ArrayBufferPrototype: Object

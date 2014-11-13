@@ -179,6 +179,7 @@ struct QQmlSequence : public QV4::Object
 {
     V4_OBJECT2(QQmlSequence<Container>, QV4::Object)
     Q_MANAGED_TYPE(QmlSequence)
+    V4_NEEDS_DESTROY
 public:
 
     void init()
@@ -494,10 +495,6 @@ public:
     static void advanceIterator(Managed *that, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
     { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, p, attrs); }
 
-    static void destroy(Managed *that)
-    {
-        static_cast<QQmlSequence<Container> *>(that)->d()->~Data();
-    }
 };
 
 

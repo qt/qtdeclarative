@@ -119,6 +119,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     // ### FIXME: Should this be a V4_OBJECT
     V4_OBJECT2(String, Managed)
     Q_MANAGED_TYPE(String)
+    V4_NEEDS_DESTROY
     enum {
         IsString = true
     };
@@ -170,7 +171,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     Identifier *identifier() const { return d()->identifier; }
 
 protected:
-    static void destroy(Managed *);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);

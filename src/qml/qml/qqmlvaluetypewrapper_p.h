@@ -73,6 +73,7 @@ struct QmlValueTypeWrapper : Object {
 struct Q_QML_EXPORT QmlValueTypeWrapper : Object
 {
     V4_OBJECT2(QmlValueTypeWrapper, Object)
+    static void destroy(Heap::Base *b);
 
 public:
 
@@ -84,7 +85,6 @@ public:
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);
-    static void destroy(Managed *that);
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes query(const Managed *, String *name);
 

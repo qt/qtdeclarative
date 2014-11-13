@@ -216,14 +216,12 @@ class NamedNodeMap : public Object
 {
 public:
     V4_OBJECT2(NamedNodeMap, Object)
+    V4_NEEDS_DESTROY
 
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static void destroy(Managed *that) {
-        static_cast<NamedNodeMap *>(that)->d()->~Data();
-    }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 };
@@ -245,11 +243,9 @@ class NodeList : public Object
 {
 public:
     V4_OBJECT2(NodeList, Object)
+    V4_NEEDS_DESTROY
 
     // JS API
-    static void destroy(Managed *that) {
-        static_cast<NodeList *>(that)->d()->~Data();
-    }
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
 
@@ -328,12 +324,7 @@ DEFINE_OBJECT_VTABLE(NodePrototype);
 struct Node : public Object
 {
     V4_OBJECT2(Node, Object)
-
-
-    // JS API
-    static void destroy(Managed *that) {
-        static_cast<Node *>(that)->d()->~Data();
-    }
+    V4_NEEDS_DESTROY
 
     // C++ API
     static ReturnedValue create(QV8Engine *, NodeImpl *);
@@ -1629,10 +1620,7 @@ struct QQmlXMLHttpRequestCtor : FunctionObject {
 struct QQmlXMLHttpRequestWrapper : public Object
 {
     V4_OBJECT2(QQmlXMLHttpRequestWrapper, Object)
-
-    static void destroy(Managed *that) {
-        static_cast<QQmlXMLHttpRequestWrapper *>(that)->d()->~Data();
-    }
+    V4_NEEDS_DESTROY
 };
 
 Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)

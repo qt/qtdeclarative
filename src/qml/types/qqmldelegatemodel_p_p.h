@@ -165,8 +165,7 @@ struct QQmlDelegateModelItemObject : Object {
 struct QQmlDelegateModelItemObject : QV4::Object
 {
     V4_OBJECT2(QQmlDelegateModelItemObject, QV4::Object)
-
-    static void destroy(Managed *that);
+    V4_NEEDS_DESTROY
 };
 
 QV4::Heap::QQmlDelegateModelItemObject::QQmlDelegateModelItemObject(QV4::ExecutionEngine *engine, QQmlDelegateModelItem *item)

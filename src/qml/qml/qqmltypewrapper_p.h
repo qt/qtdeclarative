@@ -82,9 +82,7 @@ struct QmlTypeWrapper : Object {
 struct Q_QML_EXPORT QmlTypeWrapper : Object
 {
     V4_OBJECT2(QmlTypeWrapper, Object)
-private:
-
-public:
+    V4_NEEDS_DESTROY
 
     bool isSingleton() const;
     QObject *singletonObject() const;
@@ -100,8 +98,6 @@ public:
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);
     static PropertyAttributes query(const Managed *, String *name);
-    static void destroy(Managed *that);
-
     static bool isEqualTo(Managed *that, Managed *o);
 
 };

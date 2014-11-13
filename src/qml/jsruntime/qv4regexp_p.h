@@ -80,6 +80,7 @@ struct RegExp : public Managed
 {
     V4_MANAGED(RegExp, Managed)
     Q_MANAGED_TYPE(RegExp)
+    V4_NEEDS_DESTROY
 
     QString pattern() const { return d()->pattern; }
     OwnPtr<JSC::Yarr::BytecodePattern> &byteCode() { return d()->byteCode; }
@@ -99,7 +100,6 @@ struct RegExp : public Managed
 
     int captureCount() const { return subPatternCount() + 1; }
 
-    static void destroy(Managed *that);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 
     friend class RegExpCache;

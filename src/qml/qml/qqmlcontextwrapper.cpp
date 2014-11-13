@@ -342,11 +342,6 @@ void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
     Object::put(m, name, value);
 }
 
-void QmlContextWrapper::destroy(Managed *that)
-{
-    static_cast<QmlContextWrapper *>(that)->d()->~Data();
-}
-
 void QmlContextWrapper::markObjects(Heap::Base *m, ExecutionEngine *engine)
 {
     QmlContextWrapper::Data *This = static_cast<QmlContextWrapper::Data *>(m);

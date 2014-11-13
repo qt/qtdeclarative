@@ -75,6 +75,7 @@ struct QmlListWrapper : Object {
 struct Q_QML_EXPORT QmlListWrapper : Object
 {
     V4_OBJECT2(QmlListWrapper, Object)
+    V4_NEEDS_DESTROY
 
     static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
     static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);
@@ -85,7 +86,6 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);
     static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void destroy(Managed *that);
 };
 
 }

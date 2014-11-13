@@ -357,12 +357,6 @@ void SparseArrayData::free(ArrayData *d, uint idx)
 }
 
 
-void SparseArrayData::destroy(Managed *d)
-{
-    SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    delete dd->sparse();
-}
-
 void SparseArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
 {
     Heap::SparseArrayData *dd = static_cast<Heap::SparseArrayData *>(d);

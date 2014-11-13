@@ -135,6 +135,7 @@ struct QQmlLocaleData : Object {
 struct QQmlLocaleData : public QV4::Object
 {
     V4_OBJECT2(QQmlLocaleData, Object)
+    V4_NEEDS_DESTROY
 
     static QLocale *getThisLocale(QV4::CallContext *ctx) {
         QV4::Object *o = ctx->d()->callData->thisObject.asObject();
@@ -173,12 +174,6 @@ struct QQmlLocaleData : public QV4::Object
     static QV4::ReturnedValue method_get_exponential(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_amText(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_pmText(QV4::CallContext *ctx);
-
-private:
-    static void destroy(Managed *that)
-    {
-        static_cast<QQmlLocaleData *>(that)->d()->~Data();
-    }
 };
 
 Heap::QQmlLocaleData::QQmlLocaleData(ExecutionEngine *engine)

@@ -187,14 +187,13 @@ QVariant QmlValueTypeWrapper::toVariant() const
     }
 }
 
-void QmlValueTypeWrapper::destroy(Managed *that)
+void QmlValueTypeWrapper::destroy(Heap::Base *that)
 {
-    Q_ASSERT(that->as<QmlValueTypeWrapper>());
-    QmlValueTypeWrapper *w = static_cast<QmlValueTypeWrapper *>(that);
-    if (w->d()->objectType == Heap::QmlValueTypeWrapper::Reference)
-        static_cast<QmlValueTypeReference *>(w)->d()->Heap::QmlValueTypeReference::~QmlValueTypeReference();
+    Heap::QmlValueTypeWrapper *w = static_cast<Heap::QmlValueTypeWrapper *>(that);
+    if (w->objectType == Heap::QmlValueTypeWrapper::Reference)
+        static_cast<Heap::QmlValueTypeReference *>(w)->Heap::QmlValueTypeReference::~QmlValueTypeReference();
     else
-        static_cast<QmlValueTypeCopy *>(w)->d()->Heap::QmlValueTypeCopy::~QmlValueTypeCopy();
+        static_cast<Heap::QmlValueTypeCopy *>(w)->Heap::QmlValueTypeCopy::~QmlValueTypeCopy();
 }
 
 bool QmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)

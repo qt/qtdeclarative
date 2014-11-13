@@ -88,6 +88,7 @@ struct QQmlIdObjectsArray : Object {
 struct Q_QML_EXPORT QmlContextWrapper : Object
 {
     V4_OBJECT2(QmlContextWrapper, Object)
+    V4_NEEDS_DESTROY
 
     static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
     static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
@@ -103,7 +104,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const ValueRef value);
-    static void destroy(Managed *that);
     static void markObjects(Heap::Base *m, ExecutionEngine *engine);
 
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);

@@ -673,13 +673,9 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DPrototype);
 struct QQuickContext2DStyle : public QV4::Object
 {
     V4_OBJECT2(QQuickContext2DStyle, QV4::Object)
+    V4_NEEDS_DESTROY
 
     static QV4::ReturnedValue gradient_proto_addColorStop(QV4::CallContext *ctx);
-protected:
-    static void destroy(Managed *that)
-    {
-        static_cast<QQuickContext2DStyle *>(that)->d()->~Data();
-    }
 };
 
 QV4::Heap::QQuickContext2DStyle::QQuickContext2DStyle(QV4::ExecutionEngine *e)
@@ -890,10 +886,8 @@ static QString qt_composite_mode_to_string(QPainter::CompositionMode op)
 struct QQuickJSContext2DPixelData : public QV4::Object
 {
     V4_OBJECT2(QQuickJSContext2DPixelData, QV4::Object)
+    V4_NEEDS_DESTROY
 
-    static void destroy(QV4::Managed *that) {
-        static_cast<QQuickJSContext2DPixelData *>(that)->d()->~Data();
-    }
     static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
     static void putIndexed(QV4::Managed *m, uint index, const QV4::ValueRef value);
 

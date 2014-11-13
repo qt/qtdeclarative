@@ -1034,12 +1034,12 @@ namespace {
     };
 }
 
-void QObjectWrapper::destroy(Managed *that)
+void QObjectWrapper::destroy(Heap::Base *that)
 {
-    QObjectWrapper *This = static_cast<QObjectWrapper*>(that);
-    QPointer<QObject> object = This->d()->object;
-    ExecutionEngine *engine = This->engine();
-    This->d()->~Data();
+    Heap::QObjectWrapper *This = static_cast<Heap::QObjectWrapper*>(that);
+    QPointer<QObject> object = This->object;
+    ExecutionEngine *engine = This->internalClass->engine;
+    This->~Data();
     This = 0;
     if (!object)
         return;

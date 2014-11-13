@@ -1888,12 +1888,6 @@ QV4::Heap::QQmlDelegateModelItemObject::~QQmlDelegateModelItemObject()
     item->Dispose();
 }
 
-void QQmlDelegateModelItemObject::destroy(Managed *that)
-{
-    static_cast<QQmlDelegateModelItemObject *>(that)->d()->~Data();
-}
-
-
 
 QQmlDelegateModelItem::QQmlDelegateModelItem(
         QQmlDelegateModelItemMetaType *metaType, int modelIndex)
@@ -3276,6 +3270,7 @@ DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
 struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 {
     V4_OBJECT2(QQmlDelegateModelGroupChangeArray, QV4::Object)
+    V4_NEEDS_DESTROY
 public:
     static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
@@ -3323,10 +3318,6 @@ public:
 
         return Object::get(m, name, hasProperty);
     }
-    static void destroy(Managed *that) {
-        static_cast<QQmlDelegateModelGroupChangeArray *>(that)->d()->~Data();
-    }
-
 };
 
 QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
