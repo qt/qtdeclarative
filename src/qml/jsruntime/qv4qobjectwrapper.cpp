@@ -261,7 +261,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     return result;
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, String *n, QObjectWrapper::RevisionMode revisionMode,
+ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String *n, QObjectWrapper::RevisionMode revisionMode,
                                              bool *hasProperty, bool includeImports)
 {
     if (QQmlData::wasDeleted(d()->object)) {
@@ -270,19 +270,19 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         return QV4::Encode::undefined();
     }
 
-    QV4::Scope scope(ctx);
+    QV4::Scope scope(engine());
     QV4::ScopedString name(scope, n);
 
     if (name->equals(scope.engine->id_destroy) || name->equals(scope.engine->id_toString)) {
         int index = name->equals(scope.engine->id_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-        QV4::ScopedValue method(scope, QV4::QObjectMethod::create(ctx->d()->engine->rootContext, d()->object, index));
+        QV4::ScopedValue method(scope, QV4::QObjectMethod::create(scope.engine->rootContext, d()->object, index));
         if (hasProperty)
             *hasProperty = true;
         return method.asReturnedValue();
     }
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(ctx->d()->engine, qmlContext, name.getPointer(), revisionMode, &local);
+    QQmlPropertyData *result = findProperty(scope.engine, qmlContext, name.getPointer(), revisionMode, &local);
 
     if (!result) {
         if (includeImports && name->startsWithUpper()) {
@@ -297,10 +297,10 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
                     } else if (r.type) {
-                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object,
+                        return QmlTypeWrapper::create(scope.engine->v8Engine, d()->object,
                                                       r.type, Heap::QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
-                        return QmlTypeWrapper::create(ctx->d()->engine->v8Engine, d()->object,
+                        return QmlTypeWrapper::create(scope.engine->v8Engine, d()->object,
                                                       qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);
                     }
                     Q_ASSERT(!"Unreachable");
@@ -323,7 +323,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
     if (hasProperty)
         *hasProperty = true;
 
-    return getProperty(d()->object, ctx, result);
+    return getProperty(d()->object, scope.engine->currentContext(), result);
 }
 
 ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired)
@@ -391,9 +391,9 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
     }
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
+ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
 {
-    QV4::Scope scope(ctx);
+    QV4::Scope scope(engine);
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
             *hasProperty = false;
@@ -406,16 +406,16 @@ ReturnedValue QObjectWrapper::getQmlProperty(ExecutionContext *ctx, QQmlContextD
         return QV4::Encode::null();
     }
 
-    QV4::Scoped<QObjectWrapper> wrapper(scope, wrap(ctx->d()->engine, object));
+    QV4::Scoped<QObjectWrapper> wrapper(scope, wrap(engine, object));
     if (!wrapper) {
         if (hasProperty)
             *hasProperty = false;
         return QV4::Encode::null();
     }
-    return wrapper->getQmlProperty(ctx, qmlContext, name, revisionMode, hasProperty);
+    return wrapper->getQmlProperty(qmlContext, name, revisionMode, hasProperty);
 }
 
-bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlContext, QObject *object, String *name,
+bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name,
                                     QObjectWrapper::RevisionMode revisionMode, const ValueRef value)
 {
     if (QQmlData::wasDeleted(object))
@@ -424,7 +424,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
-        result = QQmlPropertyCache::property(ctx->d()->engine->v8Engine->engine(), object, name, qmlContext, local);
+        result = QQmlPropertyCache::property(engine->v8Engine->engine(), object, name, qmlContext, local);
     }
 
     if (!result)
@@ -436,7 +436,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionContext *ctx, QQmlContextData *qmlC
             return false;
     }
 
-    setProperty(object, ctx, result, value);
+    setProperty(object, engine->currentContext(), result, value);
     return true;
 }
 
@@ -674,9 +674,8 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    ExecutionEngine *v4 = m->engine();
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    return that->getQmlProperty(v4->currentContext(), qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(m->engine());
+    return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, String *name, const ValueRef value)
@@ -688,7 +687,7 @@ void QObjectWrapper::put(Managed *m, String *name, const ValueRef value)
         return;
 
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-    if (!setQmlProperty(v4->currentContext(), qmlContext, that->d()->object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
+    if (!setQmlProperty(v4, qmlContext, that->d()->object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QQmlData *ddata = QQmlData::get(that->d()->object);
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
         // as regular JavaScript properties, like on JavaScript objects.

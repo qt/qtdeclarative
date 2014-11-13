@@ -240,7 +240,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
-            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, scopeObject,
+            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4, context, scopeObject,
                                                                                name, QV4::QObjectWrapper::CheckRevision, &hasProp));
             if (hasProp) {
                 if (hasProperty)
@@ -254,7 +254,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            result = QV4::QObjectWrapper::getQmlProperty(v4->currentContext(), context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            result = QV4::QObjectWrapper::getQmlProperty(v4, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -318,13 +318,13 @@ void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
 
         // Search scope object
         if (scopeObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            QV4::QObjectWrapper::setQmlProperty(v4->currentContext(), context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, value))
+            QV4::QObjectWrapper::setQmlProperty(v4, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return;
 
         context = context->parent;
