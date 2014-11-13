@@ -285,16 +285,6 @@ public:
 
     QString className() const;
 
-    Managed **nextFreeRef() {
-        return reinterpret_cast<Managed **>(this);
-    }
-    Managed *nextFree() {
-        return *reinterpret_cast<Managed **>(this);
-    }
-    void setNextFree(Managed *m) {
-        *reinterpret_cast<Managed **>(this) = m;
-    }
-
     void setVTable(const ManagedVTable *vt);
 
     bool isEqualTo(const Managed *other) const

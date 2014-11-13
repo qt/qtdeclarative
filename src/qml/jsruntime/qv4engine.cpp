@@ -492,7 +492,8 @@ void ExecutionEngine::enableProfiler()
 
 void ExecutionEngine::initRootContext()
 {
-    GlobalContext *r = static_cast<GlobalContext*>(memoryManager->allocManaged(sizeof(GlobalContext::Data) + sizeof(CallData)));
+    Scope scope(this);
+    Scoped<GlobalContext> r(scope, static_cast<Heap::GlobalContext*>(memoryManager->allocManaged(sizeof(GlobalContext::Data) + sizeof(CallData))));
     new (r->d()) GlobalContext::Data(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = QV4::Value::_Integer_Type;

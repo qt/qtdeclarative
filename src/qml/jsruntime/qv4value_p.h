@@ -76,6 +76,16 @@ struct Q_QML_EXPORT Base {
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
 
+    Base **nextFreeRef() {
+        return reinterpret_cast<Base **>(this);
+    }
+    Base *nextFree() {
+        return *reinterpret_cast<Base **>(this);
+    }
+    void setNextFree(Base *m) {
+        *reinterpret_cast<Base **>(this) = m;
+    }
+
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
     void operator delete(void *, Heap::Base *) {}

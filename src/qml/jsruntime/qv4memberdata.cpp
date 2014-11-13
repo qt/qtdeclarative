@@ -53,11 +53,12 @@ Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *o
 
     int newAlloc = qMax((uint)4, 2*idx);
     uint alloc = sizeof(Heap::MemberData) + (newAlloc)*sizeof(Value);
-    MemberData *newMemberData = static_cast<MemberData *>(e->memoryManager->allocManaged(alloc));
+    Scope scope(e);
+    Scoped<MemberData> newMemberData(scope, static_cast<Heap::MemberData *>(e->memoryManager->allocManaged(alloc)));
     if (old)
         memcpy(newMemberData, old, sizeof(Heap::MemberData) + s*sizeof(Value));
     else
-        new (newMemberData) Heap::MemberData(e->memberDataClass);
+        new (newMemberData->d()) Heap::MemberData(e->memberDataClass);
     newMemberData->d()->size = newAlloc;
     return newMemberData->d();
 }

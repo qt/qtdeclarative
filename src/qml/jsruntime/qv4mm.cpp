@@ -77,7 +77,7 @@ struct MemoryManager::Data
     ExecutionEngine *engine;
 
     enum { MaxItemSize = 512 };
-    Managed *smallItems[MaxItemSize/16];
+    Heap::Base *smallItems[MaxItemSize/16];
     uint nChunks[MaxItemSize/16];
     uint availableItems[MaxItemSize/16];
     uint allocCount[MaxItemSize/16];
@@ -98,8 +98,8 @@ struct MemoryManager::Data
         size_t size;
         void *data;
 
-        Managed *managed() {
-            return reinterpret_cast<Managed *>(&data);
+        Heap::Base *heapObject() {
+            return reinterpret_cast<Heap::Base *>(&data);
         }
     };
 
@@ -172,7 +172,7 @@ MemoryManager::MemoryManager()
 #endif
 }
 
-Managed *MemoryManager::allocData(std::size_t size)
+Heap::Base *MemoryManager::allocData(std::size_t size)
 {
     if (m_d->aggressiveGC)
         runGC();
@@ -199,10 +199,10 @@ Managed *MemoryManager::allocData(std::size_t size)
         item->size = size;
         m_d->largeItems = item;
         m_d->totalLargeItemsAllocated += size;
-        return item->managed();
+        return item->heapObject();
     }
 
-    Managed *m = m_d->smallItems[pos];
+    Heap::Base *m = m_d->smallItems[pos];
     if (m)
         goto found;
 
@@ -232,9 +232,9 @@ Managed *MemoryManager::allocData(std::size_t size)
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
 
-        Managed **last = &m_d->smallItems[pos];
+        Heap::Base **last = &m_d->smallItems[pos];
         while (chunk <= end) {
-            Managed *o = reinterpret_cast<Managed *>(chunk);
+            Heap::Base *o = reinterpret_cast<Heap::Base *>(chunk);
             *last = o;
             last = o->nextFreeRef();
             chunk += size;
@@ -368,16 +368,16 @@ void MemoryManager::sweep(bool lastSweep)
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
     while (i) {
-        Managed *m = i->managed();
-        Q_ASSERT(m->inUse());
-        if (m->markBit()) {
-            m->d()->markBit = 0;
+        Heap::Base *m = i->heapObject();
+        Q_ASSERT(m->inUse);
+        if (m->markBit) {
+            m->markBit = 0;
             last = &i->next;
             i = i->next;
             continue;
         }
-        if (m->internalClass()->vtable->destroy)
-            m->internalClass()->vtable->destroy(m->d());
+        if (m->internalClass->vtable->destroy)
+            m->internalClass->vtable->destroy(m);
 
         *last = i->next;
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
@@ -398,28 +398,28 @@ void MemoryManager::sweep(bool lastSweep)
 void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
 {
 //    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
-    Managed **f = &m_d->smallItems[size >> 4];
+    Heap::Base **f = &m_d->smallItems[size >> 4];
 
 #ifdef V4_USE_VALGRIND
     VALGRIND_DISABLE_ERROR_REPORTING;
 #endif
     for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; chunk += size) {
-        Managed *m = reinterpret_cast<Managed *>(chunk);
+        Heap::Base *m = reinterpret_cast<Heap::Base *>(chunk);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
 
         Q_ASSERT((qintptr) chunk % 16 == 0);
 
-        if (m->inUse()) {
-            if (m->markBit()) {
-                m->d()->markBit = 0;
+        if (m->inUse) {
+            if (m->markBit) {
+                m->markBit = 0;
             } else {
 //                qDebug() << "-- collecting it." << m << *f << m->nextFree();
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->internalClass()->vtable->destroy)
-                    m->internalClass()->vtable->destroy(m->d());
+                if (m->internalClass->vtable->destroy)
+                    m->internalClass->vtable->destroy(m);
 
                 memset(m, 0, size);
                 m->setNextFree(*f);

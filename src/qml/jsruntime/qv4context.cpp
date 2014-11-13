@@ -94,7 +94,7 @@ Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, 
 Heap::CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
     Scope scope(this);
-    Scoped<CallContext> c(scope, static_cast<CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
+    Scoped<CallContext> c(scope, static_cast<Heap::CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
     new (c->d()) Heap::CallContext(d()->engine, qml, f);
     return c->d();
 }

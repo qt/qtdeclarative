@@ -126,15 +126,16 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     if (enforceAttributes)
         size += alloc*sizeof(PropertyAttributes);
 
+    Scope scope(o->engine());
     ArrayData *newData;
     if (newType < Heap::ArrayData::Sparse) {
-        SimpleArrayData *n = static_cast<SimpleArrayData *>(o->engine()->memoryManager->allocManaged(size));
+        Scoped<SimpleArrayData> n(scope, static_cast<Heap::SimpleArrayData *>(o->engine()->memoryManager->allocManaged(size)));
         new (n->d()) Heap::SimpleArrayData(o->engine());
         n->d()->offset = 0;
         n->len() = d ? static_cast<SimpleArrayData *>(d)->len() : 0;
         newData = n;
     } else {
-        SparseArrayData *n = static_cast<SparseArrayData *>(o->engine()->memoryManager->allocManaged(size));
+        Scoped<SparseArrayData> n(scope, static_cast<Heap::SparseArrayData *>(o->engine()->memoryManager->allocManaged(size)));
         new (n->d()) Heap::SparseArrayData(o->engine());
         newData = n;
     }
