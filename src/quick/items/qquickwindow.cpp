@@ -1394,6 +1394,9 @@ bool QQuickWindow::event(QEvent *e)
             d->windowManager->handleUpdateRequest(this);
         break;
     }
+    case QEvent::NativeGesture:
+        d->deliverGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
+        break;
     default:
         break;
     }
@@ -1743,6 +1746,38 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
         wheel.accept();
         q->sendEvent(item, &wheel);
         if (wheel.isAccepted()) {
+            event->accept();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
+{
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+
+    if ((itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) && !item->contains(event->localPos()))
+        return false;
+
+    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        QQuickItem *child = children.at(ii);
+        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
+            continue;
+        if (deliverGestureEvent(child, event))
+            return true;
+    }
+
+    QPointF p = item->mapFromScene(event->localPos());
+
+    if (item->contains(p)) {
+        QNativeGestureEvent copy(event->gestureType(), p, event->windowPos(), event->screenPos(),
+                                 event->value(), 0L, 0L); // TODO can't copy things I can't access
+        event->accept();
+        item->event(&copy);
+        if (copy.isAccepted()) {
             event->accept();
             return true;
         }

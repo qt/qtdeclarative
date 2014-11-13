@@ -274,15 +274,12 @@ protected:
     void geometryChanged(const QRectF &newGeometry,
                          const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData& value) Q_DECL_OVERRIDE;
-#ifdef Q_OS_OSX
-    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void setTouchEventsEnabled(bool enable);
-#endif
+    bool event(QEvent *) Q_DECL_OVERRIDE;
 
 private:
     void clearPinch();
     void updatePinch();
+    void updatePinchTarget();
     void handlePress();
     void handleRelease();
 

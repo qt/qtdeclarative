@@ -37,7 +37,10 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
+#include <qpa/qplatformintegration.h>
 #include <qpa/qplatformnativeinterface.h>
+#include <private/qguiapplication_p.h>
+#include <QVariant>
 
 #include <float.h>
 #include <math.h>
@@ -178,7 +181,10 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \li using the onPinchStarted, onPinchUpdated and onPinchFinished handlers
     \endlist
 
-    \sa PinchEvent
+    Since Qt 5.5, PinchArea can react to native pinch gesture events from the
+    operating system if available; otherwise it reacts only to touch events.
+
+    \sa PinchEvent, QNativeGestureEvent, QTouchEvent
 */
 
 /*!
@@ -526,34 +532,40 @@ void QQuickPinchArea::updatePinch()
             d->lastPoint1 = touchPoint1.scenePos();
             d->lastPoint2 = touchPoint2.scenePos();
             emit pinchUpdated(&pe);
-            if (d->pinch && d->pinch->target()) {
-                qreal s = d->pinchStartScale * scale;
-                s = qMin(qMax(pinch()->minimumScale(),s), pinch()->maximumScale());
-                pinch()->target()->setScale(s);
-                QPointF pos = sceneCenter - d->sceneStartCenter + d->pinchStartPos;
-                if (pinch()->axis() & QQuickPinch::XAxis) {
-                    qreal x = pos.x();
-                    if (x < pinch()->xmin())
-                        x = pinch()->xmin();
-                    else if (x > pinch()->xmax())
-                        x = pinch()->xmax();
-                    pinch()->target()->setX(x);
-                }
-                if (pinch()->axis() & QQuickPinch::YAxis) {
-                    qreal y = pos.y();
-                    if (y < pinch()->ymin())
-                        y = pinch()->ymin();
-                    else if (y > pinch()->ymax())
-                        y = pinch()->ymax();
-                    pinch()->target()->setY(y);
-                }
-                if (d->pinchStartRotation >= pinch()->minimumRotation()
-                        && d->pinchStartRotation <= pinch()->maximumRotation()) {
-                    qreal r = d->pinchRotation + d->pinchStartRotation;
-                    r = qMin(qMax(pinch()->minimumRotation(),r), pinch()->maximumRotation());
-                    pinch()->target()->setRotation(r);
-                }
-            }
+            updatePinchTarget();
+        }
+    }
+}
+
+void QQuickPinchArea::updatePinchTarget()
+{
+    Q_D(QQuickPinchArea);
+    if (d->pinch && d->pinch->target()) {
+        qreal s = d->pinchStartScale * d->pinchLastScale;
+        s = qMin(qMax(pinch()->minimumScale(),s), pinch()->maximumScale());
+        pinch()->target()->setScale(s);
+        QPointF pos = d->sceneLastCenter - d->sceneStartCenter + d->pinchStartPos;
+        if (pinch()->axis() & QQuickPinch::XAxis) {
+            qreal x = pos.x();
+            if (x < pinch()->xmin())
+                x = pinch()->xmin();
+            else if (x > pinch()->xmax())
+                x = pinch()->xmax();
+            pinch()->target()->setX(x);
+        }
+        if (pinch()->axis() & QQuickPinch::YAxis) {
+            qreal y = pos.y();
+            if (y < pinch()->ymin())
+                y = pinch()->ymin();
+            else if (y > pinch()->ymax())
+                y = pinch()->ymax();
+            pinch()->target()->setY(y);
+        }
+        if (d->pinchStartRotation >= pinch()->minimumRotation()
+                && d->pinchStartRotation <= pinch()->maximumRotation()) {
+            qreal r = d->pinchRotation + d->pinchStartRotation;
+            r = qMin(qMax(pinch()->minimumRotation(),r), pinch()->maximumRotation());
+            pinch()->target()->setRotation(r);
         }
     }
 }
@@ -597,31 +609,95 @@ void QQuickPinchArea::itemChange(ItemChange change, const ItemChangeData &value)
     QQuickItem::itemChange(change, value);
 }
 
-#ifdef Q_OS_OSX
-void QQuickPinchArea::hoverEnterEvent(QHoverEvent *event)
+bool QQuickPinchArea::event(QEvent *event)
 {
-    Q_UNUSED(event);
-    setTouchEventsEnabled(true);
-}
+    Q_D(QQuickPinchArea);
+    if (!d->enabled || !isVisible())
+        return QQuickItem::event(event);
 
-void QQuickPinchArea::hoverLeaveEvent(QHoverEvent *event)
-{
-    Q_UNUSED(event);
-    setTouchEventsEnabled(false);
-}
+    switch (event->type()) {
+#ifndef QT_NO_GESTURES
+    case QEvent::NativeGesture: {
+        QNativeGestureEvent *gesture = static_cast<QNativeGestureEvent *>(event);
+        switch (gesture->gestureType()) {
+        case Qt::BeginNativeGesture:
+            clearPinch(); // probably not necessary; JIC
+            d->pinchStartCenter = gesture->localPos();
+            d->pinchStartAngle = 0.0;
+            d->pinchStartRotation = 0.0;
+            d->pinchRotation = 0.0;
+            d->pinchStartScale = 1.0;
+            d->pinchLastAngle = 0.0;
+            d->pinchLastScale = 1.0;
+            d->sceneStartPoint1 = gesture->windowPos();
+            d->sceneStartPoint2 = gesture->windowPos(); // TODO we never really know
+            d->lastPoint1 = gesture->windowPos();
+            d->lastPoint2 = gesture->windowPos(); // TODO we never really know
+            if (d->pinch && d->pinch->target()) {
+                d->pinchStartPos = d->pinch->target()->position();
+                d->pinchStartScale = d->pinch->target()->scale();
+                d->pinchStartRotation = d->pinch->target()->rotation();
+                d->pinch->setActive(true);
+            }
+            break;
+        case Qt::EndNativeGesture:
+            clearPinch();
+            break;
+        case Qt::ZoomNativeGesture: {
+            qreal scale = d->pinchLastScale * (1.0 + gesture->value());
+            QQuickPinchEvent pe(d->pinchStartCenter, scale, d->pinchLastAngle, 0.0);
+            pe.setStartCenter(d->pinchStartCenter);
+            pe.setPreviousCenter(d->pinchStartCenter);
+            pe.setPreviousAngle(d->pinchLastAngle);
+            pe.setPreviousScale(d->pinchLastScale);
+            pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
+            pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
+            pe.setPoint1(mapFromScene(d->lastPoint1));
+            pe.setPoint2(mapFromScene(d->lastPoint2));
+            pe.setPointCount(2);
+            d->pinchLastScale = scale;
+            if (d->inPinch)
+                emit pinchUpdated(&pe);
+            else
+                emit pinchStarted(&pe);
+            d->inPinch = true;
+            updatePinchTarget();
+        } break;
+        case Qt::RotateNativeGesture: {
+            qreal angle = d->pinchLastAngle + gesture->value();
+            QQuickPinchEvent pe(d->pinchStartCenter, d->pinchLastScale, angle, 0.0);
+            pe.setStartCenter(d->pinchStartCenter);
+            pe.setPreviousCenter(d->pinchStartCenter);
+            pe.setPreviousAngle(d->pinchLastAngle);
+            pe.setPreviousScale(d->pinchLastScale);
+            pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
+            pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
+            pe.setPoint1(mapFromScene(d->lastPoint1));
+            pe.setPoint2(mapFromScene(d->lastPoint2));
+            pe.setPointCount(2);
+            d->pinchLastAngle = angle;
+            if (d->inPinch)
+                emit pinchUpdated(&pe);
+            else
+                emit pinchStarted(&pe);
+            d->inPinch = true;
+            d->pinchRotation = angle;
+            updatePinchTarget();
+        } break;
+#endif // QT_NO_GESTURES
+        default:
+            return QQuickItem::event(event);
+        }
+    } break;
+    case QEvent::Wheel:
+        event->ignore();
+        return false;
+    default:
+         return QQuickItem::event(event);
+    }
 
-void QQuickPinchArea::setTouchEventsEnabled(bool enable)
-{
-    // Resolve function for enabling touch events from the (cocoa) platform plugin.
-    typedef void (*RegisterTouchWindowFunction)(QWindow *, bool);
-    RegisterTouchWindowFunction registerTouchWindow = reinterpret_cast<RegisterTouchWindowFunction>(
-        QGuiApplication::platformNativeInterface()->nativeResourceFunctionForIntegration("registertouchwindow"));
-    if (!registerTouchWindow)
-        return; // Not necessarily an error, Qt might be using a different platform plugin.
-
-    registerTouchWindow(window(), enable);
+    return true;
 }
-#endif // Q_OS_OSX
 
 QQuickPinch *QQuickPinchArea::pinch()
 {
