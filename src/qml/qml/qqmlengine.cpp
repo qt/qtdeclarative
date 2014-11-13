@@ -2238,16 +2238,12 @@ void QQmlEnginePrivate::registerInternalCompositeType(QQmlCompiledData *data)
     QByteArray lst = "QQmlListProperty<" + name + '>';
 
     int ptr_type = QMetaType::registerNormalizedType(ptr,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Delete,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Create,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Construct,
                                                      sizeof(QObject*),
                                                      static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
                                                      0);
     int lst_type = QMetaType::registerNormalizedType(lst,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Delete,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Create,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Destruct,
                                                      QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Construct,
                                                      sizeof(QQmlListProperty<QObject>),
