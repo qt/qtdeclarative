@@ -103,7 +103,7 @@ struct RegExpObject: Object {
 
     void init(ExecutionEngine *engine);
 
-    Property *lastIndexProperty(ExecutionContext *ctx);
+    Property *lastIndexProperty();
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;

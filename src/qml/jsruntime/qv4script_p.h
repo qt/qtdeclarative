@@ -45,8 +45,6 @@ class QQmlContextData;
 
 namespace QV4 {
 
-struct ExecutionContext;
-
 struct ContextStateSaver {
     ExecutionContext *savedContext;
     bool strictMode;

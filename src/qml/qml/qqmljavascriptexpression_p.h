@@ -52,10 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-struct ExecutionContext;
-}
-
 class QQmlDelayedError
 {
 public:
@@ -81,7 +77,7 @@ public:
     void setErrorObject(QObject *object);
 
     // Call only from catch(...) -- will re-throw if no JS exception
-    void catchJavaScriptException(QV4::ExecutionContext *context);
+    void catchJavaScriptException(QV4::ExecutionEngine *engine);
 
 private:
 

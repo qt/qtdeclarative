@@ -76,9 +76,9 @@ void QQmlDelayedError::setErrorObject(QObject *object)
     m_error.setObject(object);
 }
 
-void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionContext *context)
+void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 {
-    m_error = context->engine()->catchExceptionAsQmlError();
+    m_error = engine->catchExceptionAsQmlError();
 }
 
 
@@ -147,10 +147,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
-    QV4::ExecutionContext *ctx = v4->currentContext();
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
-        QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(ctx->d()->engine, scopeObject()));
+        QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(v4, scopeObject()));
         if (value->isObject())
             callData->thisObject = value;
     }
@@ -160,7 +159,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
         if (watcher.wasDeleted())
             scope.engine->catchException(); // ignore exception
         else
-            delayedError()->catchJavaScriptException(ctx);
+            delayedError()->catchJavaScriptException(scope.engine);
         if (isUndefined)
             *isUndefined = true;
     } else {

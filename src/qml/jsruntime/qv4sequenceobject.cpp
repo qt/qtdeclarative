@@ -49,15 +49,15 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 // helper function to generate valid warnings if errors occur during sequence operations.
-static void generateWarning(QV4::ExecutionContext *ctx, const QString& description)
+static void generateWarning(QV4::ExecutionEngine *v4, const QString& description)
 {
-    QQmlEngine *engine = ctx->d()->engine->v8Engine->engine();
+    QQmlEngine *engine = v4->v8Engine->engine();
     if (!engine)
         return;
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::StackFrame frame = ctx->d()->engine->currentStackFrame();
+    QV4::StackFrame frame = v4->currentStackFrame();
 
     retn.setLine(frame.line);
     retn.setUrl(QUrl(frame.source));
@@ -190,7 +190,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed get"));
+            generateWarning(engine(), QLatin1String("Index out of range during indexed get"));
             if (hasProperty)
                 *hasProperty = false;
             return Encode::undefined();
@@ -221,7 +221,7 @@ public:
 
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed set"));
+            generateWarning(engine(), QLatin1String("Index out of range during indexed set"));
             return;
         }
 
@@ -259,7 +259,7 @@ public:
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
-            generateWarning(engine()->currentContext(), QLatin1String("Index out of range during indexed query"));
+            generateWarning(engine(), QLatin1String("Index out of range during indexed query"));
             return QV4::Attr_Invalid;
         }
         if (d()->isReference) {
@@ -411,7 +411,7 @@ public:
         quint32 newLength = ctx->d()->callData->args[0].toUInt32();
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
-            generateWarning(ctx, QLatin1String("Index out of range during length set"));
+            generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
             return QV4::Encode::undefined();
         }
         /* Read the sequence from the QObject property if we're a reference */

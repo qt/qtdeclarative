@@ -230,7 +230,7 @@ static QString getThisString(ExecutionContext *ctx)
     if (StringObject *thisString = t->asStringObject())
         return thisString->d()->value.stringValue()->toQString();
     if (t->isUndefined() || t->isNull()) {
-        ctx->engine()->throwTypeError();
+        scope.engine->throwTypeError();
         return QString();
     }
     return t->toQString();
@@ -517,7 +517,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global())
-            regExp->lastIndexProperty(ctx)->value = Primitive::fromUInt32(0);
+            regExp->lastIndexProperty()->value = Primitive::fromUInt32(0);
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

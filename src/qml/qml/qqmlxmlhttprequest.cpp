@@ -1547,18 +1547,17 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 
 void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 {
-    ExecutionContext *ctx = v4->currentContext();
     QV4::Scope scope(v4);
     Scoped<Object> o(scope, me);
     if (!o) {
-        ctx->engine()->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
     }
 
     ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
     Scoped<Object> thisObj(scope, o->get(s.getPointer()));
     if (!thisObj) {
-        ctx->engine()->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
+        v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
     }
 
