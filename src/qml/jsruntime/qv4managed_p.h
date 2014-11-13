@@ -198,16 +198,14 @@ private:
     void *operator new(size_t);
     Managed(const Managed &other);
     void operator = (const Managed &other);
-
-protected:
     Managed(InternalClass *internal)
         : data(internal)
     {
     }
-
-public:
     void *operator new(size_t size, MemoryManager *mm);
     void *operator new(size_t, Managed *m) { return m; }
+
+public:
 
     inline void mark(QV4::ExecutionEngine *engine);
 

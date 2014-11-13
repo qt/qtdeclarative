@@ -43,6 +43,8 @@ namespace QV4 {
 namespace Heap {
 
 struct MemberData : Base {
+    MemberData(InternalClass *c)
+        : Base(c), size(0) {}
     union {
         uint size;
         double _dummy;
@@ -56,7 +58,6 @@ struct MemberData : Managed
 {
     V4_MANAGED(MemberData, Managed)
 
-    MemberData(QV4::InternalClass *ic) : Managed(ic) {}
     Value &operator[] (uint idx) { return d()->data[idx]; }
     const Value *data() const { return d()->data; }
     Value *data() { return d()->data; }

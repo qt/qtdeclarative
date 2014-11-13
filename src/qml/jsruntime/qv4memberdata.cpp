@@ -57,7 +57,7 @@ Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *o
     if (old)
         memcpy(newMemberData, old, sizeof(Heap::MemberData) + s*sizeof(Value));
     else
-        new (newMemberData) MemberData(e->memberDataClass);
+        new (newMemberData) Heap::MemberData(e->memberDataClass);
     newMemberData->d()->size = newAlloc;
     return newMemberData->d();
 }
