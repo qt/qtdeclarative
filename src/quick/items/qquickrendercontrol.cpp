@@ -106,7 +106,7 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
   rendered by calling render(). After making the context current, applications
   are expected to call render().
 
-  \li QQuickRenderControl::sceneChanged() Inidcates that the scene has changed
+  \li QQuickRenderControl::sceneChanged() Indicates that the scene has changed
   meaning that, before rendering, polishing and synchronizing is also necessary.
 
   \endlist
@@ -296,6 +296,10 @@ void QQuickRenderControl::render()
     \fn void QQuickRenderControl::renderRequested()
 
     This signal is emitted when the scene graph needs to be rendered. It is not necessary to call sync().
+
+    \note Avoid triggering rendering directly when this signal is
+    emitted. Instead, prefer deferring it by using a timer for example. This
+    will lead to better performance.
 */
 
 /*!
@@ -304,6 +308,10 @@ void QQuickRenderControl::render()
     This signal is emitted when the scene graph is updated, meaning that
     polishItems() and sync() needs to be called. If sync() returns
     true, then render() needs to be called.
+
+    \note Avoid triggering polishing, synchronization and rendering directly
+    when this signal is emitted. Instead, prefer deferring it by using a timer
+    for example. This will lead to better performance.
 */
 
 /*!
