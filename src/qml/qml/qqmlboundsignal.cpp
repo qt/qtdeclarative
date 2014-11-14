@@ -251,7 +251,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         QVarLengthArray<int, 9> dummy;
         //TODO: lookup via signal index rather than method index as an optimization
         int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-        int *argsTypes = QQmlPropertyCache::methodParameterTypes(m_target, methodIndex, dummy, 0);
+        int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, dummy, 0);
         int argCount = argsTypes ? *argsTypes : 0;
 
         QV4::ScopedValue f(scope, m_v8function.value());

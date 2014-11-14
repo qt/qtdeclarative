@@ -1181,146 +1181,6 @@ QString QQmlPropertyCache::signalParameterStringForJS(QQmlEngine *engine, const 
     return parameters;
 }
 
-// Returns an array of the arguments for method \a index.  The first entry in the array
-// is the number of arguments.
-int *QQmlPropertyCache::methodParameterTypes(QObject *object, int index,
-                                                     QVarLengthArray<int, 9> &dummy,
-                                                     QByteArray *unknownTypeError)
-{
-    Q_ASSERT(object && index >= 0);
-
-    QQmlData *ddata = QQmlData::get(object, false);
-
-    if (ddata && ddata->propertyCache) {
-        typedef QQmlPropertyCacheMethodArguments A;
-
-        QQmlPropertyCache *c = ddata->propertyCache;
-        Q_ASSERT(index < c->methodIndexCacheStart + c->methodIndexCache.count());
-
-        while (index < c->methodIndexCacheStart)
-            c = c->_parent;
-
-        QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&c->methodIndexCache.at(index - c->methodIndexCacheStart));
-
-        if (rv->arguments && static_cast<A *>(rv->arguments)->argumentsValid)
-            return static_cast<A *>(rv->arguments)->arguments;
-
-        const QMetaObject *metaObject = c->createMetaObject();
-        Q_ASSERT(metaObject);
-        QMetaMethod m = metaObject->method(index);
-
-        int argc = m.parameterCount();
-        if (!rv->arguments) {
-            A *args = c->createArgumentsObject(argc, m.parameterNames());
-            rv->arguments = args;
-        }
-        A *args = static_cast<A *>(rv->arguments);
-
-        QList<QByteArray> argTypeNames; // Only loaded if needed
-
-        for (int ii = 0; ii < argc; ++ii) {
-            int type = m.parameterType(ii);
-            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
-            if (flags & QMetaType::IsEnumeration)
-                type = QVariant::Int;
-            else if (type == QMetaType::UnknownType ||
-                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-                      type != qMetaTypeId<QJSValue>())) {
-                //the UserType clause is to catch registered QFlags
-                if (argTypeNames.isEmpty())
-                    argTypeNames = m.parameterTypes();
-                type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
-            }
-            if (type == QMetaType::UnknownType) {
-                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                return 0;
-            }
-            args->arguments[ii + 1] = type;
-        }
-        args->argumentsValid = true;
-        return static_cast<A *>(rv->arguments)->arguments;
-
-    } else {
-        QMetaMethod m = object->metaObject()->method(index);
-        int argc = m.parameterCount();
-        dummy.resize(argc + 1);
-        dummy[0] = argc;
-        QList<QByteArray> argTypeNames; // Only loaded if needed
-
-        for (int ii = 0; ii < argc; ++ii) {
-            int type = m.parameterType(ii);
-            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
-            if (flags & QMetaType::IsEnumeration)
-                type = QVariant::Int;
-            else if (type == QMetaType::UnknownType ||
-                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-                      type != qMetaTypeId<QJSValue>())) {
-                //the UserType clause is to catch registered QFlags)
-                if (argTypeNames.isEmpty())
-                    argTypeNames = m.parameterTypes();
-                type = EnumType(object->metaObject(), argTypeNames.at(ii), type);
-            }
-            if (type == QMetaType::UnknownType) {
-                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                return 0;
-            }
-            dummy[ii + 1] = type;
-        }
-
-        return dummy.data();
-    }
-}
-
-// Returns the return type of the method.
-int QQmlPropertyCache::methodReturnType(QObject *object, const QQmlPropertyData &data,
-                                        QByteArray *unknownTypeError)
-{
-    Q_ASSERT(object && data.coreIndex >= 0);
-
-    int type = data.propType;
-
-    const char *propTypeName = 0;
-
-    if (type == QMetaType::UnknownType) {
-        // Find the return type name from the method info
-        QMetaMethod m;
-
-        QQmlData *ddata = QQmlData::get(object, false);
-        if (ddata && ddata->propertyCache) {
-            QQmlPropertyCache *c = ddata->propertyCache;
-            Q_ASSERT(data.coreIndex < c->methodIndexCacheStart + c->methodIndexCache.count());
-
-            while (data.coreIndex < c->methodIndexCacheStart)
-                c = c->_parent;
-
-            const QMetaObject *metaObject = c->createMetaObject();
-            Q_ASSERT(metaObject);
-            m = metaObject->method(data.coreIndex);
-        } else {
-            m = object->metaObject()->method(data.coreIndex);
-        }
-
-        type = m.returnType();
-        propTypeName = m.typeName();
-    }
-
-    QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
-    if (flags & QMetaType::IsEnumeration) {
-        type = QVariant::Int;
-    } else if (type == QMetaType::UnknownType ||
-               (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
-               type != qMetaTypeId<QJSValue>())) {
-        //the UserType clause is to catch registered QFlags
-        type = EnumType(object->metaObject(), propTypeName, type);
-    }
-
-    if (type == QMetaType::UnknownType) {
-        if (unknownTypeError) *unknownTypeError = propTypeName;
-    }
-
-    return type;
-}
-
 int QQmlPropertyCache::originalClone(int index)
 {
     while (signal(index)->isCloned())
@@ -1660,6 +1520,137 @@ QQmlPropertyCache *QQmlMetaObject::propertyCache(QQmlEnginePrivate *e) const
     if (_m.isNull()) return 0;
     if (_m.isT1()) return _m.asT1();
     else return e->cache(_m.asT2());
+}
+
+int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const
+{
+    Q_ASSERT(!_m.isNull() && data.coreIndex >= 0);
+
+    int type = data.propType;
+
+    const char *propTypeName = 0;
+
+    if (type == QMetaType::UnknownType) {
+        // Find the return type name from the method info
+        QMetaMethod m;
+
+        if (_m.isT1()) {
+            QQmlPropertyCache *c = _m.asT1();
+            Q_ASSERT(data.coreIndex < c->methodIndexCacheStart + c->methodIndexCache.count());
+
+            while (data.coreIndex < c->methodIndexCacheStart)
+                c = c->_parent;
+
+            const QMetaObject *metaObject = c->createMetaObject();
+            Q_ASSERT(metaObject);
+            m = metaObject->method(data.coreIndex);
+        } else {
+            m = _m.asT2()->method(data.coreIndex);
+        }
+
+        type = m.returnType();
+        propTypeName = m.typeName();
+    }
+
+    QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+    if (flags & QMetaType::IsEnumeration) {
+        type = QVariant::Int;
+    } else if (type == QMetaType::UnknownType ||
+               (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+               type != qMetaTypeId<QJSValue>())) {
+        //the UserType clause is to catch registered QFlags
+        type = EnumType(metaObject(), propTypeName, type);
+    }
+
+    if (type == QMetaType::UnknownType) {
+        if (unknownTypeError) *unknownTypeError = propTypeName;
+    }
+
+    return type;
+}
+
+int *QQmlMetaObject::methodParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const
+{
+    Q_ASSERT(!_m.isNull() && index >= 0);
+
+    if (_m.isT1()) {
+        typedef QQmlPropertyCacheMethodArguments A;
+
+        QQmlPropertyCache *c = _m.asT1();
+        Q_ASSERT(index < c->methodIndexCacheStart + c->methodIndexCache.count());
+
+        while (index < c->methodIndexCacheStart)
+            c = c->_parent;
+
+        QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&c->methodIndexCache.at(index - c->methodIndexCacheStart));
+
+        if (rv->arguments && static_cast<A *>(rv->arguments)->argumentsValid)
+            return static_cast<A *>(rv->arguments)->arguments;
+
+        const QMetaObject *metaObject = c->createMetaObject();
+        Q_ASSERT(metaObject);
+        QMetaMethod m = metaObject->method(index);
+
+        int argc = m.parameterCount();
+        if (!rv->arguments) {
+            A *args = c->createArgumentsObject(argc, m.parameterNames());
+            rv->arguments = args;
+        }
+        A *args = static_cast<A *>(rv->arguments);
+
+        QList<QByteArray> argTypeNames; // Only loaded if needed
+
+        for (int ii = 0; ii < argc; ++ii) {
+            int type = m.parameterType(ii);
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+            if (flags & QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QMetaType::UnknownType ||
+                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                      type != qMetaTypeId<QJSValue>())) {
+                //the UserType clause is to catch registered QFlags
+                if (argTypeNames.isEmpty())
+                    argTypeNames = m.parameterTypes();
+                type = EnumType(metaObject, argTypeNames.at(ii), type);
+            }
+            if (type == QMetaType::UnknownType) {
+                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
+                return 0;
+            }
+            args->arguments[ii + 1] = type;
+        }
+        args->argumentsValid = true;
+        return static_cast<A *>(rv->arguments)->arguments;
+
+    } else {
+        QMetaMethod m = _m.asT2()->method(index);
+        int argc = m.parameterCount();
+        dummy.resize(argc + 1);
+        dummy[0] = argc;
+        QList<QByteArray> argTypeNames; // Only loaded if needed
+
+        for (int ii = 0; ii < argc; ++ii) {
+            int type = m.parameterType(ii);
+            QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
+            if (flags & QMetaType::IsEnumeration)
+                type = QVariant::Int;
+            else if (type == QMetaType::UnknownType ||
+                     (type >= (int)QVariant::UserType && !(flags & QMetaType::PointerToQObject) &&
+                      type != qMetaTypeId<QJSValue>())) {
+                //the UserType clause is to catch registered QFlags)
+                if (argTypeNames.isEmpty())
+                    argTypeNames = m.parameterTypes();
+                type = EnumType(_m.asT2(), argTypeNames.at(ii), type);
+            }
+            if (type == QMetaType::UnknownType) {
+                if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
+                return 0;
+            }
+            dummy[ii + 1] = type;
+        }
+
+        return dummy.data();
+    }
 }
 
 QT_END_NAMESPACE

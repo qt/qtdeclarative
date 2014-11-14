@@ -305,10 +305,6 @@ public:
                                               QQmlContextData *, QQmlPropertyData &);
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QV4::String *,
                                               QQmlContextData *, QQmlPropertyData &);
-    static int *methodParameterTypes(QObject *, int index, QVarLengthArray<int, 9> &dummy,
-                                     QByteArray *unknownTypeError);
-    static int methodReturnType(QObject *, const QQmlPropertyData &data,
-                                QByteArray *unknownTypeError);
 
     //see QMetaObjectPrivate::originalClone
     int originalClone(int index);
@@ -340,6 +336,7 @@ private:
     friend class QQmlCompiler;
     friend class QQmlPropertyCacheCreator;
     friend class QQmlComponentAndAliasResolver;
+    friend class QQmlMetaObject;
 
     inline QQmlPropertyCache *copy(int reserve);
 
@@ -427,6 +424,9 @@ public:
     inline const QMetaObject *metaObject() const;
 
     QQmlPropertyCache *propertyCache(QQmlEnginePrivate *) const;
+
+    int methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
+    int *methodParameterTypes(int index, QVarLengthArray<int, 9> &dummy, QByteArray *unknownTypeError) const;
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
 

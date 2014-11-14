@@ -796,7 +796,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 break;
 
             QVarLengthArray<int, 9> dummy;
-            int *argsTypes = QQmlPropertyCache::methodParameterTypes(r, This->signalIndex, dummy, 0);
+            int *argsTypes = QQmlMetaObject(r).methodParameterTypes(This->signalIndex, dummy, 0);
 
             int argCount = argsTypes ? argsTypes[0]:0;
 
@@ -1370,7 +1370,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
 {
     QByteArray unknownTypeError;
 
-    int returnType = QQmlPropertyCache::methodReturnType(object, data, &unknownTypeError);
+    int returnType = QQmlMetaObject(object).methodReturnType(data, &unknownTypeError);
 
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
@@ -1383,8 +1383,7 @@ static QV4::ReturnedValue CallPrecise(QObject *object, const QQmlPropertyData &d
         int *args = 0;
         QVarLengthArray<int, 9> dummy;
 
-        args = QQmlPropertyCache::methodParameterTypes(object, data.coreIndex, dummy,
-                                                               &unknownTypeError);
+        args = QQmlMetaObject(object).methodParameterTypes(data.coreIndex, dummy, &unknownTypeError);
 
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
@@ -1439,8 +1438,7 @@ static QV4::ReturnedValue CallOverloaded(QObject *object, const QQmlPropertyData
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt->hasArguments()) {
-            typedef QQmlPropertyCache PC;
-            int *args = PC::methodParameterTypes(object, attempt->coreIndex, dummy, 0);
+            int *args = QQmlMetaObject(object).methodParameterTypes(attempt->coreIndex, dummy, 0);
             if (!args) // Must be an unknown argument
                 continue;
 
