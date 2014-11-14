@@ -304,10 +304,12 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
     if (!result)
         return Object::get(m, name, hasProperty);
 
+    if (hasProperty)
+        *hasProperty = true;
+
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
-        QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
-        return QV4::QObjectWrapper::getQmlProperty(v4, qmlContext, r->d()->type, name, QV4::QObjectWrapper::IgnoreRevision);
+        return QV4::QObjectMethod::create(v4->rootContext(), r->d()->type, result->coreIndex);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

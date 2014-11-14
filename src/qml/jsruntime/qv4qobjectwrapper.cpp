@@ -1332,12 +1332,14 @@ static const QQmlPropertyData * RelatedMethod(QObject *object,
                                                       const QQmlPropertyData *current,
                                                       QQmlPropertyData &dummy)
 {
-    QQmlPropertyCache *cache = QQmlData::get(object)->propertyCache;
     if (!current->isOverload())
         return 0;
 
     Q_ASSERT(!current->overrideIndexIsProperty);
 
+    QQmlPropertyCache *cache = 0;
+    if (QQmlData *ddata = QQmlData::get(object))
+        cache = ddata->propertyCache;
     if (cache) {
         return cache->method(current->overrideIndex);
     } else {
@@ -1831,10 +1833,6 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
 
     QObject *object = d()->object.data();
     if (!object)
-        return Encode::undefined();
-
-    QQmlData *ddata = QQmlData::get(object);
-    if (!ddata)
         return Encode::undefined();
 
     QV8Engine *v8Engine = context->d()->engine->v8Engine;
