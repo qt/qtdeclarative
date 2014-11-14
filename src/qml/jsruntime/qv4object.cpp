@@ -468,7 +468,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
             l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
-            o->memberData()->data()[idx] = *value;
+            o->memberData()->data[idx] = *value;
             return;
         }
 
@@ -1158,7 +1158,7 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);
-        return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
+        return a->memberData()->data[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
     }
     return Object::getLookup(m, l);
 }
@@ -1166,9 +1166,9 @@ ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 uint ArrayObject::getLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
-    if (a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].isInteger())
-        return a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].integerValue();
-    return Primitive::toUInt32(a->memberData()->data()[Heap::ArrayObject::LengthPropertyIndex].doubleValue());
+    if (a->memberData()->data[Heap::ArrayObject::LengthPropertyIndex].isInteger())
+        return a->memberData()->data[Heap::ArrayObject::LengthPropertyIndex].integerValue();
+    return Primitive::toUInt32(a->memberData()->data[Heap::ArrayObject::LengthPropertyIndex].doubleValue());
 }
 
 QStringList ArrayObject::toQStringList() const

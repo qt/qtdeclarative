@@ -150,10 +150,10 @@ void FunctionObject::init(String *n, bool createProto)
     if (createProto) {
         Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
-        proto->memberData()->data()[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
-        memberData()->data()[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
+        proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
+        memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
     } else {
-        memberData()->data()[Heap::FunctionObject::Index_Prototype] = Encode::undefined();
+        memberData()->data[Heap::FunctionObject::Index_Prototype] = Encode::undefined();
     }
 
     ScopedValue v(s, n);

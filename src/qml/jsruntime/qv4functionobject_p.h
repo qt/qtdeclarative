@@ -139,7 +139,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
-    ReturnedValue protoProperty() { return memberData()->data()[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
+    ReturnedValue protoProperty() { return memberData()->data[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
 
     bool needsActivation() const { return d()->needsActivation; }
     bool strictMode() const { return d()->strictMode; }

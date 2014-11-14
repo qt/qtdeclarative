@@ -391,8 +391,8 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);
-    array->memberData()->data()[Index_ArrayIndex] = Primitive::fromInt32(result);
-    array->memberData()->data()[Index_ArrayInput] = arg.asReturnedValue();
+    array->memberData()->data[Index_ArrayIndex] = Primitive::fromInt32(result);
+    array->memberData()->data[Index_ArrayInput] = arg.asReturnedValue();
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch = array;

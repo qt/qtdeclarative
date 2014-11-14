@@ -65,10 +65,10 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     } else {
         args->setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
-        args->memberData()->data()[CalleePropertyIndex] = context->d()->function->asReturnedValue();
+        args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length));
-    args->memberData()->data()[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
+    args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
 }
 
 void ArgumentsObject::fullyCreate()

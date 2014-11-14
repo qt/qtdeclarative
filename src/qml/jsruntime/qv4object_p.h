@@ -96,14 +96,14 @@ struct Q_QML_EXPORT Object: Managed {
         IsObject = true
     };
 
+    Heap::MemberData *memberData() { return d()->memberData; }
+    const Heap::MemberData *memberData() const { return d()->memberData; }
     // ### GC
-    MemberData *memberData() { return reinterpret_cast<MemberData *>(d()->memberData); }
-    const MemberData *memberData() const { return reinterpret_cast<const MemberData *>(d()->memberData); }
     ArrayData *arrayData() const { return reinterpret_cast<ArrayData *>(d()->arrayData); }
     void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
 
-    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData()->data() + index); }
-    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData()->data() + index); }
+    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData()->data + index); }
+    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData()->data + index); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass()->vtable); }
     Object *prototype() const { return internalClass()->prototype; }
@@ -339,7 +339,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        memberData()->data()[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
+        memberData()->data[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const ValueRef v)
