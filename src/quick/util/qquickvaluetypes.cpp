@@ -599,16 +599,8 @@ bool QQuickMatrix4x4ValueType::isEqual(const QVariant &other) const
 }
 
 QQuickFontValueType::QQuickFontValueType(QObject *parent)
-    : QQmlValueTypeBase<QFont>(QMetaType::QFont, parent),
-      pixelSizeSet(false),
-      pointSizeSet(false)
+    : QQmlValueTypeBase<QFont>(QMetaType::QFont, parent)
 {
-}
-
-void QQuickFontValueType::onLoad()
-{
-    pixelSizeSet = false;
-    pointSizeSet = false;
 }
 
 QString QQuickFontValueType::toString() const
@@ -698,16 +690,13 @@ qreal QQuickFontValueType::pointSize() const
 
 void QQuickFontValueType::setPointSize(qreal size)
 {
-    if (pixelSizeSet) {
+    if ((v.resolve() & QFont::SizeResolved) && v.pixelSize() != -1) {
         qWarning() << "Both point size and pixel size set. Using pixel size.";
         return;
     }
 
     if (size >= 0.0) {
-        pointSizeSet = true;
         v.setPointSizeF(size);
-    } else {
-        pointSizeSet = false;
     }
 }
 
@@ -724,12 +713,9 @@ int QQuickFontValueType::pixelSize() const
 void QQuickFontValueType::setPixelSize(int size)
 {
     if (size >0) {
-        if (pointSizeSet)
+        if ((v.resolve() & QFont::SizeResolved) && v.pointSizeF() != -1)
             qWarning() << "Both point size and pixel size set. Using pixel size.";
         v.setPixelSize(size);
-        pixelSizeSet = true;
-    } else {
-        pixelSizeSet = false;
     }
 }
 

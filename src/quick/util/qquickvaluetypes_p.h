@@ -345,11 +345,7 @@ public:
     qreal wordSpacing() const;
     void setWordSpacing(qreal spacing);
 
-    void onLoad();
-
 private:
-    bool pixelSizeSet;
-    bool pointSizeSet;
     mutable QQmlNullableValue<int> dpi;
 };
 

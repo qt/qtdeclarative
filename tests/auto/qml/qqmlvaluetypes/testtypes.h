@@ -100,7 +100,6 @@ public:
         m_font.setUnderline(true);
         m_font.setOverline(true);
         m_font.setStrikeOut(true);
-        m_font.setPointSize(29);
         m_font.setCapitalization(QFont::AllLowercase);
         m_font.setLetterSpacing(QFont::AbsoluteSpacing, 10.2);
         m_font.setWordSpacing(19.7);
