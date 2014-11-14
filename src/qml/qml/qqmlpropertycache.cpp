@@ -1653,4 +1653,12 @@ int *QQmlMetaObject::methodParameterTypes(int index, QVarLengthArray<int, 9> &du
     }
 }
 
+void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv) const
+{
+    if (ptr.isT1())
+        QMetaObject::metacall(ptr.asT1(), type, index, argv);
+    else
+        _m.asT1()->metaObject()->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
+}
+
 QT_END_NAMESPACE

@@ -430,8 +430,26 @@ public:
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
 
-private:
+protected:
     QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
+};
+
+class QQmlObjectOrGadget: public QQmlMetaObject
+{
+public:
+    QQmlObjectOrGadget(QObject *obj)
+        : QQmlMetaObject(obj),
+          ptr(obj)
+    {}
+    QQmlObjectOrGadget(QQmlPropertyCache *propertyCache, void *gadget)
+        : QQmlMetaObject(propertyCache)
+        , ptr(gadget)
+    {}
+
+    void metacall(QMetaObject::Call type, int index, void **argv) const;
+
+private:
+    QBiPointer<QObject, void> ptr;
 };
 
 QQmlPropertyData::QQmlPropertyData()

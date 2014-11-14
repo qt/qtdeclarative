@@ -256,7 +256,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
         // calling a Q_INVOKABLE function of a value type
         Scope scope(v4);
         ScopedContext c(scope, v4->rootContext());
-        return QV4::QObjectMethod::create(c, r->d()->type.data(), result->coreIndex);
+        return QV4::QObjectMethod::create(c, r, result->coreIndex);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

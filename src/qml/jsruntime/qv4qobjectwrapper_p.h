@@ -75,10 +75,15 @@ struct QObjectWrapper : Object {
 };
 
 struct QObjectMethod : FunctionObject {
-    QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
+    QObjectMethod(QV4::ExecutionContext *scope);
     QPointer<QObject> object;
+    QQmlRefPointer<QQmlPropertyCache> propertyCache;
     int index;
     Value qmlGlobal;
+
+    Value valueTypeWrapper;
+
+    const QMetaObject *metaObject();
 };
 
 struct QmlSignalHandler : Object {
@@ -133,6 +138,8 @@ private:
     static ReturnedValue method_disconnect(CallContext *ctx);
 };
 
+struct QQmlValueTypeWrapper;
+
 struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 {
     V4_OBJECT2(QObjectMethod, QV4::FunctionObject)
@@ -141,6 +148,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
     static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
+    static ReturnedValue create(QV4::ExecutionContext *scope, QQmlValueTypeWrapper *valueType, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
 
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object.data(); }

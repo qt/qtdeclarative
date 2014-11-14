@@ -72,6 +72,8 @@ public:
     QString toString() const;
     bool isEqual(const QVariant &value) const;
 
+    void *gadget() const { return gadgetPtr; }
+
     inline int userType() const
     {
         return typeId;
