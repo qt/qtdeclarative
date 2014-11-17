@@ -23,7 +23,6 @@
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
 #include <private/qquickprofiler_p.h>
-#include <private/qsgcontext_p.h>
 
 RenderLoop::RenderLoop()
     : eventPending(false)
@@ -99,7 +98,7 @@ void RenderLoop::renderWindow(QQuickWindow *window)
     }
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::featuresEnabled;
+    bool profileFrames = QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::featuresEnabled;
     if (profileFrames)
         renderTimer.start();
 
@@ -136,9 +135,9 @@ void RenderLoop::renderWindow(QQuickWindow *window)
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
 
-    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
+    if (QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
-        qCDebug(QSG_LOG_TIME_RENDERLOOP,
+        qCDebug(QSG_RASTER_LOG_TIME_RENDERLOOP,
                 "Frame rendered with 'basic' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
                 int(swapTime / 1000000),
                 int(polishTime / 1000000),
