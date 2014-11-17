@@ -4171,13 +4171,35 @@ QQuickContext2DTexture *QQuickContext2D::texture() const
 
 QImage QQuickContext2D::toImage(const QRectF& bounds)
 {
-    flush();
-    if (m_texture->thread() == QThread::currentThread())
-        m_texture->grabImage(bounds);
-    else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
+    if (m_texture->thread() == QThread::currentThread()) {
+        // if we're either not rendering to an fbo or we have a separate opengl context we can just
+        // flush. Otherwise we have to make sure the shared opengl context is current before we do
+        // so. It may or may not be current already, depending on how this method is called.
+        if (m_renderTarget != QQuickCanvasItem::FramebufferObject || m_glContext) {
+            flush();
+            m_texture->grabImage(bounds);
+        } else {
+            QQuickWindow *window = m_canvas->window();
+            QOpenGLContext *ctx =  window ? window->openglContext() : 0;
+            if (ctx && ctx->isValid()) {
+                if (ctx == QOpenGLContext::currentContext()) {
+                    flush();
+                } else {
+                    ctx->makeCurrent(window);
+                    flush();
+                    ctx->doneCurrent();
+                }
+                m_texture->grabImage(bounds);
+            } else {
+                qWarning() << "Cannot read pixels from canvas before opengl context is valid";
+                return QImage();
+            }
+        }
+    } else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
         qWarning() << "Pixel readback is not supported in Cooperative mode, please try Threaded or Immediate mode";
         return QImage();
     } else {
+        flush();
         QCoreApplication::postEvent(m_texture, new QEvent(QEvent::Type(QEvent::User + 10)));
         QMetaObject::invokeMethod(m_texture,
                                   "grabImage",
