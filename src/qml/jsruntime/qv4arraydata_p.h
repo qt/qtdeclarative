@@ -102,6 +102,10 @@ struct SimpleArrayData : public ArrayData {
     SimpleArrayData(ExecutionEngine *engine)
         : ArrayData(engine->simpleArrayDataClass)
     {}
+
+    uint mappedIndex(uint index) const { return (index + offset) % alloc; }
+    Value data(uint index) const { return arrayData[mappedIndex(index)]; }
+    Value &data(uint index) { return arrayData[mappedIndex(index)]; }
 };
 
 struct SparseArrayData : public ArrayData {
@@ -162,9 +166,9 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 {
     V4_ARRAYDATA(SimpleArrayData)
 
-    uint mappedIndex(uint index) const { return (index + d()->offset) % d()->alloc; }
-    Value data(uint index) const { return d()->arrayData[mappedIndex(index)]; }
-    Value &data(uint index) { return d()->arrayData[mappedIndex(index)]; }
+    uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
+    Value data(uint index) const { return d()->data(index); }
+    Value &data(uint index) { return d()->data(index); }
 
     Property *getProperty(uint index) {
         if (index >= len())
