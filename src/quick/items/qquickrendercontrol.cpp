@@ -172,6 +172,10 @@ void QQuickRenderControlPrivate::windowDestroyed()
 /*!
   Initializes the scene graph resources. The context \a gl has to
   be the current context.
+
+  \note Qt Quick does not take ownership of the context. It is up to the
+  application to destroy it after a call to invalidate() or after the
+  QQuickRenderControl instance is destroyed.
  */
 void QQuickRenderControl::initialize(QOpenGLContext *gl)
 {
@@ -274,7 +278,6 @@ void QQuickRenderControl::invalidate()
     // application right after returning from this function. Invalidating is
     // also essential to allow a subsequent initialize() to succeed.
     d->rc->invalidate();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 
     d->initialized = false;
 }
