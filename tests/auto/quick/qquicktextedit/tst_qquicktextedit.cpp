@@ -201,6 +201,7 @@ private slots:
 
     void emptytags_QTBUG_22058();
     void cursorRectangle_QTBUG_38947();
+    void textCached_QTBUG_41583();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -5300,6 +5301,17 @@ void tst_qquicktextedit::cursorRectangle_QTBUG_38947()
 
     QPoint to = edit->positionToRectangle(edit->length() - 1).center().toPoint();
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, to);
+}
+
+void tst_qquicktextedit::textCached_QTBUG_41583()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nTextEdit { property int margin: 10; text: \"TextEdit\"; textMargin: margin; property bool empty: !text; }", QUrl());
+    QQuickTextEdit *textedit = qobject_cast<QQuickTextEdit*>(component.create());
+    QVERIFY(textedit);
+    QCOMPARE(textedit->textMargin(), qreal(10.0));
+    QCOMPARE(textedit->text(), QString("TextEdit"));
+    QVERIFY(!textedit->property("empty").toBool());
 }
 
 QTEST_MAIN(tst_qquicktextedit)

@@ -175,7 +175,7 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 QString QQuickTextEdit::text() const
 {
     Q_D(const QQuickTextEdit);
-    if (!d->textCached) {
+    if (!d->textCached && isComponentComplete()) {
         QQuickTextEditPrivate *d = const_cast<QQuickTextEditPrivate *>(d_func());
 #ifndef QT_NO_TEXTHTMLPARSER
         if (d->richText)
