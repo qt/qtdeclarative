@@ -346,6 +346,7 @@ bool Object::hasOwnProperty(uint index) const
 {
     if (arrayData() && !arrayData()->isEmpty(index))
         return true;
+
     if (isStringObject()) {
         String *s = static_cast<const StringObject *>(this)->d()->value.asString();
         if (index < (uint)s->d()->length())
@@ -403,7 +404,7 @@ PropertyAttributes Object::query(const Managed *m, String *name)
 PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
 {
     const Object *o = static_cast<const Object *>(m);
-    if (o->arrayData() && o->arrayData()->get(index) != Primitive::emptyValue().asReturnedValue())
+    if (o->arrayData() && !o->arrayData()->isEmpty(index))
         return o->arrayData()->attributes(index);
 
     if (o->isStringObject()) {
@@ -522,10 +523,10 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint
             while (it->arrayNode != o->sparseEnd()) {
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
-                SparseArrayData *sa = static_cast<SparseArrayData *>(o->arrayData());
-                Property *p = reinterpret_cast<Property *>(sa->arrayData() + pidx);
+                Heap::SparseArrayData *sa = static_cast<Heap::SparseArrayData *>(o->d()->arrayData);
+                Property *p = reinterpret_cast<Property *>(sa->arrayData + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
-                PropertyAttributes a = o->arrayData()->attributes(k);
+                PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
                 if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                     it->arrayIndex = k + 1;
                     *index = k;
@@ -538,8 +539,8 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint
             it->arrayIndex = UINT_MAX;
         }
         // dense arrays
-        while (it->arrayIndex < o->arrayData()->length()) {
-            SimpleArrayData *sa = static_cast<SimpleArrayData *>(o->arrayData());
+        while (it->arrayIndex < o->d()->arrayData->len) {
+            Heap::SimpleArrayData *sa = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
             Value &val = sa->data(it->arrayIndex);
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
             ++it->arrayIndex;
@@ -817,10 +818,12 @@ bool Object::internalDeleteProperty(String *name)
 
 bool Object::internalDeleteIndexedProperty(uint index)
 {
-    if (internalClass()->engine->hasException)
+    Scope scope(engine());
+    if (scope.engine->hasException)
         return false;
 
-    if (!arrayData() || arrayData()->vtable()->del(this, index))
+    Scoped<ArrayData> ad(scope, arrayData());
+    if (!ad || ad->vtable()->del(this, index))
         return true;
 
     if (engine()->currentContext()->d()->strictMode)
@@ -1063,28 +1066,28 @@ void Object::copyArrayData(Object *other)
         }
     } else if (!other->arrayData()) {
         ;
-    } else if (other->hasAccessorProperty() && other->arrayData()->attrs() && other->arrayData()->isSparse()){
+    } else if (other->hasAccessorProperty() && other->d()->arrayData->attrs && other->d()->arrayData->isSparse()){
         // do it the slow way
         ScopedValue v(scope);
-        SparseArrayData *osa = static_cast<SparseArrayData *>(other->arrayData());
-        for (const SparseArrayNode *it = osa->sparse()->begin(); it != osa->sparse()->end(); it = it->nextNode()) {
-            v = other->getValue(reinterpret_cast<Property *>(osa->arrayData() + it->value), other->arrayData()->attrs()[it->value]);
+        Heap::ArrayData *osa = other->d()->arrayData;
+        for (const SparseArrayNode *it = osa->sparse->begin(); it != osa->sparse->end(); it = it->nextNode()) {
+            v = other->getValue(reinterpret_cast<Property *>(osa->arrayData + it->value), osa->attrs[it->value]);
             arraySet(it->key(), v);
         }
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
-        ArrayData::realloc(this, other->arrayData()->type(), other->arrayData()->alloc(), false);
+        ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->alloc, false);
         if (other->arrayType() == Heap::ArrayData::Sparse) {
-            SparseArrayData *od = static_cast<SparseArrayData *>(other->arrayData());
-            SparseArrayData *dd = static_cast<SparseArrayData *>(arrayData());
-            dd->setSparse(new SparseArray(*od->sparse()));
-            dd->freeList() = od->freeList();
+            Heap::ArrayData *od = other->d()->arrayData;
+            Heap::ArrayData *dd = d()->arrayData;
+            dd->sparse = new SparseArray(*od->sparse);
+            dd->freeList = od->freeList;
         } else {
-            SimpleArrayData *d = static_cast<SimpleArrayData *>(arrayData());
-            d->len() = static_cast<SimpleArrayData *>(other->arrayData())->len();
-            d->d()->offset = static_cast<SimpleArrayData *>(other->arrayData())->d()->offset;
+            Heap::ArrayData *dd = d()->arrayData;
+            dd->len = other->d()->arrayData->len;
+            dd->offset = other->d()->arrayData->offset;
         }
-        memcpy(arrayData()->d()->arrayData, other->arrayData()->d()->arrayData, arrayData()->alloc()*sizeof(Value));
+        memcpy(d()->arrayData->arrayData, other->d()->arrayData->arrayData, d()->arrayData->alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }
