@@ -59,12 +59,11 @@ struct ArrayVTable
     ManagedVTable managedVTable;
     uint type;
     ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
-    ReturnedValue (*get)(const ArrayData *d, uint index);
+    ReturnedValue (*get)(const Heap::ArrayData *d, uint index);
     bool (*put)(Object *o, uint index, ValueRef value);
     bool (*putArray)(Object *o, uint index, Value *values, uint n);
     bool (*del)(Object *o, uint index);
     void (*setAttribute)(Object *o, uint index, PropertyAttributes attrs);
-    PropertyAttributes (*attribute)(const ArrayData *d, uint index);
     void (*push_front)(Object *o, Value *values, uint n);
     ReturnedValue (*pop_front)(Object *o);
     uint (*truncate)(Object *o, uint newLen);
@@ -96,6 +95,21 @@ struct ArrayData : public Base {
         SparseArray *sparse;
     };
     Value arrayData[1];
+
+    bool isSparse() const { return type == Sparse; }
+
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
+
+    inline ReturnedValue get(uint i) const {
+        return vtable()->get(this, i);
+    }
+    inline Property *getProperty(uint index);
+    inline PropertyAttributes attributes(uint i) const;
+
+    bool isEmpty(uint i) const {
+        return get(i) == Primitive::emptyValue().asReturnedValue();
+    }
+
 };
 
 struct SimpleArrayData : public ArrayData {
@@ -106,6 +120,19 @@ struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { return (index + offset) % alloc; }
     Value data(uint index) const { return arrayData[mappedIndex(index)]; }
     Value &data(uint index) { return arrayData[mappedIndex(index)]; }
+
+    Property *getProperty(uint index) {
+        if (index >= len)
+            return 0;
+        index = mappedIndex(index);
+        if (arrayData[index].isEmpty())
+            return 0;
+        return reinterpret_cast<Property *>(arrayData + index);
+    }
+
+    PropertyAttributes attributes(uint i) const {
+        return attrs ? attrs[i] : Attr_Data;
+    }
 };
 
 struct SparseArrayData : public ArrayData {
@@ -117,6 +144,20 @@ struct SparseArrayData : public ArrayData {
         if (!n)
             return UINT_MAX;
         return n->value;
+    }
+
+    Property *getProperty(uint index) {
+        SparseArrayNode *n = sparse->findNode(index);
+        if (!n)
+            return 0;
+        return reinterpret_cast<Property *>(arrayData + n->value);
+    }
+
+    PropertyAttributes attributes(uint i) const {
+        if (!attrs)
+            return Attr_Data;
+        uint index = mappedIndex(i);
+        return index < UINT_MAX ? attrs[index] : Attr_Data;
     }
 };
 
@@ -147,19 +188,20 @@ struct Q_QML_EXPORT ArrayData : public Managed
     bool hasAttributes() const {
         return attrs();
     }
-    PropertyAttributes attributes(int i) const {
-        Q_ASSERT(this);
-        return attrs() ? vtable()->attribute(this, i) : Attr_Data;
+    PropertyAttributes attributes(uint i) const {
+        return d()->attributes(i);
     }
 
     bool isEmpty(uint i) const {
-        return (vtable()->get(this, i) == Primitive::emptyValue().asReturnedValue());
+        return d()->isEmpty(i);
     }
 
     ReturnedValue get(uint i) const {
-        return vtable()->get(this, i);
+        return d()->get(i);
     }
-    inline Property *getProperty(uint index);
+    inline Property *getProperty(uint index) {
+        return d()->getProperty(index);
+    }
 
     static void ensureAttributes(Object *o);
     static void realloc(Object *o, Type newType, uint alloc, bool enforceAttributes);
@@ -177,15 +219,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     Value data(uint index) const { return d()->data(index); }
     Value &data(uint index) { return d()->data(index); }
 
-    Property *getProperty(uint index) {
-        if (index >= len())
-            return 0;
-        index = mappedIndex(index);
-        if (d()->arrayData[index].isEmpty())
-            return 0;
-        return reinterpret_cast<Property *>(d()->arrayData + index);
-    }
-
     uint &len() { return d()->len; }
     uint len() const { return d()->len; }
 
@@ -193,12 +226,11 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
 
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
-    static ReturnedValue get(const ArrayData *d, uint index);
+    static ReturnedValue get(const Heap::ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
     static bool putArray(Object *o, uint index, Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
-    static PropertyAttributes attribute(const ArrayData *d, uint index);
     static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
@@ -218,24 +250,16 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint allocate(Object *o, bool doubleSlot = false);
     static void free(ArrayData *d, uint idx);
 
-    Property *getProperty(uint index) {
-        SparseArrayNode *n = sparse()->findNode(index);
-        if (!n)
-            return 0;
-        return reinterpret_cast<Property *>(arrayData() + n->value);
-    }
-
     uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
 
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
-    static ReturnedValue get(const ArrayData *d, uint index);
+    static ReturnedValue get(const Heap::ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
     static bool putArray(Object *o, uint index, Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
-    static PropertyAttributes attribute(const ArrayData *d, uint index);
     static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
@@ -254,17 +278,21 @@ inline SparseArrayData::~SparseArrayData()
     delete sparse;
 }
 
-}
-
 inline Property *ArrayData::getProperty(uint index)
 {
-    if (type() != Heap::ArrayData::Sparse) {
-        SimpleArrayData *that = static_cast<SimpleArrayData *>(this);
-        return that->getProperty(index);
-    } else {
-        SparseArrayData *that = static_cast<SparseArrayData *>(this);
-        return that->getProperty(index);
-    }
+    if (isSparse())
+        return static_cast<SparseArrayData *>(this)->getProperty(index);
+    return static_cast<SimpleArrayData *>(this)->getProperty(index);
+}
+
+inline PropertyAttributes ArrayData::attributes(uint i) const
+{
+    if (isSparse())
+        return static_cast<const SparseArrayData *>(this)->attributes(i);
+    return static_cast<const SimpleArrayData *>(this)->attributes(i);
+}
+
+
 }
 
 }

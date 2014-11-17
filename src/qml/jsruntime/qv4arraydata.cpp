@@ -64,7 +64,6 @@ const ArrayVTable SimpleArrayData::static_vtbl =
     SimpleArrayData::putArray,
     SimpleArrayData::del,
     SimpleArrayData::setAttribute,
-    SimpleArrayData::attribute,
     SimpleArrayData::push_front,
     SimpleArrayData::pop_front,
     SimpleArrayData::truncate,
@@ -81,7 +80,6 @@ const ArrayVTable SparseArrayData::static_vtbl =
     SparseArrayData::putArray,
     SparseArrayData::del,
     SparseArrayData::setAttribute,
-    SparseArrayData::attribute,
     SparseArrayData::push_front,
     SparseArrayData::pop_front,
     SparseArrayData::truncate,
@@ -222,10 +220,10 @@ void SimpleArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
         dd->arrayData[i].mark(e);
 }
 
-ReturnedValue SimpleArrayData::get(const ArrayData *d, uint index)
+ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
 {
-    const SimpleArrayData *dd = static_cast<const SimpleArrayData *>(d);
-    if (index >= dd->len())
+    const Heap::SimpleArrayData *dd = static_cast<const Heap::SimpleArrayData *>(d);
+    if (index >= dd->len)
         return Primitive::emptyValue().asReturnedValue();
     return dd->data(index).asReturnedValue();
 }
@@ -264,11 +262,6 @@ bool SimpleArrayData::del(Object *o, uint index)
 void SimpleArrayData::setAttribute(Object *o, uint index, PropertyAttributes attrs)
 {
     o->arrayData()->attrs()[index] = attrs;
-}
-
-PropertyAttributes SimpleArrayData::attribute(const ArrayData *d, uint index)
-{
-    return d->attrs()[index];
 }
 
 void SimpleArrayData::push_front(Object *o, Value *values, uint n)
@@ -412,9 +405,9 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
     }
 }
 
-ReturnedValue SparseArrayData::get(const ArrayData *d, uint index)
+ReturnedValue SparseArrayData::get(const Heap::ArrayData *d, uint index)
 {
-    const Heap::SparseArrayData *s = static_cast<const SparseArrayData *>(d)->d();
+    const Heap::SparseArrayData *s = static_cast<const Heap::SparseArrayData *>(d);
     index = s->mappedIndex(index);
     if (index == UINT_MAX)
         return Primitive::emptyValue().asReturnedValue();
@@ -489,14 +482,6 @@ void SparseArrayData::setAttribute(Object *o, uint index, PropertyAttributes att
         d = static_cast<Heap::SparseArrayData *>(o->d()->arrayData);
     }
     d->attrs[n->value] = attrs;
-}
-
-PropertyAttributes SparseArrayData::attribute(const ArrayData *d, uint index)
-{
-    SparseArrayNode *n = d->d()->sparse->findNode(index);
-    if (!n)
-        return PropertyAttributes();
-    return d->d()->attrs[n->value];
 }
 
 void SparseArrayData::push_front(Object *o, Value *values, uint n)
