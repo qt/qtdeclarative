@@ -111,6 +111,13 @@ struct SimpleArrayData : public ArrayData {
 struct SparseArrayData : public ArrayData {
     inline SparseArrayData(ExecutionEngine *engine);
     inline ~SparseArrayData();
+
+    uint mappedIndex(uint index) const {
+        SparseArrayNode *n = sparse->findNode(index);
+        if (!n)
+            return UINT_MAX;
+        return n->value;
+    }
 };
 
 }
@@ -218,12 +225,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
         return reinterpret_cast<Property *>(arrayData() + n->value);
     }
 
-    uint mappedIndex(uint index) const {
-        SparseArrayNode *n = sparse()->findNode(index);
-        if (!n)
-            return UINT_MAX;
-        return n->value;
-    }
+    uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
 
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
