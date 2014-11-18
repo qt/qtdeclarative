@@ -1838,6 +1838,7 @@ void tst_QJSEngine::errorConstructors()
             QJSValue ret = eng.evaluate(code);
             QVERIFY(ret.isError());
             QVERIFY(ret.toString().startsWith(name));
+            qDebug() << ret.property("stack").toString();
             QCOMPARE(ret.property("lineNumber").toInt(), i+2);
         }
     }

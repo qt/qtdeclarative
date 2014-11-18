@@ -288,7 +288,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Q_ASSERT(argumentsObjectClass->vtable == ArgumentsObject::staticVTable());
     Q_ASSERT(strictArgumentsObjectClass->vtable == ArgumentsObject::staticVTable());
 
-    m_globalObject = ScopedObject(scope, newObject()).getPointer();
+    m_globalObject = newObject();
     Q_ASSERT(globalObject()->internalClass()->vtable);
     initRootContext();
 

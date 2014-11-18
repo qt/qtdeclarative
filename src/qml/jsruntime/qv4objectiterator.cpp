@@ -64,8 +64,8 @@ ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
 
 void ObjectIterator::init(Object *o)
 {
-    object->m = o ? &o->data : 0;
-    current->m = o ? &o->data : 0;
+    object->m = o ? o->m : 0;
+    current->m = o ? o->m : 0;
 
 #if QT_POINTER_SIZE == 4
     object->tag = QV4::Value::Managed_Type;

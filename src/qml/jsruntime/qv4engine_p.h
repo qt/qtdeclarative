@@ -110,8 +110,8 @@ public:
     QV4::Debugging::Debugger *debugger;
     QV4::Profiling::Profiler *profiler;
 
-    Object *m_globalObject;
-    Object *globalObject() { return m_globalObject; }
+    Value m_globalObject;
+    Object *globalObject() { return reinterpret_cast<Object *>(&m_globalObject); }
 
     Function *globalCode;
 

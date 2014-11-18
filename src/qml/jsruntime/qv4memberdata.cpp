@@ -56,7 +56,7 @@ Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *o
     Scope scope(e);
     Scoped<MemberData> newMemberData(scope, static_cast<Heap::MemberData *>(e->memoryManager->allocManaged(alloc)));
     if (old)
-        memcpy(newMemberData, old, sizeof(Heap::MemberData) + s*sizeof(Value));
+        memcpy(newMemberData->d(), old, sizeof(Heap::MemberData) + s*sizeof(Value));
     else
         new (newMemberData->d()) Heap::MemberData(e->memberDataClass);
     newMemberData->d()->size = newAlloc;

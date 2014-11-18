@@ -48,8 +48,8 @@ namespace QV4 {
         static const QV4::ArrayVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        const QV4::Heap::Data *d() const { return &static_cast<const QV4::Heap::Data &>(Managed::data); } \
-        QV4::Heap::Data *d() { return &static_cast<QV4::Heap::Data &>(Managed::data); }
+        const QV4::Heap::Data *d() const { return static_cast<const QV4::Heap::Data *>(m); } \
+        QV4::Heap::Data *d() { return static_cast<QV4::Heap::Data *>(m); }
 
 
 struct ArrayData;

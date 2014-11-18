@@ -206,9 +206,9 @@ struct Scoped
 
     inline void setPointer(Managed *p) {
 #if QT_POINTER_SIZE == 8
-        ptr->val = (quint64)(p ? &p->data : 0);
+        ptr->m = p ? p->m : 0;
 #else
-        *ptr = p ? QV4::Value::fromManaged(p) : QV4::Primitive::undefinedValue();
+        *ptr = QV4::Value::fromManaged(p);
 #endif
     }
 
@@ -437,7 +437,7 @@ inline Value &Value::operator=(const ValueRef v)
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator =(T *t)
 {
-    m = t ? &t->data : 0;
+    m = t ? t->m : 0;
 #if QT_POINTER_SIZE == 4
     tag = Managed_Type;
 #endif

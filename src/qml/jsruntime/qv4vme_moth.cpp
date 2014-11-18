@@ -145,7 +145,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     QV4::Scope scope(engine);
     QV4::ScopedContext context(scope, engine->currentContext());
-    context->d()->lineNumber = -1;
+    engine->currentContext()->lineNumber = -1;
 
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -616,14 +616,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
-        context->d()->lineNumber = instr.lineNumber;
+        engine->currentContext()->lineNumber = instr.lineNumber;
         QV4::Debugging::Debugger *debugger = context->engine()->debugger;
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
-        context->d()->lineNumber = instr.lineNumber;
+        engine->currentContext()->lineNumber = instr.lineNumber;
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)

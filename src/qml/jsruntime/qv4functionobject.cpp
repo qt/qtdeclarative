@@ -586,8 +586,9 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
+    Scoped<CallContext> sctx(scope, &ctx);
 
-    return f->d()->code(reinterpret_cast<CallContext *>(&ctx));
+    return f->d()->code(sctx);
 }
 
 ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
@@ -605,8 +606,9 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
+    Scoped<CallContext> sctx(scope, &ctx);
 
-    return f->d()->code(reinterpret_cast<CallContext *>(&ctx), f->d()->index);
+    return f->d()->code(sctx, f->d()->index);
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

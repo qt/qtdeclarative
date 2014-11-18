@@ -49,13 +49,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return m && static_cast<Heap::Base *>(m)->internalClass->vtable->isString;
+    return m && m->internalClass->vtable->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return m && static_cast<Heap::Base *>(m)->internalClass->vtable->isObject;
+    return m && m->internalClass->vtable->isObject;
 }
 
 inline bool Value::isPrimitive() const

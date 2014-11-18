@@ -52,7 +52,7 @@ DEFINE_OBJECT_VTABLE(Object);
 
 Heap::Object::Object(InternalClass *internalClass, QV4::Object *prototype)
     : Heap::Base(internalClass),
-      prototype(prototype->d())
+      prototype(prototype ? prototype->d() : 0)
 {
     if (internalClass->size) {
         Scope scope(internalClass->engine);

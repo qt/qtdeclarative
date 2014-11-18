@@ -301,13 +301,13 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     String *stringValue() const {
-        return m ? reinterpret_cast<String*>(m) : 0;
+        return m ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
     }
     Object *objectValue() const {
-        return m ? reinterpret_cast<Object*>(m) : 0;
+        return m ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
     }
     Managed *managed() const {
-        return m ? reinterpret_cast<Managed*>(m) : 0;
+        return m ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
     }
     Heap::Base *heapObject() const {
         return m;

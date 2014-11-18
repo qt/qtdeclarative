@@ -68,7 +68,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ManagedVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return &static_cast<QV4::Heap::DataClass &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
 
 #define V4_OBJECT(superClass) \
     public: \
@@ -77,7 +77,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        Data *d() const { return &static_cast<Data &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
+        Data *d() const { return static_cast<Data *>(m); }
 
 #define V4_OBJECT2(DataClass, superClass) \
     public: \
@@ -87,7 +87,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return &static_cast<QV4::Heap::DataClass &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
 
 #define Q_MANAGED_TYPE(type) \
     public: \
@@ -182,9 +182,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     advanceIterator                            \
 }
 
-struct Q_QML_PRIVATE_EXPORT Managed
+struct Q_QML_PRIVATE_EXPORT Managed : Value
 {
-    Heap::Base data;
     V4_MANAGED(Base, Managed)
     enum {
         IsExecutionContext = false,
@@ -196,12 +195,9 @@ struct Q_QML_PRIVATE_EXPORT Managed
     };
 private:
     void *operator new(size_t);
+    Managed();
     Managed(const Managed &other);
     void operator = (const Managed &other);
-    Managed(InternalClass *internal)
-        : data(internal)
-    {
-    }
     void *operator new(size_t size, MemoryManager *mm);
     void *operator new(size_t, Managed *m) { return m; }
 
@@ -339,14 +335,7 @@ inline Value Value::fromManaged(Managed *m)
 {
     if (!m)
         return QV4::Primitive::undefinedValue();
-    Value v;
-#if QT_POINTER_SIZE == 8
-    v.m = &m->data;
-#else
-    v.tag = Managed_Type;
-    v.m = &m->data;
-#endif
-    return v;
+    return *m;
 }
 
 }
