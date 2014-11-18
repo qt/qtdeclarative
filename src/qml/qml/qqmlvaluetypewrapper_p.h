@@ -62,6 +62,7 @@ namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
     QQmlValueTypeWrapper(ExecutionEngine *engine);
+    mutable QQmlRefPointer<QQmlPropertyCache> propertyCache;
     mutable QScopedPointer<QQmlValueType> type;
 };
 

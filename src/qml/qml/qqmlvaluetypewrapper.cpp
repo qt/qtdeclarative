@@ -108,9 +108,13 @@ bool QQmlValueTypeReference::readReferenceValue() const
             // possible, or return false if it is not a value type.
             if (QQmlValueTypeFactory::isValueType(variantReferenceType)) {
                 QQmlValueType *vt = 0;
-                if (const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType))
+                QQmlPropertyCache *cache = 0;
+                if (const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType)) {
                     vt = new QQmlValueType(variantReferenceType, mo);
+                    cache = QQmlEnginePrivate::get(engine())->cache(mo);
+                }
                 d()->type.reset(vt);
+                d()->propertyCache = cache;
                 if (!d()->type) {
                     return false;
                 }
@@ -146,6 +150,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
     r->d()->type.reset(new QQmlValueType(typeId, metaObject)); r->d()->object = object; r->d()->property = property;
+    r->d()->propertyCache = QQmlEnginePrivate::get(engine)->cache(metaObject);
     return r->asReturnedValue();
 }
 
@@ -158,6 +163,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
     r->d()->type.reset(new QQmlValueType(typeId, metaObject)); r->d()->type->setValue(value);
+    r->d()->propertyCache = QQmlEnginePrivate::get(engine)->cache(metaObject);
     return r->asReturnedValue();
 }
 
@@ -194,17 +200,7 @@ PropertyAttributes QQmlValueTypeWrapper::query(const Managed *m, String *name)
     Q_ASSERT(m->as<const QQmlValueTypeWrapper>());
     const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
 
-    QQmlPropertyData local;
-    QQmlPropertyData *result = 0;
-    {
-        QQmlData *ddata = QQmlData::get(r->d()->type.data(), false);
-        if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name, 0, 0);
-        else {
-            QQmlEngine *engine = qobject_cast<QQmlEngine*>(r->engine()->v8Engine->publicEngine());
-            result = QQmlPropertyCache::property(engine, r->d()->type.data(), name, 0, local);
-        }
-    }
+    QQmlPropertyData *result = r->d()->propertyCache->property(name, 0, 0);
     return result ? Attr_Data : Attr_Invalid;
 }
 
@@ -249,18 +245,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
             return Primitive::undefinedValue().asReturnedValue();
     }
 
-    QQmlPropertyData local;
-    QQmlPropertyData *result = 0;
-    {
-        QQmlData *ddata = QQmlData::get(r->d()->type.data(), false);
-        if (ddata && ddata->propertyCache)
-            result = ddata->propertyCache->property(name, 0, 0);
-        else {
-            QQmlEngine *engine = qobject_cast<QQmlEngine*>(r->engine()->v8Engine->publicEngine());
-            result = QQmlPropertyCache::property(engine, r->d()->type.data(), name, 0, local);
-        }
-    }
-
+    QQmlPropertyData *result = r->d()->propertyCache->property(name, 0, 0);
     if (!result)
         return Object::get(m, name, hasProperty);
 
