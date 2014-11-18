@@ -87,7 +87,7 @@ bool VariantObject::isEqualTo(Managed *m, Managed *other)
     if (QV4::VariantObject *rv = other->as<QV4::VariantObject>())
         return lv->d()->data == rv->d()->data;
 
-    if (QV4::QmlValueTypeWrapper *v = other->as<QmlValueTypeWrapper>())
+    if (QV4::QQmlValueTypeWrapper *v = other->as<QQmlValueTypeWrapper>())
         return v->isEqual(lv->d()->data);
 
     return false;

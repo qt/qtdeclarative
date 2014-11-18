@@ -188,7 +188,7 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint, bool crea
             return QVariant();
         } else if (QV4::QmlTypeWrapper *w = object->as<QV4::QmlTypeWrapper>()) {
             return w->toVariant();
-        } else if (QV4::QmlValueTypeWrapper *v = object->as<QV4::QmlValueTypeWrapper>()) {
+        } else if (QV4::QQmlValueTypeWrapper *v = object->as<QV4::QQmlValueTypeWrapper>()) {
             return v->toVariant();
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
@@ -414,7 +414,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
         }
 
         if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
-            return QV4::QmlValueTypeWrapper::create(this, variant, vtmo, type);
+            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);
     } else {
         QV4::Scope scope(m_v4Engine);
         if (type == qMetaTypeId<QQmlListReference>()) {
@@ -455,7 +455,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             return retn.asReturnedValue();
 
         if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
-            return QV4::QmlValueTypeWrapper::create(this, variant, vtmo, type);
+            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);
     }
 
     // XXX TODO: To be compatible, we still need to handle:

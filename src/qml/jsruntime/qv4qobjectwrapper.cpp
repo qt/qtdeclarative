@@ -202,7 +202,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
 
         if (QQmlValueTypeFactory::isValueType(v.userType())) {
             if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(v.userType()))
-                return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, v.userType()); // VariantReference value-type.
+                return QV4::QQmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, v.userType()); // VariantReference value-type.
         }
 
         return engine->fromVariant(v);
@@ -210,7 +210,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
         Q_ASSERT(notifier == 0);
 
         if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property.propType))
-            return QV4::QmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, property.propType);
+            return QV4::QQmlValueTypeWrapper::create(engine, object, property.coreIndex, valueTypeMetaObject, property.propType);
     } else {
         Q_ASSERT(notifier == 0);
 
@@ -1288,7 +1288,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
             }
         }
 
-        if (obj->as<QV4::QmlValueTypeWrapper>()) {
+        if (obj->as<QV4::QQmlValueTypeWrapper>()) {
             if (engine->toVariant(actual, -1).userType() == conversionType)
                 return 0;
             return 10;

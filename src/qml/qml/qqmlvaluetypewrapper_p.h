@@ -60,9 +60,9 @@ namespace QV4 {
 
 namespace Heap {
 
-struct QmlValueTypeWrapper : Object {
+struct QQmlValueTypeWrapper : Object {
     enum ObjectType { Reference, Copy };
-    QmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
+    QQmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
     QV8Engine *v8;
     ObjectType objectType;
     mutable QScopedPointer<QQmlValueType> type;
@@ -70,9 +70,9 @@ struct QmlValueTypeWrapper : Object {
 
 }
 
-struct Q_QML_EXPORT QmlValueTypeWrapper : Object
+struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 {
-    V4_OBJECT2(QmlValueTypeWrapper, Object)
+    V4_OBJECT2(QQmlValueTypeWrapper, Object)
     static void destroy(Heap::Base *b);
 
 public:
