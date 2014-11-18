@@ -52,7 +52,7 @@ Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, Ca
 {
     Q_ASSERT(function->function());
 
-    Heap::CallContext *c = reinterpret_cast<Heap::CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
+    Heap::CallContext *c = static_cast<Heap::CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
     new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
     c->function = function->d();
