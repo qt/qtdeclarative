@@ -61,8 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
-    QQmlValueTypeWrapper(QV8Engine *engine);
-    QV8Engine *v8;
+    QQmlValueTypeWrapper(ExecutionEngine *engine);
     mutable QScopedPointer<QQmlValueType> type;
 };
 
@@ -75,8 +74,8 @@ struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 
 public:
 
-    static ReturnedValue create(QV8Engine *v8, QObject *, int, const QMetaObject *metaObject, int typeId);
-    static ReturnedValue create(QV8Engine *v8, const QVariant &, const QMetaObject *metaObject, int typeId);
+    static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, int typeId);
+    static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, int typeId);
 
     QVariant toVariant() const;
     bool isEqual(const QVariant& value);
