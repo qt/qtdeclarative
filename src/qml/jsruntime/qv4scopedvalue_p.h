@@ -48,7 +48,15 @@ namespace QV4 {
 struct ScopedValue;
 
 struct Scope {
-    inline explicit Scope(ExecutionContext *ctx);
+    inline Scope(ExecutionContext *ctx)
+        : engine(ctx->d()->engine)
+    #ifndef QT_NO_DEBUG
+        , size(0)
+    #endif
+    {
+        mark = engine->jsStackTop;
+    }
+
     explicit Scope(ExecutionEngine *e)
         : engine(e)
 #ifndef QT_NO_DEBUG
@@ -351,24 +359,6 @@ struct Scoped
     }
 
     Value *ptr;
-};
-
-struct CallData
-{
-    // below is to be compatible with Value. Initialize tag to 0
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-    uint tag;
-#endif
-    int argc;
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-    uint tag;
-#endif
-    inline ReturnedValue argument(int i) {
-        return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
-    }
-
-    Value thisObject;
-    Value args[1];
 };
 
 struct ScopedCallData {

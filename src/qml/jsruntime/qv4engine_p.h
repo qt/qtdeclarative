@@ -36,6 +36,7 @@
 #include "qv4global_p.h"
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
+#include "qv4context_p.h"
 #include <private/qintrusivelist_p.h>
 
 namespace WTF {
@@ -337,6 +338,55 @@ public:
 private:
     QmlExtensions *m_qmlExtensions;
 };
+
+struct ExecutionContextSaver
+{
+    ExecutionEngine *engine;
+    ExecutionContext *savedContext;
+
+    ExecutionContextSaver(ExecutionContext *context)
+        : engine(context->d()->engine)
+        , savedContext(context)
+    {
+    }
+    ~ExecutionContextSaver()
+    {
+        engine->current = savedContext;
+    }
+};
+
+inline void ExecutionEngine::pushContext(CallContext *context)
+{
+    Q_ASSERT(current && current->d() && context && context->d());
+    context->d()->parent = current->d();
+    current = context;
+}
+
+inline ExecutionContext *ExecutionEngine::popContext()
+{
+    Q_ASSERT(current->d()->parent);
+    // ### GC
+    current = reinterpret_cast<ExecutionContext *>(current->d()->parent);
+    Q_ASSERT(current && current->d());
+    return current;
+}
+
+inline
+Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
+    : Heap::Base(engine->executionContextClass)
+    , type(t)
+    , strictMode(false)
+    , engine(engine)
+    , parent(engine->currentContext()->d())
+    , outer(0)
+    , lookups(0)
+    , compilationUnit(0)
+    , lineNumber(-1)
+{
+    // ### GC
+    engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
+}
+
 
 // ### Remove me
 inline

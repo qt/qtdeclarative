@@ -34,9 +34,7 @@
 #define QMLJS_ENVIRONMENT_H
 
 #include "qv4global_p.h"
-#include "qv4scopedvalue_p.h"
 #include "qv4managed_p.h"
-#include "qv4engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -50,6 +48,24 @@ struct Function;
 struct CallContext;
 struct CatchContext;
 struct WithContext;
+
+struct CallData
+{
+    // below is to be compatible with Value. Initialize tag to 0
+#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
+    uint tag;
+#endif
+    int argc;
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    uint tag;
+#endif
+    inline ReturnedValue argument(int i) {
+        return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+    }
+
+    Value thisObject;
+    Value args[1];
+};
 
 namespace Heap {
 
@@ -142,23 +158,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
 
-inline
-Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : Heap::Base(engine->executionContextClass)
-    , type(t)
-    , strictMode(false)
-    , engine(engine)
-    , parent(engine->currentContext()->d())
-    , outer(0)
-    , lookups(0)
-    , compilationUnit(0)
-    , lineNumber(-1)
-{
-    // ### GC
-    engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
-}
-
-
 struct CallContext : public ExecutionContext
 {
     V4_MANAGED(CallContext, ExecutionContext)
@@ -201,48 +200,6 @@ inline CallContext *ExecutionContext::asCallContext()
 inline const CallContext *ExecutionContext::asCallContext() const
 {
     return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
-}
-
-
-inline void ExecutionEngine::pushContext(CallContext *context)
-{
-    Q_ASSERT(current && current->d() && context && context->d());
-    context->d()->parent = current->d();
-    current = context;
-}
-
-inline ExecutionContext *ExecutionEngine::popContext()
-{
-    Q_ASSERT(current->d()->parent);
-    // ### GC
-    current = reinterpret_cast<ExecutionContext *>(current->d()->parent);
-    Q_ASSERT(current && current->d());
-    return current;
-}
-
-struct ExecutionContextSaver
-{
-    ExecutionEngine *engine;
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(ExecutionContext *context)
-        : engine(context->d()->engine)
-        , savedContext(context)
-    {
-    }
-    ~ExecutionContextSaver()
-    {
-        engine->current = savedContext;
-    }
-};
-
-inline Scope::Scope(ExecutionContext *ctx)
-    : engine(ctx->d()->engine)
-#ifndef QT_NO_DEBUG
-    , size(0)
-#endif
-{
-    mark = engine->jsStackTop;
 }
 
 /* Function *f, int argc */
