@@ -61,10 +61,8 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
-    enum ObjectType { Reference, Copy };
-    QQmlValueTypeWrapper(QV8Engine *engine, ObjectType type);
+    QQmlValueTypeWrapper(QV8Engine *engine);
     QV8Engine *v8;
-    ObjectType objectType;
     mutable QScopedPointer<QQmlValueType> type;
 };
 
