@@ -158,7 +158,6 @@ private:
 
 class QObject;
 class QQmlEngine;
-class QQmlValueType;
 class QNetworkAccessManager;
 class QQmlContextData;
 

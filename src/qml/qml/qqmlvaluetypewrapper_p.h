@@ -53,7 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlValueType;
 class QV8Engine;
 
 namespace QV4 {
@@ -62,8 +61,14 @@ namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
     QQmlValueTypeWrapper(ExecutionEngine *engine);
+    ~QQmlValueTypeWrapper();
     mutable QQmlRefPointer<QQmlPropertyCache> propertyCache;
-    mutable QScopedPointer<QQmlValueType> type;
+    mutable void *gadgetPtr;
+    mutable int metaType;
+
+    void setValue(const QVariant &value) const;
+    QVariant toVariant() const;
+    void *gadget() const { return gadgetPtr; }
 };
 
 }

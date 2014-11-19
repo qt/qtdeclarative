@@ -192,24 +192,16 @@ QQmlValueType::~QQmlValueType()
 
 void QQmlValueType::read(QObject *obj, int idx)
 {
-    readProperty(obj, idx, gadgetPtr);
-}
-
-void QQmlValueType::readVariantValue(QObject *obj, int idx, QVariant *into)
-{
-    // important: must not change the userType of the variant
-    readProperty(obj, idx, into);
+    void *a[] = { gadgetPtr, 0 };
+    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
 void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags)
 {
     Q_ASSERT(gadgetPtr);
-    writeProperty(obj, idx, flags, gadgetPtr);
-}
-
-void QQmlValueType::writeVariantValue(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags, QVariant *from)
-{
-    writeProperty(obj, idx, flags, from);
+    int status = -1;
+    void *a[] = { gadgetPtr, 0, &status, &flags };
+    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
 }
 
 QVariant QQmlValueType::value()
@@ -223,35 +215,6 @@ void QQmlValueType::setValue(const QVariant &value)
     Q_ASSERT(typeId == value.userType());
     QMetaType::destruct(typeId, gadgetPtr);
     QMetaType::construct(typeId, gadgetPtr, value.constData());
-}
-
-bool QQmlValueType::isEqual(const QVariant &other) const
-{
-    Q_ASSERT(gadgetPtr);
-    return QVariant(typeId, gadgetPtr) == other;
-}
-
-QString QQmlValueType::toString() const
-{
-    const QMetaObject *mo = metaObject();
-    const int toStringIndex = mo->indexOfMethod("toString()");
-    if (toStringIndex != -1) {
-        QString result;
-        void *args[] = { &result, 0 };
-        _metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), QMetaObject::InvokeMetaMethod, toStringIndex, args);
-        return result;
-    }
-    QString result = QString::fromUtf8(QMetaType::typeName(typeId));
-    result += QLatin1Char('(');
-    const int propCount = mo->propertyCount();
-    for (int i = 0; i < propCount; ++i) {
-        QVariant value = mo->property(i).read(this);
-        result += value.toString();
-        if (i < propCount - 1)
-            result += QStringLiteral(", ");
-    }
-    result += QLatin1Char(')');
-    return result;
 }
 
 QAbstractDynamicMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)

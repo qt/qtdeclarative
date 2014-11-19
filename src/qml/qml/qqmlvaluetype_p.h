@@ -63,41 +63,15 @@ public:
     QQmlValueType(int userType, const QMetaObject *metaObject);
     ~QQmlValueType();
     void read(QObject *, int);
-    void readVariantValue(QObject *, int, QVariant *);
     void write(QObject *, int, QQmlPropertyPrivate::WriteFlags flags);
-    void writeVariantValue(QObject *, int, QQmlPropertyPrivate::WriteFlags, QVariant *);
     QVariant value();
     void setValue(const QVariant &);
 
-    QString toString() const;
-    bool isEqual(const QVariant &value) const;
-
-    void *gadget() const { return gadgetPtr; }
-
-    inline int userType() const
-    {
-        return typeId;
-
-    }
     // ---- dynamic meta object data interface
     virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *);
     virtual void objectDestroyed(QObject *);
     virtual int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv);
     // ----
-
-protected:
-    inline void readProperty(QObject *obj, int idx, void *p)
-    {
-        void *a[] = { p, 0 };
-        QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
-    }
-
-    inline void writeProperty(QObject *obj, int idx, QQmlPropertyPrivate::WriteFlags flags, void *p)
-    {
-        int status = -1;
-        void *a[] = { p, 0, &status, &flags };
-        QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
-    }
 
 private:
     const QMetaObject *_metaObject;
