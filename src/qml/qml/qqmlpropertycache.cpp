@@ -630,6 +630,8 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+    // These indices don't apply to gadgets, so don't block them.
+    const bool preventDestruction = metaObject->superClass() || metaObject == &QObject::staticMetaObject;
 
     int methodOffset = metaObject->methodOffset();
     int signalOffset = signalCount - QMetaObjectPrivate::get(metaObject)->signalCount;
@@ -640,7 +642,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
     signalHandlerIndexCache.resize(signalCount - signalHandlerIndexCacheStart);
     int signalHandlerIndex = signalOffset;
     for (int ii = methodOffset; ii < methodCount; ++ii) {
-        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
+        if (preventDestruction && (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx))
             continue;
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
@@ -1332,12 +1334,14 @@ QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, const QS
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+    // These indices don't apply to gadgets, so don't block them.
+    const bool preventDestruction = metaObject->superClass() || metaObject == &QObject::staticMetaObject;
 
     const QByteArray propertyName = property.toUtf8();
 
     int methodCount = metaObject->methodCount();
     for (int ii = methodCount - 1; ii >= 0; --ii) {
-        if (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx)
+        if (preventDestruction && (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx))
             continue;
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)

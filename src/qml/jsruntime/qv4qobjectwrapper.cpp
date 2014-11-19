@@ -728,6 +728,8 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&na
 
     if (that->d()->object) {
         const QMetaObject *mo = that->d()->object->metaObject();
+        // These indices don't apply to gadgets, so don't block them.
+        const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
         const int propertyCount = mo->propertyCount();
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
             // #### GC
@@ -744,7 +746,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&na
             const int index = it->arrayIndex - propertyCount;
             const QMetaMethod method = mo->method(index);
             ++it->arrayIndex;
-            if (method.access() == QMetaMethod::Private || index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)
+            if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
                 continue;
             // #### GC
             Scope scope(that->engine());
