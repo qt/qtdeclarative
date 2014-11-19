@@ -1765,8 +1765,8 @@ Heap::QObjectMethod::QObjectMethod(QV4::ExecutionContext *scope, QObject *object
     : Heap::FunctionObject(scope)
     , object(object)
     , index(index)
-    , qmlGlobal(qmlGlobal)
 {
+    this->qmlGlobal = qmlGlobal;
     setVTable(QV4::QObjectMethod::staticVTable());
     subtype = WrappedQtMethod;
 }
@@ -1875,7 +1875,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     if (method.isV4Function()) {
         QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
 
-        QV4::ScopedValue qmlGlobal(scope, d()->qmlGlobal.value());
+        QV4::ScopedValue qmlGlobal(scope, d()->qmlGlobal);
         QQmlV4Function func(callData, rv, qmlGlobal,
                             QmlContextWrapper::getContext(qmlGlobal),
                             v8Engine);
@@ -1892,6 +1892,11 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     } else {
         return CallOverloaded(object, method, v8Engine, callData);
     }
+}
+
+void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
+{
+    static_cast<QObjectMethod::Data*>(that)->qmlGlobal.mark(e);
 }
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);

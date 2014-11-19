@@ -78,7 +78,7 @@ struct QObjectMethod : FunctionObject {
     QObjectMethod(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal);
     QPointer<QObject> object;
     int index;
-    QV4::PersistentValue qmlGlobal;
+    Value qmlGlobal;
 };
 
 struct QmlSignalHandler : Object {
@@ -151,6 +151,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     ReturnedValue callInternal(CallData *callData);
 
+    static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
     static void destroy(Managed *that)
     {
         static_cast<QObjectMethod *>(that)->d()->~Data();
