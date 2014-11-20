@@ -217,7 +217,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 //TODO: look at using the property cache here (as in the compiler)
                 //      for further optimization
                 QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
-                expression += QQmlPropertyCache::signalParameterStringForJS(engine(), signal.parameterNames(), &error);
+                expression += QQmlPropertyCache::signalParameterStringForJS(scope.engine, signal.parameterNames(), &error);
 
                 if (!error.isEmpty()) {
                     qmlInfo(scopeObject()) << error;

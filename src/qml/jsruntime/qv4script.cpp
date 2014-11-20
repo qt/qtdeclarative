@@ -176,7 +176,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
 
     if (!signalParameters.isEmpty()) {
         if (error)
-            QQmlPropertyCache::signalParameterStringForJS(qmlContext->engine, signalParameters, error);
+            QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, error);
         QV4::ScopedProperty p(valueScope);
         QV4::ScopedString s(valueScope);
         int index = 0;

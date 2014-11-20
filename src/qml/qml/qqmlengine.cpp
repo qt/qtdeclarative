@@ -559,7 +559,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   activeObjectCreator(0),
   networkAccessManager(0), networkAccessManagerFactory(0), urlInterceptor(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
+  incubatorCount(0), incubationController(0)
 {
 }
 
@@ -582,8 +582,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (incubationController) incubationController->d = 0;
     incubationController = 0;
 
-    for(QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator iter = propertyCache.begin(); iter != propertyCache.end(); ++iter)
-        (*iter)->release();
     for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
         (*iter)->release();
     for (QHash<int, QQmlCompiledData *>::Iterator iter = m_compositeTypes.begin(); iter != m_compositeTypes.end(); ++iter)
@@ -2041,22 +2039,6 @@ QString QQmlEngine::offlineStoragePath() const
     }
 
     return d->offlineStoragePath;
-}
-
-QQmlPropertyCache *QQmlEnginePrivate::createCache(const QMetaObject *mo)
-{
-    Q_Q(QQmlEngine);
-
-    if (!mo->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(q, mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    } else {
-        QQmlPropertyCache *super = cache(mo->superClass());
-        QQmlPropertyCache *rv = super->copyAndAppend(mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    }
 }
 
 QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion,

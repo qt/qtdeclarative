@@ -208,9 +208,8 @@ public:
     inline static void deleteInEngineThread(QQmlEngine *, T *);
 
     // These methods may be called from the loader thread
-    inline QQmlPropertyCache *cache(QObject *obj);
-    inline QQmlPropertyCache *cache(const QMetaObject *);
     inline QQmlPropertyCache *cache(QQmlType *, int, QQmlError &error);
+    using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
     bool isQObject(int);
@@ -260,40 +259,13 @@ public:
     static bool qml_debugging_enabled;
 
     mutable QMutex networkAccessManagerMutex;
-    mutable QMutex mutex;
 
 private:
-    // Locker locks the QQmlEnginePrivate data structures for read and write, if necessary.
-    // Currently, locking is only necessary if the threaded loader is running concurrently.  If it is
-    // either idle, or is running with the main thread blocked, no locking is necessary.  This way
-    // we only pay for locking when we have to.
-    // Consequently, this class should only be used to protect simple accesses or modifications of the
-    // QQmlEnginePrivate structures or operations that can be guaranteed not to start activity
-    // on the loader thread.
-    // The Locker API is identical to QMutexLocker.  Locker reuses the QQmlEnginePrivate::mutex
-    // QMutex instance and multiple Lockers are recursive in the same thread.
-    class Locker
-    {
-    public:
-        inline Locker(const QQmlEngine *);
-        inline Locker(const QQmlEnginePrivate *);
-        inline ~Locker();
-
-        inline void unlock();
-        inline void relock();
-
-    private:
-        const QQmlEnginePrivate *m_ep;
-        quint32 m_locked:1;
-    };
-
     // Must be called locked
-    QQmlPropertyCache *createCache(const QMetaObject *);
     QQmlPropertyCache *createCache(QQmlType *, int, QQmlError &error);
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<const QMetaObject *, QQmlPropertyCache *> propertyCache;
     QHash<QPair<QQmlType *, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;
     QHash<int, QQmlCompiledData *> m_compositeTypes;
@@ -305,38 +277,6 @@ private:
     QFieldList<Deletable, &Deletable::next> toDeleteInEngineThread;
     void doDeleteInEngineThread();
 };
-
-QQmlEnginePrivate::Locker::Locker(const QQmlEngine *e)
-: m_ep(QQmlEnginePrivate::get(e))
-{
-    relock();
-}
-
-QQmlEnginePrivate::Locker::Locker(const QQmlEnginePrivate *e)
-: m_ep(e), m_locked(false)
-{
-    relock();
-}
-
-QQmlEnginePrivate::Locker::~Locker()
-{
-    unlock();
-}
-
-void QQmlEnginePrivate::Locker::unlock()
-{
-    if (m_locked) {
-        m_ep->mutex.unlock();
-        m_locked = false;
-    }
-}
-
-void QQmlEnginePrivate::Locker::relock()
-{
-    Q_ASSERT(!m_locked);
-    m_ep->mutex.lock();
-    m_locked = true;
-}
 
 /*!
 Returns true if the calling thread is the QQmlEngine thread.
@@ -399,52 +339,6 @@ void QQmlEnginePrivate::deleteInEngineThread(QQmlEngine *engine, T *value)
 {
     Q_ASSERT(engine);
     QQmlEnginePrivate::get(engine)->deleteInEngineThread<T>(value);
-}
-
-/*!
-Returns a QQmlPropertyCache for \a obj if one is available.
-
-If \a obj is null, being deleted or contains a dynamic meta object 0
-is returned.
-
-The returned cache is not referenced, so if it is to be stored, call addref().
-
-XXX thread There is a potential future race condition in this and all the cache()
-functions.  As the QQmlPropertyCache is returned unreferenced, when called
-from the loader thread, it is possible that the cache will have been dereferenced
-and deleted before the loader thread has a chance to use or reference it.  This
-can't currently happen as the cache holds a reference to the
-QQmlPropertyCache until the QQmlEngine is destroyed.
-*/
-QQmlPropertyCache *QQmlEnginePrivate::cache(QObject *obj)
-{
-    if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return 0;
-
-    Locker locker(this);
-    const QMetaObject *mo = obj->metaObject();
-    QQmlPropertyCache *rv = propertyCache.value(mo);
-    if (!rv) rv = createCache(mo);
-    return rv;
-}
-
-/*!
-Returns a QQmlPropertyCache for \a metaObject.
-
-As the cache is persisted for the life of the engine, \a metaObject must be
-a static "compile time" meta-object, or a meta-object that is otherwise known to
-exist for the lifetime of the QQmlEngine.
-
-The returned cache is not referenced, so if it is to be stored, call addref().
-*/
-QQmlPropertyCache *QQmlEnginePrivate::cache(const QMetaObject *metaObject)
-{
-    Q_ASSERT(metaObject);
-
-    Locker locker(this);
-    QQmlPropertyCache *rv = propertyCache.value(metaObject);
-    if (!rv) rv = createCache(metaObject);
-    return rv;
 }
 
 /*!

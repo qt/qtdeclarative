@@ -539,6 +539,27 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     \sa toScriptValue()
 */
 
+
+QJSEnginePrivate::~QJSEnginePrivate()
+{
+    for (QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator iter = propertyCache.begin(); iter != propertyCache.end(); ++iter)
+        (*iter)->release();
+}
+
+QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
+{
+    if (!mo->superClass()) {
+        QQmlPropertyCache *rv = new QQmlPropertyCache(q_func(), mo);
+        propertyCache.insert(mo, rv);
+        return rv;
+    } else {
+        QQmlPropertyCache *super = cache(mo->superClass());
+        QQmlPropertyCache *rv = super->copyAndAppend(mo);
+        propertyCache.insert(mo, rv);
+        return rv;
+    }
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qjsengine.cpp"

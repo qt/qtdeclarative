@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 class QV8Engine;
 class QMetaProperty;
 class QQmlEngine;
+class QJSEngine;
 class QQmlPropertyData;
 class QQmlAccessors;
 class QMetaObjectBuilder;
@@ -242,8 +243,8 @@ class QQmlPropertyCacheMethodArguments;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
 {
 public:
-    QQmlPropertyCache(QQmlEngine *);
-    QQmlPropertyCache(QQmlEngine *, const QMetaObject *);
+    QQmlPropertyCache(QJSEngine *);
+    QQmlPropertyCache(QJSEngine *, const QMetaObject *);
     virtual ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
@@ -311,7 +312,7 @@ public:
 
     QList<QByteArray> signalParameterNames(int index) const;
     QString signalParameterStringForJS(int index, QString *errorString = 0);
-    static QString signalParameterStringForJS(QQmlEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = 0);
+    static QString signalParameterStringForJS(QV4::ExecutionEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = 0);
 
     const char *className() const;
 
@@ -374,8 +375,7 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
-    // Optional! Only used for calling flagsForPropertyType, in which it is also optional.
-    QQmlEngine *engine;
+    QJSEngine *engine;
 
     QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
