@@ -140,10 +140,8 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p, QQmlEngine *engine)
     return fastFlagsForProperty(p) | flagsForPropertyType(p.userType(), engine);
 }
 
-void QQmlPropertyData::lazyLoad(const QMetaProperty &p, QQmlEngine *engine)
+void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 {
-    Q_UNUSED(engine);
-
     coreIndex = p.propertyIndex();
     notifyIndex = QMetaObjectPrivate::signalIndex(p.notifySignal());
     Q_ASSERT(p.revision() <= Q_INT16_MAX);
@@ -252,7 +250,7 @@ QQmlPropertyCache::QQmlPropertyCache(QQmlEngine *e, const QMetaObject *metaObjec
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
 
-    update(engine, metaObject);
+    update(metaObject);
 }
 
 QQmlPropertyCache::~QQmlPropertyCache()
@@ -281,7 +279,6 @@ QQmlPropertyCache::~QQmlPropertyCache()
 
 void QQmlPropertyCache::destroy()
 {
-    Q_ASSERT(engine);
     delete this;
 }
 
@@ -313,7 +310,7 @@ QQmlPropertyCache *QQmlPropertyCache::copy()
     return copy(0);
 }
 
-QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(QQmlEngine *, int propertyCount, int methodCount,
+QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int methodCount,
                                                      int signalCount)
 {
     QQmlPropertyCache *rv = copy(propertyCount + methodCount + signalCount);
@@ -548,16 +545,16 @@ const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
 }
 
 QQmlPropertyCache *
-QQmlPropertyCache::copyAndAppend(QQmlEngine *engine, const QMetaObject *metaObject,
+QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                          QQmlPropertyData::Flag propertyFlags,
                                          QQmlPropertyData::Flag methodFlags,
                                          QQmlPropertyData::Flag signalFlags)
 {
-    return copyAndAppend(engine, metaObject, -1, propertyFlags, methodFlags, signalFlags);
+    return copyAndAppend(metaObject, -1, propertyFlags, methodFlags, signalFlags);
 }
 
 QQmlPropertyCache *
-QQmlPropertyCache::copyAndAppend(QQmlEngine *engine, const QMetaObject *metaObject,
+QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                          int revision,
                                          QQmlPropertyData::Flag propertyFlags,
                                          QQmlPropertyData::Flag methodFlags,
@@ -572,12 +569,12 @@ QQmlPropertyCache::copyAndAppend(QQmlEngine *engine, const QMetaObject *metaObje
                                          QMetaObjectPrivate::get(metaObject)->signalCount +
                                          QMetaObjectPrivate::get(metaObject)->propertyCount);
 
-    rv->append(engine, metaObject, revision, propertyFlags, methodFlags, signalFlags);
+    rv->append(metaObject, revision, propertyFlags, methodFlags, signalFlags);
 
     return rv;
 }
 
-void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject,
+void QQmlPropertyCache::append(const QMetaObject *metaObject,
                                        int revision,
                                        QQmlPropertyData::Flag propertyFlags,
                                        QQmlPropertyData::Flag methodFlags,
@@ -747,7 +744,7 @@ void QQmlPropertyCache::append(QQmlEngine *engine, const QMetaObject *metaObject
 
         QQmlPropertyData *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 
-        data->lazyLoad(p, engine);
+        data->lazyLoad(p);
         data->flags |= propertyFlags;
 
         if (!dynamicMetaObject)
@@ -827,19 +824,18 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
     data->flags &= ~QQmlPropertyData::NotFullyResolved;
 }
 
-void QQmlPropertyCache::updateRecur(QQmlEngine *engine, const QMetaObject *metaObject)
+void QQmlPropertyCache::updateRecur(const QMetaObject *metaObject)
 {
     if (!metaObject)
         return;
 
-    updateRecur(engine, metaObject->superClass());
+    updateRecur(metaObject->superClass());
 
-    append(engine, metaObject, -1);
+    append(metaObject, -1);
 }
 
-void QQmlPropertyCache::update(QQmlEngine *engine, const QMetaObject *metaObject)
+void QQmlPropertyCache::update(const QMetaObject *metaObject)
 {
-    Q_ASSERT(engine);
     Q_ASSERT(metaObject);
     Q_ASSERT(stringCache.isEmpty());
 
@@ -857,14 +853,14 @@ void QQmlPropertyCache::update(QQmlEngine *engine, const QMetaObject *metaObject
     // cached in a parent cache.
     stringCache.reserve(pc + mc + sc);
 
-    updateRecur(engine,metaObject);
+    updateRecur(metaObject);
 }
 
 /*! \internal
     invalidates and updates the PropertyCache if the QMetaObject has changed.
     This function is used in the tooling to update dynamic properties.
 */
-void QQmlPropertyCache::invalidate(QQmlEngine *engine, const QMetaObject *metaObject)
+void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
 {
     stringCache.clear();
     propertyIndexCache.clear();
@@ -884,12 +880,12 @@ void QQmlPropertyCache::invalidate(QQmlEngine *engine, const QMetaObject *metaOb
         methodIndexCacheStart = parent()->methodIndexCache.count() + parent()->methodIndexCacheStart;
         signalHandlerIndexCacheStart = parent()->signalHandlerIndexCache.count() + parent()->signalHandlerIndexCacheStart;
         stringCache.linkAndReserve(parent()->stringCache, reserve);
-        append(engine, metaObject, -1);
+        append(metaObject, -1);
     } else {
         propertyIndexCacheStart = 0;
         methodIndexCacheStart = 0;
         signalHandlerIndexCacheStart = 0;
-        update(engine, metaObject);
+        update(metaObject);
     }
 }
 

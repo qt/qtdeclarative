@@ -119,7 +119,7 @@ int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
         QQmlOpenMetaObject *omo = *it;
         *static_cast<QMetaObject *>(omo) = *d->mem;
         if (d->cache)
-            d->cache->update(d->engine, omo);
+            d->cache->update(omo);
         ++it;
     }
 

@@ -2053,7 +2053,7 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(const QMetaObject *mo)
         return rv;
     } else {
         QQmlPropertyCache *super = cache(mo->superClass());
-        QQmlPropertyCache *rv = super->copyAndAppend(q, mo);
+        QQmlPropertyCache *rv = super->copyAndAppend(mo);
         propertyCache.insert(mo, rv);
         return rv;
     }

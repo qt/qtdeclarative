@@ -128,7 +128,7 @@ void tst_qqmlpropertycache::propertiesDerived()
     const QMetaObject *metaObject = object.metaObject();
 
     QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(&engine, object.metaObject()));
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "propertyA"));
@@ -185,7 +185,7 @@ void tst_qqmlpropertycache::methodsDerived()
     const QMetaObject *metaObject = object.metaObject();
 
     QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(&engine, object.metaObject()));
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "slotA"));
@@ -248,7 +248,7 @@ void tst_qqmlpropertycache::signalHandlersDerived()
     const QMetaObject *metaObject = object.metaObject();
 
     QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(&engine, object.metaObject()));
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "onSignalA"));

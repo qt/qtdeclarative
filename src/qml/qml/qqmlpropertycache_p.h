@@ -233,7 +233,7 @@ public:
 
 private:
     friend class QQmlPropertyCache;
-    void lazyLoad(const QMetaProperty &, QQmlEngine *engine = 0);
+    void lazyLoad(const QMetaProperty &);
     void lazyLoad(const QMetaMethod &);
     bool notFullyResolved() const { return flags & NotFullyResolved; }
 };
@@ -246,21 +246,21 @@ public:
     QQmlPropertyCache(QQmlEngine *, const QMetaObject *);
     virtual ~QQmlPropertyCache();
 
-    void update(QQmlEngine *, const QMetaObject *);
-    void invalidate(QQmlEngine *, const QMetaObject *);
+    void update(const QMetaObject *);
+    void invalidate(const QMetaObject *);
 
     QQmlPropertyCache *copy();
 
-    QQmlPropertyCache *copyAndAppend(QQmlEngine *, const QMetaObject *,
+    QQmlPropertyCache *copyAndAppend(const QMetaObject *,
                 QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
-    QQmlPropertyCache *copyAndAppend(QQmlEngine *, const QMetaObject *, int revision,
+    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int revision,
                 QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
-    QQmlPropertyCache *copyAndReserve(QQmlEngine *, int propertyCount,
+    QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount);
     void appendProperty(const QString &,
                         quint32 flags, int coreIndex, int propType, int notifyIndex);
@@ -300,7 +300,6 @@ public:
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
-    inline QQmlEngine *qmlEngine() const;
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QString &,
                                               QQmlContextData *, QQmlPropertyData &);
     static QQmlPropertyData *property(QQmlEngine *, QObject *, const QV4::String *,
@@ -340,7 +339,7 @@ private:
 
     inline QQmlPropertyCache *copy(int reserve);
 
-    void append(QQmlEngine *, const QMetaObject *, int revision,
+    void append(const QMetaObject *, int revision,
                 QQmlPropertyData::Flag propertyFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
@@ -359,7 +358,7 @@ private:
     QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
 
     void resolve(QQmlPropertyData *) const;
-    void updateRecur(QQmlEngine *, const QMetaObject *);
+    void updateRecur(const QMetaObject *);
 
     template<typename K>
     QQmlPropertyData *findNamedProperty(const K &key)
@@ -375,6 +374,7 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
+    // Optional! Only used for calling flagsForPropertyType, in which it is also optional.
     QQmlEngine *engine;
 
     QQmlPropertyCache *_parent;
@@ -507,11 +507,6 @@ bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 {
     return (data->hasAccessors() || (data->metaObjectOffset == -1 && data->revision == 0)) ||
            (allowedRevisionCache[data->metaObjectOffset] >= data->revision);
-}
-
-QQmlEngine *QQmlPropertyCache::qmlEngine() const
-{
-    return engine;
 }
 
 int QQmlPropertyCache::propertyCount() const

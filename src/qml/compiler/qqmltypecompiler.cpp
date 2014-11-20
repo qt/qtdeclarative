@@ -559,8 +559,7 @@ bool QQmlPropertyCacheCreator::ensureMetaObject(int objectIndex)
 
 bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Object *obj, QQmlPropertyCache *baseTypeCache)
 {
-    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(QQmlEnginePrivate::get(enginePrivate),
-                                                             obj->propertyCount(),
+    QQmlPropertyCache *cache = baseTypeCache->copyAndReserve(obj->propertyCount(),
                                                              obj->functionCount() + obj->propertyCount() + obj->signalCount(),
                                                              obj->signalCount() + obj->propertyCount());
     propertyCaches[objectIndex] = cache;
