@@ -250,9 +250,9 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
 
     if (o->arrayData()) {
         ArrayData::ensureAttributes(o.getPointer());
-        for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
+        for (uint i = 0; i < o->d()->arrayData->alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
-                o->arrayData()->attrs()[i].setConfigurable(false);
+                o->d()->arrayData->attrs[i].setConfigurable(false);
         }
     }
 
@@ -275,11 +275,11 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
 
     if (o->arrayData()) {
         ArrayData::ensureAttributes(o.getPointer());
-        for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
+        for (uint i = 0; i < o->arrayData()->alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
-                o->arrayData()->attrs()[i].setConfigurable(false);
-            if (o->arrayData()->attrs()[i].isData())
-                o->arrayData()->attrs()[i].setWritable(false);
+                o->arrayData()->attrs[i].setConfigurable(false);
+            if (o->arrayData()->attrs[i].isData())
+                o->arrayData()->attrs[i].setWritable(false);
         }
     }
     return o.asReturnedValue();
@@ -313,10 +313,10 @@ ReturnedValue ObjectPrototype::method_isSealed(CallContext *ctx)
         return Encode(true);
 
     Q_ASSERT(o->arrayData() && o->arrayData()->length());
-    if (!o->arrayData()->attrs())
+    if (!o->arrayData()->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
+    for (uint i = 0; i < o->arrayData()->alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable())
                 return Encode(false);
@@ -342,10 +342,10 @@ ReturnedValue ObjectPrototype::method_isFrozen(CallContext *ctx)
         return Encode(true);
 
     Q_ASSERT(o->arrayData() && o->arrayData()->length());
-    if (!o->arrayData()->attrs())
+    if (!o->arrayData()->attrs)
         return Encode(false);
 
-    for (uint i = 0; i < o->arrayData()->alloc(); ++i) {
+    for (uint i = 0; i < o->arrayData()->alloc; ++i) {
         if (!o->arrayData()->isEmpty(i))
             if (o->arrayData()->attributes(i).isConfigurable() || o->arrayData()->attributes(i).isWritable())
                 return Encode(false);

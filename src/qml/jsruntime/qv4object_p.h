@@ -98,8 +98,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     Heap::MemberData *memberData() { return d()->memberData; }
     const Heap::MemberData *memberData() const { return d()->memberData; }
-    // ### GC
-    ArrayData *arrayData() const { return reinterpret_cast<ArrayData *>(d()->arrayData); }
+    Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
 
     const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData()->data + index); }

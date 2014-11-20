@@ -58,7 +58,7 @@ struct ArrayVTable
 {
     ManagedVTable managedVTable;
     uint type;
-    ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
+    Heap::ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
     ReturnedValue (*get)(const Heap::ArrayData *d, uint index);
     bool (*put)(Object *o, uint index, ValueRef value);
     bool (*putArray)(Object *o, uint index, Value *values, uint n);
@@ -67,7 +67,7 @@ struct ArrayVTable
     void (*push_front)(Object *o, Value *values, uint n);
     ReturnedValue (*pop_front)(Object *o);
     uint (*truncate)(Object *o, uint newLen);
-    uint (*length)(const ArrayData *d);
+    uint (*length)(const Heap::ArrayData *d);
 };
 
 namespace Heap {
@@ -108,6 +108,10 @@ struct ArrayData : public Base {
 
     bool isEmpty(uint i) const {
         return get(i) == Primitive::emptyValue().asReturnedValue();
+    }
+
+    inline ReturnedValue length() const {
+        return vtable()->length(this);
     }
 
 };
@@ -182,7 +186,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     bool isSparse() const { return type() == Heap::ArrayData::Sparse; }
 
     uint length() const {
-        return vtable()->length(this);
+        return d()->length();
     }
 
     bool hasAttributes() const {
@@ -222,7 +226,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     uint &len() { return d()->len; }
     uint len() const { return d()->len; }
 
-    static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
+    static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
 
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
@@ -234,7 +238,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
-    static uint length(const ArrayData *d);
+    static uint length(const Heap::ArrayData *d);
 };
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
@@ -248,13 +252,13 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     void setSparse(SparseArray *s) { d()->sparse = s; }
 
     static uint allocate(Object *o, bool doubleSlot = false);
-    static void free(ArrayData *d, uint idx);
+    static void free(Heap::ArrayData *d, uint idx);
 
     uint mappedIndex(uint index) const { return d()->mappedIndex(index); }
 
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
-    static ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
+    static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const Heap::ArrayData *d, uint index);
     static bool put(Object *o, uint index, ValueRef value);
     static bool putArray(Object *o, uint index, Value *values, uint n);
@@ -263,7 +267,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static void push_front(Object *o, Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
-    static uint length(const ArrayData *d);
+    static uint length(const Heap::ArrayData *d);
 };
 
 namespace Heap {

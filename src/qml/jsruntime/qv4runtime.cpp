@@ -589,7 +589,7 @@ ReturnedValue Runtime::getElement(ExecutionEngine *engine, const ValueRef object
     }
 
     if (idx < UINT_MAX) {
-        if (o->arrayData() && !o->arrayData()->hasAttributes()) {
+        if (o->arrayData() && !o->arrayData()->attrs) {
             ScopedValue v(scope, o->arrayData()->get(idx));
             if (!v->isEmpty())
                 return v->asReturnedValue();
@@ -614,8 +614,8 @@ void Runtime::setElement(ExecutionEngine *engine, const ValueRef object, const V
     uint idx = index->asArrayIndex();
     if (idx < UINT_MAX) {
         if (o->arrayType() == Heap::ArrayData::Simple) {
-            SimpleArrayData *s = static_cast<SimpleArrayData *>(o->arrayData());
-            if (s && idx < s->len() && !s->data(idx).isEmpty()) {
+            Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->arrayData());
+            if (s && idx < s->len && !s->data(idx).isEmpty()) {
                 s->data(idx) = value;
                 return;
             }

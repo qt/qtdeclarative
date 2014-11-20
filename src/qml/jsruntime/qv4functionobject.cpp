@@ -326,11 +326,11 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {
-            uint alen = arr->arrayData() ? arr->arrayData()->length() : 0;
+            uint alen = arr->arrayData() ? arr->arrayData()->len : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
-                callData->args[i] = static_cast<SimpleArrayData *>(arr->arrayData())->data(i);
+                callData->args[i] = static_cast<Heap::SimpleArrayData *>(arr->arrayData())->data(i);
             for (quint32 i = alen; i < len; ++i)
                 callData->args[i] = Primitive::undefinedValue();
         }

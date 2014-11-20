@@ -197,7 +197,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     // ### Could explicitly free the old data
 }
 
-ArrayData *SimpleArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
+Heap::ArrayData *SimpleArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
 {
     realloc(o, Heap::ArrayData::Simple, n, enforceAttributes);
     return o->arrayData();
@@ -205,7 +205,7 @@ ArrayData *SimpleArrayData::reallocate(Object *o, uint n, bool enforceAttributes
 
 void ArrayData::ensureAttributes(Object *o)
 {
-    if (o->arrayData() && o->arrayData()->attrs())
+    if (o->arrayData() && o->arrayData()->attrs)
         return;
 
     ArrayData::realloc(o, Heap::ArrayData::Simple, 0, true);
@@ -261,7 +261,7 @@ bool SimpleArrayData::del(Object *o, uint index)
 
 void SimpleArrayData::setAttribute(Object *o, uint index, PropertyAttributes attrs)
 {
-    o->arrayData()->attrs()[index] = attrs;
+    o->arrayData()->attrs[index] = attrs;
 }
 
 void SimpleArrayData::push_front(Object *o, Value *values, uint n)
@@ -311,9 +311,9 @@ uint SimpleArrayData::truncate(Object *o, uint newLen)
     return dd->len;
 }
 
-uint SimpleArrayData::length(const ArrayData *d)
+uint SimpleArrayData::length(const Heap::ArrayData *d)
 {
-    return static_cast<const SimpleArrayData *>(d)->len();
+    return d->len;
 }
 
 bool SimpleArrayData::putArray(Object *o, uint index, Value *values, uint n)
@@ -331,24 +331,23 @@ bool SimpleArrayData::putArray(Object *o, uint index, Value *values, uint n)
     return true;
 }
 
-void SparseArrayData::free(ArrayData *d, uint idx)
+void SparseArrayData::free(Heap::ArrayData *d, uint idx)
 {
-    Q_ASSERT(d && d->type() == Heap::ArrayData::Sparse);
-    SparseArrayData *dd = static_cast<SparseArrayData *>(d);
-    Value *v = dd->arrayData() + idx;
-    if (dd->attrs() && dd->attrs()[idx].isAccessor()) {
+    Q_ASSERT(d && d->type == Heap::ArrayData::Sparse);
+    Value *v = d->arrayData + idx;
+    if (d->attrs && d->attrs[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
         v[1].tag = Value::Empty_Type;
-        v[1].uint_32 = dd->freeList();
+        v[1].uint_32 = d->freeList;
         v[0].tag = Value::Empty_Type;
         v[0].uint_32 = idx + 1;
     } else {
         v->tag = Value::Empty_Type;
-        v->uint_32 = dd->freeList();
+        v->uint_32 = d->freeList;
     }
-    dd->freeList() = idx;
-    if (dd->attrs())
-        dd->attrs()[idx].clear();
+    d->freeList = idx;
+    if (d->attrs)
+        d->attrs[idx].clear();
 }
 
 
@@ -360,7 +359,7 @@ void SparseArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
         dd->arrayData[i].mark(e);
 }
 
-ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
+Heap::ArrayData *SparseArrayData::reallocate(Object *o, uint n, bool enforceAttributes)
 {
     realloc(o, Heap::ArrayData::Sparse, n, enforceAttributes);
     return o->arrayData();
@@ -536,12 +535,12 @@ uint SparseArrayData::truncate(Object *o, uint newLen)
     return newLen;
 }
 
-uint SparseArrayData::length(const ArrayData *d)
+uint SparseArrayData::length(const Heap::ArrayData *d)
 {
-    const SparseArrayData *dd = static_cast<const SparseArrayData *>(d);
-    if (!dd->sparse())
+    const Heap::SparseArrayData *dd = static_cast<const Heap::SparseArrayData *>(d);
+    if (!dd->sparse)
         return 0;
-    SparseArrayNode *n = dd->sparse()->end();
+    SparseArrayNode *n = dd->sparse->end();
     n = n->previousNode();
     return n ? n->key() + 1 : 0;
 }
@@ -815,7 +814,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const ValueRef
 
     ArrayElementLessThan lessThan(engine, thisObject, comparefn);
 
-    Value *begin = thisObject->arrayData()->d()->arrayData;
+    Value *begin = thisObject->arrayData()->arrayData;
     sortHelper(begin, begin + len, *begin, lessThan);
 
 #ifdef CHECK_SPARSE_ARRAYS

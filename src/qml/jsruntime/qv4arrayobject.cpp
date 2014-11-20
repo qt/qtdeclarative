@@ -293,7 +293,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
 
     if (!ctx->d()->callData->argc)
         ;
-    else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayData()->type() == Heap::ArrayData::Simple) {
+    else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayData()->type == Heap::ArrayData::Simple) {
         instance->arrayData()->vtable()->putArray(instance.getPointer(), len, ctx->d()->callData->args, ctx->d()->callData->argc);
         len = instance->arrayData()->length();
     } else {
@@ -361,7 +361,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     ScopedValue result(scope);
 
-    if (!instance->protoHasArray() && !instance->arrayData()->attrs() && instance->arrayData()->length() <= len && instance->arrayData()->type() != Heap::ArrayData::Custom) {
+    if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len && instance->arrayData()->type != Heap::ArrayData::Custom) {
         result = instance->arrayData()->vtable()->pop_front(instance.getPointer());
     } else {
         result = instance->getIndexed(0);
@@ -541,8 +541,8 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    if (!instance->protoHasArray() && !instance->arrayData()->attrs() && instance->arrayData()->length() <= len &&
-        instance->arrayData()->type() != Heap::ArrayData::Custom) {
+    if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len &&
+        instance->arrayData()->type != Heap::ArrayData::Custom) {
         instance->arrayData()->vtable()->push_front(instance.getPointer(), ctx->d()->callData->args, ctx->d()->callData->argc);
     } else {
         ScopedValue v(scope);
