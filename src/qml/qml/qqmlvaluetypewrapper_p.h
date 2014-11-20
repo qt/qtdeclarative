@@ -84,6 +84,7 @@ public:
     static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, int typeId);
 
     QVariant toVariant() const;
+    void toGadget(void *data) const;
     bool isEqual(const QVariant& value);
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);

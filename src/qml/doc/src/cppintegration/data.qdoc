@@ -307,6 +307,33 @@ them with default constructed values, do not use the indexed delete operator
 ("delete sequence[i]") but instead use the \c {splice} function
 ("sequence.splice(startIndex, deleteCount)").
 
+\section2 Value types
+
+Some value types in Qt such as QPoint are represented in JavaScript as objects
+that have the same properties and functions like in the C++ API. The same
+representation is possible with custom C++ value types. To enable a custom
+value type with the QML engine, the class declaration needs to be annotated
+with \c{Q_GADGET}. Properties that are intended to be visible in the JavaScript
+representation need to be declared with \c Q_PROPERTY. Similarly functions need
+to be marked with \c Q_INVOKABLE. This is the same with QObject based C++ APIs.
+For example, the \c Actor class below is annotated as gadget and has
+properties:
+
+\code
+ class Actor
+ {
+     Q_GADGET
+     Q_PROPERTY(QString name READ name WRITE setName)
+ public:
+     QString name() const { return m_name; }
+     void setName(const QString &name) { m_name = name; }
+
+ private:
+     QString m_name;
+ }
+
+ Q_DECLARE_METATYPE(Actor)
+\endcode
 
 \section1 Enumeration Types
 

@@ -133,7 +133,7 @@ bool QQmlValueTypeReference::readReferenceValue() const
             if (QQmlValueTypeFactory::isValueType(variantReferenceType)) {
                 QQmlPropertyCache *cache = 0;
                 if (const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType))
-                    cache = QQmlEnginePrivate::get(engine())->cache(mo);
+                    cache = QJSEnginePrivate::get(engine())->cache(mo);
                 if (d()->gadgetPtr)
                     QMetaType::destroy(d()->metaType, d()->gadgetPtr);
                 d()->gadgetPtr = 0;
@@ -177,7 +177,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
     r->d()->object = object; r->d()->property = property;
-    r->d()->propertyCache = QQmlEnginePrivate::get(engine)->cache(metaObject);
+    r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->metaType = typeId;
     r->d()->gadgetPtr = QMetaType::create(r->d()->metaType);
     return r->asReturnedValue();
@@ -191,7 +191,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->alloc<QQmlValueTypeWrapper>(engine));
     ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
     r->setPrototype(proto);
-    r->d()->propertyCache = QQmlEnginePrivate::get(engine)->cache(metaObject);
+    r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->metaType = typeId;
     r->d()->gadgetPtr = QMetaType::create(r->d()->metaType);
     r->d()->setValue(value);
@@ -204,6 +204,13 @@ QVariant QQmlValueTypeWrapper::toVariant() const
         if (!ref->readReferenceValue())
             return QVariant();
     return d()->toVariant();
+}
+
+void QQmlValueTypeWrapper::toGadget(void *data) const
+{
+    int typeId = d()->metaType;
+    QMetaType::destruct(typeId, data);
+    QMetaType::construct(typeId, data, d()->gadget());
 }
 
 void QQmlValueTypeWrapper::destroy(Heap::Base *that)

@@ -107,6 +107,9 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         break;
     }
 
+    QMetaType metaType(t);
+    if (metaType.flags() & QMetaType::IsGadget)
+        return metaType.metaObject();
     return 0;
 }
 

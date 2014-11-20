@@ -54,6 +54,10 @@ QT_BEGIN_NAMESPACE
 
 class QQmlPropertyCache;
 
+namespace QV4 {
+struct ExecutionEngine;
+}
+
 class QJSEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QJSEngine)
@@ -61,6 +65,7 @@ class QJSEnginePrivate : public QObjectPrivate
 public:
     static QJSEnginePrivate* get(QJSEngine*e) { return e->d_func(); }
     static const QJSEnginePrivate* get(const QJSEngine*e) { return e->d_func(); }
+    static QJSEnginePrivate* get(QV4::ExecutionEngine *e);
 
     QJSEnginePrivate() : mutex(QMutex::Recursive) {}
     ~QJSEnginePrivate();

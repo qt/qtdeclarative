@@ -700,10 +700,14 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
                 return QV4::Encode::null();
-            } else {
-                // Fall back to wrapping in a QVariant.
-                return QV4::Encode(m_v4Engine->newVariantObject(QVariant(type, data)));
             }
+            QMetaType mt(type);
+            if (mt.flags() & QMetaType::IsGadget) {
+                Q_ASSERT(mt.metaObject());
+                return QV4::QQmlValueTypeWrapper::create(m_v4Engine, QVariant(type, data), mt.metaObject(), type);
+            }
+            // Fall back to wrapping in a QVariant.
+            return QV4::Encode(m_v4Engine->newVariantObject(QVariant(type, data)));
         }
     }
     Q_UNREACHABLE();
@@ -833,6 +837,14 @@ bool QV8Engine::metaTypeFromJS(const QV4::ValueRef value, int type, void *data)
     }
     default:
     ;
+    }
+
+    {
+        QV4::Scoped<QV4::QQmlValueTypeWrapper> vtw(scope, value);
+        if (vtw && vtw->d()->metaType == type) {
+            vtw->toGadget(data);
+            return true;
+        }
     }
 
 #if 0

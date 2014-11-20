@@ -88,6 +88,8 @@ private slots:
     void initializeByWrite();
     void groupedInterceptors();
     void groupedInterceptors_data();
+    void customValueType();
+    void customValueTypeInQml();
 
 private:
     QQmlEngine engine;
@@ -1420,6 +1422,87 @@ void tst_qqmlvaluetypes::groupedInterceptors()
     QVERIFY(fuzzyCompare(finalColor.alphaF(), expectedFinalColor.alphaF()));
 
     delete object;
+}
+
+struct MyDesk
+{
+    Q_PROPERTY(int monitorCount MEMBER monitorCount)
+    Q_GADGET
+public:
+    MyDesk() : monitorCount(1) {}
+
+    int monitorCount;
+};
+
+bool operator==(const MyDesk &lhs, const MyDesk &rhs)
+{ return lhs.monitorCount == rhs.monitorCount; }
+bool operator!=(const MyDesk &lhs, const MyDesk &rhs)
+{ return lhs.monitorCount != rhs.monitorCount; }
+
+Q_DECLARE_METATYPE(MyDesk)
+
+struct MyOffice
+{
+    Q_PROPERTY(int chairs MEMBER m_chairs)
+    Q_PROPERTY(MyDesk desk READ desk WRITE setDesk)
+    Q_GADGET
+public:
+    MyOffice() : m_chairs(0) {}
+
+    MyDesk desk() const { return m_desk; }
+    void setDesk(const MyDesk &d) { m_desk = d; }
+
+    int m_chairs;
+    MyDesk m_desk;
+};
+
+Q_DECLARE_METATYPE(MyOffice)
+
+void tst_qqmlvaluetypes::customValueType()
+{
+    QJSEngine engine;
+
+    MyOffice cppOffice;
+    cppOffice.m_chairs = 2;
+
+    QJSValue office = engine.toScriptValue(cppOffice);
+    QCOMPARE(office.property("chairs").toInt(), 2);
+    office.setProperty("chairs", 1);
+    QCOMPARE(office.property("chairs").toInt(), 1);
+    QCOMPARE(cppOffice.m_chairs, 2);
+
+    QJSValue jsDesk = office.property("desk");
+    QCOMPARE(jsDesk.property("monitorCount").toInt(), 1);
+    jsDesk.setProperty("monitorCount", 2);
+    QCOMPARE(jsDesk.property("monitorCount").toInt(), 2);
+
+    QCOMPARE(cppOffice.desk().monitorCount, 1);
+
+    office.setProperty("desk", jsDesk);
+    cppOffice = engine.fromScriptValue<MyOffice>(office);
+    QCOMPARE(cppOffice.m_chairs, 1);
+    QCOMPARE(cppOffice.desk().monitorCount, 2);
+}
+
+class TypeWithCustomValueType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyDesk desk MEMBER m_desk)
+public:
+
+    MyDesk m_desk;
+};
+
+void tst_qqmlvaluetypes::customValueTypeInQml()
+{
+    qmlRegisterType<TypeWithCustomValueType>("Test", 1, 0, "TypeWithCustomValueType");
+    QQmlComponent component(&engine, testFileUrl("customvaluetype.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    TypeWithCustomValueType *t = qobject_cast<TypeWithCustomValueType*>(object.data());
+    Q_ASSERT(t);
+    QCOMPARE(t->m_desk.monitorCount, 3);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypes)
