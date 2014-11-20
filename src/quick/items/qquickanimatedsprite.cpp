@@ -625,8 +625,25 @@ void QQuickAnimatedSprite::prepareNextFrame()
 
     qreal w = m_spriteEngine->spriteWidth() / m_sheetSize.width();
     qreal h = m_spriteEngine->spriteHeight() / m_sheetSize.height();
-    qreal x1 = m_spriteEngine->spriteX() / m_sheetSize.width() + frameAt * w;
-    qreal y1 = m_spriteEngine->spriteY() / m_sheetSize.height();
+    qreal x1;
+    qreal y1;
+    if (m_paused) {
+        int spriteY = m_spriteEngine->spriteY();
+        if (reverse) {
+            int rows = m_spriteEngine->maxFrames() * m_spriteEngine->spriteWidth() / m_sheetSize.width();
+            spriteY -= rows * m_spriteEngine->spriteHeight();
+            frameAt = (frameCount - 1) - frameAt;
+        }
+
+        int position = frameAt * m_spriteEngine->spriteWidth() + m_spriteEngine->spriteX();
+        int row = position / m_sheetSize.width();
+
+        x1 = (position - (row * m_sheetSize.width())) / m_sheetSize.width();
+        y1 = (row * m_spriteEngine->spriteHeight() + spriteY) / m_sheetSize.height();
+    } else {
+        x1 = m_spriteEngine->spriteX() / m_sheetSize.width() + frameAt * w;
+        y1 = m_spriteEngine->spriteY() / m_sheetSize.height();
+    }
 
     //### hard-coded 0/1 work because we are the only
     // images in the sprite sheet (without this we cannot assume
