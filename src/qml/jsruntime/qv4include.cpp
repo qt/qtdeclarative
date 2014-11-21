@@ -101,7 +101,7 @@ void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef stat
         return;
 
     QV4::ScopedCallData callData(scope, 1);
-    callData->thisObject = v4->globalObject->asReturnedValue();
+    callData->thisObject = v4->globalObject()->asReturnedValue();
     callData->args[0] = status;
     f->call(callData);
     if (scope.hasException())

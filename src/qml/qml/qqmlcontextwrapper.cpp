@@ -136,7 +136,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
     bool hasProp;
-    QV4::ScopedValue result(scope, v4->globalObject->get(name, &hasProp));
+    QV4::ScopedValue result(scope, v4->globalObject()->get(name, &hasProp));
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;

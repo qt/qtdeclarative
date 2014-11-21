@@ -106,7 +106,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     Scope scope(this);
 
     // find the right context to create the binding on
-    ScopedObject activation(scope, d()->engine->globalObject);
+    ScopedObject activation(scope, d()->engine->globalObject());
     Scoped<ExecutionContext> ctx(scope, this);
     while (ctx) {
         if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
@@ -131,7 +131,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
     : Heap::ExecutionContext(eng, Heap::ExecutionContext::Type_GlobalContext)
 {
-    global = eng->globalObject->d();
+    global = eng->globalObject()->d();
 }
 
 Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
@@ -334,7 +334,7 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
         engine()->throwReferenceError(n);
         return;
     }
-    d()->engine->globalObject->put(name, value);
+    d()->engine->globalObject()->put(name, value);
 }
 
 ReturnedValue ExecutionContext::getProperty(String *name)

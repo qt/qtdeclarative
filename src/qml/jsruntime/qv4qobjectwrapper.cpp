@@ -796,7 +796,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::ScopedFunctionObject f(scope, This->function.value());
 
             QV4::ScopedCallData callData(scope, argCount);
-            callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
+            callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject()->asReturnedValue() : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {

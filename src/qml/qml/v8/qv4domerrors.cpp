@@ -59,7 +59,7 @@ void qt_add_domexceptions(ExecutionEngine *e)
     domexception->defineReadonlyProperty(QStringLiteral("INVALID_ACCESS_ERR"), Primitive::fromInt32(DOMEXCEPTION_INVALID_ACCESS_ERR));
     domexception->defineReadonlyProperty(QStringLiteral("VALIDATION_ERR"), Primitive::fromInt32(DOMEXCEPTION_VALIDATION_ERR));
     domexception->defineReadonlyProperty(QStringLiteral("TYPE_MISMATCH_ERR"), Primitive::fromInt32(DOMEXCEPTION_TYPE_MISMATCH_ERR));
-    e->globalObject->defineDefaultProperty(QStringLiteral("DOMException"), domexception);
+    e->globalObject()->defineDefaultProperty(QStringLiteral("DOMException"), domexception);
 }
 
 QT_END_NAMESPACE

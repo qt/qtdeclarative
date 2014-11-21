@@ -119,7 +119,8 @@ public:
     QV4::Debugging::Debugger *debugger;
     QV4::Profiling::Profiler *profiler;
 
-    Object *globalObject;
+    Object *m_globalObject;
+    Object *globalObject() { return m_globalObject; }
 
     Function *globalCode;
 

@@ -2001,7 +2001,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
 
     Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->alloc<QQmlXMLHttpRequestCtor>(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
-    v4->globalObject->defineReadonlyProperty(s.getPointer(), ctor);
+    v4->globalObject()->defineReadonlyProperty(s.getPointer(), ctor);
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

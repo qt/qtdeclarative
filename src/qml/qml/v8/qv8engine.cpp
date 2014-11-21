@@ -482,7 +482,7 @@ QQmlContextData *QV8Engine::callingContext()
 void QV8Engine::initializeGlobal()
 {
     QV4::Scope scope(m_v4Engine);
-    QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
+    QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject());
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);
@@ -494,9 +494,9 @@ void QV8Engine::initializeGlobal()
     qt_add_sqlexceptions(m_v4Engine);
 
     {
-        for (uint i = 0; i < m_v4Engine->globalObject->internalClass()->size; ++i) {
-            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i))
-                m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->string);
+        for (uint i = 0; i < m_v4Engine->globalObject()->internalClass()->size; ++i) {
+            if (m_v4Engine->globalObject()->internalClass()->nameMap.at(i))
+                m_illegalNames.insert(m_v4Engine->globalObject()->internalClass()->nameMap.at(i)->string);
         }
     }
 
@@ -532,7 +532,7 @@ void QV8Engine::freezeObject(const QV4::ValueRef value)
     QV4::ScopedFunctionObject f(scope, m_freezeObject.value());
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = value;
-    callData->thisObject = m_v4Engine->globalObject;
+    callData->thisObject = m_v4Engine->globalObject();
     f->call(callData);
 }
 
@@ -570,7 +570,7 @@ void QV8Engine::initQmlGlobalObject()
 {
     initializeGlobal();
     QV4::Scope scope(m_v4Engine);
-    QV4::ScopedValue v(scope, m_v4Engine->globalObject);
+    QV4::ScopedValue v(scope, m_v4Engine->globalObject());
     freezeObject(v);
 }
 
@@ -582,7 +582,7 @@ void QV8Engine::setEngine(QQmlEngine *engine)
 
 QV4::ReturnedValue QV8Engine::global()
 {
-    return m_v4Engine->globalObject->asReturnedValue();
+    return m_v4Engine->globalObject()->asReturnedValue();
 }
 
 // Converts a QVariantList to JS.

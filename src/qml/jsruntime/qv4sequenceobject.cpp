@@ -356,7 +356,7 @@ public:
             ScopedCallData callData(scope, 2);
             callData->args[0] = convertElementToValue(this->m_ctx->d()->engine, lhs);
             callData->args[1] = convertElementToValue(this->m_ctx->d()->engine, rhs);
-            callData->thisObject = this->m_ctx->d()->engine->globalObject;
+            callData->thisObject = this->m_ctx->d()->engine->globalObject();
             QV4::ScopedValue result(scope, compare->call(callData));
             return result->toNumber() < 0;
         }

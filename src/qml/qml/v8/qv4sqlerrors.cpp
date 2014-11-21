@@ -51,7 +51,7 @@ void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
     sqlexception->defineReadonlyProperty(QStringLiteral("SYNTAX_ERR"), Primitive::fromInt32(SQLEXCEPTION_SYNTAX_ERR));
     sqlexception->defineReadonlyProperty(QStringLiteral("CONSTRAINT_ERR"), Primitive::fromInt32(SQLEXCEPTION_CONSTRAINT_ERR));
     sqlexception->defineReadonlyProperty(QStringLiteral("TIMEOUT_ERR"), Primitive::fromInt32(SQLEXCEPTION_TIMEOUT_ERR));
-    engine->globalObject->defineDefaultProperty(QStringLiteral("SQLException"), sqlexception);
+    engine->globalObject()->defineDefaultProperty(QStringLiteral("SQLException"), sqlexception);
 }
 
 QT_END_NAMESPACE
