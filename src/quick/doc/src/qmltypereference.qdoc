@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick 2.3
+\qmlmodule QtQuick 2.4
 \title Qt Quick QML Types
 \ingroup qmlmodules
 \brief Provides graphical QML types.
@@ -34,11 +34,11 @@
 The \l{Qt Quick} module provides graphical primitive types. These types are only
 available in a QML document if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version 2.3, and thus it may be
+The current version of the \c QtQuick module is version 2.4, and thus it may be
 imported via the following statement:
 
 \qml
-import QtQuick 2.3
+import QtQuick 2.4
 \endqml
 
 Visit the \l {Qt Quick} module documentation for more

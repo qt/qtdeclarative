@@ -79,6 +79,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , requireImplicitSize(false), implicitWidthValid(false), implicitHeightValid(false)
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
+    , polishSize(false)
 {
     implicitAntialiasing = true;
 }
@@ -356,6 +357,8 @@ void QQuickTextPrivate::updateLayout()
         textHasChanged = true;
         updateLayout();
     }
+
+    q->polish();
 }
 
 void QQuickText::imageDownloadFinished()
@@ -2248,13 +2251,22 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
                 node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, pix->width(), pix->height()), pix->image());
         }
     }
+
+    // The font caches have now been initialized on the render thread, so they have to be
+    // invalidated before we can use them from the main thread again.
+    invalidateFontCaches();
+
     return node;
 }
 
 void QQuickText::updatePolish()
 {
     Q_D(QQuickText);
-    d->updateSize();
+    if (d->polishSize) {
+        d->updateSize();
+        d->polishSize = false;
+    }
+    invalidateFontCaches();
 }
 
 /*!
@@ -2381,6 +2393,7 @@ void QQuickText::setFontSizeMode(FontSizeMode mode)
     if (d->fontSizeMode() == mode)
         return;
 
+    d->polishSize = true;
     polish();
 
     d->extra.value().fontSizeMode = mode;
@@ -2409,8 +2422,10 @@ void QQuickText::setMinimumPixelSize(int size)
     if (d->minimumPixelSize() == size)
         return;
 
-    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid()))
+    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid())) {
+        d->polishSize = true;
         polish();
+    }
     d->extra.value().minimumPixelSize = size;
     emit minimumPixelSizeChanged();
 }
@@ -2437,8 +2452,10 @@ void QQuickText::setMinimumPointSize(int size)
     if (d->minimumPointSize() == size)
         return;
 
-    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid()))
+    if (d->fontSizeMode() != FixedSize && (widthValid() || heightValid())) {
+        d->polishSize = true;
         polish();
+    }
     d->extra.value().minimumPointSize = size;
     emit minimumPointSizeChanged();
 }
@@ -2697,6 +2714,28 @@ QString QQuickText::linkAt(qreal x, qreal y) const
 {
     Q_D(const QQuickText);
     return d->anchorAt(QPointF(x, y));
+}
+
+/*!
+ * \internal
+ *
+ * Invalidates font caches owned by the text objects owned by the element
+ * to work around the fact that text objects cannot be used from multiple threads.
+ */
+void QQuickText::invalidateFontCaches()
+{
+    Q_D(QQuickText);
+
+    if (d->richText && d->extra->doc != 0) {
+        QTextBlock block;
+        for (block = d->extra->doc->firstBlock(); block.isValid(); block = block.next()) {
+            if (block.layout() != 0 && block.layout()->engine() != 0)
+                block.layout()->engine()->resetFontEngineCache();
+        }
+    } else {
+        if (d->layout.engine() != 0)
+            d->layout.engine()->resetFontEngineCache();
+    }
 }
 
 QT_END_NAMESPACE

@@ -245,6 +245,7 @@ protected:
     void hoverEnterEvent(QHoverEvent *event);
     void hoverMoveEvent(QHoverEvent *event);
     void hoverLeaveEvent(QHoverEvent *event);
+    void invalidateFontCaches();
 
 private Q_SLOTS:
     void q_imagesLoaded();
