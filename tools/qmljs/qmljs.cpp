@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
         QV4::ExecutionEngine vm(iSelFactory);
 
-        QV4::ExecutionContext *ctx = vm.rootContext;
+        QV4::ExecutionContext *ctx = vm.rootContext();
         QV4::Scope scope(ctx);
 
         QV4::ScopedObject globalObject(scope, vm.globalObject);

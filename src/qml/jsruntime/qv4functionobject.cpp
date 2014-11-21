@@ -123,7 +123,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
 
 Heap::FunctionObject::FunctionObject(InternalClass *ic)
     : Heap::Object(ic)
-    , scope(ic->engine->rootContext->d())
+    , scope(ic->engine->rootContext()->d())
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);
@@ -257,7 +257,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
     QV4::Function *vmf = compilationUnit->linkToEngine(v4);
 
-    return FunctionObject::createScriptFunction(v4->rootContext, vmf)->asReturnedValue();
+    return FunctionObject::createScriptFunction(v4->rootContext(), vmf)->asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)
@@ -372,7 +372,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         memcpy(boundArgs->data(), ctx->d()->callData->args + 1, (ctx->d()->callData->argc - 1)*sizeof(Value));
     }
 
-    return BoundFunction::create(ctx->d()->engine->rootContext, target, boundThis, boundArgs)->asReturnedValue();
+    return BoundFunction::create(ctx->d()->engine->rootContext(), target, boundThis, boundArgs)->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);

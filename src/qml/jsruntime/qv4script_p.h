@@ -101,7 +101,7 @@ struct Q_QML_EXPORT Script {
         , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext), strictMode(false), inheritContext(true), parsed(false)
+        , scope(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
         , qml(qml->asReturnedValue()), vmFunction(0), parseAsBinding(true) {}
     Script(ExecutionEngine *engine, Object *qml, CompiledData::CompilationUnit *compilationUnit);
     ~Script();

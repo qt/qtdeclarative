@@ -78,7 +78,8 @@ public:
 
     Value *jsStackTop;
     quint32 hasException;
-    GlobalContext *rootContext;
+    GlobalContext *m_rootContext;
+    GlobalContext *rootContext() const { return m_rootContext; }
 
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;

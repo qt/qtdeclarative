@@ -168,7 +168,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine->v8Engine, qmlContext, scopeObject));
-    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(engine->rootContext, qmlScopeObject));
+    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(engine->rootContext(), qmlScopeObject));
     QV4::Scoped<CallContext> wrapperContext(valueScope, wrapper->context());
 
     if (!signalParameters.isEmpty()) {
@@ -191,7 +191,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
 }
 
 Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
-    : line(0), column(0), scope(v4->rootContext), strictMode(false), inheritContext(true), parsed(false)
+    : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
     , qml(qml->asReturnedValue()), vmFunction(0), parseAsBinding(true)
 {
     parsed = true;

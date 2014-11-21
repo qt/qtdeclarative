@@ -302,7 +302,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::ExecutionEngine *v4 = d->m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ExecutionContext *ctx = v4->currentContext();
-    if (ctx != v4->rootContext)
+    if (ctx != v4->rootContext())
         ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);
 
@@ -314,7 +314,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         result = script.run();
     if (scope.engine->hasException)
         result = v4->catchException();
-    if (ctx != v4->rootContext)
+    if (ctx != v4->rootContext())
         v4->popContext();
     return new QJSValuePrivate(v4, result);
 }

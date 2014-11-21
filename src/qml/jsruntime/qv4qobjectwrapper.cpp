@@ -275,7 +275,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
 
     if (name->equals(scope.engine->id_destroy) || name->equals(scope.engine->id_toString)) {
         int index = name->equals(scope.engine->id_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-        QV4::ScopedValue method(scope, QV4::QObjectMethod::create(scope.engine->rootContext, d()->object, index));
+        QV4::ScopedValue method(scope, QV4::QObjectMethod::create(scope.engine->rootContext(), d()->object, index));
         if (hasProperty)
             *hasProperty = true;
         return method.asReturnedValue();
@@ -339,7 +339,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
             return vmemo->vmeMethod(property->coreIndex);
         } else if (property->isV4Function()) {
             QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->d()->engine->qmlContextObject());
-            return QV4::QObjectMethod::create(ctx->d()->engine->rootContext, object, property->coreIndex, qmlcontextobject);
+            return QV4::QObjectMethod::create(ctx->d()->engine->rootContext(), object, property->coreIndex, qmlcontextobject);
         } else if (property->isSignalHandler()) {
             QV4::Scoped<QV4::QmlSignalHandler> handler(scope, scope.engine->memoryManager->alloc<QV4::QmlSignalHandler>(ctx->d()->engine, object, property->coreIndex));
 
@@ -350,7 +350,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
             return handler.asReturnedValue();
         } else {
-            return QV4::QObjectMethod::create(ctx->d()->engine->rootContext, object, property->coreIndex);
+            return QV4::QObjectMethod::create(ctx->d()->engine->rootContext(), object, property->coreIndex);
         }
     }
 

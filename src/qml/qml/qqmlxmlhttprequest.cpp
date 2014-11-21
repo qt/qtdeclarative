@@ -1679,7 +1679,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 
 Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
-    : Heap::FunctionObject(engine->rootContext, QStringLiteral("XMLHttpRequest"))
+    : Heap::FunctionObject(engine->rootContext(), QStringLiteral("XMLHttpRequest"))
 {
     setVTable(QV4::QQmlXMLHttpRequestCtor::staticVTable());
     Scope scope(engine);
