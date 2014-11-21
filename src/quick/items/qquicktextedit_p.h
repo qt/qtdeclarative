@@ -330,6 +330,7 @@ private Q_SLOTS:
 private:
     void markDirtyNodesForRange(int start, int end, int charDelta);
     void updateTotalLines();
+    void invalidateFontCaches();
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,
@@ -354,6 +355,7 @@ protected:
     void inputMethodEvent(QInputMethodEvent *e);
 #endif
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
+    void updatePolish();
 
     friend class QQuickTextUtil;
     friend class QQuickTextDocument;

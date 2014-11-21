@@ -314,6 +314,9 @@ Q_SIGNALS:
 #endif
     void renderTypeChanged();
 
+private:
+    void invalidateFontCaches();
+
 protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
@@ -332,6 +335,7 @@ protected:
     void focusInEvent(QFocusEvent *event);
     void timerEvent(QTimerEvent *event);
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data);
+    void updatePolish();
 
 public Q_SLOTS:
     void selectAll();

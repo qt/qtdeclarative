@@ -72,8 +72,8 @@ The following pages show how to develop Qt applications using
 \l{Qt Creator Manual}{Qt Creator} and Qt Quick. The pages demonstrate various
 steps such as use cases and introductory material. For more information about Qt Quick Applications and related modules, visit the \l{QML Applications} page.
 
-\div {class="landingicons"}
-    \div {class="icons1of3"}
+\div {class="multi-column"}
+    \div {class="doc-column"}
         \b{Development Environment}
         \list
         \li \l{Qt Creator: Creating Qt Quick Projects}{Creating Qt Quick Projects}
@@ -84,7 +84,7 @@ steps such as use cases and introductory material. For more information about Qt
         \li \l{Qt Creator: Using QML Modules with Plugins}{Using QML Modules with Plugins}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{Beginning with QML and Qt Quick}
         \list
         \li \l{First Steps with QML}
@@ -92,7 +92,7 @@ steps such as use cases and introductory material. For more information about Qt
         \li \l{QML Advanced Tutorial}{SameGame}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{Use Cases}
         \list
         \li \l{qtquick-usecase-visual.html}{Visual types in QML}
@@ -120,8 +120,8 @@ Examples are small applications which show how to implement various Qt Quick
 features. The examples run on various platforms and are opened from within Qt
 Creator.
 
-\div {class="landingicons"}
-    \div {class="icons1of3"}
+\div {class="multi-column"}
+    \div {class="doc-column"}
         \b{QML Types and Controls}
         \list
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
@@ -132,7 +132,7 @@ Creator.
         \li \l{Qt Quick Examples - Toggle Switch}{Custom Toggle Switch}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{Layouts and Views}
         \list
         \li \l{Qt Quick Controls - Basic Layouts Example}{Basic Layouts}
@@ -142,7 +142,7 @@ Creator.
         \li \l{Qt Quick Examples - Right to Left}{Right-to-Left and Text Layout}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{Image and Graphics}
         \list
         \li \l{Qt Quick Examples - Image Elements}{Image Elements}
@@ -153,8 +153,8 @@ Creator.
     \enddiv
 \enddiv
 
-\div {class="landingicons"}
-    \div {class="icons1of3"}
+\div {class="multi-column"}
+    \div {class="doc-column"}
         \b{Keyboard, Focus, and Touch}
         \list
         \li \l{Qt Quick Examples - Key Interaction}{Key Interaction}
@@ -162,7 +162,7 @@ Creator.
         \li \l{Qt Quick Controls - Touch Gallery}{Touch Gallery}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{System and Events}
         \list
         \li \l{Qt Quick Examples - Threading}{Threading}
@@ -171,7 +171,7 @@ Creator.
         \li \l{Qt Quick Examples - Drag and Drop}{Drag and Drop}
         \endlist
     \enddiv
-    \div {class="icons1of3"}
+    \div {class="doc-column"}
         \b{Scene Graph}
         \list
         \li \l{Scene Graph - OpenGL Under QML}{OpenGL Under QML}

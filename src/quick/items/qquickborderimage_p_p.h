@@ -89,16 +89,6 @@ public:
     QQuickBorderImage::TileMode verticalTileMode;
     int redirectCount;
 
-    struct BorderImageRegion
-    {
-        BorderImageRegion() : node(0), textureFactory(0) {}
-        QImage image;
-        QSGImageNode *node;
-        QScopedPointer<QQuickTextureFactory> textureFactory;
-        QRectF targetRect;
-    };
-    BorderImageRegion regions[9];
-
     bool pixmapChanged : 1;
 };
 
