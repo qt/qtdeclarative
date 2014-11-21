@@ -35,6 +35,7 @@
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4regexp_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4scopedvalue_p.h"

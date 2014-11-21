@@ -1179,8 +1179,8 @@ QStringList ArrayObject::toQStringList() const
     Scope scope(engine);
     ScopedValue v(scope);
 
-    uint32_t length = getLength();
-    for (uint32_t i = 0; i < length; ++i) {
+    uint length = getLength();
+    for (uint i = 0; i < length; ++i) {
         v = const_cast<ArrayObject *>(this)->getIndexed(i);
         result.append(v->toQStringNoThrow());
     }

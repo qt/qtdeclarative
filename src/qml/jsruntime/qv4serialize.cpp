@@ -159,7 +159,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             push(data, valueheader(WorkerUndefined));
             return;
         }
-        int utf16size = ALIGN(length * sizeof(uint16_t));
+        int utf16size = ALIGN(length * sizeof(quint16));
 
         reserve(data, utf16size + sizeof(quint32));
         push(data, valueheader(WorkerString, length));
@@ -175,7 +175,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         push(data, valueheader(WorkerUndefined));
     } else if (v->asArrayObject()) {
         QV4::ScopedArrayObject array(scope, v);
-        uint32_t length = array->getLength();
+        uint length = array->getLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
             return;
@@ -183,7 +183,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         reserve(data, sizeof(quint32) + length * sizeof(quint32));
         push(data, valueheader(WorkerArray, length));
         ScopedValue val(scope);
-        for (uint32_t ii = 0; ii < length; ++ii)
+        for (uint ii = 0; ii < length; ++ii)
             serialize(data, (val = array->getIndexed(ii)), engine);
     } else if (v->isInteger()) {
         reserve(data, 2 * sizeof(quint32));
@@ -210,7 +210,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             push(data, valueheader(WorkerUndefined));
             return;
         }
-        int utf16size = ALIGN(length * sizeof(uint16_t));
+        int utf16size = ALIGN(length * sizeof(quint16));
 
         reserve(data, sizeof(quint32) + utf16size);
         push(data, valueheader(WorkerRegexp, flags));
@@ -239,8 +239,8 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         ScopedObject o(scope, v);
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-            uint32_t seqLength = ScopedValue(scope, o->get(v4->id_length))->toUInt32();
-            uint32_t length = seqLength + 1;
+            uint seqLength = ScopedValue(scope, o->get(v4->id_length))->toUInt32();
+            uint length = seqLength + 1;
             if (length > 0xFFFFFF) {
                 push(data, valueheader(WorkerUndefined));
                 return;
@@ -249,7 +249,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             push(data, valueheader(WorkerSequence, length));
             serialize(data, QV4::Primitive::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             ScopedValue val(scope);
-            for (uint32_t ii = 0; ii < seqLength; ++ii)
+            for (uint ii = 0; ii < seqLength; ++ii)
                 serialize(data, (val = o->getIndexed(ii)), engine); // sequence elements
 
             return;
@@ -305,7 +305,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     {
         quint32 size = headersize(header);
         QString qstr((QChar *)data, size);
-        data += ALIGN(size * sizeof(uint16_t));
+        data += ALIGN(size * sizeof(quint16));
         return QV4::Encode(v4->newString(qstr));
     }
     case WorkerFunction:
@@ -350,7 +350,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 flags = headersize(header);
         quint32 length = popUint32(data);
         QString pattern = QString((QChar *)data, length - 1);
-        data += ALIGN(length * sizeof(uint16_t));
+        data += ALIGN(length * sizeof(quint16));
         return Encode(v4->newRegExpObject(pattern, flags));
     }
     case WorkerListModel:

@@ -1635,8 +1635,8 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         if (array) {
             Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
 
-            uint32_t length = array->getLength();
-            for (uint32_t ii = 0; ii < length; ++ii)  {
+            uint length = array->getLength();
+            for (uint ii = 0; ii < length; ++ii)  {
                 QObject *o = 0;
                 qobjectWrapper = array->getIndexed(ii);
                 if (!!qobjectWrapper)

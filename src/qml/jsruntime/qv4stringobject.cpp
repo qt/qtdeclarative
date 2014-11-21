@@ -33,6 +33,7 @@
 
 
 #include "qv4stringobject_p.h"
+#include "qv4regexp_p.h"
 #include "qv4regexpobject_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"

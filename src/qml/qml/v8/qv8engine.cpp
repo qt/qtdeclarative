@@ -199,9 +199,9 @@ QVariant QV8Engine::toVariant(const QV4::ValueRef value, int typeHint, bool crea
         QV4::ScopedArrayObject a(scope, value);
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
-            uint32_t length = a->getLength();
+            uint length = a->getLength();
             QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
-            for (uint32_t ii = 0; ii < length; ++ii) {
+            for (uint ii = 0; ii < length; ++ii) {
                 qobjectWrapper = a->getIndexed(ii);
                 if (!!qobjectWrapper) {
                     list << qobjectWrapper->object();

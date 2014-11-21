@@ -43,7 +43,6 @@
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"
-#include "qv4regexp_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
