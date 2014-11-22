@@ -1796,7 +1796,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
         if (!delayedTouch) {
             delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
             delayedTouch->setTimestamp(event->timestamp());
-            if (windowManager)
+            if (renderControl)
+                QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
+            else if (windowManager)
                 windowManager->maybeUpdate(q);
             return;
         } else {
