@@ -63,7 +63,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -72,7 +72,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -82,7 +82,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -92,7 +92,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->engine->functionClass)
+    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
     , scope(scope)
 {
     Scope s(scope->engine);
@@ -102,7 +102,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->d()->engine->functionClass)
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
 {
     Scope s(scope);
@@ -112,7 +112,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->engine->functionClass)
+    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
     , scope(scope)
 {
     Scope s(scope->engine);
@@ -121,8 +121,8 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
     f->init(n.getPointer(), false);
 }
 
-Heap::FunctionObject::FunctionObject(InternalClass *ic)
-    : Heap::Object(ic)
+Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
+    : Heap::Object(ic, prototype)
     , scope(ic->engine->rootContext()->d())
 {
     Scope scope(ic->engine);
@@ -148,7 +148,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        Scoped<Object> proto(s, scope()->engine->newObject(scope()->engine->protoClass));
+        Scoped<Object> proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.asObject()));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
         proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
         memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
@@ -268,8 +268,8 @@ ReturnedValue FunctionCtor::call(Managed *that, CallData *callData)
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
 
-Heap::FunctionPrototype::FunctionPrototype(InternalClass *ic)
-    : Heap::FunctionObject(ic)
+Heap::FunctionPrototype::FunctionPrototype(InternalClass *ic, QV4::Object *prototype)
+    : Heap::FunctionObject(ic, prototype)
 {
 }
 
@@ -393,8 +393,9 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
-    InternalClass *ic = f->internalClassForConstructor();
-    ScopedObject obj(scope, v4->newObject(ic));
+    InternalClass *ic = scope.engine->objectClass;
+    ScopedObject proto(scope, f->protoForConstructor());
+    ScopedObject obj(scope, v4->newObject(ic, proto));
 
     ExecutionContext *context = v4->currentContext();
     callData->thisObject = obj.asReturnedValue();
@@ -477,8 +478,9 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
-    InternalClass *ic = f->internalClassForConstructor();
-    callData->thisObject = v4->newObject(ic);
+    InternalClass *ic = scope.engine->objectClass;
+    ScopedObject proto(scope, f->protoForConstructor());
+    callData->thisObject = v4->newObject(ic, proto);
 
     ExecutionContext *context = v4->currentContext();
     ExecutionContextSaver ctxSaver(context);
@@ -542,18 +544,13 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     return result.asReturnedValue();
 }
 
-InternalClass *SimpleScriptFunction::internalClassForConstructor()
+Heap::Object *SimpleScriptFunction::protoForConstructor()
 {
-    ReturnedValue proto = protoProperty();
-    InternalClass *classForConstructor;
-    Scope scope(internalClass()->engine);
-    ScopedObject p(scope, proto);
+    Scope scope(engine());
+    ScopedObject p(scope, protoProperty());
     if (p)
-        classForConstructor = internalClass()->engine->constructClass->changePrototype(p.getPointer());
-    else
-        classForConstructor = scope.engine->objectClass;
-
-    return classForConstructor;
+        return p->d();
+    return scope.engine->objectPrototype.asObject()->d();
 }
 
 

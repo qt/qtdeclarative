@@ -500,7 +500,7 @@ public:
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable(), engine->sequencePrototype.asObject()))
+    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable()), engine->sequencePrototype.asObject())
     , container(container)
     , propertyIndex(-1)
     , isReference(false)
@@ -513,7 +513,7 @@ Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const 
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable(), engine->sequencePrototype.asObject()))
+    : Heap::Object(InternalClass::create(engine, QV4::QQmlSequence<Container>::staticVTable()), engine->sequencePrototype.asObject())
     , object(object)
     , propertyIndex(propertyIndex)
     , isReference(true)

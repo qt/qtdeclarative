@@ -264,8 +264,8 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
     obj->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
 
     // string prototype extension
-    v4->stringObjectClass->prototype->defineDefaultProperty(QStringLiteral("arg"),
-                                                            QV4::GlobalExtensions::method_string_arg);
+    v4->stringPrototype.asObject()->defineDefaultProperty(QStringLiteral("arg"),
+                                                          QV4::GlobalExtensions::method_string_arg);
 #endif
 }
 
@@ -301,7 +301,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 {
     QV4::ExecutionEngine *v4 = d->m_v4Engine;
     QV4::Scope scope(v4);
-    QV4::ExecutionContext *ctx = v4->currentContext();
+    QV4::ScopedContext ctx(scope, v4->currentContext());
     if (ctx != v4->rootContext())
         ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);

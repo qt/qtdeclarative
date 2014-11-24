@@ -877,10 +877,10 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-Heap::JsonObject::JsonObject(InternalClass *ic)
-    : Heap::Object(ic)
+Heap::JsonObject::JsonObject(ExecutionEngine *e)
+    : Heap::Object(QV4::InternalClass::create(e, QV4::JsonObject::staticVTable()), e->objectPrototype.asObject())
 {
-    Scope scope(ic->engine);
+    Scope scope(e);
     ScopedObject o(scope, this);
 
     o->defineDefaultProperty(QStringLiteral("parse"), QV4::JsonObject::method_parse, 2);

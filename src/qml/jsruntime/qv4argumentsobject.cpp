@@ -39,7 +39,8 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
-    : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass)
+    : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass,
+                   context->d()->engine->objectPrototype.asObject())
     , context(context->d())
     , fullyCreated(false)
 {

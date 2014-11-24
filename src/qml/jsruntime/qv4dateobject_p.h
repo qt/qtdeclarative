@@ -46,13 +46,18 @@ namespace QV4 {
 namespace Heap {
 
 struct DateObject : Object {
+    DateObject(InternalClass *ic, QV4::Object *prototype)
+        : Object(ic, prototype)
+    {
+        value = Encode(qSNaN());
+    }
+
     DateObject(QV4::ExecutionEngine *engine, const ValueRef date)
-        : Object(engine->dateClass)
+        : Object(engine->dateClass, engine->datePrototype.asObject())
     {
         value = date;
     }
     DateObject(QV4::ExecutionEngine *engine, const QDateTime &date);
-    inline DateObject(InternalClass *ic);
     Value value;
 };
 
@@ -73,13 +78,6 @@ struct DateObject: Object {
 
     QDateTime toQDateTime() const;
 };
-
-Heap::DateObject::DateObject(InternalClass *ic)
-    : Heap::Object(ic)
-{
-    Q_ASSERT(internalClass->vtable == QV4::DateObject::staticVTable());
-    value = Primitive::fromDouble(qSNaN());
-}
 
 struct DateCtor: FunctionObject
 {

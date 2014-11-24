@@ -44,8 +44,8 @@ namespace QV4 {
 namespace Heap {
 
 struct StringObject : Object {
+    StringObject(InternalClass *ic, QV4::Object *prototype);
     StringObject(ExecutionEngine *engine, const ValueRef value);
-    StringObject(InternalClass *ic);
     Value value;
     // ### get rid of tmpProperty
     mutable Property tmpProperty;

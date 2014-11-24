@@ -141,16 +141,36 @@ public:
     Value syntaxErrorCtor;
     Value typeErrorCtor;
     Value uRIErrorCtor;
-    Value sequencePrototype;
     Value arrayBufferCtor;
     Value dataViewCtor;
     enum { NTypedArrayTypes = 9 }; // avoid header dependency
     Value typedArrayCtors[NTypedArrayTypes];
 
+    Value objectPrototype;
+    Value arrayPrototype;
+    Value stringPrototype;
+    Value numberPrototype;
+    Value booleanPrototype;
+    Value datePrototype;
+    Value functionPrototype;
+    Value regExpPrototype;
+    Value errorPrototype;
+    Value evalErrorPrototype;
+    Value rangeErrorPrototype;
+    Value referenceErrorPrototype;
+    Value syntaxErrorPrototype;
+    Value typeErrorPrototype;
+    Value uRIErrorPrototype;
+    Value variantPrototype;
+    Value sequencePrototype;
+
+    Value arrayBufferPrototype;
+    Value dataViewPrototype;
+    Value typedArrayPrototype[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
+
     InternalClassPool *classPool;
     InternalClass *emptyClass;
     InternalClass *executionContextClass;
-    InternalClass *constructClass;
     InternalClass *stringClass;
 
     InternalClass *objectClass;
@@ -264,7 +284,7 @@ public:
     ExecutionContext *popContext();
 
     Heap::Object *newObject();
-    Heap::Object *newObject(InternalClass *internalClass);
+    Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
 
     Heap::String *newString(const QString &s);
     Heap::String *newIdentifier(const QString &text);
@@ -275,7 +295,7 @@ public:
 
     Heap::ArrayObject *newArrayObject(int count = 0);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
-    Heap::ArrayObject *newArrayObject(InternalClass *ic);
+    Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
     Heap::DateObject *newDateObject(const ValueRef value);
     Heap::DateObject *newDateObject(const QDateTime &dt);

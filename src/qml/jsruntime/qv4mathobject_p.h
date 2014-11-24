@@ -42,7 +42,7 @@ namespace QV4 {
 namespace Heap {
 
 struct MathObject : Object {
-    MathObject(InternalClass *ic);
+    MathObject(ExecutionEngine *e);
 };
 
 }

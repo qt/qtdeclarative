@@ -57,9 +57,9 @@ namespace QV4 {
 namespace Heap {
 
 struct RegExpObject : Object {
+    RegExpObject(InternalClass *ic, QV4::Object *prototype);
     RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global);
     RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re);
-    RegExpObject(InternalClass *ic);
 
     RegExp *value;
     bool global;
@@ -76,7 +76,7 @@ struct RegExpCtor : FunctionObject {
 
 struct RegExpPrototype : RegExpObject
 {
-    inline RegExpPrototype(InternalClass *ic);
+    inline RegExpPrototype(ExecutionEngine *e);
 };
 
 }
@@ -145,10 +145,9 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_get_rightContext(CallContext *ctx);
 };
 
-inline Heap::RegExpPrototype::RegExpPrototype(InternalClass *ic)
-    : RegExpObject(ic)
+inline Heap::RegExpPrototype::RegExpPrototype(ExecutionEngine *e)
+    : RegExpObject(InternalClass::create(e, QV4::RegExpPrototype::staticVTable()), e->objectPrototype.asObject())
 {
-    setVTable(QV4::RegExpPrototype::staticVTable());
 }
 
 }

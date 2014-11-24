@@ -138,7 +138,7 @@ ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
         return Primitive::fromInt32(that->d()->text->size).asReturnedValue();
     }
     PropertyAttributes attrs;
-    Property *pd = v4->stringObjectClass->prototype->__getPropertyDescriptor__(name, &attrs);
+    Property *pd = v4->stringPrototype.asObject()->__getPropertyDescriptor__(name, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -146,7 +146,7 @@ ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return v4->stringObjectClass->prototype->getValue(that, pd, attrs);
+    return v4->stringPrototype.asObject()->getValue(that, pd, attrs);
 }
 
 ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
@@ -161,7 +161,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
         return Encode(engine->newString(that->toQString().mid(index, 1)));
     }
     PropertyAttributes attrs;
-    Property *pd = engine->stringObjectClass->prototype->__getPropertyDescriptor__(index, &attrs);
+    Property *pd = engine->stringPrototype.asObject()->__getPropertyDescriptor__(index, &attrs);
     if (!pd || attrs.isGeneric()) {
         if (hasProperty)
             *hasProperty = false;
@@ -169,7 +169,7 @@ ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
     }
     if (hasProperty)
         *hasProperty = true;
-    return engine->stringObjectClass->prototype->getValue(that, pd, attrs);
+    return engine->stringPrototype.asObject()->getValue(that, pd, attrs);
 }
 
 void String::put(Managed *m, String *name, const ValueRef value)

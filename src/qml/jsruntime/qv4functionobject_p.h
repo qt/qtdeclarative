@@ -63,7 +63,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);
     FunctionObject(ExecutionContext *scope, const ReturnedValue name);
-    FunctionObject(InternalClass *ic);
+    FunctionObject(InternalClass *ic, QV4::Object *prototype);
     ~FunctionObject();
 
     unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
@@ -78,7 +78,7 @@ struct FunctionCtor : FunctionObject {
 };
 
 struct FunctionPrototype : FunctionObject {
-    FunctionPrototype(InternalClass *ic);
+    FunctionPrototype(InternalClass *ic, QV4::Object *prototype);
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
@@ -213,7 +213,7 @@ struct SimpleScriptFunction: FunctionObject {
     static ReturnedValue construct(Managed *, CallData *callData);
     static ReturnedValue call(Managed *that, CallData *callData);
 
-    InternalClass *internalClassForConstructor();
+    Heap::Object *protoForConstructor();
 };
 
 struct ScriptFunction: SimpleScriptFunction {

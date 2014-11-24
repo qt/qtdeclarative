@@ -84,7 +84,7 @@ ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
 
 
 Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, int length)
-    : Heap::Object(e->arrayBufferClass)
+    : Heap::Object(e->arrayBufferClass, e->arrayBufferPrototype.asObject())
 {
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {

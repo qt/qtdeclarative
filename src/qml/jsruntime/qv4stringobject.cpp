@@ -70,8 +70,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-Heap::StringObject::StringObject(InternalClass *ic)
-    : Heap::Object(ic)
+Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
+    : Heap::Object(ic, prototype)
 {
     Q_ASSERT(internalClass->vtable == QV4::StringObject::staticVTable());
     value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
@@ -83,7 +83,7 @@ Heap::StringObject::StringObject(InternalClass *ic)
 }
 
 Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
-    : Heap::Object(engine->stringObjectClass)
+    : Heap::Object(engine->stringObjectClass, engine->stringPrototype.asObject())
 {
     value = val;
     Q_ASSERT(value.isString());
@@ -386,8 +386,8 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
     bool global = rx->global();
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
-    ScopedString execString(scope, context->d()->engine->newString(QStringLiteral("exec")));
-    Scoped<FunctionObject> exec(scope, context->d()->engine->regExpClass->prototype->get(execString.getPointer()));
+    ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
+    Scoped<FunctionObject> exec(scope, scope.engine->regExpPrototype.asObject()->get(execString.getPointer()));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;

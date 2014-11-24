@@ -77,7 +77,7 @@ ReturnedValue DataViewCtor::call(Managed *that, CallData *callData)
 
 
 Heap::DataView::DataView(ExecutionEngine *e)
-    : Heap::Object(e->dataViewClass),
+    : Heap::Object(e->dataViewClass, e->dataViewPrototype.asObject()),
       buffer(0),
       byteLength(0),
       byteOffset(0)

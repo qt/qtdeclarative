@@ -191,14 +191,12 @@ struct InternalClassTransition
 {
     union {
         Identifier *id;
-        Object *prototype;
         const ManagedVTable *vtable;
     };
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
-        ProtoChange = 0x100,
-        VTableChange = 0x200
+        VTableChange = 0x100
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -208,7 +206,6 @@ uint qHash(const QV4::InternalClassTransition &t, uint = 0);
 
 struct InternalClass : public QQmlJS::Managed {
     ExecutionEngine *engine;
-    Object *prototype;
     const ManagedVTable *vtable;
 
     PropertyHash propertyTable; // id to valueIndex
@@ -223,8 +220,7 @@ struct InternalClass : public QQmlJS::Managed {
 
     uint size;
 
-    static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable, Object *proto);
-    InternalClass *changePrototype(Object *proto);
+    static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable);
     InternalClass *changeVTable(const ManagedVTable *vt);
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);

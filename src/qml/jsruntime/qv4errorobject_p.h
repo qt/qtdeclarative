@@ -55,10 +55,10 @@ struct ErrorObject : Object {
         URIError
     };
 
-    ErrorObject(InternalClass *ic);
-    ErrorObject(InternalClass *ic, const ValueRef message, ErrorType t = Error);
-    ErrorObject(InternalClass *ic, const QString &message, ErrorType t = Error);
-    ErrorObject(InternalClass *ic, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, QV4::Object *prototype);
+    ErrorObject(InternalClass *ic, QV4::Object *prototype, const ValueRef message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
     StackTrace stackTrace;
     String *stack;
 };

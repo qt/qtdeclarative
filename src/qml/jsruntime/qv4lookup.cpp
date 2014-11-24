@@ -243,11 +243,11 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
     case Value::Null_Type:
         return engine->throwTypeError();
     case Value::Boolean_Type:
-        proto = engine->booleanClass->prototype;
+        proto = engine->booleanPrototype.asObject();
         break;
     case Value::Managed_Type: {
         Q_ASSERT(object->isString());
-        proto = engine->stringObjectClass->prototype;
+        proto = engine->stringPrototype.asObject();
         Scope scope(engine);
         ScopedString name(scope, engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
         if (name->equals(engine->id_length.getPointer())) {
@@ -259,7 +259,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
     }
     case Value::Integer_Type:
     default: // Number
-        proto = engine->numberClass->prototype;
+        proto = engine->numberPrototype.asObject();
     }
 
     PropertyAttributes attrs;

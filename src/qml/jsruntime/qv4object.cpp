@@ -50,8 +50,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Object);
 
-Heap::Object::Object(InternalClass *internalClass)
-    : Heap::Base(internalClass)
+Heap::Object::Object(InternalClass *internalClass, QV4::Object *prototype)
+    : Heap::Base(internalClass),
+      prototype(prototype->d())
 {
     if (internalClass->size) {
         Scope scope(internalClass->engine);
@@ -62,13 +63,13 @@ Heap::Object::Object(InternalClass *internalClass)
 
 bool Object::setPrototype(Object *proto)
 {
-    Object *pp = proto;
+    Heap::Object *pp = proto->d();
     while (pp) {
-        if (pp == this)
+        if (pp == d())
             return false;
-        pp = pp->prototype();
+        pp = pp->prototype;
     }
-    setInternalClass(internalClass()->changePrototype(proto));
+    d()->prototype = proto->d();
     return true;
 }
 
@@ -187,6 +188,8 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
         o->memberData->mark(e);
     if (o->arrayData)
         o->arrayData->mark(e);
+    if (o->prototype)
+        o->prototype->mark(e);
 }
 
 void Object::ensureMemberIndex(uint idx)
@@ -1135,7 +1138,7 @@ void Object::initSparseArray()
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
 Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Heap::Object(engine->arrayClass)
+    : Heap::Object(engine->arrayClass, engine->arrayPrototype.asObject())
 {
     init();
     Scope scope(engine);

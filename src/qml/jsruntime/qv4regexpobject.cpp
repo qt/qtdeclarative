@@ -65,8 +65,8 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(RegExpObject);
 DEFINE_OBJECT_VTABLE(RegExpPrototype);
 
-Heap::RegExpObject::RegExpObject(InternalClass *ic)
-    : Heap::Object(ic)
+Heap::RegExpObject::RegExpObject(InternalClass *ic, QV4::Object *prototype)
+    : Heap::Object(ic, prototype)
 {
     setVTable(QV4::RegExpObject::staticVTable());
 
@@ -78,7 +78,7 @@ Heap::RegExpObject::RegExpObject(InternalClass *ic)
 }
 
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
-    : Heap::Object(engine->regExpClass)
+    : Heap::Object(engine->regExpClass, engine->regExpPrototype.asObject())
     , value(value->d())
     , global(global)
 {
@@ -93,7 +93,7 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *valu
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
-    : Heap::Object(engine->regExpClass)
+    : Heap::Object(engine->regExpClass, engine->regExpPrototype.asObject())
 {
     setVTable(QV4::RegExpObject::staticVTable());
 
@@ -380,7 +380,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     // fill in result data
-    Scoped<ArrayObject> array(scope, ctx->d()->engine->newArrayObject(ctx->d()->engine->regExpExecArrayClass));
+    Scoped<ArrayObject> array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.asObject()));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);
