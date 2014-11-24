@@ -590,8 +590,8 @@ Item {
 }
 \endqml
 
-\note A read-only property cannot also be a \l{Default Properties}{default} or
-\l {Property Aliases}{alias} property.
+\note A read-only property cannot also be a \l{Default Properties}{default}
+property.
 
 
 \section3 Property Modifier Objects
