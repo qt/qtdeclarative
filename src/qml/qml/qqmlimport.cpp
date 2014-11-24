@@ -63,7 +63,8 @@ static const QLatin1Char Backslash('\\');
 static const QLatin1Char Colon(':');
 static const QLatin1String Slash_qmldir("/qmldir");
 static const QLatin1String String_qmldir("qmldir");
-static const QString dotqml_string(QLatin1String(".qml"));
+static const QString dotqml_string(QStringLiteral(".qml"));
+static const QString dotuidotqml_string(QStringLiteral(".ui.qml"));
 static bool designerSupportRequired = false;
 
 namespace {
@@ -657,23 +658,28 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
             return (*type_return != 0);
         }
     } else if (!isLibrary) {
-        QString qmlUrl = url + QString::fromRawData(type.constData(), type.length()) + dotqml_string;
-
+        QString qmlUrl;
         bool exists = false;
 
-        if (QQmlFile::isBundle(qmlUrl)) {
-            exists = QQmlFile::bundleFileExists(qmlUrl, typeLoader->engine());
-        } else {
-            exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(qmlUrl)).isEmpty();
-            if (!exists) {
-                QString formUrl = url + QString::fromRawData(type.constData(), type.length()) + QStringLiteral(".ui.qml");
-                if (!typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(formUrl)).isEmpty()) {
-                    exists = true;
-                    qmlUrl = formUrl;
-                }
+        const QString urlsToTry[2] = {
+            url + QString::fromRawData(type.constData(), type.length()) + dotqml_string, // Type -> Type.qml
+            url + QString::fromRawData(type.constData(), type.length()) + dotuidotqml_string // Type -> Type.ui.qml
+        };
+        for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
+            const QString url = urlsToTry[i];
+
+            if (QQmlFile::isBundle(url)) {
+                exists = QQmlFile::bundleFileExists(url, typeLoader->engine());
+            } else {
+                exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(url)).isEmpty();
+                if (!exists)
+                    exists = QQmlMetaType::findCachedCompilationUnit(QUrl(url));
             }
-            if (!exists)
-                exists = QQmlMetaType::findCachedCompilationUnit(QUrl(qmlUrl));
+
+            if (exists) {
+                qmlUrl = url;
+                break;
+            }
         }
 
         if (exists) {
