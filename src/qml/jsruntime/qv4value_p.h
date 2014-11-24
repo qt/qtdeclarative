@@ -571,6 +571,11 @@ private:
     Value *ptr;
 };
 
+inline Primitive::operator ValueRef()
+{
+    return ValueRef(this);
+}
+
 inline
 ReturnedValue Heap::Base::asReturnedValue() const
 {

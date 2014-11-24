@@ -467,11 +467,6 @@ inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
     return *this;
 }
 
-inline Primitive::operator ValueRef()
-{
-    return ValueRef(this);
-}
-
 inline PersistentValue &PersistentValue::operator=(const ScopedValue &other)
 {
     return operator=(other.asReturnedValue());
