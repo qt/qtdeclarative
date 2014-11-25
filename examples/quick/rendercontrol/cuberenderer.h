@@ -38,25 +38,36 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include "window_singlethreaded.h"
-#include "window_multithreaded.h"
+#ifndef CUBERENDERER_H
+#define CUBERENDERER_H
 
-int main(int argc, char **argv)
+#include <QMatrix4x4>
+
+QT_FORWARD_DECLARE_CLASS(QOpenGLContext)
+QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+QT_FORWARD_DECLARE_CLASS(QOpenGLBuffer)
+QT_FORWARD_DECLARE_CLASS(QOpenGLVertexArrayObject)
+QT_FORWARD_DECLARE_CLASS(QWindow)
+
+class CubeRenderer
 {
-    QGuiApplication app(argc, argv);
+public:
+    CubeRenderer();
+    ~CubeRenderer();
 
-    QScopedPointer<QWindow> window;
-    if (QCoreApplication::arguments().contains(QLatin1String("--threaded"))) {
-        qWarning("Using separate Qt Quick render thread");
-        window.reset(new WindowMultiThreaded);
-    } else {
-        qWarning("Using single-threaded rendering");
-        window.reset(new WindowSingleThreaded);
-    }
+    void resize(int w, int h);
+    void render(QWindow *w, QOpenGLContext *share, uint texture);
 
-    window->resize(1024, 768);
-    window->show();
+private:
+    void init(QWindow *w, QOpenGLContext *share);
+    void setupVertexAttribs();
 
-    return app.exec();
-}
+    QOpenGLContext *m_context;
+    QOpenGLShaderProgram *m_program;
+    QOpenGLBuffer *m_vbo;
+    QOpenGLVertexArrayObject *m_vao;
+    int m_matrixLoc;
+    QMatrix4x4 m_proj;
+};
+
+#endif

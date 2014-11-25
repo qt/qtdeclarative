@@ -38,7 +38,8 @@
 **
 ****************************************************************************/
 
-#include "window.h"
+#include "window_singlethreaded.h"
+#include "cuberenderer.h"
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
@@ -54,11 +55,9 @@
 #include <QQuickRenderControl>
 #include <QCoreApplication>
 
-Window::Window()
+WindowSingleThreaded::WindowSingleThreaded()
     : m_rootItem(0),
       m_fbo(0),
-      m_program(0),
-      m_vbo(0),
       m_quickInitialized(false),
       m_quickReady(false)
 {
@@ -82,6 +81,8 @@ Window::Window()
     m_offscreenSurface->setFormat(m_context->format());
     m_offscreenSurface->create();
 
+    m_cubeRenderer = new CubeRenderer;
+
     m_renderControl = new QQuickRenderControl(this);
 
     // Create a QQuickWindow that is associated with out render control. Note that this
@@ -98,18 +99,18 @@ Window::Window()
     // a timer with a small interval is used to get better performance.
     m_updateTimer.setSingleShot(true);
     m_updateTimer.setInterval(5);
-    connect(&m_updateTimer, &QTimer::timeout, this, &Window::updateQuick);
+    connect(&m_updateTimer, &QTimer::timeout, this, &WindowSingleThreaded::render);
 
     // Now hook up the signals. For simplicy we don't differentiate between
     // renderRequested (only render is needed, no sync) and sceneChanged (polish and sync
     // is needed too).
-    connect(m_quickWindow, &QQuickWindow::sceneGraphInitialized, this, &Window::createFbo);
-    connect(m_quickWindow, &QQuickWindow::sceneGraphInvalidated, this, &Window::destroyFbo);
-    connect(m_renderControl, &QQuickRenderControl::renderRequested, this, &Window::requestUpdate);
-    connect(m_renderControl, &QQuickRenderControl::sceneChanged, this, &Window::requestUpdate);
+    connect(m_quickWindow, &QQuickWindow::sceneGraphInitialized, this, &WindowSingleThreaded::createFbo);
+    connect(m_quickWindow, &QQuickWindow::sceneGraphInvalidated, this, &WindowSingleThreaded::destroyFbo);
+    connect(m_renderControl, &QQuickRenderControl::renderRequested, this, &WindowSingleThreaded::requestUpdate);
+    connect(m_renderControl, &QQuickRenderControl::sceneChanged, this, &WindowSingleThreaded::requestUpdate);
 }
 
-Window::~Window()
+WindowSingleThreaded::~WindowSingleThreaded()
 {
     // Make sure the context is current while doing cleanup. Note that we use the
     // offscreen surface here because passing 'this' at this point is not safe: the
@@ -125,17 +126,16 @@ Window::~Window()
     delete m_quickWindow;
     delete m_qmlEngine;
     delete m_fbo;
-    delete m_program;
-    delete m_vbo;
-    delete m_vao;
 
     m_context->doneCurrent();
 
     delete m_offscreenSurface;
     delete m_context;
+
+    delete m_cubeRenderer;
 }
 
-void Window::createFbo()
+void WindowSingleThreaded::createFbo()
 {
     // The scene graph has been initialized. It is now time to create an FBO and associate
     // it with the QQuickWindow.
@@ -143,19 +143,41 @@ void Window::createFbo()
     m_quickWindow->setRenderTarget(m_fbo);
 }
 
-void Window::destroyFbo()
+void WindowSingleThreaded::destroyFbo()
 {
     delete m_fbo;
     m_fbo = 0;
 }
 
-void Window::requestUpdate()
+void WindowSingleThreaded::render()
+{
+    if (!m_context->makeCurrent(m_offscreenSurface))
+        return;
+
+    // Polish, synchronize and render the next frame (into our fbo).  In this example
+    // everything happens on the same thread and therefore all three steps are performed
+    // in succession from here. In a threaded setup the render() call would happen on a
+    // separate thread.
+    m_renderControl->polishItems();
+    m_renderControl->sync();
+    m_renderControl->render();
+
+    m_quickWindow->resetOpenGLState();
+    QOpenGLFramebufferObject::bindDefault();
+
+    m_quickReady = true;
+
+    // Get something onto the screen.
+    m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
+}
+
+void WindowSingleThreaded::requestUpdate()
 {
     if (!m_updateTimer.isActive())
         m_updateTimer.start();
 }
 
-void Window::run()
+void WindowSingleThreaded::run()
 {
     disconnect(m_qmlComponent, SIGNAL(statusChanged(QQmlComponent::Status)), this, SLOT(run()));
 
@@ -190,89 +212,10 @@ void Window::run()
     // Initialize the render control and our OpenGL resources.
     m_context->makeCurrent(m_offscreenSurface);
     m_renderControl->initialize(m_context);
-
-    static const char *vertexShaderSource =
-        "attribute highp vec4 vertex;\n"
-        "attribute lowp vec2 coord;\n"
-        "varying lowp vec2 v_coord;\n"
-        "uniform highp mat4 matrix;\n"
-        "void main() {\n"
-        "   v_coord = coord;\n"
-        "   gl_Position = matrix * vertex;\n"
-        "}\n";
-    static const char *fragmentShaderSource =
-        "varying lowp vec2 v_coord;\n"
-        "uniform sampler2D sampler;\n"
-        "void main() {\n"
-        "   gl_FragColor = vec4(texture2D(sampler, v_coord).rgb, 1.0);\n"
-        "}\n";
-    m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
-    m_program->bindAttributeLocation("vertex", 0);
-    m_program->bindAttributeLocation("coord", 1);
-    m_program->link();
-    m_matrixLoc = m_program->uniformLocation("matrix");
-
-    m_vao = new QOpenGLVertexArrayObject;
-    m_vao->create();
-    m_vao->bind();
-
-    m_vbo = new QOpenGLBuffer;
-    m_vbo->create();
-    m_vbo->bind();
-
-    GLfloat v[] = {
-        -0.5, 0.5, 0.5, 0.5,-0.5,0.5,-0.5,-0.5,0.5,
-        0.5, -0.5, 0.5, -0.5,0.5,0.5,0.5,0.5,0.5,
-        -0.5, -0.5, -0.5, 0.5,-0.5,-0.5,-0.5,0.5,-0.5,
-        0.5, 0.5, -0.5, -0.5,0.5,-0.5,0.5,-0.5,-0.5,
-
-        0.5, -0.5, -0.5, 0.5,-0.5,0.5,0.5,0.5,-0.5,
-        0.5, 0.5, 0.5, 0.5,0.5,-0.5,0.5,-0.5,0.5,
-        -0.5, 0.5, -0.5, -0.5,-0.5,0.5,-0.5,-0.5,-0.5,
-        -0.5, -0.5, 0.5, -0.5,0.5,-0.5,-0.5,0.5,0.5,
-
-        0.5, 0.5,  -0.5, -0.5, 0.5,  0.5,  -0.5,  0.5,  -0.5,
-        -0.5,  0.5,  0.5,  0.5,  0.5,  -0.5, 0.5, 0.5,  0.5,
-        -0.5,  -0.5, -0.5, -0.5, -0.5, 0.5,  0.5, -0.5, -0.5,
-        0.5, -0.5, 0.5,  0.5,  -0.5, -0.5, -0.5,  -0.5, 0.5
-    };
-    GLfloat texCoords[] = {
-        0.0f,0.0f, 1.0f,1.0f, 1.0f,0.0f,
-        1.0f,1.0f, 0.0f,0.0f, 0.0f,1.0f,
-        1.0f,1.0f, 1.0f,0.0f, 0.0f,1.0f,
-        0.0f,0.0f, 0.0f,1.0f, 1.0f,0.0f,
-
-        1.0f,1.0f, 1.0f,0.0f, 0.0f,1.0f,
-        0.0f,0.0f, 0.0f,1.0f, 1.0f,0.0f,
-        0.0f,0.0f, 1.0f,1.0f, 1.0f,0.0f,
-        1.0f,1.0f, 0.0f,0.0f, 0.0f,1.0f,
-
-        0.0f,1.0f, 1.0f,0.0f, 1.0f,1.0f,
-        1.0f,0.0f, 0.0f,1.0f, 0.0f,0.0f,
-        1.0f,0.0f, 1.0f,1.0f, 0.0f,0.0f,
-        0.0f,1.0f, 0.0f,0.0f, 1.0f,1.0f
-    };
-
-    const int vertexCount = 36;
-    m_vbo->allocate(sizeof(GLfloat) * vertexCount * 5);
-    m_vbo->write(0, v, sizeof(GLfloat) * vertexCount * 3);
-    m_vbo->write(sizeof(GLfloat) * vertexCount * 3, texCoords, sizeof(GLfloat) * vertexCount * 2);
-    m_vbo->release();
-
-    if (m_vao->isCreated())
-        setupVertexAttribs();
-
-    // Must unbind before changing the current context. Hence the absence of
-    // QOpenGLVertexArrayObject::Binder here.
-    m_vao->release();
-
-    m_context->doneCurrent();
     m_quickInitialized = true;
 }
 
-void Window::updateSizes()
+void WindowSingleThreaded::updateSizes()
 {
     // Behave like SizeRootObjectToView.
     m_rootItem->setWidth(width());
@@ -280,40 +223,28 @@ void Window::updateSizes()
 
     m_quickWindow->setGeometry(0, 0, width(), height());
 
-    m_proj.setToIdentity();
-    m_proj.perspective(45, width() / float(height()), 0.01f, 100.0f);
+    m_cubeRenderer->resize(width(), height());
 }
 
-void Window::setupVertexAttribs()
-{
-    m_vbo->bind();
-    m_program->enableAttributeArray(0);
-    m_program->enableAttributeArray(1);
-    m_context->functions()->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    m_context->functions()->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0,
-                                                  (const void *)(36 * 3 * sizeof(GLfloat)));
-    m_vbo->release();
-}
-
-void Window::startQuick(const QString &filename)
+void WindowSingleThreaded::startQuick(const QString &filename)
 {
     m_qmlComponent = new QQmlComponent(m_qmlEngine, QUrl(filename));
     if (m_qmlComponent->isLoading())
-        connect(m_qmlComponent, &QQmlComponent::statusChanged, this, &Window::run);
+        connect(m_qmlComponent, &QQmlComponent::statusChanged, this, &WindowSingleThreaded::run);
     else
         run();
 }
 
-void Window::exposeEvent(QExposeEvent *)
+void WindowSingleThreaded::exposeEvent(QExposeEvent *)
 {
     if (isExposed()) {
-        render();
+        m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
         if (!m_quickInitialized)
             startQuick(QStringLiteral("qrc:/rendercontrol/demo.qml"));
     }
 }
 
-void Window::resizeEvent(QResizeEvent *)
+void WindowSingleThreaded::resizeEvent(QResizeEvent *)
 {
     // If this is a resize after the scene is up and running, recreate the fbo and the
     // Quick item and scene.
@@ -325,71 +256,7 @@ void Window::resizeEvent(QResizeEvent *)
     }
 }
 
-void Window::updateQuick()
-{
-    if (!m_context->makeCurrent(m_offscreenSurface))
-        return;
-
-    // Polish, synchronize and render the next frame (into our fbo).  In this example
-    // everything happens on the same thread and therefore all three steps are performed
-    // in succession from here. In a threaded setup the render() call would happen on a
-    // separate thread.
-    m_renderControl->polishItems();
-    m_renderControl->sync();
-    m_renderControl->render();
-
-    m_quickWindow->resetOpenGLState();
-    QOpenGLFramebufferObject::bindDefault();
-
-    m_quickReady = true;
-
-    // Get something onto the screen.
-    render();
-}
-
-void Window::render()
-{
-    if (!m_context->makeCurrent(this))
-        return;
-
-    QOpenGLFunctions *f = m_context->functions();
-    f->glClearColor(0.0f, 0.1f, 0.25f, 1.0f);
-    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    if (m_quickReady) {
-        f->glFrontFace(GL_CW); // because our cube's vertex data is such
-        f->glEnable(GL_CULL_FACE);
-        f->glEnable(GL_DEPTH_TEST);
-
-        f->glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-
-        m_program->bind();
-        QOpenGLVertexArrayObject::Binder vaoBinder(m_vao);
-        // If VAOs are not supported, set the vertex attributes every time.
-        if (!m_vao->isCreated())
-            setupVertexAttribs();
-
-        static GLfloat angle = 0;
-        QMatrix4x4 m;
-        m.translate(0, 0, -2);
-        m.rotate(90, 0, 0, 1);
-        m.rotate(angle, 0.5, 1, 0);
-        angle += 0.5f;
-
-        m_program->setUniformValue(m_matrixLoc, m_proj * m);
-
-        // Draw the cube.
-        f->glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        m_program->release();
-        f->glDisable(GL_DEPTH_TEST);
-        f->glDisable(GL_CULL_FACE);
-    }
-
-    m_context->swapBuffers(this);
-}
-
-void Window::mousePressEvent(QMouseEvent *e)
+void WindowSingleThreaded::mousePressEvent(QMouseEvent *e)
 {
     // Use the constructor taking localPos and screenPos. That puts localPos into the
     // event's localPos and windowPos, and screenPos into the event's screenPos. This way
@@ -399,7 +266,7 @@ void Window::mousePressEvent(QMouseEvent *e)
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
 }
 
-void Window::mouseReleaseEvent(QMouseEvent *e)
+void WindowSingleThreaded::mouseReleaseEvent(QMouseEvent *e)
 {
     QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);

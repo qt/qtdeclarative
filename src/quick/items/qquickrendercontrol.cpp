@@ -36,7 +36,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
-#include <QtCore/private/qabstractanimation_p.h>
+#include <QtQuick/private/qquickanimatorcontroller_p.h>
 
 #include <QtGui/QOpenGLContext>
 #include <QtGui/private/qguiapplication_p.h>
@@ -167,6 +167,20 @@ void QQuickRenderControlPrivate::windowDestroyed()
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
+}
+
+/*!
+  Prepares rendering the Qt Quick scene outside the gui thread.
+
+  \a targetThread specifies the thread on which synchronization and
+  rendering will happen. There is no need to call this function in a
+  single threaded scenario.
+ */
+void QQuickRenderControl::prepareThread(QThread *targetThread)
+{
+    Q_D(QQuickRenderControl);
+    d->rc->moveToThread(targetThread);
+    QQuickWindowPrivate::get(d->window)->animationController->moveToThread(targetThread);
 }
 
 /*!

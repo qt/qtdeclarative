@@ -38,15 +38,15 @@
 **
 ****************************************************************************/
 
+#ifndef WINDOW_SINGLETHREADED_H
+#define WINDOW_SINGLETHREADED_H
+
 #include <QWindow>
 #include <QMatrix4x4>
 #include <QTimer>
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLContext)
 QT_FORWARD_DECLARE_CLASS(QOpenGLFramebufferObject)
-QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
-QT_FORWARD_DECLARE_CLASS(QOpenGLBuffer)
-QT_FORWARD_DECLARE_CLASS(QOpenGLVertexArrayObject)
 QT_FORWARD_DECLARE_CLASS(QOffscreenSurface)
 QT_FORWARD_DECLARE_CLASS(QQuickRenderControl)
 QT_FORWARD_DECLARE_CLASS(QQuickWindow)
@@ -54,13 +54,15 @@ QT_FORWARD_DECLARE_CLASS(QQmlEngine)
 QT_FORWARD_DECLARE_CLASS(QQmlComponent)
 QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
-class Window : public QWindow
+class CubeRenderer;
+
+class WindowSingleThreaded : public QWindow
 {
     Q_OBJECT
 
 public:
-    Window();
-    ~Window();
+    WindowSingleThreaded();
+    ~WindowSingleThreaded();
 
 protected:
     void exposeEvent(QExposeEvent *e) Q_DECL_OVERRIDE;
@@ -69,16 +71,15 @@ protected:
     void mouseReleaseEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
 
 private slots:
-    void render();
-    void updateQuick();
     void run();
+
     void createFbo();
     void destroyFbo();
+    void render();
     void requestUpdate();
 
 private:
     void startQuick(const QString &filename);
-    void setupVertexAttribs();
     void updateSizes();
 
     QOpenGLContext *m_context;
@@ -89,12 +90,10 @@ private:
     QQmlComponent *m_qmlComponent;
     QQuickItem *m_rootItem;
     QOpenGLFramebufferObject *m_fbo;
-    QOpenGLShaderProgram *m_program;
-    QOpenGLBuffer *m_vbo;
-    QOpenGLVertexArrayObject *m_vao;
     bool m_quickInitialized;
     bool m_quickReady;
-    int m_matrixLoc;
-    QMatrix4x4 m_proj;
     QTimer m_updateTimer;
+    CubeRenderer *m_cubeRenderer;
 };
+
+#endif

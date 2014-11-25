@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
 class QQuickWindow;
 class QOpenGLContext;
 class QQuickRenderControlPrivate;
+class QThread;
 
 class Q_QUICK_EXPORT QQuickRenderControl : public QObject
 {
@@ -51,6 +52,7 @@ public:
     QQuickRenderControl(QObject *parent = 0);
     ~QQuickRenderControl();
 
+    void prepareThread(QThread *targetThread);
     void initialize(QOpenGLContext *gl);
     void invalidate();
 

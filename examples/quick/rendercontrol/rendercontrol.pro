@@ -2,8 +2,14 @@ TEMPLATE = app
 
 QT += quick qml
 
-SOURCES += main.cpp window.cpp
-HEADERS += window.h
+SOURCES += main.cpp \
+           window_singlethreaded.cpp \
+           window_multithreaded.cpp \
+           cuberenderer.cpp
+
+HEADERS += window_singlethreaded.h \
+           window_multithreaded.h \
+           cuberenderer.h
 
 RESOURCES += rendercontrol.qrc
 
