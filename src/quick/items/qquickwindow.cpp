@@ -3945,7 +3945,7 @@ void QQuickWindow::runJobsAfterSwap()
  *
  * \sa QWindow::devicePixelRatio()
  */
-int QQuickWindow::effectiveDevicePixelRatio() const
+qreal QQuickWindow::effectiveDevicePixelRatio() const
 {
     QWindow *w = QQuickRenderControl::renderWindowFor(const_cast<QQuickWindow *>(this));
     return w ? w->devicePixelRatio() : devicePixelRatio();
