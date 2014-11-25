@@ -28,8 +28,13 @@
 
 namespace SoftwareContext {
 
-void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMargins,
-                       const QPixmap &pixmap, const QRect &sourceRect,const QMargins &sourceMargins,
+static inline QMargins normalizedMargins(const QMargins &m)
+{
+    return QMargins(qMax(m.left(), 0), qMax(m.top(), 0), qMax(m.right(), 0), qMax(m.bottom(), 0));
+}
+
+void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargins &targetMarginsIn,
+                       const QPixmap &pixmap, const QRect &sourceRect, const QMargins &sourceMarginsIn,
                        const QTileRules &rules, QDrawBorderPixmap::DrawingHints hints)
 {
     QPainter::PixmapFragment d;
@@ -38,6 +43,9 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
 
     QPixmapFragmentsArray opaqueData;
     QPixmapFragmentsArray translucentData;
+
+    QMargins sourceMargins = normalizedMargins(sourceMarginsIn);
+    QMargins targetMargins = normalizedMargins(targetMarginsIn);
 
     // source center
     const int sourceCenterTop = sourceRect.top() + sourceMargins.top();
