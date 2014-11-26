@@ -2766,7 +2766,10 @@ void Renderer::visualizeBatch(Batch *b)
             g = gn->geometry();
             shader->setUniformValue(shader->matrix, matrix * *gn->matrix());
             glVertexAttribPointer(a.position, a.tupleSize, a.type, false, g->sizeOfVertex(), (void *) (qintptr) offset);
-            glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
+            if (g->indexCount())
+                glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
+            else
+                glDrawArrays(g->drawingMode(), 0, g->vertexCount());
             offset += g->sizeOfVertex() * g->vertexCount();
             e = e->nextInBatch;
         }
