@@ -125,7 +125,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     // exceptions & scopes
     static void throwException(ExecutionEngine *engine, const ValueRef value);
     static ReturnedValue unwindException(ExecutionEngine *engine);
-    static void pushWithScope(const ValueRef o, NoThrowEngine *engine);
+    static void pushWithScope(const ValueRef o, ExecutionEngine *engine);
     static void pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex);
     static void popScope(ExecutionEngine *engine);
 

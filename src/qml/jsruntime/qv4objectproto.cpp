@@ -552,7 +552,7 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
     Scoped<Object> p(scope, ctx->d()->callData->args[0]);
     bool ok = false;
     if (!!p) {
-        if (o->prototype() == p.getPointer()) {
+        if (o->prototype() == p->d()) {
             ok = true;
         } else if (o->isExtensible()) {
             ok = o->setPrototype(p.getPointer());

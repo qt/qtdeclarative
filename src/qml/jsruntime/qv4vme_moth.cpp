@@ -421,8 +421,9 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        Runtime::pushWithScope(VALUEPTR(instr.arg), static_cast<QV4::NoThrowEngine*>(engine));
+        Runtime::pushWithScope(VALUEPTR(instr.arg), engine);
         context = engine->currentContext();
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)

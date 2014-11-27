@@ -142,7 +142,7 @@ Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
     lookups = parent->lookups;
     compilationUnit = parent->compilationUnit;
 
-    withObject = with->d();
+    withObject = with ? with->d() : 0;
 }
 
 Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue)
@@ -269,7 +269,8 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
         c->function->mark(engine);
     } else if (ctx->type == Heap::ExecutionContext::Type_WithContext) {
         WithContext::Data *w = static_cast<WithContext::Data *>(ctx);
-        w->withObject->mark(engine);
+        if (w->withObject)
+            w->withObject->mark(engine);
     } else if (ctx->type == Heap::ExecutionContext::Type_CatchContext) {
         CatchContext::Data *c = static_cast<CatchContext::Data *>(ctx);
         c->exceptionVarName->mark(engine);

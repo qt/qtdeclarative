@@ -38,8 +38,9 @@
 
 using namespace QV4;
 
-ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint flags)
-    : object(scratch1)
+ObjectIterator::ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags)
+    : engine(e)
+    , object(scratch1)
     , current(scratch2)
     , arrayNode(0)
     , arrayIndex(0)
@@ -50,7 +51,8 @@ ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint
 }
 
 ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
-    : object(scope.alloc(1))
+    : engine(scope.engine)
+    , object(scope.alloc(1))
     , current(scope.alloc(1))
     , arrayNode(0)
     , arrayIndex(0)
@@ -58,19 +60,6 @@ ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
     , flags(flags)
 {
     init(o);
-}
-
-ObjectIterator::ObjectIterator(Value *scratch1, Value *scratch2, uint flags)
-    : object(scratch1)
-    , current(scratch2)
-    , arrayNode(0)
-    , arrayIndex(0)
-    , memberIndex(0)
-    , flags(flags)
-{
-    object->m = 0;
-    current->m = 0;
-    // Caller needs to call init!
 }
 
 void ObjectIterator::init(Object *o)
@@ -98,6 +87,8 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
         *attrs = PropertyAttributes();
         return;
     }
+    Scope scope(engine);
+    ScopedObject o(scope);
 
     while (1) {
         if (!current->asObject())
@@ -109,7 +100,7 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
                 break;
             // check the property is not already defined earlier in the proto chain
             if (current->asObject() != object->asObject()) {
-                Object *o = object->asObject();
+                o = object->asObject();
                 bool shadowed = false;
                 while (o != current->asObject()) {
                     if ((!!name && o->hasOwnProperty(name)) ||
@@ -125,10 +116,9 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
             return;
         }
 
-        if (flags & WithProtoChain) {
-            Object *proto = current->objectValue()->prototype();
-            current->m = proto ? &proto->data : 0;
-        } else
+        if (flags & WithProtoChain)
+            current->m = current->objectValue()->prototype();
+        else
             current->m = (Heap::Base *)0;
 
         arrayIndex = 0;

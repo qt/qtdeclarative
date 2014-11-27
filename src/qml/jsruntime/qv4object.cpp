@@ -261,16 +261,16 @@ Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *at
         return __getPropertyDescriptor__(idx, attrs);
 
 
-    const Object *o = this;
+    const Heap::Object *o = d();
     while (o) {
-        uint idx = o->internalClass()->find(name);
+        uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX) {
             if (attrs)
-                *attrs = o->internalClass()->propertyData[idx];
+                *attrs = o->internalClass->propertyData[idx];
             return const_cast<Property *>(o->propertyAt(idx));
         }
 
-        o = o->prototype();
+        o = o->prototype;
     }
     if (attrs)
         *attrs = Attr_Invalid;
@@ -279,23 +279,23 @@ Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *at
 
 Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attrs) const
 {
-    const Object *o = this;
+    const Heap::Object *o = d();
     while (o) {
-        Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
+        Property *p = o->arrayData ? o->arrayData->getProperty(index) : 0;
         if (p) {
             if (attrs)
-                *attrs = o->arrayData()->attributes(index);
+                *attrs = o->arrayData->attributes(index);
             return p;
         }
-        if (o->isStringObject()) {
-            Property *p = static_cast<const StringObject *>(o)->getIndex(index);
+        if (o->internalClass->vtable->type == Type_StringObject) {
+            Property *p = static_cast<const Heap::StringObject *>(o)->getIndex(index);
             if (p) {
                 if (attrs)
                     *attrs = (Attr_NotWritable|Attr_NotConfigurable);
                 return p;
             }
         }
-        o = o->prototype();
+        o = o->prototype;
     }
     if (attrs)
         *attrs = Attr_Invalid;
@@ -308,7 +308,8 @@ bool Object::hasProperty(String *name) const
     if (idx != UINT_MAX)
         return hasProperty(idx);
 
-    const Object *o = this;
+    Scope scope(engine());
+    ScopedObject o(scope, d());
     while (o) {
         if (o->hasOwnProperty(name))
             return true;
@@ -321,7 +322,8 @@ bool Object::hasProperty(String *name) const
 
 bool Object::hasProperty(uint index) const
 {
-    const Object *o = this;
+    Scope scope(engine());
+    ScopedObject o(scope, d());
     while (o) {
         if (o->hasOwnProperty(index))
                 return true;
@@ -589,7 +591,8 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
 
     name->makeIdentifier();
 
-    Object *o = this;
+    Scope scope(engine());
+    ScopedObject o(scope, this);
     while (o) {
         uint idx = o->internalClass()->find(name);
         if (idx < UINT_MAX) {
@@ -610,7 +613,8 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 {
     Property *pd = 0;
     PropertyAttributes attrs;
-    Object *o = this;
+    Scope scope(engine());
+    ScopedObject o(scope, this);
     while (o) {
         Property *p = o->arrayData() ? o->arrayData()->getProperty(index) : 0;
         if (p) {
@@ -619,7 +623,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
             break;
         }
         if (o->isStringObject()) {
-            pd = static_cast<StringObject *>(o)->getIndex(index);
+            pd = static_cast<StringObject *>(o.getPointer())->getIndex(index);
             if (pd) {
                 attrs = (Attr_NotWritable|Attr_NotConfigurable);
                 break;
@@ -687,7 +691,8 @@ void Object::internalPut(String *name, const ValueRef value)
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype()->__getPropertyDescriptor__(name, &attrs))) {
+        Scope scope(engine());
+        if ((pd = ScopedObject(scope, prototype())->__getPropertyDescriptor__(name, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;
@@ -759,7 +764,8 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
             goto reject;
     } else {
         // clause 4
-        if ((pd = prototype()->__getPropertyDescriptor__(index, &attrs))) {
+        Scope scope(engine());
+        if ((pd = ScopedObject(scope, prototype())->__getPropertyDescriptor__(index, &attrs))) {
             if (attrs.isAccessor()) {
                 if (!pd->setter())
                     goto reject;

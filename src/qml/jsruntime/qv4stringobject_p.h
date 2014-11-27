@@ -47,6 +47,8 @@ struct StringObject : Object {
     StringObject(InternalClass *ic, QV4::Object *prototype);
     StringObject(ExecutionEngine *engine, const ValueRef value);
     Value value;
+
+    Property *getIndex(uint index) const;
     // ### get rid of tmpProperty
     mutable Property tmpProperty;
 };
@@ -61,7 +63,9 @@ struct StringObject: Object {
     V4_OBJECT2(StringObject, Object)
     Q_MANAGED_TYPE(StringObject)
 
-    Property *getIndex(uint index) const;
+    Property *getIndex(uint index) const {
+        return d()->getIndex(index);
+    }
 
     static bool deleteIndexedProperty(Managed *m, uint index);
 

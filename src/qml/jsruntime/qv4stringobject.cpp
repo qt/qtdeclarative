@@ -95,13 +95,13 @@ Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     s->defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-Property *StringObject::getIndex(uint index) const
+Property *Heap::StringObject::getIndex(uint index) const
 {
-    QString str = d()->value.stringValue()->toQString();
+    QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    d()->tmpProperty.value = Encode(internalClass()->engine->newString(str.mid(index, 1)));
-    return &d()->tmpProperty;
+    tmpProperty.value = Encode(internalClass->engine->newString(str.mid(index, 1)));
+    return &tmpProperty;
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)

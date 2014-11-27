@@ -39,67 +39,68 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 
-ReturnedValue Lookup::lookup(ValueRef thisObject, Object *obj, PropertyAttributes *attrs)
+ReturnedValue Lookup::lookup(ValueRef thisObject, Object *o, PropertyAttributes *attrs)
 {
-    ExecutionEngine *engine = obj->engine();
+    ExecutionEngine *engine = o->engine();
     Identifier *name = engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
+    Heap::Object *obj = o->d();
     while (i < Size && obj) {
-        classList[i] = obj->internalClass();
+        classList[i] = obj->internalClass;
 
-        index = obj->internalClass()->find(name);
+        index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             level = i;
-            *attrs = obj->internalClass()->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->memberData()->data[index].asReturnedValue() : obj->getValue(thisObject, obj->propertyAt(index), *attrs);
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData->data[index].asReturnedValue() : Object::getValue(thisObject, obj->propertyAt(index), *attrs);
         }
 
-        obj = obj->prototype();
+        obj = obj->prototype;
         ++i;
     }
     level = Size;
 
     while (obj) {
-        index = obj->internalClass()->find(name);
+        index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
-            *attrs = obj->internalClass()->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->memberData()->data[index].asReturnedValue() : obj->getValue(thisObject, obj->propertyAt(index), *attrs);
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData->data[index].asReturnedValue() : Object::getValue(thisObject, obj->propertyAt(index), *attrs);
         }
 
-        obj = obj->prototype();
+        obj = obj->prototype;
     }
     return Primitive::emptyValue().asReturnedValue();
 }
 
-ReturnedValue Lookup::lookup(Object *obj, PropertyAttributes *attrs)
+ReturnedValue Lookup::lookup(Object *thisObject, PropertyAttributes *attrs)
 {
-    Object *thisObject = obj;
-    ExecutionEngine *engine = obj->engine();
+    Heap::Object *obj = thisObject->d();
+    ExecutionEngine *engine = thisObject->engine();
     Identifier *name = engine->currentContext()->d()->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
     while (i < Size && obj) {
-        classList[i] = obj->internalClass();
+        classList[i] = obj->internalClass;
 
-        index = obj->internalClass()->find(name);
+        index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             level = i;
-            *attrs = obj->internalClass()->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->memberData()->data[index].asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData->data[index].asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
         }
 
-        obj = obj->prototype();
+        obj = obj->prototype;
         ++i;
     }
     level = Size;
 
     while (obj) {
-        index = obj->internalClass()->find(name);
+        index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
-            *attrs = obj->internalClass()->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->memberData()->data[index].asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
+            *attrs = obj->internalClass->propertyData.at(index);
+            return !attrs->isAccessor() ? obj->memberData->data[index].asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
         }
 
-        obj = obj->prototype();
+        obj = obj->prototype;
     }
     return Primitive::emptyValue().asReturnedValue();
 }
@@ -350,8 +351,8 @@ ReturnedValue Lookup::getter1(Lookup *l, ExecutionEngine *engine, const ValueRef
         // the internal class won't match
         Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass())
-            return o->prototype()->memberData()->data[l->index].asReturnedValue();
+            l->classList[1] == o->prototype()->internalClass)
+            return o->prototype()->memberData->data[l->index].asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
 }
@@ -363,11 +364,11 @@ ReturnedValue Lookup::getter2(Lookup *l, ExecutionEngine *engine, const ValueRef
         // the internal class won't match
         Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass()) {
-            o = o->prototype();
-            if (l->classList[1] == o->internalClass()) {
-                o = o->prototype();
-                if (l->classList[2] == o->internalClass())
-                    return o->memberData()->data[l->index].asReturnedValue();
+            Heap::Object *p = o->prototype();
+            if (l->classList[1] == p->internalClass) {
+                p = p->prototype;
+                if (l->classList[2] == p->internalClass)
+                    return p->memberData->data[l->index].asReturnedValue();
             }
         }
     }
@@ -399,8 +400,8 @@ ReturnedValue Lookup::getter0getter1(Lookup *l, ExecutionEngine *engine, const V
         if (l->classList[0] == o->internalClass())
             return o->memberData()->data[l->index].asReturnedValue();
         if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass())
-            return o->prototype()->memberData()->data[l->index2].asReturnedValue();
+            l->classList[3] == o->prototype()->internalClass)
+            return o->prototype()->memberData->data[l->index2].asReturnedValue();
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -413,11 +414,11 @@ ReturnedValue Lookup::getter1getter1(Lookup *l, ExecutionEngine *engine, const V
         // the internal class won't match
         Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass())
-            return o->prototype()->memberData()->data[l->index].asReturnedValue();
+            l->classList[1] == o->prototype()->internalClass)
+            return o->prototype()->memberData->data[l->index].asReturnedValue();
         if (l->classList[2] == o->internalClass() &&
-            l->classList[3] == o->prototype()->internalClass())
-            return o->prototype()->memberData()->data[l->index2].asReturnedValue();
+            l->classList[3] == o->prototype()->internalClass)
+            return o->prototype()->memberData->data[l->index2].asReturnedValue();
         return getterFallback(l, engine, object);
     }
     l->getter = getterFallback;
@@ -451,11 +452,11 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
         // the internal class won't match
-        Object *o = object->objectValue();
-        if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass()) {
-            Scope scope(o->engine());
-            FunctionObject *getter = o->prototype()->propertyAt(l->index)->getter();
+        Heap::Object *o = object->objectValue()->d();
+        if (l->classList[0] == o->internalClass &&
+            l->classList[1] == o->prototype->internalClass) {
+            Scope scope(o->internalClass->engine);
+            FunctionObject *getter = o->prototype->propertyAt(l->index)->getter();
             if (!getter)
                 return Encode::undefined();
 
@@ -473,13 +474,13 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const 
     if (object->isManaged()) {
         // we can safely cast to a QV4::Object here. If object is actually a string,
         // the internal class won't match
-        Object *o = object->objectValue();
-        if (l->classList[0] == o->internalClass()) {
-            o = o->prototype();
-            if (l->classList[1] == o->internalClass()) {
-                o = o->prototype();
-                if (l->classList[2] == o->internalClass()) {
-                    Scope scope(o->engine());
+        Heap::Object *o = object->objectValue()->d();
+        if (l->classList[0] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[1] == o->internalClass) {
+                o = o->prototype;
+                if (l->classList[2] == o->internalClass) {
+                    Scope scope(o->internalClass->engine);
                     FunctionObject *getter = o->propertyAt(l->index)->getter();
                     if (!getter)
                         return Encode::undefined();
@@ -511,8 +512,8 @@ ReturnedValue Lookup::primitiveGetter1(Lookup *l, ExecutionEngine *engine, const
     if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass())
-            return o->prototype()->memberData()->data[l->index].asReturnedValue();
+            l->classList[1] == o->prototype()->internalClass)
+            return o->prototype()->memberData->data[l->index].asReturnedValue();
     }
     l->getter = getterGeneric;
     return getterGeneric(l, engine, object);
@@ -542,7 +543,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engin
     if (object->type() == l->type) {
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass() &&
-            l->classList[1] == o->prototype()->internalClass()) {
+            l->classList[1] == o->prototype()->internalClass) {
             Scope scope(o->engine());
             FunctionObject *getter = o->prototype()->propertyAt(l->index)->getter();
             if (!getter)
@@ -619,8 +620,8 @@ ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
 {
     Object *o = engine->globalObject();
     if (l->classList[0] == o->internalClass() &&
-        l->classList[1] == o->prototype()->internalClass())
-        return o->prototype()->memberData()->data[l->index].asReturnedValue();
+        l->classList[1] == o->prototype()->internalClass)
+        return o->prototype()->memberData->data[l->index].asReturnedValue();
 
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -628,13 +629,13 @@ ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
-    if (l->classList[0] == o->internalClass()) {
-        o = o->prototype();
-        if (l->classList[1] == o->internalClass()) {
-            o = o->prototype();
-            if (l->classList[2] == o->internalClass()) {
-                return o->prototype()->memberData()->data[l->index].asReturnedValue();
+    Heap::Object *o = engine->globalObject()->d();
+    if (l->classList[0] == o->internalClass) {
+        o = o->prototype;
+        if (l->classList[1] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[2] == o->internalClass) {
+                return o->prototype->memberData->data[l->index].asReturnedValue();
             }
         }
     }
@@ -663,7 +664,7 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 {
     Object *o = engine->globalObject();
     if (l->classList[0] == o->internalClass() &&
-        l->classList[1] == o->prototype()->internalClass()) {
+        l->classList[1] == o->prototype()->internalClass) {
         Scope scope(o->engine());
         FunctionObject *getter = o->prototype()->propertyAt(l->index)->getter();
         if (!getter)
@@ -679,13 +680,13 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
-    if (l->classList[0] == o->internalClass()) {
-        o = o->prototype();
-        if (l->classList[1] == o->internalClass()) {
-            o = o->prototype();
-            if (l->classList[2] == o->internalClass()) {
-                Scope scope(o->engine());
+    Heap::Object *o = engine->globalObject()->d();
+    if (l->classList[0] == o->internalClass) {
+        o = o->prototype;
+        if (l->classList[1] == o->internalClass) {
+            o = o->prototype;
+            if (l->classList[2] == o->internalClass) {
+                Scope scope(o->internalClass->engine);
                 FunctionObject *getter = o->propertyAt(l->index)->getter();
                 if (!getter)
                     return Encode::undefined();
@@ -776,8 +777,8 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, const ValueRef ob
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
-        Object *p = o->prototype();
-        if (p && p->internalClass() == l->classList[1]) {
+        Heap::Object *p = o->prototype();
+        if (p && p->internalClass == l->classList[1]) {
             if (!o->memberData() || l->index >= o->memberData()->size)
                 o->ensureMemberIndex(l->index);
             o->memberData()->data[l->index] = *value;
@@ -794,10 +795,10 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, const ValueRef ob
 {
     Object *o = static_cast<Object *>(object->asManaged());
     if (o && o->internalClass() == l->classList[0]) {
-        Object *p = o->prototype();
-        if (p && p->internalClass() == l->classList[1]) {
-            p = p->prototype();
-            if (p && p->internalClass() == l->classList[2]) {
+        Heap::Object *p = o->prototype();
+        if (p && p->internalClass == l->classList[1]) {
+            p = p->prototype;
+            if (p && p->internalClass == l->classList[2]) {
                 if (!o->memberData() || l->index >= o->memberData()->size)
                     o->ensureMemberIndex(l->index);
                 o->memberData()->data[l->index] = *value;

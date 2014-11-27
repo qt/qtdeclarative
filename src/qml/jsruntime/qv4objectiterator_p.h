@@ -48,6 +48,7 @@ struct Q_QML_EXPORT ObjectIterator
         WithProtoChain = 0x2,
     };
 
+    ExecutionEngine *engine;
     Value *object;
     Value *current;
     SparseArrayNode *arrayNode;
@@ -55,16 +56,13 @@ struct Q_QML_EXPORT ObjectIterator
     uint memberIndex;
     uint flags;
 
-    ObjectIterator(Value *scratch1, Value *scratch2, Object *o, uint flags);
+    ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags);
     ObjectIterator(Scope &scope, Object *o, uint flags);
     void init(Object *o);
     void next(String *&name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
     ReturnedValue nextPropertyName(ValueRef value);
     ReturnedValue nextPropertyNameAsString(ValueRef value);
     ReturnedValue nextPropertyNameAsString();
-private:
-    friend struct ForEachIteratorObject;
-    ObjectIterator(Value *scratch1, Value *scratch2, uint flags); // Constructor that requires calling init()
 };
 
 namespace Heap {
@@ -89,7 +87,7 @@ protected:
 inline
 Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::ExecutionEngine *engine, QV4::Object *o)
     : Heap::Object(engine)
-    , it(workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
+    , it(engine, workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
 {
     setVTable(QV4::ForEachIteratorObject::staticVTable());
 }

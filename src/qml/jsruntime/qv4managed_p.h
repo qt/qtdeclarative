@@ -68,8 +68,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ManagedVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
-        const QV4::Heap::DataClass *d() const { return &static_cast<const QV4::Heap::DataClass &>(Managed::data); } \
-        QV4::Heap::DataClass *d() { return &static_cast<QV4::Heap::DataClass &>(Managed::data); }
+        QV4::Heap::DataClass *d() const { return &static_cast<QV4::Heap::DataClass &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
 
 #define V4_OBJECT(superClass) \
     public: \
@@ -78,8 +77,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        const Data *d() const { return &static_cast<const Data &>(Managed::data); } \
-        Data *d() { return &static_cast<Data &>(Managed::data); }
+        Data *d() const { return &static_cast<Data &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
 
 #define V4_OBJECT2(DataClass, superClass) \
     public: \
@@ -89,8 +87,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        const QV4::Heap::DataClass *d() const { return &static_cast<const QV4::Heap::DataClass &>(Managed::data); } \
-        QV4::Heap::DataClass *d() { return &static_cast<QV4::Heap::DataClass &>(Managed::data); }
+        QV4::Heap::DataClass *d() const { return &static_cast<QV4::Heap::DataClass &>(const_cast<QV4::Heap::Base &>(Managed::data)); }
 
 #define Q_MANAGED_TYPE(type) \
     public: \

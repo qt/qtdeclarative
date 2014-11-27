@@ -303,9 +303,6 @@ ReturnedValue Runtime::deleteName(ExecutionEngine *engine, int nameIndex)
 
 QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const ValueRef left, const ValueRef right)
 {
-    // As nothing in this method can call into the memory manager, avoid using a Scope
-    // for performance reasons
-
     Scope scope(engine);
     ScopedFunctionObject f(scope, right->asFunctionObject());
     if (!f)
@@ -314,11 +311,11 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const ValueRef l
     if (f->subtype() == Heap::FunctionObject::BoundFunction)
         f = static_cast<BoundFunction *>(f.getPointer())->target();
 
-    Object *v = left->asObject();
+    ScopedObject v(scope, left->asObject());
     if (!v)
         return Encode(false);
 
-    Object *o = QV4::Value::fromReturnedValue(f->protoProperty()).asObject();
+    ScopedObject o(scope, QV4::Value::fromReturnedValue(f->protoProperty()).asObject());
     if (!o)
         return engine->throwTypeError();
 
@@ -327,7 +324,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const ValueRef l
 
         if (!v)
             break;
-        else if (o == v)
+        else if (o->d() == v->d())
             return Encode(true);
     }
 
@@ -1136,7 +1133,7 @@ QV4::ReturnedValue Runtime::typeofElement(ExecutionEngine *engine, const ValueRe
     return Runtime::typeofValue(engine, prop);
 }
 
-void Runtime::pushWithScope(const ValueRef o, NoThrowEngine *engine)
+void Runtime::pushWithScope(const ValueRef o, ExecutionEngine *engine)
 {
     Scope scope(engine);
     ScopedObject obj(scope, o->toObject(engine));

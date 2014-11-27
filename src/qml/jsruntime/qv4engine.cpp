@@ -331,7 +331,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     variantPrototype = memoryManager->alloc<VariantPrototype>(InternalClass::create(this, VariantPrototype::staticVTable()), objectPrototype.asObject());
     variantClass = InternalClass::create(this, VariantObject::staticVTable());
-    Q_ASSERT(variantPrototype.asObject()->prototype() == objectPrototype.asObject());
+    Q_ASSERT(variantPrototype.asObject()->prototype() == objectPrototype.asObject()->d());
 
     sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.asObject()));
 
