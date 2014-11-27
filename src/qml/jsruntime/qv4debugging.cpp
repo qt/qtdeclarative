@@ -65,7 +65,7 @@ public:
     {
         Scope scope(engine);
 
-        ExecutionContextSaver saver(engine->currentContext());
+        ExecutionContextSaver saver(scope, engine->currentContext());
 
         Value *savedContexts = scope.alloc(frameNr);
         for (int i = 0; i < frameNr; ++i) {
@@ -73,7 +73,7 @@ public:
             engine->popContext();
         }
 
-        ExecutionContext *ctx = engine->currentContext();
+        ScopedContext ctx(scope, engine->currentContext());
         QV4::Script script(ctx, this->script);
         script.strictMode = ctx->d()->strictMode;
         // In order for property lookups in QML to work, we need to disable fast v4 lookups. That

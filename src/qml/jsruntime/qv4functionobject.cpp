@@ -401,7 +401,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = obj.asReturnedValue();
     Scoped<CallContext> ctx(scope, context->newCallContext(f.getPointer(), callData));
 
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
@@ -428,7 +428,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
@@ -483,7 +483,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     callData->thisObject = v4->newObject(ic, proto);
 
     ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
@@ -520,7 +520,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 
     Scope scope(v4);
     ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
@@ -577,8 +577,9 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
+    Scope scope(v4);
     ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
@@ -596,8 +597,9 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
+    Scope scope(v4);
     ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(context);
+    ExecutionContextSaver ctxSaver(scope, context);
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?

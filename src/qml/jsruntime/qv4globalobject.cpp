@@ -353,11 +353,12 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
+    Scope scope(v4);
+
     ExecutionContext *parentContext = v4->currentContext();
-    ExecutionContextSaver ctxSaver(parentContext);
+    ExecutionContextSaver ctxSaver(scope, parentContext);
 
     ExecutionContext *ctx = parentContext;
-    Scope scope(ctx);
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root

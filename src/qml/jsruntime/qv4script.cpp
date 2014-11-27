@@ -296,7 +296,7 @@ ReturnedValue Script::run()
     if (qml.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ExecutionContextSaver ctxSaver(scope);
+        ExecutionContextSaver ctxSaver(valueScope, scope);
         ContextStateSaver stateSaver(scope);
         scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;

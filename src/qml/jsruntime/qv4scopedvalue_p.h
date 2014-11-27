@@ -498,6 +498,27 @@ struct ScopedProperty
     Property *property;
 };
 
+struct ExecutionContextSaver
+{
+    ExecutionEngine *engine;
+    Value *savedContext;
+
+    ExecutionContextSaver(Scope &scope, ExecutionContext *context)
+        : engine(context->d()->engine)
+        , savedContext(scope.alloc(1))
+    {
+        savedContext->m = context->d();
+#if QT_POINTER_SIZE == 4
+        savedContext->tag = QV4::Value::Managed_Type;
+#endif
+    }
+    ~ExecutionContextSaver()
+    {
+        engine->current = static_cast<ExecutionContext *>(savedContext->asManaged());
+    }
+};
+
+
 }
 
 QT_END_NAMESPACE

@@ -361,22 +361,6 @@ private:
     QmlExtensions *m_qmlExtensions;
 };
 
-struct ExecutionContextSaver
-{
-    ExecutionEngine *engine;
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(ExecutionContext *context)
-        : engine(context->d()->engine)
-        , savedContext(context)
-    {
-    }
-    ~ExecutionContextSaver()
-    {
-        engine->current = savedContext;
-    }
-};
-
 inline void ExecutionEngine::pushContext(CallContext *context)
 {
     Q_ASSERT(current && current->d() && context && context->d());
