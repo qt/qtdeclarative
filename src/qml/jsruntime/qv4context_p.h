@@ -73,11 +73,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         Type_CallContext = 0x5,
         Type_QmlContext = 0x6
     };
-    struct EvalCode
-    {
-        Function *function;
-        EvalCode *next;
-    };
 
     struct Data : Managed::Data {
         Data(ExecutionEngine *engine, ContextType t)
@@ -89,7 +84,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
             , outer(0)
             , lookups(0)
             , compilationUnit(0)
-            , currentEvalCode(0)
             , lineNumber(-1)
         {
             engine->current = reinterpret_cast<ExecutionContext *>(this);
@@ -104,7 +98,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         ExecutionContext *outer;
         Lookup *lookups;
         CompiledData::CompilationUnit *compilationUnit;
-        EvalCode *currentEvalCode;
 
         int lineNumber;
 
@@ -122,7 +115,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         d()->outer = 0;
         d()->lookups = 0;
         d()->compilationUnit = 0;
-        d()->currentEvalCode = 0;
         d()->lineNumber = -1;
         engine->current = this;
     }
@@ -238,7 +230,6 @@ inline void ExecutionEngine::pushContext(CallContext *context)
 {
     context->d()->parent = current;
     current = context;
-    current->d()->currentEvalCode = 0;
 }
 
 inline ExecutionContext *ExecutionEngine::popContext()
