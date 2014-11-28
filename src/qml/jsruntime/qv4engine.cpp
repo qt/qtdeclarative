@@ -436,7 +436,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    evalFunction = Scoped<EvalFunction>(scope, memoryManager->alloc<EvalFunction>(global));
+    evalFunction = memoryManager->alloc<EvalFunction>(global);
     globalObject()->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject()->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);

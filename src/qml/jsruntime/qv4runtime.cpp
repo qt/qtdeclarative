@@ -910,7 +910,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionEngine *engine, uint index, Cal
         return engine->throwTypeError();
 
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (o.getPointer() == scope.engine->evalFunction && name->equals(scope.engine->id_eval))
+    if (o->d() == scope.engine->evalFunction && name->equals(scope.engine->id_eval))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
     return o->call(callData);
@@ -943,7 +943,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionEngine *engine, int nameI
         return engine->throwTypeError(msg);
     }
 
-    if (o == scope.engine->evalFunction && name->equals(scope.engine->id_eval)) {
+    if (o->d() == scope.engine->evalFunction && name->equals(scope.engine->id_eval)) {
         return static_cast<EvalFunction *>(o)->evalCall(callData, true);
     }
 

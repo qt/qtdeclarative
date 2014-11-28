@@ -196,7 +196,7 @@ public:
     InternalClass *dataViewClass;
     InternalClass *typedArrayClasses[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
 
-    EvalFunction *evalFunction;
+    Heap::EvalFunction *evalFunction;
     FunctionObject *thrower;
 
     Property *argumentsAccessors;
