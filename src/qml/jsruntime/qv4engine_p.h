@@ -73,8 +73,8 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
-    ExecutionContext *current;
-    ExecutionContext *currentContext() const { return current; }
+    Heap::ExecutionContext *current;
+    Heap::ExecutionContext *currentContext() const { return current; }
 
     Value *jsStackTop;
     quint32 hasException;
@@ -272,7 +272,7 @@ public:
 
     ExecutionContext *pushGlobalContext();
     void pushContext(CallContext *context);
-    ExecutionContext *popContext();
+    Heap::ExecutionContext *popContext();
 
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
@@ -354,17 +354,16 @@ private:
 
 inline void ExecutionEngine::pushContext(CallContext *context)
 {
-    Q_ASSERT(current && current->d() && context && context->d());
-    context->d()->parent = current->d();
-    current = context;
+    Q_ASSERT(current && context && context->d());
+    context->d()->parent = current;
+    current = context->d();
 }
 
-inline ExecutionContext *ExecutionEngine::popContext()
+inline Heap::ExecutionContext *ExecutionEngine::popContext()
 {
-    Q_ASSERT(current->d()->parent);
-    // ### GC
-    current = reinterpret_cast<ExecutionContext *>(current->d()->parent);
-    Q_ASSERT(current && current->d());
+    Q_ASSERT(current->parent);
+    current = current->parent;
+    Q_ASSERT(current);
     return current;
 }
 
@@ -374,14 +373,13 @@ Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     , type(t)
     , strictMode(false)
     , engine(engine)
-    , parent(engine->currentContext()->d())
+    , parent(engine->currentContext())
     , outer(0)
     , lookups(0)
     , compilationUnit(0)
     , lineNumber(-1)
 {
-    // ### GC
-    engine->current = reinterpret_cast<QV4::ExecutionContext *>(this);
+    engine->current = this;
 }
 
 

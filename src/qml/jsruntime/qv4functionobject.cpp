@@ -216,7 +216,8 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
     FunctionCtor *f = static_cast<FunctionCtor *>(that);
     ExecutionEngine *v4 = f->internalClass()->engine;
-    ExecutionContext *ctx = v4->currentContext();
+    Scope scope(v4);
+    ScopedContext ctx(scope, v4->currentContext());
     QString arguments;
     QString body;
     if (callData->argc > 0) {
@@ -397,7 +398,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
 
-    ExecutionContext *context = v4->currentContext();
+    ScopedContext context(scope, v4->currentContext());
     callData->thisObject = obj.asReturnedValue();
     Scoped<CallContext> ctx(scope, context->newCallContext(f.getPointer(), callData));
 
@@ -423,8 +424,8 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
-    ExecutionContext *context = v4->currentContext();
-    Scope scope(context);
+    Scope scope(v4);
+    ScopedContext context(scope, v4->currentContext());
 
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
@@ -482,8 +483,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
 
-    ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(scope, context);
+    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
@@ -497,7 +497,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }
-    Q_ASSERT(v4->currentContext()->d() == &ctx);
+    Q_ASSERT(v4->currentContext() == &ctx);
 
     Scoped<Object> result(scope, Q_V4_PROFILE(v4, f->function()));
 
@@ -519,8 +519,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
 
     Scope scope(v4);
-    ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(scope, context);
+    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
@@ -534,7 +533,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
     }
-    Q_ASSERT(v4->currentContext()->d() == &ctx);
+    Q_ASSERT(v4->currentContext() == &ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
@@ -578,13 +577,12 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(scope, context);
+    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
-    Q_ASSERT(v4->currentContext()->d() == &ctx);
+    Q_ASSERT(v4->currentContext() == &ctx);
 
     return f->d()->code(reinterpret_cast<CallContext *>(&ctx));
 }
@@ -598,13 +596,12 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    ExecutionContext *context = v4->currentContext();
-    ExecutionContextSaver ctxSaver(scope, context);
+    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
-    Q_ASSERT(v4->currentContext()->d() == &ctx);
+    Q_ASSERT(v4->currentContext() == &ctx);
 
     return f->d()->code(reinterpret_cast<CallContext *>(&ctx), f->d()->index);
 }

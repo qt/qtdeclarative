@@ -232,7 +232,7 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue = Encode::undefined();
 
-    m_currentContext = m_engine->currentContext()->d();
+    m_currentContext = m_engine->currentContext();
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -262,7 +262,7 @@ Debugger::ExecutionState Debugger::currentExecutionState() const
 {
     ExecutionState state;
     state.fileName = getFunction()->sourceFile();
-    state.lineNumber = engine()->currentContext()->d()->lineNumber;
+    state.lineNumber = engine()->currentContext()->lineNumber;
 
     return state;
 }
@@ -272,18 +272,18 @@ QVector<StackFrame> Debugger::stackTrace(int frameLimit) const
     return m_engine->stackTrace(frameLimit);
 }
 
-static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
+static inline Heap::CallContext *findContext(Heap::ExecutionContext *ctxt, int frame)
 {
     if (!ctxt)
         return 0;
 
-    Scope scope(ctxt);
+    Scope scope(ctxt->engine);
     Scoped<ExecutionContext> ctx(scope, ctxt);
     while (ctx) {
         CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {
             if (frame < 1)
-                return cCtxt;
+                return cCtxt->d();
             --frame;
         }
         ctx = ctx->d()->parent;
@@ -292,17 +292,17 @@ static inline CallContext *findContext(ExecutionContext *ctxt, int frame)
     return 0;
 }
 
-static inline CallContext *findScope(ExecutionContext *ctxt, int scope)
+static inline Heap::CallContext *findScope(Heap::ExecutionContext *ctxt, int scope)
 {
     if (!ctxt)
         return 0;
 
-    Scope s(ctxt);
+    Scope s(ctxt->engine);
     Scoped<ExecutionContext> ctx(s, ctxt);
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->d()->outer;
 
-    return ctx ? ctx->asCallContext() : 0;
+    return (ctx && ctx->d()) ? ctx->asCallContext()->d() : 0;
 }
 
 void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int scopeNr)
@@ -332,11 +332,11 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
             if (frameNr < 0)
                 return;
 
-            CallContext *ctxt = findScope(findContext(engine->currentContext(), frameNr), scopeNr);
+            Scope scope(engine);
+            Scoped<CallContext> ctxt(scope, findScope(findContext(engine->currentContext(), frameNr), scopeNr));
             if (!ctxt)
                 return;
 
-            Scope scope(engine);
             ScopedValue v(scope);
             int nFormals = ctxt->formalCount();
             for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
@@ -379,11 +379,11 @@ void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int sco
             if (frameNr < 0)
                 return;
 
-            CallContext *ctxt = findScope(findContext(engine->currentContext(), frameNr), scopeNr);
+            Scope scope(engine);
+            Scoped<CallContext> ctxt(scope, findScope(findContext(engine->currentContext(), frameNr), scopeNr));
             if (!ctxt)
                 return;
 
-            Scope scope(engine);
             ScopedValue v(scope);
             for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
                 QString qName;
@@ -495,13 +495,12 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
     if (state() != Paused)
         return types;
 
-    CallContext *sctxt = findContext(m_engine->currentContext(), frame);
+    Scope scope(m_engine);
+    Scoped<CallContext> sctxt(scope, findContext(m_engine->currentContext(), frame));
     if (!sctxt || sctxt->d()->type < Heap::ExecutionContext::Type_SimpleCallContext)
         return types;
-    CallContext *ctxt = static_cast<CallContext *>(sctxt);
 
-    Scope scope(m_engine);
-    Scoped<ExecutionContext> it(scope, ctxt);
+    Scoped<ExecutionContext> it(scope, sctxt->d());
     for (; it; it = it->d()->outer)
         types.append(it->d()->type);
 
@@ -524,7 +523,7 @@ void Debugger::maybeBreakAtInstruction()
         return;
 
     QMutexLocker locker(&m_lock);
-    int lineNumber = engine()->currentContext()->d()->lineNumber;
+    int lineNumber = engine()->currentContext()->lineNumber;
 
     if (m_gatherSources) {
         m_gatherSources->run();
@@ -534,7 +533,7 @@ void Debugger::maybeBreakAtInstruction()
 
     switch (m_stepping) {
     case StepOver:
-        if (m_currentContext.asManaged()->d() != m_engine->currentContext()->d())
+        if (m_currentContext.asManaged()->d() != m_engine->currentContext())
             break;
         // fall through
     case StepIn:
@@ -560,7 +559,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_currentContext = m_engine->currentContext()->d();
+        m_currentContext = m_engine->currentContext();
     }
 }
 
@@ -573,8 +572,8 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     Scope scope(m_engine);
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()->d()) {
-        m_currentContext = m_engine->currentContext()->d()->parent;
+    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()) {
+        m_currentContext = m_engine->currentContext()->parent;
         m_stepping = StepOver;
         m_returnedValue = retVal;
     }
@@ -594,7 +593,8 @@ void Debugger::aboutToThrow()
 
 Function *Debugger::getFunction() const
 {
-    ExecutionContext *context = m_engine->currentContext();
+    Scope scope(m_engine);
+    ScopedContext context(scope, m_engine->currentContext());
     if (CallContext *callCtx = context->asCallContext())
         return callCtx->d()->function->function;
     else {

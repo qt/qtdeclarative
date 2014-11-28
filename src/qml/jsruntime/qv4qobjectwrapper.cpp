@@ -323,7 +323,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     if (hasProperty)
         *hasProperty = true;
 
-    return getProperty(d()->object, scope.engine->currentContext(), result);
+    ScopedContext ctx(scope, scope.engine->currentContext());
+    return getProperty(d()->object, ctx, result);
 }
 
 ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired)
@@ -436,7 +437,9 @@ bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qm
             return false;
     }
 
-    setProperty(object, engine->currentContext(), result, value);
+    Scope scope(engine);
+    ScopedContext ctx(scope, engine->currentContext());
+    setProperty(object, ctx, result, value);
     return true;
 }
 
@@ -1825,7 +1828,8 @@ ReturnedValue QObjectMethod::call(Managed *m, CallData *callData)
 
 ReturnedValue QObjectMethod::callInternal(CallData *callData)
 {
-    ExecutionContext *context = engine()->currentContext();
+    Scope scope(engine());
+    ScopedContext context(scope, scope.engine->currentContext());
     if (d()->index == DestroyMethod)
         return method_destroy(context, callData->args, callData->argc);
     else if (d()->index == ToStringMethod)
@@ -1836,8 +1840,6 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
         return Encode::undefined();
 
     QV8Engine *v8Engine = context->d()->engine->v8Engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8Engine);
-    QV4::Scope scope(v4);
 
     QQmlPropertyData method;
 

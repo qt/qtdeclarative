@@ -516,9 +516,18 @@ struct ExecutionContextSaver
         savedContext->tag = QV4::Value::Managed_Type;
 #endif
     }
+    ExecutionContextSaver(Scope &scope, Heap::ExecutionContext *context)
+        : engine(context->engine)
+        , savedContext(scope.alloc(1))
+    {
+        savedContext->m = context;
+#if QT_POINTER_SIZE == 4
+        savedContext->tag = QV4::Value::Managed_Type;
+#endif
+    }
     ~ExecutionContextSaver()
     {
-        engine->current = static_cast<ExecutionContext *>(savedContext->asManaged());
+        engine->current = static_cast<Heap::ExecutionContext *>(savedContext->heapObject());
     }
 };
 

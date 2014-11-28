@@ -104,7 +104,8 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    ScopedContext ctx(s, s.engine->currentContext());
+    o->d()->qmlContext = ctx->newQmlContext(o, qml);
     s.engine->popContext();
 }
 
@@ -122,7 +123,8 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
 
     o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
 
-    o->d()->qmlContext = s.engine->currentContext()->newQmlContext(o, qml);
+    ScopedContext ctx(s, s.engine->currentContext());
+    o->d()->qmlContext = ctx->newQmlContext(o, qml);
     s.engine->popContext();
 }
 

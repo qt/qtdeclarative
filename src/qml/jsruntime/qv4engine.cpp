@@ -519,7 +519,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
     g->d()->callData = rootContext()->d()->callData;
 
-    Q_ASSERT(currentContext() == g.getPointer());
+    Q_ASSERT(currentContext() == g->d());
     return g.getPointer();
 }
 
@@ -716,7 +716,7 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 
 Heap::Object *ExecutionEngine::qmlContextObject() const
 {
-    Heap::ExecutionContext *ctx = currentContext()->d();
+    Heap::ExecutionContext *ctx = currentContext();
 
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
         ctx = ctx->parent;
@@ -737,7 +737,7 @@ Heap::Object *ExecutionEngine::qmlContextObject() const
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
-    Scope scope(this->currentContext());
+    Scope scope(const_cast<ExecutionEngine *>(this));
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
@@ -890,7 +890,7 @@ void ExecutionEngine::markObjects()
             setter->mark(this);
     }
 
-    Heap::ExecutionContext *c = currentContext()->d();
+    Heap::ExecutionContext *c = currentContext();
     while (c) {
         Q_ASSERT(c->inUse);
         if (!c->markBit) {

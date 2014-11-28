@@ -956,7 +956,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return engine->currentContext()->d()->engine->newString(value.toString())->asReturnedValue();
+        return engine->currentContext()->engine->newString(value.toString())->asReturnedValue();
     else if (value.isDouble())
         return Encode(value.toDouble());
     else if (value.isBool())

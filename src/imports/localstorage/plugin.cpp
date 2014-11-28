@@ -670,8 +670,8 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV8Engine *engine = args->engine();
-    QV4::ExecutionContext *ctx = args->v4engine()->currentContext();
-    QV4::Scope scope(ctx);
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedContext ctx(scope, args->v4engine()->currentContext());
     if (engine->engine()->offlineStoragePath().isEmpty())
         V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
 

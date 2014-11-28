@@ -355,7 +355,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
 
-    ExecutionContext *parentContext = v4->currentContext();
+    ScopedContext parentContext(scope, v4->currentContext());
     ExecutionContextSaver ctxSaver(scope, parentContext);
 
     ExecutionContext *ctx = parentContext;

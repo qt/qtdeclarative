@@ -118,7 +118,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
     return;
 
   reject:
-    if (engine()->currentContext()->d()->strictMode)
+    if (engine()->currentContext()->strictMode)
         engine()->throwTypeError();
 }
 
@@ -465,7 +465,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
 {
     Scope scope(m->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
-    ScopedString name(scope, scope.engine->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString name(scope, scope.engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
 
     InternalClass *c = o->internalClass();
     uint idx = c->find(name);
@@ -722,7 +722,7 @@ void Object::internalPut(String *name, const ValueRef value)
     return;
 
   reject:
-    if (engine()->currentContext()->d()->strictMode) {
+    if (engine()->currentContext()->strictMode) {
         QString message = QStringLiteral("Cannot assign to read-only property \"");
         message += name->toQString();
         message += QLatin1Char('\"');
@@ -795,7 +795,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
     return;
 
   reject:
-    if (engine()->currentContext()->d()->strictMode)
+    if (engine()->currentContext()->strictMode)
         engine()->throwTypeError();
 }
 
@@ -817,7 +817,7 @@ bool Object::internalDeleteProperty(String *name)
             InternalClass::removeMember(this, name->identifier());
             return true;
         }
-        if (engine()->currentContext()->d()->strictMode)
+        if (engine()->currentContext()->strictMode)
             engine()->throwTypeError();
         return false;
     }
@@ -835,7 +835,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
     if (!ad || ad->vtable()->del(this, index))
         return true;
 
-    if (engine()->currentContext()->d()->strictMode)
+    if (engine()->currentContext()->strictMode)
         engine()->throwTypeError();
     return false;
 }
@@ -901,7 +901,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
 
     return __defineOwnProperty__(engine, memberIndex, name, p, attrs);
 reject:
-  if (engine->currentContext()->d()->strictMode)
+  if (engine->currentContext()->strictMode)
       engine->throwTypeError();
   return false;
 }
@@ -917,7 +917,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Pr
 
     return defineOwnProperty2(engine, index, p, attrs);
 reject:
-  if (engine->currentContext()->d()->strictMode)
+  if (engine->currentContext()->strictMode)
       engine->throwTypeError();
   return false;
 }
@@ -953,7 +953,7 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
 
     return __defineOwnProperty__(engine, index, 0, p, attrs);
 reject:
-  if (engine->currentContext()->d()->strictMode)
+  if (engine->currentContext()->strictMode)
       engine->throwTypeError();
   return false;
 }
@@ -1046,7 +1046,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
         setHasAccessorProperty();
     return true;
   reject:
-    if (engine->currentContext()->d()->strictMode)
+    if (engine->currentContext()->strictMode)
         engine->throwTypeError();
     return false;
 }
@@ -1165,7 +1165,7 @@ Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 {
     Scope scope(m->engine());
-    ScopedString name(scope, m->engine()->currentContext()->d()->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString name(scope, m->engine()->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
     if (name->equals(m->engine()->id_length)) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
