@@ -110,7 +110,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(context->engine);
     QV4::Scope scope(v4);
-    QV4::ScopedCallData callData(scope, 0);
+    QV4::ScopedCallData callData(scope);
 
     return evaluate(context, function, callData, isUndefined);
 }

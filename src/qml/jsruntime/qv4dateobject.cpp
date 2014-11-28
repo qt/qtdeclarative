@@ -1311,7 +1311,7 @@ ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
     if (!toIso)
         return ctx->engine()->throwTypeError();
 
-    ScopedCallData callData(scope, 0);
+    ScopedCallData callData(scope);
     callData->thisObject = ctx->d()->callData->thisObject;
     return toIso->call(callData);
 }

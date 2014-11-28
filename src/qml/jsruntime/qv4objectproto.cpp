@@ -408,7 +408,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
     Scoped<FunctionObject> f(scope, o->get(ctx->d()->engine->id_toString));
     if (!f)
         return ctx->engine()->throwTypeError();
-    ScopedCallData callData(scope, 0);
+    ScopedCallData callData(scope);
     callData->thisObject = o;
     return f->call(callData);
 }

@@ -306,7 +306,7 @@ ReturnedValue Script::run()
     } else {
         ScopedObject qmlObj(valueScope, qml.value());
         ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
-        ScopedCallData callData(valueScope, 0);
+        ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
     }

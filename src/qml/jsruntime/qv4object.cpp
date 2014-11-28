@@ -89,7 +89,7 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
         return Encode::undefined();
 
     Scope scope(getter->engine());
-    ScopedCallData callData(scope, 0);
+    ScopedCallData callData(scope);
     callData->thisObject = *thisObject;
     return getter->call(callData);
 }

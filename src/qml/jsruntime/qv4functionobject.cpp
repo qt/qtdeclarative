@@ -169,7 +169,7 @@ ReturnedValue FunctionObject::name()
 ReturnedValue FunctionObject::newInstance()
 {
     Scope scope(internalClass()->engine);
-    ScopedCallData callData(scope, 0);
+    ScopedCallData callData(scope);
     return construct(callData);
 }
 
