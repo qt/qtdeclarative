@@ -357,7 +357,7 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
     // before without a context. Now the context is ready.
     if (!d->distanceFieldAntialiasingDecided) {
         d->distanceFieldAntialiasingDecided = true;
-#ifndef Q_OS_WIN
+#ifndef Q_OS_WIN32
         if (renderContext->openglContext()->isOpenGLES())
             d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
 #endif
