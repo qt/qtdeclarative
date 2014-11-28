@@ -182,6 +182,14 @@ public:
 
         m_stackTrace = debugger->stackTrace();
 
+        while (!m_expressionRequests.isEmpty()) {
+            ExpressionRequest request = m_expressionRequests.takeFirst();
+            QVariantMap result;
+            collector.setDestination(&result);
+            debugger->evaluateExpression(request.frameNr, request.expression, &collector);
+            m_expressionResults << result[QString::fromLatin1("body")];
+        }
+
         if (m_captureContextInfo)
             captureContextInfo(debugger);
 
@@ -233,6 +241,13 @@ public:
     QList<QVariantMap> m_capturedLocals;
     QVariant m_thrownValue;
 
+    struct ExpressionRequest {
+        QString expression;
+        int frameNr;
+    };
+    QVector<ExpressionRequest> m_expressionRequests;
+    QVector<QVariant> m_expressionResults;
+
     // Utility methods:
     void dumpStackTrace() const
     {
@@ -268,6 +283,8 @@ private slots:
 
     // exceptions:
     void pauseOnThrow();
+
+    void evaluateExpression();
 
 private:
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
@@ -554,6 +571,33 @@ void tst_qv4debugger::pauseOnThrow()
     QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 2);
     QCOMPARE(m_debuggerAgent->m_thrownValue.type(), QVariant::String);
     QCOMPARE(m_debuggerAgent->m_thrownValue.toString(), QString("hard"));
+}
+
+void tst_qv4debugger::evaluateExpression()
+{
+    QString script =
+            "function testFunction() {\n"
+            "    var x = 10\n"
+            "    return x\n" // breakpoint
+            "}\n"
+            "var x = 20\n"
+            "testFunction()\n";
+
+    TestAgent::ExpressionRequest request;
+    request.expression = "x";
+    request.frameNr = 0;
+    m_debuggerAgent->m_expressionRequests << request;
+    request.expression = "x";
+    request.frameNr = 1;
+    m_debuggerAgent->m_expressionRequests << request;
+
+    m_debuggerAgent->addBreakPoint("evaluateExpression", 3);
+
+    evaluateJavaScript(script, "evaluateExpression");
+
+    QCOMPARE(m_debuggerAgent->m_expressionResults.count(), 2);
+    QCOMPARE(m_debuggerAgent->m_expressionResults[0].toInt(), 10);
+    QCOMPARE(m_debuggerAgent->m_expressionResults[1].toInt(), 20);
 }
 
 QTEST_MAIN(tst_qv4debugger)
