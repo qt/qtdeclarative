@@ -358,7 +358,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ScopedContext parentContext(scope, v4->currentContext());
     ExecutionContextSaver ctxSaver(scope, parentContext);
 
-    ExecutionContext *ctx = parentContext;
+    ScopedContext ctx(scope, parentContext.getPointer());
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
@@ -394,7 +394,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
         return e->call(callData);
     }
 
-    ContextStateSaver stateSaver(ctx);
+    ContextStateSaver stateSaver(scope, ctx);
 
     // set the correct strict mode flag on the context
     ctx->d()->strictMode = strictMode();

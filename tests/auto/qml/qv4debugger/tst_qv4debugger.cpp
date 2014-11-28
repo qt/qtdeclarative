@@ -83,7 +83,8 @@ public:
         QV4::Scope scope(v4);
 
         QV4::Scoped<QV4::String> name(scope, v4->newString(functionName));
-        QV4::ScopedValue function(scope, BuiltinFunction::create(v4->rootContext(), name, injectedFunction));
+        QV4::ScopedContext ctx(scope, v4->rootContext());
+        QV4::ScopedValue function(scope, BuiltinFunction::create(ctx, name, injectedFunction));
         v4->globalObject()->put(name, function);
     }
 

@@ -309,7 +309,9 @@ ReturnedValue QmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProper
 
     if (result->isFunction()) {
         // calling a Q_INVOKABLE function of a value type
-        return QV4::QObjectMethod::create(v4->rootContext(), r->d()->type, result->coreIndex);
+        Scope scope(v4);
+        ScopedContext c(scope, v4->rootContext());
+        return QV4::QObjectMethod::create(c, r->d()->type, result->coreIndex);
     }
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \

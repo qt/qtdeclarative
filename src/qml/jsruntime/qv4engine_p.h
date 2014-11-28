@@ -78,8 +78,8 @@ public:
 
     Value *jsStackTop;
     quint32 hasException;
-    GlobalContext *m_rootContext;
-    GlobalContext *rootContext() const { return m_rootContext; }
+    Heap::GlobalContext *m_rootContext;
+    Heap::GlobalContext *rootContext() const { return m_rootContext; }
 
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
@@ -270,7 +270,7 @@ public:
     void enableDebugger();
     void enableProfiler();
 
-    ExecutionContext *pushGlobalContext();
+    Heap::ExecutionContext *pushGlobalContext();
     void pushContext(CallContext *context);
     Heap::ExecutionContext *popContext();
 

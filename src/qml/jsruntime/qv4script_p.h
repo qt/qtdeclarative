@@ -46,26 +46,38 @@ class QQmlContextData;
 namespace QV4 {
 
 struct ContextStateSaver {
-    ExecutionContext *savedContext;
+    Value *savedContext;
     bool strictMode;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
     int lineNumber;
 
-    ContextStateSaver(ExecutionContext *context)
-        : savedContext(context)
+    ContextStateSaver(Scope &scope, ExecutionContext *context)
+        : savedContext(scope.alloc(1))
         , strictMode(context->d()->strictMode)
         , lookups(context->d()->lookups)
         , compilationUnit(context->d()->compilationUnit)
         , lineNumber(context->d()->lineNumber)
-    {}
+    {
+        savedContext->m = context->d();
+    }
+    ContextStateSaver(Scope &scope, Heap::ExecutionContext *context)
+        : savedContext(scope.alloc(1))
+        , strictMode(context->strictMode)
+        , lookups(context->lookups)
+        , compilationUnit(context->compilationUnit)
+        , lineNumber(context->lineNumber)
+    {
+        savedContext->m = context;
+    }
 
     ~ContextStateSaver()
     {
-        savedContext->d()->strictMode = strictMode;
-        savedContext->d()->lookups = lookups;
-        savedContext->d()->compilationUnit = compilationUnit;
-        savedContext->d()->lineNumber = lineNumber;
+        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m);
+        ctx->strictMode = strictMode;
+        ctx->lookups = lookups;
+        ctx->compilationUnit = compilationUnit;
+        ctx->lineNumber = lineNumber;
     }
 };
 
@@ -97,7 +109,7 @@ private:
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), parsed(false)
+        , scope(scope->d()), strictMode(false), inheritContext(false), parsed(false)
         , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
@@ -109,7 +121,8 @@ struct Q_QML_EXPORT Script {
     int line;
     int column;
     QString sourceCode;
-    ExecutionContext *scope;
+    // ### GC
+    Heap::ExecutionContext *scope;
     bool strictMode;
     bool inheritContext;
     bool parsed;

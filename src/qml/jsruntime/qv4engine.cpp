@@ -343,21 +343,22 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.asObject()));
 
-    objectCtor = memoryManager->alloc<ObjectCtor>(rootContext());
-    stringCtor = memoryManager->alloc<StringCtor>(rootContext());
-    numberCtor = memoryManager->alloc<NumberCtor>(rootContext());
-    booleanCtor = memoryManager->alloc<BooleanCtor>(rootContext());
-    arrayCtor = memoryManager->alloc<ArrayCtor>(rootContext());
-    functionCtor = memoryManager->alloc<FunctionCtor>(rootContext());
-    dateCtor = memoryManager->alloc<DateCtor>(rootContext());
-    regExpCtor = memoryManager->alloc<RegExpCtor>(rootContext());
-    errorCtor = memoryManager->alloc<ErrorCtor>(rootContext());
-    evalErrorCtor = memoryManager->alloc<EvalErrorCtor>(rootContext());
-    rangeErrorCtor = memoryManager->alloc<RangeErrorCtor>(rootContext());
-    referenceErrorCtor = memoryManager->alloc<ReferenceErrorCtor>(rootContext());
-    syntaxErrorCtor = memoryManager->alloc<SyntaxErrorCtor>(rootContext());
-    typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(rootContext());
-    uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(rootContext());
+    ScopedContext global(scope, rootContext());
+    objectCtor = memoryManager->alloc<ObjectCtor>(global);
+    stringCtor = memoryManager->alloc<StringCtor>(global);
+    numberCtor = memoryManager->alloc<NumberCtor>(global);
+    booleanCtor = memoryManager->alloc<BooleanCtor>(global);
+    arrayCtor = memoryManager->alloc<ArrayCtor>(global);
+    functionCtor = memoryManager->alloc<FunctionCtor>(global);
+    dateCtor = memoryManager->alloc<DateCtor>(global);
+    regExpCtor = memoryManager->alloc<RegExpCtor>(global);
+    errorCtor = memoryManager->alloc<ErrorCtor>(global);
+    evalErrorCtor = memoryManager->alloc<EvalErrorCtor>(global);
+    rangeErrorCtor = memoryManager->alloc<RangeErrorCtor>(global);
+    referenceErrorCtor = memoryManager->alloc<ReferenceErrorCtor>(global);
+    syntaxErrorCtor = memoryManager->alloc<SyntaxErrorCtor>(global);
+    typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(global);
+    uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(global);
 
     static_cast<ObjectPrototype *>(objectPrototype.asObject())->init(this, objectCtor.asObject());
     static_cast<StringPrototype *>(stringPrototype.asObject())->init(this, stringCtor.asObject());
@@ -381,18 +382,18 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // typed arrays
 
-    arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(rootContext());
+    arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(global);
     arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(objectClass, objectPrototype.asObject());
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype.asObject())->init(this, arrayBufferCtor.asObject());
     arrayBufferClass = InternalClass::create(this, ArrayBuffer::staticVTable());
 
-    dataViewCtor = memoryManager->alloc<DataViewCtor>(rootContext());
+    dataViewCtor = memoryManager->alloc<DataViewCtor>(global);
     dataViewPrototype = memoryManager->alloc<DataViewPrototype>(objectClass, objectPrototype.asObject());
     static_cast<DataViewPrototype *>(dataViewPrototype.asObject())->init(this, dataViewCtor.asObject());
     dataViewClass = InternalClass::create(this, DataView::staticVTable());
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(rootContext(), Heap::TypedArray::Type(i));
+        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         typedArrayPrototype[i] = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
         typedArrayClasses[i] = InternalClass::create(this, TypedArray::staticVTable());
@@ -401,8 +402,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    rootContext()->d()->global = globalObject()->d();
-    rootContext()->d()->callData->thisObject = globalObject();
+    rootContext()->global = globalObject()->d();
+    rootContext()->callData->thisObject = globalObject();
     Q_ASSERT(globalObject()->internalClass()->vtable);
 
     globalObject()->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
@@ -435,7 +436,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    evalFunction = Scoped<EvalFunction>(scope, memoryManager->alloc<EvalFunction>(rootContext()));
+    evalFunction = Scoped<EvalFunction>(scope, memoryManager->alloc<EvalFunction>(global));
     globalObject()->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
     globalObject()->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
@@ -450,7 +451,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
-    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(rootContext(), name.getPointer(), ::throwTypeError)).getPointer();
+    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(global, name.getPointer(), ::throwTypeError)).getPointer();
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -505,7 +506,7 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->thisObject = globalObject();
     r->d()->callData->args[0] = Encode::undefined();
 
-    m_rootContext = r;
+    m_rootContext = r->d();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -513,14 +514,14 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool) InternalClass(other);
 }
 
-ExecutionContext *ExecutionEngine::pushGlobalContext()
+Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     Scope scope(this);
     Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
-    g->d()->callData = rootContext()->d()->callData;
+    g->d()->callData = rootContext()->callData;
 
     Q_ASSERT(currentContext() == g->d());
-    return g.getPointer();
+    return g->d();
 }
 
 
@@ -768,7 +769,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
         StackFrame frame;
         frame.source = globalCode->sourceFile();
         frame.function = globalCode->name()->toQString();
-        frame.line = rootContext()->d()->lineNumber;
+        frame.line = rootContext()->lineNumber;
         frame.column = -1;
 
 
@@ -869,9 +870,10 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
             memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
             delete [] oldAccessors;
         }
+        ScopedContext global(scope, scope.engine->rootContext());
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(rootContext(), i));
-            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(rootContext(), i));
+            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(global, i));
+            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(global, i));
         }
     }
 }
