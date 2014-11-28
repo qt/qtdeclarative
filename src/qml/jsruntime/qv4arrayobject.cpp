@@ -190,7 +190,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
     const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
 
     if (!r2)
-        return ctx->d()->engine->newString(QString())->asReturnedValue();
+        return ctx->d()->engine->newString()->asReturnedValue();
 
     QString R;
 

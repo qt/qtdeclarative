@@ -447,7 +447,7 @@ ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
     if (result->isUndefined())
-        return ctx->d()->engine->newString(QString())->asReturnedValue();
+        return ctx->d()->engine->newString()->asReturnedValue();
     return result.asReturnedValue();
 }
 
@@ -457,7 +457,7 @@ ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
     if (result->isUndefined())
-        return ctx->d()->engine->newString(QString())->asReturnedValue();
+        return ctx->d()->engine->newString()->asReturnedValue();
     return result.asReturnedValue();
 }
 

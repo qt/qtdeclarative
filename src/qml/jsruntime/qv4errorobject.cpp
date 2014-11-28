@@ -356,7 +356,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj)
     ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
     obj->defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     obj->defineDefaultProperty(engine->id_toString, method_toString, 0);
-    obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString(QString())));
+    obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString()));
 }
 
 ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)

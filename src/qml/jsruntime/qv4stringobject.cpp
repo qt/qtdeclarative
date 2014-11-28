@@ -74,7 +74,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
 {
     Q_ASSERT(internalClass->vtable == QV4::StringObject::staticVTable());
-    value = ic->engine->newString(QStringLiteral(""))->asReturnedValue();
+    value = ic->engine->newString()->asReturnedValue();
     tmpProperty.value = Primitive::undefinedValue();
 
     Scope scope(ic->engine);
@@ -174,7 +174,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     if (callData->argc)
         value = callData->args[0].toString(v4);
     else
-        value = v4->newString(QString());
+        value = v4->newString();
     return Encode(v4->newStringObject(value));
 }
 
@@ -186,7 +186,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
     if (callData->argc)
         value = callData->args[0].toString(v4);
     else
-        value = v4->newString(QString());
+        value = v4->newString();
     return value.asReturnedValue();
 }
 
@@ -674,7 +674,7 @@ ReturnedValue StringPrototype::method_split(CallContext *ctx)
     if (re) {
         if (re->value()->pattern.isEmpty()) {
             re = (RegExpObject *)0;
-            separatorValue = ctx->d()->engine->newString(QString());
+            separatorValue = ctx->d()->engine->newString();
         }
     }
 

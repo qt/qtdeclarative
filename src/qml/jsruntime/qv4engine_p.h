@@ -286,7 +286,7 @@ public:
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
 
-    Heap::String *newString(const QString &s);
+    Heap::String *newString(const QString &s = QString());
     Heap::String *newIdentifier(const QString &text);
 
     Heap::Object *newStringObject(const ValueRef value);
