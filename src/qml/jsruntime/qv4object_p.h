@@ -230,7 +230,7 @@ public:
     { return vtable()->getLookup(this, l); }
     void setLookup(Lookup *l, const ValueRef v)
     { vtable()->setLookup(this, l, v); }
-    void advanceIterator(ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes)
+    void advanceIterator(ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
 
@@ -252,7 +252,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const ValueRef v);
-    static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
 private:

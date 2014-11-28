@@ -70,7 +70,7 @@ struct StringObject: Object {
     static bool deleteIndexedProperty(Managed *m, uint index);
 
 protected:
-    static void advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attrs);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 

@@ -516,10 +516,10 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
     l->setter = Lookup::setterGeneric;
 }
 
-void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *pd, PropertyAttributes *attrs)
+void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
-    name = (String *)0;
+    *name = 0;
     *index = UINT_MAX;
 
     if (o->arrayData()) {
@@ -574,8 +574,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            // #### GC
-            name = reinterpret_cast<QV4::String*>(m->engine()->newString(n->string));
+            *name = m->engine()->newString(n->string);
             *attrs = a;
             pd->copy(*p, a);
             return;

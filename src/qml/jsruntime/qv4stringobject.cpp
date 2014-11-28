@@ -122,9 +122,9 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     return true;
 }
 
-void StringObject::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
+void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name = (String *)0;
+    *name = (Heap::String *)0;
     StringObject *s = static_cast<StringObject *>(m);
     uint slen = s->d()->value.stringValue()->toQString().length();
     if (it->arrayIndex <= slen) {

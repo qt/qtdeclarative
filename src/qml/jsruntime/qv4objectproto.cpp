@@ -215,9 +215,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
         uint index;
         PropertyAttributes attrs;
         Property pd;
-        String *nm;
-        it.next(nm, &index, &pd, &attrs);
-        name = nm;
+        it.next(name.getRef(), &index, &pd, &attrs);
         if (attrs.isEmpty())
             break;
         Property n;

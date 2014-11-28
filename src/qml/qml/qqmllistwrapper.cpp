@@ -143,9 +143,9 @@ void QmlListWrapper::put(Managed *m, String *name, const ValueRef value)
     Q_UNUSED(value);
 }
 
-void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attrs)
+void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name = (String *)0;
+    *name = (Heap::String *)0;
     *index = UINT_MAX;
     Q_ASSERT(m->as<QmlListWrapper>());
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);

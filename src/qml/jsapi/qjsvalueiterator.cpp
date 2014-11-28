@@ -102,8 +102,8 @@ QJSValueIterator::QJSValueIterator(const QJSValue& object)
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it.flags =  QV4::ObjectIterator::NoFlags;
-    QV4::String *nm = 0;
-    it->d()->it.next(nm, &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
+    QV4::ScopedString nm(scope);
+    it->d()->it.next(nm.getRef(), &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
     d_ptr->nextName = nm;
 }
 
@@ -150,8 +150,8 @@ bool QJSValueIterator::next()
         return false;
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
-    QV4::String *nm = 0;
-    it->d()->it.next(nm, &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
+    QV4::ScopedString nm(scope);
+    it->d()->it.next(nm.getRef(), &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
     d_ptr->nextName = nm;
     return !!d_ptr->currentName || d_ptr->currentIndex != UINT_MAX;
 }
@@ -226,8 +226,8 @@ QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
     d_ptr->iterator = v4->newForEachIteratorObject(o)->asReturnedValue();
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it.flags =  QV4::ObjectIterator::NoFlags;
-    QV4::String *nm = 0;
-    it->d()->it.next(nm, &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
+    QV4::ScopedString nm(scope);
+    it->d()->it.next(nm.getRef(), &d_ptr->nextIndex, &d_ptr->nextProperty, &d_ptr->nextAttributes);
     d_ptr->nextName = nm;
     return *this;
 }

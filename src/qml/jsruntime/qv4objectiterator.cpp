@@ -78,9 +78,9 @@ void ObjectIterator::init(Object *o)
     }
 }
 
-void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttributes *attrs)
+void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
-    name = (String *)0;
+    *name = 0;
     *index = UINT_MAX;
 
     if (!object->asObject()) {
@@ -89,6 +89,7 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
     }
     Scope scope(engine);
     ScopedObject o(scope);
+    ScopedString n(scope);
 
     while (1) {
         if (!current->asObject())
@@ -101,9 +102,10 @@ void ObjectIterator::next(String *&name, uint *index, Property *pd, PropertyAttr
             // check the property is not already defined earlier in the proto chain
             if (current->asObject() != object->asObject()) {
                 o = object->asObject();
+                n = *name;
                 bool shadowed = false;
                 while (o != current->asObject()) {
-                    if ((!!name && o->hasOwnProperty(name)) ||
+                    if ((!!n && o->hasOwnProperty(n)) ||
                         (*index != UINT_MAX && o->hasOwnProperty(*index))) {
                         shadowed = true;
                         break;
@@ -137,9 +139,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    String *n;
-    next(n, &index, &p, &attrs);
-    name = n;
+    next(name.getRef(), &index, &p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 
@@ -161,9 +161,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    String *n;
-    next(n, &index, &p, &attrs);
-    name = n;
+    next(name.getRef(), &index, &p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 
@@ -185,9 +183,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
     uint index;
     Scope scope(object->engine());
     ScopedString name(scope);
-    String *n;
-    next(n, &index, &p, &attrs);
-    name = n;
+    next(name.getRef(), &index, &p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 

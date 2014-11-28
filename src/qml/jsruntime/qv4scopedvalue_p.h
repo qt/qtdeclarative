@@ -215,6 +215,10 @@ struct Scoped
     Scoped(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
+        ptr->m = 0;
+#if QT_POINTER_SIZE == 4
+        ptr->tag = QV4::Value::Managed_Type;
+#endif
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -357,6 +361,9 @@ struct Scoped
 
     T *getPointer() {
         return static_cast<T *>(ptr->managed());
+    }
+    typename T::Data **getRef() {
+        return reinterpret_cast<typename T::Data **>(&ptr->m);
     }
 
     ReturnedValue asReturnedValue() const {

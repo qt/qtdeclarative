@@ -138,7 +138,7 @@ struct ObjectVTable
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
     uint (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, String *&name, uint *index, Property *p, PropertyAttributes *attributes);
+    void (*advanceIterator)(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
