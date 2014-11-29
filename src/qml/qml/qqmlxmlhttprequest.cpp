@@ -1040,6 +1040,10 @@ class QQmlXMLHttpRequest : public QObject
 {
     Q_OBJECT
 public:
+    enum LoadType {
+        AsynchronousLoad,
+        SynchronousLoad
+    };
     enum State { Unsent = 0,
                  Opened = 1, HeadersReceived = 2,
                  Loading = 3, Done = 4 };
@@ -1053,7 +1057,7 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    ReturnedValue open(const ValueRef me, const QString &, const QUrl &);
+    ReturnedValue open(const ValueRef me, const QString &, const QUrl &, LoadType);
     ReturnedValue send(const ValueRef me, const QByteArray &);
     ReturnedValue abort(const ValueRef me);
 
@@ -1152,7 +1156,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-ReturnedValue QQmlXMLHttpRequest::open(const ValueRef me, const QString &method, const QUrl &url)
+ReturnedValue QQmlXMLHttpRequest::open(const ValueRef me, const QString &method, const QUrl &url, LoadType loadType)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1160,6 +1164,7 @@ ReturnedValue QQmlXMLHttpRequest::open(const ValueRef me, const QString &method,
     m_responseEntityBody = QByteArray();
     m_method = method;
     m_url = url;
+    m_request.setAttribute(QNetworkRequest::SynchronousRequestAttribute, loadType == SynchronousLoad);
     m_state = Opened;
     m_addedHeaders.clear();
     dispatchCallback(me);
@@ -1276,12 +1281,24 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         buffer->setParent(m_network);
     }
 
-    QObject::connect(m_network, SIGNAL(readyRead()),
-                     this, SLOT(readyRead()));
-    QObject::connect(m_network, SIGNAL(error(QNetworkReply::NetworkError)),
-                     this, SLOT(error(QNetworkReply::NetworkError)));
-    QObject::connect(m_network, SIGNAL(finished()),
-                     this, SLOT(finished()));
+    if (m_request.attribute(QNetworkRequest::SynchronousRequestAttribute).toBool()) {
+        if (m_network->bytesAvailable() > 0)
+            readyRead();
+
+        QNetworkReply::NetworkError networkError = m_network->error();
+        if (networkError != QNetworkReply::NoError) {
+            error(networkError);
+        } else {
+            finished();
+        }
+    } else {
+        QObject::connect(m_network, SIGNAL(readyRead()),
+                         this, SLOT(readyRead()));
+        QObject::connect(m_network, SIGNAL(error(QNetworkReply::NetworkError)),
+                         this, SLOT(error(QNetworkReply::NetworkError)));
+        QObject::connect(m_network, SIGNAL(finished()),
+                         this, SLOT(finished()));
+    }
 }
 
 ReturnedValue QQmlXMLHttpRequest::send(const ValueRef me, const QByteArray &data)
@@ -1759,9 +1776,11 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
     if (url.isRelative())
         url = engine->callingContext()->resolvedUrl(url);
 
+    bool async = true;
     // Argument 2 - async (optional)
-    if (ctx->d()->callData->argc > 2 && !ctx->d()->callData->args[2].booleanValue())
-        V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
+    if (ctx->d()->callData->argc > 2) {
+        async = ctx->d()->callData->args[2].booleanValue();
+    }
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
@@ -1778,7 +1797,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
     if (!password.isNull()) url.setPassword(password);
 
     ScopedValue meObject(scope, constructMeObject(ctx->d()->callData->thisObject, engine));
-    return r->open(meObject, method, url);
+    return r->open(meObject, method, url, async ? QQmlXMLHttpRequest::AsynchronousLoad : QQmlXMLHttpRequest::SynchronousLoad);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(CallContext *ctx)

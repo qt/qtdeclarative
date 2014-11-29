@@ -37,6 +37,7 @@
 #include <QDebug>
 #include <QScopedPointer>
 #include <QNetworkCookieJar>
+#include <QThread>
 #include "testhttpserver.h"
 #include "../../shared/util.h"
 
@@ -282,14 +283,46 @@ void tst_qqmlxmlhttprequest::open_invalid_method()
     QCOMPARE(object->property("exceptionThrown").toBool(), true);
 }
 
-// Test that calling XMLHttpRequest.open() with sync raises an exception
+class TestThreadedHTTPServer : public QObject
+{
+    Q_OBJECT
+public:
+    TestThreadedHTTPServer(const QUrl &expectUrl, const QUrl &replyUrl, const QUrl &bodyUrl)
+        : m_server(Q_NULLPTR) {
+        moveToThread(&m_thread);
+        m_thread.start();
+        QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection, Q_ARG(QUrl, expectUrl), Q_ARG(QUrl, replyUrl), Q_ARG(QUrl, bodyUrl));
+    }
+    ~TestThreadedHTTPServer() {
+        m_server->deleteLater();
+        m_thread.exit();
+        m_thread.wait();
+    }
+
+private slots:
+    void start(const QUrl &expectUrl, const QUrl &replyUrl, const QUrl &bodyUrl) {
+        m_server = new TestHTTPServer;
+        QVERIFY2(m_server->listen(SERVER_PORT), qPrintable(m_server->errorString()));
+        QVERIFY(m_server->wait(expectUrl, replyUrl, bodyUrl));
+    }
+
+private:
+    TestHTTPServer *m_server;
+    QThread m_thread;
+};
+
+// Test that calling XMLHttpRequest.open() with sync
 void tst_qqmlxmlhttprequest::open_sync()
 {
-    QQmlComponent component(&engine, testFileUrl("open_sync.qml"));
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(!object.isNull());
+    TestThreadedHTTPServer server(testFileUrl("open_network.expect"), testFileUrl("open_network.reply"), testFileUrl("testdocument.html"));
 
-    QCOMPARE(object->property("exceptionThrown").toBool(), true);
+    QQmlComponent component(&engine, testFileUrl("open_sync.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    component.completeCreate();
+
+    QCOMPARE(object->property("responseText").toString(), QStringLiteral("QML Rocks!\n"));
 }
 
 // Calling with incorrect arg count raises an exception

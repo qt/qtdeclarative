@@ -57,7 +57,6 @@ The XMLHttpRequest API implements the same \l {http://www.w3.org/TR/XMLHttpReque
 as many popular web browsers with following exceptions:
 \list
 \li QML's XMLHttpRequest does not enforce the same origin policy.
-\li QML's XMLHttpRequest does not support \e synchronous requests.
 \endlist
 
 Additionally, the \c responseXML XML DOM tree currently supported by QML is a reduced subset

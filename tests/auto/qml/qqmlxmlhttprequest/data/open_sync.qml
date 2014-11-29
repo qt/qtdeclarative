@@ -1,17 +1,15 @@
 import QtQuick 2.0
 
 QtObject {
-    property bool exceptionThrown: false
+    property url url
+    property string responseText
 
     Component.onCompleted: {
         var x = new XMLHttpRequest;
-
-        try {
-            x.open("GET", "http://www.qt-project.org", false);
-        } catch (e) {
-            if (e.code == DOMException.NOT_SUPPORTED_ERR)
-                exceptionThrown = true;
-        }
+        x.open("GET", url, false);
+        x.setRequestHeader("Accept-Language", "en-US");
+        x.send();
+        responseText = x.responseText;
     }
 }
 
