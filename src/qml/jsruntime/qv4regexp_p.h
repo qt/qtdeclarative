@@ -133,7 +133,8 @@ inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
 inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
 { return qHash(key.pattern, seed); }
 
-class RegExpCache : public QHash<RegExpCacheKey, RegExp*>
+// ### GC
+class RegExpCache : public QHash<RegExpCacheKey, Heap::RegExp*>
 {
 public:
     ~RegExpCache();

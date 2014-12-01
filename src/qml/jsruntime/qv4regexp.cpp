@@ -42,7 +42,7 @@ RegExpCache::~RegExpCache()
 {
     for (RegExpCache::Iterator it = begin(), e = end();
          it != e; ++it)
-        it.value()->d()->cache = 0;
+        it.value()->cache = 0;
     clear();
 }
 
@@ -69,8 +69,8 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
 
     RegExpCache *cache = engine->regExpCache;
     if (cache) {
-        if (RegExp *result = cache->value(key))
-            return result->d();
+        if (Heap::RegExp *result = cache->value(key))
+            return result;
     }
 
     Scope scope(engine);
@@ -80,7 +80,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
         cache = engine->regExpCache = new RegExpCache;
 
     result->d()->cache = cache;
-    cache->insert(key, result);
+    cache->insert(key, result->d());
 
     return result->d();
 }
