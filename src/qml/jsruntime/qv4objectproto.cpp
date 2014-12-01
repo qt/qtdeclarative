@@ -448,7 +448,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
         return Encode::undefined();
     Scoped<Object> proto(scope, V->prototype());
     while (proto) {
-        if (O.getPointer() == proto.getPointer())
+        if (O->d() == proto->d())
             return Encode(true);
         proto = proto->prototype();
     }
