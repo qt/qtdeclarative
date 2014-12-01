@@ -424,13 +424,13 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
 
         // Add the value now
         if ((s = propertyValue)) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::String);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             roleIndex = e->setStringProperty(r, s->toQString());
         } else if (propertyValue->isNumber()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Number);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
             roleIndex = e->setDoubleProperty(r, propertyValue->asDouble());
         } else if ((a = propertyValue)) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::List);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
             int arrayLength = a->getLength();
@@ -441,16 +441,16 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles, 
 
             roleIndex = e->setListProperty(r, subModel);
         } else if (propertyValue->isBoolean()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::Bool);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue->booleanValue());
         } else if (QV4::DateObject *dd = propertyValue->asDateObject()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::DateTime);
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             QDateTime dt = dd->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
         } else if (QV4::Object *o = propertyValue->asObject()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object();
-                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName.getPointer(), ListLayout::Role::QObject);
+                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
                     roleIndex = e->setQObjectProperty(role, o);
             } else {

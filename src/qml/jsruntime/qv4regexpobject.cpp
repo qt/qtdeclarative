@@ -152,7 +152,7 @@ void RegExpObject::init(ExecutionEngine *engine)
 
     ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
     ScopedValue v(scope, Primitive::fromInt32(0));
-    insertMember(lastIndex.getPointer(), v, Attr_NotEnumerable|Attr_NotConfigurable);
+    insertMember(lastIndex, v, Attr_NotEnumerable|Attr_NotConfigurable);
     if (!this->value())
         return;
 
@@ -211,7 +211,7 @@ QString RegExpObject::source() const
 {
     Scope scope(engine());
     ScopedString source(scope, scope.engine->newIdentifier(QStringLiteral("source")));
-    ScopedValue s(scope, const_cast<RegExpObject *>(this)->get(source.getPointer()));
+    ScopedValue s(scope, const_cast<RegExpObject *>(this)->get(source));
     return s->toQString();
 }
 

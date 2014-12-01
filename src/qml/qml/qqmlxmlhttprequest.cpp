@@ -98,9 +98,9 @@ static ReturnedValue constructMeObject(const ValueRef thisObj, QV8Engine *e)
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
     Scoped<Object> meObj(scope, v4->newObject());
-    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))).getPointer(), thisObj);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), thisObj);
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
-    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))).getPointer(), v);
+    meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
     return meObj.asReturnedValue();
 }
 
@@ -620,7 +620,7 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance->setPrototype((p = Attr::prototype(v4)).getPointer());
+        instance->setPrototype((p = Attr::prototype(v4)));
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -632,13 +632,13 @@ ReturnedValue Node::create(QV8Engine *engine, NodeImpl *data)
     case NodeImpl::ProcessingInstruction:
         return Encode::undefined();
     case NodeImpl::CDATA:
-        instance->setPrototype((p = CDATA::prototype(v4)).getPointer());
+        instance->setPrototype((p = CDATA::prototype(v4)));
         break;
     case NodeImpl::Text:
-        instance->setPrototype((p = Text::prototype(v4)).getPointer());
+        instance->setPrototype((p = Text::prototype(v4)));
         break;
     case NodeImpl::Element:
-        instance->setPrototype((p = Element::prototype(v4)).getPointer());
+        instance->setPrototype((p = Element::prototype(v4)));
         break;
     }
 
@@ -652,7 +652,7 @@ ReturnedValue Element::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(engine)).getPointer());
+        p->setPrototype((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
         d->elementPrototype = p;
         engine->v8Engine->freezeObject(p);
@@ -667,7 +667,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         Scoped<Object> p(scope, engine->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(engine)).getPointer());
+        p->setPrototype((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
         p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
         p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
@@ -728,7 +728,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(v4)).getPointer());
+        p->setPrototype((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
         d->characterDataPrototype = p;
@@ -764,7 +764,7 @@ ReturnedValue Text::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = CharacterData::prototype(v4)).getPointer());
+        p->setPrototype((pp = CharacterData::prototype(v4)));
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
         p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
         d->textPrototype = p;
@@ -781,7 +781,7 @@ ReturnedValue CDATA::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = Text::prototype(v4)).getPointer());
+        p->setPrototype((pp = Text::prototype(v4)));
         d->cdataPrototype = p;
         v4->v8Engine->freezeObject(p);
     }
@@ -795,7 +795,7 @@ ReturnedValue Document::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         Scoped<Object> p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(v4)).getPointer());
+        p->setPrototype((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, 0);
         p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
         p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
@@ -892,7 +892,7 @@ ReturnedValue Document::load(QV8Engine *engine, const QByteArray &data)
 
     ScopedObject instance(scope, v4->memoryManager->alloc<Node>(v4, document));
     ScopedObject p(scope);
-    instance->setPrototype((p = Document::prototype(v4)).getPointer());
+    instance->setPrototype((p = Document::prototype(v4)));
     return instance.asReturnedValue();
 }
 
@@ -1546,21 +1546,21 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
     }
 
     ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
-    Scoped<Object> thisObj(scope, o->get(s.getPointer()));
+    Scoped<Object> thisObj(scope, o->get(s));
     if (!thisObj) {
         v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
     }
 
     s = v4->newString(QStringLiteral("onreadystatechange"));
-    Scoped<FunctionObject> callback(scope, thisObj->get(s.getPointer()));
+    Scoped<FunctionObject> callback(scope, thisObj->get(s));
     if (!callback) {
         // not an error, but no onreadystatechange function to call.
         return;
     }
 
     s = v4->newString(QStringLiteral("ActivationObject"));
-    Scoped<Object> activationObject(scope, o->get(s.getPointer()));
+    Scoped<Object> activationObject(scope, o->get(s));
     if (!activationObject) {
         v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
         return;
@@ -1693,7 +1693,7 @@ Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
     if (!ctor->d()->proto)
         ctor->setupProto();
     ScopedString s(scope, engine->id_prototype);
-    ctor->defineDefaultProperty(s.getPointer(), ScopedObject(scope, ctor->d()->proto));
+    ctor->defineDefaultProperty(s, ScopedObject(scope, ctor->d()->proto));
 }
 
 DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestCtor);
@@ -1703,7 +1703,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
     Scoped<Object> p(scope, v4->newObject());
-    d()->proto = p.getPointer()->d();
+    d()->proto = p->d();
 
     // Methods
     p->defineDefaultProperty(QStringLiteral("open"), method_open);
@@ -2001,7 +2001,7 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
 
     Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->alloc<QQmlXMLHttpRequestCtor>(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
-    v4->globalObject()->defineReadonlyProperty(s.getPointer(), ctor);
+    v4->globalObject()->defineReadonlyProperty(s, ctor);
 
     QQmlXMLHttpRequestData *data = new QQmlXMLHttpRequestData;
     return data;

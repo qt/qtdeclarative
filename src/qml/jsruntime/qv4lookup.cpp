@@ -155,7 +155,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
     ScopedString name(scope, index->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
-    return o->get(name.getPointer());
+    return o->get(name);
 
 }
 
@@ -211,7 +211,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const ValueRef object, const Value
     }
 
     ScopedString name(scope, index->toString(scope.engine));
-    o->put(name.getPointer(), value);
+    o->put(name, value);
 }
 
 void Lookup::indexedSetterObjectInt(Lookup *l, const ValueRef object, const ValueRef index, const ValueRef v)
@@ -251,7 +251,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
         proto = engine->stringPrototype.asObject();
         Scope scope(engine);
         ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-        if (name->equals(engine->id_length.getPointer())) {
+        if (name->equals(engine->id_length)) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;
             return stringLengthGetter(l, engine, object);

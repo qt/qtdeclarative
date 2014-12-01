@@ -451,7 +451,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
-    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(global, name.getPointer(), ::throwTypeError)).getPointer();
+    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(global, name, ::throwTypeError));
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -1140,7 +1140,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
     if (!!errorObj && errorObj->asSyntaxError()) {
         QV4::ScopedString m(scope, newString(QStringLiteral("message")));
-        QV4::ScopedValue v(scope, errorObj->get(m.getPointer()));
+        QV4::ScopedValue v(scope, errorObj->get(m));
         error.setDescription(v->toQStringNoThrow());
     } else
         error.setDescription(exception->toQStringNoThrow());

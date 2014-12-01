@@ -232,12 +232,12 @@ protected:
         QV4::Scope scope(engine());
         QV4::ScopedObject obj(scope, value->asObject());
 
-        int ref = cachedObjectRef(obj.getPointer());
+        int ref = cachedObjectRef(obj);
         if (ref != -1) {
             addNameRefPair(name, ref);
         } else {
             int ref = newRefId();
-            cacheObjectRef(obj.getPointer(), ref);
+            cacheObjectRef(obj, ref);
 
             QJsonArray properties, *prev = &properties;
             QSet<int> used;

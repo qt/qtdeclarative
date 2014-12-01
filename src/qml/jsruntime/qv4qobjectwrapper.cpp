@@ -283,13 +283,13 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     }
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(scope.engine, qmlContext, name.getPointer(), revisionMode, &local);
+    QQmlPropertyData *result = findProperty(scope.engine, qmlContext, name, revisionMode, &local);
 
     if (!result) {
         if (includeImports && name->startsWithUpper()) {
             // Check for attached properties
             if (qmlContext && qmlContext->imports) {
-                QQmlTypeNameCache::Result r = qmlContext->imports->query(name.getPointer());
+                QQmlTypeNameCache::Result r = qmlContext->imports->query(name);
 
                 if (hasProperty)
                     *hasProperty = true;
@@ -308,7 +308,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 }
             }
         }
-        return QV4::Object::get(this, name.getPointer(), hasProperty);
+        return QV4::Object::get(this, name, hasProperty);
     }
 
     QQmlData *ddata = QQmlData::get(d()->object, false);
@@ -348,8 +348,8 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
             QV4::ScopedString connect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect.getPointer(), QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(connect.getPointer())));
-            handler->put(disconnect.getPointer(), QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(disconnect.getPointer())));
+            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(connect)));
+            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(disconnect)));
 
             return handler.asReturnedValue();
         } else {
@@ -618,7 +618,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
             alternateWrapper = create(engine, object);
             if (!engine->m_multiplyWrappedQObjects)
                 engine->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
-            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper.getPointer());
+            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
             ddata->hasTaintedV8Object = true;
         }
 

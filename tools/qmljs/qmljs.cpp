@@ -119,7 +119,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef except
         std::cerr << "Uncaught exception: " << qPrintable(ex->toQString()) << std::endl;
     } else {
         QV4::ScopedString m(scope, scope.engine->newString(QStringLiteral("message")));
-        QV4::ScopedValue message(scope, e->get(m.getPointer()));
+        QV4::ScopedValue message(scope, e->get(m));
         std::cerr << "Uncaught exception: " << qPrintable(message->toQStringNoThrow()) << std::endl;
     }
 

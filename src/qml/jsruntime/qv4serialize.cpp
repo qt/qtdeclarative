@@ -272,7 +272,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
             serialize(data, s, engine);
 
             str = s;
-            val = o->get(str.getPointer());
+            val = o->get(str);
             if (scope.hasException())
                 scope.engine->catchException();
 
@@ -333,7 +333,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
             name = deserialize(data, engine);
             value = deserialize(data, engine);
             n = name.asReturnedValue();
-            o->put(n.getPointer(), value);
+            o->put(n, value);
         }
         return o.asReturnedValue();
     }
@@ -363,7 +363,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         QVariant var = qVariantFromValue(ref);
         QV4::ScopedValue v(scope, engine->fromVariant((var)));
         QV4::ScopedString s(scope, v4->newString(QStringLiteral("__qml:hidden:ref")));
-        rv->asObject()->defineReadonlyProperty(s.getPointer(), v);
+        rv->asObject()->defineReadonlyProperty(s, v);
 
         agent->release();
         agent->setV8Engine(engine);

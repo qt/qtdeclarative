@@ -1365,7 +1365,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->engine(), mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
-    r->setPrototype(p.getPointer());
+    r->setPrototype(p);
 
     if (!valuemap->isUndefined()) {
         r->d()->valuemap = valuemap;
@@ -1373,7 +1373,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     }
     r->d()->parent = parent;
 
-    QQmlIncubator *incubator = r.getPointer()->d()->incubator.data();
+    QQmlIncubator *incubator = r->d()->incubator.data();
     create(*incubator, creationContext());
 
     if (incubator->status() == QQmlIncubator::Null) {

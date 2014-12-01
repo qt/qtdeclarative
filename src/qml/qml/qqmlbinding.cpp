@@ -172,7 +172,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     Q_ASSERT(f);
     if (f->bindingKeyFlag()) {
         Q_ASSERT(f->as<QV4::QQmlBindingFunction>());
-        QQmlSourceLocation loc = static_cast<QV4::QQmlBindingFunction *>(f.getPointer())->d()->bindingLocation;
+        QQmlSourceLocation loc = static_cast<QV4::Heap::QQmlBindingFunction *>(f->d())->bindingLocation;
         url = loc.sourceFile;
         lineNumber = loc.line;
         columnNumber = loc.column;

@@ -88,7 +88,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
     ScopedString n(s, s.engine->newString(name));
-    f->init(n.getPointer(), createProto);
+    f->init(n, createProto);
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
@@ -98,7 +98,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, s.engine->newString(name));
-    f->init(n.getPointer(), createProto);
+    f->init(n, createProto);
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
@@ -108,7 +108,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
     Scope s(scope);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, name);
-    f->init(n.getPointer(), false);
+    f->init(n, false);
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
@@ -118,7 +118,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
     ScopedString n(s, name);
-    f->init(n.getPointer(), false);
+    f->init(n, false);
 }
 
 Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
@@ -402,7 +402,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
     ScopedContext context(scope, v4->currentContext());
     callData->thisObject = obj.asReturnedValue();
-    Scoped<CallContext> ctx(scope, context->newCallContext(f.getPointer(), callData));
+    Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
     ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -490,7 +490,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     CallContext::Data ctx(v4);
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
-    ctx.function = f.getPointer()->d();
+    ctx.function = f->d();
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();

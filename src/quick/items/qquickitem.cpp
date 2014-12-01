@@ -4169,15 +4169,15 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
 
             QRectF r = mapRectFromItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))).getPointer(), (v = QV4::Primitive::fromDouble(r.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))).getPointer(), (v = QV4::Primitive::fromDouble(r.y())));
-            rv->put((s = v4->newString(QStringLiteral("width"))).getPointer(), (v = QV4::Primitive::fromDouble(r.width())));
-            rv->put((s = v4->newString(QStringLiteral("height"))).getPointer(), (v = QV4::Primitive::fromDouble(r.height())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Primitive::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Primitive::fromDouble(r.height())));
         } else {
             QPointF p = mapFromItem(itemObj, QPointF(x, y));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))).getPointer(), (v = QV4::Primitive::fromDouble(p.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))).getPointer(), (v = QV4::Primitive::fromDouble(p.y())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(p.y())));
         }
     }
 }
@@ -4249,15 +4249,15 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 
             QRectF r = mapRectToItem(itemObj, QRectF(x, y, w, h));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))).getPointer(), (v = QV4::Primitive::fromDouble(r.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))).getPointer(), (v = QV4::Primitive::fromDouble(r.y())));
-            rv->put((s = v4->newString(QStringLiteral("width"))).getPointer(), (v = QV4::Primitive::fromDouble(r.width())));
-            rv->put((s = v4->newString(QStringLiteral("height"))).getPointer(), (v = QV4::Primitive::fromDouble(r.height())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(r.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(r.y())));
+            rv->put((s = v4->newString(QStringLiteral("width"))), (v = QV4::Primitive::fromDouble(r.width())));
+            rv->put((s = v4->newString(QStringLiteral("height"))), (v = QV4::Primitive::fromDouble(r.height())));
         } else {
             QPointF p = mapToItem(itemObj, QPointF(x, y));
 
-            rv->put((s = v4->newString(QStringLiteral("x"))).getPointer(), (v = QV4::Primitive::fromDouble(p.x())));
-            rv->put((s = v4->newString(QStringLiteral("y"))).getPointer(), (v = QV4::Primitive::fromDouble(p.y())));
+            rv->put((s = v4->newString(QStringLiteral("x"))), (v = QV4::Primitive::fromDouble(p.x())));
+            rv->put((s = v4->newString(QStringLiteral("y"))), (v = QV4::Primitive::fromDouble(p.y())));
         }
     }
 }

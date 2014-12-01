@@ -387,7 +387,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
     ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
-    Scoped<FunctionObject> exec(scope, scope.engine->regExpPrototype.asObject()->get(execString.getPointer()));
+    Scoped<FunctionObject> exec(scope, scope.engine->regExpPrototype.asObject()->get(execString));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;
@@ -396,7 +396,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
         return exec->call(callData);
 
     ScopedString lastIndex(scope, context->d()->engine->newString(QStringLiteral("lastIndex")));
-    rx->put(lastIndex.getPointer(), ScopedValue(scope, Primitive::fromInt32(0)));
+    rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
     Scoped<ArrayObject> a(scope, context->d()->engine->newArrayObject());
 
     double previousLastIndex = 0;
@@ -409,11 +409,11 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
         if (result->isNull())
             break;
         assert(result->isObject());
-        index = rx->get(lastIndex.getPointer(), 0);
+        index = rx->get(lastIndex, 0);
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
             previousLastIndex = thisIndex + 1;
-            rx->put(lastIndex.getPointer(), ScopedValue(scope, Primitive::fromDouble(previousLastIndex)));
+            rx->put(lastIndex, ScopedValue(scope, Primitive::fromDouble(previousLastIndex)));
         } else {
             previousLastIndex = thisIndex;
         }

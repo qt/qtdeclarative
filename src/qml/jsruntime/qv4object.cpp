@@ -77,7 +77,7 @@ void Object::put(ExecutionEngine *engine, const QString &name, const ValueRef va
 {
     Scope scope(engine);
     ScopedString n(scope, engine->newString(name));
-    put(n.getPointer(), value);
+    put(n, value);
 }
 
 ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs)
@@ -127,7 +127,7 @@ void Object::defineDefaultProperty(const QString &name, ValueRef value)
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    defineDefaultProperty(s.getPointer(), value);
+    defineDefaultProperty(s, value);
 }
 
 void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount)
@@ -136,9 +136,9 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
     ScopedContext global(scope, e->rootContext());
-    Scoped<FunctionObject> function(scope, BuiltinFunction::create(global, s.getPointer(), code));
+    Scoped<FunctionObject> function(scope, BuiltinFunction::create(global, s, code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s.getPointer(), function);
+    defineDefaultProperty(s, function);
 }
 
 void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount)
@@ -156,7 +156,7 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
     ExecutionEngine *e = engine();
     Scope scope(e);
     Scoped<String> s(scope, e->newIdentifier(name));
-    defineAccessorProperty(s.getPointer(), getter, setter);
+    defineAccessorProperty(s, getter, setter);
 }
 
 void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *))
@@ -165,8 +165,8 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallCo
     QV4::Scope scope(v4);
     ScopedProperty p(scope);
     ScopedContext global(scope, scope.engine->rootContext());
-    p->setGetter(getter ? ScopedFunctionObject(scope, BuiltinFunction::create(global, name, getter)).getPointer() : 0);
-    p->setSetter(setter ? ScopedFunctionObject(scope, BuiltinFunction::create(global, name, setter)).getPointer() : 0);
+    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
+    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
@@ -175,7 +175,7 @@ void Object::defineReadonlyProperty(const QString &name, ValueRef value)
     QV4::ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    defineReadonlyProperty(s.getPointer(), value);
+    defineReadonlyProperty(s, value);
 }
 
 void Object::defineReadonlyProperty(String *name, ValueRef value)
@@ -1058,7 +1058,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, const QString &name,
 {
     Scope scope(engine);
     ScopedString s(scope, engine->newString(name));
-    return __defineOwnProperty__(engine, s.getPointer(), p, attrs);
+    return __defineOwnProperty__(engine, s, p, attrs);
 }
 
 

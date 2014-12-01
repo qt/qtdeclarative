@@ -284,7 +284,7 @@ ReturnedValue Runtime::deleteElement(ExecutionEngine *engine, const ValueRef bas
     }
 
     ScopedString name(scope, index->toString(engine));
-    return Runtime::deleteMemberString(engine, base, name.getPointer());
+    return Runtime::deleteMemberString(engine, base, name);
 }
 
 ReturnedValue Runtime::deleteMember(ExecutionEngine *engine, const ValueRef base, int nameIndex)
@@ -349,7 +349,7 @@ QV4::ReturnedValue Runtime::in(ExecutionEngine *engine, const ValueRef left, con
     ScopedString s(scope, left->toString(engine));
     if (scope.hasException())
         return Encode::undefined();
-    bool r = right->objectValue()->hasProperty(s.getPointer());
+    bool r = right->objectValue()->hasProperty(s);
     return Encode(r);
 }
 
@@ -451,14 +451,14 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined.getPointer()->d();
+        return engine->id_undefined->d();
     case Value::Null_Type:
-        return engine->id_null.getPointer()->d();
+        return engine->id_null->d();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return engine->id_true.getPointer()->d();
+            return engine->id_true->d();
         else
-            return engine->id_false.getPointer()->d();
+            return engine->id_false->d();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->d();
@@ -482,14 +482,14 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const ValueR
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined.getPointer()->d();
+        return engine->id_undefined->d();
     case Value::Null_Type:
-        return engine->id_null.getPointer()->d();
+        return engine->id_null->d();
     case Value::Boolean_Type:
         if (value->booleanValue())
-            return engine->id_true.getPointer()->d();
+            return engine->id_true->d();
         else
-            return engine->id_false.getPointer()->d();
+            return engine->id_false->d();
     case Value::Managed_Type:
         if (value->isString())
             return value->stringValue()->d();
@@ -608,7 +608,7 @@ ReturnedValue Runtime::getElement(ExecutionEngine *engine, const ValueRef object
     ScopedString name(scope, index->toString(engine));
     if (scope.hasException())
         return Encode::undefined();
-    return o->get(name.getPointer());
+    return o->get(name);
 }
 
 void Runtime::setElement(ExecutionEngine *engine, const ValueRef object, const ValueRef index, const ValueRef value)
@@ -632,7 +632,7 @@ void Runtime::setElement(ExecutionEngine *engine, const ValueRef object, const V
     }
 
     ScopedString name(scope, index->toString(engine));
-    o->put(name.getPointer(), value);
+    o->put(name, value);
 }
 
 ReturnedValue Runtime::foreachIterator(ExecutionEngine *engine, const ValueRef in)
@@ -998,7 +998,7 @@ ReturnedValue Runtime::callElement(ExecutionEngine *engine, const ValueRef index
         return Encode::undefined();
     callData->thisObject = baseObject;
 
-    ScopedObject o(scope, baseObject->get(s.getPointer()));
+    ScopedObject o(scope, baseObject->get(s));
     if (!o)
         return engine->throwTypeError();
 
@@ -1144,7 +1144,7 @@ QV4::ReturnedValue Runtime::typeofElement(ExecutionEngine *engine, const ValueRe
     ScopedObject obj(scope, base->toObject(engine));
     if (scope.engine->hasException)
         return Encode::undefined();
-    ScopedValue prop(scope, obj->get(name.getPointer()));
+    ScopedValue prop(scope, obj->get(name));
     return Runtime::typeofValue(engine, prop);
 }
 

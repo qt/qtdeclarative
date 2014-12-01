@@ -510,7 +510,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, v4->memoryManager->alloc<QV4ParticleData>(v4, datum));
     QV4::ScopedObject p(scope, d->proto.value());
-    o->setPrototype(p.getPointer());
+    o->setPrototype(p);
     m_v4Value = o;
 }
 

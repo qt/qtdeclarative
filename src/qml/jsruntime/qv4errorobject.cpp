@@ -375,7 +375,7 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
         qname = name->toQString();
 
     ScopedString s(scope, ctx->d()->engine->newString(QString::fromLatin1("message")));
-    ScopedValue message(scope, o->get(s.getPointer()));
+    ScopedValue message(scope, o->get(s));
     QString qmessage;
     if (!message->isUndefined())
         qmessage = message->toQString();

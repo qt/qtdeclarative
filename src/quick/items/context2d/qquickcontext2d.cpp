@@ -567,10 +567,10 @@ struct QQuickJSContext2DPrototype : public QV4::Object
 {
     V4_OBJECT2(QQuickJSContext2DPrototype, QV4::Object)
 public:
-    static QQuickJSContext2DPrototype *create(QV4::ExecutionEngine *engine)
+    static QV4::Heap::QQuickJSContext2DPrototype *create(QV4::ExecutionEngine *engine)
     {
         QV4::Scope scope(engine);
-        QV4::ScopedObject o(scope, engine->memoryManager->alloc<QQuickJSContext2DPrototype>(engine));
+        QV4::Scoped<QQuickJSContext2DPrototype> o(scope, engine->memoryManager->alloc<QQuickJSContext2DPrototype>(engine));
 
         o->defineDefaultProperty(QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
         o->defineDefaultProperty(QStringLiteral("restore"), method_restore, 0);
@@ -617,7 +617,7 @@ public:
         o->defineDefaultProperty(QStringLiteral("closePath"), method_closePath, 0);
         o->defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, 0);
 
-        return static_cast<QQuickJSContext2DPrototype*>(o.getPointer());
+        return o->d();
     }
 
     static QV4::ReturnedValue method_get_canvas(QV4::CallContext *ctx);
@@ -942,7 +942,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engi
     QV4::Scope scope(v4);
     QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, scope.engine->memoryManager->alloc<QQuickJSContext2DPixelData>(v4));
     QV4::ScopedObject p(scope, ed->pixelArrayProto.value());
-    pixelData->setPrototype(p.getPointer());
+    pixelData->setPrototype(p);
 
     if (image.isNull()) {
         pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
@@ -1568,7 +1568,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
-        gradient->setPrototype(p.getPointer());
+        gradient->setPrototype(p);
         gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
         return gradient.asReturnedValue();
     }
@@ -1622,7 +1622,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
-        gradient->setPrototype(p.getPointer());
+        gradient->setPrototype(p);
         gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
         return gradient.asReturnedValue();
     }
@@ -1668,7 +1668,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
-        gradient->setPrototype(p.getPointer());
+        gradient->setPrototype(p);
         gradient->d()->brush = QConicalGradient(x, y, angle);
         return gradient.asReturnedValue();
     }
@@ -1742,7 +1742,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
 
             if (QV4::Object *o = ctx->d()->callData->args[0].asObject()) {
                 QV4::ScopedString s(scope, scope.engine->newString(QStringLiteral("data")));
-                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s.getPointer()));
+                QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s));
                 if (!!pixelData) {
                     patternTexture = pixelData->d()->image;
                 }
@@ -4332,7 +4332,7 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         QV4::Scope scope(v4Engine);
         QV4::Scoped<QQuickJSContext2D> wrapper(scope, v4Engine->memoryManager->alloc<QQuickJSContext2D>(v4Engine));
         QV4::ScopedObject p(scope, ed->contextPrototype.value());
-        wrapper->setPrototype(p.getPointer());
+        wrapper->setPrototype(p);
         wrapper->d()->context = this;
         m_v4value = wrapper;
     }

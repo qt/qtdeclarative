@@ -224,7 +224,7 @@ public:
             QV4::ScopedFunctionObject s(scope, v4->memoryManager->alloc<QV4::IndexedBuiltinFunction>(global, propertyId, QQmlDMCachedModelData::set_property));
             p->setGetter(g);
             p->setSetter(s);
-            proto->insertMember(name.getPointer(), p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
+            proto->insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
         }
         prototype = proto;
     }
@@ -427,7 +427,7 @@ public:
         QV4::Scope scope(v4);
         QV4::ScopedObject proto(scope, type->prototype.value());
         QV4::ScopedObject o(scope, proto->engine()->memoryManager->alloc<QQmlDelegateModelItemObject>(proto->engine(), this));
-        o->setPrototype(proto.getPointer());
+        o->setPrototype(proto);
         ++scriptRef;
         return o.asReturnedValue();
     }
@@ -606,7 +606,7 @@ public:
         QV4::Scope scope(v4);
         QV4::ScopedObject o(scope, v4->memoryManager->alloc<QQmlDelegateModelItemObject>(v4, this));
         QV4::ScopedObject p(scope, data->listItemProto.value());
-        o->setPrototype(p.getPointer());
+        o->setPrototype(p);
         ++scriptRef;
         return o.asReturnedValue();
     }

@@ -64,7 +64,7 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
         Scoped<Object> obj(scope, v4->newObject());
         Scoped<Object> proto(scope, ctor->get(v4->id_prototype));
         if (!!proto)
-            obj->setPrototype(proto.getPointer());
+            obj->setPrototype(proto);
         return obj.asReturnedValue();
     }
     return RuntimeHelpers::toObject(scope.engine, ValueRef(&callData->args[0]));
@@ -109,8 +109,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     ScopedContext global(scope, scope.engine->rootContext());
-    Property p(ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_get_proto)).getPointer(),
-               ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_set_proto)).getPointer());
+    Property p(ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_get_proto)),
+               ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_set_proto)));
     insertMember(v4->id___proto__, p, Attr_Accessor|Attr_NotEnumerable);
 }
 
@@ -132,7 +132,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (!O)
         return ctx->engine()->throwTypeError();
 
-    if (ArgumentsObject::isNonStrictArgumentsObject(O.getPointer()))
+    if (ArgumentsObject::isNonStrictArgumentsObject(O))
         Scoped<ArgumentsObject>(scope, O)->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
@@ -140,7 +140,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
-    Property *desc = O->__getOwnProperty__(name.getPointer(), &attrs);
+    Property *desc = O->__getOwnProperty__(name, &attrs);
     return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
@@ -191,7 +191,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    if (!O->__defineOwnProperty__(scope.engine, name.getPointer(), pd, attrs))
+    if (!O->__defineOwnProperty__(scope.engine, name, pd, attrs))
         return ctx->engine()->throwTypeError();
 
     return O.asReturnedValue();
@@ -226,7 +226,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
             return Encode::undefined();
         bool ok;
         if (name)
-            ok = O->__defineOwnProperty__(scope.engine, name.getPointer(), n, nattrs);
+            ok = O->__defineOwnProperty__(scope.engine, name, n, nattrs);
         else
             ok = O->__defineOwnProperty__(scope.engine, index, n, nattrs);
         if (!ok)
@@ -248,7 +248,7 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
     o->setInternalClass(o->internalClass()->sealed());
 
     if (o->arrayData()) {
-        ArrayData::ensureAttributes(o.getPointer());
+        ArrayData::ensureAttributes(o);
         for (uint i = 0; i < o->d()->arrayData->alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
                 o->d()->arrayData->attrs[i].setConfigurable(false);
@@ -265,7 +265,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    if (ArgumentsObject::isNonStrictArgumentsObject(o.getPointer()))
+    if (ArgumentsObject::isNonStrictArgumentsObject(o))
         Scoped<ArgumentsObject>(scope, o)->fullyCreate();
 
     o->setExtensible(false);
@@ -273,7 +273,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     o->setInternalClass(o->internalClass()->frozen());
 
     if (o->arrayData()) {
-        ArrayData::ensureAttributes(o.getPointer());
+        ArrayData::ensureAttributes(o);
         for (uint i = 0; i < o->arrayData()->alloc; ++i) {
             if (!o->arrayData()->isEmpty(i))
                 o->arrayData()->attrs[i].setConfigurable(false);
@@ -430,9 +430,9 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
     Scoped<Object> O(scope, ctx->d()->callData->thisObject, Scoped<Object>::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
-    bool r = O->hasOwnProperty(P.getPointer());
+    bool r = O->hasOwnProperty(P);
     if (!r)
-        r = !O->query(P.getPointer()).isEmpty();
+        r = !O->query(P).isEmpty();
     return Encode(r);
 }
 
@@ -466,7 +466,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
     PropertyAttributes attrs;
-    o->__getOwnProperty__(p.getPointer(), &attrs);
+    o->__getOwnProperty__(p, &attrs);
     return Encode(attrs.isEnumerable());
 }
 
@@ -494,7 +494,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
     Property pd;
     pd.value = f;
     pd.set = Primitive::emptyValue();
-    o->__defineOwnProperty__(scope.engine, prop.getPointer(), pd, Attr_Accessor);
+    o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }
 
@@ -522,7 +522,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
     Property pd;
     pd.value = Primitive::emptyValue();
     pd.set = f;
-    o->__defineOwnProperty__(scope.engine, prop.getPointer(), pd, Attr_Accessor);
+    o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }
 
@@ -554,7 +554,7 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
         if (o->prototype() == p->d()) {
             ok = true;
         } else if (o->isExtensible()) {
-            ok = o->setPrototype(p.getPointer());
+            ok = o->setPrototype(p);
         }
     }
     if (!ok)
@@ -645,24 +645,24 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
     if (attrs.isData()) {
         pd.value = desc->value;
         s = engine->newString(QStringLiteral("value"));
-        o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
         pd.value = Primitive::fromBoolean(attrs.isWritable());
         s = engine->newString(QStringLiteral("writable"));
-        o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
     } else {
         pd.value = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("get"));
-        o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
         pd.value = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("set"));
-        o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
     }
     pd.value = Primitive::fromBoolean(attrs.isEnumerable());
     s = engine->newString(QStringLiteral("enumerable"));
-    o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+    o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
     pd.value = Primitive::fromBoolean(attrs.isConfigurable());
     s = engine->newString(QStringLiteral("configurable"));
-    o->__defineOwnProperty__(scope.engine, s.getPointer(), pd, Attr_Data);
+    o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
 
     return o.asReturnedValue();
 }

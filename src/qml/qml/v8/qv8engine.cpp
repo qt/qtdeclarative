@@ -333,7 +333,7 @@ static QV4::ReturnedValue objectFromVariantMap(QV8Engine *engine, const QVariant
         uint idx = s->asArrayIndex();
         if (idx > 16 && (!o->arrayData() || idx > o->arrayData()->length() * 2))
             o->initSparseArray();
-        o->put(s.getPointer(), (v = engine->fromVariant(iter.value())));
+        o->put(s, (v = engine->fromVariant(iter.value())));
     }
     return o.asReturnedValue();
 }
@@ -620,7 +620,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
         if (idx < UINT_MAX)
             o->arraySet(idx, v);
         else
-            o->insertMember(s.getPointer(), v);
+            o->insertMember(s, v);
     }
     return o.asReturnedValue();
 }

@@ -144,7 +144,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     Scope scope(v4);
     Scoped<Object> o(scope, v4->newObject());
     o->defineDefaultProperty(v4->id_toString, method_toString, 1);
-    v4->qmlExtensions()->valueTypeWrapperPrototype = o.getPointer();
+    v4->qmlExtensions()->valueTypeWrapperPrototype = o;
 }
 
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
@@ -347,7 +347,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 
     QByteArray propName = name->toQString().toUtf8();
     if (r->d()->objectType == Heap::QmlValueTypeWrapper::Reference) {
-        QmlValueTypeReference *reference = static_cast<QmlValueTypeReference *>(r.getPointer());
+        Scoped<QmlValueTypeReference> reference(scope, static_cast<Heap::QmlValueTypeReference *>(r->d()));
         QMetaProperty writebackProperty = reference->d()->object->metaObject()->property(reference->d()->property);
 
         if (!reference->d()->object || !writebackProperty.isWritable() || !readReferenceValue(reference))
@@ -413,7 +413,7 @@ void QmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
     } else {
         Q_ASSERT(r->d()->objectType == Heap::QmlValueTypeWrapper::Copy);
 
-        QmlValueTypeCopy *copy = static_cast<QmlValueTypeCopy *>(r.getPointer());
+        Scoped<QmlValueTypeCopy> copy(scope, static_cast<Heap::QmlValueTypeCopy *>(r->d()));
 
         int index = r->d()->type->metaObject()->indexOfProperty(propName.constData());
         if (index == -1)
