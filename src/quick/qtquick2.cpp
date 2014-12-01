@@ -194,5 +194,10 @@ void QQmlQtQuick2Module::defineModule()
     }
 }
 
+void QQmlQtQuick2Module::undefineModule()
+{
+    QQuick_deinitializeProviders();
+}
+
 QT_END_NAMESPACE
 

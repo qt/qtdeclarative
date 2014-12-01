@@ -46,6 +46,7 @@ public:
 
 private slots:
     void test_qmlClearTypeRegistrations();
+    void test_valueTypeProviderModule(); // QTBUG-43004
 };
 
 void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
@@ -83,6 +84,50 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
 
     delete engine;
     delete component;
+}
+
+static void cleanState(QQmlEngine **e)
+{
+    delete *e;
+    qmlClearTypeRegistrations();
+    *e = new QQmlEngine;
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
+void tst_qqmlenginecleanup::test_valueTypeProviderModule()
+{
+    // this test ensures that a module which installs a value type
+    // provider can be reinitialized after multiple calls to
+    // qmlClearTypeRegistrations() without causing cycles in the
+    // value type provider list.
+    QQmlEngine *e = 0;
+    QUrl testFile1 = testFileUrl("testFile1.qml");
+    QUrl testFile2 = testFileUrl("testFile2.qml");
+    bool noCycles = false;
+    for (int i = 0; i < 20; ++i) {
+        cleanState(&e);
+        QQmlComponent c(e, this);
+        c.loadUrl(i % 2 == 0 ? testFile1 : testFile2); // this will hang if cycles exist.
+    }
+    delete e;
+    e = 0;
+    noCycles = true;
+    QVERIFY(noCycles);
+
+    // this test ensures that no crashes occur due to using
+    // a dangling QQmlType pointer in the type compiler
+    // which results from qmlClearTypeRegistrations()
+    QUrl testFile3 = testFileUrl("testFile3.qml");
+    bool noDangling = false;
+    for (int i = 0; i < 20; ++i) {
+        cleanState(&e);
+        QQmlComponent c(e, this);
+        c.loadUrl(i % 2 == 0 ? testFile1 : testFile3); // this will crash if dangling ptr exists.
+    }
+    delete e;
+    noDangling = true;
+    QVERIFY(noDangling);
 }
 
 QTEST_MAIN(tst_qqmlenginecleanup)

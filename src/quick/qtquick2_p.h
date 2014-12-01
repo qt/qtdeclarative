@@ -42,6 +42,7 @@ class Q_QUICK_PRIVATE_EXPORT QQmlQtQuick2Module
 {
 public:
     static void defineModule();
+    static void undefineModule();
 };
 
 QT_END_NAMESPACE
