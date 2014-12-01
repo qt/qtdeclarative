@@ -47,6 +47,7 @@ public:
 private slots:
     void scriptString();
     void syntaxError();
+    void exception();
     void expressionFromDataComponent();
 };
 
@@ -107,6 +108,15 @@ void tst_qqmlexpression::syntaxError()
     QQmlExpression expression(engine.rootContext(), 0, "asd asd");
     QVariant v = expression.evaluate();
     QCOMPARE(v, QVariant());
+}
+
+void tst_qqmlexpression::exception()
+{
+    QQmlEngine engine;
+    QQmlExpression expression(engine.rootContext(), 0, "abc=123");
+    QVariant v = expression.evaluate();
+    QCOMPARE(v, QVariant());
+    QVERIFY(expression.hasError());
 }
 
 void tst_qqmlexpression::expressionFromDataComponent()
