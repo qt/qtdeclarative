@@ -33,6 +33,8 @@
 #include <QtTest/QtTest>
 
 #include <QJSEngine>
+#include <QQmlEngine>
+#include <QQmlComponent>
 #include <private/qv4engine_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv8engine_p.h>
@@ -274,6 +276,7 @@ private slots:
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
     void conditionalBreakPoint();
+    void conditionalBreakPointInQml();
 
     // context access:
     void readArguments();
@@ -443,6 +446,42 @@ void tst_qv4debugger::conditionalBreakPoint()
     QCOMPARE(m_debuggerAgent->m_capturedLocals[0].size(), 2);
     QVERIFY(m_debuggerAgent->m_capturedLocals[0].contains(QStringLiteral("i")));
     QCOMPARE(m_debuggerAgent->m_capturedLocals[0]["i"].toInt(), 11);
+}
+
+void tst_qv4debugger::conditionalBreakPointInQml()
+{
+    QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
+    v4->enableDebugger();
+
+    QScopedPointer<QThread> debugThread(new QThread);
+    debugThread->start();
+    QScopedPointer<TestAgent> debuggerAgent(new TestAgent);
+    debuggerAgent->addDebugger(v4->debugger);
+    debuggerAgent->moveToThread(debugThread.data());
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.0\n"
+                      "QtObject {\n"
+                      "    id: root\n"
+                      "    property int foo: 42\n"
+                      "    property bool success: false\n"
+                      "    Component.onCompleted: {\n"
+                      "        success = true;\n" // breakpoint here
+                      "    }\n"
+                      "}\n", QUrl("test.qml"));
+
+    debuggerAgent->addBreakPoint("test.qml", 7, /*enabled*/true, "root.foo == 42");
+
+    QScopedPointer<QObject> obj(component.create());
+    QCOMPARE(obj->property("success").toBool(), true);
+
+    QCOMPARE(debuggerAgent->m_statesWhenPaused.count(), 1);
+    QCOMPARE(debuggerAgent->m_statesWhenPaused.at(0).fileName, QStringLiteral("test.qml"));
+    QCOMPARE(debuggerAgent->m_statesWhenPaused.at(0).lineNumber, 7);
+
+    debugThread->quit();
+    debugThread->wait();
 }
 
 void tst_qv4debugger::readArguments()

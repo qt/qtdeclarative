@@ -74,7 +74,9 @@ public:
         ExecutionContext *ctx = engine->currentContext();
         QV4::Script script(ctx, this->script);
         script.strictMode = ctx->d()->strictMode;
-        script.inheritContext = false;
+        // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
+        // is a side-effect of inheritContext.
+        script.inheritContext = true;
         script.parse();
         QV4::ScopedValue result(scope);
         if (!scope.engine->hasException)
