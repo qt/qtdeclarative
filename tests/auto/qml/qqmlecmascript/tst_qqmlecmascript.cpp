@@ -323,6 +323,8 @@ private slots:
     void contextObjectOnLazyBindings();
     void garbageCollectionDuringCreation();
     void qtbug_39520();
+    void readUnregisteredQObjectProperty();
+    void writeUnregisteredQObjectProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5433,7 +5435,7 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         QVERIFY(seq != 0);
 
         // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to an unregistered type");
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to QList<QPoint>");
         QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
@@ -7765,6 +7767,80 @@ void tst_qqmlecmascript::qtbug_39520()
 
     QString s = object->property("s").toString();
     QCOMPARE(s.count('\n'), 1 * 1000 * 1000);
+}
+
+class ContainedObject1 : public QObject
+{
+    Q_OBJECT
+};
+
+class ContainedObject2 : public QObject
+{
+    Q_OBJECT
+};
+
+class ObjectContainer : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(ContainedObject1 *object1 READ object1 WRITE setObject1)
+    Q_PROPERTY(ContainedObject2 *object2 READ object2 WRITE setObject2)
+public:
+    explicit ObjectContainer(QObject *parent = 0) :
+        QObject(parent),
+        mGetterCalled(false),
+        mSetterCalled(false)
+    {
+    }
+
+    ContainedObject1 *object1()
+    {
+        mGetterCalled = true;
+        return 0;
+    }
+
+    void setObject1(ContainedObject1 *)
+    {
+        mSetterCalled = true;
+    }
+
+    ContainedObject2 *object2()
+    {
+        mGetterCalled = true;
+        return 0;
+    }
+
+    void setObject2(ContainedObject2 *)
+    {
+        mSetterCalled = true;
+    }
+
+public:
+    bool mGetterCalled;
+    bool mSetterCalled;
+};
+
+void tst_qqmlecmascript::readUnregisteredQObjectProperty()
+{
+    qmlRegisterType<ObjectContainer>("Test", 1, 0, "ObjectContainer");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("accessUnregisteredQObjectProperty.qml"));
+    QObject *root = component.create();
+    QVERIFY(root);
+
+    QMetaObject::invokeMethod(root, "readProperty");
+    QCOMPARE(root->property("container").value<ObjectContainer*>()->mGetterCalled, true);
+}
+
+void tst_qqmlecmascript::writeUnregisteredQObjectProperty()
+{
+    qmlRegisterType<ObjectContainer>("Test", 1, 0, "ObjectContainer");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("accessUnregisteredQObjectProperty.qml"));
+    QObject *root = component.create();
+    QVERIFY(root);
+
+    QMetaObject::invokeMethod(root, "writeProperty");
+    QCOMPARE(root->property("container").value<ObjectContainer*>()->mSetterCalled, true);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

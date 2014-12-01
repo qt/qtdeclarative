@@ -799,8 +799,30 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
 
     data->propType = QMetaType::type(data->propTypeName);
 
-    if (!data->isFunction())
+    if (!data->isFunction()) {
+        if (data->propType == QMetaType::UnknownType) {
+            const QMetaObject *mo = _metaObject;
+            QQmlPropertyCache *p = _parent;
+            while (p && (!mo || _ownMetaObject)) {
+                mo = p->_metaObject;
+                p = p->_parent;
+            }
+
+            int propOffset = mo->propertyOffset();
+            if (mo && data->coreIndex < propOffset + mo->propertyCount()) {
+                while (data->coreIndex < propOffset) {
+                    mo = mo->superClass();
+                    propOffset = mo->propertyOffset();
+                }
+
+                int registerResult = -1;
+                void *argv[] = { &registerResult };
+                mo->static_metacall(QMetaObject::RegisterPropertyMetaType, data->coreIndex - propOffset, argv);
+                data->propType = registerResult == -1 ? QMetaType::UnknownType : registerResult;
+            }
+        }
         data->flags |= flagsForPropertyType(data->propType, engine);
+    }
 
     data->flags &= ~QQmlPropertyData::NotFullyResolved;
 }
