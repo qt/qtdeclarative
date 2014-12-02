@@ -1443,6 +1443,8 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
         qDebug("QML debugging is enabled. Only use this in a safe environment.");
     }
     QQmlEnginePrivate::qml_debugging_enabled = true;
+#else
+    Q_UNUSED(printWarning);
 #endif
 }
 
