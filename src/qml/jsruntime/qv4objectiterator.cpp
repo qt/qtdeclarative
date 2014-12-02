@@ -100,11 +100,11 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
             if (attrs->isEmpty())
                 break;
             // check the property is not already defined earlier in the proto chain
-            if (current->asObject() != object->asObject()) {
+            if (current->heapObject() != object->heapObject()) {
                 o = object->asObject();
                 n = *name;
                 bool shadowed = false;
-                while (o != current->asObject()) {
+                while (o->asObject()->d() != current->heapObject()) {
                     if ((!!n && o->hasOwnProperty(n)) ||
                         (*index != UINT_MAX && o->hasOwnProperty(*index))) {
                         shadowed = true;
@@ -179,6 +179,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
         return Encode::null();
 
     PropertyAttributes attrs;
+    // ### GC
     Property p;
     uint index;
     Scope scope(object->engine());
@@ -189,7 +190,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
     if (!!name)
         return name->asReturnedValue();
-    assert(index < UINT_MAX);
+    Q_ASSERT(index < UINT_MAX);
     return Encode(object->engine()->newString(QString::number(index)));
 }
 

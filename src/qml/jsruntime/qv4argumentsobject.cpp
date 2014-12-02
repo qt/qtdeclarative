@@ -108,7 +108,8 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     bool isMapped = false;
     uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
     if (pd && index < (uint)numAccessors)
-        isMapped = arrayData()->attributes(index).isAccessor() && pd->getter() == context()->engine->argumentsAccessors[index].getter();
+        isMapped = arrayData()->attributes(index).isAccessor() &&
+                pd->getter()->d() == context()->engine->argumentsAccessors[index].getter()->d();
 
     if (isMapped) {
         Q_ASSERT(arrayData());
