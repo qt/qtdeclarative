@@ -63,13 +63,13 @@ Heap::Object::Object(InternalClass *internalClass, QV4::Object *prototype)
 
 bool Object::setPrototype(Object *proto)
 {
-    Heap::Object *pp = proto->d();
+    Heap::Object *pp = proto ? proto->d() : 0;
     while (pp) {
         if (pp == d())
             return false;
         pp = pp->prototype;
     }
-    d()->prototype = proto->d();
+    d()->prototype = proto ? proto->d() : 0;
     return true;
 }
 
