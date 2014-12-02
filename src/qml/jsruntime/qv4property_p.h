@@ -88,6 +88,10 @@ struct Property {
         value = Primitive::fromManaged(reinterpret_cast<Managed *>(getter));
         set = Primitive::fromManaged(reinterpret_cast<Managed *>(setter));
     }
+    Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
+        value.m = reinterpret_cast<Heap::Base *>(getter);
+        set.m = reinterpret_cast<Heap::Base *>(setter);
+    }
     Property &operator=(Value v) { value = v; return *this; }
 private:
     Property(const Property &);

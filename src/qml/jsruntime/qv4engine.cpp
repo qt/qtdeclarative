@@ -451,7 +451,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     Scoped<String> name(scope, newString(QStringLiteral("thrower")));
-    thrower = ScopedFunctionObject(scope, BuiltinFunction::create(global, name, ::throwTypeError));
+    thrower = BuiltinFunction::create(global, name, ::throwTypeError);
 }
 
 ExecutionEngine::~ExecutionEngine()

@@ -197,7 +197,7 @@ public:
     InternalClass *typedArrayClasses[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
 
     Heap::EvalFunction *evalFunction;
-    FunctionObject *thrower;
+    Heap::FunctionObject *thrower;
 
     Property *argumentsAccessors;
     int nArgumentsAccessors;
