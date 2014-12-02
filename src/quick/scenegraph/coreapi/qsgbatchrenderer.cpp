@@ -1727,7 +1727,8 @@ void Renderer::uploadBatch(Batch *b)
         QSGGeometryNode *gn = b->first->node;
         QSGGeometry *g =  gn->geometry();
         QSGMaterial::Flags flags = gn->activeMaterial()->flags();
-        bool canMerge = (g->drawingMode() == GL_TRIANGLES || g->drawingMode() == GL_TRIANGLE_STRIP)
+        bool canMerge = (g->drawingMode() == GL_TRIANGLES || g->drawingMode() == GL_TRIANGLE_STRIP ||
+                         g->drawingMode() == GL_LINES || g->drawingMode() == GL_POINTS)
                         && b->positionAttribute >= 0
                         && g->indexType() == GL_UNSIGNED_SHORT
                         && (flags & (QSGMaterial::CustomCompileStep | QSGMaterial_FullMatrix)) == 0
