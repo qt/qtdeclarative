@@ -106,6 +106,7 @@ void QQmlInspectorService::updateState()
             return;
         }
 
+        m_currentInspectorPlugin = 0;
         foreach (QQmlInspectorInterface *inspector, m_inspectorPlugins) {
             if (inspector->canHandleView(m_views.first())) {
                 m_currentInspectorPlugin = inspector;
