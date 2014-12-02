@@ -491,6 +491,12 @@ The following functions are also on the Qt object.
     \li \c application.domain
     \li This is the organization domain set on the QCoreApplication instance. This property can be written
     to in order to set the organization domain.
+
+    \row
+    \li \c application.supportsMultipleWindows
+    \li This read-only property can be used to determine whether or not the
+        platform supports multiple windows. Some embedded platforms do not support
+        multiple windows, for example.
     \endtable
 
     The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
