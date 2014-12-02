@@ -404,11 +404,11 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     return engine()->throwReferenceError(n);
 }
 
-ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
+ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **base)
 {
     Scope scope(this);
     ScopedValue v(scope);
-    base = (Object *)0;
+    *base = (Heap::Object *)0;
     name->makeIdentifier();
 
     if (name->equals(d()->engine->id_this))
@@ -424,7 +424,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
             if (hasProperty) {
-                base = w;
+                *base = w->d();
                 return v.asReturnedValue();
             }
             continue;
@@ -454,7 +454,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Object *&base)
                 v = activation->get(name, &hasProperty);
                 if (hasProperty) {
                     if (ctx->d()->type == Heap::ExecutionContext::Type_QmlContext)
-                        base = activation;
+                        *base = activation->d();
                     return v.asReturnedValue();
                 }
             }

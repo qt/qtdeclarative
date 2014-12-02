@@ -149,7 +149,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     void setProperty(String *name, const ValueRef value);
     ReturnedValue getProperty(String *name);
-    ReturnedValue getPropertyAndBase(String *name, Object *&base);
+    ReturnedValue getPropertyAndBase(String *name, Heap::Object **base);
     bool deleteProperty(String *name);
 
     inline CallContext *asCallContext();
