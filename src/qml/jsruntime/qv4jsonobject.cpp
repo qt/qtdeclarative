@@ -641,11 +641,13 @@ struct Stringify
 {
     ExecutionContext *ctx;
     FunctionObject *replacerFunction;
-    QVector<String *> propertyList;
+    // ### GC
+    QVector<Heap::String *> propertyList;
     QString gap;
     QString indent;
 
-    QStack<Object *> stack;
+    // ### GC
+    QStack<Heap::Object *> stack;
 
     Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
 
@@ -776,7 +778,7 @@ QString Stringify::makeMember(const QString &key, ValueRef v)
 
 QString Stringify::JO(Object *o)
 {
-    if (stack.contains(o)) {
+    if (stack.contains(o->d())) {
         ctx->engine()->throwTypeError();
         return QString();
     }
@@ -784,7 +786,7 @@ QString Stringify::JO(Object *o)
     Scope scope(ctx);
 
     QString result;
-    stack.push(o);
+    stack.push(o->d());
     QString stepback = indent;
     indent += gap;
 
@@ -833,7 +835,7 @@ QString Stringify::JO(Object *o)
 
 QString Stringify::JA(ArrayObject *a)
 {
-    if (stack.contains(a)) {
+    if (stack.contains(a->d())) {
         ctx->engine()->throwTypeError();
         return QString();
     }
@@ -841,7 +843,7 @@ QString Stringify::JA(ArrayObject *a)
     Scope scope(a->engine());
 
     QString result;
-    stack.push(a);
+    stack.push(a->d());
     QString stepback = indent;
     indent += gap;
 
@@ -924,8 +926,8 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
                     v = RuntimeHelpers::toString(scope.engine, v);
                 if (v->isString()) {
                     String *s = v->stringValue();
-                    if (!stringify.propertyList.contains(s))
-                    stringify.propertyList.append(s);
+                    if (!stringify.propertyList.contains(s->d()))
+                    stringify.propertyList.append(s->d());
                 }
             }
         }
