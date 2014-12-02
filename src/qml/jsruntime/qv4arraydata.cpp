@@ -637,8 +637,10 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
     o->initSparseArray();
     SparseArrayData *s = static_cast<SparseArrayData *>(o->arrayData());
     SparseArrayNode *n = s->sparse()->insert(index);
-    if (n->value == UINT_MAX)
+    if (n->value == UINT_MAX) {
         n->value = SparseArrayData::allocate(o, isAccessor);
+        s = static_cast<SparseArrayData *>(o->arrayData());
+    }
     return reinterpret_cast<Property *>(s->arrayData() + n->value);
 }
 

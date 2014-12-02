@@ -142,7 +142,7 @@ public:
 
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
-    int effectiveDevicePixelRatio() const;
+    qreal effectiveDevicePixelRatio() const;
 
 Q_SIGNALS:
     void frameSwapped();
