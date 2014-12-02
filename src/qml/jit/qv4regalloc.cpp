@@ -37,6 +37,9 @@
 #include <private/qv4value_inl_p.h>
 
 #include <algorithm>
+#if defined(Q_CC_MINGW)
+#  include <malloc.h>
+#endif
 
 namespace {
 enum { DebugRegAlloc = 0 };

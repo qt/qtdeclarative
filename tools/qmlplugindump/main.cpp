@@ -62,7 +62,9 @@
 #include <signal.h>
 #endif
 #ifdef Q_OS_WIN
-#include <crtdbg.h>
+#  if !defined(Q_CC_MINGW)
+#    include <crtdbg.h>
+#  endif
 #include <qt_windows.h>
 #endif
 
