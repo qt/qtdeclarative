@@ -46,6 +46,7 @@ public:
     ~QQmlDebugConnection();
 
     void connectToHost(const QString &hostName, quint16 port);
+    void startLocalServer(const QString &fileName);
 
     void setDataStreamVersion(int dataStreamVersion);
     int dataStreamVersion();

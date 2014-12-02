@@ -79,7 +79,6 @@ public:
     void receiveMessage(const QByteArray &message);
 
     void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
-    static bool enable(int portFrom, int portTo, bool block, const QString &hostAddress);
 
 private slots:
     void wakeEngine(QQmlEngine *engine);

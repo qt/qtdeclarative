@@ -31,30 +31,48 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUG_H
-#define QQMLDEBUG_H
+#ifndef QLOCALCLIENTCONNECTION_H
+#define QLOCALCLIENTCONNECTION_H
 
-#include <QtQml/qtqmlglobal.h>
-#include <QtCore/qstring.h>
+#include <private/qqmldebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
 
-
-struct Q_QML_EXPORT QQmlDebuggingEnabler
+class QQmlDebugServer;
+class QLocalClientConnectionPrivate;
+class QLocalClientConnection : public QObject, public QQmlDebugServerConnection
 {
-    QQmlDebuggingEnabler(bool printWarning = true);
-    static bool startTcpDebugServer(int port, bool block = false,
-                                    const QString &hostName = QString());
-    static bool connectToLocalDebugger(const QString &socketFileName, bool block = false);
-};
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QLocalClientConnection)
+    Q_DISABLE_COPY(QLocalClientConnection)
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlDebugServerConnection")
+    Q_INTERFACES(QQmlDebugServerConnection)
 
-// Execute code in constructor before first QQmlEngine is instantiated
-#if defined(QT_QML_DEBUG_NO_WARNING)
-static QQmlDebuggingEnabler qQmlEnableDebuggingHelper(false);
-#elif defined(QT_QML_DEBUG)
-static QQmlDebuggingEnabler qQmlEnableDebuggingHelper(true);
-#endif
+public:
+    QLocalClientConnection();
+    ~QLocalClientConnection();
+
+    void setServer(QQmlDebugServer *server);
+    bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
+    bool setFileName(const QString &filename, bool block);
+
+    bool isConnected() const;
+    void send(const QList<QByteArray> &messages);
+    void disconnect();
+    bool waitForMessage();
+
+    void waitForConnection();
+    bool connect();
+
+private Q_SLOTS:
+    void readyRead();
+    void connectionEstablished();
+    void invalidPacket();
+
+private:
+    QLocalClientConnectionPrivate *d_ptr;
+};
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUG_H
+#endif // QLOCALCLIENTCONNECTION_H

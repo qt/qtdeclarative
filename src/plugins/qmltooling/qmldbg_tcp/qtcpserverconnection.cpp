@@ -146,6 +146,13 @@ bool QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
     return listen();
 }
 
+bool QTcpServerConnection::setFileName(const QString &fileName, bool block)
+{
+    Q_UNUSED(fileName);
+    Q_UNUSED(block);
+    return false;
+}
+
 void QTcpServerConnection::waitForConnection()
 {
     Q_D(QTcpServerConnection);

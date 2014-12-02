@@ -39,6 +39,8 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qtimer.h>
 #include <QtNetwork/qnetworkproxy.h>
+#include <QtNetwork/qlocalserver.h>
+#include <QtNetwork/qlocalsocket.h>
 
 const int protocolVersion = 1;
 const QString serverId = QLatin1String("QDeclarativeDebugServer");
@@ -61,6 +63,7 @@ public:
     QQmlDebugConnection *q;
     QPacketProtocol *protocol;
     QIODevice *device;
+    QLocalServer *server;
     QEventLoop handshakeEventLoop;
     QTimer handshakeTimer;
 
@@ -72,6 +75,10 @@ public:
     void connectDeviceSignals();
 
 public Q_SLOTS:
+    void forwardStateChange(QLocalSocket::LocalSocketState state);
+    void forwardError(QLocalSocket::LocalSocketError error);
+
+    void newConnection();
     void connected();
     void readyRead();
     void deviceAboutToClose();
@@ -79,7 +86,7 @@ public Q_SLOTS:
 };
 
 QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate(QQmlDebugConnection *c)
-    : QObject(c), q(c), protocol(0), device(0), gotHello(false)
+    : QObject(c), q(c), protocol(0), device(0), server(0), gotHello(false)
 {
     protocol = new QPacketProtocol(q, this);
     QObject::connect(c, SIGNAL(connected()), this, SLOT(connected()));
@@ -307,10 +314,13 @@ void QQmlDebugConnection::close()
 bool QQmlDebugConnection::waitForConnected(int msecs)
 {
     QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
-    if (!socket)
+    if (!socket) {
+        if (!d->server || (!d->server->hasPendingConnections() &&
+                           !d->server->waitForNewConnection(msecs)))
+            return false;
+    } else if (!socket->waitForConnected(msecs)) {
         return false;
-    if (!socket->waitForConnected(msecs))
-        return false;
+    }
     // wait for handshake
     d->handshakeTimer.start();
     d->handshakeEventLoop.exec();
@@ -336,9 +346,13 @@ QString QQmlDebugConnection::stateString() const
 
 QAbstractSocket::SocketState QQmlDebugConnection::state() const
 {
-    QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
-    if (socket)
-        return socket->state();
+    QAbstractSocket *abstractSocket = qobject_cast<QAbstractSocket*>(d->device);
+    if (abstractSocket)
+        return abstractSocket->state();
+
+    QLocalSocket *localSocket = qobject_cast<QLocalSocket*>(d->device);
+    if (localSocket)
+        return static_cast<QAbstractSocket::SocketState>(localSocket->state());
 
     return QAbstractSocket::UnconnectedState;
 }
@@ -366,6 +380,29 @@ void QQmlDebugConnection::connectToHost(const QString &hostName, quint16 port)
     QIODevice::open(ReadWrite | Unbuffered);
 }
 
+void QQmlDebugConnection::startLocalServer(const QString &fileName)
+{
+    d->gotHello = false;
+    d->server = new QLocalServer(d);
+    // QueuedConnection so that waitForNewConnection() returns true.
+    connect(d->server, SIGNAL(newConnection()), d, SLOT(newConnection()), Qt::QueuedConnection);
+    d->server->listen(fileName);
+    QIODevice::open(ReadWrite | Unbuffered);
+}
+
+void QQmlDebugConnectionPrivate::newConnection()
+{
+    QLocalSocket *socket = server->nextPendingConnection();
+    server->close();
+    device = socket;
+    connectDeviceSignals();
+    connect(socket, SIGNAL(stateChanged(QLocalSocket::LocalSocketState)),
+            this, SLOT(forwardStateChange(QLocalSocket::LocalSocketState)));
+    connect(socket, SIGNAL(error(QLocalSocket::LocalSocketError)),
+            this, SLOT(forwardError(QLocalSocket::LocalSocketError)));
+    emit q->connected();
+}
+
 void QQmlDebugConnectionPrivate::connectDeviceSignals()
 {
     connect(device, SIGNAL(bytesWritten(qint64)), q, SIGNAL(bytesWritten(qint64)));
@@ -373,7 +410,15 @@ void QQmlDebugConnectionPrivate::connectDeviceSignals()
     connect(device, SIGNAL(aboutToClose()), this, SLOT(deviceAboutToClose()));
 }
 
-//
+void QQmlDebugConnectionPrivate::forwardStateChange(QLocalSocket::LocalSocketState state)
+{
+    emit q->stateChanged(static_cast<QAbstractSocket::SocketState>(state));
+}
+
+void QQmlDebugConnectionPrivate::forwardError(QLocalSocket::LocalSocketError error)
+{
+    emit q->error(static_cast<QAbstractSocket::SocketError>(error));
+}
 
 QQmlDebugClientPrivate::QQmlDebugClientPrivate()
     : connection(0)

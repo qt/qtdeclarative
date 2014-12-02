@@ -12,6 +12,7 @@ PUBLICTESTS += \
 
 PRIVATETESTS += \
     qqmldebugclient \
+    qqmldebuglocal \
     qqmldebugservice
 
 SUBDIRS += $$PUBLICTESTS

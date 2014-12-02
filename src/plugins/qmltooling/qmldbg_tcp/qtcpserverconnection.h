@@ -54,6 +54,7 @@ public:
 
     void setServer(QQmlDebugServer *server);
     bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
+    bool setFileName(const QString &fileName, bool block);
 
     bool isConnected() const;
     void send(const QList<QByteArray> &messages);
