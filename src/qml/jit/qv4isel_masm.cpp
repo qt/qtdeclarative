@@ -1530,16 +1530,15 @@ void InstructionSelection::calculateRegistersToSave(const RegisterInformation &u
     fpRegistersToSave.clear();
 
     foreach (const RegisterInfo &ri, Assembler::getRegisterInfo()) {
+#if defined(RESTORE_EBX_ON_CALL)
+        if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
+            regularRegistersToSave.append(ri);
+            continue;
+        }
+#endif // RESTORE_EBX_ON_CALL
         if (ri.isCallerSaved())
             continue;
-
         if (ri.isRegularRegister()) {
-#if defined(RESTORE_EBX_ON_CALL)
-            if (ri.isRegularRegister() && ri.reg<JSC::X86Registers::RegisterID>() == JSC::X86Registers::ebx) {
-                regularRegistersToSave.append(ri);
-                continue;
-            }
-#endif // RESTORE_EBX_ON_CALL
             if (ri.isPredefined() || used.contains(ri))
                 regularRegistersToSave.append(ri);
         } else {
