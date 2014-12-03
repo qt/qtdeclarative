@@ -162,6 +162,65 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 
 } // namespace QV4
 
+namespace {
+
+struct ChunkSweepData {
+    ChunkSweepData() : tail(&head), head(0), isEmpty(true) { }
+    Heap::Base **tail;
+    Heap::Base *head;
+    bool isEmpty;
+};
+
+void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, ExecutionEngine *engine)
+{
+    char *chunkStart = reinterpret_cast<char*>(chunk.memory.base());
+    std::size_t itemSize = chunk.chunkSize;
+//    qDebug("chunkStart @ %p, size=%x, pos=%x", chunkStart, chunk.chunkSize, chunk.chunkSize>>4);
+
+#ifdef V4_USE_VALGRIND
+    VALGRIND_DISABLE_ERROR_REPORTING;
+#endif
+    for (char *item = chunkStart, *chunkEnd = item + chunk.memory.size() - itemSize; item <= chunkEnd; item += itemSize) {
+        Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
+//        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
+//               item, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
+
+        Q_ASSERT((qintptr) item % 16 == 0);
+
+        if (m->markBit) {
+            Q_ASSERT(m->inUse);
+            m->markBit = 0;
+            sweepData->isEmpty = false;
+            ++(*itemsInUse);
+        } else {
+            if (m->inUse) {
+//                qDebug() << "-- collecting it." << m << sweepData->tail << m->nextFree();
+#ifdef V4_USE_VALGRIND
+                VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
+                if (m->internalClass->vtable->destroy)
+                    m->internalClass->vtable->destroy(m);
+
+                memset(m, 0, itemSize);
+#ifdef V4_USE_VALGRIND
+                VALGRIND_DISABLE_ERROR_REPORTING;
+                VALGRIND_MEMPOOL_FREE(this, m);
+#endif
+                Q_V4_PROFILE_DEALLOC(engine, m, itemSize, Profiling::SmallItem);
+                ++(*itemsInUse);
+            }
+            // Relink all free blocks to rewrite references to any released chunk.
+            *sweepData->tail = m;
+            sweepData->tail = m->nextFreeRef();
+        }
+    }
+#ifdef V4_USE_VALGRIND
+    VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
+}
+
+} // namespace
+
 MemoryManager::MemoryManager()
     : m_d(new Data)
     , m_persistentValues(0)
@@ -362,8 +421,43 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    for (QVector<Data::Chunk>::iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i)
-        sweep(reinterpret_cast<char*>(i->memory.base()), i->memory.size(), i->chunkSize);
+    QVarLengthArray<ChunkSweepData> chunkSweepData(m_d->heapChunks.size());
+    uint itemsInUse[MemoryManager::Data::MaxItemSize/16];
+    memset(itemsInUse, 0, sizeof(itemsInUse));
+
+    for (int i = 0; i < m_d->heapChunks.size(); ++i) {
+        const MemoryManager::Data::Chunk &chunk = m_d->heapChunks[i];
+        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d->engine);
+    }
+
+    Heap::Base** tails[MemoryManager::Data::MaxItemSize/16];
+    memset(m_d->smallItems, 0, sizeof(m_d->smallItems));
+    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
+        tails[pos] = &m_d->smallItems[pos];
+
+    QVector<Data::Chunk>::iterator chunkIter = m_d->heapChunks.begin();
+    for (int i = 0; i < chunkSweepData.size(); ++i) {
+        Q_ASSERT(chunkIter != m_d->heapChunks.end());
+        const size_t pos = chunkIter->chunkSize >> 4;
+        const size_t decrease = chunkIter->memory.size()/chunkIter->chunkSize - 1;
+
+        // Release that chunk if it could have been spared since the last GC run without any difference.
+        if (chunkSweepData[i].isEmpty && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
+            Q_V4_PROFILE_DEALLOC(m_d->engine, 0, chunkIter->memory.size(), Profiling::HeapPage);
+            --m_d->nChunks[pos];
+            m_d->availableItems[pos] -= uint(decrease);
+            m_d->totalItems -= int(decrease);
+            chunkIter->memory.deallocate();
+            chunkIter = m_d->heapChunks.erase(chunkIter);
+            continue;
+        } else if (chunkSweepData[i].head) {
+            *tails[pos] = chunkSweepData[i].head;
+            tails[pos] = chunkSweepData[i].tail;
+        }
+        ++chunkIter;
+    }
+    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
+        *tails[pos] = 0;
 
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
@@ -395,48 +489,6 @@ void MemoryManager::sweep(bool lastSweep)
     }
 }
 
-void MemoryManager::sweep(char *chunkStart, std::size_t chunkSize, size_t size)
-{
-//    qDebug("chunkStart @ %p, size=%x, pos=%x (%x)", chunkStart, size, size>>4, m_d->smallItems[size >> 4]);
-    Heap::Base **f = &m_d->smallItems[size >> 4];
-
-#ifdef V4_USE_VALGRIND
-    VALGRIND_DISABLE_ERROR_REPORTING;
-#endif
-    for (char *chunk = chunkStart, *chunkEnd = chunk + chunkSize - size; chunk <= chunkEnd; chunk += size) {
-        Heap::Base *m = reinterpret_cast<Heap::Base *>(chunk);
-//        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
-//               chunk, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
-
-        Q_ASSERT((qintptr) chunk % 16 == 0);
-
-        if (m->inUse) {
-            if (m->markBit) {
-                m->markBit = 0;
-            } else {
-//                qDebug() << "-- collecting it." << m << *f << m->nextFree();
-#ifdef V4_USE_VALGRIND
-                VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
-                if (m->internalClass->vtable->destroy)
-                    m->internalClass->vtable->destroy(m);
-
-                memset(m, 0, size);
-                m->setNextFree(*f);
-#ifdef V4_USE_VALGRIND
-                VALGRIND_DISABLE_ERROR_REPORTING;
-                VALGRIND_MEMPOOL_FREE(this, m);
-#endif
-                Q_V4_PROFILE_DEALLOC(m_d->engine, m, size, Profiling::SmallItem);
-                *f = m;
-            }
-        }
-    }
-#ifdef V4_USE_VALGRIND
-    VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
-}
-
 bool MemoryManager::isGCBlocked() const
 {
     return m_d->gcBlocked;
@@ -466,6 +518,7 @@ void MemoryManager::runGC()
         int markTime = t.elapsed();
         t.restart();
         int usedBefore = getUsedMem();
+        int chunksBefore = m_d->heapChunks.size();
         sweep();
         int usedAfter = getUsedMem();
         int sweepTime = t.elapsed();
@@ -477,6 +530,7 @@ void MemoryManager::runGC()
         qDebug() << "Used memory before GC:" << usedBefore;
         qDebug() << "Used memory after GC:" << usedAfter;
         qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
+        qDebug() << "Released chunks:" << (chunksBefore - m_d->heapChunks.size());
         qDebug() << "======== End GC ========";
     }
 
