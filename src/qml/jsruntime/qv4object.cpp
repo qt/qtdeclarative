@@ -84,11 +84,11 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
 {
     if (!attrs.isAccessor())
         return p->value.asReturnedValue();
-    FunctionObject *getter = p->getter();
-    if (!getter)
+    if (!p->getter())
         return Encode::undefined();
 
-    Scope scope(getter->engine());
+    Scope scope(p->getter()->internalClass->engine);
+    ScopedFunctionObject getter(scope, p->getter());
     ScopedCallData callData(scope);
     callData->thisObject = *thisObject;
     return getter->call(callData);
@@ -100,12 +100,13 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
         return;
 
     if (attrs.isAccessor()) {
-        if (FunctionObject *set = pd->setter()) {
-            Scope scope(set->engine());
+        if (Heap::FunctionObject *set = pd->setter()) {
+            Scope scope(set->internalClass->engine);
+            ScopedFunctionObject setter(scope, set);
             ScopedCallData callData(scope, 1);
             callData->args[0] = *value;
             callData->thisObject = this;
-            set->call(callData);
+            setter->call(callData);
             return;
         }
         goto reject;
@@ -713,10 +714,11 @@ void Object::internalPut(String *name, const ValueRef value)
         assert(pd->setter() != 0);
 
         Scope scope(engine());
+        ScopedFunctionObject setter(scope, pd->setter());
         ScopedCallData callData(scope, 1);
         callData->args[0] = *value;
         callData->thisObject = this;
-        pd->setter()->call(callData);
+        setter->call(callData);
         return;
     }
 
@@ -786,10 +788,11 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
         assert(pd->setter() != 0);
 
         Scope scope(engine());
+        ScopedFunctionObject setter(scope, pd->setter());
         ScopedCallData callData(scope, 1);
         callData->args[0] = *value;
         callData->thisObject = this;
-        pd->setter()->call(callData);
+        setter->call(callData);
         return;
     }
 

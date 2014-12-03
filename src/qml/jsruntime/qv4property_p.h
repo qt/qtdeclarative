@@ -71,10 +71,10 @@ struct Property {
     inline bool isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const;
     inline void merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs);
 
-    inline FunctionObject *getter() const { return reinterpret_cast<FunctionObject *>(value.asManaged()); }
-    inline FunctionObject *setter() const { return reinterpret_cast<FunctionObject *>(set.asManaged()); }
+    inline Heap::FunctionObject *getter() const { return value.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(value.heapObject()) : 0; }
+    inline Heap::FunctionObject *setter() const { return set.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(set.heapObject()) : 0; }
     inline void setGetter(FunctionObject *g) { value = Primitive::fromManaged(reinterpret_cast<Managed *>(g)); }
-    inline void setSetter(FunctionObject *s) { set = Primitive::fromManaged(reinterpret_cast<Managed *>(s)); }
+    inline void setSetter(FunctionObject *s) { set = s ? Primitive::fromManaged(reinterpret_cast<Managed *>(s)) : Value::fromHeapObject(0); }
 
     void copy(const Property &other, PropertyAttributes attrs) {
         value = other.value;
@@ -82,8 +82,8 @@ struct Property {
             set = other.set;
     }
 
-    explicit Property()  { value = Encode::undefined(); set = Encode::undefined(); }
-    explicit Property(Value v) : value(v) { set = Encode::undefined(); }
+    explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(0); }
+    explicit Property(Value v) : value(v) { set = Value::fromHeapObject(0); }
     Property(FunctionObject *getter, FunctionObject *setter) {
         value = Primitive::fromManaged(reinterpret_cast<Managed *>(getter));
         set = Primitive::fromManaged(reinterpret_cast<Managed *>(setter));
@@ -111,9 +111,9 @@ inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &
     if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other.value))
         return false;
     if (attrs.type() == PropertyAttributes::Accessor) {
-        if (value.asManaged() != other.value.asManaged())
+        if (value.heapObject() != other.value.heapObject())
             return false;
-        if (set.asManaged() != other.set.asManaged())
+        if (set.heapObject() != other.set.heapObject())
             return false;
     }
     return true;

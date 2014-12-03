@@ -109,7 +109,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
     if (pd && index < (uint)numAccessors)
         isMapped = arrayData()->attributes(index).isAccessor() &&
-                pd->getter()->d() == context()->engine->argumentsAccessors[index].getter()->d();
+                pd->getter() == context()->engine->argumentsAccessors[index].getter();
 
     if (isMapped) {
         Q_ASSERT(arrayData());
@@ -127,10 +127,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
+        ScopedFunctionObject setter(scope, map.setter());
         ScopedCallData callData(scope, 1);
         callData->thisObject = this->asReturnedValue();
         callData->args[0] = desc.value;
-        map.setter()->call(callData);
+        setter->call(callData);
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);

@@ -886,9 +886,9 @@ void ExecutionEngine::markObjects()
 
     for (int i = 0; i < nArgumentsAccessors; ++i) {
         const Property &pd = argumentsAccessors[i];
-        if (FunctionObject *getter = pd.getter())
+        if (Heap::FunctionObject *getter = pd.getter())
             getter->mark(this);
-        if (FunctionObject *setter = pd.setter())
+        if (Heap::FunctionObject *setter = pd.setter())
             setter->mark(this);
     }
 

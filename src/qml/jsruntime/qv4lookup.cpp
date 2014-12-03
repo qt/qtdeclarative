@@ -434,7 +434,7 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const 
         Object *o = object->objectValue();
         if (l->classList[0] == o->internalClass()) {
             Scope scope(o->engine());
-            FunctionObject *getter = o->propertyAt(l->index)->getter();
+            ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
             if (!getter)
                 return Encode::undefined();
 
@@ -456,7 +456,7 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
         if (l->classList[0] == o->internalClass &&
             l->classList[1] == o->prototype->internalClass) {
             Scope scope(o->internalClass->engine);
-            FunctionObject *getter = o->prototype->propertyAt(l->index)->getter();
+            ScopedFunctionObject getter(scope, o->prototype->propertyAt(l->index)->getter());
             if (!getter)
                 return Encode::undefined();
 
@@ -481,7 +481,7 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const 
                 o = o->prototype;
                 if (l->classList[2] == o->internalClass) {
                     Scope scope(o->internalClass->engine);
-                    FunctionObject *getter = o->propertyAt(l->index)->getter();
+                    ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
                     if (!getter)
                         return Encode::undefined();
 
@@ -525,7 +525,7 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engin
         Object *o = l->proto;
         if (l->classList[0] == o->internalClass()) {
             Scope scope(o->engine());
-            FunctionObject *getter = o->propertyAt(l->index)->getter();
+            ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
             if (!getter)
                 return Encode::undefined();
 
@@ -545,7 +545,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engin
         if (l->classList[0] == o->internalClass() &&
             l->classList[1] == o->prototype()->internalClass) {
             Scope scope(o->engine());
-            FunctionObject *getter = o->prototype()->propertyAt(l->index)->getter();
+            ScopedFunctionObject getter(scope, o->prototype()->propertyAt(l->index)->getter());
             if (!getter)
                 return Encode::undefined();
 
@@ -648,7 +648,7 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
     Object *o = engine->globalObject();
     if (l->classList[0] == o->internalClass()) {
         Scope scope(o->engine());
-        FunctionObject *getter = o->propertyAt(l->index)->getter();
+        ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
         if (!getter)
             return Encode::undefined();
 
@@ -666,7 +666,7 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
     if (l->classList[0] == o->internalClass() &&
         l->classList[1] == o->prototype()->internalClass) {
         Scope scope(o->engine());
-        FunctionObject *getter = o->prototype()->propertyAt(l->index)->getter();
+        ScopedFunctionObject getter(scope, o->prototype()->propertyAt(l->index)->getter());
         if (!getter)
             return Encode::undefined();
 
@@ -687,7 +687,7 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
             o = o->prototype;
             if (l->classList[2] == o->internalClass) {
                 Scope scope(o->internalClass->engine);
-                FunctionObject *getter = o->propertyAt(l->index)->getter();
+                ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
                 if (!getter)
                     return Encode::undefined();
 
