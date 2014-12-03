@@ -214,10 +214,9 @@ Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)
 // 15.3.2
 ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
-    FunctionCtor *f = static_cast<FunctionCtor *>(that);
-    ExecutionEngine *v4 = f->internalClass()->engine;
-    Scope scope(v4);
-    ScopedContext ctx(scope, v4->currentContext());
+    Scope scope(that->engine());
+    Scoped<FunctionCtor> f(scope, static_cast<FunctionCtor *>(that));
+    ScopedContext ctx(scope, scope.engine->currentContext());
     QString arguments;
     QString body;
     if (callData->argc > 0) {
@@ -241,22 +240,22 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
     const bool parsed = parser.parseExpression();
 
     if (!parsed)
-        return v4->throwSyntaxError(QLatin1String("Parse error"));
+        return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
 
     using namespace QQmlJS::AST;
     FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
     if (!fe)
-        return v4->throwSyntaxError(QLatin1String("Parse error"));
+        return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
 
-    IR::Module module(v4->debugger != 0);
+    IR::Module module(scope.engine->debugger != 0);
 
-    QQmlJS::RuntimeCodegen cg(v4, f->strictMode());
+    QQmlJS::RuntimeCodegen cg(scope.engine, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
-    QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-    QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
-    QV4::Function *vmf = compilationUnit->linkToEngine(v4);
+    Compiler::JSUnitGenerator jsGenerator(&module);
+    QScopedPointer<EvalInstructionSelection> isel(scope.engine->iselFactory->create(QQmlEnginePrivate::get(scope.engine), scope.engine->executableAllocator, &module, &jsGenerator));
+    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = isel->compile();
+    Function *vmf = compilationUnit->linkToEngine(scope.engine);
 
     ScopedContext global(scope, scope.engine->rootContext());
     return FunctionObject::createScriptFunction(global, vmf)->asReturnedValue();
@@ -304,7 +303,7 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
     Scope scope(ctx);
-    FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
+    ScopedFunctionObject o(scope, ctx->d()->callData->thisObject.asFunctionObject());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -346,7 +345,7 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    FunctionObject *o = ctx->d()->callData->thisObject.asFunctionObject();
+    ScopedFunctionObject o(scope, ctx->d()->callData->thisObject.asFunctionObject());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -420,13 +419,13 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
-    ScriptFunction *f = static_cast<ScriptFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
+    ExecutionEngine *v4 = that->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
+    Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
     ScopedContext context(scope, v4->currentContext());
 
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
@@ -518,9 +517,9 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
-    SimpleScriptFunction *f = static_cast<SimpleScriptFunction *>(that);
-
     Scope scope(v4);
+    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
+
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
