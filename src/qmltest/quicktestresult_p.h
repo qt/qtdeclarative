@@ -139,7 +139,7 @@ public Q_SLOTS:
 
     QObject *grabImage(QQuickItem *item);
 
-    QObject *findChild(QObject *parent, const QString &objectName);
+    Q_REVISION(1) QObject *findChild(QObject *parent, const QString &objectName);
 
 public:
     // Helper functions for the C++ main() shell.

@@ -33,7 +33,7 @@
 
 import QtQuick 2.2
 import QtQuick.Window 2.0
-import QtTest 1.0
+import QtTest 1.1
 
 Item {
     width: 100

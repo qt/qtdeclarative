@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtTest 1.0
+import QtTest 1.1
 import "testlogger.js" as TestLogger
 import Qt.test.qtestroot 1.0
 
@@ -101,7 +101,7 @@ import Qt.test.qtestroot 1.0
 
     \code
     import QtQuick 2.0
-    import QtTest 1.0
+    import QtTest 1.1
 
     TestCase {
         name: "DataTests"

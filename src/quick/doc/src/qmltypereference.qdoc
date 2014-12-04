@@ -830,14 +830,14 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-\qmlmodule QtTest 1.0
+\qmlmodule QtTest 1.1
 \title Qt Quick Test QML Types
 \brief This module provides QML types to unit test your QML application
 \ingroup qmlmodules
 
 You can import this module using the following statement:
 \code
-import QtTest 1.0
+import QtTest 1.1
 \endcode
 
 For more information about how to use these types, see

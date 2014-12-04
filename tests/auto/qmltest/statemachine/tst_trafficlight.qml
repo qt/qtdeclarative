@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-import QtTest 1.0
+import QtTest 1.1
 import QtQml.StateMachine 1.0
 
 TestCase {
