@@ -72,7 +72,11 @@ bool RenderingVisitor::visit(QSGGeometryNode *node)
         QSGTexture *texture = tn->texture();
         if (PixmapTexture *pt = dynamic_cast<PixmapTexture *>(texture)) {
             const QPixmap &pm = pt->pixmap();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
+            painter->drawPixmap(tn->rect(), pm, tn->sourceRect());
+#else
             painter->drawPixmap(tn->rect(), pm, QRectF(0, 0, pm.width(), pm.height()));
+#endif
         } else if (QSGPlainTexture *pt = dynamic_cast<QSGPlainTexture *>(texture)) {
             const QImage &im = pt->image();
             painter->drawImage(tn->rect(), im, QRectF(0, 0, im.width(), im.height()));
