@@ -250,6 +250,12 @@ Module {
             type: "QObject*"
             Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
         }
+        Method {
+            name: "findChild"
+            type: "QObject*"
+            Parameter { name: "parent"; type: "QObject"; isPointer: true }
+            Parameter { name: "objectName"; type: "string" }
+        }
     }
     Component {
         name: "QuickTestUtil"

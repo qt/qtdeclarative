@@ -38,8 +38,10 @@ Module {
         Property { name: "desktopAvailableHeight"; type: "int"; isReadonly: true }
         Property { name: "logicalPixelDensity"; type: "double"; isReadonly: true }
         Property { name: "pixelDensity"; type: "double"; isReadonly: true }
+        Property { name: "devicePixelRatio"; type: "double"; isReadonly: true }
         Property { name: "primaryOrientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
         Property { name: "orientation"; type: "Qt::ScreenOrientation"; isReadonly: true }
+        Property { name: "orientationUpdateMask"; type: "Qt::ScreenOrientations" }
         Signal { name: "desktopGeometryChanged" }
         Method {
             name: "angleBetween"
@@ -104,11 +106,20 @@ Module {
         Method { name: "releaseResources" }
     }
     Component {
+        name: "QQuickWindowAttached"
+        prototype: "QObject"
+        Property { name: "visibility"; type: "QWindow::Visibility"; isReadonly: true }
+        Property { name: "active"; type: "bool"; isReadonly: true }
+        Property { name: "activeFocusItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+    }
+    Component {
         name: "QQuickWindowQmlImpl"
         defaultProperty: "data"
         prototype: "QQuickWindow"
-        exports: ["QtQuick.Window/Window 2.1"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick.Window/Window 2.1", "QtQuick.Window/Window 2.2"]
+        exportMetaObjectRevisions: [0, 1]
+        attachedType: "QQuickWindowAttached"
         Property { name: "visible"; type: "bool" }
         Property { name: "visibility"; type: "Visibility" }
         Signal {
