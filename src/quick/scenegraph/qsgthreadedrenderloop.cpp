@@ -145,7 +145,7 @@ const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 4);
 // called.
 const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 5);
 
-template <typename T> T *windowFor(const QList<T> list, QQuickWindow *window)
+template <typename T> T *windowFor(const QList<T> &list, QQuickWindow *window)
 {
     for (int i=0; i<list.size(); ++i) {
         const T &t = list.at(i);
@@ -943,9 +943,9 @@ void QSGThreadedRenderLoop::handleObscurity(Window *w)
 void QSGThreadedRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
     qCDebug(QSG_LOG_RENDERLOOP) << "- polish and sync update request";
-    foreach (const Window &w, m_windows)
-        if (w.window == window)
-            polishAndSync(const_cast<Window *>(&w));
+    Window *w = windowFor(m_windows, window);
+    if (w)
+        polishAndSync(w);
 }
 
 void QSGThreadedRenderLoop::maybeUpdate(QQuickWindow *window)
