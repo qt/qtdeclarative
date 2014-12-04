@@ -147,6 +147,7 @@ void PixmapRenderer::render(QPixmap *target)
     target->fill(clearColor());
     QPainter painter(target);
     painter.setRenderHint(QPainter::Antialiasing);
+    painter.setWindow(m_projectionRect);
 
     RenderingVisitor(&painter).visitChildren(rootNode());
 }

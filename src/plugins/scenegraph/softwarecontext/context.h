@@ -66,6 +66,8 @@ public:
     virtual void render();
 
     void render(QPixmap *target);
+
+    QRect m_projectionRect;
 };
 
 class RenderContext : public QSGRenderContext

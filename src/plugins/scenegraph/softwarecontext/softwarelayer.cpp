@@ -196,6 +196,7 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
+    m_renderer->m_projectionRect = m_rect.toRect();
     m_renderer->setClearColor(Qt::transparent);
 
     m_renderer->renderScene();
