@@ -149,6 +149,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
     inline const CatchContext *asCatchContext() const;
+    inline const WithContext *asWithContext() const;
 
     inline FunctionObject *getFunctionObject() const;
 
@@ -232,12 +233,17 @@ inline const CatchContext *ExecutionContext::asCatchContext() const
     return d()->type == Type_CatchContext ? static_cast<const CatchContext *>(this) : 0;
 }
 
+inline const WithContext *ExecutionContext::asWithContext() const
+{
+    return d()->type == Type_WithContext ? static_cast<const WithContext *>(this) : 0;
+}
+
 inline FunctionObject *ExecutionContext::getFunctionObject() const
 {
     for (const ExecutionContext *it = this; it; it = it->d()->parent) {
         if (const CallContext *callCtx = it->asCallContext())
             return callCtx->d()->function;
-        else if (it->asCatchContext())
+        else if (it->asCatchContext() || it->asWithContext())
             continue; // look in the parent context for a FunctionObject
         else
             break;

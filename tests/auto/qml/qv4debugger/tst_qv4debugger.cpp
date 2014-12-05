@@ -287,6 +287,7 @@ private slots:
     // exceptions:
     void pauseOnThrow();
     void breakInCatch();
+    void breakInWith();
 
     void evaluateExpression();
 
@@ -630,6 +631,23 @@ void tst_qv4debugger::breakInCatch()
     QV4::Debugging::Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("breakInCatch"));
     QCOMPARE(state.lineNumber, 4);
+}
+
+void tst_qv4debugger::breakInWith()
+{
+    QString script =
+            "with (42) {\n"
+            "    console.log('give the answer');\n"
+            "}\n";
+
+    m_debuggerAgent->addBreakPoint("breakInWith", 2);
+    evaluateJavaScript(script, "breakInWith");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, BreakPoint);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
+    QV4::Debugging::Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(state.fileName, QString("breakInWith"));
+    QCOMPARE(state.lineNumber, 2);
 }
 
 void tst_qv4debugger::evaluateExpression()
