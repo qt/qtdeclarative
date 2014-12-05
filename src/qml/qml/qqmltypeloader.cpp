@@ -2584,20 +2584,10 @@ void QQmlScriptBlob::dataReceived(const Data &data)
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
     QmlIR::Document irUnit(v4->debugger != 0);
-    QQmlJS::DiagnosticMessage metaDataError;
-    irUnit.extractScriptMetaData(source, &metaDataError);
-    if (!metaDataError.message.isEmpty()) {
-        QQmlError e;
-        e.setUrl(finalUrl());
-        e.setLine(metaDataError.loc.startLine);
-        e.setColumn(metaDataError.loc.startColumn);
-        e.setDescription(metaDataError.message);
-        setError(e);
-        return;
-    }
+    QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
 
     QList<QQmlError> errors;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, v4, finalUrl(), source, &errors);
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, v4, finalUrl(), source, &errors, &collector);
     // No need to addref on unit, it's initial refcount is 1
     source.clear();
     if (!errors.isEmpty()) {
@@ -2608,6 +2598,9 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         unit.take(new EmptyCompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
+    irUnit.imports = collector.imports;
+    if (collector.hasPragmaLibrary)
+        irUnit.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);

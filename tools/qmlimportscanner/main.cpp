@@ -246,6 +246,41 @@ static QVariantList findQmlImportsInQmlFile(const QString &filePath)
     return findQmlImportsInQmlCode(filePath, code);
 }
 
+struct ImportCollector : public QQmlJS::Directives
+{
+    QVariantList imports;
+
+    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    {
+        QVariantMap entry;
+        entry[QLatin1String("type")] = QStringLiteral("javascript");
+        entry[QLatin1String("path")] = jsfile;
+        imports << entry;
+
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+
+    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    {
+        QVariantMap entry;
+        if (uri.contains(QLatin1Char('/'))) {
+            entry[QLatin1String("type")] = QStringLiteral("directory");
+            entry[QLatin1String("name")] = uri;
+        } else {
+            entry[QLatin1String("type")] = QStringLiteral("module");
+            entry[QLatin1String("name")] = uri;
+            entry[QLatin1String("version")] = version;
+        }
+        imports << entry;
+
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+};
+
 // Scan a single javascrupt file for import statements
 QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
 {
@@ -256,42 +291,22 @@ QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
            return QVariantList();
     }
 
-    QVariantList imports;
-
     QString sourceCode = QString::fromUtf8(file.readAll());
     file.close();
-    QmlIR::Document doc(/*debug mode*/false);
-    QQmlJS::DiagnosticMessage error;
-    doc.extractScriptMetaData(sourceCode, &error);
-    if (!error.message.isEmpty())
-        return imports;
 
-    foreach (const QV4::CompiledData::Import *import, doc.imports) {
-        QVariantMap entry;
-        const QString name = doc.stringAt(import->uriIndex);
-        switch (import->type) {
-        case QV4::CompiledData::Import::ImportScript:
-            entry[QStringLiteral("type")] = QStringLiteral("javascript");
-            entry[QStringLiteral("path")] = name;
-            break;
-        case QV4::CompiledData::Import::ImportLibrary:
-            if (name.contains(QLatin1Char('/'))) {
-                entry[QStringLiteral("type")] = QStringLiteral("directory");
-                entry[QStringLiteral("name")] = name;
-            } else {
-                entry[QStringLiteral("type")] = QStringLiteral("module");
-                entry[QStringLiteral("name")] = name;
-                entry[QStringLiteral("version")] = QString::number(import->majorVersion) + QLatin1Char('.') + QString::number(import->minorVersion);
-            }
-            break;
-        default:
-            Q_UNREACHABLE();
-            continue;
-        }
-        imports << entry;
-    }
+    QQmlJS::Engine ee;
+    ImportCollector collector;
+    ee.setDirectives(&collector);
+    QQmlJS::Lexer lexer(&ee);
+    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
+    QQmlJS::Parser parser(&ee);
+    parser.parseProgram();
 
-    return imports;
+    foreach (const QQmlJS::DiagnosticMessage &m, parser.diagnosticMessages())
+        if (m.isError())
+            return QVariantList();
+
+    return collector.imports;
 }
 
 // Scan a single qml or js file for import statements

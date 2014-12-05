@@ -41,6 +41,7 @@
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qv4compiler_p.h>
+#include <private/qqmljslexer_p.h>
 #include <QTextStream>
 #include <QCoreApplication>
 
@@ -326,8 +327,21 @@ struct Q_QML_PRIVATE_EXPORT Document
     int registerString(const QString &str) { return jsGenerator.registerString(str); }
     QString stringAt(int index) const { return jsGenerator.stringForIndex(index); }
 
-    void extractScriptMetaData(QString &script, QQmlJS::DiagnosticMessage *error);
     static void removeScriptPragmas(QString &script);
+};
+
+struct Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
+{
+    ScriptDirectivesCollector(QQmlJS::Engine *engine, QV4::Compiler::JSUnitGenerator *unitGenerator);
+
+    QQmlJS::Engine *engine;
+    QV4::Compiler::JSUnitGenerator *jsGenerator;
+    QList<const QV4::CompiledData::Import *> imports;
+    bool hasPragmaLibrary;
+
+    virtual void pragmaLibrary();
+    virtual void importFile(const QString &jsfile, const QString &module, int lineNumber, int column);
+    virtual void importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column);
 };
 
 struct Q_QML_PRIVATE_EXPORT IRBuilder : public QQmlJS::AST::Visitor

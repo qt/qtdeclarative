@@ -93,7 +93,7 @@ public:
         _directives += QLatin1String(".pragma library\n");
     }
 
-    virtual void importFile(const QString &jsfile, const QString &module)
+    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
     {
         _directives += QLatin1String(".import");
         _directives += QLatin1Char('"');
@@ -102,9 +102,11 @@ public:
         _directives += QLatin1String("as ");
         _directives += module;
         _directives += QLatin1Char('\n');
+        Q_UNUSED(line);
+        Q_UNUSED(column);
     }
 
-    virtual void importModule(const QString &uri, const QString &version, const QString &module)
+    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
     {
         _directives += QLatin1String(".import ");
         _directives += uri;
@@ -113,6 +115,8 @@ public:
         _directives += QLatin1String(" as ");
         _directives += module;
         _directives += QLatin1Char('\n');
+        Q_UNUSED(line);
+        Q_UNUSED(column);
     }
 
 protected:
@@ -262,7 +266,8 @@ bool Minify::parse(int startToken)
 
     if (startToken == T_FEED_JS_PROGRAM) {
         // parse optional pragma directive
-        if (scanDirectives(this)) {
+        DiagnosticMessage error;
+        if (scanDirectives(this, &error)) {
             // append the scanned directives to the minifier code.
             append(directives());
 
@@ -433,7 +438,8 @@ bool Tokenize::parse(int startToken)
 
     if (startToken == T_FEED_JS_PROGRAM) {
         // parse optional pragma directive
-        if (scanDirectives(this)) {
+        DiagnosticMessage error;
+        if (scanDirectives(this, &error)) {
             // append the scanned directives as one token to
             // the token stream.
             _minifiedCode.append(directives());

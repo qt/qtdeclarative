@@ -321,12 +321,14 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors)
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors, QQmlJS::Directives *directivesCollector)
 {
     using namespace QQmlJS;
     using namespace QQmlJS::AST;
 
     QQmlJS::Engine ee;
+    if (directivesCollector)
+        ee.setDirectives(directivesCollector);
     QQmlJS::Lexer lexer(&ee);
     lexer.setCode(source, /*line*/1, /*qml mode*/false);
     QQmlJS::Parser parser(&ee);

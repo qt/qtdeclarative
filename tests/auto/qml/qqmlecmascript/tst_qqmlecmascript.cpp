@@ -4107,7 +4107,7 @@ void tst_qqmlecmascript::importScripts_data()
             << testFileUrl("jsimportfail/malformedImport.qml")
             << false /* compilation should succeed */
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1:1: Syntax error"))
+            << (QStringList() << testFileUrl("jsimportfail/malformedImport.js").toString() + QLatin1String(":1:2: Syntax error"))
             << QStringList()
             << QVariantList();
 
@@ -4139,7 +4139,7 @@ void tst_qqmlecmascript::importScripts_data()
             << testFileUrl("jsimportfail/malformedFileQualifier.2.qml")
             << false /* compilation should succeed */
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.2.js").toString() + QLatin1String(":1:1: Invalid import qualifier"))
+            << (QStringList() << testFileUrl("jsimportfail/malformedFileQualifier.2.js").toString() + QLatin1String(":1:23: Invalid import qualifier"))
             << QStringList()
             << QVariantList();
 
@@ -4187,7 +4187,7 @@ void tst_qqmlecmascript::importScripts_data()
             << testFileUrl("jsimportfail/malformedModuleQualifier.2.qml")
             << false /* compilation should succeed */
             << QString()
-            << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.2.js").toString() + QLatin1String(":1:1: Invalid import qualifier"))
+            << (QStringList() << testFileUrl("jsimportfail/malformedModuleQualifier.2.js").toString() + QLatin1String(":1:24: Invalid import qualifier"))
             << QStringList()
             << QVariantList();
 }

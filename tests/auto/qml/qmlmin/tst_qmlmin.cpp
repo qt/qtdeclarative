@@ -107,9 +107,12 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/parserstress/tests/ecma_3/Unicode/regress-352044-02-n.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedFileQualifier.js";
+    invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedFileQualifier.2.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedImport.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedModule.js";
+    invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedFile.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedModuleQualifier.js";
+    invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedModuleQualifier.2.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/malformedModuleVersion.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/missingFileQualifier.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/jsimportfail/missingModuleQualifier.js";
