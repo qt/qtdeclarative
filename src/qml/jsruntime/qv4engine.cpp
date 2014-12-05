@@ -700,19 +700,18 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 
     QV4::ExecutionContext *c = currentContext();
     while (c && frameLimit) {
-        CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->d()->function) {
+        if (FunctionObject *function = c->getFunctionObject()) {
             StackFrame frame;
-            if (callCtx->d()->function->function())
-                frame.source = callCtx->d()->function->function()->sourceFile();
-            name = callCtx->d()->function->name();
+            if (const Function *f = function->function())
+                frame.source = f->sourceFile();
+            name = function->name();
             frame.function = name->toQString();
             frame.line = -1;
             frame.column = -1;
 
-            if (callCtx->d()->function->function())
+            if (function->function())
                 // line numbers can be negative for places where you can't set a real breakpoint
-                frame.line = qAbs(callCtx->d()->lineNumber);
+                frame.line = qAbs(c->d()->lineNumber);
 
             stack.append(frame);
             --frameLimit;
@@ -726,7 +725,6 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
         frame.function = globalCode->name()->toQString();
         frame.line = rootContext->d()->lineNumber;
         frame.column = -1;
-
 
         stack.append(frame);
     }

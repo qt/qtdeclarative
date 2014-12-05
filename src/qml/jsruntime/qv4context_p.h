@@ -55,7 +55,6 @@ struct Function;
 }
 
 struct CallContext;
-struct CallContext;
 struct CatchContext;
 struct WithContext;
 
@@ -149,6 +148,9 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+    inline const CatchContext *asCatchContext() const;
+
+    inline FunctionObject *getFunctionObject() const;
 
     static void markObjects(Managed *m, ExecutionEngine *e);
 };
@@ -225,6 +227,24 @@ inline const CallContext *ExecutionContext::asCallContext() const
     return d()->type >= Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
+inline const CatchContext *ExecutionContext::asCatchContext() const
+{
+    return d()->type == Type_CatchContext ? static_cast<const CatchContext *>(this) : 0;
+}
+
+inline FunctionObject *ExecutionContext::getFunctionObject() const
+{
+    for (const ExecutionContext *it = this; it; it = it->d()->parent) {
+        if (const CallContext *callCtx = it->asCallContext())
+            return callCtx->d()->function;
+        else if (it->asCatchContext())
+            continue; // look in the parent context for a FunctionObject
+        else
+            break;
+    }
+
+    return 0;
+}
 
 inline void ExecutionEngine::pushContext(CallContext *context)
 {

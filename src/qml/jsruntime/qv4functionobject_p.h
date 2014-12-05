@@ -116,7 +116,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
 
     ExecutionContext *scope() { return d()->scope; }
-    Function *function() { return d()->function; }
+    Function *function() const { return d()->function; }
 
     ReturnedValue name();
     unsigned int formalParameterCount() { return function() ? function()->compiledFunction->nFormals : 0; }
