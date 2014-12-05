@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
-: enabled(true), hovered(false), longPress(false),
+: enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
   propagateComposedEvents(false), pressed(0)
 #ifndef QT_NO_DRAGANDDROP
@@ -497,6 +497,36 @@ void QQuickMouseArea::setEnabled(bool a)
 }
 
 /*!
+    \qmlproperty bool QtQuick::MouseArea::scrollGestureEnabled
+
+    This property controls whether this MouseArea responds to scroll gestures
+    from non-mouse devices, such as the 2-finger flick gesture on a trackpad.
+    If set to false, the \l wheel signal be emitted only when the wheel event
+    comes from an actual mouse with a wheel, while scroll gesture events will
+    pass through to any other Item that will handle them. For example, the user
+    might perform a flick gesture while the cursor is over an item containing a
+    MouseArea, intending to interact with a Flickable which is underneath.
+    Setting this property to false will allow the PinchArea to handle the mouse
+    wheel or the pinch gesture, while the Flickable handles the flick gesture.
+
+    By default, this property is true.
+*/
+bool QQuickMouseArea::isScrollGestureEnabled() const
+{
+    Q_D(const QQuickMouseArea);
+    return d->scrollGestureEnabled;
+}
+
+void QQuickMouseArea::setScrollGestureEnabled(bool e)
+{
+    Q_D(QQuickMouseArea);
+    if (e != d->scrollGestureEnabled) {
+        d->scrollGestureEnabled = e;
+        emit scrollGestureEnabledChanged();
+    }
+}
+
+/*!
     \qmlproperty bool QtQuick::MouseArea::preventStealing
     This property holds whether the mouse events may be stolen from this
     MouseArea.
@@ -821,7 +851,7 @@ void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
 void QQuickMouseArea::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->enabled) {
+    if (!d->enabled || (!isScrollGestureEnabled() && event->source() != Qt::MouseEventNotSynthesized)) {
         QQuickItem::wheelEvent(event);
         return;
     }

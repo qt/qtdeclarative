@@ -78,6 +78,7 @@ public:
     bool isWheelConnected();
 
     bool enabled : 1;
+    bool scrollGestureEnabled : 1;
     bool hovered : 1;
     bool longPress : 1;
     bool moved : 1;
