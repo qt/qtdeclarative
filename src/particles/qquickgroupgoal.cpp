@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype GroupGoal
     \instantiates QQuickGroupGoalAffector
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
     \brief For changing the state of a group of a particle

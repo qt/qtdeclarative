@@ -1436,7 +1436,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 /*!
     \qmltype ListModel
     \instantiates QQmlListModel
-    \inqmlmodule QtQml.Models 2
+    \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Defines a free-form list data source
 
@@ -2447,7 +2447,7 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 /*!
     \qmltype ListElement
     \instantiates QQmlListElement
-    \inqmlmodule QtQml.Models 2
+    \inqmlmodule QtQml.Models
     \brief Defines a data item in a ListModel
     \ingroup qtquick-models
 

@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TrailEmitter
     \instantiates QQuickTrailEmitter
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits QQuickParticleEmitter
     \brief Emits logical particles from other logical particles
     \ingroup qtquick-particles

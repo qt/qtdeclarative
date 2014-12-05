@@ -150,7 +150,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 /*!
     \qmltype DelegateModel
     \instantiates QQmlDelegateModel
-    \inqmlmodule QtQml.Models 2
+    \inqmlmodule QtQml.Models
     \brief Encapsulates a model and delegate
 
     The DelegateModel type encapsulates a model and the delegate that will
@@ -2289,7 +2289,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 /*!
     \qmltype DelegateModelGroup
     \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQml.Models 2
+    \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Encapsulates a filtered set of visual data items
 

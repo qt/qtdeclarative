@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Emitter
     \instantiates QQuickParticleEmitter
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \brief Emits logical particles
     \ingroup qtquick-particles
 

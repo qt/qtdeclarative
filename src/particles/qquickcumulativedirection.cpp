@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CumulativeDirection
     \instantiates QQuickCumulativeDirection
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits Direction
     \brief For specifying a direction made of other directions
     \ingroup qtquick-particles

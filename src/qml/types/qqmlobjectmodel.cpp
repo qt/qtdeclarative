@@ -123,7 +123,7 @@ public:
 /*!
     \qmltype ObjectModel
     \instantiates QQmlObjectModel
-    \inqmlmodule QtQml.Models 2
+    \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Defines a set of items to be used as a model
 

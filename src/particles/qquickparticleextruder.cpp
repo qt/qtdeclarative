@@ -39,7 +39,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Shape
     \instantiates QQuickParticleExtruder
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \brief For specifying an area for affectors and emitters
     \ingroup qtquick-particles
 

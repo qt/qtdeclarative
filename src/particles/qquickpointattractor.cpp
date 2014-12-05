@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Attractor
     \instantiates QQuickAttractorAffector
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
     \brief For attracting particles towards a specific point

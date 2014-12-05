@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MaskShape
     \instantiates QQuickMaskExtruder
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits Shape
     \brief For representing an image as a shape to affectors and emitters
     \ingroup qtquick-particles
