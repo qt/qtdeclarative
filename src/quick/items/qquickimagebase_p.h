@@ -93,12 +93,12 @@ protected:
     virtual void load();
     virtual void componentComplete();
     virtual void pixmapChange();
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);
 
 private Q_SLOTS:
     virtual void requestFinished();
     void requestProgress(qint64,qint64);
-    void handleWindowChanged(QQuickWindow *window);
     void handleScreenChanged(QScreen *screen);
 
 private:
