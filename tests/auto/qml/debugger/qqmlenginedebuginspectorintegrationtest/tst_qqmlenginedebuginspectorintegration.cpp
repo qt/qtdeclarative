@@ -54,7 +54,6 @@ class tst_QQmlEngineDebugInspectorIntegration : public QQmlDataTest
 public:
     tst_QQmlEngineDebugInspectorIntegration()
         : m_process(0)
-        , m_connection(0)
         , m_inspectorClient(0)
         , m_engineDebugClient(0)
     {
@@ -65,7 +64,6 @@ private:
     QmlDebugObjectReference findRootObject();
 
     QQmlDebugProcess *m_process;
-    QQmlDebugConnection *m_connection;
     QQmlInspectorClient *m_inspectorClient;
     QQmlEngineDebugClient *m_engineDebugClient;
 
