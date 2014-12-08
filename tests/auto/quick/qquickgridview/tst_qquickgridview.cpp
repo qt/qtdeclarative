@@ -1558,7 +1558,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
             {
                 QList<QPair<QString, QString> > items;
                 for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
-                    items << qMakePair(QString("new item " + j), QString::number(j));
+                    items << qMakePair(QString("new item %1").arg(j), QString::number(j));
                 model.insertItems(changes[i].index, items);
                 break;
             }
