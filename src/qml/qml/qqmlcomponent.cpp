@@ -675,9 +675,9 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
         emit q->progressChanged(progress);
     }
 
-    QQmlDataLoader::Mode loaderMode = (mode == QQmlComponent::Asynchronous)
-            ? QQmlDataLoader::Asynchronous
-            : QQmlDataLoader::PreferSynchronous;
+    QQmlTypeLoader::Mode loaderMode = (mode == QQmlComponent::Asynchronous)
+            ? QQmlTypeLoader::Asynchronous
+            : QQmlTypeLoader::PreferSynchronous;
 
     QQmlTypeData *data = QQmlEnginePrivate::get(engine)->typeLoader.getType(url, loaderMode);
 

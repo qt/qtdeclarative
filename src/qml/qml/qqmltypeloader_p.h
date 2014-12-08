@@ -73,7 +73,7 @@ class QQmlTypeLoader;
 class QQmlCompiledData;
 class QQmlComponentPrivate;
 class QQmlTypeData;
-class QQmlDataLoader;
+class QQmlTypeLoader;
 class QQmlExtensionInterface;
 
 namespace QmlIR {
@@ -84,7 +84,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
 {
 public:
     enum Status {
-        Null,                    // Prior to QQmlDataLoader::load()
+        Null,                    // Prior to QQmlTypeLoader::load()
         Loading,                 // Prior to data being received and dataReceived() being called
         WaitingForDependencies,  // While there are outstanding addDependency()s
         Complete,                // Finished
@@ -100,7 +100,7 @@ public:
     QQmlDataBlob(const QUrl &, Type);
     virtual ~QQmlDataBlob();
 
-    void startLoading(QQmlDataLoader* manager);
+    void startLoading(QQmlTypeLoader* manager);
 
     Type type() const;
 
@@ -132,7 +132,7 @@ public:
 
     private:
         friend class QQmlDataBlob;
-        friend class QQmlDataLoader;
+        friend class QQmlTypeLoader;
         inline Data();
         Data(const Data &);
         Data &operator=(const Data &);
@@ -158,8 +158,8 @@ protected:
     virtual void downloadProgressChanged(qreal);
     virtual void completed();
 private:
-    friend class QQmlDataLoader;
-    friend class QQmlDataLoaderThread;
+    friend class QQmlTypeLoader;
+    friend class QQmlTypeLoaderThread;
 
     void tryDone();
     void cancelAllWaitingFor();
@@ -199,59 +199,13 @@ private:
     QList<QQmlDataBlob *> m_waitingFor;
 
     // Manager that is currently fetching data for me
-    QQmlDataLoader *m_manager;
+    QQmlTypeLoader *m_manager;
     int m_redirectCount:30;
     bool m_inCallback:1;
     bool m_isDone:1;
 };
 
-class QQmlDataLoaderThread;
-class QQmlDataLoader
-{
-public:
-    QQmlDataLoader(QQmlEngine *);
-    ~QQmlDataLoader();
-
-    void lock();
-    void unlock();
-
-    bool isConcurrent() const { return true; }
-
-    enum Mode { PreferSynchronous, Asynchronous };
-
-    void load(QQmlDataBlob *, Mode = PreferSynchronous);
-    void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
-    void loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode = PreferSynchronous);
-
-    QQmlEngine *engine() const;
-    void initializeEngine(QQmlExtensionInterface *, const char *);
-    void invalidate();
-
-protected:
-    void shutdownThread();
-
-private:
-    friend class QQmlDataBlob;
-    friend class QQmlDataLoaderThread;
-    friend class QQmlDataLoaderNetworkReplyProxy;
-
-    void loadThread(QQmlDataBlob *);
-    void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
-    void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
-    void networkReplyFinished(QNetworkReply *);
-    void networkReplyProgress(QNetworkReply *, qint64, qint64);
-
-    typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
-
-    void setData(QQmlDataBlob *, const QByteArray &);
-    void setData(QQmlDataBlob *, QQmlFile *);
-    void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
-    void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
-
-    QQmlEngine *m_engine;
-    QQmlDataLoaderThread *m_thread;
-    NetworkReplies m_networkReplies;
-};
+class QQmlTypeLoaderThread;
 
 class QQmlBundleData : public QQmlBundle,
                        public QQmlRefCount
@@ -261,10 +215,12 @@ public:
     QString fileName;
 };
 
-class Q_AUTOTEST_EXPORT QQmlTypeLoader : public QQmlDataLoader
+class Q_AUTOTEST_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
+    enum Mode { PreferSynchronous, Asynchronous };
+
     class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
     {
     public:
@@ -354,9 +310,41 @@ public:
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
 
+    void lock();
+    void unlock();
+
+    bool isConcurrent() const { return true; }
+
+    void load(QQmlDataBlob *, Mode = PreferSynchronous);
+    void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
+    void loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode = PreferSynchronous);
+
+    QQmlEngine *engine() const;
+    void initializeEngine(QQmlExtensionInterface *, const char *);
+    void invalidate();
+
 private:
+    friend class QQmlDataBlob;
+    friend class QQmlTypeLoaderThread;
+    friend class QQmlTypeLoaderNetworkReplyProxy;
+
+    void shutdownThread();
+
     void addBundleNoLock(const QString &, const QString &);
     QString bundleIdForQmldir(const QString &qmldir, const QString &uriHint);
+
+    void loadThread(QQmlDataBlob *);
+    void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
+    void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
+    void networkReplyFinished(QNetworkReply *);
+    void networkReplyProgress(QNetworkReply *, qint64, qint64);
+
+    typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
+
+    void setData(QQmlDataBlob *, const QByteArray &);
+    void setData(QQmlDataBlob *, QQmlFile *);
+    void setData(QQmlDataBlob *, const QQmlDataBlob::Data &);
+    void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
     template<typename T>
     struct TypedCallback
@@ -383,6 +371,9 @@ private:
     typedef QStringHash<QQmlBundleData *> BundleCache;
     typedef QStringHash<QString> QmldirBundleIdCache;
 
+    QQmlEngine *m_engine;
+    QQmlTypeLoaderThread *m_thread;
+    NetworkReplies m_networkReplies;
     TypeCache m_typeCache;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;
