@@ -893,11 +893,11 @@ property in question is \c isCurrentItem, hence the attached property is
 referred to as \c ListView.isCurrentItem.
 
 An attached signal handler is referred to in the same way. For example, the
-\c Component.isCompleted attached signal handler is commonly used to execute
-some JavaScript code when a component's creation process has been completed.
-In the example below, once the \l ListModel has been fully created, its
-\c Component.onCompleted signal handler will automatically be invoked to
-populate the model:
+\l{Component::completed}{Component.onCompleted} attached signal handler is
+commonly used to execute some JavaScript code when a component's creation
+process has been completed. In the example below, once the \l ListModel has
+been fully created, its \c Component.onCompleted signal handler will
+automatically be invoked to populate the model:
 
 \qml
 import QtQuick 2.0
@@ -916,8 +916,8 @@ ListView {
 \endqml
 
 Since the name of the \e {attaching type} is \c Component and that type has a
-\c completed signal, the attached signal handler is referred to as
-\c Component.isCompleted.
+\l{Component::completed}{completed} signal, the attached signal handler is
+referred to as \c Component.onCompleted.
 
 
 \section3 A Note About Accessing Attached Properties and Signal Handlers
