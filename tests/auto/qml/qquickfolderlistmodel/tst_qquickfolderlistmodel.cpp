@@ -46,7 +46,6 @@
 
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
-const int FilePathRole = Qt::UserRole+2;
 enum SortField { Unsorted, Name, Time, Size, Type };
 
 class tst_qquickfolderlistmodel : public QQmlDataTest
