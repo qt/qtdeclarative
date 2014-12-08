@@ -334,10 +334,8 @@ void QQmlEnginePrivate::Locker::unlock()
 void QQmlEnginePrivate::Locker::relock()
 {
     Q_ASSERT(!m_locked);
-    if (m_ep->typeLoader.isConcurrent()) {
-        m_ep->mutex.lock();
-        m_locked = true;
-    }
+    m_ep->mutex.lock();
+    m_locked = true;
 }
 
 /*!

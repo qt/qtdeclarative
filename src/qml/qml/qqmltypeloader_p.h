@@ -313,8 +313,6 @@ public:
     void lock();
     void unlock();
 
-    bool isConcurrent() const { return true; }
-
     void load(QQmlDataBlob *, Mode = PreferSynchronous);
     void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
     void loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode = PreferSynchronous);
