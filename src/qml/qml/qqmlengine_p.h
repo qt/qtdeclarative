@@ -138,7 +138,6 @@ public:
 
     QQmlContext *rootContext;
     bool isDebugging;
-    bool useNewCompiler;
     QQmlProfiler *profiler;
     void enableProfiler();
 

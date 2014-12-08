@@ -555,7 +555,6 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   incubatorCount(0), incubationController(0), mutex(QMutex::Recursive)
 {
-    useNewCompiler = true;
 }
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
