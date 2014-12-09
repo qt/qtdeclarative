@@ -41,6 +41,16 @@
 
 QT_BEGIN_NAMESPACE
 
+static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProviders)
+{
+    for (int i = 0; i < textureProviders.size(); ++i) {
+        QSGTextureProvider *t = textureProviders.at(i);
+        if (t->texture() && t->texture()->isAtlasTexture())
+            return true;
+    }
+    return false;
+}
+
 class QQuickCustomMaterialShader : public QSGMaterialShader
 {
 public:
@@ -137,7 +147,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                         if (loc >= 0) {
                             QRectF r = texture->normalizedTextureSubRect();
                             program()->setUniformValue(loc, r.x(), r.y(), r.width(), r.height());
-                        } else if (texture->isAtlasTexture() && (idx != 0 || !material->supportsAtlasTextures)) {
+                        } else if (texture->isAtlasTexture() && !material->geometryUsesTextureSubRect) {
                             texture = texture->removedFromAtlas();
                         }
                         texture->bind();
@@ -342,7 +352,7 @@ QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > QQuickSha
 
 QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
     : cullMode(NoCulling)
-    , supportsAtlasTextures(false)
+    , geometryUsesTextureSubRect(false)
     , m_node(node)
     , m_emittedLogChanged(false)
 {
@@ -380,13 +390,9 @@ bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &ot
 int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
 {
     const QQuickShaderEffectMaterial *other = static_cast<const QQuickShaderEffectMaterial *>(o);
-    if (!supportsAtlasTextures || !other->supportsAtlasTextures)
-        return 1;
-    if (bool(flags() & QSGMaterial::RequiresFullMatrix) || bool(other->flags() & QSGMaterial::RequiresFullMatrix))
+    if ((hasAtlasTexture(textureProviders) && !geometryUsesTextureSubRect) || (hasAtlasTexture(other->textureProviders) && !other->geometryUsesTextureSubRect))
         return 1;
     if (cullMode != other->cullMode)
-        return 1;
-    if (m_source != other->m_source)
         return 1;
     for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         if (uniforms[shaderType] != other->uniforms[shaderType])

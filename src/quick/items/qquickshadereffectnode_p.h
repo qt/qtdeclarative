@@ -95,7 +95,7 @@ public:
     QVector<UniformData> uniforms[QQuickShaderEffectMaterialKey::ShaderTypeCount];
     QVector<QSGTextureProvider *> textureProviders;
     CullMode cullMode;
-    bool supportsAtlasTextures;
+    bool geometryUsesTextureSubRect;
 
     void setProgramSource(const QQuickShaderEffectMaterialKey &source);
     void updateTextures() const;

@@ -854,12 +854,17 @@ void QQuickShaderEffect::setCullMode(CullMode face)
 /*!
     \qmlproperty bool QtQuick::ShaderEffect::supportsAtlasTextures
 
-    Set this property true to indicate that the ShaderEffect is able to
-    use the default source texture without first removing it from an atlas.
-    In this case the range of qt_MultiTexCoord0 will based on the position of
-    the texture within the atlas, rather than (0,0) to (1,1).
+    Set this property true to confirm that your shader code doesn't rely on
+    qt_MultiTexCoord0 ranging from (0,0) to (1,1) relative to the mesh.
+    In this case the range of qt_MultiTexCoord0 will rather be based on the position
+    of the texture within the atlas. This property currently has no effect if there
+    is less, or more, than one sampler uniform used as input to your shader.
 
-    Setting this to true may enable some optimizations.
+    This differs from providing qt_SubRect_<name> uniforms in that the latter allows
+    drawing one or more textures from the atlas in a single ShaderEffect item, while
+    supportsAtlasTextures allows multiple instances of a ShaderEffect component using
+    a different source image from the atlas to be batched in a single draw.
+    Both prevent a texture from being copied out of the atlas when referenced by a ShaderEffect.
 
     The default value is false.
 
@@ -1029,24 +1034,23 @@ QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDa
         m_dirtyUniforms = m_dirtyUniformValues = m_dirtyTextureProviders = false;
     }
 
-    int textureCount = material->textureProviders.size();
-    bool preventBatching = m_customVertexShader || textureCount > 1 || (textureCount > 0 && !m_supportsAtlasTextures);
-
     QRectF srcRect(0, 0, 1, 1);
-    if (m_supportsAtlasTextures && textureCount != 0) {
-        if (QSGTextureProvider *provider = material->textureProviders.at(0)) {
-            if (provider->texture())
-                srcRect = provider->texture()->normalizedTextureSubRect();
+    bool geometryUsesTextureSubRect = false;
+    if (m_supportsAtlasTextures && material->textureProviders.size() == 1) {
+        QSGTextureProvider *provider = material->textureProviders.at(0);
+        if (provider->texture()) {
+            srcRect = provider->texture()->normalizedTextureSubRect();
+            geometryUsesTextureSubRect = true;
         }
     }
 
-    if (bool(material->flags() & QSGMaterial::RequiresFullMatrix) != preventBatching) {
-        material->setFlag(QSGMaterial::RequiresFullMatrix, preventBatching);
+    if (bool(material->flags() & QSGMaterial::RequiresFullMatrix) != m_customVertexShader) {
+        material->setFlag(QSGMaterial::RequiresFullMatrix, m_customVertexShader);
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
-    if (material->supportsAtlasTextures != m_supportsAtlasTextures) {
-        material->supportsAtlasTextures = m_supportsAtlasTextures;
+    if (material->geometryUsesTextureSubRect != geometryUsesTextureSubRect) {
+        material->geometryUsesTextureSubRect = geometryUsesTextureSubRect;
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
