@@ -57,7 +57,6 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmlcleanup_p.h>
 #include <private/qqmldirparser_p.h>
-#include <private/qqmlbundle_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlirbuilder_p.h>
 
@@ -207,14 +206,6 @@ private:
 
 class QQmlTypeLoaderThread;
 
-class QQmlBundleData : public QQmlBundle,
-                       public QQmlRefCount
-{
-public:
-    QQmlBundleData(const QString &);
-    QString fileName;
-};
-
 class Q_AUTOTEST_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
@@ -294,14 +285,10 @@ public:
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
 
-    QQmlBundleData *getBundle(const QString &);
-    QQmlBundleData *getBundle(const QHashedStringRef &);
-    void addBundle(const QString &, const QString &);
-
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
 
-    const QmldirContent *qmldirContent(const QString &filePath, const QString &uriHint);
+    const QmldirContent *qmldirContent(const QString &filePath);
     void setQmldirContent(const QString &filePath, const QString &content);
 
     void clearCache();
@@ -327,9 +314,6 @@ private:
     friend class QQmlTypeLoaderNetworkReplyProxy;
 
     void shutdownThread();
-
-    void addBundleNoLock(const QString &, const QString &);
-    QString bundleIdForQmldir(const QString &qmldir, const QString &uriHint);
 
     void loadThread(QQmlDataBlob *);
     void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
@@ -366,8 +350,6 @@ private:
     typedef QStringHash<bool> StringSet;
     typedef QStringHash<StringSet*> ImportDirCache;
     typedef QStringHash<QmldirContent *> ImportQmlDirCache;
-    typedef QStringHash<QQmlBundleData *> BundleCache;
-    typedef QStringHash<QString> QmldirBundleIdCache;
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
@@ -377,8 +359,6 @@ private:
     QmldirCache m_qmldirCache;
     ImportDirCache m_importDirCache;
     ImportQmlDirCache m_importQmlDirCache;
-    BundleCache m_bundleCache;
-    QmldirBundleIdCache m_qmldirBundleIdCache;
 };
 
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob

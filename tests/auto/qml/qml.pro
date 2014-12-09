@@ -51,7 +51,6 @@ PRIVATETESTS += \
     qqmltypeloader \
     qqmlparser \
     qquickworkerscript \
-    qqmlbundle \
     qrcqml \
     qqmltimer \
     qqmlinstantiator \

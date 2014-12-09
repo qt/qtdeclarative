@@ -668,13 +668,9 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
             const QString url = urlsToTry[i];
 
-            if (QQmlFile::isBundle(url)) {
-                exists = QQmlFile::bundleFileExists(url, typeLoader->engine());
-            } else {
-                exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(url)).isEmpty();
-                if (!exists)
-                    exists = QQmlMetaType::findCachedCompilationUnit(QUrl(url));
-            }
+            exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(url)).isEmpty();
+            if (!exists)
+                exists = QQmlMetaType::findCachedCompilationUnit(QUrl(url));
 
             if (exists) {
                 qmlUrl = url;
@@ -879,7 +875,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
 /*!
 Import an extension defined by a qmldir file.
 
-\a qmldirFilePath is either a raw file path, or a bundle url.
+\a qmldirFilePath is a raw file path.
 */
 bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                          const QString &uri,
@@ -1012,17 +1008,11 @@ bool QQmlImportsPrivate::getQmldirContent(const QString &qmldirIdentifier, const
     Q_ASSERT(errors);
     Q_ASSERT(qmldir);
 
-    *qmldir = typeLoader->qmldirContent(qmldirIdentifier, uri);
+    *qmldir = typeLoader->qmldirContent(qmldirIdentifier);
     if (*qmldir) {
         // Ensure that parsing was successful
         if ((*qmldir)->hasError()) {
-            QUrl url;
-
-            if (QQmlFile::isBundle(qmldirIdentifier))
-                url = QUrl(qmldirIdentifier);
-            else
-                url = QUrl::fromLocalFile(qmldirIdentifier);
-
+            QUrl url = QUrl::fromLocalFile(qmldirIdentifier);
             const QList<QQmlError> qmldirErrors = (*qmldir)->errors(uri);
             for (int i = 0; i < qmldirErrors.size(); ++i) {
                 QQmlError error = qmldirErrors.at(i);
@@ -1328,30 +1318,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
 
     QString qmldirIdentifier;
 
-    if (QQmlFile::isBundle(qmldirUrl)) {
-
-        QString dir = resolveLocalUrl(base, importUri);
-        Q_ASSERT(QQmlFile::isBundle(dir));
-        if (!QQmlFile::bundleDirectoryExists(dir, typeLoader->engine())) {
-            if (!isImplicitImport) {
-                QQmlError error;
-                error.setDescription(QQmlImportDatabase::tr("\"%1\": no such directory").arg(uri));
-                error.setUrl(QUrl(qmldirUrl));
-                errors->prepend(error);
-            }
-            return false;
-        }
-
-        // Transforms the (possible relative) uri into our best guess relative to the
-        // import paths.
-        importUri = resolvedUri(dir, database);
-        if (importUri.endsWith(Slash))
-            importUri.chop(1);
-
-        if (QQmlFile::bundleFileExists(qmldirUrl, typeLoader->engine()))
-            qmldirIdentifier = qmldirUrl;
-
-    } else if (QQmlFile::isLocalFile(qmldirUrl)) {
+    if (QQmlFile::isLocalFile(qmldirUrl)) {
 
         QString localFileOrQrc = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
         Q_ASSERT(!localFileOrQrc.isEmpty());
@@ -1555,12 +1522,12 @@ bool QQmlImports::locateQmldir(QQmlImportDatabase *importDb,
 
 bool QQmlImports::isLocal(const QString &url)
 {
-    return QQmlFile::isBundle(url) || !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
+    return !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
 }
 
 bool QQmlImports::isLocal(const QUrl &url)
 {
-    return QQmlFile::isBundle(url) || !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
+    return !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
 }
 
 void QQmlImports::setDesignerSupportRequired(bool b)

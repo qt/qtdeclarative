@@ -351,7 +351,6 @@ static void usage()
     puts("  --quit .................................... Quit immediately after starting");
     puts("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
     puts("  -I <path> ................................. Add <path> to the list of import paths");
-    puts("  -B <name> <file> .......................... Add a named bundle");
     puts("  -translation <translationfile> ............ Set the language to run in");
 
     puts(" ");
@@ -363,7 +362,6 @@ int main(int argc, char ** argv)
     Options options;
 
     QStringList imports;
-    QList<QPair<QString, QString> > bundles;
     for (int i = 1; i < argc; ++i) {
         if (*argv[i] != '-' && QFileInfo(QFile::decodeName(argv[i])).exists()) {
             options.file = QUrl::fromLocalFile(argv[i]);
@@ -393,11 +391,7 @@ int main(int argc, char ** argv)
                 options.contextSharing = false;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
-            else if (lowerArgument == QLatin1String("-b") && i + 2 < argc) {
-                QString name = QString::fromLatin1(argv[++i]);
-                QString file = QString::fromLatin1(argv[++i]);
-                bundles.append(qMakePair(name, file));
-            } else if (lowerArgument == QLatin1String("--help")
+            else if (lowerArgument == QLatin1String("--help")
                      || lowerArgument == QLatin1String("-help")
                      || lowerArgument == QLatin1String("--h")
                      || lowerArgument == QLatin1String("-h"))
@@ -460,8 +454,6 @@ int main(int argc, char ** argv)
             QPointer<QQmlComponent> component = new QQmlComponent(&engine);
             for (int i = 0; i < imports.size(); ++i)
                 engine.addImportPath(imports.at(i));
-            for (int i = 0; i < bundles.size(); ++i)
-                engine.addNamedBundle(bundles.at(i).first, bundles.at(i).second);
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
 #ifndef QT_NO_TRANSLATION

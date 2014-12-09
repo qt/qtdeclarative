@@ -36,6 +36,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qfile.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -45,7 +46,7 @@
 
 \internal
 
-Supports file://, qrc:/, bundle:// uris and whatever QNetworkAccessManager supports.
+Supports file:// and qrc:/ uris and whatever QNetworkAccessManager supports.
 */
 
 #define QQMLFILE_MAX_REDIRECT_RECURSION 16
@@ -54,7 +55,6 @@ QT_BEGIN_NAMESPACE
 
 static char qrc_string[] = "qrc";
 static char file_string[] = "file";
-static char bundle_string[] = "bundle";
 
 #if defined(Q_OS_ANDROID)
 static char assets_string[] = "assets";
@@ -99,9 +99,6 @@ public:
 
     mutable QUrl url;
     mutable QString urlString;
-
-    QQmlBundleData *bundle;
-    const QQmlBundle::FileEntry *file;
 
     QByteArray data;
 
@@ -199,7 +196,7 @@ void QQmlFileNetworkReply::networkDownloadProgress(qint64 a, qint64 b)
 }
 
 QQmlFilePrivate::QQmlFilePrivate()
-: bundle(0), file(0), error(None), reply(0)
+: error(None), reply(0)
 {
 }
 
@@ -222,11 +219,7 @@ QQmlFile::QQmlFile(QQmlEngine *e, const QString &url)
 
 QQmlFile::~QQmlFile()
 {
-    if (d->reply)
-        delete d->reply;
-    if (d->bundle)
-        d->bundle->release();
-
+    delete d->reply;
     delete d;
     d = 0;
 }
@@ -287,31 +280,17 @@ QString QQmlFile::error() const
 
 qint64 QQmlFile::size() const
 {
-    if (d->file) return d->file->fileSize();
-    else return d->data.size();
+    return d->data.size();
 }
 
 const char *QQmlFile::data() const
 {
-    if (d->file) return d->file->contents();
-    else return d->data.constData();
+    return d->data.constData();
 }
 
 QByteArray QQmlFile::dataByteArray() const
 {
-    if (d->file) return QByteArray(d->file->contents(), d->file->fileSize());
-    else return d->data;
-}
-
-QByteArray QQmlFile::metaData(const QString &name) const
-{
-    if (d->file) {
-        Q_ASSERT(d->bundle);
-        const QQmlBundle::FileEntry *meta = d->bundle->link(d->file, name);
-        if (meta)
-            return QByteArray::fromRawData(meta->contents(), meta->fileSize());
-    }
-    return QByteArray();
+    return d->data;
 }
 
 void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
@@ -321,25 +300,7 @@ void QQmlFile::load(QQmlEngine *engine, const QUrl &url)
     clear();
     d->url = url;
 
-    if (isBundle(url)) {
-        // Bundle
-        QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
-        QQmlBundleData *bundle = p->typeLoader.getBundle(url.host());
-
-        d->error = QQmlFilePrivate::NotFound;
-
-        if (bundle) {
-            QString filename = url.path().mid(1);
-            const QQmlBundle::FileEntry *entry = bundle->find(filename);
-            if (entry) {
-                d->file = entry;
-                d->bundle = bundle;
-                d->bundle->addref();
-                d->error = QQmlFilePrivate::None;
-            }
-            bundle->release();
-        }
-    } else if (isLocalFile(url)) {
+    if (isLocalFile(url)) {
         QString lf = urlToLocalFileOrQrc(url);
 
         if (!QQml_isFileCaseCorrect(lf)) {
@@ -366,33 +327,7 @@ void QQmlFile::load(QQmlEngine *engine, const QString &url)
 
     d->urlString = url;
 
-    if (isBundle(url)) {
-        // Bundle
-        QQmlEnginePrivate *p = QQmlEnginePrivate::get(engine);
-
-        d->error = QQmlFilePrivate::NotFound;
-
-        int index = url.indexOf(QLatin1Char('/'), 9);
-        if (index == -1)
-            return;
-
-        QStringRef identifier(&url, 9, index - 9);
-
-        QQmlBundleData *bundle = p->typeLoader.getBundle(identifier);
-
-        d->error = QQmlFilePrivate::NotFound;
-
-        if (bundle) {
-            QString filename = url.mid(index);
-            const QQmlBundle::FileEntry *entry = bundle->find(filename);
-            if (entry) {
-                d->data = QByteArray(entry->contents(), entry->fileSize());
-                d->error = QQmlFilePrivate::None;
-            }
-            bundle->release();
-        }
-
-    } else if (isLocalFile(url)) {
+    if (isLocalFile(url)) {
         QString lf = urlToLocalFileOrQrc(url);
 
         if (!QQml_isFileCaseCorrect(lf)) {
@@ -419,9 +354,6 @@ void QQmlFile::clear()
     d->url = QUrl();
     d->urlString = QString();
     d->data = QByteArray();
-    if (d->bundle) d->bundle->release();
-    d->bundle = 0;
-    d->file = 0;
     d->error = QQmlFilePrivate::None;
 }
 
@@ -477,7 +409,7 @@ bool QQmlFile::connectDownloadProgress(QObject *object, int method)
 /*!
 Returns true if QQmlFile will open \a url synchronously.
 
-Synchronous urls have a qrc:/, file://, or bundle:// scheme.
+Synchronous urls have a qrc:/ or file:// scheme.
 
 \note On Android, urls with assets:/ scheme are also considered synchronous.
 */
@@ -486,7 +418,6 @@ bool QQmlFile::isSynchronous(const QUrl &url)
     QString scheme = url.scheme();
 
     if ((scheme.length() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
-        (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(bundle_string), Qt::CaseInsensitive)) ||
         (scheme.length() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
         return true;
 
@@ -503,7 +434,7 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 /*!
 Returns true if QQmlFile will open \a url synchronously.
 
-Synchronous urls have a qrc:/, file://, or bundle:// scheme.
+Synchronous urls have a qrc:/ or file:// scheme.
 
 \note On Android, urls with assets:/ scheme are also considered synchronous.
 */
@@ -519,12 +450,6 @@ bool QQmlFile::isSynchronous(const QString &url)
         return url.length() >= 7 /* file:// */ &&
                url.startsWith(QLatin1String(file_string), Qt::CaseInsensitive) &&
                url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
-
-    } else if (f == QLatin1Char('b') || f == QLatin1Char('B')) {
-
-        return url.length() >= 9 /* bundle:// */ &&
-               url.startsWith(QLatin1String(bundle_string), Qt::CaseInsensitive) &&
-               url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/') && url[8] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
@@ -544,29 +469,6 @@ bool QQmlFile::isSynchronous(const QString &url)
 #endif
 
     return false;
-}
-
-/*!
-Returns true if \a url is a bundle.
-
-Bundle urls have a bundle:// scheme.
-*/
-bool QQmlFile::isBundle(const QString &url)
-{
-    return url.length() >= 9 && url.startsWith(QLatin1String(bundle_string), Qt::CaseInsensitive) &&
-           url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/') && url[8] == QLatin1Char('/');
-}
-
-/*!
-Returns true if \a url is a bundle.
-
-Bundle urls have a bundle:// scheme.
-*/
-bool QQmlFile::isBundle(const QUrl &url)
-{
-    QString scheme = url.scheme();
-
-    return scheme.length() == 6 && 0 == scheme.compare(QLatin1String(bundle_string), Qt::CaseInsensitive);
 }
 
 /*!
@@ -686,162 +588,6 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 #endif
 
     return toLocalFile(url);
-}
-
-bool QQmlFile::bundleDirectoryExists(const QString &dir, QQmlEngine *e)
-{
-    if (!isBundle(dir))
-        return false;
-
-    int index = dir.indexOf(QLatin1Char('/'), 9);
-
-    if (index == -1 && dir.length() > 9) // We accept "bundle://<blah>" with no extra path
-        index = dir.length();
-
-    if (index == -1)
-        return false;
-
-    QStringRef identifier(&dir, 9, index - 9);
-
-    QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(identifier);
-
-    if (bundle) {
-        int lastIndex = dir.lastIndexOf(QLatin1Char('/'));
-
-        if (lastIndex <= index) {
-            bundle->release();
-            return true;
-        }
-
-        QStringRef d(&dir, index + 1, lastIndex - index);
-
-        QList<const QQmlBundle::FileEntry *> entries = bundle->files();
-
-        for (int ii = 0; ii < entries.count(); ++ii) {
-            QString name = entries.at(ii)->fileName();
-            if (name.startsWith(d)) {
-                bundle->release();
-                return true;
-            }
-        }
-
-        bundle->release();
-    }
-
-    return false;
-}
-
-bool QQmlFile::bundleDirectoryExists(const QUrl &url, QQmlEngine *e)
-{
-    if (!isBundle(url))
-        return false;
-
-    QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(url.host());
-
-    if (bundle) {
-        QString path = url.path();
-
-        int lastIndex = path.lastIndexOf(QLatin1Char('/'));
-
-        if (lastIndex == -1) {
-            bundle->release();
-            return true;
-        }
-
-        QStringRef d(&path, 0, lastIndex);
-
-        QList<const QQmlBundle::FileEntry *> entries = bundle->files();
-
-        for (int ii = 0; ii < entries.count(); ++ii) {
-            QString name = entries.at(ii)->fileName();
-            if (name.startsWith(d)) {
-                bundle->release();
-                return true;
-            }
-        }
-
-        bundle->release();
-    }
-
-    return false;
-}
-
-bool QQmlFile::bundleFileExists(const QString &file, QQmlEngine *e)
-{
-    if (!isBundle(file))
-        return false;
-
-    int index = file.indexOf(QLatin1Char('/'), 9);
-
-    if (index == -1)
-        return false;
-
-    QStringRef identifier(&file, 9, index - 9);
-    QStringRef path(&file, index + 1, file.length() - index - 1);
-
-    QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(identifier);
-
-    if (bundle) {
-        const QQmlBundle::FileEntry *entry = bundle->find(path.constData(), path.length());
-        bundle->release();
-
-        return entry != 0;
-    }
-
-    return false;
-}
-
-bool QQmlFile::bundleFileExists(const QUrl &, QQmlEngine *)
-{
-    qFatal("Not implemented");
-    return true;
-}
-
-/*!
-Returns the file name for the bundle file referenced by \a url or an
-empty string if \a url isn't a bundle url.
-*/
-QString QQmlFile::bundleFileName(const QString &url, QQmlEngine *e)
-{
-    if (!isBundle(url))
-        return QString();
-
-    int index = url.indexOf(QLatin1Char('/'), 9);
-
-    if (index == -1)
-        index = url.length();
-
-    QStringRef identifier(&url, 9, index - 9);
-
-    QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(identifier);
-
-    if (bundle) {
-        QString rv = bundle->fileName;
-        bundle->release();
-        return rv;
-    }
-
-    return QString();
-}
-
-/*!
-Returns the file name for the bundle file referenced by \a url or an
-empty string if \a url isn't a bundle url.
-*/
-QString QQmlFile::bundleFileName(const QUrl &url, QQmlEngine *e)
-{
-    if (!isBundle(url))
-        return QString();
-
-    QQmlBundleData *bundle = QQmlEnginePrivate::get(e)->typeLoader.getBundle(url.host());
-
-    if (bundle) {
-        QString rv = bundle->fileName;
-        bundle->release();
-        return rv;
-    }
-
-    return QString();
 }
 
 QT_END_NAMESPACE

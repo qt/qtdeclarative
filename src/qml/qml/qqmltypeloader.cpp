@@ -1288,7 +1288,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::Compile
     if (!importQualifier.isEmpty()) {
         // Does this library contain any qualified scripts?
         QUrl libraryUrl(qmldirUrl);
-        const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirIdentifier, qmldirUrl);
+        const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirIdentifier);
         foreach (const QQmlDirParser::Script &script, qmldir->scripts()) {
             QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
             QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
@@ -1335,7 +1335,7 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
             if (!importQualifier.isEmpty()) {
                 // Does this library contain any qualified scripts?
                 QUrl libraryUrl(qmldirUrl);
-                const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirFilePath, qmldirUrl);
+                const QmldirContent *qmldir = typeLoader()->qmldirContent(qmldirFilePath);
                 foreach (const QQmlDirParser::Script &script, qmldir->scripts()) {
                     QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
                     QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
@@ -1687,82 +1687,15 @@ QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
     return qmldirData;
 }
 
+// #### Qt 6: Remove this function, it exists only for binary compatibility.
 /*!
-Returns a QQmlBundleData for \a identifier.
-*/
-QQmlBundleData *QQmlTypeLoader::getBundle(const QString &identifier)
-{
-    return getBundle(QHashedStringRef(identifier));
-}
-
-QQmlBundleData *QQmlTypeLoader::getBundle(const QHashedStringRef &identifier)
-{
-    lock();
-
-    QQmlBundleData *rv = 0;
-    QQmlBundleData **bundle = m_bundleCache.value(identifier);
-    if (bundle) {
-        rv = *bundle;
-        rv->addref();
-    }
-
-    unlock();
-
-    return rv;
-}
-
-QQmlBundleData::QQmlBundleData(const QString &file)
-: QQmlBundle(file), fileName(file)
-{
-}
-
-// XXX check for errors etc.
-void QQmlTypeLoader::addBundle(const QString &identifier, const QString &fileName)
-{
-    lock();
-    addBundleNoLock(identifier, fileName);
-    unlock();
-}
-
-void QQmlTypeLoader::addBundleNoLock(const QString &identifier, const QString &fileName)
-{
-    QQmlBundleData *data = new QQmlBundleData(fileName);
-    if (data->open()) {
-
-        m_bundleCache.insert(identifier, data);
-
-    } else {
-        data->release();
-    }
-}
-
-QString QQmlTypeLoader::bundleIdForQmldir(const QString &name, const QString &uriHint)
-{
-    lock();
-    QString *bundleId = m_qmldirBundleIdCache.value(name);
-    if (!bundleId) {
-        QString newBundleId = QLatin1String("qml.") + uriHint.toLower() /* XXX toLower()? */;
-        if (m_qmldirBundleIdCache.contains(newBundleId))
-            newBundleId += QString::number(m_qmldirBundleIdCache.count());
-        m_qmldirBundleIdCache.insert(name, newBundleId);
-        addBundleNoLock(newBundleId, name);
-        unlock();
-        return newBundleId;
-    } else {
-        unlock();
-        return *bundleId;
-    }
-}
-
+ * \internal
+ */
 bool QQmlEngine::addNamedBundle(const QString &name, const QString &fileName)
 {
-    Q_D(QQmlEngine);
-
-    if (name.startsWith(QLatin1String("qml."))) // reserved
-        return false;
-
-    d->typeLoader.addBundle(name, fileName);
-    return true;
+    Q_UNUSED(name)
+    Q_UNUSED(fileName)
+    return false;
 }
 
 /*!
@@ -1881,20 +1814,20 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 /*!
 Return a QmldirContent for absoluteFilePath.  The QmldirContent may be cached.
 
-\a filePath is either a bundle URL, or a local file path.
+\a filePath is a local file path.
 
 It can also be a remote path for a remote directory import, but it will have been cached by now in this case.
 */
-const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn, const QString &uriHint)
+const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn)
 {
-    QUrl url(filePathIn); //May already contain bundle or http scheme
+    QUrl url(filePathIn); //May already contain http scheme
     if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
         return *(m_importQmlDirCache.value(filePathIn)); //Can't load the remote here, but should be cached
-    else if (!QQmlFile::isBundle(filePathIn))
+    else
         url = QUrl::fromLocalFile(filePathIn);
     if (engine() && engine()->urlInterceptor())
         url = engine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::QmldirFile);
-    Q_ASSERT(url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("bundle"));
+    Q_ASSERT(url.scheme() == QLatin1String("file"));
     QString filePath;
     if (url.scheme() == QLatin1String("file"))
         filePath = url.toLocalFile();
@@ -1910,45 +1843,14 @@ const QQmlTypeLoader::QmldirContent *QQmlTypeLoader::qmldirContent(const QString
 #define NOT_READABLE_ERROR QString(QLatin1String("module \"$$URI$$\" definition \"%1\" not readable"))
 #define CASE_MISMATCH_ERROR QString(QLatin1String("cannot load module \"$$URI$$\": File name case mismatch for \"%1\""))
 
-        if (QQmlFile::isBundle(url.toString())) {
-            QQmlFile file(engine(), url);
-            if (file.isError()) {
-                ERROR(NOT_READABLE_ERROR.arg(url.toString()));
-            } else {
-                QString content(QString::fromUtf8(file.data(), file.size()));
-                qmldir->setContent(filePath, content);
-            }
-
+        QFile file(filePath);
+        if (!QQml_isFileCaseCorrect(filePath)) {
+            ERROR(CASE_MISMATCH_ERROR.arg(filePath));
+        } else if (file.open(QFile::ReadOnly)) {
+            QByteArray data = file.readAll();
+            qmldir->setContent(filePath, QString::fromUtf8(data));
         } else {
-
-            QFile file(filePath);
-            if (!QQml_isFileCaseCorrect(filePath)) {
-                ERROR(CASE_MISMATCH_ERROR.arg(filePath));
-            } else if (file.open(QFile::ReadOnly)) {
-                QByteArray data = file.read(QQmlBundle::bundleHeaderLength());
-
-                if (QQmlBundle::isBundleHeader(data.constData(), data.length())) {
-                    QString id = bundleIdForQmldir(filePath, uriHint);
-
-                    QString bundleUrl = QLatin1String("bundle://") + id + QLatin1Char('/');
-
-                    QUrl url(bundleUrl + QLatin1String("qmldir"));
-
-                    QQmlFile file(engine(), url);
-                    if (file.isError()) {
-                        ERROR(NOT_READABLE_ERROR.arg(filePath));
-                    } else {
-                        QString content(QString::fromUtf8(file.data(), file.size()));
-                        qmldir->setContent(QQmlFile::bundleFileName(bundleUrl, engine()), content);
-                    }
-                } else {
-                    data += file.readAll();
-                    qmldir->setContent(filePath, QString::fromUtf8(data));
-                }
-            } else {
-                ERROR(NOT_READABLE_ERROR.arg(filePath));
-            }
-
+            ERROR(NOT_READABLE_ERROR.arg(filePath));
         }
 
 #undef ERROR
@@ -2208,10 +2110,6 @@ bool QQmlTypeData::loadImplicitImport()
 void QQmlTypeData::dataReceived(const Data &data)
 {
     QString code = QString::fromUtf8(data.data(), data.size());
-    QByteArray preparseData;
-
-    if (data.isFile()) preparseData = data.asFile()->metaData(QLatin1String("qml:preparse"));
-
     QQmlEngine *qmlEngine = typeLoader()->engine();
     m_document.reset(new QmlIR::Document(QV8Engine::getV4(qmlEngine)->debugger != 0));
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());

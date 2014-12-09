@@ -68,8 +68,6 @@ public:
     const char *data() const;
     QByteArray dataByteArray() const;
 
-    QByteArray metaData(const QString &) const;
-
     void load(QQmlEngine *, const QUrl &);
     void load(QQmlEngine *, const QString &);
 
@@ -84,24 +82,11 @@ public:
     static bool isSynchronous(const QString &url);
     static bool isSynchronous(const QUrl &url);
 
-    static bool isBundle(const QString &url);
-    static bool isBundle(const QUrl &url);
-
     static bool isLocalFile(const QString &url);
     static bool isLocalFile(const QUrl &url);
 
     static QString urlToLocalFileOrQrc(const QString &);
     static QString urlToLocalFileOrQrc(const QUrl &);
-
-    static bool bundleDirectoryExists(const QString &, QQmlEngine *);
-    static bool bundleDirectoryExists(const QUrl &, QQmlEngine *);
-
-    static bool bundleFileExists(const QString &, QQmlEngine *);
-    static bool bundleFileExists(const QUrl &, QQmlEngine *);
-
-    static QString bundleFileName(const QString &, QQmlEngine *);
-    static QString bundleFileName(const QUrl &, QQmlEngine *);
-
 private:
     Q_DISABLE_COPY(QQmlFile)
     QQmlFilePrivate *d;
