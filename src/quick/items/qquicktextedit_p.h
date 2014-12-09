@@ -221,7 +221,7 @@ public:
 
 #ifndef QT_NO_IM
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
-    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
+    Q_REVISION(4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
     qreal contentWidth() const;
