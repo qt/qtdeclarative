@@ -265,6 +265,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickMouseArea, 1>(uri, 2, 4, "MouseArea");
     qmlRegisterType<QQuickShaderEffect, 1>(uri, 2, 4, "ShaderEffect");
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
+
+    qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");
 }
 
 static void initResources()

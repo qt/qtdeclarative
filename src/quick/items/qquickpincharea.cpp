@@ -234,6 +234,22 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     The corresponding handler is \c onPinchFinished.
 */
 
+/*!
+    \qmlsignal QtQuick::PinchArea::smartZoom()
+    \since 5.5
+
+    This signal is emitted when the pinch area detects the smart zoom gesture.
+    This gesture occurs only on certain operating systems such as OS X.
+
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch
+    gesture, including the location where the gesture occurred.  \c pinch.scale
+    will be greater than zero when the gesture indicates that the user wishes to
+    enter smart zoom, and zero when exiting (even though typically the same gesture
+    is used to toggle between the two states).
+
+    The corresponding handler is \c onSmartZoom.
+*/
+
 
 /*!
     \qmlpropertygroup QtQuick::PinchArea::pinch
@@ -662,6 +678,27 @@ bool QQuickPinchArea::event(QEvent *event)
                 emit pinchStarted(&pe);
             d->inPinch = true;
             updatePinchTarget();
+        } break;
+        case Qt::SmartZoomNativeGesture: {
+            if (gesture->value() > 0.0 && d->pinch && d->pinch->target()) {
+                d->pinchStartPos = pinch()->target()->position();
+                d->pinchStartCenter = mapToItem(pinch()->target()->parentItem(), pinch()->target()->boundingRect().center());
+                d->pinchStartScale = d->pinch->target()->scale();
+                d->pinchStartRotation = d->pinch->target()->rotation();
+                d->pinchLastScale = d->pinchStartScale = d->pinch->target()->scale();
+                d->pinchLastAngle = d->pinchStartRotation = d->pinch->target()->rotation();
+            }
+            QQuickPinchEvent pe(gesture->localPos(), gesture->value(), d->pinchLastAngle, 0.0);
+            pe.setStartCenter(gesture->localPos());
+            pe.setPreviousCenter(d->pinchStartCenter);
+            pe.setPreviousAngle(d->pinchLastAngle);
+            pe.setPreviousScale(d->pinchLastScale);
+            pe.setStartPoint1(gesture->localPos());
+            pe.setStartPoint2(gesture->localPos());
+            pe.setPoint1(mapFromScene(gesture->windowPos()));
+            pe.setPoint2(mapFromScene(gesture->windowPos()));
+            pe.setPointCount(2);
+            emit smartZoom(&pe);
         } break;
         case Qt::RotateNativeGesture: {
             qreal angle = d->pinchLastAngle + gesture->value();

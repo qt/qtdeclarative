@@ -37,7 +37,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.4
+import QtQuick 2.5
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 1.0
@@ -104,6 +104,25 @@ Window {
                     pinch.maximumScale: 10
                     pinch.dragAxis: Pinch.XAndYAxis
                     onPinchStarted: setFrameColor();
+                    property real zRestore: 0
+                    onSmartZoom: {
+                        if (pinch.scale > 0) {
+                            photoFrame.rotation = 0;
+                            photoFrame.scale = Math.min(root.width, root.height) / Math.max(image.sourceSize.width, image.sourceSize.height) * 0.85
+                            photoFrame.x = flick.contentX + (flick.width - photoFrame.width) / 2
+                            photoFrame.y = flick.contentY + (flick.height - photoFrame.height) / 2
+                            zRestore = photoFrame.z
+                            photoFrame.z = ++root.highestZ;
+                        } else {
+                            photoFrame.rotation = pinch.previousAngle
+                            photoFrame.scale = pinch.previousScale
+                            photoFrame.x = pinch.previousCenter.x - photoFrame.width / 2
+                            photoFrame.y = pinch.previousCenter.y - photoFrame.height / 2
+                            photoFrame.z = zRestore
+                            --root.highestZ
+                        }
+                    }
+
                     MouseArea {
                         id: dragArea
                         hoverEnabled: true

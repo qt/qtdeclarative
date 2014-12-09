@@ -266,6 +266,7 @@ Q_SIGNALS:
     void pinchStarted(QQuickPinchEvent *pinch);
     void pinchUpdated(QQuickPinchEvent *pinch);
     void pinchFinished(QQuickPinchEvent *pinch);
+    Q_REVISION(1) void smartZoom(QQuickPinchEvent *pinch);
 
 protected:
     bool childMouseEventFilter(QQuickItem *i, QEvent *e) Q_DECL_OVERRIDE;
