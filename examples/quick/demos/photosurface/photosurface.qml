@@ -67,21 +67,23 @@ Window {
         }
         Rectangle {
             id: photoFrame
-            width: image.width * image.scale + 20
-            height: image.height * image.scale + 20
+            width: image.width * (1 + 0.10 * image.height / image.width)
+            height: image.height * 1.10
+            scale: defaultSize / Math.max(image.sourceSize.width, image.sourceSize.height)
             border.color: "black"
             border.width: 2
             smooth: true
             antialiasing: true
-            x: Math.random() * root.width - defaultSize
-            y: Math.random() * root.height - defaultSize
-            rotation: Math.random() * 13 - 6
+            Component.onCompleted: {
+                x = Math.random() * root.width - defaultSize
+                y = Math.random() * root.height - defaultSize
+                rotation = Math.random() * 13 - 6
+            }
             Image {
                 id: image
                 anchors.centerIn: parent
                 fillMode: Image.PreserveAspectFit
                 source: folderModel.folder + fileName
-                scale: defaultSize / Math.max(sourceSize.width, sourceSize.height)
                 antialiasing: true
             }
             PinchArea {
@@ -111,10 +113,8 @@ Window {
                             photoFrame.rotation += wheel.angleDelta.x / 120;
                             if (Math.abs(photoFrame.rotation) < 0.6)
                                 photoFrame.rotation = 0;
-                            var scaleBefore = image.scale;
-                            image.scale += image.scale * wheel.angleDelta.y / 120 / 10;
-                            photoFrame.x -= image.width * (image.scale - scaleBefore) / 2.0;
-                            photoFrame.y -= image.height * (image.scale - scaleBefore) / 2.0;
+                            var scaleBefore = photoFrame.scale;
+                            photoFrame.scale += photoFrame.scale * wheel.angleDelta.y / 120 / 10;
                         }
                     }
                 }
