@@ -37,9 +37,12 @@
 #include <QVector>
 #include <QStringList>
 #include <QHash>
+#include <QUrl>
+
 #include <private/qv4value_p.h>
 #include <private/qv4executableallocator_p.h>
 #include <private/qqmlrefcount_p.h>
+#include <private/qqmlnullablevalue_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -586,12 +589,14 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
+    QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 
     QV4::Heap::String **runtimeStrings; // Array
     QV4::Lookup *runtimeLookups;
     QV4::Value *runtimeRegularExpressions;
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
+    mutable QQmlNullableValue<QUrl> m_url;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
