@@ -395,11 +395,6 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 
     ContextStateSaver stateSaver(ctx);
 
-    Heap::ExecutionContext::EvalCode evalCode;
-    evalCode.function = function;
-    evalCode.next = ctx->d()->currentEvalCode;
-    ctx->d()->currentEvalCode = &evalCode;
-
     // set the correct strict mode flag on the context
     ctx->d()->strictMode = strictMode();
     ctx->d()->compilationUnit = function->compilationUnit;

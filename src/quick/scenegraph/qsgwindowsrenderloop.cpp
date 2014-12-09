@@ -38,6 +38,7 @@
 
 #include <QtGui/QScreen>
 #include <QtGui/QGuiApplication>
+#include <QtGui/QOffscreenSurface>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -214,15 +215,29 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     hide(window);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
-    if (m_gl)
-        m_gl->makeCurrent(window);
+    bool current = false;
+    QScopedPointer<QOffscreenSurface> offscreenSurface;
+    if (m_gl) {
+        QSurface *surface = window;
+        // There may be no platform window if the window got closed.
+        if (!window->handle()) {
+            offscreenSurface.reset(new QOffscreenSurface);
+            offscreenSurface->setFormat(m_gl->format());
+            offscreenSurface->create();
+            surface = offscreenSurface.data();
+        }
+        current = m_gl->makeCurrent(surface);
+    }
+    if (Q_UNLIKELY(!current))
+        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         d->context->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete m_gl;
         m_gl = 0;
-    } else if (m_gl) {
+    } else if (m_gl && current) {
         m_gl->doneCurrent();
     }
 }

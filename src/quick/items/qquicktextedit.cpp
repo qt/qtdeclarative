@@ -1745,6 +1745,7 @@ void QQuickTextEdit::triggerPreprocess()
     Q_D(QQuickTextEdit);
     if (d->updateType == QQuickTextEditPrivate::UpdateNone)
         d->updateType = QQuickTextEditPrivate::UpdateOnlyPreprocess;
+    polish();
     update();
 }
 
@@ -1762,6 +1763,25 @@ static inline void updateNodeTransform(QQuickTextNode* node, const QPointF &topL
     QMatrix4x4 transformMatrix;
     transformMatrix.translate(topLeft.x(), topLeft.y());
     node->setMatrix(transformMatrix);
+}
+
+/*!
+ * \internal
+ *
+ * Invalidates font caches owned by the text objects owned by the element
+ * to work around the fact that text objects cannot be used from multiple threads.
+ */
+void QQuickTextEdit::invalidateFontCaches()
+{
+    Q_D(QQuickTextEdit);
+    if (d->document == 0)
+        return;
+
+    QTextBlock block;
+    for (block = d->document->firstBlock(); block.isValid(); block = block.next()) {
+        if (block.layout() != 0 && block.layout()->engine() != 0)
+            block.layout()->engine()->resetFontEngineCache();
+    }
 }
 
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
@@ -1917,7 +1937,14 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         rootNode->resetCursorNode(cursor);
     }
 
+    invalidateFontCaches();
+
     return rootNode;
+}
+
+void QQuickTextEdit::updatePolish()
+{
+    invalidateFontCaches();
 }
 
 /*!
@@ -2087,6 +2114,7 @@ void QQuickTextEdit::q_contentsChange(int pos, int charsRemoved, int charsAdded)
 
     markDirtyNodesForRange(pos, editRange, delta);
 
+    polish();
     if (isComponentComplete()) {
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
@@ -2114,6 +2142,7 @@ void QQuickTextEdit::updateSelection()
     // No need for node updates when we go from an empty selection to another empty selection
     if (d->control->textCursor().hasSelection() || d->hadSelection) {
         markDirtyNodesForRange(qMin(d->lastSelectionStart, d->control->textCursor().selectionStart()), qMax(d->control->textCursor().selectionEnd(), d->lastSelectionEnd), 0);
+        polish();
         if (isComponentComplete()) {
             d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
             update();
@@ -2254,6 +2283,7 @@ void QQuickTextEdit::updateWholeDocument()
             node->setDirty();
     }
 
+    polish();
     if (isComponentComplete()) {
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
@@ -2268,6 +2298,7 @@ void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
 void QQuickTextEdit::updateCursor()
 {
     Q_D(QQuickTextEdit);
+    polish();
     if (isComponentComplete()) {
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();

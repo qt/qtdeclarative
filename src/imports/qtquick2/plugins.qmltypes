@@ -800,6 +800,7 @@ Module {
         Property { name: "role"; type: "QAccessible::Role" }
         Property { name: "name"; type: "string" }
         Property { name: "description"; type: "string" }
+        Property { name: "ignored"; type: "bool" }
         Property { name: "checkable"; type: "bool" }
         Property { name: "checked"; type: "bool" }
         Property { name: "editable"; type: "bool" }
@@ -814,6 +815,7 @@ Module {
         Property { name: "defaultButton"; type: "bool" }
         Property { name: "passwordEdit"; type: "bool" }
         Property { name: "selectableText"; type: "bool" }
+        Property { name: "searchEdit"; type: "bool" }
         Signal {
             name: "checkableChanged"
             Parameter { name: "arg"; type: "bool" }
@@ -870,8 +872,20 @@ Module {
             name: "selectableTextChanged"
             Parameter { name: "arg"; type: "bool" }
         }
+        Signal {
+            name: "searchEditChanged"
+            Parameter { name: "arg"; type: "bool" }
+        }
+        Signal { name: "pressAction" }
+        Signal { name: "toggleAction" }
+        Signal { name: "increaseAction" }
+        Signal { name: "decreaseAction" }
         Method { name: "valueChanged" }
         Method { name: "cursorPositionChanged" }
+        Method {
+            name: "setIgnored"
+            Parameter { name: "ignored"; type: "bool" }
+        }
     }
     Component {
         name: "QQuickAnchorAnimation"
@@ -1367,6 +1381,7 @@ Module {
         Property { name: "maximumY"; type: "double" }
         Property { name: "active"; type: "bool"; isReadonly: true }
         Property { name: "filterChildren"; type: "bool" }
+        Property { name: "smoothed"; type: "bool" }
         Property { name: "threshold"; type: "double" }
     }
     Component {
@@ -1630,6 +1645,61 @@ Module {
         Property { name: "source"; type: "QUrl" }
         Property { name: "name"; type: "string" }
         Property { name: "status"; type: "Status"; isReadonly: true }
+    }
+    Component {
+        name: "QQuickFontMetrics"
+        prototype: "QObject"
+        exports: ["QtQuick/FontMetrics 2.4"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "font"; type: "QFont" }
+        Property { name: "ascent"; type: "double"; isReadonly: true }
+        Property { name: "descent"; type: "double"; isReadonly: true }
+        Property { name: "height"; type: "double"; isReadonly: true }
+        Property { name: "leading"; type: "double"; isReadonly: true }
+        Property { name: "lineSpacing"; type: "double"; isReadonly: true }
+        Property { name: "minimumLeftBearing"; type: "double"; isReadonly: true }
+        Property { name: "minimumRightBearing"; type: "double"; isReadonly: true }
+        Property { name: "maximumCharacterWidth"; type: "double"; isReadonly: true }
+        Property { name: "xHeight"; type: "double"; isReadonly: true }
+        Property { name: "averageCharacterWidth"; type: "double"; isReadonly: true }
+        Property { name: "underlinePosition"; type: "double"; isReadonly: true }
+        Property { name: "overlinePosition"; type: "double"; isReadonly: true }
+        Property { name: "strikeOutPosition"; type: "double"; isReadonly: true }
+        Property { name: "lineWidth"; type: "double"; isReadonly: true }
+        Signal {
+            name: "fontChanged"
+            Parameter { name: "font"; type: "QFont" }
+        }
+        Method {
+            name: "advanceWidth"
+            type: "double"
+            Parameter { name: "text"; type: "string" }
+        }
+        Method {
+            name: "boundingRect"
+            type: "QRectF"
+            Parameter { name: "text"; type: "string" }
+        }
+        Method {
+            name: "tightBoundingRect"
+            type: "QRectF"
+            Parameter { name: "text"; type: "string" }
+        }
+        Method {
+            name: "elidedText"
+            type: "string"
+            Parameter { name: "text"; type: "string" }
+            Parameter { name: "mode"; type: "Qt::TextElideMode" }
+            Parameter { name: "width"; type: "double" }
+            Parameter { name: "flags"; type: "int" }
+        }
+        Method {
+            name: "elidedText"
+            type: "string"
+            Parameter { name: "text"; type: "string" }
+            Parameter { name: "mode"; type: "Qt::TextElideMode" }
+            Parameter { name: "width"; type: "double" }
+        }
     }
     Component {
         name: "QQuickFontValueType"
@@ -1903,8 +1973,8 @@ Module {
         name: "QQuickItem"
         defaultProperty: "data"
         prototype: "QObject"
-        exports: ["QtQuick/Item 2.0", "QtQuick/Item 2.1"]
-        exportMetaObjectRevisions: [0, 1]
+        exports: ["QtQuick/Item 2.0", "QtQuick/Item 2.1", "QtQuick/Item 2.4"]
+        exportMetaObjectRevisions: [0, 1, 2]
         Enum {
             name: "TransformOrigin"
             values: {
@@ -2011,6 +2081,19 @@ Module {
         }
         Method { name: "update" }
         Method {
+            name: "grabToImage"
+            revision: 2
+            type: "bool"
+            Parameter { name: "callback"; type: "QJSValue" }
+            Parameter { name: "targetSize"; type: "QSize" }
+        }
+        Method {
+            name: "grabToImage"
+            revision: 2
+            type: "bool"
+            Parameter { name: "callback"; type: "QJSValue" }
+        }
+        Method {
             name: "contains"
             type: "bool"
             Parameter { name: "point"; type: "QPointF" }
@@ -2040,6 +2123,18 @@ Module {
             type: "QQuickItem*"
             Parameter { name: "x"; type: "double" }
             Parameter { name: "y"; type: "double" }
+        }
+    }
+    Component {
+        name: "QQuickItemGrabResult"
+        prototype: "QObject"
+        Property { name: "image"; type: "QImage"; isReadonly: true }
+        Property { name: "url"; type: "QUrl"; isReadonly: true }
+        Signal { name: "ready" }
+        Method {
+            name: "saveToFile"
+            type: "bool"
+            Parameter { name: "fileName"; type: "string" }
         }
     }
     Component {
@@ -2435,8 +2530,12 @@ Module {
         name: "QQuickListView"
         defaultProperty: "data"
         prototype: "QQuickItemView"
-        exports: ["QtQuick/ListView 2.0", "QtQuick/ListView 2.1"]
-        exportMetaObjectRevisions: [0, 1]
+        exports: [
+            "QtQuick/ListView 2.0",
+            "QtQuick/ListView 2.1",
+            "QtQuick/ListView 2.4"
+        ]
+        exportMetaObjectRevisions: [0, 1, 2]
         attachedType: "QQuickListViewAttached"
         Enum {
             name: "Orientation"
@@ -2453,6 +2552,22 @@ Module {
                 "SnapOneItem": 2
             }
         }
+        Enum {
+            name: "HeaderPositioning"
+            values: {
+                "InlineHeader": 0,
+                "OverlayHeader": 1,
+                "PullBackHeader": 2
+            }
+        }
+        Enum {
+            name: "FooterPositioning"
+            values: {
+                "InlineFooter": 0,
+                "OverlayFooter": 1,
+                "PullBackFooter": 2
+            }
+        }
         Property { name: "highlightMoveVelocity"; type: "double" }
         Property { name: "highlightResizeVelocity"; type: "double" }
         Property { name: "highlightResizeDuration"; type: "int" }
@@ -2461,6 +2576,10 @@ Module {
         Property { name: "section"; type: "QQuickViewSection"; isReadonly: true; isPointer: true }
         Property { name: "currentSection"; type: "string"; isReadonly: true }
         Property { name: "snapMode"; type: "SnapMode" }
+        Property { name: "headerPositioning"; revision: 2; type: "HeaderPositioning" }
+        Property { name: "footerPositioning"; revision: 2; type: "FooterPositioning" }
+        Signal { name: "headerPositioningChanged"; revision: 2 }
+        Signal { name: "footerPositioningChanged"; revision: 2 }
         Method { name: "incrementCurrentIndex" }
         Method { name: "decrementCurrentIndex" }
     }
@@ -2504,8 +2623,8 @@ Module {
         name: "QQuickMouseArea"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick/MouseArea 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick/MouseArea 2.0", "QtQuick/MouseArea 2.4"]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "mouseX"; type: "double"; isReadonly: true }
         Property { name: "mouseY"; type: "double"; isReadonly: true }
         Property { name: "containsMouse"; type: "bool"; isReadonly: true }
@@ -2518,6 +2637,7 @@ Module {
         Property { name: "preventStealing"; type: "bool" }
         Property { name: "propagateComposedEvents"; type: "bool" }
         Property { name: "cursorShape"; type: "Qt::CursorShape" }
+        Property { name: "containsPress"; revision: 1; type: "bool"; isReadonly: true }
         Signal { name: "hoveredChanged" }
         Signal {
             name: "positionChanged"
@@ -2558,6 +2678,7 @@ Module {
         Signal { name: "entered" }
         Signal { name: "exited" }
         Signal { name: "canceled" }
+        Signal { name: "containsPressChanged"; revision: 1 }
     }
     Component {
         name: "QQuickMouseEvent"
@@ -2619,6 +2740,33 @@ Module {
         prototype: "QQuickAnimator"
         exports: ["QtQuick/OpacityAnimator 2.2"]
         exportMetaObjectRevisions: [0]
+    }
+    Component {
+        name: "QQuickOpenGLInfo"
+        prototype: "QObject"
+        exports: ["QtQuick/OpenGLInfo 2.4"]
+        isCreatable: false
+        exportMetaObjectRevisions: [0]
+        Enum {
+            name: "ContextProfile"
+            values: {
+                "NoProfile": 0,
+                "CoreProfile": 1,
+                "CompatibilityProfile": 2
+            }
+        }
+        Enum {
+            name: "RenderableType"
+            values: {
+                "Unspecified": 0,
+                "OpenGL": 1,
+                "OpenGLES": 2
+            }
+        }
+        Property { name: "majorVersion"; type: "int"; isReadonly: true }
+        Property { name: "minorVersion"; type: "int"; isReadonly: true }
+        Property { name: "profile"; type: "ContextProfile"; isReadonly: true }
+        Property { name: "renderableType"; type: "RenderableType"; isReadonly: true }
     }
     Component {
         name: "QQuickPackage"
@@ -3226,8 +3374,8 @@ Module {
         name: "QQuickShaderEffect"
         defaultProperty: "data"
         prototype: "QQuickItem"
-        exports: ["QtQuick/ShaderEffect 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick/ShaderEffect 2.0", "QtQuick/ShaderEffect 2.4"]
+        exportMetaObjectRevisions: [0, 1]
         Enum {
             name: "CullMode"
             values: {
@@ -3251,6 +3399,7 @@ Module {
         Property { name: "cullMode"; type: "CullMode" }
         Property { name: "log"; type: "string"; isReadonly: true }
         Property { name: "status"; type: "Status"; isReadonly: true }
+        Property { name: "supportsAtlasTextures"; revision: 1; type: "bool" }
     }
     Component {
         name: "QQuickShaderEffectMesh"
@@ -3983,6 +4132,13 @@ Module {
             Parameter { name: "text"; type: "string" }
         }
         Method {
+            name: "inputMethodQuery"
+            revision: 4
+            type: "QVariant"
+            Parameter { name: "query"; type: "Qt::InputMethodQuery" }
+            Parameter { name: "argument"; type: "QVariant" }
+        }
+        Method {
             name: "positionToRectangle"
             type: "QRectF"
             Parameter { type: "int" }
@@ -4026,8 +4182,12 @@ Module {
         name: "QQuickTextInput"
         defaultProperty: "data"
         prototype: "QQuickImplicitSizeItem"
-        exports: ["QtQuick/TextInput 2.0", "QtQuick/TextInput 2.2"]
-        exportMetaObjectRevisions: [0, 2]
+        exports: [
+            "QtQuick/TextInput 2.0",
+            "QtQuick/TextInput 2.2",
+            "QtQuick/TextInput 2.4"
+        ]
+        exportMetaObjectRevisions: [0, 2, 3]
         Enum {
             name: "EchoMode"
             values: {
@@ -4110,6 +4270,7 @@ Module {
         Property { name: "echoMode"; type: "EchoMode" }
         Property { name: "activeFocusOnPress"; type: "bool" }
         Property { name: "passwordCharacter"; type: "string" }
+        Property { name: "passwordMaskDelay"; revision: 3; type: "int" }
         Property { name: "displayText"; type: "string"; isReadonly: true }
         Property { name: "autoScroll"; type: "bool" }
         Property { name: "selectByMouse"; type: "bool" }
@@ -4155,6 +4316,11 @@ Module {
         Signal {
             name: "echoModeChanged"
             Parameter { name: "echoMode"; type: "EchoMode" }
+        }
+        Signal {
+            name: "passwordMaskDelayChanged"
+            revision: 3
+            Parameter { name: "delay"; type: "int" }
         }
         Signal {
             name: "activeFocusOnPressChanged"
@@ -4203,6 +4369,11 @@ Module {
             Parameter { name: "end"; type: "int" }
         }
         Method {
+            name: "ensureVisible"
+            revision: 3
+            Parameter { name: "position"; type: "int" }
+        }
+        Method {
             name: "positionAt"
             Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
         }
@@ -4221,6 +4392,13 @@ Module {
             Parameter { name: "mode"; type: "SelectionMode" }
         }
         Method {
+            name: "inputMethodQuery"
+            revision: 3
+            type: "QVariant"
+            Parameter { name: "query"; type: "Qt::InputMethodQuery" }
+            Parameter { name: "argument"; type: "QVariant" }
+        }
+        Method {
             name: "getText"
             type: "string"
             Parameter { name: "start"; type: "int" }
@@ -4235,6 +4413,23 @@ Module {
         Property { name: "height"; type: "double" }
         Property { name: "x"; type: "double" }
         Property { name: "y"; type: "double" }
+    }
+    Component {
+        name: "QQuickTextMetrics"
+        prototype: "QObject"
+        exports: ["QtQuick/TextMetrics 2.4"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "font"; type: "QFont" }
+        Property { name: "text"; type: "string" }
+        Property { name: "advanceWidth"; type: "double"; isReadonly: true }
+        Property { name: "boundingRect"; type: "QRectF"; isReadonly: true }
+        Property { name: "width"; type: "double"; isReadonly: true }
+        Property { name: "height"; type: "double"; isReadonly: true }
+        Property { name: "tightBoundingRect"; type: "QRectF"; isReadonly: true }
+        Property { name: "elidedText"; type: "string"; isReadonly: true }
+        Property { name: "elide"; type: "Qt::TextElideMode" }
+        Property { name: "elideWidth"; type: "double" }
+        Signal { name: "metricsChanged" }
     }
     Component {
         name: "QQuickTouchPoint"
@@ -4779,7 +4974,8 @@ Module {
                 "WA_TouchPadAcceptSingleTouchEvents": 123,
                 "WA_X11DoNotAcceptFocus": 126,
                 "WA_MacNoShadow": 127,
-                "WA_AttributeCount": 128
+                "WA_AlwaysStackOnTop": 128,
+                "WA_AttributeCount": 129
             }
         }
         Enum {
@@ -4801,7 +4997,9 @@ Module {
                 "AA_ForceRasterWidgets": 14,
                 "AA_UseDesktopOpenGL": 15,
                 "AA_UseOpenGLES": 16,
-                "AA_AttributeCount": 17
+                "AA_UseSoftwareOpenGL": 17,
+                "AA_ShareOpenGLContexts": 18,
+                "AA_AttributeCount": 19
             }
         }
         Enum {
@@ -5246,6 +5444,13 @@ Module {
                 "Key_Guide": 16777498,
                 "Key_Info": 16777499,
                 "Key_Settings": 16777500,
+                "Key_MicVolumeUp": 16777501,
+                "Key_MicVolumeDown": 16777502,
+                "Key_New": 16777504,
+                "Key_Open": 16777505,
+                "Key_Find": 16777506,
+                "Key_Undo": 16777507,
+                "Key_Redo": 16777508,
                 "Key_MediaLast": 16842751,
                 "Key_Select": 16842752,
                 "Key_Yes": 16842753,
@@ -5582,6 +5787,20 @@ Module {
             }
         }
         Enum {
+            name: "FocusReason"
+            values: {
+                "MouseFocusReason": 0,
+                "TabFocusReason": 1,
+                "BacktabFocusReason": 2,
+                "ActiveWindowFocusReason": 3,
+                "PopupFocusReason": 4,
+                "ShortcutFocusReason": 5,
+                "MenuBarFocusReason": 6,
+                "OtherFocusReason": 7,
+                "NoFocusReason": 8
+            }
+        }
+        Enum {
             name: "ContextMenuPolicy"
             values: {
                 "NoContextMenu": 0,
@@ -5831,6 +6050,18 @@ Module {
             }
         }
         Enum {
+            name: "NativeGestureType"
+            values: {
+                "BeginNativeGesture": 0,
+                "EndNativeGesture": 1,
+                "PanNativeGesture": 2,
+                "ZoomNativeGesture": 3,
+                "SmartZoomNativeGesture": 4,
+                "RotateNativeGesture": 5,
+                "SwipeNativeGesture": 6
+            }
+        }
+        Enum {
             name: "CursorMoveStyle"
             values: {
                 "LogicalMoveStyle": 0,
@@ -5851,6 +6082,14 @@ Module {
                 "ScrollBegin": 1,
                 "ScrollUpdate": 2,
                 "ScrollEnd": 3
+            }
+        }
+        Enum {
+            name: "MouseEventSource"
+            values: {
+                "MouseEventNotSynthesized": 0,
+                "MouseEventSynthesizedBySystem": 1,
+                "MouseEventSynthesizedByQt": 2
             }
         }
     }

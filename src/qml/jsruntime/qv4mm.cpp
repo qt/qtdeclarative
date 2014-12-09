@@ -245,7 +245,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
         m_d->availableItems[pos] += uint(increase);
         m_d->totalItems += int(increase);
 #ifdef V4_USE_VALGRIND
-        VALGRIND_MAKE_MEM_NOACCESS(allocation.memory, allocation.chunkSize);
+        VALGRIND_MAKE_MEM_NOACCESS(allocation.memory.base(), allocSize);
 #endif
     }
 

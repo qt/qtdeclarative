@@ -51,25 +51,36 @@ namespace {
 class JavaScriptJob: public Debugger::Job
 {
     QV4::ExecutionEngine *engine;
+    int frameNr;
     const QString &script;
 
 public:
-    JavaScriptJob(QV4::ExecutionEngine *engine, const QString &script)
+    JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script)
         : engine(engine)
+        , frameNr(frameNr)
         , script(script)
     {}
 
     void run()
     {
-        QV4::Scope scope(engine);
-        QV4::ExecutionContext *ctx = engine->currentContext();
-        ContextStateSaver ctxSaver(ctx);
-        QV4::ScopedValue result(scope);
+        Scope scope(engine);
 
+        ExecutionContextSaver saver(engine->currentContext());
+
+        Value *savedContexts = scope.alloc(frameNr);
+        for (int i = 0; i < frameNr; ++i) {
+            savedContexts[i] = engine->currentContext();
+            engine->popContext();
+        }
+
+        ExecutionContext *ctx = engine->currentContext();
         QV4::Script script(ctx, this->script);
         script.strictMode = ctx->d()->strictMode;
-        script.inheritContext = false;
+        // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
+        // is a side-effect of inheritContext.
+        script.inheritContext = true;
         script.parse();
+        QV4::ScopedValue result(scope);
         if (!scope.engine->hasException)
             result = script.run();
         if (scope.engine->hasException)
@@ -87,7 +98,7 @@ class EvalJob: public JavaScriptJob
 
 public:
     EvalJob(QV4::ExecutionEngine *engine, const QString &script)
-        : JavaScriptJob(engine, script)
+        : JavaScriptJob(engine, /*frameNr*/-1, script)
         , result(false)
     {}
 
@@ -107,8 +118,8 @@ class ExpressionEvalJob: public JavaScriptJob
     Debugger::Collector *collector;
 
 public:
-    ExpressionEvalJob(ExecutionEngine *engine, const QString &expression, Debugger::Collector *collector)
-        : JavaScriptJob(engine, expression)
+    ExpressionEvalJob(ExecutionEngine *engine, int frameNr, const QString &expression, Debugger::Collector *collector)
+        : JavaScriptJob(engine, frameNr, expression)
         , collector(collector)
     {
     }
@@ -499,13 +510,10 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
 void Debugger::evaluateExpression(int frameNr, const QString &expression, Debugger::Collector *resultsCollector)
 {
     Q_ASSERT(state() == Paused);
-    Q_UNUSED(frameNr);
 
     Q_ASSERT(m_runningJob == 0);
-    ExpressionEvalJob job(m_engine, expression, resultsCollector);
-    m_runningJob = &job;
-    m_runningJob->run();
-    m_runningJob = 0;
+    ExpressionEvalJob job(m_engine, frameNr, expression, resultsCollector);
+    runInEngine(&job);
 }
 
 void Debugger::maybeBreakAtInstruction()

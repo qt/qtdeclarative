@@ -243,6 +243,8 @@ void QJSEngine::collectGarbage()
     \row    \li QT_TRID_NOOP() \li QT_TRID_NOOP()
     \endtable
 
+  It also adds an arg() method to the string prototype.
+
   \sa {Internationalization with Qt}
 */
 void QJSEngine::installTranslatorFunctions(const QJSValue &object)
@@ -260,6 +262,10 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
     obj->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), QV4::GlobalExtensions::method_qsTrNoOp);
     obj->defineDefaultProperty(QStringLiteral("qsTrId"), QV4::GlobalExtensions::method_qsTrId);
     obj->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
+
+    // string prototype extension
+    v4->stringObjectClass->prototype->defineDefaultProperty(QStringLiteral("arg"),
+                                                            QV4::GlobalExtensions::method_string_arg);
 #endif
 }
 

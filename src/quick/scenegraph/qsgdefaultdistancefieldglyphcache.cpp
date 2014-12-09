@@ -48,6 +48,10 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
 
+#if !defined(QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING)
+#  define QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
+#endif
+
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, QOpenGLContext *c, const QRawFont &font)
     : QSGDistanceFieldGlyphCache(man, c, font)
     , m_maxTextureSize(0)
@@ -90,8 +94,9 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
     for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
         glyph_t glyphIndex = *it;
 
+        int padding = QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING;
         int glyphWidth = qCeil(glyphData(glyphIndex).boundingRect.width()) + distanceFieldRadius() * 2;
-        QSize glyphSize(glyphWidth, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()));
+        QSize glyphSize(glyphWidth + padding * 2, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution()) + padding * 2);
         QRect alloc = m_areaAllocator->allocate(glyphSize);
 
         if (alloc.isNull()) {
@@ -101,7 +106,10 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
 
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
                 int unusedGlyphWidth = qCeil(glyphData(unusedGlyph).boundingRect.width()) + distanceFieldRadius() * 2;
-                m_areaAllocator->deallocate(QRect(unusedCoord.x, unusedCoord.y, unusedGlyphWidth, QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())));
+                m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
+                                                  unusedCoord.y - padding,
+                                                  padding * 2 + unusedGlyphWidth,
+                                                  padding * 2 + QT_DISTANCEFIELD_TILESIZE(doubleGlyphResolution())));
 
                 m_unusedGlyphs.remove(unusedGlyph);
                 m_glyphsTexture.remove(unusedGlyph);
@@ -117,11 +125,14 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
 
         TextureInfo *tex = textureInfo(alloc.y() / maxTextureSize());
         alloc = QRect(alloc.x(), alloc.y() % maxTextureSize(), alloc.width(), alloc.height());
+
         tex->allocatedArea |= alloc;
+        Q_ASSERT(tex->padding == padding || tex->padding < 0);
+        tex->padding = padding;
 
         GlyphPosition p;
         p.glyph = glyphIndex;
-        p.position = alloc.topLeft();
+        p.position = alloc.topLeft() + QPoint(padding, padding);
 
         glyphPositions.append(p);
         glyphsToRender.append(glyphIndex);
@@ -153,13 +164,14 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> 
 
         glyphTextures[texInfo].append(glyphIndex);
 
+        int padding = texInfo->padding;
         int expectedWidth = qCeil(c.width + c.xMargin * 2);
-        if (glyph.width() != expectedWidth)
-            glyph = glyph.copy(0, 0, expectedWidth, glyph.height());
+        glyph = glyph.copy(-padding, -padding,
+                           expectedWidth + padding  * 2, glyph.height() + padding * 2);
 
         if (useTextureResizeWorkaround()) {
             uchar *inBits = glyph.scanLine(0);
-            uchar *outBits = texInfo->image.scanLine(int(c.y)) + int(c.x);
+            uchar *outBits = texInfo->image.scanLine(int(c.y) - padding) + int(c.x) - padding;
             for (int y = 0; y < glyph.height(); ++y) {
                 memcpy(outBits, inBits, glyph.width());
                 inBits += glyph.width();
@@ -175,13 +187,13 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> 
         if (useTextureUploadWorkaround()) {
             for (int i = 0; i < glyph.height(); ++i) {
                 m_funcs->glTexSubImage2D(GL_TEXTURE_2D, 0,
-                                         c.x, c.y + i, glyph.width(),1,
+                                         c.x - padding, c.y + i - padding, glyph.width(),1,
                                          format, GL_UNSIGNED_BYTE,
                                          glyph.scanLine(i));
             }
         } else {
             m_funcs->glTexSubImage2D(GL_TEXTURE_2D, 0,
-                                     c.x, c.y, glyph.width(), glyph.height(),
+                                     c.x - padding, c.y - padding, glyph.width(), glyph.height(),
                                      format, GL_UNSIGNED_BYTE,
                                      glyph.constBits());
         }

@@ -56,6 +56,8 @@
 #include "qquickaccessibleattached_p.h"
 #endif
 
+#include <QtGui/private/qtextengine_p.h>
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -362,6 +364,7 @@ void QQuickTextInput::setColor(const QColor &c)
         d->color = c;
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        polish();
         update();
         emit colorChanged();
     }
@@ -389,6 +392,7 @@ void QQuickTextInput::setSelectionColor(const QColor &color)
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        polish();
         update();
     }
     emit selectionColorChanged();
@@ -414,6 +418,7 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     if (d->hasSelectedText()) {
         d->textLayoutDirty = true;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        polish();
         update();
     }
     emit selectedTextColorChanged();
@@ -723,6 +728,7 @@ void QQuickTextInput::setCursorVisible(bool on)
     if (!d->cursorItem) {
         d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        polish();
         update();
     }
     emit cursorVisibleChanged(d->cursorVisible);
@@ -1846,7 +1852,21 @@ void QQuickTextInput::triggerPreprocess()
     Q_D(QQuickTextInput);
     if (d->updateType == QQuickTextInputPrivate::UpdateNone)
         d->updateType = QQuickTextInputPrivate::UpdateOnlyPreprocess;
+    polish();
     update();
+}
+
+void QQuickTextInput::updatePolish()
+{
+    invalidateFontCaches();
+}
+
+void QQuickTextInput::invalidateFontCaches()
+{
+    Q_D(QQuickTextInput);
+
+    if (d->m_textLayout.engine() != 0)
+        d->m_textLayout.engine()->resetFontEngineCache();
 }
 
 QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
@@ -1906,6 +1926,8 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         d->textLayoutDirty = false;
     }
+
+    invalidateFontCaches();
 
     return node;
 }
@@ -2669,6 +2691,7 @@ void QQuickTextInput::updateCursorRectangle(bool scroll)
         d->updateVerticalScroll();
     }
     d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+    polish();
     update();
     emit cursorRectangleChanged();
     if (d->cursorItem) {
@@ -2686,6 +2709,7 @@ void QQuickTextInput::selectionChanged()
     Q_D(QQuickTextInput);
     d->textLayoutDirty = true; //TODO: Only update rect in selection
     d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+    polish();
     update();
     emit selectedTextChanged();
 
@@ -2897,6 +2921,7 @@ void QQuickTextInputPrivate::updateLayout()
     contentSize = QSizeF(width, height);
 
     updateType = UpdatePaintNode;
+    q->polish();
     q->update();
 
     if (!requireImplicitWidth && !q->widthValid())
@@ -4185,6 +4210,7 @@ void QQuickTextInputPrivate::setCursorBlinkPeriod(int msec)
         m_blinkTimer = 0;
         if (m_blinkStatus == 1) {
             updateType = UpdatePaintNode;
+            q->polish();
             q->update();
         }
     }
@@ -4197,6 +4223,7 @@ void QQuickTextInput::timerEvent(QTimerEvent *event)
     if (event->timerId() == d->m_blinkTimer) {
         d->m_blinkStatus = !d->m_blinkStatus;
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
+        polish();
         update();
     } else if (event->timerId() == d->m_passwordEchoTimer.timerId()) {
         d->m_passwordEchoTimer.stop();

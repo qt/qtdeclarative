@@ -36,7 +36,7 @@
 /*!
     \qmltype ParticleGroup
     \instantiates QQuickParticleGroup
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \brief For setting attributes on a logical particle group
     \ingroup qtquick-particles
 

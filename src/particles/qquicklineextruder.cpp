@@ -37,7 +37,7 @@
 /*!
     \qmltype LineShape
     \instantiates QQuickLineExtruder
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits Shape
     \brief Represents a line for affectors and emitters
     \ingroup qtquick-particles

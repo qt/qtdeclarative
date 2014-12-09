@@ -126,17 +126,6 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGImageNode : public QSGVisitableNode
 {
 public:
-    enum AntialiasingFlag
-    {
-        AntialiasingNone = 0,
-        AntialiasingLeft = 1,
-        AntialiasingRight = 2,
-        AntialiasingTop = 4,
-        AntialiasingBottom = 8,
-        AntialiasingAll = AntialiasingLeft | AntialiasingRight | AntialiasingBottom | AntialiasingTop
-    };
-    Q_DECLARE_FLAGS(AntialiasingFlags, AntialiasingFlag)
-
     virtual void setTargetRect(const QRectF &rect) = 0;
     virtual void setInnerTargetRect(const QRectF &rect) = 0;
     virtual void setInnerSourceRect(const QRectF &rect) = 0;
@@ -151,7 +140,6 @@ public:
     virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) = 0;
     virtual void setVerticalWrapMode(QSGTexture::WrapMode wrapMode) = 0;
-    virtual void setAntialiasing(AntialiasingFlags flags) { Q_UNUSED(flags); }
 
     virtual void update() = 0;
 
@@ -356,6 +344,10 @@ protected:
     GLuint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
+
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+    void saveTexture(GLuint textureId, int width, int height) const;
+#endif
 
     inline bool isCoreProfile() const { return m_coreProfile; }
 

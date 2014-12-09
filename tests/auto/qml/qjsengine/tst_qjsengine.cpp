@@ -3200,6 +3200,11 @@ void tst_QJSEngine::installTranslatorFunctions()
         QVERIFY(ret.isString());
         QCOMPARE(ret.toString(), QString::fromLatin1("foo"));
     }
+    {
+        QJSValue ret = eng.evaluate("qsTr('%1').arg('foo')");
+        QVERIFY(ret.isString());
+        QCOMPARE(ret.toString(), QString::fromLatin1("foo"));
+    }
     QVERIFY(eng.evaluate("QT_TRID_NOOP()").isUndefined());
 }
 

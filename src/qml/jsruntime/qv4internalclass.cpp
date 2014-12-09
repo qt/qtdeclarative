@@ -421,25 +421,24 @@ InternalClass *InternalClass::frozen()
 
 void InternalClass::destroy()
 {
-    if (!engine)
-        return;
-    engine = 0;
+    QList<InternalClass *> destroyStack;
+    destroyStack.append(this);
 
-    propertyTable.~PropertyHash();
-    nameMap.~SharedInternalClassData<Identifier *>();
-    propertyData.~SharedInternalClassData<PropertyAttributes>();
-
-    if (m_sealed)
-        m_sealed->destroy();
-
-    if (m_frozen)
-        m_frozen->destroy();
-
-    for (QHash<Transition, InternalClass *>::ConstIterator it = transitions.begin(), end = transitions.end();
-         it != end; ++it)
-        it.value()->destroy();
-
-    transitions.clear();
+    while (!destroyStack.isEmpty()) {
+        InternalClass *next = destroyStack.takeLast();
+        if (!next->engine)
+            continue;
+        next->engine = 0;
+        next->propertyTable.~PropertyHash();
+        next->nameMap.~SharedInternalClassData<Identifier *>();
+        next->propertyData.~SharedInternalClassData<PropertyAttributes>();
+        if (next->m_sealed)
+            destroyStack.append(next->m_sealed);
+        if (next->m_frozen)
+            destroyStack.append(next->m_frozen);
+        destroyStack.append(next->transitions.values());
+        next->transitions.clear();
+    }
 }
 
 struct InternalClassPoolVisitor

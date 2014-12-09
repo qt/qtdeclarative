@@ -73,8 +73,9 @@ private:
         QSize size;
         QRect allocatedArea;
         QDistanceField image;
+        int padding;
 
-        TextureInfo() : texture(0)
+        TextureInfo() : texture(0), padding(-1)
         { }
     };
 

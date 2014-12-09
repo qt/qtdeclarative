@@ -239,7 +239,7 @@ public:
 
 #ifndef QT_NO_IM
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
-    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
+    Q_REVISION(3) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
     QRectF boundingRect() const Q_DECL_OVERRIDE;
@@ -301,6 +301,9 @@ Q_SIGNALS:
     void inputMethodHintsChanged();
     void renderTypeChanged();
 
+private:
+    void invalidateFontCaches();
+
 protected:
     void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry) Q_DECL_OVERRIDE;
@@ -319,6 +322,7 @@ protected:
     void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
+    void updatePolish();
 
 public Q_SLOTS:
     void selectAll();

@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Particle
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \brief Represents particles manipulated by emitters and affectors
     \ingroup qtquick-particles
 

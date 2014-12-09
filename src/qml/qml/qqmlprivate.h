@@ -122,12 +122,12 @@ namespace QQmlPrivate
         typedef int yes_type;
         typedef char no_type;
 
-        static yes_type check(To *);
-        static no_type check(...);
+        static yes_type checkType(To *);
+        static no_type checkType(...);
 
         static inline int cast()
         {
-            return StaticCastSelectorClass<From, To, sizeof(check(reinterpret_cast<From *>(0)))>::cast();
+            return StaticCastSelectorClass<From, To, sizeof(checkType(reinterpret_cast<From *>(0)))>::cast();
         }
     };
 
@@ -145,10 +145,10 @@ namespace QQmlPrivate
         typedef char no_type;
 
         template<typename ReturnType>
-        static yes_type check(ReturnType *(*)(QObject *));
-        static no_type check(...);
+        static yes_type checkType(ReturnType *(*)(QObject *));
+        static no_type checkType(...);
 
-        static bool const value = sizeof(check(&T::qmlAttachedProperties)) == sizeof(yes_type);
+        static bool const value = sizeof(checkType(&T::qmlAttachedProperties)) == sizeof(yes_type);
     };
 
     template <typename T>

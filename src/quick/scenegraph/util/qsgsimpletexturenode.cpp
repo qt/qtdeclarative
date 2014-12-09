@@ -299,6 +299,8 @@ QSGSimpleTextureNode::TextureCoordinatesTransformMode QSGSimpleTextureNode::text
     By default, the node does not take ownership of the texture.
 
     \sa setTexture()
+
+    \since 5.4
  */
 void QSGSimpleTextureNode::setOwnsTexture(bool owns)
 {
@@ -308,6 +310,8 @@ void QSGSimpleTextureNode::setOwnsTexture(bool owns)
 
 /*!
    Returns \c true if the node takes ownership of the texture; otherwise returns \c false.
+
+   \since 5.4
  */
 bool QSGSimpleTextureNode::ownsTexture() const
 {

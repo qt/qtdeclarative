@@ -897,8 +897,10 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
 
 void QQuickWindowPrivate::clearFocusObject()
 {
-    if (activeFocusItem)
-        activeFocusItem->setFocus(false, Qt::OtherFocusReason);
+    if (activeFocusItem == contentItem)
+        return;
+
+    clearFocusInScope(contentItem, QQuickItemPrivate::get(contentItem)->subFocusItem, Qt::OtherFocusReason);
 }
 
 void QQuickWindowPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
@@ -970,10 +972,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     Alternatively you can set or bind \l x and \l y to position the Window
     explicitly on the screen.
 
-    When the user attempts to close a window, the \a closing signal will be
+    When the user attempts to close a window, the \l closing signal will be
     emitted. You can force the window to stay open (for example to prompt the
-    user to save changes) by writing an onClosing handler and setting
-    close.accepted = false.
+    user to save changes) by writing an \c onClosing handler and setting
+    \c {close.accepted = false}.
 */
 /*!
     \class QQuickWindow
@@ -1254,6 +1256,14 @@ bool QQuickWindow::isPersistentSceneGraph() const
 
 
 
+/*!
+    \qmlattachedproperty Item Window::contentItem
+    \since 5.4
+
+    This attached property holds the invisible root item of the scene or
+    \c null if the item is not in a window. The Window attached property
+    can be attached to any Item.
+*/
 
 /*!
     \property QQuickWindow::contentItem
@@ -1795,7 +1805,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
         if (!delayedTouch) {
             delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
             delayedTouch->setTimestamp(event->timestamp());
-            if (windowManager)
+            if (renderControl)
+                QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
+            else if (windowManager)
                 windowManager->maybeUpdate(q);
             return;
         } else {
@@ -3088,7 +3100,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     \since 5.1
 
     Notification that a window is about to be closed by the windowing system
-    (e.g. the user clicked the titlebar close button). The CloseEvent contains
+    (e.g. the user clicked the title bar close button). The CloseEvent contains
     an accepted property which can be set to false to abort closing the window.
 
     \sa Window.closing()
@@ -3115,9 +3127,9 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the user tries to close the window.
 
-    This signal includes a closeEvent parameter. The \a close \l accepted
+    This signal includes a \a close parameter. The \a close \l accepted
     property is true by default so that the window is allowed to close; but you
-    can implement an onClosing() handler and set close.accepted = false if
+    can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
 
     The corresponding handler is \c onClosing.
@@ -3799,7 +3811,7 @@ void QQuickWindow::resetOpenGLState()
 
     Whether the window is visible on the screen.
 
-    Setting visible to false is the same as setting \l visibility to Hidden.
+    Setting visible to false is the same as setting \l visibility to \l {QWindow::}{Hidden}.
 
     \sa visibility
  */
@@ -3812,13 +3824,14 @@ void QQuickWindow::resetOpenGLState()
     Visibility is whether the window should appear in the windowing system as
     normal, minimized, maximized, fullscreen or hidden.
 
-    To set the visibility to AutomaticVisibility means to give the window a
-    default visible state, which might be fullscreen or windowed depending on
-    the platform. However when reading the visibility property you will always
-    get the actual state, never AutomaticVisibility.
+    To set the visibility to \l {QWindow::}{AutomaticVisibility} means to give the
+    window a default visible state, which might be \l {QWindow::}{FullScreen} or
+    \l {QWindow::}{Windowed} depending on the platform. However when reading the
+    visibility property you will always get the actual state, never
+    \c AutomaticVisibility.
 
     When a window is not visible its visibility is Hidden, and setting
-    visibility to Hidden is the same as setting \l visible to false.
+    visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
     \sa visible
     \since 5.1
@@ -3830,7 +3843,7 @@ void QQuickWindow::resetOpenGLState()
 
     This attached property holds whether the window is currently shown
     in the windowing system as normal, minimized, maximized, fullscreen or
-    hidden. The Window attached property can be attached to any Item. If the
+    hidden. The \c Window attached property can be attached to any Item. If the
     item is not shown in any window, the value will be \l {QWindow::}{Hidden}.
 
     \sa visible, visibility
@@ -3931,12 +3944,94 @@ void QQuickWindow::resetOpenGLState()
     \qmlmethod QtQuick::Window::alert(int msec)
     \since 5.1
 
-    Causes an alert to be shown for \a msec miliseconds. If \a msec is \c 0 (the
-    default), then the alert is shown indefinitely until the window becomes
-    active again.
+    Causes an alert to be shown for \a msec milliseconds. If \a msec is \c 0
+    (the default), then the alert is shown indefinitely until the window
+    becomes active again.
 
-    In alert state, the window indicates that it demands attention, for example by
-    flashing or bouncing the taskbar entry.
+    In alert state, the window indicates that it demands attention, for example
+    by flashing or bouncing the taskbar entry.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::close()
+
+    Closes the window.
+
+    When this method is called, or when the user tries to close the window by
+    its title bar button, the \l closing signal will be emitted. If there is no
+    handler, or the handler does not revoke permission to close, the window
+    will subsequently close. If the QGuiApplication::quitOnLastWindowClosed
+    property is \c true, and there are no other windows open, the application
+    will quit.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::raise()
+
+    Raises the window in the windowing system.
+
+    Requests that the window be raised to appear above other windows.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::lower()
+
+    Lowers the window in the windowing system.
+
+    Requests that the window be lowered to appear below other windows.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::show()
+
+    Shows the window.
+
+    This is equivalent to calling showFullScreen(), showMaximized(), or showNormal(),
+    depending on the platform's default behavior for the window type and flags.
+
+    \sa showFullScreen(), showMaximized(), showNormal(), hide(), flags()
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::hide()
+
+    Hides the window.
+
+    Equivalent to setting \l visible to \c false or \l visibility to \l {QWindow::}{Hidden}.
+
+    \sa show()
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::showMinimized()
+
+    Shows the window as minimized.
+
+    Equivalent to setting \l visibility to \l {QWindow::}{Minimized}.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::showMaximized()
+
+    Shows the window as maximized.
+
+    Equivalent to setting \l visibility to \l {QWindow::}{Maximized}.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::showFullScreen()
+
+    Shows the window as fullscreen.
+
+    Equivalent to setting \l visibility to \l {QWindow::}{FullScreen}.
+*/
+
+/*!
+    \qmlmethod QtQuick::Window::showNormal()
+
+    Shows the window as normal, i.e. neither maximized, minimized, nor fullscreen.
+
+    Equivalent to setting \l visibility to \l {QWindow::}{Windowed}.
 */
 
 /*!
@@ -3955,7 +4050,7 @@ void QQuickWindow::resetOpenGLState()
 /*!
     \since 5.4
 
-    Schedule \a job to run when the rendering of this window reaches
+    Schedules \a job to run when the rendering of this window reaches
     the given \a stage.
 
     This is a convenience to the equivalent signals in QQuickWindow for
@@ -4030,7 +4125,7 @@ void QQuickWindow::runJobsAfterSwap()
  *
  * \sa QWindow::devicePixelRatio()
  */
-int QQuickWindow::effectiveDevicePixelRatio() const
+qreal QQuickWindow::effectiveDevicePixelRatio() const
 {
     QWindow *w = QQuickRenderControl::renderWindowFor(const_cast<QQuickWindow *>(this));
     return w ? w->devicePixelRatio() : devicePixelRatio();

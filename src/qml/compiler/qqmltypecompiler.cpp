@@ -1389,7 +1389,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!mo)
             continue;
 
-        static QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+        QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
         Q_ASSERT(componentType);
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();

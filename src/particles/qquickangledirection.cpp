@@ -42,7 +42,7 @@ const qreal CONV = 0.017453292519943295;
 /*!
     \qmltype AngleDirection
     \instantiates QQuickAngleDirection
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction
     \brief For specifying a direction that varies in angle

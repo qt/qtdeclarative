@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ItemParticle
     \instantiates QQuickItemParticle
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
     \brief For specifying a delegate to paint particles
     \ingroup qtquick-particles

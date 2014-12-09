@@ -91,11 +91,16 @@ private slots:
     void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
     void pressDelayWithLoader();
+    void cleanup();
 
 private:
     void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
-    QQmlEngine engine;
 };
+
+void tst_qquickflickable::cleanup()
+{
+    QVERIFY(QGuiApplication::topLevelWindows().isEmpty());
+}
 
 void tst_qquickflickable::create()
 {
@@ -199,6 +204,7 @@ void tst_qquickflickable::properties()
 
 void tst_qquickflickable::boundsBehavior()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Flickable { boundsBehavior: Flickable.StopAtBounds }", QUrl::fromLocalFile(""));
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(component.create());
@@ -330,6 +336,7 @@ void tst_qquickflickable::rebound()
 
 void tst_qquickflickable::maximumFlickVelocity()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Flickable { maximumFlickVelocity: 1.0; }", QUrl::fromLocalFile(""));
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(component.create());
@@ -349,6 +356,7 @@ void tst_qquickflickable::maximumFlickVelocity()
 
 void tst_qquickflickable::flickDeceleration()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Flickable { flickDeceleration: 1.0; }", QUrl::fromLocalFile(""));
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(component.create());
@@ -553,6 +561,7 @@ void tst_qquickflickable::nestedClickThenFlick()
 
 void tst_qquickflickable::flickableDirection()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Flickable { flickableDirection: Flickable.VerticalFlick; }", QUrl::fromLocalFile(""));
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(component.create());
@@ -1213,9 +1222,16 @@ void tst_qquickflickable::flickVelocity()
 
 void tst_qquickflickable::margins()
 {
-    QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("margins.qml"));
-    QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("margins.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
     QQuickFlickable *obj = qobject_cast<QQuickFlickable*>(root);
     QVERIFY(obj != 0);
 

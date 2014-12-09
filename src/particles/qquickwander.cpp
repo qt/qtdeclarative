@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Wander
     \instantiates QQuickWanderAffector
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
     \brief For applying random particle trajectory

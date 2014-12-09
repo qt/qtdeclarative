@@ -62,11 +62,6 @@ struct ExecutionContext : Base {
         Type_CallContext = 0x5,
         Type_QmlContext = 0x6
     };
-    struct EvalCode
-    {
-        Function *function;
-        EvalCode *next;
-    };
 
     inline ExecutionContext(ExecutionEngine *engine, ContextType t);
 
@@ -80,7 +75,6 @@ struct ExecutionContext : Base {
     ExecutionContext *outer;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
-    EvalCode *currentEvalCode;
 
     int lineNumber;
 
@@ -158,7 +152,6 @@ Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     , outer(0)
     , lookups(0)
     , compilationUnit(0)
-    , currentEvalCode(0)
     , lineNumber(-1)
 {
     // ### GC
@@ -216,7 +209,6 @@ inline void ExecutionEngine::pushContext(CallContext *context)
     Q_ASSERT(current && current->d() && context && context->d());
     context->d()->parent = current->d();
     current = context;
-    current->d()->currentEvalCode = 0;
 }
 
 inline ExecutionContext *ExecutionEngine::popContext()

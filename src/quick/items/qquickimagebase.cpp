@@ -35,6 +35,7 @@
 #include "qquickimagebase_p_p.h"
 
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qscreen.h>
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
@@ -45,14 +46,12 @@ QQuickImageBase::QQuickImageBase(QQuickItem *parent)
 : QQuickImplicitSizeItem(*(new QQuickImageBasePrivate), parent)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(windowChanged(QQuickWindow*)), SLOT(handleWindowChanged(QQuickWindow*)));
 }
 
 QQuickImageBase::QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent)
 : QQuickImplicitSizeItem(dd, parent)
 {
     setFlag(ItemHasContents);
-    connect(this, SIGNAL(windowChanged(QQuickWindow*)), SLOT(handleWindowChanged(QQuickWindow*)));
 }
 
 QQuickImageBase::~QQuickImageBase()
@@ -278,10 +277,11 @@ void QQuickImageBase::requestProgress(qint64 received, qint64 total)
     }
 }
 
-void QQuickImageBase::handleWindowChanged(QQuickWindow* window)
+void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    if (window)
-        connect(window, SIGNAL(screenChanged(QScreen*)), this, SLOT(handleScreenChanged(QScreen*)));
+    if (change == ItemSceneChange && value.window)
+        connect(value.window, &QQuickWindow::screenChanged, this, &QQuickImageBase::handleScreenChanged);
+    QQuickItem::itemChange(change, value);
 }
 
 void QQuickImageBase::handleScreenChanged(QScreen* screen)

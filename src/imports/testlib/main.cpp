@@ -140,7 +140,8 @@ public:
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
-        qmlRegisterType<QuickTestResult>(uri,1,0,"TestResult");
+        qmlRegisterType<QuickTestResult, 0>(uri,1,0,"TestResult");
+        qmlRegisterType<QuickTestResult, 1>(uri,1,1,"TestResult");
         qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
     }

@@ -213,6 +213,7 @@ Module {
         name: "QQuickDirection"
         prototype: "QObject"
         exports: ["QtQuick.Particles/NullVector 2.0"]
+        isCreatable: false
         exportMetaObjectRevisions: [0]
     }
     Component {
@@ -574,6 +575,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick.Particles/ParticleAffector 2.0"]
+        isCreatable: false
         exportMetaObjectRevisions: [0]
         Property { name: "system"; type: "QQuickParticleSystem"; isPointer: true }
         Property { name: "groups"; type: "QStringList" }
@@ -800,6 +802,7 @@ Module {
         name: "QQuickParticleExtruder"
         prototype: "QObject"
         exports: ["QtQuick.Particles/ParticleExtruder 2.0"]
+        isCreatable: false
         exportMetaObjectRevisions: [0]
     }
     Component {
@@ -836,6 +839,7 @@ Module {
         defaultProperty: "data"
         prototype: "QQuickItem"
         exports: ["QtQuick.Particles/ParticlePainter 2.0"]
+        isCreatable: false
         exportMetaObjectRevisions: [0]
         Property { name: "system"; type: "QQuickParticleSystem"; isPointer: true }
         Property { name: "groups"; type: "QStringList" }

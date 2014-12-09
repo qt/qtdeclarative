@@ -59,29 +59,6 @@
         } \
     } while (0)
 
-static int verifyHierarchy(QAccessibleInterface *iface)
-{
-    int errorAt = 0;
-    static int treelevel = 0;   // for error diagnostics
-    QAccessibleInterface *if2;
-    ++treelevel;
-    int middle = iface->childCount()/2 + 1;
-    for (int i = 0; i < iface->childCount() && !errorAt; ++i) {
-        if2 = iface->child(i);
-        EXPECT(if2 != 0);
-        // navigate Ancestor...
-        QAccessibleInterface *parent = if2->parent();
-        EXPECT(iface->object() == parent->object());
-
-        // verify children...
-        if (!errorAt)
-            errorAt = verifyHierarchy(if2);
-    }
-
-    --treelevel;
-    return errorAt;
-}
-
 
 //TESTED_FILES=
 
@@ -383,8 +360,6 @@ void tst_QQuickAccessible::checkableTest()
     QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("checkbuttons.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickItem *contentItem = window->contentItem();
     QVERIFY(contentItem);
@@ -462,8 +437,6 @@ void tst_QQuickAccessible::ignoredTest()
     QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("ignored.qml"));
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickItem *contentItem = window->contentItem();
     QVERIFY(contentItem);

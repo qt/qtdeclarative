@@ -49,6 +49,11 @@ public:
         Q_UNUSED(uri);
         QQmlQtQuick2Module::defineModule();
     }
+
+    ~QtQuick2Plugin()
+    {
+        QQmlQtQuick2Module::undefineModule();
+    }
 };
 //![class decl]
 

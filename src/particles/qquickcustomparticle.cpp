@@ -79,7 +79,7 @@ struct PlainVertices {
 /*!
     \qmltype CustomParticle
     \instantiates QQuickCustomParticle
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
     \brief For specifying shaders to paint particles
     \ingroup qtquick-particles

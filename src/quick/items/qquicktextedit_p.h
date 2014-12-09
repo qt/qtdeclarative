@@ -215,7 +215,7 @@ public:
 
 #ifndef QT_NO_IM
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const Q_DECL_OVERRIDE;
-    Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
+    Q_REVISION(4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, QVariant argument) const;
 #endif
 
     qreal contentWidth() const;
@@ -318,6 +318,7 @@ private Q_SLOTS:
 private:
     void markDirtyNodesForRange(int start, int end, int charDelta);
     void updateTotalLines();
+    void invalidateFontCaches();
 
 protected:
     void geometryChanged(const QRectF &newGeometry,
@@ -342,6 +343,7 @@ protected:
     void inputMethodEvent(QInputMethodEvent *e) Q_DECL_OVERRIDE;
 #endif
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) Q_DECL_OVERRIDE;
+    void updatePolish();
 
     friend class QQuickTextUtil;
     friend class QQuickTextDocument;

@@ -982,4 +982,11 @@ void QQuick_initializeProviders()
     QQml_setGuiProvider(getGuiProvider());
 }
 
+void QQuick_deinitializeProviders()
+{
+    QQml_removeValueTypeProvider(getValueTypeProvider());
+    QQml_setColorProvider(0); // technically, another plugin may have overridden our providers
+    QQml_setGuiProvider(0);   // but we cannot handle that case in a sane way.
+}
+
 QT_END_NAMESPACE

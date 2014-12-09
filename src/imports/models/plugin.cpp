@@ -38,7 +38,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQml.Models 2
+    \qmlmodule QtQml.Models 2.1
     \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models

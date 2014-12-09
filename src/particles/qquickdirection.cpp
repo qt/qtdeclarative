@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Direction
     \instantiates QQuickDirection
-    \inqmlmodule QtQuick.Particles 2
+    \inqmlmodule QtQuick.Particles
     \brief For specifying a vector space
     \ingroup qtquick-particles
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -39,65 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import QtTest 1.1
+import QtQuick 2.0
 
 Item {
-    width : 800
-    height : 600
-
-    Timer {
-        id: probablyOkNow
-        interval: 2000
-        running: true
-        repeat: false
-        onTriggered: testCase.when = true;
-    }
-
-    TestCase {
-        id: testCase
-        name: "unloaded-repeater"
-        when: false
-        function test_endresult()
-        {
-            havocTimer.running = false;
-            verify(true, "If we didn't crash by now, all is good")
-        }
-    }
-
-    Timer {
-        id: havocTimer
-        interval: 1
-        running: true
-        repeat: true
-
-        onTriggered: {
-            loader.sourceComponent =  null
-            loader.sourceComponent = component1
-        }
-
-    }
-
-    Loader {
-        id : loader
-        asynchronous : true
-    }
-
-    Component {
-        id : component1
-        Grid {
-            columns: 70
-            spacing: 2
-
-            Repeater {
-                model : 2000
-
-                Rectangle {
-                    width : 3
-                    height : 3
-                    color : "blue"
-                }
-            }
-        }
-    }
+   property variant a: Qt.rgba(0.3, 0.4, 0.5, 0.6)
 }
