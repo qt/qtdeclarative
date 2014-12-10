@@ -63,6 +63,25 @@ loads and runs the QML snippet shown at the beginning of this page.
 */
 
 /*!
+\example referenceexamples/extended
+\title Extending QML - Extension Objects Example
+\brief Extension Objects
+\ingroup qmlextendingexamples
+
+This example builds on:
+\list
+\li \l {Extending QML - Adding Types Example}
+\endlist
+
+Shows how to use \l qmlRegisterExtendedType() to provide an \l {Registering
+Extension Objects}{extension object} to a \l QLineEdit without modifying or
+subclassing. The QML engine instantiates a \l QLineEdit and sets a property that
+only exists on the extension type. The extension type performs calls on the \l
+QLineEdit that otherwise will not be accessible to the QML engine.
+
+*/
+
+/*!
 \example referenceexamples/properties
 \title Extending QML - Object and List Property Types Example
 \brief Exporting C++ Properties

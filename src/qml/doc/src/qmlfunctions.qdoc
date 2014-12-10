@@ -157,8 +157,25 @@
 */
 
 /*!
-  \fn int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
-  \relates QQmlEgine
+  \fn int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+  \relates QQmlEngine
+
+  This template function registers the C++ type and its extension object in the
+  QML system with the name \a qmlName in the library imported from \a uri having
+  version number composed from \a versionMajor and \a versionMinor. Properties
+  not available in the main type will be searched for in the extension object.
+
+  Returns the QML type id.
+
+  #include <QtQml> to use this function.
+
+  \sa qmlRegisterType(), {Registering Extension Objects}
+*/
+
+
+/*!
+  \fn int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+  \relates QQmlEngine
 
   This template function registers the C++ type and its extension
   in the QML system with the name \a qmlName in the library imported
@@ -180,7 +197,7 @@
 
 /*!
   \fn int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, QQmlCustomParser *parser)
-  \relates QQmlEgine
+  \relates QQmlEngine
 
   This template function registers the C++ type and its extension
   in the QML system with the name \a qmlName in the library imported
