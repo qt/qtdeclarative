@@ -82,12 +82,20 @@ void printInternal(PrintStream& out, unsigned long value)
 
 void printInternal(PrintStream& out, long long value)
 {
+#if OS(WINDOWS)
+    out.printf("%I64d", value);
+#else
     out.printf("%lld", value);
+#endif
 }
 
 void printInternal(PrintStream& out, unsigned long long value)
 {
+#if OS(WINDOWS)
+    out.printf("%I64u", value);
+#else
     out.printf("%llu", value);
+#endif
 }
 
 void printInternal(PrintStream& out, float value)
