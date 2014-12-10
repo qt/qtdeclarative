@@ -1714,6 +1714,10 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
 
     d->m_count -= count;
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+    //Prevents items being deleted in remove loop
+    for (QQmlDelegateModelItem *item : cache)
+        item->referenceObject();
+
     for (int i = 0, c = cache.count();  i < c; ++i) {
         QQmlDelegateModelItem *item = cache.at(i);
         // layout change triggered by removal of a previous item might have
@@ -1730,6 +1734,9 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
             item->setModelIndex(-1, -1, -1);
         }
     }
+    //Release items which are referenced before the loop
+    for (QQmlDelegateModelItem *item : cache)
+        item->releaseObject();
 
     QVector<Compositor::Remove> removes;
     d->m_compositor.listItemsRemoved(&d->m_adaptorModel, index, count, &removes);
