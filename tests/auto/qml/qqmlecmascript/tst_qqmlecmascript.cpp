@@ -7387,10 +7387,12 @@ void tst_qqmlecmascript::negativeYear()
     QVERIFY(object != 0);
 
     QVariant q;
-    QMetaObject::invokeMethod(object, "check_negative",
-                              Q_RETURN_ARG(QVariant, q));
+    QMetaObject::invokeMethod(object, "check_negative_tostring", Q_RETURN_ARG(QVariant, q));
     // Strip the timezone. It should be irrelevant as the date was created with the same one.
-    QCOMPARE(q.toString().left(32), QStringLiteral("result: Mon Jan 1 00:00:00 -2000"));
+    QCOMPARE(q.toString().left(32), QStringLiteral("result: Sat Jan 1 00:00:00 -2001"));
+
+    QMetaObject::invokeMethod(object, "check_negative_toisostring", Q_RETURN_ARG(QVariant, q));
+    QCOMPARE(q.toString().left(16), QStringLiteral("result: -002000-"));
 }
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
