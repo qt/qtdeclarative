@@ -54,7 +54,8 @@ struct JsonObject : Object {
     Q_MANAGED_TYPE(JsonObject)
     V4_OBJECT2(JsonObject, Object)
 private:
-    typedef QSet<QV4::Object *> V4ObjectSet;
+    // ### GC
+    typedef QSet<QV4::Heap::Base *> V4ObjectSet;
 public:
 
     static ReturnedValue method_parse(CallContext *ctx);

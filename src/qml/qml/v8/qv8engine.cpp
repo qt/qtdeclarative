@@ -259,7 +259,7 @@ QVariant QV8Engine::objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects)
     V8ObjectSet recursionGuardSet;
     if (!visitedObjects) {
         visitedObjects = &recursionGuardSet;
-    } else if (visitedObjects->contains(o)) {
+    } else if (visitedObjects->contains(o->d())) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
@@ -267,7 +267,7 @@ QVariant QV8Engine::objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects)
             return QVariantList();
         return QVariantMap();
     }
-    visitedObjects->insert(o);
+    visitedObjects->insert(o->d());
 
     QVariant result;
 
@@ -302,7 +302,7 @@ QVariant QV8Engine::objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects)
         result = map;
     }
 
-    visitedObjects->remove(o);
+    visitedObjects->remove(o->d());
     return result;
 }
 
