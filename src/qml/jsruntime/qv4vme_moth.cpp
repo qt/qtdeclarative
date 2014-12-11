@@ -33,8 +33,14 @@
 
 #include "qv4vme_moth_p.h"
 #include "qv4instr_moth_p.h"
+
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonobject.h>
+
 #include <private/qv4value_inl_p.h>
 #include <private/qv4debugging_p.h>
+#include <private/qv4function_p.h>
+#include <private/qv4functionobject_p.h>
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4lookup_p.h>
@@ -51,6 +57,228 @@
 #  define TRACE_INSTR(I)
 #  define TRACE(n, str, ...)
 #endif // DO_TRACE_INSTR
+
+extern "C" {
+
+// This is the interface to Qt Creator's (new) QML debugger.
+
+/*! \internal
+    \since 5.5
+
+    This function is called uncondionally from VME::run().
+
+    An attached debugger can set a breakpoint here to
+    intercept calls to VME::run().
+ */
+
+Q_QML_EXPORT void qt_v4ResolvePendingBreakpointsHook()
+{
+}
+
+/*! \internal
+    \since 5.5
+
+    This function is called when a QML interpreter breakpoint
+    is hit.
+
+    An attached debugger can set a breakpoint here.
+*/
+Q_QML_EXPORT void qt_v4TriggeredBreakpointHook()
+{
+}
+
+/*! \internal
+    \since 5.5
+
+    The main entry point into "Native Mixed" Debugging.
+
+    Commands are passed as UTF-8 encoded JSON data.
+    The data has two compulsory fields:
+    \list
+    \li \c version: Version of the protocol (currently 1)
+    \li \c command: Name of the command
+    \endlist
+
+    Depending on \c command, more fields can be present.
+
+    Error is indicated by negative return values,
+    success by non-negative return values.
+
+    \c protocolVersion:
+    Returns version of implemented protocol.
+
+    \c insertBreakpoint:
+    Sets a breakpoint on a given file and line.
+    \list
+    \li \c fullName: Name of the QML/JS file
+    \li \c lineNumber: Line number in the file
+    \li \c condition: Breakpoint condition
+    \endlist
+    Returns a unique positive number as handle.
+
+    \c removeBreakpoint:
+    Removes a breakpoint from a given file and line.
+    \list
+    \li \c fullName: Name of the QML/JS file
+    \li \c lineNumber: Line number in the file
+    \li \c condition: Breakpoint condition
+    \endlist
+    Returns zero on success, a negative number on failure.
+
+    \c prepareStep:
+    Puts the interpreter in stepping mode.
+    Returns zero.
+
+*/
+Q_QML_EXPORT int qt_v4DebuggerHook(const char *json);
+
+
+} // extern "C"
+
+static int qt_v4BreakpointCount = 0;
+static bool qt_v4IsDebugging = true;
+static bool qt_v4IsStepping = false;
+
+class Breakpoint
+{
+public:
+    Breakpoint() : bpNumber(0), lineNumber(-1) {}
+
+    bool matches(const QString &file, int line) const
+    {
+        return fullName == file && lineNumber == line;
+    }
+
+    int bpNumber;
+    int lineNumber;
+    QString fullName;      // e.g. /opt/project/main.qml
+    QString engineName;    // e.g. qrc:/main.qml
+    QString condition;     // optional
+};
+
+static QVector<Breakpoint> qt_v4Breakpoints;
+static Breakpoint qt_v4LastStop;
+
+static QV4::Function *qt_v4ExtractFunction(QV4::ExecutionContext *context)
+{
+    QV4::Scope scope(context->engine());
+    QV4::ScopedFunctionObject function(scope, context->getFunctionObject());
+    if (function)
+        return function->function();
+    else
+        return context->d()->engine->globalCode;
+}
+
+static void qt_v4TriggerBreakpoint(const Breakpoint &bp, QV4::Function *function)
+{
+    qt_v4LastStop = bp;
+
+    // Set up some auxiliary data for informational purpose.
+    // This is not part of the protocol.
+    QV4::Heap::String *functionName = function->name();
+    QByteArray functionNameUtf8;
+    if (functionName)
+        functionNameUtf8 = functionName->toQString().toUtf8();
+
+    qt_v4TriggeredBreakpointHook(); // Trigger Breakpoint.
+}
+
+int qt_v4DebuggerHook(const char *json)
+{
+    const int ProtocolVersion = 1;
+
+    enum {
+        Success = 0,
+        WrongProtocol,
+        NoSuchCommand,
+        NoSuchBreakpoint
+    };
+
+    QJsonDocument doc = QJsonDocument::fromJson(json);
+    QJsonObject ob = doc.object();
+    QByteArray command = ob.value(QStringLiteral("command")).toString().toUtf8();
+
+    if (command == "protocolVersion") {
+        return ProtocolVersion; // Version number.
+    }
+
+    int version = ob.value(QLatin1Literal("version")).toString().toInt();
+    if (version != ProtocolVersion) {
+        return -WrongProtocol;
+    }
+
+    if (command == "insertBreakpoint") {
+        Breakpoint bp;
+        bp.bpNumber = ++qt_v4BreakpointCount;
+        bp.lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
+        bp.engineName = ob.value(QStringLiteral("engineName")).toString();
+        bp.fullName = ob.value(QStringLiteral("fullName")).toString();
+        bp.condition = ob.value(QStringLiteral("condition")).toString();
+        qt_v4Breakpoints.append(bp);
+        return bp.bpNumber;
+    }
+
+    if (command == "removeBreakpoint") {
+        int lineNumber = ob.value(QStringLiteral("lineNumber")).toString().toInt();
+        QString fullName = ob.value(QStringLiteral("fullName")).toString();
+        if (qt_v4Breakpoints.last().matches(fullName, lineNumber)) {
+            qt_v4Breakpoints.removeLast();
+            return Success;
+        }
+        for (int i = 0; i + 1 < qt_v4Breakpoints.size(); ++i) {
+            if (qt_v4Breakpoints.at(i).matches(fullName, lineNumber)) {
+                qt_v4Breakpoints[i] = qt_v4Breakpoints.takeLast();
+                return Success; // Ok.
+            }
+        }
+        return -NoSuchBreakpoint; // Failure
+    }
+
+    if (command == "prepareStep") {
+        qt_v4IsStepping = true;
+        return Success; // Ok.
+    }
+
+
+    return -NoSuchCommand; // Failure.
+}
+
+static void qt_v4CheckForBreak(QV4::ExecutionContext *context, QV4::Value **scopes, int scopeDepth)
+{
+    Q_UNUSED(scopes);
+    Q_UNUSED(scopeDepth);
+    const int lineNumber = context->d()->lineNumber;
+    QV4::Function *function = qt_v4ExtractFunction(context);
+    QString engineName = function->sourceFile();
+
+    if (engineName.isEmpty())
+        return;
+
+    if (qt_v4IsStepping) {
+        if (qt_v4LastStop.lineNumber != lineNumber
+                || qt_v4LastStop.engineName != engineName) {
+            qt_v4IsStepping = false;
+            Breakpoint bp;
+            bp.bpNumber = 0;
+            bp.lineNumber = lineNumber;
+            bp.engineName = engineName;
+            qt_v4TriggerBreakpoint(bp, function);
+            return;
+        }
+    }
+
+    for (int i = qt_v4Breakpoints.size(); --i >= 0; ) {
+        const Breakpoint &bp = qt_v4Breakpoints.at(i);
+        if (bp.lineNumber != lineNumber)
+            continue;
+        if (bp.engineName != engineName)
+            continue;
+
+        qt_v4TriggerBreakpoint(bp, function);
+    }
+}
+
+// End of debugger interface
 
 using namespace QV4;
 using namespace QV4::Moth;
@@ -125,6 +353,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
 #endif // DO_TRACE_INSTR
+
+    qt_v4ResolvePendingBreakpointsHook();
 
 #ifdef MOTH_THREADED_INTERPRETER
     if (storeJumpTable) {
@@ -620,10 +850,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         QV4::Debugging::Debugger *debugger = context->engine()->debugger;
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
+        if (qt_v4IsDebugging)
+            qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
         engine->currentContext()->lineNumber = instr.lineNumber;
+        if (qt_v4IsDebugging)
+            qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
