@@ -61,10 +61,11 @@ namespace CompiledData {
 struct Function;
 }
 
-struct QQmlIdObjectsArray;
 struct QmlContextWrapper;
 
 namespace Heap {
+
+struct QQmlIdObjectsArray;
 
 struct QmlContextWrapper : Object {
     QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);

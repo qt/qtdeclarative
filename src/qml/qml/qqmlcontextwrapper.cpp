@@ -397,9 +397,7 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
 {
     if (!d()->idObjectsWrapper) {
         ExecutionEngine *v4 = engine();
-        Scope scope(v4);
-        Scoped<QQmlIdObjectsArray> a(scope, v4->memoryManager->alloc<QQmlIdObjectsArray>(v4, this));
-        d()->idObjectsWrapper = a;
+        d()->idObjectsWrapper = v4->memoryManager->alloc<QQmlIdObjectsArray>(v4, this);
     }
     return d()->idObjectsWrapper->asReturnedValue();
 }
