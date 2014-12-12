@@ -171,7 +171,7 @@ struct ChunkSweepData {
     bool isEmpty;
 };
 
-void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, MemoryManager::Data *data)
+void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, ExecutionEngine *engine)
 {
     char *chunkStart = reinterpret_cast<char*>(chunk.memory.base());
     std::size_t itemSize = chunk.chunkSize;
@@ -204,9 +204,9 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
                 memset(m, 0, itemSize);
 #ifdef V4_USE_VALGRIND
                 VALGRIND_DISABLE_ERROR_REPORTING;
-                VALGRIND_MEMPOOL_FREE(data, m);
+                VALGRIND_MEMPOOL_FREE(engine->memoryManager, m);
 #endif
-                Q_V4_PROFILE_DEALLOC(data->engine, m, itemSize, Profiling::SmallItem);
+                Q_V4_PROFILE_DEALLOC(engine, m, itemSize, Profiling::SmallItem);
                 ++(*itemsInUse);
             }
             // Relink all free blocks to rewrite references to any released chunk.
@@ -227,7 +227,7 @@ MemoryManager::MemoryManager()
     , m_weakValues(0)
 {
 #ifdef V4_USE_VALGRIND
-    VALGRIND_CREATE_MEMPOOL(m_d.data(), 0, true);
+    VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
 }
 
@@ -310,7 +310,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
   found:
 #ifdef V4_USE_VALGRIND
-    VALGRIND_MEMPOOL_ALLOC(m_d.data(), m, size);
+    VALGRIND_MEMPOOL_ALLOC(this, m, size);
 #endif
     Q_V4_PROFILE_ALLOC(m_d->engine, size, Profiling::SmallItem);
 
@@ -427,7 +427,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (int i = 0; i < m_d->heapChunks.size(); ++i) {
         const MemoryManager::Data::Chunk &chunk = m_d->heapChunks[i];
-        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d.data());
+        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d->engine);
     }
 
     Heap::Base **tails[MemoryManager::Data::MaxItemSize/16];
@@ -591,7 +591,7 @@ MemoryManager::~MemoryManager()
 
     sweep(/*lastSweep*/true);
 #ifdef V4_USE_VALGRIND
-    VALGRIND_DESTROY_MEMPOOL(m_d.data());
+    VALGRIND_DESTROY_MEMPOOL(this);
 #endif
 }
 
