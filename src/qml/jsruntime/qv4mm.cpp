@@ -214,6 +214,7 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
             sweepData->tail = m->nextFreeRef();
         }
     }
+    *sweepData->tail = 0;
 #ifdef V4_USE_VALGRIND
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
@@ -454,14 +455,22 @@ void MemoryManager::sweep(bool lastSweep)
             chunkIter = m_d->heapChunks.erase(chunkIter);
             continue;
         } else if (chunkSweepData[i].head) {
+#ifdef V4_USE_VALGRIND
+            VALGRIND_DISABLE_ERROR_REPORTING;
+#endif
             *tails[pos] = chunkSweepData[i].head;
+#ifdef V4_USE_VALGRIND
+            VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
             tails[pos] = chunkSweepData[i].tail;
         }
         ++chunkIter;
     }
-    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
-        *tails[pos] = 0;
+
 #ifdef V4_USE_VALGRIND
+    VALGRIND_DISABLE_ERROR_REPORTING;
+    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
+        Q_ASSERT(*tails[pos] == 0);
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
 
