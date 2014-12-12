@@ -198,6 +198,7 @@
 /*!
   \fn int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, QQmlCustomParser *parser)
   \relates QQmlEngine
+  \internal
 
   This template function registers the C++ type and its extension
   in the QML system with the name \a qmlName in the library imported
