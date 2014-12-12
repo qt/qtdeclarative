@@ -171,7 +171,7 @@ struct ChunkSweepData {
     bool isEmpty;
 };
 
-void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, ExecutionEngine *engine)
+void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, MemoryManager::Data *data)
 {
     char *chunkStart = reinterpret_cast<char*>(chunk.memory.base());
     std::size_t itemSize = chunk.chunkSize;
@@ -204,9 +204,9 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
                 memset(m, 0, itemSize);
 #ifdef V4_USE_VALGRIND
                 VALGRIND_DISABLE_ERROR_REPORTING;
-                VALGRIND_MEMPOOL_FREE(this, m);
+                VALGRIND_MEMPOOL_FREE(data, m);
 #endif
-                Q_V4_PROFILE_DEALLOC(engine, m, itemSize, Profiling::SmallItem);
+                Q_V4_PROFILE_DEALLOC(data->engine, m, itemSize, Profiling::SmallItem);
                 ++(*itemsInUse);
             }
             // Relink all free blocks to rewrite references to any released chunk.
@@ -227,7 +227,7 @@ MemoryManager::MemoryManager()
     , m_weakValues(0)
 {
 #ifdef V4_USE_VALGRIND
-    VALGRIND_CREATE_MEMPOOL(this, 0, true);
+    VALGRIND_CREATE_MEMPOOL(m_d.data(), 0, true);
 #endif
 }
 
@@ -310,7 +310,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
   found:
 #ifdef V4_USE_VALGRIND
-    VALGRIND_MEMPOOL_ALLOC(this, m, size);
+    VALGRIND_MEMPOOL_ALLOC(m_d.data(), m, size);
 #endif
     Q_V4_PROFILE_ALLOC(m_d->engine, size, Profiling::SmallItem);
 
@@ -427,14 +427,17 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (int i = 0; i < m_d->heapChunks.size(); ++i) {
         const MemoryManager::Data::Chunk &chunk = m_d->heapChunks[i];
-        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d->engine);
+        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d.data());
     }
 
-    Heap::Base** tails[MemoryManager::Data::MaxItemSize/16];
+    Heap::Base **tails[MemoryManager::Data::MaxItemSize/16];
     memset(m_d->smallItems, 0, sizeof(m_d->smallItems));
     for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
         tails[pos] = &m_d->smallItems[pos];
 
+#ifdef V4_USE_VALGRIND
+    VALGRIND_DISABLE_ERROR_REPORTING;
+#endif
     QVector<Data::Chunk>::iterator chunkIter = m_d->heapChunks.begin();
     for (int i = 0; i < chunkSweepData.size(); ++i) {
         Q_ASSERT(chunkIter != m_d->heapChunks.end());
@@ -458,6 +461,9 @@ void MemoryManager::sweep(bool lastSweep)
     }
     for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
         *tails[pos] = 0;
+#ifdef V4_USE_VALGRIND
+    VALGRIND_ENABLE_ERROR_REPORTING;
+#endif
 
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
@@ -585,7 +591,7 @@ MemoryManager::~MemoryManager()
 
     sweep(/*lastSweep*/true);
 #ifdef V4_USE_VALGRIND
-    VALGRIND_DESTROY_MEMPOOL(this);
+    VALGRIND_DESTROY_MEMPOOL(m_d.data());
 #endif
 }
 
