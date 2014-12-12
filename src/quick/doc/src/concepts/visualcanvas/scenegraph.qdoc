@@ -244,18 +244,20 @@ animations, process events, etc.
 
 \endlist
 
-The threaded renderer is currently used by default on Linux with
-non-Mesa based drivers, OS X and EGLFS based QPA platforms, but this
-is subject to change. It is possible to force use of the threaded
-renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
-environment.
+The threaded renderer is currently used by default on Windows with
+opengl32.dll, Linux with non-Mesa based drivers, OS X and EGLFS but
+this is subject to change. It is possible to force use of the threaded
+renderer by setting \c {QSG_RENDER_LOOP=threaded} in the environment.
 
 \section2 Non-threaded Render Loop
 
 The non-threaded render loop is currently used by default on Windows
-and non-EGLFS based embedded platforms. This is mostly a precautionary
-measure, as not all combinations of OpenGL drivers and windowing
-systems have been tested.
+with ANGLE or a non-default opengl32 implementation and Linux with
+Mesa drivers. For the latter this is mostly a precautionary measure,
+as not all combinations of OpenGL drivers and windowing systems have
+been tested. At the same time implementations like ANGLE or Mesa
+llvmpipe are not able to function properly with threaded rendering at
+all so not using threaded rendering is essential for these.
 
 Even when using the non-threaded render loop, you should write your
 code as if you are using the threaded renderer, as failing to do so
