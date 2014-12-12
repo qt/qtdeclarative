@@ -1282,7 +1282,7 @@ QV4::Heap::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
 
     o->defineDefaultProperty(QStringLiteral("debug"), QV4::ConsoleObject::method_log);
     o->defineDefaultProperty(QStringLiteral("log"), QV4::ConsoleObject::method_log);
-    o->defineDefaultProperty(QStringLiteral("info"), QV4::ConsoleObject::method_log);
+    o->defineDefaultProperty(QStringLiteral("info"), QV4::ConsoleObject::method_info);
     o->defineDefaultProperty(QStringLiteral("warn"), QV4::ConsoleObject::method_warn);
     o->defineDefaultProperty(QStringLiteral("error"), QV4::ConsoleObject::method_error);
     o->defineDefaultProperty(QStringLiteral("assert"), QV4::ConsoleObject::method_assert);
@@ -1299,6 +1299,7 @@ QV4::Heap::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
 
 enum ConsoleLogTypes {
     Log,
+    Info,
     Warn,
     Error
 };
@@ -1361,6 +1362,10 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
         if (loggingCategory.isDebugEnabled())
             logger.debug("%s", result.toUtf8().constData());
         break;
+    case Info:
+        if (loggingCategory.isInfoEnabled())
+            logger.info("%s", result.toUtf8().constData());
+        break;
     case Warn:
         if (loggingCategory.isWarningEnabled())
             logger.warning("%s", result.toUtf8().constData());
@@ -1385,9 +1390,13 @@ QV4::ReturnedValue ConsoleObject::method_log(CallContext *ctx)
 {
     //console.log
     //console.debug
-    //console.info
     //print
     return writeToConsole(Log, ctx);
+}
+
+QV4::ReturnedValue ConsoleObject::method_info(CallContext *ctx)
+{
+    return writeToConsole(Info, ctx);
 }
 
 QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)

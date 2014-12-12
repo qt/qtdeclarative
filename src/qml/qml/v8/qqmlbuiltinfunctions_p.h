@@ -126,6 +126,7 @@ struct ConsoleObject : Object
 
     static ReturnedValue method_error(CallContext *ctx);
     static ReturnedValue method_log(CallContext *ctx);
+    static ReturnedValue method_info(CallContext *ctx);
     static ReturnedValue method_profile(CallContext *ctx);
     static ReturnedValue method_profileEnd(CallContext *ctx);
     static ReturnedValue method_time(CallContext *ctx);

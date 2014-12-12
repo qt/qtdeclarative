@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
     file:///home/user/test.qml:7:8: Invalid property assignment: double expected
     \endcode
 
-    You can use qDebug() or qWarning() to output errors to the console. This method
-    will attempt to open the file indicated by the error
+    You can use qDebug(), qInfo(), or qWarning() to output errors to the console.
+    This method will attempt to open the file indicated by the error
     and include additional contextual information.
     \code
     file:///home/user/test.qml:7:8: Invalid property assignment: double expected
