@@ -732,6 +732,7 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
 
 bool QQmlDebugServer::enable(int portFrom, int portTo, bool block, const QString &hostAddress)
 {
+#ifndef QT_QML_NO_DEBUGGER
     QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
     if (!wrapper)
         return false;
@@ -745,6 +746,13 @@ bool QQmlDebugServer::enable(int portFrom, int portTo, bool block, const QString
             return false;
     }
     return true;
+#else
+    Q_UNUSED(portFrom);
+    Q_UNUSED(portTo);
+    Q_UNUSED(block);
+    Q_UNUSED(hostAddress);
+    return false;
+#endif
 }
 
 void QQmlDebugServer::wakeEngine(QQmlEngine *engine)
