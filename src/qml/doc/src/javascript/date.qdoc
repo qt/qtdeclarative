@@ -132,6 +132,25 @@
     hour, if DST is currently in effect, while it was not for the time specified, or
     vice versa.
 
+    Note: There are different date formats with different understandings of negative years. Common
+    human language does not have a year 0. The year after 1BC is 1AD. This understanding is
+    reflected when printing or parsing dates in one of the formats not standardized by ECMAScript.
+    That is: toString(), toLocaleString(), toUTCString() and friends. ECMAScript does standardize
+    one format: ISO 8601. This is what you get when you call toISOString(). This format does include
+    a year 0, which is 1BC in other formats. Thus you get different years when printing negative
+    dates with toISOString() and toString().
+
+    When setting the year using the Date constructor or set(UTC)FullYear(), the convention set by
+    ISO 8601 is used and 0 is a valid year. This means negative years set with the constructor or
+    set(UTC)FullYear() are zero-based and thus offset by one year from what is printed with
+    toString() and friends. Parsing the output of any of the to*String() methods will yield the same
+    date value you printed from. Date.parse() will recognize the different formats and their
+    convention on the existence of year 0.
+
+    Note that all this is different from what you get in other JavaScript implementations which
+    usually treat year 0 as valid in all string representations. As the date formats are
+    "implementation-dependent" in the ECMAScript standard, this is still valid, though.
+
     \sa {QtQml::Locale}{Locale}
 */
 
