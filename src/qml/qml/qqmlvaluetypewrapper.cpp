@@ -144,7 +144,7 @@ void QmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     Scope scope(v4);
     Scoped<Object> o(scope, v4->newObject());
     o->defineDefaultProperty(v4->id_toString, method_toString, 1);
-    v4->qmlExtensions()->valueTypeWrapperPrototype = o;
+    v4->qmlExtensions()->valueTypeWrapperPrototype = o->d();
 }
 
 ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int property, QQmlValueType *type)
@@ -154,7 +154,8 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, QObject *object, int pr
     initProto(v4);
 
     Scoped<QmlValueTypeReference> r(scope, v4->memoryManager->alloc<QmlValueTypeReference>(v8));
-    r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype->asObject());
+    ScopedObject proto(scope, v4->qmlExtensions()->valueTypeWrapperPrototype);
+    r->setPrototype(proto);
     r->d()->type = type; r->d()->object = object; r->d()->property = property;
     return r->asReturnedValue();
 }
@@ -166,7 +167,8 @@ ReturnedValue QmlValueTypeWrapper::create(QV8Engine *v8, const QVariant &value, 
     initProto(v4);
 
     Scoped<QmlValueTypeCopy> r(scope, v4->memoryManager->alloc<QmlValueTypeCopy>(v8));
-    r->setPrototype(v4->qmlExtensions()->valueTypeWrapperPrototype->asObject());
+    ScopedObject proto(scope, v4->qmlExtensions()->valueTypeWrapperPrototype);
+    r->setPrototype(proto);
     r->d()->type = type; r->d()->value = value;
     return r->asReturnedValue();
 }

@@ -34,12 +34,11 @@
 #define QV4QMLEXTENSIONS_P_H
 
 #include <qtqmlglobal.h>
+#include <qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-struct Object;
-struct ExecutionEngine;
 
 struct Q_QML_EXPORT QmlExtensions
 {
@@ -47,7 +46,7 @@ struct Q_QML_EXPORT QmlExtensions
         : valueTypeWrapperPrototype(0)
     {}
 
-    Object *valueTypeWrapperPrototype;
+    Heap::Object *valueTypeWrapperPrototype;
 
     void markObjects(ExecutionEngine *e);
 };
