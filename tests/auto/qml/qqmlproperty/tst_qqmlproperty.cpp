@@ -47,8 +47,12 @@
 class MyQmlObject : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QPoint pointProperty MEMBER m_point)
 public:
     MyQmlObject(QObject *parent = 0) : QObject(parent) {}
+
+private:
+    QPoint m_point;
 };
 
 QML_DECLARE_TYPE(MyQmlObject);
@@ -141,6 +145,7 @@ private slots:
     void assignEmptyVariantMap();
     void warnOnInvalidBinding();
     void registeredCompositeTypeProperty();
+    void deeplyNestedObject();
 
     void copy();
 private:
@@ -1936,6 +1941,16 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     QObject *obj = component.create();
     QVERIFY(obj);
     delete obj;
+}
+
+void tst_qqmlproperty::deeplyNestedObject()
+{
+    PropertyObject o;
+    QQmlProperty p(&o, "qmlObject.pointProperty.x");
+    QCOMPARE(p.isValid(), true);
+
+    p.write(14);
+    QCOMPARE(p.read(), QVariant(14));
 }
 
 void tst_qqmlproperty::initTestCase()

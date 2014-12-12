@@ -276,7 +276,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
         QQmlPropertyData local;
         QQmlPropertyData *property =
-            QQmlPropertyCache::property(engine, obj, pathName, context, local);
+            QQmlPropertyCache::property(engine, currentObject, pathName, context, local);
 
         if (!property) return; // Not a property
         if (property->isFunction())
