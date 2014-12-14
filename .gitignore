@@ -78,8 +78,6 @@ bin/qml*
 bin/qttracereplay*
 configure.cache
 config.status
-mkspecs/default
-mkspecs/qconfig.pri
 moc_*.cpp
 qmake/qmake.exe
 qmake/Makefile.bak
@@ -87,6 +85,11 @@ src/corelib/global/qconfig.cpp
 src/corelib/global/qconfig.h
 src/corelib/global/qconfig.h.qmake
 ui_*.h
+tests/auto/cmake/build
+tests/auto/installed_cmake/build
+tests/auto/qml/qqmlapplicationengine/testapp/testapp
+tests/auto/qml/temp.qml
+tests/auto/qmltest/*.png
 tests/auto/qprocess/test*/*.exe
 tests/auto/qtcpsocket/stressTest/*.exe
 tests/auto/qprocess/fileWriterProcess/*.exe
@@ -178,6 +181,7 @@ config.tests/unix/sse2/sse2
 # Directories to ignore
 # ---------------------
 
+mkspecs/*
 debug
 imports/*
 examples/tools/plugandpaint/plugins
@@ -252,17 +256,21 @@ src/xml/lib/
 *.map
 work
 
-#generated version headers
+# Generated version headers
 src/qmltest/qtquicktestversion.h
 src/qtquick1/qtquick1version.h
 src/qmldevtools/qtqmldevtoolsversion.h
 src/quick/qtquickversion.h
 src/qml/qtqmlversion.h
 
+# Discard !tst_*.*
+tests/auto/headersclean/tst_headersclean.cpp
 tests/auto/*/*.o
 tests/auto/*/*.moc
 tests/auto/*/*/*.o
 tests/auto/*/*/*.moc
+tests/auto/*/*/*/*.o
+tests/auto/*/*/*/*.moc
 
 # Generated static plugin import sources
 *_plugin_import.cpp
