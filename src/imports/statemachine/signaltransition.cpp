@@ -44,6 +44,7 @@
 #include <private/qv8engine_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qqmlcontext_p.h>
 
 SignalTransition::SignalTransition(QState *parent)
     : QSignalTransition(this, SIGNAL(invokeYourself()), parent)
@@ -60,7 +61,10 @@ bool SignalTransition::eventTest(QEvent *event)
     if (m_guard.isEmpty())
         return true;
 
-    QQmlContext context(QQmlEngine::contextForObject(this));
+    QQmlContext *outerContext = QQmlEngine::contextForObject(this);
+    QQmlContext context(outerContext);
+    QQmlContextData::get(outerContext)->imports->addref();
+    QQmlContextData::get(&context)->imports = QQmlContextData::get(outerContext)->imports;
 
     QStateMachine::SignalEvent *e = static_cast<QStateMachine::SignalEvent*>(event);
 
