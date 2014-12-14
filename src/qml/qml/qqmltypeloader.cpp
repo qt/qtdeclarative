@@ -2574,6 +2574,11 @@ QQmlScriptData *QQmlScriptBlob::scriptData() const
     return m_scriptData;
 }
 
+struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
+{
+    virtual void linkBackendToEngine(QV4::ExecutionEngine *) {}
+};
+
 void QQmlScriptBlob::dataReceived(const Data &data)
 {
     QString source = QString::fromUtf8(data.data(), data.size());
@@ -2599,6 +2604,9 @@ void QQmlScriptBlob::dataReceived(const Data &data)
     if (!errors.isEmpty()) {
         setError(errors);
         return;
+    }
+    if (!unit) {
+        unit.take(new EmptyCompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
 

@@ -199,14 +199,12 @@ Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *
 {
     parsed = true;
 
-    if (compilationUnit) {
-        vmFunction = compilationUnit->linkToEngine(v4);
-        Q_ASSERT(vmFunction);
+    vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
+    if (vmFunction) {
         Scope valueScope(v4);
         ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
         compilationUnitHolder = holder.asReturnedValue();
-    } else
-        vmFunction = 0;
+    }
 }
 
 Script::~Script()

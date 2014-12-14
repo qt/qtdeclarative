@@ -2924,6 +2924,11 @@ void tst_qqmllanguage::importJs_data()
         << "importJs.10.qml"
         << "importJs.10.errors.txt"
         << true;
+
+    QTest::newRow("emptyScript")
+        << "importJs.11.qml"
+        << "importJs.11.errors.txt"
+        << true;
 }
 
 void tst_qqmllanguage::importJs()
