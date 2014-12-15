@@ -82,6 +82,10 @@
 #endif
 #endif
 
+#ifdef V4_USE_VALGRIND
+#include <valgrind/memcheck.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -205,6 +209,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
                                              /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
     jsStackTop = jsStackBase;
+
+#ifdef V4_USE_VALGRIND
+    VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
+#endif
 
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);

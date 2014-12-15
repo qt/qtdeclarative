@@ -38,6 +38,10 @@
 #include "qv4persistent_p.h"
 #include "qv4property_p.h"
 
+#ifdef V4_USE_VALGRIND
+#include <valgrind/memcheck.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #define SAVE_JS_STACK(ctx) Value *__jsStack = ctx->engine->jsStackTop
@@ -50,9 +54,9 @@ struct ScopedValue;
 struct Scope {
     inline Scope(ExecutionContext *ctx)
         : engine(ctx->d()->engine)
-    #ifndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
         , size(0)
-    #endif
+#endif
     {
         mark = engine->jsStackTop;
     }
@@ -70,6 +74,9 @@ struct Scope {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
+#endif
+#ifdef V4_USE_VALGRIND
+        VALGRIND_MAKE_MEM_UNDEFINED(mark, engine->jsStackLimit - mark);
 #endif
         engine->jsStackTop = mark;
     }
