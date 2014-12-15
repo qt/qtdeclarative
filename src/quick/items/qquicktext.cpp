@@ -1166,6 +1166,17 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 }
 
 /*!
+    Returns the y offset when aligning text with a non-1.0 lineHeight
+*/
+int QQuickTextPrivate::lineHeightOffset() const
+{
+    QFontMetricsF fm(font);
+    qreal fontHeight = qCeil(fm.height());  // QScriptLine and therefore QTextLine rounds up
+    return lineHeightMode() == QQuickText::FixedHeight ? fontHeight - lineHeight()
+                                                       : (1.0 - lineHeight()) * fontHeight;
+}
+
+/*!
     Ensures the QQuickTextPrivate::doc variable is set to a valid text document
 */
 void QQuickTextPrivate::ensureDoc()
@@ -2090,7 +2101,7 @@ QRectF QQuickText::boundingRect() const
 
     QRectF rect = d->layedOutTextRect;
     rect.moveLeft(QQuickTextUtil::alignedX(rect.width(), width(), effectiveHAlign()));
-    rect.moveTop(QQuickTextUtil::alignedY(rect.height(), height(), d->vAlign));
+    rect.moveTop(QQuickTextUtil::alignedY(rect.height() + d->lineHeightOffset(), height(), d->vAlign));
 
     if (d->style != Normal)
         rect.adjust(-1, 0, 1, 2);
@@ -2209,7 +2220,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     d->updateType = QQuickTextPrivate::UpdateNone;
 
-    const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height(), height(), d->vAlign);
+    const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height() + d->lineHeightOffset(), height(), d->vAlign);
 
     QQuickTextNode *node = 0;
     if (!oldNode)
@@ -2513,7 +2524,7 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
 {
     Q_Q(const QQuickText);
     QPointF translatedMousePos = mousePos;
-    translatedMousePos.ry() -= QQuickTextUtil::alignedY(layedOutTextRect.height(), q->height(), vAlign);
+    translatedMousePos.ry() -= QQuickTextUtil::alignedY(layedOutTextRect.height() + lineHeightOffset(), q->height(), vAlign);
     if (styledText) {
         QString link = anchorAt(&layout, translatedMousePos);
         if (link.isEmpty() && elideLayout)
