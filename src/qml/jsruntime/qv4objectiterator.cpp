@@ -135,15 +135,15 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
         return Encode::null();
 
     PropertyAttributes attrs;
-    Property p;
     uint index;
     Scope scope(object->engine());
+    ScopedProperty p(scope);
     ScopedString name(scope);
-    next(name.getRef(), &index, &p, &attrs);
+    next(name.getRef(), &index, p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->objectValue()->getValue(&p, attrs);
+    value = object->objectValue()->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -157,15 +157,15 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
         return Encode::null();
 
     PropertyAttributes attrs;
-    Property p;
     uint index;
     Scope scope(object->engine());
+    ScopedProperty p(scope);
     ScopedString name(scope);
-    next(name.getRef(), &index, &p, &attrs);
+    next(name.getRef(), &index, p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->objectValue()->getValue(&p, attrs);
+    value = object->objectValue()->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -179,12 +179,11 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
         return Encode::null();
 
     PropertyAttributes attrs;
-    // ### GC
-    Property p;
     uint index;
     Scope scope(object->engine());
+    ScopedProperty p(scope);
     ScopedString name(scope);
-    next(name.getRef(), &index, &p, &attrs);
+    next(name.getRef(), &index, p, &attrs);
     if (attrs.isEmpty())
         return Encode::null();
 

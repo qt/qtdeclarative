@@ -135,7 +135,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Heap::String 
             Property *pd = s->__getOwnProperty__(*index, &a);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                 *attrs = a;
-                p->copy(*pd, a);
+                p->copy(pd, a);
                 return;
             }
         }

@@ -501,10 +501,13 @@ struct ScopedProperty
     ScopedProperty(Scope &scope)
     {
         property = reinterpret_cast<Property*>(scope.alloc(sizeof(Property) / sizeof(Value)));
+        property->value = Encode::undefined();
+        property->set = Encode::undefined();
     }
 
     Property *operator->() { return property; }
-    operator const Property &() { return *property; }
+    operator const Property *() const { return property; }
+    operator Property *() { return property; }
 
     Property *property;
 };

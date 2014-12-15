@@ -142,7 +142,7 @@ bool QJSValueIterator::next()
         return false;
     d_ptr->currentName = d_ptr->nextName;
     d_ptr->currentIndex = d_ptr->nextIndex;
-    d_ptr->currentProperty.copy(d_ptr->nextProperty, d_ptr->nextAttributes);
+    d_ptr->currentProperty.copy(&d_ptr->nextProperty, d_ptr->nextAttributes);
     d_ptr->currentAttributes = d_ptr->nextAttributes;
 
     QV4::ExecutionEngine *v4 = d_ptr->iterator.engine();

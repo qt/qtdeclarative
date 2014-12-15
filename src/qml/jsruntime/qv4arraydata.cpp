@@ -784,7 +784,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const ValueRef
             thisObject->initSparseArray();
             while (n != sparse->sparse()->end()) {
                 PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
-                thisObject->arraySet(n->value, *reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
+                thisObject->arraySet(n->value, reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
 
                 n = n->nextNode();
             }

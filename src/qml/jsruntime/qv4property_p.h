@@ -68,18 +68,18 @@ struct Property {
         return pd;
     }
 
-    inline bool isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const;
-    inline void merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs);
+    inline bool isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const;
+    inline void merge(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs);
 
     inline Heap::FunctionObject *getter() const { return value.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(value.heapObject()) : 0; }
     inline Heap::FunctionObject *setter() const { return set.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(set.heapObject()) : 0; }
     inline void setGetter(FunctionObject *g) { value = Primitive::fromManaged(reinterpret_cast<Managed *>(g)); }
     inline void setSetter(FunctionObject *s) { set = s ? Primitive::fromManaged(reinterpret_cast<Managed *>(s)) : Value::fromHeapObject(0); }
 
-    void copy(const Property &other, PropertyAttributes attrs) {
-        value = other.value;
+    void copy(const Property *other, PropertyAttributes attrs) {
+        value = other->value;
         if (attrs.isAccessor())
-            set = other.set;
+            set = other->set;
     }
 
     explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(0); }
@@ -98,7 +98,7 @@ private:
     Property &operator=(const Property &);
 };
 
-inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs) const
+inline bool Property::isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const
 {
     if (attrs.type() != PropertyAttributes::Generic && attrs.type() != otherAttrs.type())
         return false;
@@ -108,18 +108,18 @@ inline bool Property::isSubset(const PropertyAttributes &attrs, const Property &
         return false;
     if (attrs.hasWritable() && attrs.isWritable() != otherAttrs.isWritable())
         return false;
-    if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other.value))
+    if (attrs.type() == PropertyAttributes::Data && !value.sameValue(other->value))
         return false;
     if (attrs.type() == PropertyAttributes::Accessor) {
-        if (value.heapObject() != other.value.heapObject())
+        if (value.heapObject() != other->value.heapObject())
             return false;
-        if (set.heapObject() != other.set.heapObject())
+        if (set.heapObject() != other->set.heapObject())
             return false;
     }
     return true;
 }
 
-inline void Property::merge(PropertyAttributes &attrs, const Property &other, PropertyAttributes otherAttrs)
+inline void Property::merge(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs)
 {
     if (otherAttrs.hasEnumerable())
         attrs.setEnumerable(otherAttrs.isEnumerable());
@@ -129,13 +129,13 @@ inline void Property::merge(PropertyAttributes &attrs, const Property &other, Pr
         attrs.setWritable(otherAttrs.isWritable());
     if (otherAttrs.type() == PropertyAttributes::Accessor) {
         attrs.setType(PropertyAttributes::Accessor);
-        if (!other.value.isEmpty())
-            value = other.value;
-        if (!other.set.isEmpty())
-            set = other.set;
+        if (!other->value.isEmpty())
+            value = other->value;
+        if (!other->set.isEmpty())
+            set = other->set;
     } else if (otherAttrs.type() == PropertyAttributes::Data){
         attrs.setType(PropertyAttributes::Data);
-        value = other.value;
+        value = other->value;
     }
 }
 

@@ -88,7 +88,7 @@ void ArgumentsObject::fullyCreate()
         d()->mappedArguments = md->reallocate(engine(), d()->mappedArguments, numAccessors);
     for (uint i = 0; i < (uint)numAccessors; ++i) {
         mappedArguments()->data[i] = context()->callData->args[i];
-        arraySet(i, context()->engine->argumentsAccessors[i], Attr_Accessor);
+        arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
@@ -97,13 +97,13 @@ void ArgumentsObject::fullyCreate()
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, const Property &desc, PropertyAttributes attrs)
+bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs)
 {
     fullyCreate();
 
     Scope scope(engine);
     Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
-    Property map;
+    ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
     bool isMapped = false;
     uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
@@ -114,7 +114,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     if (isMapped) {
         Q_ASSERT(arrayData());
         mapAttrs = arrayData()->attributes(index);
-        map.copy(*pd, mapAttrs);
+        map->copy(pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData()->getProperty(index);
         pd->value = mappedArguments()->data[index];
@@ -127,10 +127,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
-        ScopedFunctionObject setter(scope, map.setter());
+        ScopedFunctionObject setter(scope, map->setter());
         ScopedCallData callData(scope, 1);
         callData->thisObject = this->asReturnedValue();
-        callData->args[0] = desc.value;
+        callData->args[0] = desc->value;
         setter->call(callData);
 
         if (attrs.isWritable()) {

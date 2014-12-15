@@ -201,7 +201,7 @@ void Object::ensureMemberIndex(uint idx)
     d()->memberData = MemberData::reallocate(engine(), d()->memberData, idx);
 }
 
-void Object::insertMember(String *s, const Property &p, PropertyAttributes attributes)
+void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
     InternalClass::addMember(this, s, attributes, &idx);
@@ -212,10 +212,10 @@ void Object::insertMember(String *s, const Property &p, PropertyAttributes attri
     if (attributes.isAccessor()) {
         setHasAccessorProperty();
         Property *pp = propertyAt(idx);
-        pp->value = p.value;
-        pp->set = p.set;
+        pp->value = p->value;
+        pp->set = p->set;
     } else {
-        d()->memberData->data[idx] = p.value;
+        d()->memberData->data[idx] = p->value;
     }
 }
 
@@ -540,7 +540,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
                     it->arrayIndex = k + 1;
                     *index = k;
                     *attrs = a;
-                    pd->copy(*p, a);
+                    pd->copy(p, a);
                     return;
                 }
             }
@@ -577,7 +577,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
             *name = m->engine()->newString(n->string);
             *attrs = a;
-            pd->copy(*p, a);
+            pd->copy(p, a);
             return;
         }
     }
@@ -846,7 +846,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const Property *p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -863,16 +863,16 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length));
         Property *lp = propertyAt(Heap::ArrayObject::LengthPropertyIndex);
         cattrs = internalClass()->propertyData.constData() + Heap::ArrayObject::LengthPropertyIndex;
-        if (attrs.isEmpty() || p.isSubset(attrs, *lp, *cattrs))
+        if (attrs.isEmpty() || p->isSubset(attrs, lp, *cattrs))
             return true;
         if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
             goto reject;
         bool succeeded = true;
         if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
-            uint l = p.value.asArrayLength(&ok);
+            uint l = p->value.asArrayLength(&ok);
             if (!ok) {
-                ScopedValue v(scope, p.value);
+                ScopedValue v(scope, p->value);
                 engine->throwRangeError(v);
                 return false;
             }
@@ -897,9 +897,9 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         if (!isExtensible())
             goto reject;
         // clause 4
-        Property pd;
-        pd.copy(p, attrs);
-        pd.fullyPopulated(&attrs);
+        ScopedProperty pd(scope);
+        pd->copy(p, attrs);
+        pd->fullyPopulated(&attrs);
         insertMember(name, pd, attrs);
         return true;
     }
@@ -911,7 +911,7 @@ reject:
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
 {
     // 15.4.5.1, 4b
     if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
@@ -927,7 +927,7 @@ reject:
   return false;
 }
 
-bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs)
+bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
 {
     Property *current = 0;
 
@@ -943,12 +943,12 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
         if (!isExtensible())
             goto reject;
         // clause 4
-        Property pp;
-        pp.copy(p, attrs);
-        pp.fullyPopulated(&attrs);
+        Scope scope(engine);
+        ScopedProperty pp(scope);
+        pp->copy(p, attrs);
+        pp->fullyPopulated(&attrs);
         if (attrs == Attr_Data) {
-            Scope scope(engine);
-            ScopedValue v(scope, pp.value);
+            ScopedValue v(scope, pp->value);
             arraySet(index, v);
         } else {
             arraySet(index, pp, attrs);
@@ -963,7 +963,7 @@ reject:
   return false;
 }
 
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
@@ -980,7 +980,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     }
 
     // clause 6
-    if (p.isSubset(attrs, *current, cattrs))
+    if (p->isSubset(attrs, current, cattrs))
         return true;
 
     // clause 7
@@ -1026,15 +1026,15 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
         }
     } else if (cattrs.isData() && attrs.isData()) { // clause 10
         if (!cattrs.isConfigurable() && !cattrs.isWritable()) {
-            if (attrs.isWritable() || !current->value.sameValue(p.value))
+            if (attrs.isWritable() || !current->value.sameValue(p->value))
                 goto reject;
         }
     } else { // clause 10
         Q_ASSERT(cattrs.isAccessor() && attrs.isAccessor());
         if (!cattrs.isConfigurable()) {
-            if (!p.value.isEmpty() && current->value.val != p.value.val)
+            if (!p->value.isEmpty() && current->value.val != p->value.val)
                 goto reject;
-            if (!p.set.isEmpty() && current->set.val != p.set.val)
+            if (!p->set.isEmpty() && current->set.val != p->set.val)
                 goto reject;
         }
     }
@@ -1057,7 +1057,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
 }
 
 
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property &p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs)
 {
     Scope scope(engine);
     ScopedString s(scope, engine->newString(name));

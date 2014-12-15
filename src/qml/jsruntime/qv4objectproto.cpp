@@ -109,8 +109,9 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
     ScopedContext global(scope, scope.engine->rootContext());
-    Property p(ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_get_proto)),
-               ScopedFunctionObject(scope, BuiltinFunction::create(global, v4->id___proto__, method_set_proto)));
+    ScopedProperty p(scope);
+    p->value = BuiltinFunction::create(global, v4->id___proto__, method_get_proto);
+    p->set = BuiltinFunction::create(global, v4->id___proto__, method_set_proto);
     insertMember(v4->id___proto__, p, Attr_Accessor|Attr_NotEnumerable);
 }
 
@@ -185,9 +186,9 @@ ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
         return Encode::undefined();
 
     ScopedValue attributes(scope, ctx->argument(2));
-    Property pd;
+    ScopedProperty pd(scope);
     PropertyAttributes attrs;
-    toPropertyDescriptor(scope.engine, attributes, &pd, &attrs);
+    toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -211,17 +212,17 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedString name(scope);
+    ScopedProperty pd(scope);
+    ScopedProperty n(scope);
     while (1) {
         uint index;
         PropertyAttributes attrs;
-        Property pd;
-        it.next(name.getRef(), &index, &pd, &attrs);
+        it.next(name.getRef(), &index, pd, &attrs);
         if (attrs.isEmpty())
             break;
-        Property n;
         PropertyAttributes nattrs;
-        val = o->getValue(&pd, attrs);
-        toPropertyDescriptor(scope.engine, val, &n, &nattrs);
+        val = o->getValue(pd, attrs);
+        toPropertyDescriptor(scope.engine, val, n, &nattrs);
         if (scope.engine->hasException)
             return Encode::undefined();
         bool ok;
@@ -491,9 +492,9 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
         o = ctx->d()->engine->globalObject();
     }
 
-    Property pd;
-    pd.value = f;
-    pd.set = Primitive::emptyValue();
+    ScopedProperty pd(scope);
+    pd->value = f;
+    pd->set = Primitive::emptyValue();
     o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }
@@ -519,9 +520,9 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
         o = ctx->d()->engine->globalObject();
     }
 
-    Property pd;
-    pd.value = Primitive::emptyValue();
-    pd.set = f;
+    ScopedProperty pd(scope);
+    pd->value = Primitive::emptyValue();
+    pd->set = f;
     o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
     return Encode::undefined();
 }
@@ -641,26 +642,26 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
     ScopedObject o(scope, engine->newObject());
     ScopedString s(scope);
 
-    Property pd;
+    ScopedProperty pd(scope);
     if (attrs.isData()) {
-        pd.value = desc->value;
+        pd->value = desc->value;
         s = engine->newString(QStringLiteral("value"));
         o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-        pd.value = Primitive::fromBoolean(attrs.isWritable());
+        pd->value = Primitive::fromBoolean(attrs.isWritable());
         s = engine->newString(QStringLiteral("writable"));
         o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
     } else {
-        pd.value = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
+        pd->value = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("get"));
         o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-        pd.value = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
+        pd->value = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("set"));
         o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
     }
-    pd.value = Primitive::fromBoolean(attrs.isEnumerable());
+    pd->value = Primitive::fromBoolean(attrs.isEnumerable());
     s = engine->newString(QStringLiteral("enumerable"));
     o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-    pd.value = Primitive::fromBoolean(attrs.isConfigurable());
+    pd->value = Primitive::fromBoolean(attrs.isConfigurable());
     s = engine->newString(QStringLiteral("configurable"));
     o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
 

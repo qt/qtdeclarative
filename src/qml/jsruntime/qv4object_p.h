@@ -93,11 +93,11 @@ struct Q_QML_EXPORT Object: Managed {
     bool hasOwnProperty(String *name) const;
     bool hasOwnProperty(uint index) const;
 
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, String *name, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property &p, PropertyAttributes attrs);
-    bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property &p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, String *name, const Property *p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs);
+    bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
 
     //
     // helpers
@@ -131,10 +131,12 @@ struct Q_QML_EXPORT Object: Managed {
     }
 
     void insertMember(String *s, const ValueRef v, PropertyAttributes attributes = Attr_Data) {
-        Property p(*v);
+        Scope scope(engine());
+        ScopedProperty p(scope);
+        p->value = *v;
         insertMember(s, p, attributes);
     }
-    void insertMember(String *s, const Property &p, PropertyAttributes attributes);
+    void insertMember(String *s, const Property *p, PropertyAttributes attributes);
 
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
@@ -152,7 +154,7 @@ public:
     bool setArrayLength(uint newLen);
     void setArrayLengthUnchecked(uint l);
 
-    void arraySet(uint index, const Property &p, PropertyAttributes attributes = Attr_Data);
+    void arraySet(uint index, const Property *p, PropertyAttributes attributes = Attr_Data);
     void arraySet(uint index, ValueRef value);
 
     bool arrayPut(uint index, ValueRef value) {
@@ -361,7 +363,7 @@ inline void Object::push_back(const ValueRef v)
     setArrayLengthUnchecked(idx + 1);
 }
 
-inline void Object::arraySet(uint index, const Property &p, PropertyAttributes attributes)
+inline void Object::arraySet(uint index, const Property *p, PropertyAttributes attributes)
 {
     // ### Clean up
     arrayCreate();
@@ -375,9 +377,9 @@ inline void Object::arraySet(uint index, const Property &p, PropertyAttributes a
     }
     setArrayAttributes(index, attributes);
     Property *pd = ArrayData::insert(this, index, attributes.isAccessor());
-    pd->value = p.value;
+    pd->value = p->value;
     if (attributes.isAccessor())
-        pd->set = p.set;
+        pd->set = p->set;
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }

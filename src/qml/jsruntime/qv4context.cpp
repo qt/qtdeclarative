@@ -121,7 +121,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
     if (activation->hasProperty(name))
         return;
-    Property desc(Primitive::undefinedValue());
+    ScopedProperty desc(scope);
     PropertyAttributes attrs(Attr_Data);
     attrs.setConfigurable(deletable);
     activation->__defineOwnProperty__(scope.engine, name, desc, attrs);
