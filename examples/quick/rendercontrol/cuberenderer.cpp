@@ -48,8 +48,9 @@
 #include <QOffscreenSurface>
 #include <QWindow>
 
-CubeRenderer::CubeRenderer()
-    : m_context(0),
+CubeRenderer::CubeRenderer(QOffscreenSurface *offscreenSurface)
+    : m_offscreenSurface(offscreenSurface),
+      m_context(0),
       m_program(0),
       m_vbo(0)
 {
@@ -59,10 +60,7 @@ CubeRenderer::~CubeRenderer()
 {
     // Use a temporary offscreen surface to do the cleanup.
     // There may not be a native window surface available anymore at this stage.
-    QScopedPointer<QOffscreenSurface> offscreenSurface(new QOffscreenSurface);
-    offscreenSurface->setFormat(m_context->format());
-    offscreenSurface->create();
-    m_context->makeCurrent(offscreenSurface.data());
+    m_context->makeCurrent(m_offscreenSurface);
 
     delete m_program;
     delete m_vbo;

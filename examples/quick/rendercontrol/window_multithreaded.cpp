@@ -130,7 +130,11 @@ void QuickRenderer::init()
 {
     m_context->makeCurrent(m_surface);
 
-    m_cubeRenderer = new CubeRenderer;
+    // Pass our offscreen surface to the cube renderer just so that it will
+    // have something is can make current during cleanup. QOffscreenSurface,
+    // just like QWindow, must always be created on the gui thread (as it might
+    // be backed by an actual QWindow).
+    m_cubeRenderer = new CubeRenderer(m_surface);
     m_cubeRenderer->resize(m_window->width(), m_window->height());
 
     m_renderControl->initialize(m_context);

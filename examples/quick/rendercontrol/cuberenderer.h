@@ -48,11 +48,12 @@ QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 QT_FORWARD_DECLARE_CLASS(QOpenGLBuffer)
 QT_FORWARD_DECLARE_CLASS(QOpenGLVertexArrayObject)
 QT_FORWARD_DECLARE_CLASS(QWindow)
+QT_FORWARD_DECLARE_CLASS(QOffscreenSurface)
 
 class CubeRenderer
 {
 public:
-    CubeRenderer();
+    CubeRenderer(QOffscreenSurface *offscreenSurface);
     ~CubeRenderer();
 
     void resize(int w, int h);
@@ -62,6 +63,7 @@ private:
     void init(QWindow *w, QOpenGLContext *share);
     void setupVertexAttribs();
 
+    QOffscreenSurface *m_offscreenSurface;
     QOpenGLContext *m_context;
     QOpenGLShaderProgram *m_program;
     QOpenGLBuffer *m_vbo;

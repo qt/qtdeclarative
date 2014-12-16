@@ -81,7 +81,7 @@ WindowSingleThreaded::WindowSingleThreaded()
     m_offscreenSurface->setFormat(m_context->format());
     m_offscreenSurface->create();
 
-    m_cubeRenderer = new CubeRenderer;
+    m_cubeRenderer = new CubeRenderer(m_offscreenSurface);
 
     m_renderControl = new QQuickRenderControl(this);
 
@@ -129,10 +129,10 @@ WindowSingleThreaded::~WindowSingleThreaded()
 
     m_context->doneCurrent();
 
+    delete m_cubeRenderer;
+
     delete m_offscreenSurface;
     delete m_context;
-
-    delete m_cubeRenderer;
 }
 
 void WindowSingleThreaded::createFbo()
