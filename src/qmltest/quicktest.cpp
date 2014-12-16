@@ -215,9 +215,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
+    //      -plugins dir        Specify a directory where to search for plugins.
     //      -input dir          Specify the input directory for test cases.
     //      -translation file   Specify the translation file.
     QStringList imports;
+    QStringList pluginPaths;
     QString testPath;
     QString translationFile;
     int index = 1;
@@ -227,6 +229,9 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     while (index < argc) {
         if (strcmp(argv[index], "-import") == 0 && (index + 1) < argc) {
             imports += stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
+            index += 2;
+        } else if (strcmp(argv[index], "-plugins") == 0 && (index + 1) < argc) {
+            pluginPaths += stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
         } else if (strcmp(argv[index], "-input") == 0 && (index + 1) < argc) {
             testPath = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
@@ -327,6 +332,8 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
     foreach (const QString &path, imports)
         view->engine()->addImportPath(path);
+    foreach (const QString &path, pluginPaths)
+        view->engine()->addPluginPath(path);
     foreach (const QString &file, files) {
         const QFileInfo fi(file);
         if (!fi.exists())
