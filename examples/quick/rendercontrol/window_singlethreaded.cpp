@@ -165,6 +165,8 @@ void WindowSingleThreaded::render()
     m_quickWindow->resetOpenGLState();
     QOpenGLFramebufferObject::bindDefault();
 
+    m_context->functions()->glFlush();
+
     m_quickReady = true;
 
     // Get something onto the screen.

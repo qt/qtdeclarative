@@ -188,6 +188,7 @@ void QuickRenderer::render(QMutexLocker *lock)
 
     // Meanwhile on this thread continue with the actual rendering (into the FBO first).
     m_renderControl->render();
+    m_context->functions()->glFlush();
 
     // The cube renderer uses its own context, no need to bother with the state here.
 
