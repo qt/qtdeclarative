@@ -553,7 +553,7 @@ the same object as is returned from the Qt.include() call.
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0), isDebugging(false),
-  profiler(0), outputWarningsToStdErr(true),
+  profiler(0), outputWarningsToMsgLog(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0),
   activeObjectCreator(0),
@@ -1180,7 +1180,7 @@ void QQmlEngine::setBaseUrl(const QUrl &url)
 bool QQmlEngine::outputWarningsToStandardError() const
 {
     Q_D(const QQmlEngine);
-    return d->outputWarningsToStdErr;
+    return d->outputWarningsToMsgLog;
 }
 
 /*!
@@ -1196,7 +1196,7 @@ bool QQmlEngine::outputWarningsToStandardError() const
 void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 {
     Q_D(QQmlEngine);
-    d->outputWarningsToStdErr = enabled;
+    d->outputWarningsToMsgLog = enabled;
 }
 
 /*!
@@ -1789,7 +1789,7 @@ void QQmlEnginePrivate::warning(const QQmlError &error)
 {
     Q_Q(QQmlEngine);
     q->warnings(QList<QQmlError>() << error);
-    if (outputWarningsToStdErr)
+    if (outputWarningsToMsgLog)
         dumpwarning(error);
 }
 
@@ -1797,7 +1797,7 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
 {
     Q_Q(QQmlEngine);
     q->warnings(errors);
-    if (outputWarningsToStdErr)
+    if (outputWarningsToMsgLog)
         dumpwarning(errors);
 }
 

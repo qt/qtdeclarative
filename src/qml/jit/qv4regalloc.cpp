@@ -31,6 +31,8 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QBuffer>
+#include <QtCore/QDebug>
 #include "qv4regalloc_p.h"
 #include <private/qv4value_inl_p.h>
 
@@ -223,7 +225,9 @@ public:
         if (!DebugRegAlloc)
             return;
 
-        QTextStream qout(stdout, QIODevice::WriteOnly);
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream qout(&buf);
         IRPrinterWithPositions printer(&qout, _lifeTimeIntervals);
 
         qout << "RegAllocInfo:" << endl << "Defs/uses:" << endl;
@@ -264,6 +268,7 @@ public:
             }
             qout << endl;
         }
+        qDebug("%s", buf.data().constData());
     }
 
 protected: // IRDecoder
@@ -823,8 +828,11 @@ public:
     void run() {
         renumber();
         if (DebugRegAlloc) {
-            QTextStream qout(stdout, QIODevice::WriteOnly);
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream qout(&buf);
             IRPrinterWithPositions(&qout, _intervals).print(_function);
+            qDebug("%s", buf.data().constData());
         }
         resolve();
     }
@@ -876,7 +884,9 @@ private:
             _liveAtEnd[bb] = _intervalForTemp.values();
 
             if (DebugRegAlloc) {
-                QTextStream os(stdout, QIODevice::WriteOnly);
+                QBuffer buf;
+                buf.open(QIODevice::WriteOnly);
+                QTextStream os(&buf);
                 os << "Intervals live at the start of L" << bb->index() << ":" << endl;
                 if (_liveAtStart[bb].isEmpty())
                     os << "\t(none)" << endl;
@@ -893,6 +903,7 @@ private:
                     i->dump(os);
                     os << endl;
                 }
+                qDebug("%s", buf.data().constData());
             }
 
             bb->setStatements(newStatements);
@@ -967,11 +978,13 @@ private:
     {
         if (DebugRegAlloc) {
             qDebug() << "Resolving edge" << predecessor->index() << "->" << successor->index();
-            QTextStream qout(stdout, QIODevice::WriteOnly);
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream qout(&buf);
             IRPrinterWithPositions printer(&qout, _intervals);
             printer.print(predecessor);
             printer.print(successor);
-            qout.flush();
+            qDebug("%s", buf.data().constData());
         }
 
         MoveMapping mapping;
@@ -1088,11 +1101,13 @@ private:
 
         if (DebugRegAlloc) {
             qDebug() << ".. done, result:";
-            QTextStream qout(stdout, QIODevice::WriteOnly);
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream qout(&buf);
             IRPrinterWithPositions printer(&qout, _intervals);
             printer.print(predecessor);
             printer.print(successor);
-            qout.flush();
+            qDebug("%s", buf.data().constData());
         }
     }
 
@@ -1260,7 +1275,9 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     _info->collect(function, _lifeTimeIntervals);
 
     if (DebugRegAlloc) {
-        QTextStream qout(stdout, QIODevice::WriteOnly);
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream qout(&buf);
         qout << "Ranges:" << endl;
         QVector<LifeTimeInterval *> intervals = _unhandled;
         std::reverse(intervals.begin(), intervals.end());
@@ -1268,13 +1285,13 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
             r->dump(qout);
             qout << endl;
         }
+        qDebug("%s", buf.data().constData());
         _info->dump();
-    }
 
-    if (DebugRegAlloc) {
         qDebug() << "*** Before register allocation:";
-        QTextStream qout(stdout, QIODevice::WriteOnly);
+        buf.setData(QByteArray());
         IRPrinterWithPositions(&qout, _lifeTimeIntervals).print(function);
+        qDebug("%s", buf.data().constData());
     }
     prepareRanges();
 
@@ -1293,8 +1310,11 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
 
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
     if (showCode) {
-        QTextStream qout(stdout, QIODevice::WriteOnly);
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream qout(&buf);
         IRPrinterWithRegisters(&qout, _lifeTimeIntervals, _registerInformation).print(function);
+        qDebug("%s", buf.data().constData());
     }
 }
 
@@ -1675,10 +1695,12 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
 
     // spill interval that currently block reg
     if (DebugRegAlloc) {
-        QTextStream out(stderr, QIODevice::WriteOnly);
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream out(&buf);
         out << "*** spilling intervals that block reg " <<reg<< " for interval ";
         current.dump(out);
-        out << endl;
+        qDebug("%s", buf.data().constData());
     }
     current.setReg(reg);
     _lastAssignedRegister[current.temp().index] = reg;
@@ -1701,8 +1723,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
         int ni = nextIntersection(current, *fixedRegRange);
         if (ni != -1) {
             if (DebugRegAlloc) {
-                QTextStream out(stderr, QIODevice::WriteOnly);
-                out << "***-- current range intersects with a fixed reg use at " << ni << ", so splitting it." << endl;
+                qDebug("***-- current range intersects with a fixed reg use at %d, so splitting it.", ni);
             }
             // current does overlap with a fixed interval, so split current before that intersection.
             split(current, ni, true);
@@ -1767,8 +1788,14 @@ void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
     Q_ASSERT(!current.isFixedInterval());
 
     if (DebugRegAlloc) {
-        QTextStream out(stderr, QIODevice::WriteOnly);
-        out << "***** split request for range ";current.dump(out);out<<" before position "<<beforePosition<<" and skipOptionalRegisterUses = "<<skipOptionalRegisterUses<<endl;
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream out(&buf);
+        out << "***** split request for range ";
+        current.dump(out);
+        out << " before position " << beforePosition
+            << " and skipOptionalRegisterUses = " << skipOptionalRegisterUses << endl;
+        qDebug("%s", buf.data().constData());
     }
 
     assignSpillSlot(current.temp(), current.start(), current.end());
@@ -1796,10 +1823,17 @@ void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
 
     LifeTimeInterval newInterval = current.split(lastUse, nextUse);
     if (DebugRegAlloc) {
-        QTextStream out(stderr, QIODevice::WriteOnly);
-        out << "***** last use = "<<lastUse<<", nextUse = " << nextUse<<endl;
-        out << "***** new interval: "; newInterval.dump(out); out << endl;
-        out << "***** preceding interval: "; current.dump(out); out << endl;
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream out(&buf);
+        out << "***** last use = " << lastUse << ", nextUse = " << nextUse << endl;
+        out << "***** new interval: ";
+        newInterval.dump(out);
+        out << endl;
+        out << "***** preceding interval: ";
+        current.dump(out);
+        out << endl;
+        qDebug("%s", buf.data().constData());
     }
     if (newInterval.isValid()) {
         if (current.reg() != LifeTimeInterval::InvalidRegister)
@@ -1848,7 +1882,9 @@ void RegisterAllocator::assignSpillSlot(const Temp &t, int startPos, int endPos)
 
 void RegisterAllocator::dump(IR::Function *function) const
 {
-    QTextStream qout(stdout, QIODevice::WriteOnly);
+    QBuffer buf;
+    buf.open(QIODevice::WriteOnly);
+    QTextStream qout(&buf);
     IRPrinterWithPositions printer(&qout, _lifeTimeIntervals);
 
     qout << "Ranges:" << endl;
@@ -1865,6 +1901,7 @@ void RegisterAllocator::dump(IR::Function *function) const
             qout << "\t%" << i << " -> " << _assignedSpillSlots[i] << endl;
 
     printer.print(function);
+    qDebug("%s", buf.data().constData());
 }
 
 // References:

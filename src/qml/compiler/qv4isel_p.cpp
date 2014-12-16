@@ -31,6 +31,8 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QDebug>
+#include <QtCore/QBuffer>
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
@@ -40,11 +42,6 @@
 #endif
 
 #include <QString>
-
-namespace {
-Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
-#define qout *qout()
-} // anonymous namespace
 
 using namespace QV4;
 using namespace QV4::IR;
@@ -218,8 +215,12 @@ void IRDecoder::visitMove(IR::Move *s)
 
     // For anything else...:
     Q_UNIMPLEMENTED();
+    QBuffer buf;
+    buf.open(QIODevice::WriteOnly);
+    QTextStream qout(&buf);
     IRPrinter(&qout).print(s);
     qout << endl;
+    qDebug("%s", buf.data().constData());
     Q_ASSERT(!"TODO");
 }
 
@@ -398,7 +399,10 @@ void IRDecoder::callBuiltin(IR::Call *call, Expr *result)
     }
 
     Q_UNIMPLEMENTED();
+    QBuffer buf;
+    buf.open(QIODevice::WriteOnly);
+    QTextStream qout(&buf);
     IRPrinter(&qout).print(call); qout << endl;
-    Q_ASSERT(!"TODO!");
+    qDebug("%s", buf.data().constData());
     Q_UNREACHABLE();
 }

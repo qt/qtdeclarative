@@ -188,15 +188,9 @@ public:
 
     void forFunction(IR::Function *function)
     {
-        IR::Optimizer::showMeTheCode(function);
+        IR::Optimizer::showMeTheCode(function, "Before stack slot allocation");
         _function = function;
         toStackSlots(function);
-
-//        QTextStream os(stdout, QIODevice::WriteOnly);
-//        os << "Frame layout:" << endl;
-//        foreach (int t, _stackSlotForTemp.keys()) {
-//            os << "\t" << t << " -> " << _stackSlotForTemp[t] << endl;
-//        }
     }
 
 protected:
@@ -364,7 +358,7 @@ void InstructionSelection::run(int functionIndex)
             opt.convertOutOfSSA();
             ConvertTemps().toStackSlots(_function);
         }
-        opt.showMeTheCode(_function);
+        opt.showMeTheCode(_function, "After stack slot allocation");
     } else {
         ConvertTemps().toStackSlots(_function);
     }

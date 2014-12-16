@@ -42,9 +42,11 @@
 
 #include "qv4alloca_p.h"
 
+#undef DO_TRACE_INSTR // define to enable instruction tracing
+
 #ifdef DO_TRACE_INSTR
-#  define TRACE_INSTR(I) fprintf(stderr, "executing a %s\n", #I);
-#  define TRACE(n, str, ...) { char buf[4096]; snprintf(buf, 4096, str, __VA_ARGS__); fprintf(stderr, "    %s : %s\n", #n, buf); }
+#  define TRACE_INSTR(I) qDebug("executing a %s\n", #I);
+#  define TRACE(n, str, ...) { char buf[4096]; snprintf(buf, 4096, str, __VA_ARGS__); qDebug("    %s : %s", #n, buf); }
 #else
 #  define TRACE_INSTR(I)
 #  define TRACE(n, str, ...)
@@ -79,59 +81,23 @@ using namespace QV4::Moth;
 
 #endif
 
-#ifdef WITH_STATS
-namespace {
-struct VMStats {
-    quint64 paramIsValue;
-    quint64 paramIsArg;
-    quint64 paramIsLocal;
-    quint64 paramIsTemp;
-    quint64 paramIsScopedLocal;
-
-    VMStats()
-        : paramIsValue(0)
-        , paramIsArg(0)
-        , paramIsLocal(0)
-        , paramIsTemp(0)
-        , paramIsScopedLocal(0)
-    {}
-
-    ~VMStats()
-    { show(); }
-
-    void show() {
-        fprintf(stderr, "VM stats:\n");
-        fprintf(stderr, "         value: %lu\n", paramIsValue);
-        fprintf(stderr, "           arg: %lu\n", paramIsArg);
-        fprintf(stderr, "         local: %lu\n", paramIsLocal);
-        fprintf(stderr, "          temp: %lu\n", paramIsTemp);
-        fprintf(stderr, "  scoped local: %lu\n", paramIsScopedLocal);
-    }
-};
-static VMStats vmStats;
-#define VMSTATS(what) ++vmStats.what
-}
-#else // !WITH_STATS
-#define VMSTATS(what) {}
-#endif // WITH_STATS
-
 #ifdef DO_TRACE_INSTR
 Param traceParam(const Param &param)
 {
     if (param.isConstant()) {
-        fprintf(stderr, "    constant\n");
+        qDebug("    constant\n");
     } else if (param.isArgument()) {
-        fprintf(stderr, "    argument %d@%d\n", param.index, param.scope);
+        qDebug("    argument %d@%d\n", param.index, param.scope);
     } else if (param.isLocal()) {
-        fprintf(stderr, "    local %d\n", param.index);
+        qDebug("    local %d\n", param.index);
     } else if (param.isTemp()) {
-        fprintf(stderr, "    temp %d\n", param.index);
+        qDebug("    temp %d\n", param.index);
     } else if (param.isScopedLocal()) {
-        fprintf(stderr, "    temp %d@%d\n", param.index, param.scope);
+        qDebug("    temp %d@%d\n", param.index, param.scope);
     } else {
         Q_ASSERT(!"INVALID");
     }
-    return Param
+    return param;
 }
 # define VALUE(param) (*VALUEPTR(param))
 # define VALUEPTR(param) (scopes[traceParam(param).scope] + param.index)
@@ -256,7 +222,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(GetGlobalLookup)
-        TRACE(inline, "property name = %s", runtimeStrings[instr.name]->toQString().toUtf8().constData());
         QV4::Lookup *l = context->d()->lookups + instr.index;
         STOREVALUE(instr.result, l->globalGetter(l, engine));
     MOTH_END_INSTR(GetGlobalLookup)
@@ -364,7 +329,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
-        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
@@ -383,7 +347,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
-        TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
@@ -393,7 +356,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
-        TRACE(args, "starting at %d, length %d", instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
@@ -519,7 +481,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(ConstructPropertyLookup)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
-        TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;
@@ -529,7 +490,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(ConstructGlobalLookup)
-        TRACE(inline, "property name = %s, args = %d, argc = %d", runtimeStrings[instr.name]->toQString().toUtf8().constData(), instr.args, instr.argc);
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = QV4::Value::Integer_Type;

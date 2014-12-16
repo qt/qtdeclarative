@@ -60,6 +60,11 @@
 
 #include "../../3rdparty/double-conversion/double-conversion.h"
 
+#ifdef QV4_COUNT_RUNTIME_FUNCTIONS
+#  include <QtCore/QBuffer>
+#  include <QtCore/QDebug>
+#endif // QV4_COUNT_RUNTIME_FUNCTIONS
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -144,7 +149,9 @@ struct RuntimeCounters::Data {
     };
 
     void dump() const {
-        QTextStream outs(stderr, QIODevice::WriteOnly);
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream outs(&buf);
         QList<Line> lines;
         foreach (const char *func, counters.keys()) {
             const Counters &fCount = counters[func];
@@ -159,7 +166,7 @@ struct RuntimeCounters::Data {
                 lines.append(line);
             }
         }
-        qSort(lines.begin(), lines.end(), Line::less);
+        std::sort(lines.begin(), lines.end(), Line::less);
         outs << lines.size() << " counters:" << endl;
         foreach (const Line &line, lines)
             outs << qSetFieldWidth(10) << line.count << qSetFieldWidth(0)
@@ -167,6 +174,7 @@ struct RuntimeCounters::Data {
                  << " | " << pretty(line.tag1)
                  << " | " << pretty(line.tag2)
                  << endl;
+        qDebug("%s", buf.data().constData());
     }
 };
 

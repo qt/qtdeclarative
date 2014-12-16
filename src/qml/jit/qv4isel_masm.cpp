@@ -115,8 +115,8 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
             continue;
         processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; call ") + it.value());
     }
-    fprintf(stderr, "%s\n", processedOutput.constData());
-    fflush(stderr);
+
+    qDebug("%s", processedOutput.constData());
 }
 
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
@@ -225,7 +225,7 @@ void InstructionSelection::run(int functionIndex)
             // No register allocator available for this platform, or env. var was set, so:
             opt.convertOutOfSSA();
         ConvertTemps().toStackSlots(_function);
-        IR::Optimizer::showMeTheCode(_function);
+        IR::Optimizer::showMeTheCode(_function, "After stack slot allocation");
         calculateRegistersToSave(Assembler::getRegisterInfo()); // FIXME: this saves all registers. We can probably do with a subset: those that are not used by the register allocator.
     }
     QSet<IR::Jump *> removableJumps = opt.calculateOptionalJumps();

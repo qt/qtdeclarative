@@ -62,8 +62,8 @@ const char *V4_LINENUMBER = "linenumber";
 #ifdef NO_PROTOCOL_TRACING
 #  define TRACE_PROTOCOL(x)
 #else
+#include <QtCore/QDebug>
 #  define TRACE_PROTOCOL(x) x
-static QTextStream debug(stderr, QIODevice::WriteOnly);
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -378,7 +378,7 @@ public:
         QByteArray responseData = doc.toJson(QJsonDocument::Indented);
 #endif
 
-        TRACE_PROTOCOL(debug << "sending response for: " << responseData << endl);
+        TRACE_PROTOCOL(qDebug() << "sending response for:" << responseData << endl);
 
         q_func()->sendMessage(packMessage("v8message", responseData));
     }
@@ -523,7 +523,7 @@ public:
 
     void handle(const QJsonObject &request, QQmlDebugService *s, QV4DebugServicePrivate *p)
     {
-        TRACE_PROTOCOL(debug << "handling command " << command() << "..." << endl);
+        TRACE_PROTOCOL(qDebug() << "handling command" << command() << "...");
 
         req = request;
         seq = req.value(QStringLiteral("seq"));
@@ -1137,13 +1137,13 @@ void QV4DebugService::messageReceived(const QByteArray &message)
     QByteArray header;
     ms >> header;
 
-    TRACE_PROTOCOL(debug << "received message with header " << header << endl);
+    TRACE_PROTOCOL(qDebug() << "received message with header" << header);
 
     if (header == "V8DEBUG") {
         QByteArray type;
         QByteArray payload;
         ms >> type >> payload;
-        TRACE_PROTOCOL(debug << "... type: "<<type << endl);
+        TRACE_PROTOCOL(qDebug() << "... type:" << type);
 
         if (type == V4_CONNECT) {
             sendMessage(d->packMessage(type));
@@ -1164,7 +1164,7 @@ void QV4DebugService::messageReceived(const QByteArray &message)
         } else if (type == "v8request") {
             handleV8Request(payload);
         } else if (type == V4_DISCONNECT) {
-            TRACE_PROTOCOL(debug << "... payload:"<<payload << endl);
+            TRACE_PROTOCOL(qDebug() << "... payload:" << payload);
             handleV8Request(payload);
         } else {
             sendSomethingToSomebody(type, 0);
@@ -1249,7 +1249,7 @@ void QV4DebugService::handleV8Request(const QByteArray &payload)
 {
     Q_D(QV4DebugService);
 
-    TRACE_PROTOCOL(debug << "v8request, payload: " << payload << endl);
+    TRACE_PROTOCOL(qDebug() << "v8request, payload:" << payload);
 
     QJsonDocument request = QJsonDocument::fromJson(payload);
     QJsonObject o = request.object();

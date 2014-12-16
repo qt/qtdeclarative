@@ -219,7 +219,7 @@ public:
 
     QSet<IR::Jump *> calculateOptionalJumps();
 
-    static void showMeTheCode(Function *function);
+    static void showMeTheCode(Function *function, const char *marker);
 
 private:
     Function *function;

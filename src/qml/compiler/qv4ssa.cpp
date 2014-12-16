@@ -40,6 +40,7 @@
 #include "qv4isel_util_p.h"
 #include "qv4util_p.h"
 
+#include <QtCore/QBuffer>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QSet>
@@ -51,9 +52,6 @@
 #include <cassert>
 #include <algorithm>
 
-#undef SHOW_SSA
-#undef DEBUG_MOVEMAPPING
-
 QT_USE_NAMESPACE
 
 using namespace QV4;
@@ -61,21 +59,25 @@ using namespace IR;
 
 namespace {
 
+enum { DebugMoveMapping = 0 };
+
 #ifdef QT_NO_DEBUG
 enum { DoVerification = 0 };
 #else
 enum { DoVerification = 1 };
 #endif
 
-Q_GLOBAL_STATIC_WITH_ARGS(QTextStream, qout, (stderr, QIODevice::WriteOnly));
-#define qout *qout()
-
-void showMeTheCode(IR::Function *function)
+static void showMeTheCode(IR::Function *function, const char *marker)
 {
     static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
     if (showCode) {
-        IRPrinter(&qout).print(function);
-        qout << endl;
+        qDebug() << marker;
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream stream(&buf);
+        IRPrinter(&stream).print(function);
+        stream << endl;
+        qDebug("%s", buf.data().constData());
     }
 }
 
@@ -402,11 +404,6 @@ class DominatorTree
             todo = worklist.back();
             worklist.pop_back();
         }
-
-#if defined(SHOW_SSA)
-        for (int i = 0; i < nodes.size(); ++i)
-            qDebug("\tL%d: dfnum = %d, parent = %d", i, dfnum[i], parent[i]);
-#endif // SHOW_SSA
     }
 
     BasicBlockIndex ancestorWithLowestSemi(BasicBlockIndex v, std::vector<BasicBlockIndex> &worklist) {
@@ -592,6 +589,9 @@ public:
         }
 
         if (DebugDominatorFrontiers) {
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream qout(&buf);
             qout << "Dominator Frontiers:" << endl;
             foreach (BasicBlock *n, function->basicBlocks()) {
                 if (n->isRemoved())
@@ -606,6 +606,7 @@ public:
                 }
                 qout << "}" << endl;
             }
+            qDebug("%s", buf.data().constData());
         }
 
         if (DebugDominatorFrontiers && DebugCodeCanUseLotsOfCpu) {
@@ -624,7 +625,7 @@ public:
                         }
                     }
                     if (!hasDominatedSucc) {
-                        qout << fBlock << " in DF[" << n->index() << "] has no dominated predecessors" << endl;
+                        qDebug("%d in DF[%d] has no dominated predecessors", fBlock->index(), n->index());
                     }
                     Q_ASSERT(hasDominatedSucc);
                 }
@@ -646,6 +647,9 @@ public:
     void dumpImmediateDominators() const
     {
         if (DebugImmediateDominators) {
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream qout(&buf);
             qout << "Immediate dominators:" << endl;
             foreach (BasicBlock *to, function->basicBlocks()) {
                 if (to->isRemoved())
@@ -659,6 +663,7 @@ public:
                     qout << "(none)";
                 qout << " -> " << to->index() << endl;
             }
+            qDebug("%s", buf.data().constData());
         }
     }
 
@@ -953,10 +958,6 @@ public:
         for (int i = 0, ei = A_orig.size(); i != ei; ++i)
             A_orig[i].reserve(8);
 
-#if defined(SHOW_SSA)
-        qout << "Variables collected:" << endl;
-#endif // SHOW_SSA
-
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
                 continue;
@@ -966,17 +967,6 @@ public:
             foreach (Stmt *s, bb->statements())
                 s->accept(this);
         }
-
-#if defined(SHOW_SSA)
-        qout << "Non-locals:" << endl;
-        foreach (const Temp &nonLocal, nonLocals) {
-            qout << "\t";
-            nonLocal.dump(qout);
-            qout << endl;
-        }
-
-        qout << "end collected variables." << endl;
-#endif // SHOW_SSA
     }
 
     const std::vector<Temp> &allTemps() const
@@ -1038,12 +1028,6 @@ protected:
             addTemp(t);
 
             if (isCollectable(t)) {
-#if defined(SHOW_SSA)
-                qout << '\t';
-                t->dump(qout);
-                qout << " -> L" << currentBB->index << endl;
-#endif // SHOW_SSA
-
                 _defsites[t->index].insert(currentBB);
                 addDefInCurrentBlock(t);
 
@@ -1274,6 +1258,9 @@ public:
 
     void dump() const
     {
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream qout(&buf);
         qout << "Defines and uses:" << endl;
         foreach (const DefUse &du, _defUses) {
             if (!du.isValid())
@@ -1294,16 +1281,11 @@ public:
                 qout << ' ' << t.index;
             qout << endl;
         }
+        qDebug("%s", buf.data().constData());
     }
 };
 
 void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
-#if defined(SHOW_SSA)
-    qout << "-> inserted phi node for variable ";
-    a.dump(qout);
-    qout << " in block " << y->index << endl;
-#endif
-
     Phi *phiNode = f->NewStmt<Phi>();
     phiNode->d = new Stmt::Data;
     phiNode->targetTemp = f->New<Temp>();
@@ -1643,15 +1625,6 @@ protected:
 // see [Appel]. For the changes needed for semi-pruned SSA form, and for its advantages, see [Briggs].
 void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defUses)
 {
-#if defined(SHOW_SSA)
-    qout << "Converting function ";
-    if (function->name)
-        qout << *function->name;
-    else
-        qout << "<no name>";
-    qout << " to SSA..." << endl;
-#endif // SHOW_SSA
-
     // Collect all applicable variables:
     VariableCollector variables(function);
 
@@ -2248,23 +2221,32 @@ public:
                 continue;
 
             if (DebugTypeInference) {
+                QBuffer buf;
+                buf.open(QIODevice::WriteOnly);
+                QTextStream qout(&buf);
                 qout<<"Typing stmt ";
                 IRPrinter(&qout).print(s);
-                qout<<endl;
+                qDebug("%s", buf.data().constData());
             }
 
             if (!run(s)) {
                 *_worklist += s;
                 if (DebugTypeInference) {
+                    QBuffer buf;
+                    buf.open(QIODevice::WriteOnly);
+                    QTextStream qout(&buf);
                     qout<<"Pushing back stmt: ";
                     IRPrinter(&qout).print(s);
-                    qout<<endl;
+                    qDebug("%s", buf.data().constData());
                 }
             } else {
                 if (DebugTypeInference) {
+                    QBuffer buf;
+                    buf.open(QIODevice::WriteOnly);
+                    QTextStream qout(&buf);
                     qout<<"Finished: ";
                     IRPrinter(&qout).print(s);
-                    qout<<endl;
+                    qDebug("%s", buf.data().constData());
                 }
             }
         }
@@ -2306,9 +2288,9 @@ private:
     void setType(Expr *e, DiscoveredType ty) {
         if (Temp *t = e->asTemp()) {
             if (DebugTypeInference)
-                qout << "Setting type for temp " << t->index
-                     << " to " << typeName(Type(ty.type)) << " (" << ty.type << ")"
-                     << endl;
+                qDebug() << "Setting type for temp" << t->index
+                         << " to " << typeName(Type(ty.type)) << "(" << ty.type << ")"
+                         << endl;
 
             DiscoveredType &it = _tempTypes[t->index];
             if (it != ty) {
@@ -2316,9 +2298,12 @@ private:
 
                 if (DebugTypeInference) {
                     foreach (Stmt *s, _defUses.uses(*t)) {
+                        QBuffer buf;
+                        buf.open(QIODevice::WriteOnly);
+                        QTextStream qout(&buf);
                         qout << "Pushing back dependent stmt: ";
                         IRPrinter(&qout).print(s);
-                        qout<<endl;
+                        qDebug("%s", buf.data().constData());
                     }
                 }
 
@@ -2704,15 +2689,6 @@ class TypePropagation: public StmtVisitor, public ExprVisitor {
         if (requestedType != UnknownType) {
             if (e->type != requestedType) {
                 if (requestedType & NumberType || requestedType == BoolType) {
-#ifdef SHOW_SSA
-                    QTextStream os(stdout, QIODevice::WriteOnly);
-                    os << "adding conversion from " << typeName(e->type)
-                       << " to " << typeName(requestedType) << " for expression ";
-                    e->dump(os);
-                    os << " in statement ";
-                    _currStmt->dump(os);
-                    os << endl;
-#endif
                     if (insertConversion)
                         addConversion(e, requestedType);
                     return true;
@@ -3409,14 +3385,8 @@ public:
 
     QHash<BasicBlock *, BasicBlock *> go()
     {
-        showMeTheCode(function);
+        showMeTheCode(function, "Before block scheduling");
         schedule(function->basicBlock(0));
-
-#if defined(SHOW_SSA)
-        qDebug() << "Block sequence:";
-        foreach (BasicBlock *bb, sequence)
-            qDebug("\tL%d", bb->index());
-#endif // SHOW_SSA
 
         Q_ASSERT(function->liveBasicBlocksCount() == sequence.size());
         function->setScheduledBlocks(sequence);
@@ -3431,8 +3401,8 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
         if (bb && bb->out.size() > 1) {
             foreach (BasicBlock *bb2, bb->out) {
                 if (bb2 && bb2->in.size() > 1) {
-                    qout << "found critical edge between block "
-                         << bb->index() << " and block " << bb2->index();
+                    qDebug() << "found critical edge between block"
+                             << bb->index() << "and block" << bb2->index();
                     Q_ASSERT(false);
                 }
             }
@@ -3443,7 +3413,7 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 
 void cleanupBasicBlocks(IR::Function *function)
 {
-    showMeTheCode(function);
+    showMeTheCode(function, "Before basic block cleanup");
 
     // Algorithm: this is the iterative version of a depth-first search for all blocks that are
     // reachable through outgoing edges, starting with the start block and all exception handler
@@ -3496,7 +3466,7 @@ void cleanupBasicBlocks(IR::Function *function)
         function->removeBasicBlock(bb);
     }
 
-    showMeTheCode(function);
+    showMeTheCode(function, "After basic block cleanup");
 }
 
 inline Const *isConstPhi(Phi *phi)
@@ -3829,8 +3799,14 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
     if (!showCode)
         return;
 
+    QBuffer buf;
+    buf.open(QIODevice::WriteOnly);
+    QTextStream qout(&buf);
+
     struct Util {
-        static void genLoop(LoopDetection::LoopInfo *loop)
+        QTextStream &qout;
+        Util(QTextStream &qout): qout(qout) {}
+        void genLoop(LoopDetection::LoopInfo *loop)
         {
             qout << "  subgraph \"cluster" << quint64(loop) << "\" {\n";
             qout << "    L" << loop->loopHeader->index() << ";\n";
@@ -3849,7 +3825,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
 
     foreach (LoopDetection::LoopInfo *l, loops) {
         if (l->parentLoop == 0)
-            Util::genLoop(l);
+            Util(qout).genLoop(l);
     }
 
     foreach (BasicBlock *bb, f->basicBlocks()) {
@@ -3867,7 +3843,8 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
             qout << "  L" << idx << " -> L" << out->index() << "\n";
     }
 
-    qout << "}\n" << flush;
+    qout << "}\n";
+    qDebug("%s", buf.data().constData());
 }
 
 } // anonymous namespace
@@ -4301,6 +4278,10 @@ public:
 
     void dump() const
     {
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream qout(&buf);
+
         qout << "Life ranges:" << endl;
         qout << "Intervals:" << endl;
         foreach (const LifeTimeInterval *range, _sortedIntervals->intervals()) {
@@ -4321,6 +4302,7 @@ public:
             }
             qout << endl;
         }
+        qDebug("%s", buf.data().constData());
     }
 
 private:
@@ -5068,12 +5050,7 @@ Optimizer::Optimizer(IR::Function *function)
 
 void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool peelLoops)
 {
-#if defined(SHOW_SSA)
-    qout << "##### NOW IN FUNCTION " << (function->name ? qPrintable(*function->name) : "anonymous!")
-         << " with " << function->basicBlocks.size() << " basic blocks." << endl << flush;
-#endif
-
-//    showMeTheCode(function);
+    showMeTheCode(function, "Before running the optimizer");
 
     cleanupBasicBlocks(function);
 
@@ -5087,7 +5064,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
 
         ConvertArgLocals(function).toTemps();
-        showMeTheCode(function);
+        showMeTheCode(function, "After converting arguments to locals");
 
         // Calculate the dominator tree:
         DominatorTree df(function);
@@ -5099,7 +5076,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 
             LoopDetection loopDetection(df);
             loopDetection.run(function);
-            showMeTheCode(function);
+            showMeTheCode(function, "After loop detection");
 //            cfg2dot(function, loopDetection.allLoops());
 
             if (peelLoops) {
@@ -5107,7 +5084,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
                 LoopPeeling(df).run(innerLoops);
 
 //                cfg2dot(function, loopDetection.allLoops());
-                showMeTheCode(function);
+                showMeTheCode(function, "After loop peeling");
                 if (!innerLoops.isEmpty())
                     verifyImmediateDominators(df, function);
             }
@@ -5130,14 +5107,14 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 
 //        qout << "Cleaning up phi nodes..." << endl;
         cleanupPhis(defUses);
-        showMeTheCode(function);
+        showMeTheCode(function, "After cleaning up phi-nodes");
 
         StatementWorklist worklist(function);
 
         if (doTypeInference) {
 //            qout << "Running type inference..." << endl;
             TypeInference(qmlEngine, defUses).run(worklist);
-            showMeTheCode(function);
+            showMeTheCode(function, "After type inference");
 
 //            qout << "Doing reverse inference..." << endl;
             ReverseInference(defUses).run(function);
@@ -5154,7 +5131,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 //            qout << "Running SSA optimization..." << endl;
             worklist.reset();
             optimizeSSA(worklist, defUses, df);
-            showMeTheCode(function);
+            showMeTheCode(function, "After optimization");
 
             verifyImmediateDominators(df, function);
             verifyCFG(function);
@@ -5180,7 +5157,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 //        qout << "Doing block scheduling..." << endl;
 //        df.dumpImmediateDominators();
         startEndLoops = BlockScheduler(function, df).go();
-        showMeTheCode(function);
+        showMeTheCode(function, "After basic block scheduling");
 //        cfg2dot(function);
 
 #ifndef QT_NO_DEBUG
@@ -5217,16 +5194,19 @@ void Optimizer::convertOutOfSSA() {
             }
         }
 
-    #if defined(DEBUG_MOVEMAPPING)
-        QTextStream os(stdout, QIODevice::WriteOnly);
-        os << "Move mapping for function ";
-        if (function->name)
-            os << *function->name;
-        else
-            os << (void *) function;
-        os << " on basic-block L" << bb->index << ":" << endl;
-        moves.dump();
-    #endif // DEBUG_MOVEMAPPING
+        if (DebugMoveMapping) {
+            QBuffer buf;
+            buf.open(QIODevice::WriteOnly);
+            QTextStream os(&buf);
+            os << "Move mapping for function ";
+            if (function->name)
+                os << *function->name;
+            else
+                os << (void *) function;
+            os << " on basic-block L" << bb->index() << ":" << endl;
+            moves.dump();
+            qDebug("%s", buf.data().constData());
+        }
 
         moves.order();
 
@@ -5282,22 +5262,12 @@ QSet<Jump *> Optimizer::calculateOptionalJumps()
         reachableWithoutJump.insert(bb);
     }
 
-#if 0
-    QTextStream out(stdout, QIODevice::WriteOnly);
-    out << "Jumps to ignore:" << endl;
-    foreach (Jump *j, removed) {
-        out << "\t" << j->id << ": ";
-        j->dump(out, Stmt::MIR);
-        out << endl;
-    }
-#endif
-
     return optional;
 }
 
-void Optimizer::showMeTheCode(IR::Function *function)
+void Optimizer::showMeTheCode(IR::Function *function, const char *marker)
 {
-    ::showMeTheCode(function);
+    ::showMeTheCode(function, marker);
 }
 
 static inline bool overlappingStorage(const Temp &t1, const Temp &t2)
@@ -5339,14 +5309,17 @@ void MoveMapping::add(Expr *from, Temp *to) {
     if (Temp *t = from->asTemp()) {
         if (overlappingStorage(*t, *to)) {
             // assignments like fp1 = fp1 or var{&1} = double{&1} can safely be skipped.
-#if defined(DEBUG_MOVEMAPPING)
-            QTextStream os(stderr, QIODevice::WriteOnly);
-            os << "Skipping ";
-            to->dump(os);
-            os << " <- ";
-            from->dump(os);
-            os << endl;
-#endif // DEBUG_MOVEMAPPING
+            if (DebugMoveMapping) {
+                QBuffer buf;
+                buf.open(QIODevice::WriteOnly);
+                QTextStream os(&buf);
+                IRPrinter printer(&os);
+                os << "Skipping ";
+                printer.print(to);
+                os << " <- ";
+                printer.print(from);
+                qDebug("%s", buf.data().constData());
+            }
             return;
         }
     }
@@ -5397,20 +5370,24 @@ QList<IR::Move *> MoveMapping::insertMoves(BasicBlock *bb, IR::Function *functio
 
 void MoveMapping::dump() const
 {
-#if defined(DEBUG_MOVEMAPPING)
-    QTextStream os(stdout, QIODevice::WriteOnly);
-    os << "Move mapping has " << _moves.size() << " moves..." << endl;
-    foreach (const Move &m, _moves) {
-        os << "\t";
-        m.to->dump(os);
-        if (m.needsSwap)
-            os << " <-> ";
-        else
-            os << " <-- ";
-        m.from->dump(os);
-        os << endl;
+    if (DebugMoveMapping) {
+        QBuffer buf;
+        buf.open(QIODevice::WriteOnly);
+        QTextStream os(&buf);
+        IRPrinter printer(&os);
+        os << "Move mapping has " << _moves.size() << " moves..." << endl;
+        foreach (const Move &m, _moves) {
+            os << "\t";
+            printer.print(m.to);
+            if (m.needsSwap)
+                os << " <-> ";
+            else
+                os << " <-- ";
+            printer.print(m.from);
+            os << endl;
+        }
+        qDebug("%s", buf.data().constData());
     }
-#endif // DEBUG_MOVEMAPPING
 }
 
 MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QList<Move> &delayed,
@@ -5421,19 +5398,24 @@ MoveMapping::Action MoveMapping::schedule(const Move &m, QList<Move> &todo, QLis
         if (!output.contains(dependency)) {
             if (delayed.contains(dependency)) {
                 // We have a cycle! Break it by swapping instead of assigning.
-#if defined(DEBUG_MOVEMAPPING)
-                delayed+=m;
-                QTextStream out(stderr, QIODevice::WriteOnly);
-                out<<"we have a cycle! temps:" << endl;
-                foreach (const Move &m, delayed) {
-                    out<<"\t";
-                    m.to->dump(out);
-                    out<<" <- ";
-                    m.from->dump(out);
-                    out<<endl;
+                if (DebugMoveMapping) {
+                    delayed += m;
+                    QBuffer buf;
+                    buf.open(QIODevice::WriteOnly);
+                    QTextStream out(&buf);
+                    IRPrinter printer(&out);
+                    out<<"we have a cycle! temps:" << endl;
+                    foreach (const Move &m, delayed) {
+                        out<<"\t";
+                        printer.print(m.to);
+                        out<<" <- ";
+                        printer.print(m.from);
+                        out<<endl;
+                    }
+                    qDebug("%s", buf.data().constData());
+                    delayed.removeOne(m);
                 }
-                delayed.removeOne(m);
-#endif // DEBUG_MOVEMAPPING
+
                 return NeedsSwap;
             } else {
                 delayed.append(m);

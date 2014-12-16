@@ -141,7 +141,7 @@ public:
     QQmlProfiler *profiler;
     void enableProfiler();
 
-    bool outputWarningsToStdErr;
+    bool outputWarningsToMsgLog;
 
     // Registered cleanup handlers
     QQmlCleanup *cleanup;
