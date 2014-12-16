@@ -351,6 +351,7 @@ static void usage()
     puts("  --quit .................................... Quit immediately after starting");
     puts("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
     puts("  -I <path> ................................. Add <path> to the list of import paths");
+    puts("  -P <path> ................................. Add <path> to the list of plugin paths");
     puts("  -translation <translationfile> ............ Set the language to run in");
 
     puts(" ");
@@ -362,6 +363,7 @@ int main(int argc, char ** argv)
     Options options;
 
     QStringList imports;
+    QStringList pluginPaths;
     for (int i = 1; i < argc; ++i) {
         if (*argv[i] != '-' && QFileInfo(QFile::decodeName(argv[i])).exists()) {
             options.file = QUrl::fromLocalFile(argv[i]);
@@ -391,6 +393,8 @@ int main(int argc, char ** argv)
                 options.contextSharing = false;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
+            else if (lowerArgument == QLatin1String("-p") && i + 1 < argc)
+                pluginPaths.append(QString::fromLatin1(argv[++i]));
             else if (lowerArgument == QLatin1String("--help")
                      || lowerArgument == QLatin1String("-help")
                      || lowerArgument == QLatin1String("--h")
@@ -454,6 +458,8 @@ int main(int argc, char ** argv)
             QPointer<QQmlComponent> component = new QQmlComponent(&engine);
             for (int i = 0; i < imports.size(); ++i)
                 engine.addImportPath(imports.at(i));
+            for (int i = 0; i < pluginPaths.size(); ++i)
+                engine.addPluginPath(pluginPaths.at(i));
             if (options.file.isLocalFile()) {
                 QFileInfo fi(options.file.toLocalFile());
 #ifndef QT_NO_TRANSLATION
