@@ -3609,8 +3609,8 @@ void tst_QJSEngine::intConversion_QTBUG43309()
     QJSEngine engine;
     QString jsCode = "var n = 0.1; var m = (n*255) | 0; m";
     QJSValue result = engine.evaluate( jsCode );
-//    QVERIFY(result.isNumber());
-//    QCOMPARE(result.toNumber(), 25.0);
+    QVERIFY(result.isNumber());
+    QCOMPARE(result.toNumber(), 25.0);
 }
 
 QTEST_MAIN(tst_QJSEngine)

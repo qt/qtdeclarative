@@ -2562,17 +2562,21 @@ public:
             } else if (m->source->asConvert()) {
                 break;
             } else if (Binop *b = m->source->asBinop()) {
+                bool iterateOnOperands = true;
+
                 switch (b->op) {
+                case OpSub:
+                case OpMul:
                 case OpAdd:
-                    if (b->left->type & NumberType || b->right->type & NumberType)
+                    if (b->left->type == SInt32Type && b->right->type == SInt32Type) {
+                        iterateOnOperands = false;
                         break;
-                    else
+                    } else {
                         continue;
+                    }
                 case OpBitAnd:
                 case OpBitOr:
                 case OpBitXor:
-                case OpSub:
-                case OpMul:
                 case OpLShift:
                 case OpRShift:
                 case OpURShift:
@@ -2580,10 +2584,13 @@ public:
                 default:
                     continue;
                 }
-                if (Temp *lt = b->left->asTemp())
-                    candidates.append(*lt);
-                if (Temp *rt = b->right->asTemp())
-                    candidates.append(*rt);
+
+                if (iterateOnOperands) {
+                    if (Temp *lt = b->left->asTemp())
+                        candidates.append(*lt);
+                    if (Temp *rt = b->right->asTemp())
+                        candidates.append(*rt);
+                }
             } else if (Unop *u = m->source->asUnop()) {
                 if (u->op == OpCompl || u->op == OpUPlus) {
                     if (Temp *t = u->expr->asTemp())
