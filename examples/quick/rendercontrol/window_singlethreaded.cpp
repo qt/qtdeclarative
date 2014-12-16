@@ -139,7 +139,7 @@ void WindowSingleThreaded::createFbo()
 {
     // The scene graph has been initialized. It is now time to create an FBO and associate
     // it with the QQuickWindow.
-    m_fbo = new QOpenGLFramebufferObject(size(), QOpenGLFramebufferObject::CombinedDepthStencil);
+    m_fbo = new QOpenGLFramebufferObject(size() * devicePixelRatio(), QOpenGLFramebufferObject::CombinedDepthStencil);
     m_quickWindow->setRenderTarget(m_fbo);
 }
 
