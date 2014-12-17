@@ -51,7 +51,7 @@
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
 
-#if defined(QT_STATIC) && ! defined(QT_QML_NO_DEBUGGER)
+#if defined(QT_STATIC) && ! defined(QT_NO_QML_DEBUGGER)
 #include "../../plugins/qmltooling/qmldbg_tcp/qtcpserverconnection.h"
 #endif
 
@@ -291,7 +291,7 @@ void QQmlDebugServerThread::run()
     QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
     Q_ASSERT_X(wrapper != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServer *server = &wrapper->m_instance;
-#if defined(QT_STATIC) && ! defined(QT_QML_NO_DEBUGGER)
+#if defined(QT_STATIC) && ! defined(QT_NO_QML_DEBUGGER)
     QQmlDebugServerConnection *connection
             = new QTcpServerConnection;
 #else
@@ -401,7 +401,7 @@ QQmlDebugServer::QQmlDebugServer()
     if (qApp == 0)
         return;
     QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
-#ifndef QT_QML_NO_DEBUGGER
+#ifndef QT_NO_QML_DEBUGGER
     // ### remove port definition when protocol is changed
     int portFrom = 0;
     int portTo = 0;
@@ -732,7 +732,7 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
 
 bool QQmlDebugServer::enable(int portFrom, int portTo, bool block, const QString &hostAddress)
 {
-#ifndef QT_QML_NO_DEBUGGER
+#ifndef QT_NO_QML_DEBUGGER
     QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
     if (!wrapper)
         return false;
