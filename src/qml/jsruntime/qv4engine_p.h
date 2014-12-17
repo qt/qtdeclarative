@@ -96,15 +96,6 @@ public:
     WTF::PageAllocation *jsStack;
     Value *jsStackBase;
 
-    Value *stackPush(uint nValues) {
-        Value *ptr = jsStackTop;
-        jsStackTop = ptr + nValues;
-        return ptr;
-    }
-    void stackPop(uint nValues) {
-        jsStackTop -= nValues;
-    }
-
     void pushForGC(Heap::Base *m) {
         *jsStackTop = m;
         ++jsStackTop;

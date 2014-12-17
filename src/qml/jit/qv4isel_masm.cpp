@@ -245,9 +245,30 @@ void InstructionSelection::run(int functionIndex)
 #endif
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
-    _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
-    _as->addPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
-    _as->storePtr(Assembler::LocalsRegister, Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+    if (locals > 0) {
+        _as->loadPtr(Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)), Assembler::LocalsRegister);
+#ifdef VALUE_FITS_IN_REGISTER
+        _as->move(Assembler::TrustedImm64(0), Assembler::ReturnValueRegister);
+        _as->move(Assembler::TrustedImm32(locals), Assembler::ScratchRegister);
+        Assembler::Label loop = _as->label();
+        _as->store64(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
+        _as->add64(Assembler::TrustedImm32(8), Assembler::LocalsRegister);
+        Assembler::Jump jump = _as->branchSub32(Assembler::NonZero, Assembler::TrustedImm32(1), Assembler::ScratchRegister);
+        jump.linkTo(loop, _as);
+#else
+        _as->move(Assembler::TrustedImm32(0), Assembler::ReturnValueRegister);
+        _as->move(Assembler::TrustedImm32(locals), Assembler::ScratchRegister);
+        Assembler::Label loop = _as->label();
+        _as->store32(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
+        _as->add32(Assembler::TrustedImm32(4), Assembler::LocalsRegister);
+        _as->store32(Assembler::ReturnValueRegister, Assembler::Address(Assembler::LocalsRegister));
+        _as->add32(Assembler::TrustedImm32(4), Assembler::LocalsRegister);
+        Assembler::Jump jump = _as->branchSub32(Assembler::NonZero, Assembler::TrustedImm32(1), Assembler::ScratchRegister);
+        jump.linkTo(loop, _as);
+#endif
+        _as->storePtr(Assembler::LocalsRegister, Address(Assembler::EngineRegister, qOffsetOf(ExecutionEngine, jsStackTop)));
+    }
+
 
     int lastLine = 0;
     for (int i = 0, ei = _function->basicBlockCount(); i != ei; ++i) {

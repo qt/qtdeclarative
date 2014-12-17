@@ -82,11 +82,12 @@ struct Scope {
     }
 
     Value *alloc(int nValues) {
-        Value *ptr = engine->jsStackTop;
-        engine->jsStackTop += nValues;
 #ifndef QT_NO_DEBUG
         size += nValues;
 #endif
+        Value *ptr = engine->jsStackTop;
+        engine->jsStackTop = ptr + nValues;
+        memset(ptr, 0, nValues*sizeof(Value));
         return ptr;
     }
 
@@ -111,6 +112,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
+        ptr->val = 0;
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -372,14 +374,9 @@ struct ScopedCallData {
     ScopedCallData(Scope &scope, int argc = 0)
     {
         int size = qMax(argc, (int)QV4::Global::ReservedArgumentCount) + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value);
-        ptr = reinterpret_cast<CallData *>(scope.engine->stackPush(size));
+        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->tag = QV4::Value::Integer_Type;
         ptr->argc = argc;
-#ifndef QT_NO_DEBUG
-        scope.size += size;
-        for (int ii = 0; ii < qMax(argc, (int)QV4::Global::ReservedArgumentCount); ++ii)
-            ptr->args[ii] = QV4::Primitive::undefinedValue();
-#endif
     }
 
     CallData *operator->() {

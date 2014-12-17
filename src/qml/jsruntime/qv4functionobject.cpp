@@ -492,7 +492,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
-    ctx.locals = v4->stackPush(f->varCount());
+    ctx.locals = scope.alloc(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;
@@ -529,7 +529,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ctx.compilationUnit = f->function()->compilationUnit;
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
-    ctx.locals = v4->stackPush(f->varCount());
+    ctx.locals = scope.alloc(f->varCount());
     while (callData->argc < (int)f->formalParameterCount()) {
         callData->args[callData->argc] = Encode::undefined();
         ++callData->argc;

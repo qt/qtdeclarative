@@ -143,7 +143,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     const uchar *exceptionHandler = 0;
 
-    QV4::ExecutionContext *context = engine->currentContext();
+    QV4::Scope scope(engine);
+    QV4::ScopedContext context(scope, engine->currentContext());
     context->d()->lineNumber = -1;
 
 #ifdef DO_TRACE_INSTR
@@ -292,10 +293,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_BEGIN_INSTR(Push)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
-        stack = context->engine()->stackPush(stackSize);
-#ifndef QT_NO_DEBUG
-        memset(stack, 0, stackSize * sizeof(QV4::Value));
-#endif
+        stack = scope.alloc(stackSize);
         scopes[1] = stack;
     MOTH_END_INSTR(Push)
 
@@ -613,7 +611,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(Ret)
-        context->engine()->stackPop(stackSize);
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
         return VALUE(instr.result).asReturnedValue();
     MOTH_END_INSTR(Ret)
@@ -665,10 +662,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         Q_ASSERT(false);
     catchException:
         Q_ASSERT(context->engine()->hasException);
-        if (!exceptionHandler) {
-            context->engine()->stackPop(stackSize);
+        if (!exceptionHandler)
             return QV4::Encode::undefined();
-        }
         code = exceptionHandler;
     }
 
