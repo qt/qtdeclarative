@@ -69,13 +69,14 @@ inline bool isPregOrConst(IR::Expr *e)
     return e->asConst() != 0;
 }
 
-class QIODevicePrintStream: public PrintStream
+class QIODevicePrintStream: public FilePrintStream
 {
     Q_DISABLE_COPY(QIODevicePrintStream)
 
 public:
     explicit QIODevicePrintStream(QIODevice *dest)
-        : dest(dest)
+        : FilePrintStream(0)
+        , dest(dest)
         , buf(4096, '0')
     {
         Q_ASSERT(dest);
