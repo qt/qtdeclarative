@@ -174,6 +174,8 @@ QV4::ReturnedValue VariantPrototype::method_valueOf(CallContext *ctx)
         case QVariant::Bool:
             return Encode(v.toBool());
         default:
+            if (QMetaType::typeFlags(v.userType()) & QMetaType::IsEnumeration)
+                return Encode(v.toInt());
             break;
         }
     }

@@ -70,6 +70,7 @@ private slots:
     void newArray_HooliganTask233836();
     void newVariant();
     void newVariant_valueOfToString();
+    void newVariant_valueOfEnum();
     void newRegExp();
     void jsRegExp();
     void newDate();
@@ -436,6 +437,17 @@ void tst_QJSEngine::newVariant_valueOfToString()
         QVERIFY(value.isObject());
         QVERIFY(value.strictlyEquals(object));
         QCOMPARE(object.toString(), QString::fromLatin1("QVariant(QPoint)"));
+    }
+}
+
+void tst_QJSEngine::newVariant_valueOfEnum()
+{
+    QJSEngine eng;
+    {
+        QJSValue object = eng.toScriptValue(QVariant::fromValue(Qt::ControlModifier));
+        QJSValue value = object.property("valueOf").callWithInstance(object);
+        QVERIFY(value.isNumber());
+        QCOMPARE(value.toInt(), static_cast<qint32>(Qt::ControlModifier));
     }
 }
 
