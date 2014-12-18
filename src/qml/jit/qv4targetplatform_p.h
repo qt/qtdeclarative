@@ -276,8 +276,8 @@ public:
     static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::ARMRegisters::r7;
 #endif
     static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::ARMRegisters::r13;
-    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARMRegisters::r6;
-    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARMRegisters::r5;
+    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::ARMRegisters::r5;
+    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::ARMRegisters::r10;
     static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::ARMRegisters::r0;
     static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::ARMRegisters::d0;
     static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::ARMRegisters::d1;
