@@ -47,6 +47,7 @@
 #include <QSGTransformNode>
 #include <QScreen>
 #include <QVariantAnimation>
+#include <QOpenGLFunctions>
 
 class Item {
 public:
@@ -213,13 +214,14 @@ void Window::initialize()
     m_sgRenderer->setClearColor(QColor(32, 32, 32));
 
     // With QSGEngine::createTextureFromId
+    QOpenGLFunctions glFuncs(m_context.data());
     GLuint glTexture;
-    glGenTextures(1, &glTexture);
-    glBindTexture(GL_TEXTURE_2D, glTexture);
+    glFuncs.glGenTextures(1, &glTexture);
+    glFuncs.glBindTexture(GL_TEXTURE_2D, glTexture);
     QImage smile = QImage(":/scenegraph/sgengine/face-smile.png").scaled(48, 48, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     smile = smile.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
     Q_ASSERT(!smile.isNull());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, smile.width(), smile.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, smile.constBits());
+    glFuncs.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, smile.width(), smile.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, smile.constBits());
     m_smileTexture.reset(m_sgEngine->createTextureFromId(glTexture, smile.size(), QFlag(QSGEngine::TextureOwnsGLTexture | QSGEngine::TextureHasAlphaChannel)));
 
     // With QSGEngine::createTextureFromImage
