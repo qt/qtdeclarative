@@ -41,7 +41,6 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlstringconverters_p.h>
 #include <private/qqmlboundsignal_p.h>
-#include <private/qqmltrace_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlcustomparser_p.h>
@@ -1200,10 +1199,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     QQmlObjectCreatorRecursionWatcher watcher(this);
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
-    {
-    QQmlTrace trace("VME Binding Enable");
-    trace.event("begin binding eval");
-
     while (!sharedState->allCreatedBindings.isEmpty()) {
         QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
         if (!b)
@@ -1218,10 +1213,8 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
     }
-    }
 
     if (QQmlVME::componentCompleteEnabled()) { // the qml designer does the component complete later
-        QQmlTrace trace("VME Component Complete");
         while (!sharedState->allParserStatusCallbacks.isEmpty()) {
             QQmlObjectCompletionProfiler profiler(&sharedState->profiler);
             QQmlParserStatus *status = sharedState->allParserStatusCallbacks.pop();
@@ -1236,8 +1229,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         }
     }
 
-    {
-    QQmlTrace trace("VME Finalize Callbacks");
     for (int ii = 0; ii < sharedState->finalizeCallbacks.count(); ++ii) {
         QQmlEnginePrivate::FinalizeCallback callback = sharedState->finalizeCallbacks.at(ii);
         QObject *obj = callback.first;
@@ -1249,10 +1240,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             return 0;
     }
     sharedState->finalizeCallbacks.clear();
-    }
 
-    {
-    QQmlTrace trace("VME Component.onCompleted Callbacks");
     while (sharedState->componentAttached) {
         QQmlComponentAttached *a = sharedState->componentAttached;
         a->rem();
@@ -1265,7 +1253,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return 0;
-    }
     }
 
     phase = Done;

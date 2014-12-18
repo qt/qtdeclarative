@@ -39,7 +39,6 @@
 #include "qqmlcompiler_p.h"
 #include "qqmldata_p.h"
 #include <private/qqmlprofiler_p.h>
-#include <private/qqmltrace_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlcontextwrapper_p.h>
@@ -188,11 +187,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     int lineNo = qmlSourceCoordinate(lineNumber);
     int columnNo = qmlSourceCoordinate(columnNumber);
 
-    QQmlTrace trace("General Binding Update");
-    trace.addDetail("URL", url);
-    trace.addDetail("Line", lineNo);
-    trace.addDetail("Column", columnNo);
-
     if (!updatingFlag()) {
         QQmlBindingProfiler prof(ep->profiler, url, lineNo, columnNo);
         setUpdatingFlag(true);
@@ -215,8 +209,6 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             bool isUndefined = false;
 
             QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), f, &isUndefined));
-
-            trace.event("writing binding result");
 
             bool needsErrorLocationData = false;
             if (!watcher.wasDeleted() && !hasError())

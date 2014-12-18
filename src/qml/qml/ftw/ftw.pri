@@ -13,7 +13,6 @@ HEADERS +=  \
     $$PWD/qdeletewatcher_p.h \
     $$PWD/qrecyclepool_p.h \
     $$PWD/qflagpointer_p.h \
-    $$PWD/qqmltrace_p.h \
     $$PWD/qpointervaluepair_p.h \
     $$PWD/qlazilyallocated_p.h \
 
@@ -22,7 +21,6 @@ SOURCES += \
     $$PWD/qhashedstring.cpp \
     $$PWD/qqmlpool.cpp \
     $$PWD/qqmlthread.cpp \
-    $$PWD/qqmltrace.cpp \
 
 # mirrors logic in $$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri
 # clock_gettime() is implemented in librt on these systems
