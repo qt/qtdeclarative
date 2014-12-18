@@ -233,6 +233,7 @@ private slots:
 
     void QTBUG_38209();
     void programmaticFlickAtBounds();
+    void programmaticFlickAtBounds2();
 
     void layoutChange();
 
@@ -7831,6 +7832,30 @@ void tst_QQuickListView::programmaticFlickAtBounds()
 
     // verify that there is no movement beyond bounds
     QVERIFY(!spy.wait(100));
+}
+
+void tst_QQuickListView::programmaticFlickAtBounds2()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("programmaticFlickAtBounds2.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listview);
+
+    // move exactly one item
+    qreal velocity = -qSqrt(2 * 50 * listview->flickDeceleration());
+
+    // flick down
+    listview->flick(0, velocity);
+
+    QTRY_COMPARE(listview->contentY(), qreal(50.0));
+
+    // flick down
+    listview->flick(0, velocity);
+
+    QTRY_COMPARE(listview->contentY(), qreal(100.0));
 }
 
 void tst_QQuickListView::layoutChange()

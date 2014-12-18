@@ -1603,10 +1603,10 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 }
                 data.flickTarget = isContentFlowReversed() ? -data.flickTarget+size() : data.flickTarget;
                 if (overShoot) {
-                    if (data.flickTarget >= minExtent) {
+                    if (data.flickTarget > minExtent) {
                         overshootDist = overShootDistance(vSize);
                         data.flickTarget += overshootDist;
-                    } else if (data.flickTarget <= maxExtent) {
+                    } else if (data.flickTarget < maxExtent) {
                         overshootDist = overShootDistance(vSize);
                         data.flickTarget -= overshootDist;
                     }
@@ -1626,10 +1626,10 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
                 accel = v2 / (2.0f * qAbs(dist));
             } else if (overShoot) {
                 data.flickTarget = data.move.value() - dist;
-                if (data.flickTarget >= minExtent) {
+                if (data.flickTarget > minExtent) {
                     overshootDist = overShootDistance(vSize);
                     data.flickTarget += overshootDist;
-                } else if (data.flickTarget <= maxExtent) {
+                } else if (data.flickTarget < maxExtent) {
                     overshootDist = overShootDistance(vSize);
                     data.flickTarget -= overshootDist;
                 }
