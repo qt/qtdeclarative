@@ -4061,8 +4061,7 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                         default:
                             break;
                         }
-                        if (casted) {
-                            Q_ASSERT(casted->type == SInt32Type);
+                        if (casted && casted->type == SInt32Type) {
                             m->source = casted;
                             W += m;
                             continue;
