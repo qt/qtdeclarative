@@ -125,6 +125,7 @@ InternalClass::InternalClass(ExecutionEngine *engine)
     , m_frozen(0)
     , size(0)
 {
+    transitions.reserve(17);
 }
 
 
@@ -140,6 +141,7 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     , m_frozen(0)
     , size(other.size)
 {
+    transitions.reserve(17);
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
