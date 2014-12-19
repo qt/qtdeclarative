@@ -2346,7 +2346,7 @@ bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, co
         if (!QQmlMetaType::isInterface(listType)) {
             QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
-                recordError(binding->valueLocation, tr("Cannot assign object to list"));
+                recordError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
                 return false;
             }
         }
