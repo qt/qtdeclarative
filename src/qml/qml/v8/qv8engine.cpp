@@ -58,6 +58,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qdatastream.h>
 #include <private/qsimd_p.h>
 
 #include <private/qv4value_inl_p.h>
