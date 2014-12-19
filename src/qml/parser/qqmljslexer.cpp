@@ -887,8 +887,7 @@ again:
 int Lexer::scanNumber(QChar ch)
 {
     if (ch != QLatin1Char('0')) {
-        QByteArray buf;
-        buf.reserve(64);
+        QVarLengthArray<char, 64> buf;
         buf += ch.toLatin1();
 
         QChar n = _char;
