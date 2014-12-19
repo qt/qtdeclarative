@@ -2841,6 +2841,11 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 QList<QQmlError> Codegen::qmlErrors() const
 {
     QList<QQmlError> qmlErrors;
+
+    // Short circuit to avoid costly (de)heap allocation of QUrl if there are no errors.
+    if (_errors.size() == 0)
+        return qmlErrors;
+
     qmlErrors.reserve(_errors.size());
 
     QUrl url(_fileNameIsUrl ? QUrl(_module->fileName) : QUrl::fromLocalFile(_module->fileName));
