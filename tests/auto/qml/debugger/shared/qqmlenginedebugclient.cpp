@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qqmlenginedebugclient.h"
+#include "qdatastream.h"
 
 struct QmlObjectData {
     QUrl url;
