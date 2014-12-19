@@ -67,10 +67,12 @@ public:
 
         ExecutionContextSaver saver(scope, engine->currentContext());
 
-        Value *savedContexts = scope.alloc(frameNr);
-        for (int i = 0; i < frameNr; ++i) {
-            savedContexts[i] = engine->currentContext();
-            engine->popContext();
+        if (frameNr > 0) {
+            Value *savedContexts = scope.alloc(frameNr);
+            for (int i = 0; i < frameNr; ++i) {
+                savedContexts[i] = engine->currentContext();
+                engine->popContext();
+            }
         }
 
         ScopedContext ctx(scope, engine->currentContext());
