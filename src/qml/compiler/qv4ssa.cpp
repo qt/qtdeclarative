@@ -106,10 +106,9 @@ public:
 
 class BasicBlockSet
 {
-    typedef std::vector<int> Numbers;
     typedef std::vector<bool> Flags;
 
-    Numbers *blockNumbers;
+    QVarLengthArray<int, 8> blockNumbers;
     Flags *blockFlags;
     IR::Function *function;
     enum { MaxVectorCapacity = 8 };
@@ -119,7 +118,7 @@ public:
     {
         const BasicBlockSet &set;
         // ### These two members could go into a union, but clang won't compile (https://codereview.qt-project.org/#change,74259)
-        Numbers::const_iterator numberIt;
+        QVarLengthArray<int, 8>::const_iterator numberIt;
         size_t flagIt;
 
         friend class BasicBlockSet;
@@ -127,13 +126,13 @@ public:
             : set(set)
         {
             if (end || !set.function) {
-                if (set.blockNumbers)
-                    numberIt = set.blockNumbers->end();
+                if (!set.blockFlags)
+                    numberIt = set.blockNumbers.end();
                 else
                     flagIt = set.blockFlags->size();
             } else {
-                if (set.blockNumbers)
-                    numberIt = set.blockNumbers->begin();
+                if (!set.blockFlags)
+                    numberIt = set.blockNumbers.begin();
                 else
                     findNextWithFlags(0);
             }
@@ -163,8 +162,7 @@ public:
     public:
         BasicBlock *operator*() const
         {
-
-            if (set.blockNumbers) {
+            if (!set.blockFlags) {
                 return set.function->basicBlock(*numberIt);
             } else {
                 Q_ASSERT(flagIt <= static_cast<size_t>(set.function->basicBlockCount()));
@@ -176,7 +174,7 @@ public:
         {
             if (&set != &other.set)
                 return false;
-            if (set.blockNumbers)
+            if (!set.blockFlags)
                 return numberIt == other.numberIt;
             else
                 return flagIt == other.flagIt;
@@ -187,7 +185,7 @@ public:
 
         const_iterator &operator++()
         {
-            if (set.blockNumbers)
+            if (!set.blockFlags)
                 ++numberIt;
             else
                 findNextWithFlags(flagIt + 1);
@@ -199,14 +197,14 @@ public:
     friend class const_iterator;
 
 public:
-    BasicBlockSet(IR::Function *f = 0): blockNumbers(0), blockFlags(0), function(0)
+    BasicBlockSet(IR::Function *f = 0): blockFlags(0), function(0)
     {
         if (f)
             init(f);
     }
 
 #ifdef Q_COMPILER_RVALUE_REFS
-    BasicBlockSet(BasicBlockSet &&other): blockNumbers(0), blockFlags(0)
+    BasicBlockSet(BasicBlockSet &&other): blockFlags(0)
     {
         std::swap(blockNumbers, other.blockNumbers);
         std::swap(blockFlags, other.blockFlags);
@@ -215,14 +213,12 @@ public:
 #endif // Q_COMPILER_RVALUE_REFS
 
     BasicBlockSet(const BasicBlockSet &other)
-        : blockNumbers(0)
-        , blockFlags(0)
+        : blockFlags(0)
         , function(other.function)
     {
         if (other.blockFlags)
             blockFlags = new Flags(*other.blockFlags);
-        else if (other.blockNumbers)
-            blockNumbers = new Numbers(*other.blockNumbers);
+        blockNumbers = other.blockNumbers;
     }
 
     BasicBlockSet &operator=(const BasicBlockSet &other)
@@ -230,27 +226,24 @@ public:
         if (blockFlags) {
             delete blockFlags;
             blockFlags = 0;
-        } else {
-            delete blockNumbers;
-            blockNumbers = 0;
         }
         function = other.function;
         if (other.blockFlags)
             blockFlags = new Flags(*other.blockFlags);
-        else if (other.blockNumbers)
-            blockNumbers = new Numbers(*other.blockNumbers);
+        blockNumbers = other.blockNumbers;
         return *this;
     }
 
-    ~BasicBlockSet() { delete blockNumbers; delete blockFlags; }
+    ~BasicBlockSet()
+    {
+        delete blockFlags;
+    }
 
     void init(IR::Function *f)
     {
         Q_ASSERT(!function);
         Q_ASSERT(f);
         function = f;
-        blockNumbers = new Numbers;
-        blockNumbers->reserve(MaxVectorCapacity);
     }
 
     bool empty() const
@@ -267,21 +260,20 @@ public:
             return;
         }
 
-        for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end();
-             i != ei; ++i)
-            if (*i == bb->index())
+        for (int i = 0; i < blockNumbers.size(); ++i) {
+            if (blockNumbers[i] == bb->index())
                 return;
+        }
 
-        if (blockNumbers->size() == MaxVectorCapacity) {
+        if (blockNumbers.size() == MaxVectorCapacity) {
             blockFlags = new Flags(function->basicBlockCount(), false);
-            for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end();
-                 i != ei; ++i)
-                blockFlags->operator[](*i) = true;
-            delete blockNumbers;
-            blockNumbers = 0;
+            for (int i = 0; i < blockNumbers.size(); ++i) {
+                blockFlags->operator[](blockNumbers[i]) = true;
+            }
+            blockNumbers.clear();
             blockFlags->operator[](bb->index()) = true;
         } else {
-            blockNumbers->push_back(bb->index());
+            blockNumbers.append(bb->index());
         }
     }
 
@@ -294,9 +286,9 @@ public:
             return;
         }
 
-        for (std::vector<int>::iterator i = blockNumbers->begin(), ei = blockNumbers->end(); i != ei; ++i) {
-            if (*i == bb->index()) {
-                blockNumbers->erase(i);
+        for (int i = 0; i < blockNumbers.size(); ++i) {
+            if (blockNumbers[i] == bb->index()) {
+                blockNumbers.remove(i);
                 return;
             }
         }
@@ -320,8 +312,8 @@ public:
         if (blockFlags)
             return (*blockFlags)[bb->index()];
 
-        for (std::vector<int>::const_iterator i = blockNumbers->begin(), ei = blockNumbers->end(); i != ei; ++i) {
-            if (*i == bb->index())
+        for (int i = 0; i < blockNumbers.size(); ++i) {
+            if (blockNumbers[i] == bb->index())
                 return true;
         }
 
