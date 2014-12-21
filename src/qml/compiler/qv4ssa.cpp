@@ -1145,9 +1145,10 @@ public:
         defUse.blockOfStatement = defBlock;
     }
 
-    QList<UntypedTemp> defsUntyped() const
+    QVector<UntypedTemp> defsUntyped() const
     {
-        QList<UntypedTemp> res;
+        QVector<UntypedTemp> res;
+        res.reserve(tempCount());
         foreach (const DefUse &du, _defUses)
             if (du.isValid())
                 res.append(UntypedTemp(du.temp));
@@ -2524,7 +2525,7 @@ public:
         Q_UNUSED(f);
 
         QVector<UntypedTemp> knownOk;
-        QList<UntypedTemp> candidates = _defUses.defsUntyped();
+        QVector<UntypedTemp> candidates = _defUses.defsUntyped();
         while (!candidates.isEmpty()) {
             UntypedTemp temp = candidates.last();
             candidates.removeLast();
