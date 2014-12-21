@@ -3412,8 +3412,7 @@ void cleanupBasicBlocks(IR::Function *function)
     // reachable through outgoing edges, starting with the start block and all exception handler
     // blocks.
     QBitArray reachableBlocks(function->basicBlockCount());
-    QVector<BasicBlock *> postponed;
-    postponed.reserve(16);
+    QVarLengthArray<BasicBlock *, 16> postponed;
     for (int i = 0, ei = function->basicBlockCount(); i != ei; ++i) {
         BasicBlock *bb = function->basicBlock(i);
         if (i == 0 || bb->isExceptionHandler())
