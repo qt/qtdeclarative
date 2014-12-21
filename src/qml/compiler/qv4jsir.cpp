@@ -44,6 +44,8 @@
 #include <QtCore/qset.h>
 #include <cmath>
 
+#include <vector>
+
 #ifdef CONST
 #undef CONST
 #endif
@@ -152,7 +154,7 @@ AluOp binaryOperator(int op)
 struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
 {
     CloneExpr clone;
-    QSet<Expr *> subexpressions; // contains all the non-cloned subexpressions in the given function
+    std::vector<Expr *> subexpressions; // contains all the non-cloned subexpressions in the given function. sorted using std::lower_bound.
     Expr *uniqueExpr;
 
     RemoveSharedExpressions(): uniqueExpr(0) {}
@@ -176,18 +178,19 @@ struct RemoveSharedExpressions: IR::StmtVisitor, IR::ExprVisitor
     template <typename _Expr>
     _Expr *cleanup(_Expr *expr)
     {
-        if (subexpressions.contains(expr)) {
-             // the cloned expression is unique by definition
-            // so we don't need to add it to `subexpressions'.
-            return clone(expr);
+        std::vector<Expr *>::iterator it = std::lower_bound(subexpressions.begin(), subexpressions.end(), expr);
+        if (it == subexpressions.end() || *it != expr) {
+            subexpressions.insert(it, expr);
+            IR::Expr *e = expr;
+            qSwap(uniqueExpr, e);
+            expr->accept(this);
+            qSwap(uniqueExpr, e);
+            return static_cast<_Expr *>(e);
         }
 
-        subexpressions.insert(expr);
-        IR::Expr *e = expr;
-        qSwap(uniqueExpr, e);
-        expr->accept(this);
-        qSwap(uniqueExpr, e);
-        return static_cast<_Expr *>(e);
+        // the cloned expression is unique by definition
+        // so we don't need to add it to `subexpressions'.
+        return clone(expr);
     }
 
     // statements
