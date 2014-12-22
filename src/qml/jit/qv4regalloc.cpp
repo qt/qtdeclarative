@@ -853,12 +853,14 @@ private:
 
     void renumber()
     {
+        QVector<Stmt *> newStatements;
+
         foreach (BasicBlock *bb, _function->basicBlocks()) {
             _currentStmt = 0;
 
             QVector<Stmt *> statements = bb->statements();
-            QVector<Stmt *> newStatements;
             newStatements.reserve(bb->statements().size() + 7);
+            newStatements.erase(newStatements.begin(), newStatements.end());
 
             cleanOldIntervals(_intervals->startPosition(bb));
             addNewIntervals(_intervals->startPosition(bb));
