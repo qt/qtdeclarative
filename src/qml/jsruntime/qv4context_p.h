@@ -59,7 +59,7 @@ struct CallData
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     uint tag;
 #endif
-    inline ReturnedValue argument(int i) {
+    inline ReturnedValue argument(int i) const {
         return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
     }
 
