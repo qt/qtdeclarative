@@ -159,7 +159,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
         ReadFunction(object, property, &rv, notifier);
         return QV4::QObjectWrapper::wrap(v4, rv);
     } else if (property.isQList()) {
-        return QmlListWrapper::create(engine, object, property.coreIndex, property.propType);
+        return QmlListWrapper::create(v4, object, property.coreIndex, property.propType);
     } else if (property.propType == QMetaType::QReal) {
         qreal v = 0;
         ReadFunction(object, property, &v, notifier);

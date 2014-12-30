@@ -421,7 +421,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(const QVariant &variant)
             typedef QQmlListReferencePrivate QDLRP;
             QDLRP *p = QDLRP::get((QQmlListReference*)ptr);
             if (p->object) {
-                return QV4::QmlListWrapper::create(this, p->property, p->propertyType);
+                return QV4::QmlListWrapper::create(scope.engine, p->property, p->propertyType);
             } else {
                 return QV4::Encode::null();
             }

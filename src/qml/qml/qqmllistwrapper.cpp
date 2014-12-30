@@ -45,13 +45,12 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-Heap::QmlListWrapper::QmlListWrapper(QV8Engine *engine)
-    : Heap::Object(QV8Engine::getV4(engine))
-    , v8(engine)
+Heap::QmlListWrapper::QmlListWrapper(ExecutionEngine *engine)
+    : Heap::Object(engine)
 {
     setVTable(QV4::QmlListWrapper::staticVTable());
 
-    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
 }
@@ -60,15 +59,14 @@ Heap::QmlListWrapper::~QmlListWrapper()
 {
 }
 
-ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId, int propType)
+ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, int propType)
 {
     if (!object || propId == -1)
         return Encode::null();
 
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    Scope scope(v4);
+    Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, v4->memoryManager->alloc<QmlListWrapper>(v8));
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->alloc<QmlListWrapper>(engine));
     r->d()->object = object;
     r->d()->propertyType = propType;
     void *args[] = { &r->d()->property, 0 };
@@ -76,12 +74,11 @@ ReturnedValue QmlListWrapper::create(QV8Engine *v8, QObject *object, int propId,
     return r.asReturnedValue();
 }
 
-ReturnedValue QmlListWrapper::create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType)
+ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, int propType)
 {
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    Scope scope(v4);
+    Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, v4->memoryManager->alloc<QmlListWrapper>(v8));
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->alloc<QmlListWrapper>(engine));
     r->d()->object = prop.object;
     r->d()->property = prop;
     r->d()->propertyType = propType;
@@ -93,7 +90,7 @@ QVariant QmlListWrapper::toVariant() const
     if (!d()->object)
         return QVariant();
 
-    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property, d()->propertyType, d()->v8->engine()));
+    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property, d()->propertyType, d()->internalClass->engine->v8Engine->engine()));
 }
 
 

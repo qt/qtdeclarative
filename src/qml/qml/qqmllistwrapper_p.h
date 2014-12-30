@@ -62,9 +62,8 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlListWrapper : Object {
-    QmlListWrapper(QV8Engine *engine);
+    QmlListWrapper(ExecutionEngine *engine);
     ~QmlListWrapper();
-    QV8Engine *v8;
     QPointer<QObject> object;
     QQmlListProperty<QObject> property;
     int propertyType;
@@ -77,8 +76,8 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     V4_OBJECT2(QmlListWrapper, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue create(QV8Engine *v8, QObject *object, int propId, int propType);
-    static ReturnedValue create(QV8Engine *v8, const QQmlListProperty<QObject> &prop, int propType);
+    static ReturnedValue create(ExecutionEngine *engine, QObject *object, int propId, int propType);
+    static ReturnedValue create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, int propType);
 
     QVariant toVariant() const;
 
