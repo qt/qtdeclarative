@@ -253,7 +253,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         val = v.i ^ NaNEncodeMask;
         Q_ASSERT(isDouble());
     }
-    bool isNaN() const { return (tag & 0x7fff8000) == 0x00078000; }
+    inline bool isNaN() const { return (tag & 0x7fff8000) == 0x00078000; }
 #else
     inline bool isInteger() const { return tag == _Integer_Type; }
     inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
@@ -269,7 +269,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     double doubleValue() const { Q_ASSERT(isDouble()); return dbl; }
     void setDouble(double d) { dbl = d; Q_ASSERT(isDouble()); }
-    bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
+    inline bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
     inline bool isString() const;
     inline bool isObject() const;
