@@ -72,8 +72,7 @@ public:
         None = 0,
         QQmlBoundSignal = 1,
         QQmlJavaScriptExpressionGuard = 2,
-        QQmlVMEMetaObjectEndpoint = 3,
-        QV4BindingsSubscription = 4
+        QQmlVMEMetaObjectEndpoint = 3
     };
 
     inline void setCallback(Callback c) { callback = c; }
