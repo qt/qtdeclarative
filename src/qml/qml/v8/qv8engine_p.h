@@ -197,12 +197,12 @@ public:
 
     void freezeObject(const QV4::ValueRef value);
 
-    QVariant toVariant(const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
-    QVariant objectToVariant(QV4::Object *o, V8ObjectSet *visitedObjects = 0);
+    static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
+    static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8ObjectSet *visitedObjects = 0);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
-    QVariantMap variantMapFromJS(QV4::Object *o)
-    { return objectToVariant(o).toMap(); }
+    static QVariantMap variantMapFromJS(QV4::Object *o)
+    { return objectToVariant(o->engine(), o).toMap(); }
 
     // Return a JS string for the given QString \a string
     QV4::ReturnedValue toString(const QString &string);
@@ -226,9 +226,9 @@ public:
     QV4::ReturnedValue variantToJS(const QVariant &value);
 
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
-    bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
+    static bool metaTypeFromJS(QV4::ExecutionEngine *e, const QV4::ValueRef value, int type, void *data);
 
-    bool convertToNativeQObject(const QV4::ValueRef value,
+    static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::ValueRef value,
                                 const QByteArray &targetType,
                                 void **result);
 
@@ -239,7 +239,7 @@ public:
     // used for console.count()
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
-    QObject *qtObjectFromJS(const QV4::ValueRef value);
+    static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::ValueRef value);
 
 protected:
     QJSEngine* q;

@@ -1513,13 +1513,13 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
 
     if (isUndefined) {
     } else if (core.isQList()) {
-        value = v8engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
+        value = QV8Engine::toVariant(QV8Engine::getV4(v8engine), result, qMetaTypeId<QList<QObject *> >());
     } else if (result->isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)0);
     } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
-        value = resolvedUrlSequence(v8engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context);
+        value = resolvedUrlSequence(QV8Engine::toVariant(QV8Engine::getV4(v8engine), result, qMetaTypeId<QList<QUrl> >()), context);
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
-        value = v8engine->toVariant(result, type);
+        value = QV8Engine::toVariant(QV8Engine::getV4(v8engine), result, type);
     }
 
     if (expression->hasError()) {

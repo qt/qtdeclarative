@@ -368,10 +368,10 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, ui
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
-                modelData->cachedData[propertyId] = scope.engine->v8Engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[propertyId] = QV8Engine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
-                modelData->cachedData[0] = scope.engine->v8Engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[0] = QV8Engine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 0, 0);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 1, 0);
             }
@@ -596,7 +596,7 @@ public:
         if (!ctx->d()->callData->argc)
             return ctx->engine()->throwTypeError();
 
-        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->v8Engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid));
+        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(QV8Engine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid));
         return QV4::Encode::undefined();
     }
 

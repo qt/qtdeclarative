@@ -230,9 +230,7 @@ ReturnedValue QtObject::method_colorEqual(QV4::CallContext *ctx)
 
     bool ok = false;
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-
-    QVariant lhs = v8engine->toVariant(ctx->d()->callData->args[0], -1);
+    QVariant lhs = QV8Engine::toVariant(ctx->d()->engine, ctx->d()->callData->args[0], -1);
     if (lhs.userType() == QVariant::String) {
         lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
         if (!ok) {
@@ -242,7 +240,7 @@ ReturnedValue QtObject::method_colorEqual(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
-    QVariant rhs = v8engine->toVariant(ctx->d()->callData->args[1], -1);
+    QVariant rhs = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[1], -1);
     if (rhs.userType() == QVariant::String) {
         rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
         if (!ok) {
@@ -470,7 +468,7 @@ ReturnedValue QtObject::method_lighter(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.lighter(): Invalid arguments");
 
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-    QVariant v = v8engine->toVariant(ctx->d()->callData->args[0], -1);
+    QVariant v = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -509,7 +507,7 @@ ReturnedValue QtObject::method_darker(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.darker(): Invalid arguments");
 
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-    QVariant v = v8engine->toVariant(ctx->d()->callData->args[0], -1);
+    QVariant v = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -559,7 +557,7 @@ ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
 
     // base color
-    QVariant v1 = v8engine->toVariant(ctx->d()->callData->args[0], -1);
+    QVariant v1 = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
     if (v1.userType() == QVariant::String) {
         bool ok = false;
         v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
@@ -571,7 +569,7 @@ ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
     }
 
     // tint color
-    QVariant v2 = v8engine->toVariant(ctx->d()->callData->args[1], -1);
+    QVariant v2 = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[1], -1);
     if (v2.userType() == QVariant::String) {
         bool ok = false;
         v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
@@ -607,10 +605,8 @@ ReturnedValue QtObject::method_formatDate(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.formatDate(): Invalid arguments");
     QV4::Scope scope(ctx);
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDate date = v8engine->toVariant(ctx->d()->callData->args[0], -1).toDateTime().date();
+    QDate date = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toDateTime().date();
     QString formattedDate;
     if (ctx->d()->callData->argc == 2) {
         QV4::ScopedString s(scope, ctx->d()->callData->args[1]);
@@ -652,9 +648,7 @@ ReturnedValue QtObject::method_formatTime(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
     QV4::Scope scope(ctx);
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-
-    QVariant argVariant = v8engine->toVariant(ctx->d()->callData->args[0], -1);
+    QVariant argVariant = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
     QTime time;
     if (ctx->d()->callData->args[0].asDateObject() || (argVariant.type() == QVariant::String))
         time = argVariant.toDateTime().time();
@@ -778,10 +772,8 @@ ReturnedValue QtObject::method_formatDateTime(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.formatDateTime(): Invalid arguments");
     QV4::Scope scope(ctx);
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDateTime dt = v8engine->toVariant(ctx->d()->callData->args[0], -1).toDateTime();
+    QDateTime dt = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toDateTime();
     QString formattedDt;
     if (ctx->d()->callData->argc == 2) {
         QV4::ScopedString s(scope, ctx->d()->callData->args[1]);
@@ -825,7 +817,7 @@ ReturnedValue QtObject::method_resolvedUrl(QV4::CallContext *ctx)
 {
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
 
-    QUrl url = v8engine->toVariant(ctx->d()->callData->args[0], -1).toUrl();
+    QUrl url = QV8Engine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toUrl();
     QQmlEngine *e = v8engine->engine();
     QQmlEnginePrivate *p = 0;
     if (e) p = QQmlEnginePrivate::get(e);

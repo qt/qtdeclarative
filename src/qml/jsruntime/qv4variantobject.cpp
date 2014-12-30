@@ -54,7 +54,7 @@ Heap::VariantObject::VariantObject(QV4::ExecutionEngine *engine, const QVariant 
 QVariant VariantObject::toVariant(const QV4::ValueRef v)
 {
     if (v->asObject())
-        return v->engine()->v8Engine->toVariant(v, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
+        return QV8Engine::toVariant(v->engine(), v, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
 
     if (v->isString())
         return QVariant(v->stringValue()->toQString());

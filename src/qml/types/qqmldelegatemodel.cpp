@@ -1646,7 +1646,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
         propertyName = it.nextPropertyNameAsString(v);
         if (propertyName->isNull())
             break;
-        cacheItem->setValue(propertyName->toQStringNoThrow(), m_cacheMetaType->v8Engine->toVariant(v, QVariant::Invalid));
+        cacheItem->setValue(propertyName->toQStringNoThrow(), QV8Engine::toVariant(scope.engine, v, QVariant::Invalid));
     }
 
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;

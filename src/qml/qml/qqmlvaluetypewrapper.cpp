@@ -396,7 +396,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
     if (newBinding)
         return;
 
-    QVariant v = v4->v8Engine->toVariant(value, property.userType());
+    QVariant v = QV8Engine::toVariant(v4, value, property.userType());
 
     if (property.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
         v = v.toInt();

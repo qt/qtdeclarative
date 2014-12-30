@@ -550,9 +550,9 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     } else {
         QVariant v;
         if (property->isQList())
-            v = ctx->d()->engine->v8Engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
+            v = QV8Engine::toVariant(ctx->d()->engine, value, qMetaTypeId<QList<QObject *> >());
         else
-            v = ctx->d()->engine->v8Engine->toVariant(value, property->propType);
+            v = QV8Engine::toVariant(ctx->d()->engine, value, property->propType);
 
         QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->d()->engine);
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
@@ -1268,12 +1268,10 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
         }
         }
     } else if (QV4::Object *obj = actual->asObject()) {
-        QV8Engine *engine = obj->engine()->v8Engine;
-
         if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
-            if (engine->toVariant(actual, -1).userType() == conversionType)
+            if (QV8Engine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
                 return 0;
             else
                 return 10;
@@ -1289,7 +1287,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
         }
 
         if (obj->as<QV4::QQmlValueTypeWrapper>()) {
-            if (engine->toVariant(actual, -1).userType() == conversionType)
+            if (QV8Engine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
                 return 0;
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
@@ -1606,7 +1604,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
             queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
-        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
+        qvariantPtr = new (&allocData) QVariant(QV8Engine::toVariant(scope.engine, value, -1));
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
@@ -1654,7 +1652,7 @@ void CallArgument::fromValue(int callType, QV8Engine *engine, const QV4::ValueRe
         type = -1;
 
         QQmlEnginePrivate *ep = engine->engine() ? QQmlEnginePrivate::get(engine->engine()) : 0;
-        QVariant v = engine->toVariant(value, callType);
+        QVariant v = QV8Engine::toVariant(scope.engine, value, callType);
 
         if (v.userType() == callType) {
             *qvariantPtr = v;

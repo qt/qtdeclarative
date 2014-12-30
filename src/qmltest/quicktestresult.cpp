@@ -475,13 +475,12 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     QV4::ScopedValue value(scope, (*args)[0]);
 
     QString result;
-    QV8Engine *engine = args->engine();
 
     //Check for Object Type
     if (value->isObject()
         && !value->asFunctionObject()
         && !value->asArrayObject()) {
-        QVariant v = engine->toVariant(value, QMetaType::UnknownType);
+        QVariant v = QV8Engine::toVariant(scope.engine, value, QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
             case QVariant::Vector3D:
@@ -505,7 +504,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result.append(tmp);
     }
 
-    args->setReturnValue(args->engine()->toString(result));
+    args->setReturnValue(args->v4engine()->v8Engine->toString(result));
 }
 
 bool QuickTestResult::compare

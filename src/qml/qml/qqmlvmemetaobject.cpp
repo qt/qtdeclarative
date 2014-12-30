@@ -955,7 +955,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
+                    if (a[0]) *(QVariant *)a[0] = QV8Engine::toVariant(scope.engine, result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -1004,7 +1004,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
             QV4::Scope scope(v4);
             QV4::ScopedObject o(scope, varProperties.value());
             QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
-            return v4->v8Engine->toVariant(val, -1);
+            return QV8Engine::toVariant(scope.engine, val, -1);
         }
         return QVariant();
     } else {

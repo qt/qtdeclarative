@@ -2464,7 +2464,7 @@ void tst_qqmlecmascript::callQtInvokables()
     {
     QV4::ScopedValue ret(scope, EVALUATE("object.method_NoArgs_QPointF()"));
     QVERIFY(!ret->isUndefined());
-    QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
+    QCOMPARE(QV8Engine::toVariant(scope.engine, ret, -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
     QCOMPARE(o->actuals().count(), 0);

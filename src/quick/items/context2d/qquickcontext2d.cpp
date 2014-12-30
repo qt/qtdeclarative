@@ -1385,10 +1385,9 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::CallContext *ctx
     CHECK_CONTEXT_SETTER(r)
 
     QV4::ScopedValue value(scope, ctx->argument(0));
-    QV8Engine *engine = scope.engine->v8Engine;
 
    if (value->asObject()) {
-       QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+       QColor color = QV8Engine::toVariant(scope.engine, value, qMetaTypeId<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->d()->context->state.fillStyle = color;
            r->d()->context->buffer()->setFillStyle(color);
@@ -1495,11 +1494,10 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::CallContext *c
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    QV8Engine *engine = scope.engine->v8Engine;
     QV4::ScopedValue value(scope, ctx->argument(0));
 
     if (value->asObject()) {
-        QColor color = engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = QV8Engine::toVariant(scope.engine, value, qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->d()->context->state.fillStyle = color;
             r->d()->context->buffer()->setStrokeStyle(color);
@@ -1724,12 +1722,10 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject);
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc >= 2) {
         QV4::Scoped<QQuickContext2DStyle> pattern(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
 
-        QColor color = engine->toVariant(ctx->d()->callData->args[0], qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = QV8Engine::toVariant(scope.engine, ctx->d()->callData->args[0], qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             int patternMode = ctx->d()->callData->args[1].toInt32();
             Qt::BrushStyle style = Qt::SolidPattern;
@@ -3373,8 +3369,6 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
     if (!style)
         V4THROW_ERROR("Not a CanvasGradient object");
 
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc == 2) {
 
         if (!style->d()->brush.gradient())
@@ -3384,7 +3378,7 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
         QColor color;
 
         if (ctx->d()->callData->args[1].asObject()) {
-            color = engine->toVariant(ctx->d()->callData->args[1], qMetaTypeId<QColor>()).value<QColor>();
+            color = QV8Engine::toVariant(scope.engine, ctx->d()->callData->args[1], qMetaTypeId<QColor>()).value<QColor>();
         } else {
             color = qt_color_from_string(ctx->d()->callData->args[1]);
         }

@@ -276,7 +276,7 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
         QV4::Scope scope(QV8Engine::getV4(ep->v8engine()));
         QV4::ScopedValue result(scope, v4value(isUndefined));
         if (!hasError())
-            rv = ep->v8engine()->toVariant(result, -1);
+            rv = QV8Engine::toVariant(scope.engine, result, -1);
     }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
