@@ -1374,8 +1374,8 @@ QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionEngine *engine, int 
     QObject *scopeObject = c->getScopeObject();
     QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
 
-    QQmlEngine *qmlEngine = engine->v8Engine->engine();
-    QQmlData::ensurePropertyCache(qmlEngine, attachedObject);
+    QJSEngine *jsEngine = engine->jsEngine();
+    QQmlData::ensurePropertyCache(jsEngine, attachedObject);
     ScopedContext ctx(scope, engine->currentContext());
     return QV4::QObjectWrapper::getProperty(attachedObject, ctx, propertyIndex, /*captureRequired*/true);
 }

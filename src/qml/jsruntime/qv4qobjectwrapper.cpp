@@ -146,12 +146,11 @@ struct ReadAccessor {
 // Load value properties
 template<void (*ReadFunction)(QObject *, const QQmlPropertyData &,
                               void *, QQmlNotifier **)>
-static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
+static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object,
                                           const QQmlPropertyData &property,
                                           QQmlNotifier **notifier)
 {
     Q_ASSERT(!property.isFunction());
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
 
     if (property.isQObject()) {
@@ -367,7 +366,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
         if (ep && ep->propertyCapture && property->accessors->notifier)
             nptr = &n;
 
-        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->d()->engine->v8Engine, object, *property, nptr));
+        QV4::ScopedValue rv(scope, LoadProperty<ReadAccessor::Accessor>(ctx->d()->engine, object, *property, nptr));
 
         if (captureRequired) {
             if (property->accessors->notifier) {
@@ -389,9 +388,9 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
         Q_ASSERT(vmemo);
         return vmemo->vmeProperty(property->coreIndex);
     } else if (property->isDirect())  {
-        return LoadProperty<ReadAccessor::Direct>(ctx->d()->engine->v8Engine, object, *property, 0);
+        return LoadProperty<ReadAccessor::Direct>(ctx->d()->engine, object, *property, 0);
     } else {
-        return LoadProperty<ReadAccessor::Indirect>(ctx->d()->engine->v8Engine, object, *property, 0);
+        return LoadProperty<ReadAccessor::Indirect>(ctx->d()->engine, object, *property, 0);
     }
 }
 
@@ -671,9 +670,8 @@ bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
-    QQmlEngine *qmlEngine = engine->v8Engine->engine();
-    if (qmlEngine)
-        QQmlData::ensurePropertyCache(qmlEngine, object);
+    if (engine->jsEngine())
+        QQmlData::ensurePropertyCache(engine->jsEngine(), object);
     return (engine->memoryManager->alloc<QV4::QObjectWrapper>(engine, object))->asReturnedValue();
 }
 
@@ -815,7 +813,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             }
 
             f->call(callData);
-            if (scope.hasException() && v4->v8Engine) {
+            if (scope.hasException()) {
                 if (QQmlEngine *qmlEngine = v4->v8Engine->engine()) {
                     QQmlError error = v4->catchExceptionAsQmlError();
                     if (error.description().isEmpty()) {
@@ -1832,8 +1830,6 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     else if (d()->index == ToStringMethod)
         return method_toString(context);
 
-    QV8Engine *v8Engine = context->d()->engine->v8Engine;
-
     QQmlObjectOrGadget object(d()->object.data());
     if (!d()->object) {
         Scoped<QQmlValueTypeWrapper> wrapper(scope, d()->valueTypeWrapper);
@@ -1877,7 +1873,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
         QV4::ScopedValue qmlGlobal(scope, d()->qmlGlobal);
         QQmlV4Function func(callData, rv, qmlGlobal,
                             QmlContextWrapper::getContext(qmlGlobal),
-                            v8Engine);
+                            scope.engine->v8Engine);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
@@ -1887,9 +1883,9 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
     }
 
     if (!method.isOverload()) {
-        return CallPrecise(object, method, v8Engine, callData);
+        return CallPrecise(object, method, scope.engine->v8Engine, callData);
     } else {
-        return CallOverloaded(object, method, v8Engine, callData, d()->propertyCache);
+        return CallOverloaded(object, method, scope.engine->v8Engine, callData, d()->propertyCache);
     }
 }
 

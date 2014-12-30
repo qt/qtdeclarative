@@ -2653,7 +2653,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
         model->m_cache.at(it.cacheIndex)->releaseObject();
     }
 
-    args->setReturnValue(QV4::QObjectWrapper::wrap(QV8Engine::getV4(args->engine()), object));
+    args->setReturnValue(QV4::QObjectWrapper::wrap(args->v4engine(), object));
     model->emitChanges();
 }
 
