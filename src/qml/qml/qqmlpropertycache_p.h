@@ -303,9 +303,9 @@ public:
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
-    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QString &,
+    static QQmlPropertyData *property(QJSEngine *, QObject *, const QString &,
                                               QQmlContextData *, QQmlPropertyData &);
-    static QQmlPropertyData *property(QQmlEngine *, QObject *, const QV4::String *,
+    static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
                                               QQmlContextData *, QQmlPropertyData &);
 
     //see QMetaObjectPrivate::originalClone

@@ -257,7 +257,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, d()->object, qmlContext);
     else
-        result = QQmlPropertyCache::property(engine->v8Engine->engine(), d()->object, name, qmlContext, *local);
+        result = QQmlPropertyCache::property(engine->jsEngine(), d()->object, name, qmlContext, *local);
     return result;
 }
 
@@ -428,7 +428,7 @@ bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qm
     QQmlPropertyData local;
     QQmlPropertyData *result = 0;
     {
-        result = QQmlPropertyCache::property(engine->v8Engine->engine(), object, name, qmlContext, local);
+        result = QQmlPropertyCache::property(engine->jsEngine(), object, name, qmlContext, local);
     }
 
     if (!result)

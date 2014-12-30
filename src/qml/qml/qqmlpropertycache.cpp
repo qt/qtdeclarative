@@ -1269,7 +1269,7 @@ inline QString qQmlPropertyCacheToString(const QV4::String *string)
 
 template<typename T>
 QQmlPropertyData *
-qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
+qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
                           QQmlContextData *context, QQmlPropertyData &local)
 {
     QQmlPropertyCache *cache = 0;
@@ -1279,7 +1279,7 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
     if (ddata && ddata->propertyCache) {
         cache = ddata->propertyCache;
     } else if (engine) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+        QJSEnginePrivate *ep = QJSEnginePrivate::get(engine);
         cache = ep->cache(obj);
         if (cache) {
             ddata = QQmlData::get(obj, true);
@@ -1302,14 +1302,14 @@ qQmlPropertyCacheProperty(QQmlEngine *engine, QObject *obj, T name,
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj, const QV4::String *name,
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *name,
                             QQmlContextData *context, QQmlPropertyData &local)
 {
     return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QQmlEngine *engine, QObject *obj,
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj,
                                     const QString &name, QQmlContextData *context, QQmlPropertyData &local)
 {
     return qQmlPropertyCacheProperty<const QString &>(engine, obj, name, context, local);
