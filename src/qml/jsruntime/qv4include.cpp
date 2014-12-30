@@ -49,9 +49,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4Include::QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
+QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
                        const QV4::ValueRef qmlglobal, const QV4::ValueRef callback)
-    : v4(QV8Engine::getV4(engine)), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
+    : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
     m_qmlglobal = qmlglobal;
     if (callback->asFunctionObject())
@@ -59,7 +59,7 @@ QV4Include::QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *cont
 
     m_resultObject = resultValue(v4);
 
-    m_network = engine->networkAccessManager();
+    m_network = engine->v8Engine->networkAccessManager();
 
     QNetworkRequest request;
     request.setUrl(url);
@@ -176,7 +176,6 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         return QV4::Encode::undefined();
 
     QV4::Scope scope(ctx->engine());
-    QV8Engine *engine = scope.engine->v8Engine;
     QQmlContextData *context = QV4::QmlContextWrapper::callingContext(scope.engine);
 
     if (!context || !context->isJSContext)
@@ -194,7 +193,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     QV4::ScopedObject qmlcontextobject(scope, scope.engine->qmlContextObject());
 
     if (localFile.isEmpty()) {
-        QV4Include *i = new QV4Include(url, engine, context,
+        QV4Include *i = new QV4Include(url, scope.engine, context,
                                        qmlcontextobject,
                                        callbackFunction);
         result = i->result();

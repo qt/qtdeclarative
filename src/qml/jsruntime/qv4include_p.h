@@ -76,7 +76,7 @@ private Q_SLOTS:
     void finished();
 
 private:
-    QV4Include(const QUrl &url, QV8Engine *engine, QQmlContextData *context,
+    QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
                const QV4::ValueRef qmlglobal, const QV4::ValueRef callback);
     ~QV4Include();
 
