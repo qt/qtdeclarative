@@ -91,7 +91,7 @@ QQmlListModelWorkerAgent::~QQmlListModelWorkerAgent()
     mutex.unlock();
 }
 
-void QQmlListModelWorkerAgent::setV8Engine(QV8Engine *eng)
+void QQmlListModelWorkerAgent::setEngine(QV4::ExecutionEngine *eng)
 {
     m_copy->m_engine = eng;
 }

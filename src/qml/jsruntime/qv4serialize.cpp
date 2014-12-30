@@ -364,7 +364,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         rv->asObject()->defineReadonlyProperty(s, v);
 
         agent->release();
-        agent->setV8Engine(engine->v8Engine);
+        agent->setEngine(engine);
         return rv.asReturnedValue();
     }
     case WorkerSequence:

@@ -44,7 +44,7 @@
 #include <QtCore/QVariant>
 #include <QtCore/qabstractitemmodel.h>
 
-#include <private/qv8engine_p.h>
+#include <private/qv4engine_p.h>
 #include <private/qpodvector_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -102,14 +102,14 @@ private:
 
     // Constructs a flat list model for a worker agent
     QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
-    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV8Engine *eng, QObject *parent=0);
+    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=0);
 
-    QV8Engine *engine() const;
+    QV4::ExecutionEngine *engine() const;
 
     inline bool canMove(int from, int to, int n) const { return !(from+n > count() || to+n > count() || from < 0 || to < 0 || n < 0); }
 
     QQmlListModelWorkerAgent *m_agent;
-    mutable QV8Engine *m_engine;
+    mutable QV4::ExecutionEngine *m_engine;
     bool m_mainThread;
     bool m_primary;
 

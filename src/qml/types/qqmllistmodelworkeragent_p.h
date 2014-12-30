@@ -65,7 +65,7 @@ class QQmlListModelWorkerAgent : public QObject
 public:
     QQmlListModelWorkerAgent(QQmlListModel *);
     ~QQmlListModelWorkerAgent();
-    void setV8Engine(QV8Engine *eng);
+    void setEngine(QV4::ExecutionEngine *eng);
 
     void addref();
     void release();
