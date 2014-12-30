@@ -981,10 +981,5 @@ int QV8Engine::consoleCountHelper(const QString &file, quint16 line, quint16 col
     return number;
 }
 
-QV4::ReturnedValue QV8Engine::toString(const QString &string)
-{
-    return QV4::Encode(m_v4Engine->newString(string));
-}
-
 QT_END_NAMESPACE
 

@@ -504,7 +504,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
             result.append(tmp);
     }
 
-    args->setReturnValue(args->v4engine()->v8Engine->toString(result));
+    args->setReturnValue(QV4::Encode(args->v4engine()->newString(result)));
 }
 
 bool QuickTestResult::compare

@@ -683,9 +683,8 @@ ReturnedValue Attr::method_name(CallContext *ctx)
     Scoped<Node> r(scope, ctx->d()->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
 
-    return engine->toString(r->d()->d->name);
+    return QV4::Encode(scope.engine->newString(r->d()->d->name));
 }
 
 ReturnedValue Attr::method_value(CallContext *ctx)
@@ -694,9 +693,8 @@ ReturnedValue Attr::method_value(CallContext *ctx)
     Scoped<Node> r(scope, ctx->d()->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
 
-    return engine->toString(r->d()->d->data);
+    return QV4::Encode(scope.engine->newString(r->d()->d->data));
 }
 
 ReturnedValue Attr::method_ownerElement(CallContext *ctx)
@@ -752,9 +750,8 @@ ReturnedValue Text::method_wholeText(CallContext *ctx)
     Scoped<Node> r(scope, ctx->d()->callData->thisObject.as<Node>());
     if (!r)
         return Encode::undefined();
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
 
-    return engine->toString(r->d()->d->data);
+    return QV4::Encode(scope.engine->newString(r->d()->d->data));
 }
 
 ReturnedValue Text::prototype(ExecutionEngine *v4)
@@ -1020,9 +1017,8 @@ ReturnedValue Document::method_xmlVersion(CallContext *ctx)
     Scoped<Node> r(scope, ctx->d()->callData->thisObject.as<Node>());
     if (!r || r->d()->d->type != NodeImpl::Document)
         return Encode::undefined();
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
 
-    return engine->toString(static_cast<DocumentImpl *>(r->d()->d)->version);
+    return QV4::Encode(scope.engine->newString(static_cast<DocumentImpl *>(r->d()->d)->version));
 }
 
 ReturnedValue Document::method_xmlEncoding(CallContext *ctx)
@@ -1031,9 +1027,8 @@ ReturnedValue Document::method_xmlEncoding(CallContext *ctx)
     Scoped<Node> r(scope, ctx->d()->callData->thisObject.as<Node>());
     if (!r || r->d()->d->type != NodeImpl::Document)
         return Encode::undefined();
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
 
-    return engine->toString(static_cast<DocumentImpl *>(r->d()->d)->encoding);
+    return QV4::Encode(scope.engine->newString(static_cast<DocumentImpl *>(r->d()->d)->encoding));
 }
 
 class QQmlXMLHttpRequest : public QObject
@@ -1889,8 +1884,6 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(CallContext *ctx)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
-
     if (ctx->d()->callData->argc != 1)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
@@ -1899,7 +1892,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(CallContext *ctx)
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->header(ctx->d()->callData->args[0].toQStringNoThrow()));
+    return QV4::Encode(scope.engine->newString(r->header(ctx->d()->callData->args[0].toQStringNoThrow())));
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(CallContext *ctx)
@@ -1910,8 +1903,6 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(CallContext *
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
-
     if (ctx->d()->callData->argc != 0)
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
@@ -1920,7 +1911,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(CallContext *
         r->readyState() != QQmlXMLHttpRequest::HeadersReceived)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
-    return engine->toString(r->headers());
+    return QV4::Encode(scope.engine->newString(r->headers()));
 }
 
 // XMLHttpRequest properties
@@ -1961,16 +1952,14 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_statusText(CallContext *ctx)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
-
     if (r->readyState() == QQmlXMLHttpRequest::Unsent ||
         r->readyState() == QQmlXMLHttpRequest::Opened)
         V4THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
-        return engine->toString(QString());
+        return QV4::Encode(scope.engine->newString(QString()));
     else
-        return engine->toString(r->replyStatusText());
+        return QV4::Encode(scope.engine->newString(r->replyStatusText()));
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(CallContext *ctx)
@@ -1981,13 +1970,11 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseText(CallContext *ctx)
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    QV8Engine *engine = ctx->d()->engine->v8Engine;
-
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
         r->readyState() != QQmlXMLHttpRequest::Done)
-        return engine->toString(QString());
+        return QV4::Encode(scope.engine->newString(QString()));
     else
-        return engine->toString(r->responseBody());
+        return QV4::Encode(scope.engine->newString(r->responseBody()));
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(CallContext *ctx)

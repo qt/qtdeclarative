@@ -1689,7 +1689,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
     } else if (type == QMetaType::Float) {
         return QV4::Encode(floatValue);
     } else if (type == QMetaType::QString) {
-        return engine->v8Engine->toString(*qstringPtr);
+        return QV4::Encode(engine->newString(*qstringPtr));
     } else if (type == QMetaType::QObjectStar) {
         QObject *object = qobjectPtr;
         if (object)

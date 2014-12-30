@@ -330,7 +330,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             ScopedString s(scope);
             ScopedValue v(scope);
             resultObject->put((s = scope.engine->newIdentifier("rowsAffected")).getPointer(), (v = Primitive::fromInt32(query.numRowsAffected())));
-            resultObject->put((s = scope.engine->newIdentifier("insertId")).getPointer(), (v = engine->toString(query.lastInsertId().toString())));
+            resultObject->put((s = scope.engine->newIdentifier("insertId")).getPointer(), (v = scope.engine->newString(query.lastInsertId().toString())));
             resultObject->put((s = scope.engine->newIdentifier("rows")).getPointer(), rows);
         } else {
             err = true;

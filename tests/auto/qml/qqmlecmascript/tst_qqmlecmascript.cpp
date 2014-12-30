@@ -2497,7 +2497,7 @@ void tst_qqmlecmascript::callQtInvokables()
     }
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::ScopedValue(scope, engine->toString("QML rocks"))));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::ScopedValue(scope, scope.engine->newString("QML rocks"))));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 7);
     QCOMPARE(o->actuals().count(), 0);
