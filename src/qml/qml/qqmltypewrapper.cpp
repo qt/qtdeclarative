@@ -48,9 +48,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 
-Heap::QmlTypeWrapper::QmlTypeWrapper(QV8Engine *engine)
-    : Heap::Object(QV8Engine::getV4(engine))
-    , v8(engine)
+Heap::QmlTypeWrapper::QmlTypeWrapper(ExecutionEngine *engine)
+    : Heap::Object(engine)
     , mode(IncludeEnums)
 {
     setVTable(QV4::QmlTypeWrapper::staticVTable());
@@ -72,7 +71,7 @@ QObject* QmlTypeWrapper::singletonObject() const
     if (!isSingleton())
         return 0;
 
-    QQmlEngine *e = d()->v8->engine();
+    QQmlEngine *e = engine()->v8Engine->engine();
     QQmlType::SingletonInstanceInfo *siinfo = d()->type->singletonInstanceInfo();
     siinfo->init(e);
     return siinfo->qobjectApi(e);
@@ -81,7 +80,7 @@ QObject* QmlTypeWrapper::singletonObject() const
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (d()->type && d()->type->isSingleton()) {
-        QQmlEngine *e = d()->v8->engine();
+        QQmlEngine *e = engine()->v8Engine->engine();
         QQmlType::SingletonInstanceInfo *siinfo = d()->type->singletonInstanceInfo();
         siinfo->init(e); // note: this will also create QJSValue singleton which isn't strictly required.
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
@@ -96,29 +95,27 @@ QVariant QmlTypeWrapper::toVariant() const
 
 
 // Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
-ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlType *t,
+ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, QQmlType *t,
                                      Heap::QmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    Scope scope(v4);
+    Scope scope(engine);
 
-    Scoped<QmlTypeWrapper> w(scope, v4->memoryManager->alloc<QmlTypeWrapper>(v8));
+    Scoped<QmlTypeWrapper> w(scope, engine->memoryManager->alloc<QmlTypeWrapper>(engine));
     w->d()->mode = mode; w->d()->object = o; w->d()->type = t;
     return w.asReturnedValue();
 }
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-ReturnedValue QmlTypeWrapper::create(QV8Engine *v8, QObject *o, QQmlTypeNameCache *t, const void *importNamespace,
+ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, QQmlTypeNameCache *t, const void *importNamespace,
                                      Heap::QmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
     Q_ASSERT(importNamespace);
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
-    Scope scope(v4);
+    Scope scope(engine);
 
-    Scoped<QmlTypeWrapper> w(scope, v4->memoryManager->alloc<QmlTypeWrapper>(v8));
+    Scoped<QmlTypeWrapper> w(scope, engine->memoryManager->alloc<QmlTypeWrapper>(engine));
     w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t; w->d()->importNamespace = importNamespace;
     t->addref();
     return w.asReturnedValue();
@@ -137,8 +134,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
     if (hasProperty)
         *hasProperty = true;
 
-    QV8Engine *v8engine = w->d()->v8;
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = v4->v8Engine->callingContext();
 
     QObject *object = w->d()->object;
 
@@ -147,7 +143,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
         // singleton types are handled differently to other types.
         if (type->isSingleton()) {
-            QQmlEngine *e = v8engine->engine();
+            QQmlEngine *e = v4->v8Engine->engine();
             QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
             siinfo->init(e);
 
@@ -208,14 +204,13 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
         QQmlTypeNameCache::Result r = w->d()->typeNamespace->query(name, w->d()->importNamespace);
 
         if (r.isValid()) {
-            QQmlContextData *context = v8engine->callingContext();
             if (r.type) {
-                return create(w->d()->v8, object, r.type, w->d()->mode);
+                return create(scope.engine, object, r.type, w->d()->mode);
             } else if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts);
                 return scripts->getIndexed(r.scriptIndex);
             } else if (r.importNamespace) {
-                return create(w->d()->v8, object, context->imports, r.importNamespace);
+                return create(scope.engine, object, context->imports, r.importNamespace);
             }
 
             return QV4::Encode::undefined();

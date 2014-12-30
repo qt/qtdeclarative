@@ -175,8 +175,6 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     //     context = context->parent
     // }
 
-    QV8Engine *engine = v4->v8Engine;
-
     QObject *scopeObject = resource->getScopeObject();
 
     if (context->imports && name->startsWithUpper()) {
@@ -190,9 +188,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
                 QV4::ScopedObject scripts(scope, context->importedScripts);
                 return scripts->getIndexed(r.scriptIndex);
             } else if (r.type) {
-                return QmlTypeWrapper::create(engine, scopeObject, r.type);
+                return QmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
-                return QmlTypeWrapper::create(engine, scopeObject, context->imports, r.importNamespace);
+                return QmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
             }
             Q_ASSERT(!"Unreachable");
         }
@@ -200,7 +198,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Fall through
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine->engine());
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->v8Engine->engine());
 
     while (context) {
         // Search context properties

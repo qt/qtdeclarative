@@ -66,9 +66,8 @@ struct QmlTypeWrapper : Object {
         ExcludeEnums
     };
 
-    QmlTypeWrapper(QV8Engine *engine);
+    QmlTypeWrapper(QV4::ExecutionEngine *engine);
     ~QmlTypeWrapper();
-    QV8Engine *v8;
     TypeNameMode mode;
     QPointer<QObject> object;
 
@@ -89,9 +88,9 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
 
     QVariant toVariant() const;
 
-    static ReturnedValue create(QV8Engine *, QObject *, QQmlType *,
+    static ReturnedValue create(ExecutionEngine *, QObject *, QQmlType *,
                                 Heap::QmlTypeWrapper::TypeNameMode = Heap::QmlTypeWrapper::IncludeEnums);
-    static ReturnedValue create(QV8Engine *, QObject *, QQmlTypeNameCache *, const void *,
+    static ReturnedValue create(ExecutionEngine *, QObject *, QQmlTypeNameCache *, const void *,
                                 Heap::QmlTypeWrapper::TypeNameMode = Heap::QmlTypeWrapper::IncludeEnums);
 
 
