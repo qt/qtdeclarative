@@ -670,7 +670,7 @@ QJSEngine* QJSValue::engine() const
 {
     QV4::ExecutionEngine *engine = d->engine;
     if (engine)
-        return engine->v8Engine->publicEngine();
+        return engine->jsEngine();
     return 0;
 }
 

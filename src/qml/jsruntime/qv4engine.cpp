@@ -64,6 +64,7 @@
 #include "qv4arraybuffer_p.h"
 #include "qv4dataview_p.h"
 #include "qv4typedarray_p.h"
+#include <private/qv8engine_p.h>
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -161,6 +162,11 @@ quintptr getStackLimit()
     return stackLimit + MinimumStackSize*1024;
 }
 
+
+QJSEngine *ExecutionEngine::jsEngine() const
+{
+    return v8Engine->publicEngine();
+}
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
