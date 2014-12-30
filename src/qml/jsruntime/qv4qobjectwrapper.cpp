@@ -1871,7 +1871,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
         QV4::ScopedValue qmlGlobal(scope, d()->qmlGlobal);
         QQmlV4Function func(callData, rv, qmlGlobal,
                             QmlContextWrapper::getContext(qmlGlobal),
-                            scope.engine->v8Engine);
+                            scope.engine);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };

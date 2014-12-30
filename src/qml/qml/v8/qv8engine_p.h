@@ -122,8 +122,7 @@ public:
     QQmlContextData *context() { return ctx; }
     QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
     void setReturnValue(QV4::ReturnedValue rv) { retVal = rv; }
-    QV8Engine *engine() const { return e; }
-    QV4::ExecutionEngine *v4engine() const;
+    QV4::ExecutionEngine *v4engine() const { return e; }
 private:
     friend struct QV4::QObjectMethod;
     QQmlV4Function();
@@ -131,7 +130,7 @@ private:
     QQmlV4Function &operator=(const QQmlV4Function &);
 
     QQmlV4Function(QV4::CallData *callData, QV4::ValueRef retVal,
-                   const QV4::ValueRef global, QQmlContextData *c, QV8Engine *e)
+                   const QV4::ValueRef global, QQmlContextData *c, QV4::ExecutionEngine *e)
         : callData(callData), retVal(retVal), ctx(c), e(e)
     {
         callData->thisObject.val = global.asReturnedValue();
@@ -140,7 +139,7 @@ private:
     QV4::CallData *callData;
     QV4::ValueRef retVal;
     QQmlContextData *ctx;
-    QV8Engine *e;
+    QV4::ExecutionEngine *e;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlV4Handle
@@ -275,10 +274,6 @@ inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
         return 0;
 }
 
-inline QV4::ExecutionEngine *QQmlV4Function::v4engine() const
-{
-    return QV8Engine::getV4(e);
-}
 
 QT_END_NAMESPACE
 

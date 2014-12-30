@@ -136,7 +136,7 @@ public:
 
 void MyQmlObject::v8function(QQmlV4Function *function)
 {
-    QV8Engine::getV4(function->engine())->throwError(QStringLiteral("Exception thrown from within QObject slot"));
+    function->v4engine()->throwError(QStringLiteral("Exception thrown from within QObject slot"));
 }
 
 static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
