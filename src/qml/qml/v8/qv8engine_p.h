@@ -199,7 +199,7 @@ public:
 
     static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
     static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8ObjectSet *visitedObjects = 0);
-    QV4::ReturnedValue fromVariant(const QVariant &);
+    static QV4::ReturnedValue fromVariant(QV4::ExecutionEngine *e, const QVariant &);
 
     static QVariantMap variantMapFromJS(QV4::Object *o)
     { return objectToVariant(o->engine(), o).toMap(); }

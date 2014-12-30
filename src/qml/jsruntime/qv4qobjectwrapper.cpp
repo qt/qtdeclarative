@@ -205,7 +205,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
                 return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex, valueTypeMetaObject, v.userType()); // VariantReference value-type.
         }
 
-        return engine->fromVariant(v);
+        return QV8Engine::fromVariant(scope.engine, v);
     } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
         Q_ASSERT(notifier == 0);
 
@@ -229,7 +229,7 @@ static QV4::ReturnedValue LoadProperty(QV8Engine *engine, QObject *object,
     } else {
         QVariant v(property.propType, (void *)0);
         ReadFunction(object, property, v.data(), notifier);
-        return engine->fromVariant(v);
+        return QV8Engine::fromVariant(scope.engine, v);
     }
 }
 
@@ -808,9 +808,9 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    callData->args[ii] = v4->v8Engine->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    callData->args[ii] = QV8Engine::fromVariant(v4, *((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    callData->args[ii] = v4->v8Engine->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    callData->args[ii] = QV8Engine::fromVariant(v4, QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
@@ -1720,7 +1720,7 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         return QV4::JsonObject::fromJsonValue(v4, *jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
-        QV4::ScopedValue rv(scope, engine->fromVariant(value));
+        QV4::ScopedValue rv(scope, QV8Engine::fromVariant(scope.engine, value));
         QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, rv);
         if (!!qobjectWrapper) {
             if (QObject *object = qobjectWrapper->object())

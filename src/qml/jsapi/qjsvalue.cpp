@@ -58,7 +58,7 @@ QV4::ReturnedValue QJSValuePrivate::getValue(QV4::ExecutionEngine *e)
     }
 
     if (value.isEmpty()) {
-        value = QV4::Encode(engine->v8Engine->fromVariant(unboundData));
+        value = QV4::Encode(QV8Engine::fromVariant(e, unboundData));
         PersistentValuePrivate **listRoot = &engine->memoryManager->m_persistentValues;
         prev = listRoot;
         next = *listRoot;

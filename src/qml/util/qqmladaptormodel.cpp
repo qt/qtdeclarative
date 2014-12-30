@@ -345,11 +345,11 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, ui
     QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
     if (o->d()->item->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
-            return ctx->d()->engine->v8Engine->fromVariant(
+            return QV8Engine::fromVariant(scope.engine,
                     modelData->cachedData.at(modelData->type->hasModelData ? 0 : propertyId));
         }
     } else if (*modelData->type->model) {
-        return ctx->d()->engine->v8Engine->fromVariant(
+        return QV8Engine::fromVariant(scope.engine,
                 modelData->value(modelData->type->propertyRoles.at(propertyId)));
     }
     return QV4::Encode::undefined();
@@ -584,7 +584,7 @@ public:
         if (!o)
             return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        return scope.engine->v8Engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
+        return QV8Engine::fromVariant(scope.engine, static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
     }
 
     static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)

@@ -247,7 +247,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             setExpressionFunctionValid(true);
         }
 
-        QV8Engine *engine = ep->v8engine();
         QVarLengthArray<int, 9> dummy;
         //TODO: lookup via signal index rather than method index as an optimization
         int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
@@ -262,7 +261,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             //    for several cases (such as QVariant type and QObject-derived types)
             //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
             if (type == QMetaType::QVariant) {
-                callData->args[ii] = engine->fromVariant(*((QVariant *)a[ii + 1]));
+                callData->args[ii] = QV8Engine::fromVariant(scope.engine, *((QVariant *)a[ii + 1]));
             } else if (type == QMetaType::Int) {
                 //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
                 callData->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
@@ -274,7 +273,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                 else
                     callData->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
             } else {
-                callData->args[ii] = engine->fromVariant(QVariant(type, a[ii + 1]));
+                callData->args[ii] = QV8Engine::fromVariant(scope.engine, QVariant(type, a[ii + 1]));
             }
         }
 

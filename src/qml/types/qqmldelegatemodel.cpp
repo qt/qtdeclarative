@@ -1825,7 +1825,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::CallContext *ctx)
             groups.append(o->d()->item->metaType->groupNames.at(i - 1));
     }
 
-    return scope.engine->v8Engine->fromVariant(groups);
+    return QV8Engine::fromVariant(scope.engine, groups);
 }
 
 QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::CallContext *ctx)

@@ -231,7 +231,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
                                                                QQmlContextPrivate::context_at);
                         return QmlListWrapper::create(v4, prop, qMetaTypeId<QQmlListProperty<QObject> >());
                     } else {
-                        return engine->fromVariant(cp->propertyValues.at(propertyIdx));
+                        return QV8Engine::fromVariant(scope.engine, cp->propertyValues.at(propertyIdx));
                     }
                 }
             }

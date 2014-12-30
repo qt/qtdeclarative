@@ -323,7 +323,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
     metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, result->coreIndex, args);
-    return v4->v8Engine->fromVariant(v);
+    return QV8Engine::fromVariant(v4, v);
 #undef VALUE_TYPE_ACCESSOR
 }
 

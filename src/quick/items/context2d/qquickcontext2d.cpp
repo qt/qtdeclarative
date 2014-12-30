@@ -1430,8 +1430,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_get_fillRule(QV4::CallContext *ctx)
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = scope.engine->v8Engine;
-    return engine->fromVariant(r->d()->context->state.fillRule);
+    return QV8Engine::fromVariant(scope.engine, r->d()->context->state.fillRule);
 }
 
 QV4::ReturnedValue QQuickJSContext2D::method_set_fillRule(QV4::CallContext *ctx)

@@ -945,7 +945,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    callData->args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
+                    callData->args[ii] = QV8Engine::fromVariant(scope.engine, *(QVariant *)a[ii + 1]);
 
                 QV4::ScopedValue result(scope);
                 result = function->call(callData);
@@ -1077,7 +1077,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        QV4::ScopedValue newv(scope, QQmlEnginePrivate::get(ctxt->engine)->v8engine()->fromVariant(value));
+        QV4::ScopedValue newv(scope, QV8Engine::fromVariant(scope.engine, value));
         QV4::Scoped<QV4::VariantObject> v(scope, newv);
         if (!!v)
             v->addVmePropertyReference();

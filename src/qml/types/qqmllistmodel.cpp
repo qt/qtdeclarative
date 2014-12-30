@@ -1264,7 +1264,7 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QVariant value = operator[](index);
 
     QV4::Scope scope(QV8Engine::getV4((eng)));
-    QV4::ScopedValue v(scope, eng->fromVariant(value));
+    QV4::ScopedValue v(scope, QV8Engine::fromVariant(scope.engine, value));
 
     int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, eng);
     if (roleIndex != -1) {

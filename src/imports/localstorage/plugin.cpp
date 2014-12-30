@@ -219,7 +219,6 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Eng
 static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     Scope scope(v4);
-    QV8Engine *v8 = v4->v8Engine;
 
     if (r->d()->sqlQuery.at() == (int)index || r->d()->sqlQuery.seek(index)) {
         QSqlRecord record = r->d()->sqlQuery.record();
@@ -228,7 +227,7 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             ScopedString s(scope, v4->newIdentifier(record.fieldName(ii)));
-            ScopedValue val(scope, v.isNull() ? Encode::null() : v8->fromVariant(v));
+            ScopedValue val(scope, v.isNull() ? Encode::null() : QV8Engine::fromVariant(v4, v));
             row->put(s.getPointer(), val);
         }
         if (hasProperty)
