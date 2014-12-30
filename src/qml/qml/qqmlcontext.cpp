@@ -374,7 +374,6 @@ QVariant QQmlContext::contextProperty(const QString &name) const
         idx = data->propertyNames.value(name);
 
     if (idx == -1) {
-        QByteArray utf8Name = name.toUtf8();
         if (data->contextObject) {
             QObject *obj = data->contextObject;
             QQmlPropertyData local;
