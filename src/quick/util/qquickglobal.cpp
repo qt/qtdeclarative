@@ -261,13 +261,11 @@ public:
         return QMatrix4x4();
     }
 
-    static QFont fontFromObject(QQmlV4Handle object, QV8Engine *e, bool *ok)
+    static QFont fontFromObject(QQmlV4Handle object, QV4::ExecutionEngine *v4, bool *ok)
     {
-        Q_UNUSED(e);
-
-        if (ok) *ok = false;
+        if (ok)
+            *ok = false;
         QFont retn;
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, object);
         if (!obj) {
@@ -339,10 +337,10 @@ public:
         return retn;
     }
 
-    static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, QV8Engine *e, bool *ok)
+    static QMatrix4x4 matrix4x4FromObject(QQmlV4Handle object, QV4::ExecutionEngine *v4, bool *ok)
     {
-        if (ok) *ok = false;
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
+        if (ok)
+            *ok = false;
         QV4::Scope scope(v4);
         QV4::ScopedArrayObject array(scope, object);
         if (!array)
@@ -704,9 +702,8 @@ public:
         return false;
     }
 
-    bool variantFromJsObject(int type, QQmlV4Handle object, QV8Engine *e, QVariant *v)
+    bool variantFromJsObject(int type, QQmlV4Handle object, QV4::ExecutionEngine *v4, QVariant *v)
     {
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
         QV4::Scope scope(v4);
 #ifndef QT_NO_DEBUG
         QV4::ScopedObject obj(scope, object);
@@ -715,10 +712,10 @@ public:
         bool ok = false;
         switch (type) {
         case QMetaType::QFont:
-            *v = QVariant::fromValue(fontFromObject(object, e, &ok));
+            *v = QVariant::fromValue(fontFromObject(object, v4, &ok));
             break;
         case QMetaType::QMatrix4x4:
-            *v = QVariant::fromValue(matrix4x4FromObject(object, e, &ok));
+            *v = QVariant::fromValue(matrix4x4FromObject(object, v4, &ok));
         default: break;
         }
 

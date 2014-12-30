@@ -234,7 +234,7 @@ public:
 
     QVariant createVariantFromString(const QString &);
     QVariant createVariantFromString(int, const QString &, bool *);
-    QVariant createVariantFromJsObject(int, QQmlV4Handle, QV8Engine *, bool*);
+    QVariant createVariantFromJsObject(int, QQmlV4Handle, QV4::ExecutionEngine *, bool*);
 
     bool equalValueType(int, const void *, const void *, size_t);
     bool storeValueType(int, const void *, void *, size_t);
@@ -253,7 +253,7 @@ private:
 
     virtual bool variantFromString(const QString &, QVariant *);
     virtual bool variantFromString(int, const QString &, QVariant *);
-    virtual bool variantFromJsObject(int, QQmlV4Handle, QV8Engine *, QVariant *);
+    virtual bool variantFromJsObject(int, QQmlV4Handle, QV4::ExecutionEngine *, QVariant *);
 
     virtual bool equal(int, const void *, const void *, size_t);
     virtual bool store(int, const void *, void *, size_t);

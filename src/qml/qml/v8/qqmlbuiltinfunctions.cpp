@@ -317,9 +317,9 @@ ReturnedValue QtObject::method_font(QV4::CallContext *ctx)
     if (ctx->d()->callData->argc != 1 || !ctx->d()->callData->args[0].isObject())
         V4THROW_ERROR("Qt.font(): Invalid arguments");
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
+    QV4::ExecutionEngine *v4 = ctx->d()->engine;
     bool ok = false;
-    QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle(ctx->d()->callData->args[0]), v8engine, &ok);
+    QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle(ctx->d()->callData->args[0]), v4, &ok);
     if (!ok)
         V4THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
     return QV8Engine::fromVariant(ctx->engine(), v);
@@ -409,11 +409,11 @@ matrix values.
 */
 ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
+    QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
     if (ctx->d()->callData->argc == 1 && ctx->d()->callData->args[0].isObject()) {
         bool ok = false;
-        QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle(ctx->d()->callData->args[0]), v8engine, &ok);
+        QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle(ctx->d()->callData->args[0]), v4, &ok);
         if (!ok)
             V4THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
         return QV8Engine::fromVariant(ctx->engine(), v);

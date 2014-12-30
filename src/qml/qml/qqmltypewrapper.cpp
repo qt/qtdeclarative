@@ -71,7 +71,7 @@ QObject* QmlTypeWrapper::singletonObject() const
     if (!isSingleton())
         return 0;
 
-    QQmlEngine *e = engine()->v8Engine->engine();
+    QQmlEngine *e = engine()->qmlEngine();
     QQmlType::SingletonInstanceInfo *siinfo = d()->type->singletonInstanceInfo();
     siinfo->init(e);
     return siinfo->qobjectApi(e);
@@ -80,7 +80,7 @@ QObject* QmlTypeWrapper::singletonObject() const
 QVariant QmlTypeWrapper::toVariant() const
 {
     if (d()->type && d()->type->isSingleton()) {
-        QQmlEngine *e = engine()->v8Engine->engine();
+        QQmlEngine *e = engine()->qmlEngine();
         QQmlType::SingletonInstanceInfo *siinfo = d()->type->singletonInstanceInfo();
         siinfo->init(e); // note: this will also create QJSValue singleton which isn't strictly required.
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
@@ -143,7 +143,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 
         // singleton types are handled differently to other types.
         if (type->isSingleton()) {
-            QQmlEngine *e = v4->v8Engine->engine();
+            QQmlEngine *e = v4->qmlEngine();
             QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
             siinfo->init(e);
 

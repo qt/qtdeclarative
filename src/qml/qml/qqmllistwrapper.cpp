@@ -90,7 +90,7 @@ QVariant QmlListWrapper::toVariant() const
     if (!d()->object)
         return QVariant();
 
-    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property, d()->propertyType, d()->internalClass->engine->v8Engine->engine()));
+    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property, d()->propertyType, engine()->qmlEngine()));
 }
 
 
