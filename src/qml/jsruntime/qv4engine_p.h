@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 class QV8Engine;
 class QQmlError;
 class QJSEngine;
+class QQmlEngine;
 
 namespace QV4 {
 namespace Debugging {
@@ -117,6 +118,7 @@ public:
     Function *globalCode;
 
     QJSEngine *jsEngine() const;
+    QQmlEngine *qmlEngine() const;
     QV8Engine *v8Engine;
 
     Value objectCtor;

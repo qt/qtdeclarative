@@ -168,6 +168,11 @@ QJSEngine *ExecutionEngine::jsEngine() const
     return v8Engine->publicEngine();
 }
 
+QQmlEngine *ExecutionEngine::qmlEngine() const
+{
+    return v8Engine->engine();
+}
+
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
     , memoryManager(new QV4::MemoryManager)
