@@ -139,10 +139,9 @@ static inline void *popPtr(const char *&data)
 // serialization/deserialization failures
 
 #define ALIGN(size) (((size) + 3) & ~3)
-void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *engine)
+void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, ExecutionEngine *engine)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    QV4::Scope scope(v4);
+    QV4::Scope scope(engine);
 
     if (v->isEmpty()) {
         Q_ASSERT(!"Serialize: got empty value");
@@ -239,7 +238,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
         ScopedObject o(scope, v);
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-            uint seqLength = ScopedValue(scope, o->get(v4->id_length))->toUInt32();
+            uint seqLength = ScopedValue(scope, o->get(engine->id_length))->toUInt32();
             uint length = seqLength + 1;
             if (length > 0xFFFFFF) {
                 push(data, valueheader(WorkerUndefined));
@@ -257,7 +256,7 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
 
         // regular object
         QV4::ScopedValue val(scope, *v);
-        QV4::ScopedArrayObject properties(scope, QV4::ObjectPrototype::getOwnPropertyNames(v4, val));
+        QV4::ScopedArrayObject properties(scope, QV4::ObjectPrototype::getOwnPropertyNames(engine, val));
         quint32 length = properties->getLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
@@ -284,13 +283,12 @@ void Serialize::serialize(QByteArray &data, const QV4::ValueRef v, QV8Engine *en
     }
 }
 
-ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
+ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
 {
     quint32 header = popUint32(data);
     Type type = headertype(header);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
-    Scope scope(v4);
+    Scope scope(engine);
 
     switch (type) {
     case WorkerUndefined:
@@ -306,7 +304,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 size = headersize(header);
         QString qstr((QChar *)data, size);
         data += ALIGN(size * sizeof(quint16));
-        return QV4::Encode(v4->newString(qstr));
+        return QV4::Encode(engine->newString(qstr));
     }
     case WorkerFunction:
         Q_ASSERT(!"Unreachable");
@@ -314,7 +312,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerArray:
     {
         quint32 size = headersize(header);
-        Scoped<ArrayObject> a(scope, v4->newArrayObject());
+        Scoped<ArrayObject> a(scope, engine->newArrayObject());
         ScopedValue v(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             v = deserialize(data, engine);
@@ -325,7 +323,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerObject:
     {
         quint32 size = headersize(header);
-        Scoped<Object> o(scope, v4->newObject());
+        Scoped<Object> o(scope, engine->newObject());
         ScopedValue name(scope);
         ScopedString n(scope);
         ScopedValue value(scope);
@@ -344,29 +342,29 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Encode(v4->newDateObject(QV4::Primitive::fromDouble(popDouble(data))));
+        return QV4::Encode(engine->newDateObject(QV4::Primitive::fromDouble(popDouble(data))));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);
         quint32 length = popUint32(data);
         QString pattern = QString((QChar *)data, length - 1);
         data += ALIGN(length * sizeof(quint16));
-        return Encode(v4->newRegExpObject(pattern, flags));
+        return Encode(engine->newRegExpObject(pattern, flags));
     }
     case WorkerListModel:
     {
         void *ptr = popPtr(data);
         QQmlListModelWorkerAgent *agent = (QQmlListModelWorkerAgent *)ptr;
-        QV4::ScopedValue rv(scope, QV4::QObjectWrapper::wrap(v4, agent));
+        QV4::ScopedValue rv(scope, QV4::QObjectWrapper::wrap(engine, agent));
         // ### Find a better solution then the ugly property
         QQmlListModelWorkerAgent::VariantRef ref(agent);
         QVariant var = qVariantFromValue(ref);
-        QV4::ScopedValue v(scope, engine->fromVariant((var)));
-        QV4::ScopedString s(scope, v4->newString(QStringLiteral("__qml:hidden:ref")));
+        QV4::ScopedValue v(scope, engine->v8Engine->fromVariant((var)));
+        QV4::ScopedString s(scope, engine->newString(QStringLiteral("__qml:hidden:ref")));
         rv->asObject()->defineReadonlyProperty(s, v);
 
         agent->release();
-        agent->setV8Engine(engine);
+        agent->setV8Engine(engine->v8Engine);
         return rv.asReturnedValue();
     }
     case WorkerSequence:
@@ -377,7 +375,7 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         quint32 seqLength = length - 1;
         value = deserialize(data, engine);
         int sequenceType = value->integerValue();
-        Scoped<ArrayObject> array(scope, v4->newArrayObject());
+        Scoped<ArrayObject> array(scope, engine->newArrayObject());
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);
@@ -385,21 +383,21 @@ ReturnedValue Serialize::deserialize(const char *&data, QV8Engine *engine)
         }
         array->setArrayLengthUnchecked(seqLength);
         QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);
-        return QV4::SequencePrototype::fromVariant(v4, seqVariant, &succeeded);
+        return QV4::SequencePrototype::fromVariant(engine, seqVariant, &succeeded);
     }
     }
     Q_ASSERT(!"Unreachable");
     return QV4::Encode::undefined();
 }
 
-QByteArray Serialize::serialize(const QV4::ValueRef value, QV8Engine *engine)
+QByteArray Serialize::serialize(const QV4::ValueRef value, ExecutionEngine *engine)
 {
     QByteArray rv;
     serialize(rv, value, engine);
     return rv;
 }
 
-ReturnedValue Serialize::deserialize(const QByteArray &data, QV8Engine *engine)
+ReturnedValue Serialize::deserialize(const QByteArray &data, ExecutionEngine *engine)
 {
     const char *stream = data.constData();
     return deserialize(stream, engine);

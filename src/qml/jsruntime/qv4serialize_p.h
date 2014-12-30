@@ -57,12 +57,12 @@ namespace QV4 {
 class Serialize {
 public:
 
-    static QByteArray serialize(const ValueRef, QV8Engine *);
-    static ReturnedValue deserialize(const QByteArray &, QV8Engine *);
+    static QByteArray serialize(const ValueRef, ExecutionEngine *);
+    static ReturnedValue deserialize(const QByteArray &, ExecutionEngine *);
 
 private:
-    static void serialize(QByteArray &, const ValueRef, QV8Engine *);
-    static ReturnedValue deserialize(const char *&, QV8Engine *);
+    static void serialize(QByteArray &, const ValueRef, ExecutionEngine *);
+    static ReturnedValue deserialize(const char *&, ExecutionEngine *);
 };
 
 }

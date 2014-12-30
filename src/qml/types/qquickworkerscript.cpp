@@ -281,7 +281,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Call
 
     QV4::Scope scope(ctx);
     QV4::ScopedValue v(scope, ctx->d()->callData->argument(2));
-    QByteArray data = QV4::Serialize::serialize(v, engine);
+    QByteArray data = QV4::Serialize::serialize(v, scope.engine);
 
     QMutexLocker locker(&engine->p->m_lock);
     WorkerScript *script = engine->p->workers.value(id);
@@ -353,7 +353,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
 
-    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, workerEngine));
+    QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
 
     QV4::ScopedCallData callData(scope, 2);
     callData->thisObject = workerEngine->global();
@@ -682,7 +682,7 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
     if (args->length() != 0)
         argument = (*args)[0];
 
-    m_engine->sendMessage(m_scriptId, QV4::Serialize::serialize(argument, args->engine()));
+    m_engine->sendMessage(m_scriptId, QV4::Serialize::serialize(argument, scope.engine));
 }
 
 void QQuickWorkerScript::classBegin()
@@ -734,7 +734,7 @@ bool QQuickWorkerScript::event(QEvent *event)
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
             QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
             QV4::Scope scope(QV8Engine::getV4(v8engine));
-            QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), v8engine));
+            QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), scope.engine));
             emit message(QQmlV4Handle(value));
         }
         return true;
