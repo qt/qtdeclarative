@@ -2462,7 +2462,6 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
 
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
-    QV8Engine *v8engine = ep->v8engine();
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
     QV4::Scope scope(v4);
 
@@ -2521,7 +2520,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         return QV4::PersistentValue();
     }
 
-    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v8engine, ctxt, 0));
+    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, 0));
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
     m_program->qml = qmlglobal;

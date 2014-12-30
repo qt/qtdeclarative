@@ -264,7 +264,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     Q_ASSERT(!sharedState->allJavaScriptObjects);
     sharedState->allJavaScriptObjects = valueScope.alloc(compiledData->totalObjectCount);
 
-    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
+    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
     QV4::ScopedContext global(valueScope, valueScope.engine->rootContext());
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, v4->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScope));
     // ### GC
@@ -1176,7 +1176,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ref = QV4::QObjectWrapper::wrap(v4, instance);
 
     QV4::Scope valueScope(v4);
-    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(QV8Engine::get(engine), context, _scopeObject));
+    QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
     QV4::ScopedContext global(valueScope, valueScope.engine->rootContext());
     QV4::Scoped<QV4::QmlBindingWrapper> qmlBindingWrapper(valueScope, v4->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScope));
     // ### GC

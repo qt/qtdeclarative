@@ -289,7 +289,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
 
-    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, scopeObject));
+    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, scopeObject));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
     script.parse();
@@ -322,7 +322,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4);
 
-    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(ep->v8engine(), ctxt, qmlScope));
+    QV4::ScopedObject qmlScopeObject(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, qmlScope));
     QV4::Script script(v4, qmlScopeObject, code, filename, line);
     QV4::ScopedValue result(scope);
     script.parse();

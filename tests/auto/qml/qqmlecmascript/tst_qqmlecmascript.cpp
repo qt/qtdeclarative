@@ -3950,7 +3950,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
 
             {
                 QV4::Scope scope(QV8Engine::getV4((engine)));
-                QV4::ScopedValue temporaryScope(scope, QV4::QmlContextWrapper::qmlScope(engine, scriptContext, 0));
+                QV4::ScopedValue temporaryScope(scope, QV4::QmlContextWrapper::qmlScope(scope.engine, scriptContext, 0));
                 Q_UNUSED(temporaryScope)
             }
 

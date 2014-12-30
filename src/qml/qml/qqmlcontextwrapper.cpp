@@ -53,8 +53,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-Heap::QmlContextWrapper::QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : Heap::Object(QV8Engine::getV4(engine))
+Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+    : Heap::Object(engine)
     , readOnly(true)
     , ownsContext(ownsContext)
     , isNullWrapper(false)
@@ -70,18 +70,16 @@ Heap::QmlContextWrapper::~QmlContextWrapper()
         context->destroy();
 }
 
-ReturnedValue QmlContextWrapper::qmlScope(QV8Engine *v8, QQmlContextData *ctxt, QObject *scope)
+ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *ctxt, QObject *scope)
 {
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope valueScope(v4);
 
-    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->alloc<QmlContextWrapper>(v8, ctxt, scope));
+    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->alloc<QmlContextWrapper>(v4, ctxt, scope));
     return w.asReturnedValue();
 }
 
-ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
+ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
 {
-    ExecutionEngine *v4 = QV8Engine::getV4(v8);
     Scope scope(v4);
 
     QQmlContextData *context = new QQmlContextData;
@@ -89,7 +87,7 @@ ReturnedValue QmlContextWrapper::urlScope(QV8Engine *v8, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->alloc<QmlContextWrapper>(v8, context, (QObject*)0, true));
+    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->alloc<QmlContextWrapper>(v4, context, (QObject*)0, true));
     w->d()->isNullWrapper = true;
     return w.asReturnedValue();
 }
@@ -198,7 +196,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
         // Fall through
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->v8Engine->engine());
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
 
     while (context) {
         // Search context properties
@@ -353,7 +351,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
     // Let the caller check and avoid the function call :)
     Q_ASSERT(compiledFunction->hasQmlDependencies());
 
-    QQmlEnginePrivate *ep = engine->v8Engine->engine() ? QQmlEnginePrivate::get(engine->v8Engine->engine()) : 0;
+    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
     if (!ep)
         return;
     QQmlEnginePrivate::PropertyCapture *capture = ep->propertyCapture;
@@ -400,7 +398,7 @@ ReturnedValue QmlContextWrapper::idObjectsArray()
     return d()->idObjectsWrapper->asReturnedValue();
 }
 
-ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, String *name)
+ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String *name)
 {
     if (!d()->context->imports)
         return Encode::undefined();
@@ -410,9 +408,9 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(QV8Engine *v8, String *name
     Q_ASSERT(r.isValid());
     Q_ASSERT(r.type);
     Q_ASSERT(r.type->isSingleton());
-    Q_ASSERT(v8);
+    Q_ASSERT(v4);
 
-    QQmlEngine *e = v8->engine();
+    QQmlEngine *e = v4->qmlEngine();
     QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
     siinfo->init(e);
 
@@ -451,7 +449,7 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
         *hasProperty = true;
 
     ExecutionEngine *v4 = m->engine();
-    QQmlEnginePrivate *ep = v4->v8Engine->engine() ? QQmlEnginePrivate::get(v4->v8Engine->engine()) : 0;
+    QQmlEnginePrivate *ep = v4->qmlEngine() ? QQmlEnginePrivate::get(v4->qmlEngine()) : 0;
     if (ep)
         ep->captureProperty(&context->idValues[index].bindings);
 

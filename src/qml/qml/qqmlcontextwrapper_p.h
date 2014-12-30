@@ -68,7 +68,7 @@ namespace Heap {
 struct QQmlIdObjectsArray;
 
 struct QmlContextWrapper : Object {
-    QmlContextWrapper(QV8Engine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    QmlContextWrapper(ExecutionEngine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
     bool readOnly;
     bool ownsContext;
@@ -91,8 +91,8 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     V4_OBJECT2(QmlContextWrapper, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue qmlScope(QV8Engine *e, QQmlContextData *ctxt, QObject *scope);
-    static ReturnedValue urlScope(QV8Engine *e, const QUrl &);
+    static ReturnedValue qmlScope(ExecutionEngine *e, QQmlContextData *ctxt, QObject *scope);
+    static ReturnedValue urlScope(ExecutionEngine *v4, const QUrl &);
 
     static QQmlContextData *callingContext(ExecutionEngine *v4);
     static void takeContextOwnership(const ValueRef qmlglobal);
@@ -110,7 +110,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
     ReturnedValue idObjectsArray();
-    ReturnedValue qmlSingletonWrapper(QV8Engine *e, String *name);
+    ReturnedValue qmlSingletonWrapper(ExecutionEngine *e, String *name);
 
 };
 

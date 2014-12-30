@@ -300,7 +300,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
         QV4::Scope scope(v4);
 
-        script->object = QV4::QmlContextWrapper::urlScope(workerEngine, script->source);
+        script->object = QV4::QmlContextWrapper::urlScope(v4, script->source);
 
         QV4::Scoped<QV4::QmlContextWrapper> w(scope, script->object.value());
         Q_ASSERT(!!w);
