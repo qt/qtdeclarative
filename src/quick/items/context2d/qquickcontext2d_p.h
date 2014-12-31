@@ -173,7 +173,7 @@ public:
     QImage toImage(const QRectF& bounds);
 
     QV4::ReturnedValue v4value() const;
-    void setV8Engine(QV8Engine *eng);
+    void setV4Engine(QV4::ExecutionEngine *eng);
 
     QQuickCanvasItem* canvas() const { return m_canvas; }
     QQuickContext2DCommandBuffer* buffer() const { return m_buffer; }
@@ -234,7 +234,7 @@ public:
     QV4::PersistentValue m_fillStyle;
     QV4::PersistentValue m_strokeStyle;
     QV4::PersistentValue m_v4path;
-    QV8Engine *m_v8engine;
+    QV4::ExecutionEngine *m_v4engine;
     QScopedPointer<QOffscreenSurface> m_surface;
     QOpenGLContext *m_glContext;
     QV4::PersistentValue m_v4value;

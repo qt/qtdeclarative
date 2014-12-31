@@ -1075,9 +1075,8 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlIncubatorObject : Object {
-    QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
+    QmlIncubatorObject(QV4::ExecutionEngine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
     QScopedPointer<QQmlComponentIncubator> incubator;
-    QV8Engine *v8;
     QPointer<QObject> parent;
     QV4::Value valuemap;
     QV4::Value qmlGlobal;
@@ -1363,7 +1362,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QQmlComponentExtension *e = componentExtension(args->v4engine());
 
-    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->v4engine()->v8Engine, mode));
+    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->v4engine(), mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
     r->setPrototype(p);
 
@@ -1387,8 +1386,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::ValueRef qmlGlobal, const QV4::ValueRef valuemap, QObject *toCreate)
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
     QV4::Scope scope(v4engine);
 
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
@@ -1396,8 +1394,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
 
     if (!valuemap->isUndefined()) {
         QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
-        QV4::ScopedFunctionObject  f(scope, QV4::Script::evaluate(QV8Engine::getV4(v8engine),
-                                                                    QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
+        QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4engine,
+                                                                 QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = v4engine->globalObject();
         callData->args[0] = object;
@@ -1477,9 +1475,8 @@ QQmlComponentExtension::~QQmlComponentExtension()
 {
 }
 
-QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QV8Engine *engine, QQmlIncubator::IncubationMode m)
-    : QV4::Heap::Object(QV8Engine::getV4(engine))
-    , v8(engine)
+QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(ExecutionEngine *engine, QQmlIncubator::IncubationMode m)
+    : QV4::Heap::Object(engine)
     , valuemap(QV4::Primitive::undefinedValue())
     , qmlGlobal(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
@@ -1494,7 +1491,7 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
     QQmlComponent_setQmlParent(o, d()->parent);
 
     if (!d()->valuemap.isUndefined()) {
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(d()->v8);
+        QV4::ExecutionEngine *v4 = engine();
         QV4::Scope scope(v4);
 
         QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.asObject()));
@@ -1517,7 +1514,7 @@ void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionE
 
 void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 {
-    QV4::Scope scope(QV8Engine::getV4(d()->v8));
+    QV4::Scope scope(engine());
     // hold the incubated object in a scoped value to prevent it's destruction before this method returns
     QV4::ScopedObject incubatedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, d()->incubator->object()));
 
@@ -1535,7 +1532,7 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
         f->call(callData);
         if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
-            QQmlEnginePrivate::warning(QQmlEnginePrivate::get(d()->v8->engine()), error);
+            QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
         }
     }
 }

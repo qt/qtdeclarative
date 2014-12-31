@@ -1142,7 +1142,7 @@ void QQuickCanvasItem::initializeContext(QQuickCanvasContext *context, const QVa
 
     d->context = context;
     d->context->init(this, args);
-    d->context->setV8Engine(QQmlEnginePrivate::getV8Engine(qmlEngine(this)));
+    d->context->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
     connect(d->context, SIGNAL(textureChanged()), SLOT(update()));
     connect(d->context, SIGNAL(textureChanged()), SIGNAL(painted()));
     emit contextChanged();

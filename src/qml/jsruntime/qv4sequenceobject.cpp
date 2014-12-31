@@ -51,7 +51,7 @@ using namespace QV4;
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV4::ExecutionEngine *v4, const QString& description)
 {
-    QQmlEngine *engine = v4->v8Engine->engine();
+    QQmlEngine *engine = v4->qmlEngine();
     if (!engine)
         return;
     QQmlError retn;

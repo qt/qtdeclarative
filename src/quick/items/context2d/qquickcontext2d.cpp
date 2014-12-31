@@ -935,9 +935,8 @@ QV4::Heap::QQuickJSContext2DImageData::QQuickJSContext2DImageData(QV4::Execution
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
 
-static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
+static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionEngine *v4, const QImage& image)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QQuickContext2DEngineData *ed = engineData(scope.engine);
     QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, scope.engine->memoryManager->alloc<QQuickJSContext2DPixelData>(v4));
@@ -3188,8 +3187,6 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::CallC
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc == 1) {
         QV4::ScopedValue arg0(scope, ctx->d()->callData->args[0]);
         QV4::Scoped<QQuickJSContext2DImageData> imgData(scope, arg0);
@@ -3198,11 +3195,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::CallC
             if (pa) {
                 qreal w = pa->d()->image.width();
                 qreal h = pa->d()->image.height();
-                return qt_create_image_data(w, h, engine, QImage());
+                return qt_create_image_data(w, h, scope.engine, QImage());
             }
         } else if (arg0->isString()) {
             QImage image = r->d()->context->createPixmap(QUrl(arg0->toQStringNoThrow()))->image();
-            return qt_create_image_data(image.width(), image.height(), engine, image);
+            return qt_create_image_data(image.width(), image.height(), scope.engine, image);
         }
     } else if (ctx->d()->callData->argc == 2) {
         qreal w = ctx->d()->callData->args[0].toNumber();
@@ -3212,7 +3209,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(QV4::CallC
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createImageData(): invalid arguments");
 
         if (w > 0 && h > 0)
-            return qt_create_image_data(w, h, engine, QImage());
+            return qt_create_image_data(w, h, scope.engine, QImage());
         else
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createImageData(): invalid arguments");
     }
@@ -3229,7 +3226,6 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(QV4::CallCont
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    QV8Engine *engine = scope.engine->v8Engine;
     if (ctx->d()->callData->argc >= 4) {
         qreal x = ctx->d()->callData->args[0].toNumber();
         qreal y = ctx->d()->callData->args[1].toNumber();
@@ -3242,7 +3238,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(QV4::CallCont
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "getImageData(): Invalid arguments");
 
         QImage image = r->d()->context->canvas()->toImage(QRectF(x, y, w, h));
-        return qt_create_image_data(w, h, engine, image);
+        return qt_create_image_data(w, h, scope.engine, image);
     }
     return QV4::Encode::null();
 }
@@ -4014,7 +4010,7 @@ QMutex QQuickContext2D::mutex;
 QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
-    , m_v8engine(0)
+    , m_v4engine(0)
     , m_surface(0)
     , m_glContext(0)
     , m_thread(0)
@@ -4302,18 +4298,17 @@ void QQuickContext2D::reset()
     m_buffer->clearRect(QRectF(0, 0, m_canvas->width(), m_canvas->height()));
 }
 
-void QQuickContext2D::setV8Engine(QV8Engine *engine)
+void QQuickContext2D::setV4Engine(QV4::ExecutionEngine *engine)
 {
-    if (m_v8engine != engine) {
-        m_v8engine = engine;
+    if (m_v4engine != engine) {
+        m_v4engine = engine;
 
-        if (m_v8engine == 0)
+        if (m_v4engine == 0)
             return;
 
-        QQuickContext2DEngineData *ed = engineData(QV8Engine::getV4(engine));
-        QV4::ExecutionEngine *v4Engine = QV8Engine::getV4(engine);
-        QV4::Scope scope(v4Engine);
-        QV4::Scoped<QQuickJSContext2D> wrapper(scope, v4Engine->memoryManager->alloc<QQuickJSContext2D>(v4Engine));
+        QQuickContext2DEngineData *ed = engineData(engine);
+        QV4::Scope scope(engine);
+        QV4::Scoped<QQuickJSContext2D> wrapper(scope, engine->memoryManager->alloc<QQuickJSContext2D>(engine));
         QV4::ScopedObject p(scope, ed->contextPrototype.value());
         wrapper->setPrototype(p);
         wrapper->d()->context = this;

@@ -60,7 +60,7 @@ public:
     virtual void prepare(const QSize& canvasSize, const QSize& tileSize, const QRect& canvasWindow, const QRect& dirtyRect, bool smooth, bool antialiasing);
     virtual void flush();
 
-    virtual void setV8Engine(QV8Engine *engine) = 0;
+    virtual void setV4Engine(QV4::ExecutionEngine *engine) = 0;
     virtual QV4::ReturnedValue v4value() const = 0;
 
     virtual QImage toImage(const QRectF& bounds) = 0;

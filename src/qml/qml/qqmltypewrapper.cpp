@@ -238,8 +238,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         return;
 
     QV4::Scope scope(v4);
-    QV8Engine *v8engine = v4->v8Engine;
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = v4->v8Engine->callingContext();
 
     QQmlType *type = w->d()->type;
     if (type && !type->isSingleton() && w->d()->object) {
@@ -248,7 +247,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         if (ao)
             QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {
-        QQmlEngine *e = v8engine->engine();
+        QQmlEngine *e = scope.engine->qmlEngine();
         QQmlType::SingletonInstanceInfo *siinfo = type->singletonInstanceInfo();
         siinfo->init(e);
 
