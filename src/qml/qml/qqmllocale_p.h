@@ -38,8 +38,7 @@
 
 #include <QtCore/qlocale.h>
 #include <QtCore/qobject.h>
-#include <private/qv8engine_p.h>
-
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -110,8 +109,8 @@ public:
         Saturday = Qt::Saturday
     };
 
-    static QV4::ReturnedValue locale(QV8Engine *v8engine, const QString &localeName);
-    static QV4::ReturnedValue wrap(QV8Engine *engine, const QLocale &locale);
+    static QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
+    static QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);
 
     static void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
 

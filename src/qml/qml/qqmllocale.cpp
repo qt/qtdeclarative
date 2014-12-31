@@ -794,17 +794,16 @@ QQmlLocale::~QQmlLocale()
 {
 }
 
-QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &localeName)
+QV4::ReturnedValue QQmlLocale::locale(ExecutionEngine *engine, const QString &localeName)
 {
     QLocale qlocale;
     if (!localeName.isEmpty())
         qlocale = localeName;
-    return wrap(v8engine, qlocale);
+    return wrap(engine, qlocale);
 }
 
-QV4::ReturnedValue QQmlLocale::wrap(QV8Engine *engine, const QLocale &locale)
+QV4::ReturnedValue QQmlLocale::wrap(ExecutionEngine *v4, const QLocale &locale)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4LocaleDataDeletable *d = localeV4Data(scope.engine);
     QV4::Scoped<QQmlLocaleData> wrapper(scope, v4->memoryManager->alloc<QQmlLocaleData>(v4));

@@ -406,7 +406,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(QV4::ExecutionEngine *e, const QVarian
             case QMetaType::QJsonArray:
                 return QV4::JsonObject::fromJsonArray(e, *reinterpret_cast<const QJsonArray *>(ptr));
             case QMetaType::QLocale:
-                return QQmlLocale::wrap(e->v8Engine, *reinterpret_cast<const QLocale*>(ptr));
+                return QQmlLocale::wrap(e, *reinterpret_cast<const QLocale*>(ptr));
             default:
                 break;
         }

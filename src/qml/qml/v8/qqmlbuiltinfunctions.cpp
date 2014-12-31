@@ -1138,11 +1138,10 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
     if (ctx->d()->callData->argc == 1 && !ctx->d()->callData->args[0].isString())
         V4THROW_TYPE("locale(): argument (locale code) must be a string");
 
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     if (ctx->d()->callData->argc == 1)
         code = ctx->d()->callData->args[0].toQStringNoThrow();
 
-    return QQmlLocale::locale(v8engine, code);
+    return QQmlLocale::locale(ctx->engine(), code);
 }
 
 Heap::QQmlBindingFunction::QQmlBindingFunction(QV4::FunctionObject *originalFunction)
