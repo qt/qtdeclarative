@@ -47,6 +47,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <private/qqmlglobal_p.h>
 
 #ifndef QT_NO_XMLSTREAMREADER
 
@@ -54,8 +55,8 @@ QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 
-void *qt_add_qmlxmlhttprequest(QV8Engine *engine);
-void qt_rem_qmlxmlhttprequest(QV8Engine *engine, void *);
+void *qt_add_qmlxmlhttprequest(QV4::ExecutionEngine *engine);
+void qt_rem_qmlxmlhttprequest(QV4::ExecutionEngine *engine, void *);
 
 QT_END_NAMESPACE
 

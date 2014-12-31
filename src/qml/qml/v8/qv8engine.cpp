@@ -152,7 +152,7 @@ QV8Engine::~QV8Engine()
         delete m_extensionData[ii];
     m_extensionData.clear();
 
-    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData);
+    qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
     delete m_listModelData;
     m_listModelData = 0;
@@ -488,7 +488,7 @@ void QV8Engine::initializeGlobal()
     QQmlNumberExtension::registerExtension(m_v4Engine);
 
     qt_add_domexceptions(m_v4Engine);
-    m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
+    m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(m_v4Engine);
 
     qt_add_sqlexceptions(m_v4Engine);
 
