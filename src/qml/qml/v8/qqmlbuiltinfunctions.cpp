@@ -1243,7 +1243,7 @@ ReturnedValue QtObject::method_get_platform(CallContext *ctx)
 
     if (!qt->d()->platform)
         // Only allocate a platform object once
-        qt->d()->platform = new QQmlPlatform(ctx->d()->engine->v8Engine->publicEngine());
+        qt->d()->platform = new QQmlPlatform(ctx->d()->engine->jsEngine());
 
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, qt->d()->platform);
 }
@@ -1260,7 +1260,7 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
 
     if (!qt->d()->application)
         // Only allocate an application object once
-        qt->d()->application = QQml_guiProvider()->application(ctx->d()->engine->v8Engine->publicEngine());
+        qt->d()->application = QQml_guiProvider()->application(ctx->d()->engine->jsEngine());
 
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, qt->d()->application);
 }
@@ -1402,7 +1402,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     if (!QQmlDebugService::isDebuggingEnabled()) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
     } else {
-        QQmlProfilerService::instance()->startProfiling(v4->v8Engine->engine());
+        QQmlProfilerService::instance()->startProfiling(v4->qmlEngine());
         logger.debug("Profiling started.");
     }
 
@@ -1421,7 +1421,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     if (!QQmlDebugService::isDebuggingEnabled()) {
         logger.warning("Ignoring console.profileEnd(): the debug service is disabled.");
     } else {
-        QQmlProfilerService::instance()->stopProfiling(v4->v8Engine->engine());
+        QQmlProfilerService::instance()->stopProfiling(v4->qmlEngine());
         logger.debug("Profiling ended.");
     }
 
