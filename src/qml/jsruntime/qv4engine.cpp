@@ -748,7 +748,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    Scoped<ExecutionContext> c(scope, currentContext());
+    ScopedContext c(scope, currentContext());
     while (c && frameLimit) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {
@@ -838,7 +838,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
 
     QUrl base;
     Scope scope(this);
-    Scoped<ExecutionContext> c(scope, currentContext());
+    ScopedContext c(scope, currentContext());
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {

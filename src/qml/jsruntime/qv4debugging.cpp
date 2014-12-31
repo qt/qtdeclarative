@@ -278,7 +278,7 @@ static inline Heap::CallContext *findContext(Heap::ExecutionContext *ctxt, int f
         return 0;
 
     Scope scope(ctxt->engine);
-    Scoped<ExecutionContext> ctx(scope, ctxt);
+    ScopedContext ctx(scope, ctxt);
     while (ctx) {
         CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {
@@ -298,7 +298,7 @@ static inline Heap::CallContext *findScope(Heap::ExecutionContext *ctxt, int sco
         return 0;
 
     Scope s(ctxt->engine);
-    Scoped<ExecutionContext> ctx(s, ctxt);
+    ScopedContext ctx(s, ctxt);
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->d()->outer;
 
@@ -427,7 +427,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
         bool myRun()
         {
             Scope scope(engine);
-            Scoped<ExecutionContext> ctxt(scope, findContext(engine->currentContext(), frameNr));
+            ScopedContext ctxt(scope, findContext(engine->currentContext(), frameNr));
             while (ctxt) {
                 if (CallContext *cCtxt = ctxt->asCallContext())
                     if (cCtxt->d()->activation)
@@ -500,7 +500,7 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
     if (!sctxt || sctxt->d()->type < Heap::ExecutionContext::Type_SimpleCallContext)
         return types;
 
-    Scoped<ExecutionContext> it(scope, sctxt->d());
+    ScopedContext it(scope, sctxt->d());
     for (; it; it = it->d()->outer)
         types.append(it->d()->type);
 

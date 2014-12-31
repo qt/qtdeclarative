@@ -107,7 +107,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
     // find the right context to create the binding on
     ScopedObject activation(scope, d()->engine->globalObject());
-    Scoped<ExecutionContext> ctx(scope, this);
+    ScopedContext ctx(scope, this);
     while (ctx) {
         if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
@@ -208,7 +208,7 @@ bool ExecutionContext::deleteProperty(String *name)
 {
     Scope scope(this);
     bool hasWith = false;
-    Scoped<ExecutionContext> ctx(scope, this);
+    ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             hasWith = true;
@@ -284,7 +284,7 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
 void ExecutionContext::setProperty(String *name, const ValueRef value)
 {
     Scope scope(this);
-    Scoped<ExecutionContext> ctx(scope, this);
+    ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
@@ -349,7 +349,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
 
     bool hasWith = false;
     bool hasCatchScope = false;
-    Scoped<ExecutionContext> ctx(scope, this);
+    ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
@@ -416,7 +416,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
 
     bool hasWith = false;
     bool hasCatchScope = false;
-    Scoped<ExecutionContext> ctx(scope, this);
+    ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
         if (ctx->d()->type == Heap::ExecutionContext::Type_WithContext) {
             ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);

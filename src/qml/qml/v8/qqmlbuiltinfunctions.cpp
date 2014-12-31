@@ -1691,7 +1691,7 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
         int length = lastDot - (lastSlash + 1);
         context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
     } else if (ctx->d()->parent) {
-        Scoped<ExecutionContext> parentCtx(scope, ctx->d()->parent);
+        ScopedContext parentCtx(scope, ctx->d()->parent);
         // The first non-empty source URL in the call stack determines the translation context.
         while (parentCtx && context.isEmpty()) {
             if (QV4::CompiledData::CompilationUnit *unit = parentCtx->d()->compilationUnit) {
