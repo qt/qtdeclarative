@@ -926,7 +926,7 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
             Scope scope(v4);
             QString errorstr = QLatin1String("Qt.createQmlObject(): failed to create object: ");
 
-            QV4::Scoped<ArrayObject> qmlerrors(scope, v4->newArrayObject());
+            QV4::ScopedArrayObject qmlerrors(scope, v4->newArrayObject());
             QV4::ScopedObject qmlerror(scope);
             QV4::ScopedString s(scope);
             QV4::ScopedValue v(scope);

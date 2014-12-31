@@ -298,7 +298,7 @@ ReturnedValue JsonParser::parseArray()
 {
     Scope scope(engine);
     BEGIN << "parseArray";
-    Scoped<ArrayObject> array(scope, engine->newArrayObject());
+    ScopedArrayObject array(scope, engine->newArrayObject());
 
     if (++nestingLevel > nestingLimit) {
         lastError = QJsonParseError::DeepNesting;
@@ -1048,7 +1048,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
 {
     Scope scope(engine);
     int size = array.size();
-    Scoped<ArrayObject> a(scope, engine->newArrayObject());
+    ScopedArrayObject a(scope, engine->newArrayObject());
     a->arrayReserve(size);
     ScopedValue v(scope);
     for (int i = 0; i < size; i++)

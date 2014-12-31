@@ -51,7 +51,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     Scope scope(v4);
-    Scoped<ArrayObject> a(scope, v4->newArrayObject());
+    ScopedArrayObject a(scope, v4->newArrayObject());
     uint len;
     if (callData->argc == 1 && callData->args[0].isNumber()) {
         bool ok;
@@ -400,7 +400,7 @@ ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
     if (!o)
         return Encode::undefined();
 
-    Scoped<ArrayObject> result(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject result(scope, ctx->d()->engine->newArrayObject());
     uint len = o->getLength();
     double s = ScopedValue(scope, ctx->argument(0))->toInteger();
     uint start;
@@ -457,7 +457,7 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
         return Encode::undefined();
     uint len = instance->getLength();
 
-    Scoped<ArrayObject> newArray(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject newArray(scope, ctx->d()->engine->newArrayObject());
 
     double rs = ScopedValue(scope, ctx->argument(0))->toInteger();
     uint start;
@@ -793,7 +793,7 @@ ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
     if (!callback)
         return ctx->engine()->throwTypeError();
 
-    Scoped<ArrayObject> a(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject a(scope, ctx->d()->engine->newArrayObject());
     a->arrayReserve(len);
     a->setArrayLengthUnchecked(len);
 
@@ -830,7 +830,7 @@ ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
     if (!callback)
         return ctx->engine()->throwTypeError();
 
-    Scoped<ArrayObject> a(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject a(scope, ctx->d()->engine->newArrayObject());
     a->arrayReserve(len);
 
     ScopedValue selected(scope);

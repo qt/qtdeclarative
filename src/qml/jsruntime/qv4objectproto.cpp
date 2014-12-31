@@ -371,7 +371,7 @@ ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    Scoped<ArrayObject> a(scope, ctx->d()->engine->newArrayObject());
+    ScopedArrayObject a(scope, ctx->d()->engine->newArrayObject());
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
@@ -672,7 +672,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
 Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o)
 {
     Scope scope(v4);
-    Scoped<ArrayObject> array(scope, v4->newArrayObject());
+    ScopedArrayObject array(scope, v4->newArrayObject());
     ScopedObject O(scope, o);
     if (O) {
         ObjectIterator it(scope, O, ObjectIterator::NoFlags);

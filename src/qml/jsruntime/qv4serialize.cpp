@@ -312,7 +312,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerArray:
     {
         quint32 size = headersize(header);
-        Scoped<ArrayObject> a(scope, engine->newArrayObject());
+        ScopedArrayObject a(scope, engine->newArrayObject());
         ScopedValue v(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             v = deserialize(data, engine);
@@ -375,7 +375,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         quint32 seqLength = length - 1;
         value = deserialize(data, engine);
         int sequenceType = value->integerValue();
-        Scoped<ArrayObject> array(scope, engine->newArrayObject());
+        ScopedArrayObject array(scope, engine->newArrayObject());
         array->arrayReserve(seqLength);
         for (quint32 ii = 0; ii < seqLength; ++ii) {
             value = deserialize(data, engine);

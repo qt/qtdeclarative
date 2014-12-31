@@ -380,7 +380,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     // fill in result data
-    Scoped<ArrayObject> array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.asObject()));
+    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.asObject()));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);

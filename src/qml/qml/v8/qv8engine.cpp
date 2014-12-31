@@ -309,7 +309,7 @@ QVariant QV8Engine::objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8O
 static QV4::ReturnedValue arrayFromVariantList(QV4::ExecutionEngine *e, const QVariantList &list)
 {
     QV4::Scope scope(e);
-    QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
+    QV4::ScopedArrayObject a(scope, e->newArrayObject());
     int len = list.count();
     a->arrayReserve(len);
     QV4::ScopedValue v(scope);
@@ -431,7 +431,7 @@ QV4::ReturnedValue QV8Engine::fromVariant(QV4::ExecutionEngine *e, const QVarian
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
-            QV4::Scoped<QV4::ArrayObject> a(scope, e->newArrayObject());
+            QV4::ScopedArrayObject a(scope, e->newArrayObject());
             a->arrayReserve(list.count());
             QV4::ScopedValue v(scope);
             for (int ii = 0; ii < list.count(); ++ii)
@@ -591,7 +591,7 @@ QV4::ReturnedValue QV8Engine::global()
 QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 {
     QV4::Scope scope(m_v4Engine);
-    QV4::Scoped<QV4::ArrayObject> a(scope, m_v4Engine->newArrayObject());
+    QV4::ScopedArrayObject a(scope, m_v4Engine->newArrayObject());
     a->arrayReserve(lst.size());
     QV4::ScopedValue v(scope);
     for (int i = 0; i < lst.size(); i++)

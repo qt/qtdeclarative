@@ -1186,7 +1186,7 @@ void Runtime::declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 ReturnedValue Runtime::arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
 {
     Scope scope(engine);
-    Scoped<ArrayObject> a(scope, engine->newArrayObject());
+    ScopedArrayObject a(scope, engine->newArrayObject());
 
     if (length) {
         a->arrayReserve(length);

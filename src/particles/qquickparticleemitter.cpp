@@ -479,7 +479,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
         //Done after emitParticle so that the Painter::load is done first, this allows you to customize its static variables
         //We then don't need to request another reload, because the first reload isn't scheduled until we get back to the render thread
-        QV4::Scoped<QV4::ArrayObject> array(scope, v4->newArrayObject(toEmit.size()));
+        QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
         QV4::ScopedValue v(scope);
         for (int i=0; i<toEmit.size(); i++)
             array->putIndexed(i, (v = toEmit[i]->v4Value()));

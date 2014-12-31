@@ -397,7 +397,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     ScopedString lastIndex(scope, context->d()->engine->newString(QStringLiteral("lastIndex")));
     rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
-    Scoped<ArrayObject> a(scope, context->d()->engine->newArrayObject());
+    ScopedArrayObject a(scope, context->d()->engine->newArrayObject());
 
     double previousLastIndex = 0;
     uint n = 0;

@@ -1703,7 +1703,7 @@ QV4::ReturnedValue CallArgument::toValue(QV8Engine *engine)
         // XXX Can this be made more by using Array as a prototype and implementing
         // directly against QList<QObject*>?
         QList<QObject *> &list = *qlistPtr;
-        QV4::Scoped<ArrayObject> array(scope, v4->newArrayObject());
+        QV4::ScopedArrayObject array(scope, v4->newArrayObject());
         array->arrayReserve(list.count());
         QV4::ScopedValue v(scope);
         for (int ii = 0; ii < list.count(); ++ii)

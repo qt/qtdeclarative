@@ -493,7 +493,7 @@ QV4::ReturnedValue QQmlLocaleData::method_get_weekDays(QV4::CallContext *ctx)
 
     QList<Qt::DayOfWeek> days = locale->weekdays();
 
-    QV4::Scoped<QV4::ArrayObject> result(scope, ctx->d()->engine->newArrayObject());
+    QV4::ScopedArrayObject result(scope, ctx->d()->engine->newArrayObject());
     result->arrayReserve(days.size());
     for (int i = 0; i < days.size(); ++i) {
         int day = days.at(i);
@@ -514,7 +514,7 @@ QV4::ReturnedValue QQmlLocaleData::method_get_uiLanguages(QV4::CallContext *ctx)
         return QV4::Encode::undefined();
 
     QStringList langs = locale->uiLanguages();
-    QV4::Scoped<QV4::ArrayObject> result(scope, ctx->d()->engine->newArrayObject());
+    QV4::ScopedArrayObject result(scope, ctx->d()->engine->newArrayObject());
     result->arrayReserve(langs.size());
     QV4::ScopedValue v(scope);
     for (int i = 0; i < langs.size(); ++i)
