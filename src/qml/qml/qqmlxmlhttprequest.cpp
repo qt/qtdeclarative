@@ -1570,7 +1570,7 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
     }
 
     s = v4->newString(QStringLiteral("onreadystatechange"));
-    Scoped<FunctionObject> callback(scope, thisObj->get(s));
+    ScopedFunctionObject callback(scope, thisObj->get(s));
     if (!callback) {
         // not an error, but no onreadystatechange function to call.
         return;

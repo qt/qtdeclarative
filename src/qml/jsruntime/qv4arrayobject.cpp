@@ -690,7 +690,7 @@ ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -724,7 +724,7 @@ ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -758,7 +758,7 @@ ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -789,7 +789,7 @@ ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -826,7 +826,7 @@ ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -867,7 +867,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 
@@ -917,7 +917,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
 
     uint len = instance->getLength();
 
-    Scoped<FunctionObject> callback(scope, ctx->argument(0));
+    ScopedFunctionObject callback(scope, ctx->argument(0));
     if (!callback)
         return ctx->engine()->throwTypeError();
 

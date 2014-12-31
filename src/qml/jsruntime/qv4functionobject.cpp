@@ -361,7 +361,7 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<FunctionObject> target(scope, ctx->d()->callData->thisObject);
+    ScopedFunctionObject target(scope, ctx->d()->callData->thisObject);
     if (!target)
         return ctx->engine()->throwTypeError();
 

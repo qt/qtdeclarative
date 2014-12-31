@@ -387,7 +387,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
     ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
-    Scoped<FunctionObject> exec(scope, scope.engine->regExpPrototype.asObject()->get(execString));
+    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype.asObject()->get(execString));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;
@@ -536,7 +536,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     QString result;
     ScopedValue replacement(scope);
     ScopedValue replaceValue(scope, ctx->argument(1));
-    Scoped<FunctionObject> searchCallback(scope, replaceValue);
+    ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedCallData callData(scope, numCaptures + 2);

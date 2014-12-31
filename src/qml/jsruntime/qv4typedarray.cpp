@@ -560,7 +560,7 @@ ReturnedValue TypedArrayPrototype::method_subarray(CallContext *ctx)
 
     int newLen = end - begin;
 
-    Scoped<FunctionObject> constructor(scope, a->get(scope.engine->id_constructor));
+    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor));
     if (!constructor)
         return scope.engine->throwTypeError();
 

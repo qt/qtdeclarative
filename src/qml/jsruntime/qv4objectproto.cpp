@@ -405,7 +405,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
     ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!o)
         return Encode::undefined();
-    Scoped<FunctionObject> f(scope, o->get(ctx->d()->engine->id_toString));
+    ScopedFunctionObject f(scope, o->get(ctx->d()->engine->id_toString));
     if (!f)
         return ctx->engine()->throwTypeError();
     ScopedCallData callData(scope);
@@ -477,7 +477,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     Scope scope(ctx);
-    Scoped<FunctionObject> f(scope, ctx->argument(1));
+    ScopedFunctionObject f(scope, ctx->argument(1));
     if (!f)
         return ctx->engine()->throwTypeError();
 
@@ -505,7 +505,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     Scope scope(ctx);
-    Scoped<FunctionObject> f(scope, ctx->argument(1));
+    ScopedFunctionObject f(scope, ctx->argument(1));
     if (!f)
         return ctx->engine()->throwTypeError();
 

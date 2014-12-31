@@ -905,7 +905,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionEngine *engine, uint index, Cal
     Q_ASSERT(callData->thisObject.isUndefined());
 
     Lookup *l = engine->currentContext()->lookups + index;
-    Scoped<FunctionObject> o(scope, l->globalGetter(l, engine));
+    ScopedFunctionObject o(scope, l->globalGetter(l, engine));
     if (!o)
         return engine->throwTypeError();
 
@@ -966,7 +966,7 @@ ReturnedValue Runtime::callProperty(ExecutionEngine *engine, int nameIndex, Call
         callData->thisObject = baseObject.asReturnedValue();
     }
 
-    Scoped<FunctionObject> o(scope, baseObject->get(name));
+    ScopedFunctionObject o(scope, baseObject->get(name));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         return engine->throwTypeError(error);

@@ -389,7 +389,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
     QSqlDatabase db = r->d()->database;
     QString from_version = ctx->d()->callData->args[0].toQString();
     QString to_version = ctx->d()->callData->args[1].toQString();
-    Scoped<FunctionObject> callback(scope, ctx->argument(2));
+    ScopedFunctionObject callback(scope, ctx->argument(2));
 
     if (from_version != r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->d()->version));

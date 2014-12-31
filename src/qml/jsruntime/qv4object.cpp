@@ -137,7 +137,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
     ScopedContext global(scope, e->rootContext());
-    Scoped<FunctionObject> function(scope, BuiltinFunction::create(global, s, code));
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
 }
@@ -147,7 +147,7 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallConte
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedContext global(scope, e->rootContext());
-    Scoped<FunctionObject> function(scope, BuiltinFunction::create(global, name, code));
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
     function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
 }

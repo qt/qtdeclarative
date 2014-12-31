@@ -518,7 +518,7 @@ void QV8Engine::initializeGlobal()
                       "    }"\
                       "})"
 
-        QV4::Scoped<QV4::FunctionObject> result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
+        QV4::ScopedFunctionObject result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
         Q_ASSERT(!!result);
         m_freezeObject = result;
 #undef FREEZE_SOURCE

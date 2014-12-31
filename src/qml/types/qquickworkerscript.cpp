@@ -225,7 +225,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     onmessage = QV4::Script(globalContext, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run(); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     Q_ASSERT(!scope.engine->hasException);
     QV4::Script createsendscript(globalContext, QString::fromUtf8(SEND_MESSAGE_CREATE_SCRIPT)); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
-    QV4::Scoped<QV4::FunctionObject> createsendconstructor(scope, createsendscript.run());
+    QV4::ScopedFunctionObject createsendconstructor(scope, createsendscript.run());
     Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
     QV4::ScopedValue function(scope, QV4::BuiltinFunction::create(globalContext, name,

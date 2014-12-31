@@ -926,7 +926,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QV4::Scope scope(ep->v4engine());
 
 
-                QV4::Scoped<QV4::FunctionObject> function(scope, method(id));
+                QV4::ScopedFunctionObject function(scope, method(id));
                 if (!function) {
                     // The function was not compiled.  There are some exceptional cases which the
                     // expression rewriter does not rewrite properly (e.g., \r-terminated lines

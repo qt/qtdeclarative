@@ -707,7 +707,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
     ScopedObject o(scope, value);
     if (o) {
         ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toJSON")));
-        Scoped<FunctionObject> toJSON(scope, o->get(s));
+        ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;

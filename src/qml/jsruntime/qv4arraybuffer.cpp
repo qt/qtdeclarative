@@ -147,7 +147,7 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
     double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
     double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
 
-    Scoped<FunctionObject> constructor(scope, a->get(scope.engine->id_constructor));
+    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor));
     if (!constructor)
         return scope.engine->throwTypeError();
 

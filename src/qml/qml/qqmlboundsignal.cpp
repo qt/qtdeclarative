@@ -181,7 +181,7 @@ QV4::Function *QQmlBoundSignalExpression::function() const
     if (expressionFunctionValid()) {
         Q_ASSERT (context() && engine());
         QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::Scoped<QV4::FunctionObject> v(scope, m_v8function.value());
+        QV4::ScopedFunctionObject v(scope, m_v8function.value());
         return v ? v->function() : 0;
     }
     return 0;
