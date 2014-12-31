@@ -516,7 +516,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(CallContext *ctx)
     Scope scope(ctx);
 
     // [15.1.2.3] step by step:
-    Scoped<String> inputString(scope, ctx->argument(0), Scoped<String>::Convert);
+    ScopedString inputString(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
 

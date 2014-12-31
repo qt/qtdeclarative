@@ -456,7 +456,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject()->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
-    Scoped<String> name(scope, newString(QStringLiteral("thrower")));
+    ScopedString name(scope, newString(QStringLiteral("thrower")));
     thrower = BuiltinFunction::create(global, name, ::throwTypeError);
 }
 
@@ -1085,7 +1085,7 @@ ReturnedValue ExecutionEngine::throwTypeError(const QString &message)
 ReturnedValue ExecutionEngine::throwReferenceError(const ValueRef value)
 {
     Scope scope(this);
-    Scoped<String> s(scope, value->toString(this));
+    ScopedString s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" is not defined");
     Scoped<Object> error(scope, newReferenceErrorObject(msg));
     return throwError(error);

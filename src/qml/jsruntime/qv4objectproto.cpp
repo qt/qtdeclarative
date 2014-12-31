@@ -137,7 +137,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
         Scoped<ArgumentsObject>(scope, O)->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
-    Scoped<String> name(scope, v->toString(scope.engine));
+    ScopedString name(scope, v->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
@@ -181,7 +181,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(CallContext *ctx)
     if (!O)
         return ctx->engine()->throwTypeError();
 
-    Scoped<String> name(scope, ctx->argument(1), Scoped<String>::Convert);
+    ScopedString name(scope, ctx->argument(1), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -425,7 +425,7 @@ ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<String> P(scope, ctx->argument(0), Scoped<String>::Convert);
+    ScopedString P(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
     Scoped<Object> O(scope, ctx->d()->callData->thisObject, Scoped<Object>::Convert);
@@ -459,7 +459,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<String> p(scope, ctx->argument(0), Scoped<String>::Convert);
+    ScopedString p(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -481,7 +481,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
     if (!f)
         return ctx->engine()->throwTypeError();
 
-    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    ScopedString prop(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -509,7 +509,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
     if (!f)
         return ctx->engine()->throwTypeError();
 
-    Scoped<String> prop(scope, ctx->argument(0), Scoped<String>::Convert);
+    ScopedString prop(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
 

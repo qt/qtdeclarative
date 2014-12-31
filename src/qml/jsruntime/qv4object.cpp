@@ -156,7 +156,7 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
-    Scoped<String> s(scope, e->newIdentifier(name));
+    ScopedString s(scope, e->newIdentifier(name));
     defineAccessorProperty(s, getter, setter);
 }
 

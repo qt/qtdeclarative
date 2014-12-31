@@ -363,7 +363,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         if (!f->bindingKeyFlag()) {
             // assigning a JS function to a non-var-property is not allowed.
             QString error = QStringLiteral("Cannot assign JavaScript function to value-type property");
-            Scoped<String> e(scope, v4->newString(error));
+            ScopedString e(scope, v4->newString(error));
             v4->throwError(e);
             return;
         }

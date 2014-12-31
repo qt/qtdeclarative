@@ -57,7 +57,7 @@
 QT_BEGIN_NAMESPACE
 
 #define V4THROW_SQL(error, desc) { \
-    QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
+    QV4::ScopedString v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->engine()->throwError(ex); \
@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 }
 
 #define V4THROW_SQL2(error, desc) { \
-    QV4::Scoped<String> v(scope, scope.engine->newString(desc)); \
+    QV4::ScopedString v(scope, scope.engine->newString(desc)); \
     QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     args->setReturnValue(ctx->engine()->throwError(ex)); \
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 }
 
 #define V4THROW_REFERENCE(string) { \
-    QV4::Scoped<String> v(scope, scope.engine->newString(string)); \
+    QV4::ScopedString v(scope, scope.engine->newString(string)); \
     ctx->engine()->throwReferenceError(v); \
     return Encode::undefined(); \
 }

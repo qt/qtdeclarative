@@ -602,7 +602,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
         }
     }
     Scope scope(engine);
-    Scoped<String> n(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString n(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
     return engine->throwReferenceError(n);
 }
 
