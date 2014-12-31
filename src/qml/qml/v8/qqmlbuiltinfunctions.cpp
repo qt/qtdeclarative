@@ -942,7 +942,7 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
             }
 
             v = v4->newString(errorstr);
-            Scoped<Object> errorObject(scope, v4->newErrorObject(v));
+            ScopedObject errorObject(scope, v4->newErrorObject(v));
             errorObject->put((s = v4->newString(QStringLiteral("qmlErrors"))), qmlerrors);
             return errorObject.asReturnedValue();
         }

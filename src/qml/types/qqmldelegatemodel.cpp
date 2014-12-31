@@ -1710,7 +1710,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8Engine);
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
+    QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("model"), QQmlDelegateModelItem::get_model, 0);
     proto->defineAccessorProperty(QStringLiteral("groups"), QQmlDelegateModelItem::get_groups, QQmlDelegateModelItem::set_groups);
     QV4::ScopedString s(scope);
@@ -3338,7 +3338,7 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
+    QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("index"), QQmlDelegateModelGroupChange::method_get_index, 0);
     proto->defineAccessorProperty(QStringLiteral("count"), QQmlDelegateModelGroupChange::method_get_count, 0);
     proto->defineAccessorProperty(QStringLiteral("moveId"), QQmlDelegateModelGroupChange::method_get_moveId, 0);

@@ -323,7 +323,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerObject:
     {
         quint32 size = headersize(header);
-        Scoped<Object> o(scope, engine->newObject());
+        ScopedObject o(scope, engine->newObject());
         ScopedValue name(scope);
         ScopedString n(scope);
         ScopedValue value(scope);

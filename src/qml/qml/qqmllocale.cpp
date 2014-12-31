@@ -656,7 +656,7 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
 {
     QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
     QV4::Scope scope(eng);
-    QV4::Scoped<QV4::Object> o(scope, eng->newObject());
+    QV4::ScopedObject o(scope, eng->newObject());
 
     o->defineDefaultProperty(QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
     o->defineDefaultProperty(QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);

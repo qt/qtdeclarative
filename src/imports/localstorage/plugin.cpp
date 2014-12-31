@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 #define V4THROW_SQL(error, desc) { \
     QV4::ScopedString v(scope, scope.engine->newString(desc)); \
-    QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
+    QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     ctx->engine()->throwError(ex); \
     return Encode::undefined(); \
@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 
 #define V4THROW_SQL2(error, desc) { \
     QV4::ScopedString v(scope, scope.engine->newString(desc)); \
-    QV4::Scoped<Object> ex(scope, scope.engine->newErrorObject(v)); \
+    QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
     args->setReturnValue(ctx->engine()->throwError(ex)); \
     return; \
@@ -223,7 +223,7 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
     if (r->d()->sqlQuery.at() == (int)index || r->d()->sqlQuery.seek(index)) {
         QSqlRecord record = r->d()->sqlQuery.record();
         // XXX optimize
-        Scoped<Object> row(scope, v4->newObject());
+        ScopedObject row(scope, v4->newObject());
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             ScopedString s(scope, v4->newIdentifier(record.fieldName(ii)));
@@ -324,7 +324,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
             rows->d()->database = db;
             rows->d()->sqlQuery = query;
 
-            Scoped<Object> resultObject(scope, scope.engine->newObject());
+            ScopedObject resultObject(scope, scope.engine->newObject());
             result = resultObject.asReturnedValue();
             // XXX optimize
             ScopedString s(scope);
@@ -486,7 +486,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     ExecutionEngine *v4 = QV8Engine::getV4(engine);
     Scope scope(v4);
     {
-        Scoped<Object> proto(scope, v4->newObject());
+        ScopedObject proto(scope, v4->newObject());
         proto->defineDefaultProperty(QStringLiteral("transaction"), qmlsqldatabase_transaction);
         proto->defineDefaultProperty(QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
         proto->defineAccessorProperty(QStringLiteral("version"), qmlsqldatabase_version, 0);
@@ -495,12 +495,12 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(QV8Engine *engine)
     }
 
     {
-        Scoped<Object> proto(scope, v4->newObject());
+        ScopedObject proto(scope, v4->newObject());
         proto->defineDefaultProperty(QStringLiteral("executeSql"), qmlsqldatabase_executeSql);
         queryProto = proto;
     }
     {
-        Scoped<Object> proto(scope, v4->newObject());
+        ScopedObject proto(scope, v4->newObject());
         proto->defineDefaultProperty(QStringLiteral("item"), qmlsqldatabase_rows_item);
         proto->defineAccessorProperty(QStringLiteral("length"), qmlsqldatabase_rows_length, 0);
         proto->defineAccessorProperty(QStringLiteral("forwardOnly"),

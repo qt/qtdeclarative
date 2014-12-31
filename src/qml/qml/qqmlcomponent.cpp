@@ -1410,7 +1410,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
-    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
+    QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),
                                   QV4::QmlIncubatorObject::method_get_statusChanged, QV4::QmlIncubatorObject::method_set_statusChanged);
     proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, 0);

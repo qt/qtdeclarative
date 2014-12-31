@@ -42,7 +42,7 @@ using namespace QV4;
 void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
 {
     Scope scope(engine);
-    Scoped<Object> sqlexception(scope, engine->newObject());
+    ScopedObject sqlexception(scope, engine->newObject());
     sqlexception->defineReadonlyProperty(QStringLiteral("UNKNOWN_ERR"), Primitive::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));
     sqlexception->defineReadonlyProperty(QStringLiteral("DATABASE_ERR"), Primitive::fromInt32(SQLEXCEPTION_DATABASE_ERR));
     sqlexception->defineReadonlyProperty(QStringLiteral("VERSION_ERR"), Primitive::fromInt32(SQLEXCEPTION_VERSION_ERR));

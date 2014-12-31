@@ -1180,7 +1180,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::ValueRef
         QV4::ScopedArrayObject a(scope, d);
         if (role.type == ListLayout::Role::List) {
             QV4::Scope scope(a->engine());
-            QV4::Scoped<QV4::Object> o(scope);
+            QV4::ScopedObject o(scope);
 
             ListModel *subModel = new ListModel(role.subLayout, 0, -1);
             int arrayLength = a->getLength();
@@ -2084,7 +2084,7 @@ void QQmlListModel::append(QQmlV4Function *args)
         QV4::ScopedArrayObject objectArray(scope, (*args)[0]);
 
         if (objectArray) {
-            QV4::Scoped<QV4::Object> argObject(scope);
+            QV4::ScopedObject argObject(scope);
 
             int objectArrayLength = objectArray->getLength();
 

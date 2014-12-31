@@ -178,7 +178,7 @@ void String::put(Managed *m, String *name, const ValueRef value)
     if (scope.hasException())
         return;
     ScopedString that(scope, static_cast<String *>(m));
-    Scoped<Object> o(scope, that->engine()->newStringObject(that));
+    ScopedObject o(scope, that->engine()->newStringObject(that));
     o->put(name, value);
 }
 
@@ -189,7 +189,7 @@ void String::putIndexed(Managed *m, uint index, const ValueRef value)
         return;
 
     ScopedString that(scope, static_cast<String *>(m));
-    Scoped<Object> o(scope, that->engine()->newStringObject(that));
+    ScopedObject o(scope, that->engine()->newStringObject(that));
     o->putIndexed(index, value);
 }
 

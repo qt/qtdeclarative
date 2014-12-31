@@ -607,7 +607,7 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 {
     QV4::Scope scope(m_v4Engine);
-    QV4::Scoped<QV4::Object> o(scope, m_v4Engine->newObject());
+    QV4::ScopedObject o(scope, m_v4Engine->newObject());
     QVariantMap::const_iterator it;
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);

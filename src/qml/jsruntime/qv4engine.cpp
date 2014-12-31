@@ -1056,14 +1056,14 @@ ReturnedValue ExecutionEngine::throwError(const QString &message)
 ReturnedValue ExecutionEngine::throwSyntaxError(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
-    Scoped<Object> error(scope, newSyntaxErrorObject(message, fileName, line, column));
+    ScopedObject error(scope, newSyntaxErrorObject(message, fileName, line, column));
     return throwError(error);
 }
 
 ReturnedValue ExecutionEngine::throwSyntaxError(const QString &message)
 {
     Scope scope(this);
-    Scoped<Object> error(scope, newSyntaxErrorObject(message));
+    ScopedObject error(scope, newSyntaxErrorObject(message));
     return throwError(error);
 }
 
@@ -1071,14 +1071,14 @@ ReturnedValue ExecutionEngine::throwSyntaxError(const QString &message)
 ReturnedValue ExecutionEngine::throwTypeError()
 {
     Scope scope(this);
-    Scoped<Object> error(scope, newTypeErrorObject(QStringLiteral("Type error")));
+    ScopedObject error(scope, newTypeErrorObject(QStringLiteral("Type error")));
     return throwError(error);
 }
 
 ReturnedValue ExecutionEngine::throwTypeError(const QString &message)
 {
     Scope scope(this);
-    Scoped<Object> error(scope, newTypeErrorObject(message));
+    ScopedObject error(scope, newTypeErrorObject(message));
     return throwError(error);
 }
 
@@ -1087,7 +1087,7 @@ ReturnedValue ExecutionEngine::throwReferenceError(const ValueRef value)
     Scope scope(this);
     ScopedString s(scope, value->toString(this));
     QString msg = s->toQString() + QStringLiteral(" is not defined");
-    Scoped<Object> error(scope, newReferenceErrorObject(msg));
+    ScopedObject error(scope, newReferenceErrorObject(msg));
     return throwError(error);
 }
 
@@ -1095,7 +1095,7 @@ ReturnedValue ExecutionEngine::throwReferenceError(const QString &message, const
 {
     Scope scope(this);
     QString msg = message;
-    Scoped<Object> error(scope, newReferenceErrorObject(msg, fileName, line, column));
+    ScopedObject error(scope, newReferenceErrorObject(msg, fileName, line, column));
     return throwError(error);
 }
 

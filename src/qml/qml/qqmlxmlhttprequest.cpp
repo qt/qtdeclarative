@@ -65,7 +65,7 @@ using namespace QV4;
 #ifndef QT_NO_XMLSTREAMREADER
 
 #define V4THROW_REFERENCE(string) { \
-        Scoped<Object> error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
+        ScopedObject error(scope, ctx->engine()->newReferenceErrorObject(QStringLiteral(string))); \
         return ctx->engine()->throwError(error); \
     }
 
@@ -97,7 +97,7 @@ static ReturnedValue constructMeObject(const ValueRef thisObj, QV8Engine *e)
 {
     ExecutionEngine *v4 = QV8Engine::getV4(e);
     Scope scope(v4);
-    Scoped<Object> meObj(scope, v4->newObject());
+    ScopedObject meObj(scope, v4->newObject());
     meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), thisObj);
     ScopedValue v(scope, QmlContextWrapper::qmlScope(e, e->callingContext(), 0));
     meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
@@ -665,7 +665,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
     QQmlXMLHttpRequestData *d = xhrdata(engine->v8Engine);
     if (d->attrPrototype.isUndefined()) {
         Scope scope(engine);
-        Scoped<Object> p(scope, engine->newObject());
+        ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
@@ -726,7 +726,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->characterDataPrototype.isUndefined()) {
         Scope scope(v4);
-        Scoped<Object> p(scope, v4->newObject());
+        ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
@@ -762,7 +762,7 @@ ReturnedValue Text::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->textPrototype.isUndefined()) {
         Scope scope(v4);
-        Scoped<Object> p(scope, v4->newObject());
+        ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = CharacterData::prototype(v4)));
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
@@ -779,7 +779,7 @@ ReturnedValue CDATA::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->cdataPrototype.isUndefined()) {
         Scope scope(v4);
-        Scoped<Object> p(scope, v4->newObject());
+        ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = Text::prototype(v4)));
         d->cdataPrototype = p;
@@ -793,7 +793,7 @@ ReturnedValue Document::prototype(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4->v8Engine);
     if (d->documentPrototype.isUndefined()) {
         Scope scope(v4);
-        Scoped<Object> p(scope, v4->newObject());
+        ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, 0);
@@ -1556,14 +1556,14 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 {
     QV4::Scope scope(v4);
-    Scoped<Object> o(scope, me);
+    ScopedObject o(scope, me);
     if (!o) {
         v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
     }
 
     ScopedString s(scope, v4->newString(QStringLiteral("ThisObject")));
-    Scoped<Object> thisObj(scope, o->get(s));
+    ScopedObject thisObj(scope, o->get(s));
     if (!thisObj) {
         v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ThisObject"));
         return;
@@ -1577,7 +1577,7 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
     }
 
     s = v4->newString(QStringLiteral("ActivationObject"));
-    Scoped<Object> activationObject(scope, o->get(s));
+    ScopedObject activationObject(scope, o->get(s));
     if (!activationObject) {
         v4->throwError(QStringLiteral("QQmlXMLHttpRequest: internal error: empty ActivationObject"));
         return;
@@ -1666,7 +1666,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QV8Engine *engine = that->engine()->v8Engine;
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(engine, engine->networkAccessManager());
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, that->engine()->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(that->engine(), r));
-        Scoped<Object> proto(scope, ctor->d()->proto);
+        ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
         return w.asReturnedValue();
     }
@@ -1719,7 +1719,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
 {
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
-    Scoped<Object> p(scope, v4->newObject());
+    ScopedObject p(scope, v4->newObject());
     d()->proto = p->d();
 
     // Methods

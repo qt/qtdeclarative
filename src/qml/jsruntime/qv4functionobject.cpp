@@ -148,7 +148,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        Scoped<Object> proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.asObject()));
+        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.asObject()));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
         proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
         memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
@@ -502,7 +502,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     }
     Q_ASSERT(v4->currentContext() == &ctx);
 
-    Scoped<Object> result(scope, Q_V4_PROFILE(v4, f->function()));
+    ScopedObject result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);

@@ -41,7 +41,7 @@ using namespace QV4;
 void qt_add_domexceptions(ExecutionEngine *e)
 {
     Scope scope(e);
-    Scoped<Object> domexception(scope, e->newObject());
+    ScopedObject domexception(scope, e->newObject());
     domexception->defineReadonlyProperty(QStringLiteral("INDEX_SIZE_ERR"), Primitive::fromInt32(DOMEXCEPTION_INDEX_SIZE_ERR));
     domexception->defineReadonlyProperty(QStringLiteral("DOMSTRING_SIZE_ERR"), Primitive::fromInt32(DOMEXCEPTION_DOMSTRING_SIZE_ERR));
     domexception->defineReadonlyProperty(QStringLiteral("HIERARCHY_REQUEST_ERR"), Primitive::fromInt32(DOMEXCEPTION_HIERARCHY_REQUEST_ERR));

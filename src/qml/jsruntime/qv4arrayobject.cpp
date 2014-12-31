@@ -438,7 +438,7 @@ ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_sort(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -684,7 +684,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -718,7 +718,7 @@ ReturnedValue ArrayPrototype::method_every(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -752,7 +752,7 @@ ReturnedValue ArrayPrototype::method_some(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -783,7 +783,7 @@ ReturnedValue ArrayPrototype::method_forEach(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -820,7 +820,7 @@ ReturnedValue ArrayPrototype::method_map(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -861,7 +861,7 @@ ReturnedValue ArrayPrototype::method_filter(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 
@@ -911,7 +911,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
 ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<Object> instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!instance)
         return Encode::undefined();
 

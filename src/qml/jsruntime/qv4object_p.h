@@ -202,7 +202,7 @@ public:
 
     inline bool protoHasArray() {
         Scope scope(engine());
-        Scoped<Object> p(scope, this);
+        ScopedObject p(scope, this);
 
         while ((p = p->prototype()))
             if (p->arrayData())

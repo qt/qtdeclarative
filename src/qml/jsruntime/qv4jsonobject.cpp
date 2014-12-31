@@ -914,7 +914,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 
     Stringify stringify(ctx);
 
-    Scoped<Object> o(scope, ctx->argument(1));
+    ScopedObject o(scope, ctx->argument(1));
     if (o) {
         stringify.replacerFunction = o->asFunctionObject();
         if (o->isArrayObject()) {
@@ -999,7 +999,7 @@ QJsonValue JsonObject::toJsonValue(const ValueRef value,
 QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)
 {
     Scope scope(engine);
-    Scoped<Object> o(scope, engine->newObject());
+    ScopedObject o(scope, engine->newObject());
     ScopedString s(scope);
     ScopedValue v(scope);
     for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it) {

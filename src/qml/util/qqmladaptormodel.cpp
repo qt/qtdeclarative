@@ -208,7 +208,7 @@ public:
     {
         QV4::ExecutionEngine *v4 = data->v4;
         QV4::Scope scope(v4);
-        QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
+        QV4::ScopedObject proto(scope, v4->newObject());
         proto->defineAccessorProperty(QStringLiteral("index"), get_index, 0);
         proto->defineAccessorProperty(QStringLiteral("hasModelChildren"), get_hasModelChildren, 0);
         QV4::ScopedProperty p(scope);
@@ -959,7 +959,7 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
     : v4(QV8Engine::getV4(e))
 {
     QV4::Scope scope(v4);
-    QV4::Scoped<QV4::Object> proto(scope, v4->newObject());
+    QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("index"), get_index, 0);
     proto->defineAccessorProperty(QStringLiteral("modelData"),
                                   QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);

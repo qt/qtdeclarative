@@ -306,7 +306,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         Q_ASSERT(!!w);
         w->setReadOnly(false);
 
-        QV4::Scoped<QV4::Object> api(scope, v4->newObject());
+        QV4::ScopedObject api(scope, v4->newObject());
         api->put(QV4::ScopedString(scope, v4->newString(QStringLiteral("sendMessage"))), QV4::ScopedValue(scope, workerEngine->sendFunction(script->id)));
 
         w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))), api);
@@ -382,7 +382,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         return;
     script->source = url;
 
-    QV4::Scoped<QV4::Object> activation(scope, getWorker(script));
+    QV4::ScopedObject activation(scope, getWorker(script));
     if (!activation)
         return;
 

@@ -573,7 +573,7 @@ ReturnedValue Runtime::getElement(ExecutionEngine *engine, const ValueRef object
     Scope scope(engine);
     uint idx = index->asArrayIndex();
 
-    Scoped<Object> o(scope, object);
+    ScopedObject o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {
@@ -638,7 +638,7 @@ void Runtime::setElement(ExecutionEngine *engine, const ValueRef object, const V
 ReturnedValue Runtime::foreachIterator(ExecutionEngine *engine, const ValueRef in)
 {
     Scope scope(engine);
-    Scoped<Object> o(scope, (Object *)0);
+    ScopedObject o(scope, (Object *)0);
     if (!in->isNullOrUndefined())
         o = in->toObject(engine);
     return engine->newForEachIteratorObject(o)->asReturnedValue();
@@ -668,7 +668,7 @@ ReturnedValue Runtime::getProperty(ExecutionEngine *engine, const ValueRef objec
     Scope scope(engine);
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]);
 
-    Scoped<Object> o(scope, object);
+    ScopedObject o(scope, object);
     if (o)
         return o->get(name);
 
@@ -952,7 +952,7 @@ ReturnedValue Runtime::callProperty(ExecutionEngine *engine, int nameIndex, Call
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]);
-    Scoped<Object> baseObject(scope, callData->thisObject);
+    ScopedObject baseObject(scope, callData->thisObject);
     if (!baseObject) {
         Q_ASSERT(!callData->thisObject.isEmpty());
         if (callData->thisObject.isNullOrUndefined()) {
@@ -1018,7 +1018,7 @@ ReturnedValue Runtime::constructGlobalLookup(ExecutionEngine *engine, uint index
     Q_ASSERT(callData->thisObject.isUndefined());
 
     Lookup *l = engine->currentContext()->lookups + index;
-    Scoped<Object> f(scope, l->globalGetter(l, engine));
+    ScopedObject f(scope, l->globalGetter(l, engine));
     if (!f)
         return engine->throwTypeError();
 
@@ -1059,7 +1059,7 @@ ReturnedValue Runtime::constructProperty(ExecutionEngine *engine, int nameIndex,
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    Scoped<Object> f(scope, thisObject->get(name));
+    ScopedObject f(scope, thisObject->get(name));
     if (!f)
         return engine->throwTypeError();
 
@@ -1200,7 +1200,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
 {
     Scope scope(engine);
     QV4::InternalClass *klass = engine->currentContext()->compilationUnit->runtimeClasses[classId];
-    Scoped<Object> o(scope, engine->newObject(klass, engine->objectPrototype.asObject()));
+    ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype.asObject()));
 
     {
         bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;

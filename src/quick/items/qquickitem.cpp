@@ -4154,7 +4154,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
             return;
         }
 
-        QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
+        QV4::ScopedObject rv(scope, v4->newObject());
         args->setReturnValue(rv.asReturnedValue());
 
         QV4::ScopedString s(scope);
@@ -4233,7 +4233,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
             return;
         }
 
-        QV4::Scoped<QV4::Object> rv(scope, v4->newObject());
+        QV4::ScopedObject rv(scope, v4->newObject());
         args->setReturnValue(rv.asReturnedValue());
 
         QV4::ScopedValue v(scope);

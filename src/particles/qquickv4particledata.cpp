@@ -449,7 +449,7 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
-    QV4::Scoped<QV4::Object> p(scope, v4->newObject());
+    QV4::ScopedObject p(scope, v4->newObject());
 
     p->defineDefaultProperty(QStringLiteral("discard"), particleData_discard);
     p->defineDefaultProperty(QStringLiteral("lifeLeft"), particleData_lifeLeft);

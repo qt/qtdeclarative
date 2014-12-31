@@ -340,7 +340,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(property->coreIndex);
         } else if (property->isV4Function()) {
-            QV4::Scoped<QV4::Object> qmlcontextobject(scope, ctx->d()->engine->qmlContextObject());
+            QV4::ScopedObject qmlcontextobject(scope, ctx->d()->engine->qmlContextObject());
             ScopedContext global(scope, scope.engine->rootContext());
             return QV4::QObjectMethod::create(global, object, property->coreIndex, qmlcontextobject);
         } else if (property->isSignalHandler()) {
@@ -601,7 +601,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     } else {
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
-        Scoped<Object> alternateWrapper(scope, (Object *)0);
+        ScopedObject alternateWrapper(scope, (Object *)0);
         if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
             alternateWrapper = engine->m_multiplyWrappedQObjects->value(object);
 

@@ -120,7 +120,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const ValueRef object, co
     Scope scope(l->engine);
     uint idx = index->asArrayIndex();
 
-    Scoped<Object> o(scope, object);
+    ScopedObject o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
             if (String *str = object->asString()) {

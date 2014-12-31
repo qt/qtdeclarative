@@ -689,10 +689,10 @@ QJSValue QJSValue::prototype() const
     if (!engine)
         return QJSValue();
     QV4::Scope scope(engine);
-    Scoped<Object> o(scope, d->value.asObject());
+    ScopedObject o(scope, d->value.asObject());
     if (!o)
         return QJSValue();
-    Scoped<Object> p(scope, o->prototype());
+    ScopedObject p(scope, o->prototype());
     if (!p)
         return QJSValue(NullValue);
     return new QJSValuePrivate(o->internalClass()->engine, p);
@@ -930,7 +930,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     Scope scope(engine);
 
-    Scoped<Object> o(scope, d->value);
+    ScopedObject o(scope, d->value);
     if (!o)
         return;
 
@@ -972,7 +972,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
         return;
     Scope scope(engine);
 
-    Scoped<Object> o(scope, d->value);
+    ScopedObject o(scope, d->value);
     if (!o)
         return;
 

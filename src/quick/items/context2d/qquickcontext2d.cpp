@@ -2829,7 +2829,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(QV4::CallConte
     if (ctx->d()->callData->argc >= 1) {
         QFontMetrics fm(r->d()->context->state.font);
         uint width = fm.width(ctx->d()->callData->args[0].toQStringNoThrow());
-        QV4::Scoped<QV4::Object> tm(scope, scope.engine->newObject());
+        QV4::ScopedObject tm(scope, scope.engine->newObject());
         tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))).getPointer(),
                 QV4::ScopedValue(scope, QV4::Primitive::fromDouble(width)));
         return tm.asReturnedValue();
@@ -4208,7 +4208,7 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
 
-    QV4::Scoped<QV4::Object> proto(scope, QQuickJSContext2DPrototype::create(v4));
+    QV4::ScopedObject proto(scope, QQuickJSContext2DPrototype::create(v4));
     proto->defineAccessorProperty(QStringLiteral("strokeStyle"), QQuickJSContext2D::method_get_strokeStyle, QQuickJSContext2D::method_set_strokeStyle);
     proto->defineAccessorProperty(QStringLiteral("font"), QQuickJSContext2D::method_get_font, QQuickJSContext2D::method_set_font);
     proto->defineAccessorProperty(QStringLiteral("fillRule"), QQuickJSContext2D::method_get_fillRule, QQuickJSContext2D::method_set_fillRule);
