@@ -279,11 +279,11 @@ struct QV4ParticleData : public QV4::Object
 
 DEFINE_OBJECT_VTABLE(QV4ParticleData);
 
-class QV8ParticleDataDeletable : public QV8Engine::Deletable
+class QV4ParticleDataDeletable : public QV8Engine::Deletable
 {
 public:
-    QV8ParticleDataDeletable(QV8Engine *engine);
-    ~QV8ParticleDataDeletable();
+    QV4ParticleDataDeletable(QV4::ExecutionEngine *engine);
+    ~QV4ParticleDataDeletable();
 
     QV4::PersistentValue proto;
 };
@@ -445,9 +445,8 @@ FAKE_FLOAT_GETTER_AND_SETTER(curY, curY, setInstantaneousY)
 FAKE_FLOAT_GETTER_AND_SETTER(curVY, curVY, setInstantaneousVY)
 FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 
-QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
+QV4ParticleDataDeletable::QV4ParticleDataDeletable(QV4::ExecutionEngine *v4)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4::ScopedObject p(scope, v4->newObject());
 
@@ -493,11 +492,11 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     proto = p;
 }
 
-QV8ParticleDataDeletable::~QV8ParticleDataDeletable()
+QV4ParticleDataDeletable::~QV4ParticleDataDeletable()
 {
 }
 
-V8_DEFINE_EXTENSION(QV8ParticleDataDeletable, particleV8Data);
+V4_DEFINE_EXTENSION(QV4ParticleDataDeletable, particleV4Data);
 
 
 QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData* datum)
@@ -505,9 +504,9 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     if (!engine || !datum)
         return;
 
-    QV8ParticleDataDeletable *d = particleV8Data(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
+    QV4ParticleDataDeletable *d = particleV4Data(scope.engine);
     QV4::ScopedObject o(scope, v4->memoryManager->alloc<QV4ParticleData>(v4, datum));
     QV4::ScopedObject p(scope, d->proto.value());
     o->setPrototype(p);

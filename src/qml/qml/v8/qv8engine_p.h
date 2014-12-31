@@ -83,8 +83,8 @@ namespace QV4 {
 #define V4THROW_TYPE(string) \
     return ctx->engine()->throwTypeError(QStringLiteral(string));
 
-#define V8_DEFINE_EXTENSION(dataclass, datafunction) \
-    static inline dataclass *datafunction(QV8Engine *engine) \
+#define V4_DEFINE_EXTENSION(dataclass, datafunction) \
+    static inline dataclass *datafunction(QV4::ExecutionEngine *engine) \
     { \
         static int extensionId = -1; \
         if (extensionId == -1) { \
@@ -93,10 +93,10 @@ namespace QV4 {
                 extensionId = QV8Engine::registerExtension(); \
             QV8Engine::registrationMutex()->unlock(); \
         } \
-        dataclass *rv = (dataclass *)engine->extensionData(extensionId); \
+        dataclass *rv = (dataclass *)engine->v8Engine->extensionData(extensionId); \
         if (!rv) { \
             rv = new dataclass(engine); \
-            engine->setExtensionData(extensionId, rv); \
+            engine->v8Engine->setExtensionData(extensionId, rv); \
         } \
         return rv; \
     } \

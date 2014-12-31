@@ -46,14 +46,14 @@ QT_BEGIN_NAMESPACE
 class QQmlAdaptorModelEngineData : public QV8Engine::Deletable
 {
 public:
-    QQmlAdaptorModelEngineData(QV8Engine *engine);
+    QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4);
     ~QQmlAdaptorModelEngineData();
 
     QV4::ExecutionEngine *v4;
     QV4::PersistentValue listItemProto;
 };
 
-V8_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
+V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 
 static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
 {
@@ -421,7 +421,7 @@ public:
     QV4::ReturnedValue get()
     {
         if (type->prototype.isUndefined()) {
-            QQmlAdaptorModelEngineData * const data = engineData(v4->v8Engine);
+            QQmlAdaptorModelEngineData * const data = engineData(v4);
             type->initializeConstructor(data);
         }
         QV4::Scope scope(v4);
@@ -602,7 +602,7 @@ public:
 
     QV4::ReturnedValue get()
     {
-        QQmlAdaptorModelEngineData *data = engineData(v4->v8Engine);
+        QQmlAdaptorModelEngineData *data = engineData(v4);
         QV4::Scope scope(v4);
         QV4::ScopedObject o(scope, v4->memoryManager->alloc<QQmlDelegateModelItemObject>(v4, this));
         QV4::ScopedObject p(scope, data->listItemProto.value());
@@ -955,8 +955,8 @@ void QQmlAdaptorModel::objectDestroyed(QObject *)
     setModel(QVariant(), 0, 0);
 }
 
-QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV8Engine *e)
-    : v4(QV8Engine::getV4(e))
+QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)
+    : v4(v4)
 {
     QV4::Scope scope(v4);
     QV4::ScopedObject proto(scope, v4->newObject());

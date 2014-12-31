@@ -122,7 +122,7 @@ DEFINE_OBJECT_VTABLE(QV4::DelegateModelGroupFunction);
 class QQmlDelegateModelEngineData : public QV8Engine::Deletable
 {
 public:
-    QQmlDelegateModelEngineData(QV8Engine *engine);
+    QQmlDelegateModelEngineData(QV4::ExecutionEngine *v4);
     ~QQmlDelegateModelEngineData();
 
     QV4::ReturnedValue array(QV8Engine *engine, const QVector<QQmlChangeSet::Change> &changes);
@@ -130,7 +130,7 @@ public:
     QV4::PersistentValue changeProto;
 };
 
-V8_DEFINE_EXTENSION(QQmlDelegateModelEngineData, engineData)
+V4_DEFINE_EXTENSION(QQmlDelegateModelEngineData, engineData)
 
 
 void QQmlDelegateModelPartsMetaObject::propertyCreated(int, QMetaPropertyBuilder &prop)
@@ -2256,8 +2256,8 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV8Engine *engine)
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
         QV4::Scope scope(QV8Engine::getV4(engine));
-        QV4::ScopedValue removed(scope, engineData(engine)->array(engine, changeSet.removes()));
-        QV4::ScopedValue inserted(scope, engineData(engine)->array(engine, changeSet.inserts()));
+        QV4::ScopedValue removed(scope, engineData(scope.engine)->array(engine, changeSet.removes()));
+        QV4::ScopedValue inserted(scope, engineData(scope.engine)->array(engine, changeSet.inserts()));
         emit q->changed(QQmlV4Handle(removed), QQmlV4Handle(inserted));
     }
     if (changeSet.difference() != 0)
@@ -3296,7 +3296,7 @@ public:
 
         const QQmlChangeSet::Change &change = array->at(index);
 
-        QV4::ScopedObject changeProto(scope, engineData(v4->v8Engine)->changeProto.value());
+        QV4::ScopedObject changeProto(scope, engineData(v4)->changeProto.value());
         QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, QQmlDelegateModelGroupChange::create(v4));
         object->setPrototype(changeProto);
         object->d()->change = change;
@@ -3333,9 +3333,8 @@ QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(
 
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChangeArray);
 
-QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV8Engine *e)
+QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV4::ExecutionEngine *v4)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e);
     QV4::Scope scope(v4);
 
     QV4::ScopedObject proto(scope, v4->newObject());

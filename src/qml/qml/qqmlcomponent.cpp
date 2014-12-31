@@ -87,12 +87,12 @@ QT_BEGIN_NAMESPACE
 class QQmlComponentExtension : public QV8Engine::Deletable
 {
 public:
-    QQmlComponentExtension(QV8Engine *);
+    QQmlComponentExtension(QV4::ExecutionEngine *v4);
     virtual ~QQmlComponentExtension();
 
     QV4::PersistentValue incubationProto;
 };
-V8_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
+V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 
 /*!
     \class QQmlComponent
@@ -1361,7 +1361,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
             mode = QQmlIncubator::AsynchronousIfNested;
     }
 
-    QQmlComponentExtension *e = componentExtension(args->v4engine()->v8Engine);
+    QQmlComponentExtension *e = componentExtension(args->v4engine());
 
     QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->v4engine()->v8Engine, mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
@@ -1406,9 +1406,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     }
 }
 
-QQmlComponentExtension::QQmlComponentExtension(QV8Engine *engine)
+QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),

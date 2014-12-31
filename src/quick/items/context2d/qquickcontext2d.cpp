@@ -463,7 +463,7 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
 class QQuickContext2DEngineData : public QV8Engine::Deletable
 {
 public:
-    QQuickContext2DEngineData(QV8Engine *engine);
+    QQuickContext2DEngineData(QV4::ExecutionEngine *engine);
     ~QQuickContext2DEngineData();
 
     QV4::PersistentValue contextPrototype;
@@ -471,7 +471,7 @@ public:
     QV4::PersistentValue pixelArrayProto;
 };
 
-V8_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
+V4_DEFINE_EXTENSION(QQuickContext2DEngineData, engineData)
 
 namespace QV4 {
 namespace Heap {
@@ -937,9 +937,9 @@ DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
 
 static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV8Engine* engine, const QImage& image)
 {
-    QQuickContext2DEngineData *ed = engineData(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
+    QQuickContext2DEngineData *ed = engineData(scope.engine);
     QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, scope.engine->memoryManager->alloc<QQuickJSContext2DPixelData>(v4));
     QV4::ScopedObject p(scope, ed->pixelArrayProto.value());
     pixelData->setPrototype(p);
@@ -1546,9 +1546,6 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc >= 4) {
         qreal x0 = ctx->d()->callData->args[0].toNumber();
         qreal y0 = ctx->d()->callData->args[1].toNumber();
@@ -1561,7 +1558,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(QV4::
          || !qIsFinite(y1)) {
             V4THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "createLinearGradient(): Incorrect arguments")
         }
-        QQuickContext2DEngineData *ed = engineData(engine);
+        QQuickContext2DEngineData *ed = engineData(scope.engine);
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
@@ -1592,9 +1589,6 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc >= 6) {
         qreal x0 = ctx->d()->callData->args[0].toNumber();
         qreal y0 = ctx->d()->callData->args[1].toNumber();
@@ -1615,7 +1609,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(QV4::
         if (r0 < 0 || r1 < 0)
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createRadialGradient(): Incorrect arguments")
 
-        QQuickContext2DEngineData *ed = engineData(engine);
+        QQuickContext2DEngineData *ed = engineData(scope.engine);
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
@@ -1646,9 +1640,6 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
     QV4::Scoped<QQuickJSContext2D> r(scope, ctx->d()->callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-
-    QV8Engine *engine = scope.engine->v8Engine;
-
     if (ctx->d()->callData->argc >= 3) {
         qreal x = ctx->d()->callData->args[0].toNumber();
         qreal y = ctx->d()->callData->args[1].toNumber();
@@ -1661,7 +1652,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(QV4:
             V4THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "createConicalGradient(): Incorrect arguments");
         }
 
-        QQuickContext2DEngineData *ed = engineData(engine);
+        QQuickContext2DEngineData *ed = engineData(scope.engine);
 
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->alloc<QQuickContext2DStyle>(scope.engine));
         QV4::ScopedObject p(scope, ed->gradientProto.value());
@@ -4203,9 +4194,8 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
 }
 
 
-QQuickContext2DEngineData::QQuickContext2DEngineData(QV8Engine *engine)
+QQuickContext2DEngineData::QQuickContext2DEngineData(QV4::ExecutionEngine *v4)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
 
     QV4::ScopedObject proto(scope, QQuickJSContext2DPrototype::create(v4));
@@ -4320,7 +4310,7 @@ void QQuickContext2D::setV8Engine(QV8Engine *engine)
         if (m_v8engine == 0)
             return;
 
-        QQuickContext2DEngineData *ed = engineData(engine);
+        QQuickContext2DEngineData *ed = engineData(QV8Engine::getV4(engine));
         QV4::ExecutionEngine *v4Engine = QV8Engine::getV4(engine);
         QV4::Scope scope(v4Engine);
         QV4::Scoped<QQuickJSContext2D> wrapper(scope, v4Engine->memoryManager->alloc<QQuickJSContext2D>(v4Engine));

@@ -885,9 +885,7 @@ QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 */
 ReturnedValue QtObject::method_quit(CallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
-
-    QQmlEnginePrivate::get(v8engine->engine())->sendQuit();
+    QQmlEnginePrivate::get(ctx->engine()->qmlEngine())->sendQuit();
     return QV4::Encode::undefined();
 }
 

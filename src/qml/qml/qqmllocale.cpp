@@ -643,20 +643,19 @@ LOCALE_STRING_PROPERTY(exponential)
 LOCALE_STRING_PROPERTY(amText)
 LOCALE_STRING_PROPERTY(pmText)
 
-class QV8LocaleDataDeletable : public QV8Engine::Deletable
+class QV4LocaleDataDeletable : public QV8Engine::Deletable
 {
 public:
-    QV8LocaleDataDeletable(QV8Engine *engine);
-    ~QV8LocaleDataDeletable();
+    QV4LocaleDataDeletable(QV4::ExecutionEngine *engine);
+    ~QV4LocaleDataDeletable();
 
     QV4::PersistentValue prototype;
 };
 
-QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
+QV4LocaleDataDeletable::QV4LocaleDataDeletable(QV4::ExecutionEngine *engine)
 {
-    QV4::ExecutionEngine *eng = QV8Engine::getV4(engine);
-    QV4::Scope scope(eng);
-    QV4::ScopedObject o(scope, eng->newObject());
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::Object> o(scope, engine->newObject());
 
     o->defineDefaultProperty(QStringLiteral("dateFormat"), QQmlLocaleData::method_dateFormat, 0);
     o->defineDefaultProperty(QStringLiteral("standaloneDayName"), QQmlLocaleData::method_standaloneDayName, 0);
@@ -687,11 +686,11 @@ QV8LocaleDataDeletable::QV8LocaleDataDeletable(QV8Engine *engine)
     prototype = o;
 }
 
-QV8LocaleDataDeletable::~QV8LocaleDataDeletable()
+QV4LocaleDataDeletable::~QV4LocaleDataDeletable()
 {
 }
 
-V8_DEFINE_EXTENSION(QV8LocaleDataDeletable, localeV8Data);
+V4_DEFINE_EXTENSION(QV4LocaleDataDeletable, localeV4Data);
 
 /*!
     \qmltype Locale
@@ -805,9 +804,9 @@ QV4::ReturnedValue QQmlLocale::locale(QV8Engine *v8engine, const QString &locale
 
 QV4::ReturnedValue QQmlLocale::wrap(QV8Engine *engine, const QLocale &locale)
 {
-    QV8LocaleDataDeletable *d = localeV8Data(engine);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
+    QV4LocaleDataDeletable *d = localeV4Data(scope.engine);
     QV4::Scoped<QQmlLocaleData> wrapper(scope, v4->memoryManager->alloc<QQmlLocaleData>(v4));
     wrapper->d()->locale = locale;
     QV4::ScopedObject p(scope, d->prototype.value());
