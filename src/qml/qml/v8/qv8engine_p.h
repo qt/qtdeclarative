@@ -196,13 +196,6 @@ public:
 
     void freezeObject(const QV4::ValueRef value);
 
-    static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
-    static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8ObjectSet *visitedObjects = 0);
-    static QV4::ReturnedValue fromVariant(QV4::ExecutionEngine *e, const QVariant &);
-
-    static QVariantMap variantMapFromJS(QV4::Object *o)
-    { return objectToVariant(o->engine(), o).toMap(); }
-
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8
     // instance (like in WorkerScript).
@@ -217,17 +210,25 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    QV4::ReturnedValue variantListToJS(const QVariantList &lst);
-    QV4::ReturnedValue variantMapToJS(const QVariantMap &vmap);
-    QV4::ReturnedValue variantToJS(const QVariant &value);
+    static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
+    static QV4::ReturnedValue fromVariant(QV4::ExecutionEngine *e, const QVariant &);
 
-    QV4::ReturnedValue metaTypeToJS(int type, const void *data);
+    static QVariantMap variantMapFromJS(QV4::Object *o)
+    { return objectToVariant(o->engine(), o).toMap(); }
+
     static bool metaTypeFromJS(QV4::ExecutionEngine *e, const QV4::ValueRef value, int type, void *data);
 
+private:
+    static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8ObjectSet *visitedObjects = 0);
     static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::ValueRef value,
                                 const QByteArray &targetType,
                                 void **result);
+    static QV4::ReturnedValue variantListToJS(QV4::ExecutionEngine *v4, const QVariantList &lst);
+    static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap);
+    static QV4::ReturnedValue metaTypeToJS(QV4::ExecutionEngine *v4, int type, const void *data);
+    static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &value);
 
+public:
     // used for console.time(), console.timeEnd()
     void startTimer(const QString &timerName);
     qint64 stopTimer(const QString &timerName, bool *wasRunning);

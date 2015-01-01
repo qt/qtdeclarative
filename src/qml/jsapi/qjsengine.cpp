@@ -410,7 +410,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
     QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->metaTypeToJS(type, ptr));
+    QV4::ScopedValue v(scope, QV8Engine::metaTypeToJS(scope.engine, type, ptr));
     return new QJSValuePrivate(d->m_v4Engine, v);
 }
 

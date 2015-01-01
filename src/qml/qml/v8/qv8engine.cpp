@@ -588,14 +588,14 @@ QV4::ReturnedValue QV8Engine::global()
 // The result is a new Array object with length equal to the length
 // of the QVariantList, and the elements being the QVariantList's
 // elements converted to JS, recursively.
-QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
+QV4::ReturnedValue QV8Engine::variantListToJS(QV4::ExecutionEngine *v4, const QVariantList &lst)
 {
-    QV4::Scope scope(m_v4Engine);
-    QV4::ScopedArrayObject a(scope, m_v4Engine->newArrayObject());
+    QV4::Scope scope(v4);
+    QV4::ScopedArrayObject a(scope, v4->newArrayObject());
     a->arrayReserve(lst.size());
     QV4::ScopedValue v(scope);
     for (int i = 0; i < lst.size(); i++)
-        a->arrayPut(i, (v = variantToJS(lst.at(i))));
+        a->arrayPut(i, (v = variantToJS(v4, lst.at(i))));
     a->setArrayLengthUnchecked(lst.size());
     return a.asReturnedValue();
 }
@@ -604,16 +604,16 @@ QV4::ReturnedValue QV8Engine::variantListToJS(const QVariantList &lst)
 // The result is a new Object object with property names being
 // the keys of the QVariantMap, and values being the values of
 // the QVariantMap converted to JS, recursively.
-QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
+QV4::ReturnedValue QV8Engine::variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap)
 {
-    QV4::Scope scope(m_v4Engine);
-    QV4::ScopedObject o(scope, m_v4Engine->newObject());
+    QV4::Scope scope(v4);
+    QV4::ScopedObject o(scope, v4->newObject());
     QVariantMap::const_iterator it;
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
-        s = m_v4Engine->newIdentifier(it.key());
-        v = variantToJS(it.value());
+        s = v4->newIdentifier(it.key());
+        v = variantToJS(v4, it.value());
         uint idx = s->asArrayIndex();
         if (idx < UINT_MAX)
             o->arraySet(idx, v);
@@ -625,7 +625,7 @@ QV4::ReturnedValue QV8Engine::variantMapToJS(const QVariantMap &vmap)
 
 // Converts the meta-type defined by the given type and data to JS.
 // Returns the value if conversion succeeded, an empty handle otherwise.
-QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
+QV4::ReturnedValue QV8Engine::metaTypeToJS(QV4::ExecutionEngine *v4, int type, const void *data)
 {
     Q_ASSERT(data != 0);
 
@@ -656,7 +656,7 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::Double:
         return QV4::Encode(*reinterpret_cast<const double*>(data));
     case QMetaType::QString:
-        return m_v4Engine->currentContext()->engine->newString(*reinterpret_cast<const QString*>(data))->asReturnedValue();
+        return v4->currentContext()->engine->newString(*reinterpret_cast<const QString*>(data))->asReturnedValue();
     case QMetaType::Float:
         return QV4::Encode(*reinterpret_cast<const float*>(data));
     case QMetaType::Short:
@@ -670,30 +670,30 @@ QV4::ReturnedValue QV8Engine::metaTypeToJS(int type, const void *data)
     case QMetaType::QChar:
         return QV4::Encode((int)(*reinterpret_cast<const QChar*>(data)).unicode());
     case QMetaType::QStringList:
-        return QV4::Encode(m_v4Engine->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
+        return QV4::Encode(v4->newArrayObject(*reinterpret_cast<const QStringList *>(data)));
     case QMetaType::QVariantList:
-        return variantListToJS(*reinterpret_cast<const QVariantList *>(data));
+        return variantListToJS(v4, *reinterpret_cast<const QVariantList *>(data));
     case QMetaType::QVariantMap:
-        return variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
+        return variantMapToJS(v4, *reinterpret_cast<const QVariantMap *>(data));
     case QMetaType::QDateTime:
-        return QV4::Encode(m_v4Engine->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
+        return QV4::Encode(v4->newDateObject(*reinterpret_cast<const QDateTime *>(data)));
     case QMetaType::QDate:
-        return QV4::Encode(m_v4Engine->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
+        return QV4::Encode(v4->newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
     case QMetaType::QRegExp:
-        return QV4::Encode(m_v4Engine->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
+        return QV4::Encode(v4->newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
     case QMetaType::QObjectStar:
-        return QV4::QObjectWrapper::wrap(m_v4Engine, *reinterpret_cast<QObject* const *>(data));
+        return QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(data));
     case QMetaType::QVariant:
-        return variantToJS(*reinterpret_cast<const QVariant*>(data));
+        return variantToJS(v4, *reinterpret_cast<const QVariant*>(data));
     case QMetaType::QJsonValue:
-        return QV4::JsonObject::fromJsonValue(m_v4Engine, *reinterpret_cast<const QJsonValue *>(data));
+        return QV4::JsonObject::fromJsonValue(v4, *reinterpret_cast<const QJsonValue *>(data));
     case QMetaType::QJsonObject:
-        return QV4::JsonObject::fromJsonObject(m_v4Engine, *reinterpret_cast<const QJsonObject *>(data));
+        return QV4::JsonObject::fromJsonObject(v4, *reinterpret_cast<const QJsonObject *>(data));
     case QMetaType::QJsonArray:
-        return QV4::JsonObject::fromJsonArray(m_v4Engine, *reinterpret_cast<const QJsonArray *>(data));
+        return QV4::JsonObject::fromJsonArray(v4, *reinterpret_cast<const QJsonArray *>(data));
     default:
         if (type == qMetaTypeId<QJSValue>()) {
-            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->getValue(m_v4Engine);
+            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->getValue(v4);
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
@@ -914,9 +914,9 @@ bool QV8Engine::metaTypeFromJS(QV4::ExecutionEngine *engine, const QV4::ValueRef
 }
 
 // Converts a QVariant to JS.
-QV4::ReturnedValue QV8Engine::variantToJS(const QVariant &value)
+QV4::ReturnedValue QV8Engine::variantToJS(QV4::ExecutionEngine *v4, const QVariant &value)
 {
-    return metaTypeToJS(value.userType(), value.constData());
+    return metaTypeToJS(v4, value.userType(), value.constData());
 }
 
 bool QV8Engine::convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::ValueRef value, const QByteArray &targetType, void **result)
