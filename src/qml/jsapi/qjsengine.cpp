@@ -165,7 +165,8 @@ QT_BEGIN_NAMESPACE
     \l{ECMA-262}, Section 15.1.
 */
 QJSEngine::QJSEngine()
-    : d(new QV8Engine(this))
+    : QObject(*new QJSEnginePrivate, 0)
+    , d(new QV8Engine(this))
 {
 }
 
@@ -177,7 +178,7 @@ QJSEngine::QJSEngine()
 */
 
 QJSEngine::QJSEngine(QObject *parent)
-    : QObject(parent)
+    : QObject(*new QJSEnginePrivate, parent)
     , d(new QV8Engine(this))
 {
 }
