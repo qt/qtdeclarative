@@ -64,6 +64,7 @@ QUICKTESTS =  \
     qquickrectangle \
     qquickrepeater \
     qquickshadereffect \
+    qquickshortcut \
     qquickspritesequence \
     qquicktext \
     qquicktextdocument \

@@ -28,7 +28,8 @@ SOURCES += \
     $$PWD/qquickanimatorcontroller.cpp \
     $$PWD/qquickprofiler.cpp \
     $$PWD/qquickfontmetrics.cpp \
-    $$PWD/qquicktextmetrics.cpp
+    $$PWD/qquicktextmetrics.cpp \
+    $$PWD/qquickshortcut.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
@@ -64,4 +65,5 @@ HEADERS += \
     $$PWD/qquickanimatorcontroller_p.h \
     $$PWD/qquickprofiler_p.h \
     $$PWD/qquickfontmetrics_p.h \
-    $$PWD/qquicktextmetrics_p.h
+    $$PWD/qquicktextmetrics_p.h \
+    $$PWD/qquickshortcut_p.h

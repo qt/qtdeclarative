@@ -48,6 +48,7 @@
 #include "qquicktextmetrics_p.h"
 #include "qquicktransition_p.h"
 #include "qquickanimator_p.h"
+#include "qquickshortcut_p.h"
 #include <qqmlinfo.h>
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qquickanimationcontroller_p.h>
@@ -103,4 +104,6 @@ void QQuickUtilModule::defineModule()
 
     qmlRegisterType<QQuickFontMetrics>("QtQuick", 2, 4, "FontMetrics");
     qmlRegisterType<QQuickTextMetrics>("QtQuick", 2, 4, "TextMetrics");
+
+    qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
 }
