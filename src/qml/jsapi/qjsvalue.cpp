@@ -516,7 +516,22 @@ QVariant QJSValue::toVariant() const
     if (d->value.isEmpty())
         return d->unboundData;
 
-    return QV4::VariantObject::toVariant(d->value);
+    if (d->value.asObject())
+        return QV8Engine::toVariant(d->value.engine(), d->value, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
+
+    if (d->value.isString())
+        return QVariant(d->value.stringValue()->toQString());
+    if (d->value.isBoolean())
+        return QVariant(d->value.booleanValue());
+    if (d->value.isNumber()) {
+        if (d->value.isInt32())
+            return QVariant(d->value.integerValue());
+        return QVariant(d->value.asDouble());
+    }
+    if (d->value.isNull())
+        return QVariant(QMetaType::VoidStar, 0);
+    Q_ASSERT(d->value.isUndefined());
+    return QVariant();
 }
 
 /*!

@@ -51,28 +51,6 @@ Heap::VariantObject::VariantObject(QV4::ExecutionEngine *engine, const QVariant 
         engine->scarceResources.insert(this);
 }
 
-QVariant VariantObject::toVariant(const QV4::ValueRef v)
-{
-    if (v->asObject())
-        return QV8Engine::toVariant(v->engine(), v, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
-
-    if (v->isString())
-        return QVariant(v->stringValue()->toQString());
-    if (v->isBoolean())
-        return QVariant(v->booleanValue());
-    if (v->isNumber()) {
-        QV4::Value val;
-        val = v;
-        if (val.isInt32())
-            return QVariant(val.integerValue());
-        return QVariant(v->asDouble());
-    }
-    if (v->isNull())
-        return QVariant(QMetaType::VoidStar, 0);
-    Q_ASSERT(v->isUndefined());
-    return QVariant();
-}
-
 bool VariantObject::Data::isScarce() const
 {
     QVariant::Type t = data.type();

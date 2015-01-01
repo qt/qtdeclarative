@@ -79,8 +79,6 @@ struct VariantObject : Object
     V4_OBJECT2(VariantObject, Object)
     V4_NEEDS_DESTROY
 
-    static QVariant toVariant(const ValueRef v);
-
     void addVmePropertyReference();
     void removeVmePropertyReference();
 
