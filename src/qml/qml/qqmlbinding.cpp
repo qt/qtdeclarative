@@ -260,7 +260,7 @@ QVariant QQmlBinding::evaluate()
 
     ep->dereferenceScarceResources();
 
-    return QV4::ExecutionEngine::toVariant(scope.engine, result, qMetaTypeId<QList<QObject*> >());
+    return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
 QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)

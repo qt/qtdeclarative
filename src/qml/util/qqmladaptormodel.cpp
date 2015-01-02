@@ -345,11 +345,11 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, ui
     QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
     if (o->d()->item->index == -1) {
         if (!modelData->cachedData.isEmpty()) {
-            return QV4::ExecutionEngine::fromVariant(scope.engine,
+            return scope.engine->fromVariant(
                     modelData->cachedData.at(modelData->type->hasModelData ? 0 : propertyId));
         }
     } else if (*modelData->type->model) {
-        return QV4::ExecutionEngine::fromVariant(scope.engine,
+        return scope.engine->fromVariant(
                 modelData->value(modelData->type->propertyRoles.at(propertyId)));
     }
     return QV4::Encode::undefined();
@@ -368,10 +368,10 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, ui
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
-                modelData->cachedData[propertyId] = QV4::ExecutionEngine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[propertyId] = scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
-                modelData->cachedData[0] = QV4::ExecutionEngine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[0] = scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 0, 0);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 1, 0);
             }
@@ -584,7 +584,7 @@ public:
         if (!o)
             return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        return QV4::ExecutionEngine::fromVariant(scope.engine, static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
+        return scope.engine->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
     }
 
     static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
@@ -596,7 +596,7 @@ public:
         if (!ctx->d()->callData->argc)
             return ctx->engine()->throwTypeError();
 
-        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(QV4::ExecutionEngine::toVariant(scope.engine, ctx->d()->callData->args[0], QVariant::Invalid));
+        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid));
         return QV4::Encode::undefined();
     }
 

@@ -183,7 +183,7 @@ ReturnedValue QtObject::method_rgba(QV4::CallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_colorProvider()->fromRgbF(r, g, b, a));
+    return ctx->engine()->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
 }
 
 /*!
@@ -212,7 +212,7 @@ ReturnedValue QtObject::method_hsla(QV4::CallContext *ctx)
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_colorProvider()->fromHslF(h, s, l, a));
+    return ctx->engine()->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
 }
 
 /*!
@@ -230,7 +230,7 @@ ReturnedValue QtObject::method_colorEqual(QV4::CallContext *ctx)
 
     bool ok = false;
 
-    QVariant lhs = QV4::ExecutionEngine::toVariant(ctx->d()->engine, ctx->d()->callData->args[0], -1);
+    QVariant lhs = ctx->d()->engine->toVariant(ctx->d()->callData->args[0], -1);
     if (lhs.userType() == QVariant::String) {
         lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
         if (!ok) {
@@ -240,7 +240,7 @@ ReturnedValue QtObject::method_colorEqual(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.colorEqual(): Invalid arguments");
     }
 
-    QVariant rhs = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[1], -1);
+    QVariant rhs = ctx->engine()->toVariant(ctx->d()->callData->args[1], -1);
     if (rhs.userType() == QVariant::String) {
         rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
         if (!ok) {
@@ -271,7 +271,7 @@ ReturnedValue QtObject::method_rect(QV4::CallContext *ctx)
     double w = ctx->d()->callData->args[2].toNumber();
     double h = ctx->d()->callData->args[3].toNumber();
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QVariant::fromValue(QRectF(x, y, w, h)));
+    return ctx->engine()->fromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
 }
 
 /*!
@@ -286,7 +286,7 @@ ReturnedValue QtObject::method_point(QV4::CallContext *ctx)
     double x = ctx->d()->callData->args[0].toNumber();
     double y = ctx->d()->callData->args[1].toNumber();
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QVariant::fromValue(QPointF(x, y)));
+    return ctx->engine()->fromVariant(QVariant::fromValue(QPointF(x, y)));
 }
 
 /*!
@@ -301,7 +301,7 @@ ReturnedValue QtObject::method_size(QV4::CallContext *ctx)
     double w = ctx->d()->callData->args[0].toNumber();
     double h = ctx->d()->callData->args[1].toNumber();
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QVariant::fromValue(QSizeF(w, h)));
+    return ctx->engine()->fromVariant(QVariant::fromValue(QSizeF(w, h)));
 }
 
 /*!
@@ -322,7 +322,7 @@ ReturnedValue QtObject::method_font(QV4::CallContext *ctx)
     QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QFont, QQmlV4Handle(ctx->d()->callData->args[0]), v4, &ok);
     if (!ok)
         V4THROW_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), v);
+    return ctx->engine()->fromVariant(v);
 }
 
 
@@ -341,7 +341,7 @@ ReturnedValue QtObject::method_vector2d(QV4::CallContext *ctx)
     xy[1] = ctx->d()->callData->args[1].toNumber();
 
     const void *params[] = { xy };
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
+    return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
 }
 
 /*!
@@ -359,7 +359,7 @@ ReturnedValue QtObject::method_vector3d(QV4::CallContext *ctx)
     xyz[2] = ctx->d()->callData->args[2].toNumber();
 
     const void *params[] = { xyz };
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
+    return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
 }
 
 /*!
@@ -378,7 +378,7 @@ ReturnedValue QtObject::method_vector4d(QV4::CallContext *ctx)
     xyzw[3] = ctx->d()->callData->args[3].toNumber();
 
     const void *params[] = { xyzw };
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
+    return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
 }
 
 /*!
@@ -397,7 +397,7 @@ ReturnedValue QtObject::method_quaternion(QV4::CallContext *ctx)
     sxyz[3] = ctx->d()->callData->args[3].toNumber();
 
     const void *params[] = { sxyz };
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
+    return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
 }
 
 /*!
@@ -416,7 +416,7 @@ ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
         QVariant v = QQml_valueTypeProvider()->createVariantFromJsObject(QMetaType::QMatrix4x4, QQmlV4Handle(ctx->d()->callData->args[0]), v4, &ok);
         if (!ok)
             V4THROW_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
-        return QV4::ExecutionEngine::fromVariant(ctx->engine(), v);
+        return ctx->engine()->fromVariant(v);
     }
 
     if (ctx->d()->callData->argc != 16)
@@ -441,7 +441,7 @@ ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
     vals[15] = ctx->d()->callData->args[15].toNumber();
 
     const void *params[] = { vals };
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
+    return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
 }
 
 /*!
@@ -463,7 +463,7 @@ ReturnedValue QtObject::method_lighter(QV4::CallContext *ctx)
     if (ctx->d()->callData->argc != 1 && ctx->d()->callData->argc != 2)
         V4THROW_ERROR("Qt.lighter(): Invalid arguments");
 
-    QVariant v = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
+    QVariant v = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -478,7 +478,7 @@ ReturnedValue QtObject::method_lighter(QV4::CallContext *ctx)
     if (ctx->d()->callData->argc == 2)
         factor = ctx->d()->callData->args[1].toNumber();
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_colorProvider()->lighter(v, factor));
+    return ctx->engine()->fromVariant(QQml_colorProvider()->lighter(v, factor));
 }
 
 /*!
@@ -501,7 +501,7 @@ ReturnedValue QtObject::method_darker(QV4::CallContext *ctx)
     if (ctx->d()->callData->argc != 1 && ctx->d()->callData->argc != 2)
         V4THROW_ERROR("Qt.darker(): Invalid arguments");
 
-    QVariant v = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
+    QVariant v = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1);
     if (v.userType() == QVariant::String) {
         bool ok = false;
         v = QQmlStringConverters::colorFromString(v.toString(), &ok);
@@ -516,7 +516,7 @@ ReturnedValue QtObject::method_darker(QV4::CallContext *ctx)
     if (ctx->d()->callData->argc == 2)
         factor = ctx->d()->callData->args[1].toNumber();
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_colorProvider()->darker(v, factor));
+    return ctx->engine()->fromVariant(QQml_colorProvider()->darker(v, factor));
 }
 
 /*!
@@ -549,7 +549,7 @@ ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.tint(): Invalid arguments");
 
     // base color
-    QVariant v1 = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
+    QVariant v1 = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1);
     if (v1.userType() == QVariant::String) {
         bool ok = false;
         v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
@@ -561,7 +561,7 @@ ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
     }
 
     // tint color
-    QVariant v2 = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[1], -1);
+    QVariant v2 = ctx->engine()->toVariant(ctx->d()->callData->args[1], -1);
     if (v2.userType() == QVariant::String) {
         bool ok = false;
         v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
@@ -572,7 +572,7 @@ ReturnedValue QtObject::method_tint(QV4::CallContext *ctx)
         return QV4::Encode::null();
     }
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_colorProvider()->tint(v1, v2));
+    return ctx->engine()->fromVariant(QQml_colorProvider()->tint(v1, v2));
 }
 
 /*!
@@ -598,7 +598,7 @@ ReturnedValue QtObject::method_formatDate(QV4::CallContext *ctx)
     QV4::Scope scope(ctx);
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDate date = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toDateTime().date();
+    QDate date = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1).toDateTime().date();
     QString formattedDate;
     if (ctx->d()->callData->argc == 2) {
         QV4::ScopedString s(scope, ctx->d()->callData->args[1]);
@@ -640,7 +640,7 @@ ReturnedValue QtObject::method_formatTime(QV4::CallContext *ctx)
         V4THROW_ERROR("Qt.formatTime(): Invalid arguments");
     QV4::Scope scope(ctx);
 
-    QVariant argVariant = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1);
+    QVariant argVariant = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1);
     QTime time;
     if (ctx->d()->callData->args[0].asDateObject() || (argVariant.type() == QVariant::String))
         time = argVariant.toDateTime().time();
@@ -765,7 +765,7 @@ ReturnedValue QtObject::method_formatDateTime(QV4::CallContext *ctx)
     QV4::Scope scope(ctx);
 
     Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    QDateTime dt = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toDateTime();
+    QDateTime dt = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1).toDateTime();
     QString formattedDt;
     if (ctx->d()->callData->argc == 2) {
         QV4::ScopedString s(scope, ctx->d()->callData->args[1]);
@@ -796,7 +796,7 @@ ReturnedValue QtObject::method_openUrlExternally(QV4::CallContext *ctx)
         return QV4::Encode(false);
 
     QUrl url(Value::fromReturnedValue(method_resolvedUrl(ctx)).toQStringNoThrow());
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QQml_guiProvider()->openUrlExternally(url));
+    return ctx->engine()->fromVariant(QQml_guiProvider()->openUrlExternally(url));
 }
 
 /*!
@@ -807,7 +807,7 @@ ReturnedValue QtObject::method_resolvedUrl(QV4::CallContext *ctx)
 {
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
 
-    QUrl url = QV4::ExecutionEngine::toVariant(ctx->engine(), ctx->d()->callData->args[0], -1).toUrl();
+    QUrl url = ctx->engine()->toVariant(ctx->d()->callData->args[0], -1).toUrl();
     QQmlEngine *e = v8engine->engine();
     QQmlEnginePrivate *p = 0;
     if (e) p = QQmlEnginePrivate::get(e);
@@ -831,7 +831,7 @@ ReturnedValue QtObject::method_fontFamilies(CallContext *ctx)
     if (ctx->d()->callData->argc != 0)
         V4THROW_ERROR("Qt.fontFamilies(): Invalid arguments");
 
-    return QV4::ExecutionEngine::fromVariant(ctx->engine(), QVariant(QQml_guiProvider()->fontFamilies()));
+    return ctx->engine()->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
 }
 
 /*!

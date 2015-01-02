@@ -885,7 +885,7 @@ int ListElement::setVariantMapProperty(const ListLayout::Role &role, QV4::Object
             QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
             map->~QMap();
         }
-        new (mem) QVariantMap(QV4::ExecutionEngine::variantMapFromJS(o));
+        new (mem) QVariantMap(o->engine()->variantMapFromJS(o));
         roleIndex = role.index;
     }
 
@@ -966,7 +966,7 @@ void ListElement::setVariantMapFast(const ListLayout::Role &role, QV4::Object *o
 {
     char *mem = getPropertyMemory(role);
     QVariantMap *map = new (mem) QVariantMap;
-    *map = QV4::ExecutionEngine::variantMapFromJS(o);
+    *map = o->engine()->variantMapFromJS(o);
 }
 
 void ListElement::setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt)
@@ -1262,7 +1262,7 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QVariant value = operator[](index);
 
     QV4::Scope scope(m_obj->m_model->engine());
-    QV4::ScopedValue v(scope, QV4::ExecutionEngine::fromVariant(scope.engine, value));
+    QV4::ScopedValue v(scope, scope.engine->fromVariant(value));
 
     int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, scope.engine);
     if (roleIndex != -1) {
@@ -1983,7 +1983,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
                 argObject = objectArray->getIndexed(i);
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(QV4::ExecutionEngine::variantMapFromJS(argObject), this));
+                    m_modelObjects.insert(index+i, DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
                 } else {
                     m_listModel->insert(index+i, argObject);
                 }
@@ -1993,7 +1993,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
             emitItemsAboutToBeInserted(index, 1);
 
             if (m_dynamicRoles) {
-                m_modelObjects.insert(index, DynamicRoleModelNode::create(QV4::ExecutionEngine::variantMapFromJS(argObject), this));
+                m_modelObjects.insert(index, DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
             } else {
                 m_listModel->insert(index, argObject);
             }
@@ -2093,7 +2093,7 @@ void QQmlListModel::append(QQmlV4Function *args)
                 argObject = objectArray->getIndexed(i);
 
                 if (m_dynamicRoles) {
-                    m_modelObjects.append(DynamicRoleModelNode::create(QV4::ExecutionEngine::variantMapFromJS(argObject), this));
+                    m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
                 } else {
                     m_listModel->append(argObject);
                 }
@@ -2106,7 +2106,7 @@ void QQmlListModel::append(QQmlV4Function *args)
             if (m_dynamicRoles) {
                 index = m_modelObjects.count();
                 emitItemsAboutToBeInserted(index, 1);
-                m_modelObjects.append(DynamicRoleModelNode::create(QV4::ExecutionEngine::variantMapFromJS(argObject), this));
+                m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
             } else {
                 index = m_listModel->elementCount();
                 emitItemsAboutToBeInserted(index, 1);
@@ -2207,7 +2207,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
         emitItemsAboutToBeInserted(index, 1);
 
         if (m_dynamicRoles) {
-            m_modelObjects.append(DynamicRoleModelNode::create(QV4::ExecutionEngine::variantMapFromJS(object), this));
+            m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(object), this));
         } else {
             m_listModel->insert(index, object);
         }
@@ -2218,7 +2218,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
         QVector<int> roles;
 
         if (m_dynamicRoles) {
-            m_modelObjects[index]->updateValues(QV4::ExecutionEngine::variantMapFromJS(object), roles);
+            m_modelObjects[index]->updateValues(scope.engine->variantMapFromJS(object), roles);
         } else {
             m_listModel->set(index, object, &roles);
         }

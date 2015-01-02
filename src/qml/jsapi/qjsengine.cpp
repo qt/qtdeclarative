@@ -410,7 +410,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 {
     Q_D(QJSEngine);
     QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, QV4::ExecutionEngine::metaTypeToJS(scope.engine, type, ptr));
+    QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
     return new QJSValuePrivate(d->m_v4Engine, v);
 }
 
@@ -424,7 +424,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     if (vp->engine) {
         QV4::Scope scope(vp->engine);
         QV4::ScopedValue v(scope, vp->getValue(scope.engine));
-        return QV4::ExecutionEngine::metaTypeFromJS(scope.engine, v, type, ptr);
+        return scope.engine->metaTypeFromJS(v, type, ptr);
     } else if (vp->value.isEmpty()) {
         if (vp->unboundData.userType() == QMetaType::QString) {
             QString string = vp->unboundData.toString();

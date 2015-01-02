@@ -353,24 +353,13 @@ public:
     QQmlError catchExceptionAsQmlError();
 
     // variant conversions
-    typedef QSet<QV4::Heap::Object *> V4ObjectSet;
-    static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V4ObjectSet *visitedObjects = 0);
-    static QV4::ReturnedValue fromVariant(QV4::ExecutionEngine *e, const QVariant &);
+    QVariant toVariant(const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true);
+    QV4::ReturnedValue fromVariant(const QVariant &);
 
-    static QVariantMap variantMapFromJS(QV4::Object *o);
+    QVariantMap variantMapFromJS(QV4::Object *o);
 
-    static bool metaTypeFromJS(QV4::ExecutionEngine *e, const QV4::ValueRef value, int type, void *data);
-    static QV4::ReturnedValue metaTypeToJS(QV4::ExecutionEngine *v4, int type, const void *data);
-
-private:
-    static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::ValueRef value);
-    static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V4ObjectSet *visitedObjects = 0);
-    static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::ValueRef value,
-                                const QByteArray &targetType,
-                                void **result);
-    static QV4::ReturnedValue variantListToJS(QV4::ExecutionEngine *v4, const QVariantList &lst);
-    static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap);
-    static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &value);
+    bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
+    QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
 private:
     QmlExtensions *m_qmlExtensions;

@@ -1646,7 +1646,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
         propertyName = it.nextPropertyNameAsString(v);
         if (propertyName->isNull())
             break;
-        cacheItem->setValue(propertyName->toQStringNoThrow(), QV4::ExecutionEngine::toVariant(scope.engine, v, QVariant::Invalid));
+        cacheItem->setValue(propertyName->toQStringNoThrow(), scope.engine->toVariant(v, QVariant::Invalid));
     }
 
     cacheItem->groups = groups | Compositor::UnresolvedFlag | Compositor::CacheFlag;
@@ -1825,7 +1825,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(QV4::CallContext *ctx)
             groups.append(o->d()->item->metaType->groupNames.at(i - 1));
     }
 
-    return QV4::ExecutionEngine::fromVariant(scope.engine, groups);
+    return scope.engine->fromVariant(groups);
 }
 
 QV4::ReturnedValue QQmlDelegateModelItem::set_groups(QV4::CallContext *ctx)

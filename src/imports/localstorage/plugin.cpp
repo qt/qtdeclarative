@@ -226,7 +226,7 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
         for (int ii = 0; ii < record.count(); ++ii) {
             QVariant v = record.value(ii);
             ScopedString s(scope, v4->newIdentifier(record.fieldName(ii)));
-            ScopedValue val(scope, v.isNull() ? Encode::null() : QV4::ExecutionEngine::fromVariant(v4, v));
+            ScopedValue val(scope, v.isNull() ? Encode::null() : v4->fromVariant(v));
             row->put(s.getPointer(), val);
         }
         if (hasProperty)
@@ -291,7 +291,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                 quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii)
-                    query.bindValue(ii, QV4::ExecutionEngine::toVariant(scope.engine, (v = array->getIndexed(ii)), -1));
+                    query.bindValue(ii, scope.engine->toVariant((v = array->getIndexed(ii)), -1));
             } else if (values->asObject()) {
                 ScopedObject object(scope, values);
                 ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
@@ -301,7 +301,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     key = it.nextPropertyName(val);
                     if (key->isNull())
                         break;
-                    QVariant v = QV4::ExecutionEngine::toVariant(scope.engine, val, -1);
+                    QVariant v = scope.engine->toVariant(val, -1);
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
                     } else {
@@ -310,7 +310,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     }
                 }
             } else {
-                query.bindValue(0, QV4::ExecutionEngine::toVariant(scope.engine, values, -1));
+                query.bindValue(0, scope.engine->toVariant(values, -1));
             }
         }
         if (query.exec()) {

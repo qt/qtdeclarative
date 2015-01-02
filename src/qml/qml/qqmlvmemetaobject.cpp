@@ -945,7 +945,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 callData->thisObject = ep->v8engine()->global();
 
                 for (int ii = 0; ii < data->parameterCount; ++ii)
-                    callData->args[ii] = QV4::ExecutionEngine::fromVariant(scope.engine, *(QVariant *)a[ii + 1]);
+                    callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
                 QV4::ScopedValue result(scope);
                 result = function->call(callData);
@@ -955,7 +955,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = QV4::ExecutionEngine::toVariant(scope.engine, result, 0);
+                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -1004,7 +1004,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
             QV4::Scope scope(v4);
             QV4::ScopedObject o(scope, varProperties.value());
             QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
-            return QV4::ExecutionEngine::toVariant(scope.engine, val, -1);
+            return scope.engine->toVariant(val, -1);
         }
         return QVariant();
     } else {
@@ -1077,7 +1077,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        QV4::ScopedValue newv(scope, QV4::ExecutionEngine::fromVariant(scope.engine, value));
+        QV4::ScopedValue newv(scope, scope.engine->fromVariant(value));
         QV4::Scoped<QV4::VariantObject> v(scope, newv);
         if (!!v)
             v->addVmePropertyReference();

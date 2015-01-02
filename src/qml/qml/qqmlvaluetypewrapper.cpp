@@ -327,7 +327,8 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
     metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, index, args);
-    return QV4::ExecutionEngine::fromVariant(v4, v);
+    return v4->fromVariant(v);
+#undef VALUE_TYPE_ACCESSOR
 }
 
 void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
@@ -399,7 +400,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
     if (newBinding)
         return;
 
-    QVariant v = QV4::ExecutionEngine::toVariant(v4, value, property.userType());
+    QVariant v = v4->toVariant(value, property.userType());
 
     if (property.isEnumType() && (QMetaType::Type)v.type() == QMetaType::Double)
         v = v.toInt();
