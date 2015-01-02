@@ -142,6 +142,7 @@ Heap::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
 #ifndef QT_NO_IM
     o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, 0);
 #endif
+    o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, 0);
 }
 
 
@@ -1271,6 +1272,12 @@ ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, o);
 }
 #endif
+
+ReturnedValue QtObject::method_get_styleHints(CallContext *ctx)
+{
+    QObject *o = QQml_guiProvider()->styleHints();
+    return QV4::QObjectWrapper::wrap(ctx->d()->engine, o);
+}
 
 
 QV4::Heap::ConsoleObject::ConsoleObject(ExecutionEngine *v4)

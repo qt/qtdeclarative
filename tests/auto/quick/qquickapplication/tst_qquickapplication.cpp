@@ -37,6 +37,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/qinputmethod.h>
+#include <QtGui/qstylehints.h>
 #include <qpa/qwindowsysteminterface.h>
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
@@ -52,6 +53,7 @@ private slots:
     void state();
     void layoutDirection();
     void inputMethod();
+    void styleHints();
     void cleanup();
 
 private:
@@ -214,6 +216,18 @@ void tst_qquickapplication::inputMethod()
     QCOMPARE(qvariant_cast<QObject*>(item->property("inputMethod")), qApp->inputMethod());
 }
 
+void tst_qquickapplication::styleHints()
+{
+    // technically not in QQuickApplication, but testing anyway here
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; Item { property variant styleHints: Qt.styleHints }", QUrl::fromLocalFile(""));
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(item);
+    QQuickView view;
+    item->setParentItem(view.rootObject());
+
+    QCOMPARE(qvariant_cast<QObject*>(item->property("styleHints")), qApp->styleHints());
+}
 
 QTEST_MAIN(tst_qquickapplication)
 

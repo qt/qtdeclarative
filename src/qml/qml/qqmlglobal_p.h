@@ -296,6 +296,7 @@ public:
 #ifndef QT_NO_IM
     virtual QObject *inputMethod();
 #endif
+    virtual QObject *styleHints();
     virtual QStringList fontFamilies();
     virtual bool openUrlExternally(QUrl &);
 };

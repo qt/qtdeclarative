@@ -364,6 +364,14 @@ QObject *QQmlGuiProvider::inputMethod()
 }
 #endif
 
+QObject *QQmlGuiProvider::styleHints()
+{
+    QObject *o = new QObject();
+    o->setObjectName(QString::fromLatin1("No styleHints available"));
+    QQmlEngine::setObjectOwnership(o, QQmlEngine::JavaScriptOwnership);
+    return o;
+}
+
 static QQmlGuiProvider *guiProvider = 0;
 
 Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newProvider)

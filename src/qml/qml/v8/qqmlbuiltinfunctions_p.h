@@ -116,6 +116,7 @@ struct QtObject : Object
 #ifndef QT_NO_IM
     static ReturnedValue method_get_inputMethod(CallContext *ctx);
 #endif
+    static ReturnedValue method_get_styleHints(CallContext *ctx);
 };
 
 struct ConsoleObject : Object

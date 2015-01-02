@@ -523,6 +523,34 @@ The following functions are also on the Qt object.
     further details.
 */
 
+/*!
+    \qmlproperty object Qt::styleHints
+    \since 5.5
+
+    The \c styleHints object provides platform-specific style hints and settings.
+    See the QStyleHints documentation for further details.
+
+    \note The \c styleHints object is only available when using the Qt Quick module.
+
+    The following example uses the \c styleHints object to determine whether an
+    item should gain focus on mouse press or touch release:
+    \code
+    import QtQuick 2.4
+
+    MouseArea {
+        id: button
+
+        onPressed: {
+            if (!Qt.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+        onReleased: {
+            if (Qt.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+    }
+    \endcode
+*/
 
 /*!
 \qmlmethod object Qt::include(string url, jsobject callback)

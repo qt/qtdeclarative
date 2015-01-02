@@ -39,6 +39,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
+#include <QtGui/qstylehints.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
@@ -931,6 +932,13 @@ public:
         return im;
     }
 #endif
+
+    QStyleHints *styleHints()
+    {
+        QStyleHints *sh = qGuiApp->styleHints();
+        QQmlEngine::setObjectOwnership(sh, QQmlEngine::CppOwnership);
+        return sh;
+    }
 
     QStringList fontFamilies()
     {
