@@ -204,7 +204,7 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
                 return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex, valueTypeMetaObject, v.userType()); // VariantReference value-type.
         }
 
-        return QV8Engine::fromVariant(scope.engine, v);
+        return QV4::ExecutionEngine::fromVariant(scope.engine, v);
     } else if (QQmlValueTypeFactory::isValueType(property.propType)) {
         Q_ASSERT(notifier == 0);
 
@@ -228,7 +228,7 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
     } else {
         QVariant v(property.propType, (void *)0);
         ReadFunction(object, property, v.data(), notifier);
-        return QV8Engine::fromVariant(scope.engine, v);
+        return QV4::ExecutionEngine::fromVariant(scope.engine, v);
     }
 }
 
@@ -549,9 +549,9 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     } else {
         QVariant v;
         if (property->isQList())
-            v = QV8Engine::toVariant(ctx->d()->engine, value, qMetaTypeId<QList<QObject *> >());
+            v = QV4::ExecutionEngine::toVariant(ctx->d()->engine, value, qMetaTypeId<QList<QObject *> >());
         else
-            v = QV8Engine::toVariant(ctx->d()->engine, value, property->propType);
+            v = QV4::ExecutionEngine::toVariant(ctx->d()->engine, value, property->propType);
 
         QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(ctx->d()->engine);
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
@@ -806,9 +806,9 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    callData->args[ii] = QV8Engine::fromVariant(v4, *((QVariant *)metaArgs[ii + 1]));
+                    callData->args[ii] = QV4::ExecutionEngine::fromVariant(v4, *((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    callData->args[ii] = QV8Engine::fromVariant(v4, QVariant(type, metaArgs[ii + 1]));
+                    callData->args[ii] = QV4::ExecutionEngine::fromVariant(v4, QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
@@ -1269,7 +1269,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
         if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
-            if (QV8Engine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
+            if (QV4::ExecutionEngine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
                 return 0;
             else
                 return 10;
@@ -1285,7 +1285,7 @@ static int MatchScore(const QV4::ValueRef actual, int conversionType)
         }
 
         if (obj->as<QV4::QQmlValueTypeWrapper>()) {
-            if (QV8Engine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
+            if (QV4::ExecutionEngine::toVariant(obj->engine(), actual, -1).userType() == conversionType)
                 return 0;
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {
@@ -1601,7 +1601,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
             queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
-        qvariantPtr = new (&allocData) QVariant(QV8Engine::toVariant(scope.engine, value, -1));
+        qvariantPtr = new (&allocData) QVariant(QV4::ExecutionEngine::toVariant(scope.engine, value, -1));
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
         qlistPtr = new (&allocData) QList<QObject *>();
@@ -1649,7 +1649,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         type = -1;
 
         QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
-        QVariant v = QV8Engine::toVariant(scope.engine, value, callType);
+        QVariant v = QV4::ExecutionEngine::toVariant(scope.engine, value, callType);
 
         if (v.userType() == callType) {
             *qvariantPtr = v;
@@ -1716,7 +1716,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
         return QV4::JsonObject::fromJsonValue(scope.engine, *jsonValuePtr);
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
         QVariant value = *qvariantPtr;
-        QV4::ScopedValue rv(scope, QV8Engine::fromVariant(scope.engine, value));
+        QV4::ScopedValue rv(scope, QV4::ExecutionEngine::fromVariant(scope.engine, value));
         QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, rv);
         if (!!qobjectWrapper) {
             if (QObject *object = qobjectWrapper->object())

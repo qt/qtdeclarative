@@ -210,24 +210,6 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-    static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true, V8ObjectSet *visitedObjects = 0);
-    static QV4::ReturnedValue fromVariant(QV4::ExecutionEngine *e, const QVariant &);
-
-    static QVariantMap variantMapFromJS(QV4::Object *o)
-    { return objectToVariant(o->engine(), o).toMap(); }
-
-    static bool metaTypeFromJS(QV4::ExecutionEngine *e, const QV4::ValueRef value, int type, void *data);
-
-private:
-    static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V8ObjectSet *visitedObjects = 0);
-    static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::ValueRef value,
-                                const QByteArray &targetType,
-                                void **result);
-    static QV4::ReturnedValue variantListToJS(QV4::ExecutionEngine *v4, const QVariantList &lst);
-    static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap);
-    static QV4::ReturnedValue metaTypeToJS(QV4::ExecutionEngine *v4, int type, const void *data);
-    static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &value);
-
 public:
     // used for console.time(), console.timeEnd()
     void startTimer(const QString &timerName);
@@ -235,8 +217,6 @@ public:
 
     // used for console.count()
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
-
-    static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::ValueRef value);
 
 protected:
     QJSEngine* q;

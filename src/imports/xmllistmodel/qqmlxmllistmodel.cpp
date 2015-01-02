@@ -925,7 +925,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
     ScopedValue value(scope);
     for (int ii = 0; ii < d->roleObjects.count(); ++ii) {
         name = v4engine->newIdentifier(d->roleObjects[ii]->name());
-        value = QV8Engine::fromVariant(v4engine, d->data.value(ii).value(index));
+        value = QV4::ExecutionEngine::fromVariant(v4engine, d->data.value(ii).value(index));
         o->insertMember(name.getPointer(), value);
     }
 
