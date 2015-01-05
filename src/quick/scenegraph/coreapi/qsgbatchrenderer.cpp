@@ -1775,11 +1775,12 @@ void Renderer::uploadBatch(Batch *b)
             if (b->merged) {
                 if (iCount == 0)
                     iCount = eg->vertexCount();
-                // merged Triangle strips need to contain degenerate triangles at the beginning and end.
-                // One could save 2 ushorts here by ditching the padding for the front of the
+                // Merged triangle strips need to contain degenerate triangles at the beginning and end.
+                // One could save 2 uploaded ushorts here by ditching the padding for the front of the
                 // first and the end of the last, but for simplicity, we simply don't care.
+                // Those extra triangles will be skipped while drawing to preserve the strip's parity anyhow.
                 if (g->drawingMode() == GL_TRIANGLE_STRIP)
-                    iCount += sizeof(quint16);
+                    iCount += 2;
             } else {
                 unmergedIndexSize += iCount * eg->sizeOfIndex();
             }
@@ -1849,6 +1850,10 @@ void Renderer::uploadBatch(Batch *b)
                 verticesInSet  += e->node->geometry()->vertexCount();
                 if (verticesInSet > 0xffff) {
                     b->drawSets.last().indexCount = indicesInSet;
+                    if (g->drawingMode() == GL_TRIANGLE_STRIP) {
+                        b->drawSets.last().indices += 1 * sizeof(quint16);
+                        b->drawSets.last().indexCount -= 2;
+                    }
 #ifdef QSG_SEPARATE_INDEX_BUFFER
                     drawSetIndices = indexData - b->ibo.data;
 #else
@@ -1865,6 +1870,12 @@ void Renderer::uploadBatch(Batch *b)
                 e = e->nextInBatch;
             }
             b->drawSets.last().indexCount = indicesInSet;
+            // We skip the very first and very last degenerate triangles since they aren't needed
+            // and the first one would reverse the vertex ordering of the merged strips.
+            if (g->drawingMode() == GL_TRIANGLE_STRIP) {
+                b->drawSets.last().indices += 1 * sizeof(quint16);
+                b->drawSets.last().indexCount -= 2;
+            }
         } else {
             char *vboData = b->vbo.data;
 #ifdef QSG_SEPARATE_INDEX_BUFFER
