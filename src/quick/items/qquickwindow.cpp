@@ -3767,6 +3767,15 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
+    \qmlattachedproperty int Window::width
+    \qmlattachedproperty int Window::height
+    \since 5.5
+
+    These attached properties hold the size of the item's window.
+    The Window attached property can be attached to any Item.
+*/
+
+/*!
     \qmlproperty int Window::x
     \qmlproperty int Window::y
     \qmlproperty int Window::width

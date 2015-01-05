@@ -1978,6 +1978,8 @@ void tst_qquickwindow::attachedProperty()
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QVERIFY(view.rootObject()->property("windowActive").toBool());
     QCOMPARE(view.rootObject()->property("contentItem").value<QQuickItem*>(), view.contentItem());
+    QCOMPARE(view.rootObject()->property("windowWidth").toInt(), view.width());
+    QCOMPARE(view.rootObject()->property("windowHeight").toInt(), view.height());
 
     QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
     QVERIFY(innerWindow);
@@ -1988,6 +1990,8 @@ void tst_qquickwindow::attachedProperty()
     QVERIFY(text);
     QCOMPARE(text->text(), QLatin1String("active\nvisibility: 2"));
     QCOMPARE(text->property("contentItem").value<QQuickItem*>(), innerWindow->contentItem());
+    QCOMPARE(text->property("windowWidth").toInt(), innerWindow->width());
+    QCOMPARE(text->property("windowHeight").toInt(), innerWindow->height());
 }
 
 class RenderJob : public QRunnable

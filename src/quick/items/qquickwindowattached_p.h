@@ -50,6 +50,8 @@ class Q_AUTOTEST_EXPORT QQuickWindowAttached : public QObject
     Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged)
     Q_PROPERTY(QQuickItem* contentItem READ contentItem NOTIFY contentItemChanged)
+    Q_PROPERTY(int width READ width NOTIFY widthChanged)
+    Q_PROPERTY(int height READ height NOTIFY heightChanged)
 
 public:
     QQuickWindowAttached(QObject* attachee);
@@ -58,6 +60,8 @@ public:
     bool isActive() const;
     QQuickItem* activeFocusItem() const;
     QQuickItem* contentItem() const;
+    int width() const;
+    int height() const;
 
 Q_SIGNALS:
 
@@ -65,6 +69,8 @@ Q_SIGNALS:
     void activeChanged();
     void activeFocusItemChanged();
     void contentItemChanged();
+    void widthChanged();
+    void heightChanged();
 
 protected Q_SLOTS:
     void windowChanged(QQuickWindow*);
