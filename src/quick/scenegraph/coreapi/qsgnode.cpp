@@ -584,7 +584,7 @@ void QSGNode::reparentChildNodesTo(QSGNode *newParent)
 {
     Q_ASSERT_X(!newParent->parent(), "QSGNode::reparentChildNodesTo", "newParent is already part of a hierarchy");
 
-    for (QSGNode *c = firstChild(); c; c = c->nextSibling()) {
+    for (QSGNode *c = firstChild(); c; c = firstChild()) {
         removeChildNode(c);
         newParent->appendChildNode(c);
     }
