@@ -7361,7 +7361,8 @@ void tst_qqmlecmascript::dateParse()
     QMetaObject::invokeMethod(object, "test_is_invalid_qtDateTime", Q_RETURN_ARG(QVariant, q));
     QVERIFY(q.toBool() == true);
 
-
+    QMetaObject::invokeMethod(object, "test_rfc2822_date", Q_RETURN_ARG(QVariant, q));
+    QCOMPARE(q.toLongLong(), 1379512851000LL);
 }
 
 void tst_qqmlecmascript::utcDate()
