@@ -33,11 +33,13 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
-#include <QApplication>
+#include <QGuiApplication>
 #include <QTime>
 #include <QQmlContext>
-#include <QGraphicsScene>
-#include <QGraphicsRectItem>
+#include <QQuickView>
+#include <QQuickItem>
+
+#include <private/qquickview_p.h>
 
 class Timer : public QObject
 {
@@ -64,22 +66,22 @@ private:
     static Timer *m_timer;
 
     bool m_willparent;
-    QGraphicsScene m_scene;
-    QGraphicsRectItem m_item;
+    QQuickView m_view;
+    QQuickItem *m_item;
 };
 QML_DECLARE_TYPE(Timer);
 
 Timer *Timer::m_timer = 0;
 
 Timer::Timer()
-: m_component(0), m_willparent(false)
+    : m_component(0)
+    , m_willparent(false)
+    , m_item(new QQuickItem)
 {
     if (m_timer)
         qWarning("Timer: Timer already registered");
+    QQuickViewPrivate::get(&m_view)->setRootObject(m_item);
     m_timer = this;
-
-    m_scene.setItemIndexMethod(QGraphicsScene::NoIndex);
-    m_scene.addItem(&m_item);
 }
 
 QQmlComponent *Timer::component() const
@@ -102,9 +104,9 @@ void Timer::run(uint iterations)
     QQmlContext context(qmlContext(this));
 
     QObject *o = m_component->create(&context);
-    QGraphicsObject *go = qobject_cast<QGraphicsObject *>(o);
-    if (m_willparent && go)
-        go->setParentItem(&m_item);
+    QQuickItem *i = qobject_cast<QQuickItem *>(o);
+    if (m_willparent && i)
+        i->setParentItem(m_item);
     delete o;
 
     runTest(&context, iterations);
@@ -126,9 +128,9 @@ void Timer::runTest(QQmlContext *context, uint iterations)
     t.start();
     for (uint ii = 0; ii < iterations; ++ii) {
         QObject *o = m_component->create(context);
-        QGraphicsObject *go = qobject_cast<QGraphicsObject *>(o);
-        if (m_willparent && go)
-            go->setParentItem(&m_item);
+        QQuickItem *i = qobject_cast<QQuickItem *>(o);
+        if (m_willparent && i)
+            i->setParentItem(m_item);
         delete o;
     }
 
@@ -207,7 +209,7 @@ void usage(const char *name)
 
 int main(int argc, char ** argv)
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qmlRegisterType<Timer>("QmlTime", 1, 0, "Timer");
 

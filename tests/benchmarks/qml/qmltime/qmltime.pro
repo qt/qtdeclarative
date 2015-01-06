@@ -1,7 +1,8 @@
 CONFIG += testcase
 TEMPLATE = app
 TARGET = qmltime
-QT += qml widgets testlib
+QT += qml testlib quick
+QT += quick-private
 macx:CONFIG -= app_bundle
 
 SOURCES += qmltime.cpp
