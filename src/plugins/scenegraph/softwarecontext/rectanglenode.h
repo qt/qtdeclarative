@@ -46,6 +46,7 @@ public:
 
 private:
     void paintRectangle(QPainter *painter, const QRect &rect);
+    void generateCornerPixmap();
 
     QRect m_rect;
     QColor m_color;
@@ -58,6 +59,8 @@ private:
 
     bool m_cornerPixmapIsDirty;
     QPixmap m_cornerPixmap;
+
+    int m_devicePixelRatio;
 };
 
 #endif // RECTANGLENODE_H

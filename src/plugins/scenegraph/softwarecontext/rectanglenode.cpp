@@ -26,6 +26,7 @@ RectangleNode::RectangleNode()
     : m_penWidth(0)
     , m_radius(0)
     , m_cornerPixmapIsDirty(true)
+    , m_devicePixelRatio(1)
 {
     m_pen.setJoinStyle(Qt::MiterJoin);
     m_pen.setMiterLimit(0);
@@ -195,44 +196,20 @@ void RectangleNode::update()
     }
 
     if (m_cornerPixmapIsDirty) {
-        //Generate new corner Pixmap
-        int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
-
-        m_cornerPixmap = QPixmap(radius * 2, radius * 2);
-        m_cornerPixmap.fill(Qt::transparent);
-
-        if (radius > 0) {
-            QPainter cornerPainter(&m_cornerPixmap);
-            cornerPainter.setRenderHint(QPainter::Antialiasing);
-            cornerPainter.setCompositionMode(QPainter::CompositionMode_Source);
-
-            //Paint outer cicle
-            if (m_penWidth > 0) {
-                cornerPainter.setPen(Qt::NoPen);
-                cornerPainter.setBrush(m_penColor);
-                cornerPainter.drawRoundedRect(QRectF(0, 0, radius * 2, radius *2), radius, radius);
-            }
-
-            //Paint inner circle
-            if (radius > m_penWidth) {
-                cornerPainter.setPen(Qt::NoPen);
-                if (m_stops.isEmpty())
-                    cornerPainter.setBrush(m_brush);
-                else
-                    cornerPainter.setBrush(Qt::transparent);
-
-                QMarginsF adjustmentMargins(m_penWidth, m_penWidth, m_penWidth, m_penWidth);
-                QRectF cornerCircleRect = QRectF(0, 0, radius * 2, radius * 2).marginsRemoved(adjustmentMargins);
-                cornerPainter.drawRoundedRect(cornerCircleRect, radius, radius);
-            }
-            cornerPainter.end();
-        }
+        generateCornerPixmap();
         m_cornerPixmapIsDirty = false;
     }
 }
 
 void RectangleNode::paint(QPainter *painter)
 {
+    //We can only check for a device pixel ratio change when we know what
+    //paint device is being used.
+    if (painter->device()->devicePixelRatio() != m_devicePixelRatio) {
+        m_devicePixelRatio = painter->device()->devicePixelRatio();
+        generateCornerPixmap();
+    }
+
     if (painter->transform().isRotating()) {
         //Rotated rectangles lose the benefits of direct rendering, and have poor rendering
         //quality when using only blits and fills.
@@ -246,10 +223,11 @@ void RectangleNode::paint(QPainter *painter)
         } else {
             //Rounded Rects and Rects with Borders
             //Avoids broken behaviors of QPainter::drawRect/roundedRect
-            QPixmap pixmap = QPixmap(m_rect.size());
+            QPixmap pixmap = QPixmap(m_rect.width() * m_devicePixelRatio, m_rect.height() * m_devicePixelRatio);
             pixmap.fill(Qt::transparent);
+            pixmap.setDevicePixelRatio(m_devicePixelRatio);
             QPainter pixmapPainter(&pixmap);
-            paintRectangle(&pixmapPainter, pixmap.rect());
+            paintRectangle(&pixmapPainter, QRect(0, 0, m_rect.width(), m_rect.height()));
 
             QPainter::RenderHints previousRenderHints = painter->renderHints();
             painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
@@ -332,18 +310,19 @@ void RectangleNode::paintRectangle(QPainter *painter, const QRect &rect)
         } else {
 
             //blit 4 corners to border
+            int scaledRadius = radius * m_devicePixelRatio;
             QRectF topLeftCorner(QPointF(rect.x(), rect.y()),
                                  QPointF(rect.x() + radius, rect.y() + radius));
-            painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, radius, radius));
+            painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, scaledRadius, scaledRadius));
             QRectF topRightCorner(QPointF(rect.x() + rect.width() - radius, rect.y()),
                                   QPointF(rect.x() + rect.width(), rect.y() + radius));
-            painter->drawPixmap(topRightCorner, m_cornerPixmap, QRectF(radius, 0, radius, radius));
+            painter->drawPixmap(topRightCorner, m_cornerPixmap, QRectF(scaledRadius, 0, scaledRadius, scaledRadius));
             QRectF bottomLeftCorner(QPointF(rect.x(), rect.y() + rect.height() - radius),
                                     QPointF(rect.x() + radius, rect.y() + rect.height()));
-            painter->drawPixmap(bottomLeftCorner, m_cornerPixmap, QRectF(0, radius, radius, radius));
+            painter->drawPixmap(bottomLeftCorner, m_cornerPixmap, QRectF(0, scaledRadius, scaledRadius, scaledRadius));
             QRectF bottomRightCorner(QPointF(rect.x() + rect.width() - radius, rect.y() + rect.height() - radius),
                                      QPointF(rect.x() + rect.width(), rect.y() + rect.height()));
-            painter->drawPixmap(bottomRightCorner, m_cornerPixmap, QRectF(radius, radius, radius, radius));
+            painter->drawPixmap(bottomRightCorner, m_cornerPixmap, QRectF(scaledRadius, scaledRadius, scaledRadius, scaledRadius));
 
         }
 
@@ -385,4 +364,41 @@ void RectangleNode::paintRectangle(QPainter *painter, const QRect &rect)
     }
 
     painter->setRenderHints(previousRenderHints);
+}
+
+void RectangleNode::generateCornerPixmap()
+{
+    //Generate new corner Pixmap
+    int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
+
+    m_cornerPixmap = QPixmap(radius * 2 * m_devicePixelRatio, radius * 2 * m_devicePixelRatio);
+    m_cornerPixmap.setDevicePixelRatio(m_devicePixelRatio);
+    m_cornerPixmap.fill(Qt::transparent);
+
+    if (radius > 0) {
+        QPainter cornerPainter(&m_cornerPixmap);
+        cornerPainter.setRenderHint(QPainter::Antialiasing);
+        cornerPainter.setCompositionMode(QPainter::CompositionMode_Source);
+
+        //Paint outer cicle
+        if (m_penWidth > 0) {
+            cornerPainter.setPen(Qt::NoPen);
+            cornerPainter.setBrush(m_penColor);
+            cornerPainter.drawRoundedRect(QRectF(0, 0, radius * 2, radius *2), radius, radius);
+        }
+
+        //Paint inner circle
+        if (radius > m_penWidth) {
+            cornerPainter.setPen(Qt::NoPen);
+            if (m_stops.isEmpty())
+                cornerPainter.setBrush(m_brush);
+            else
+                cornerPainter.setBrush(Qt::transparent);
+
+            QMarginsF adjustmentMargins(m_penWidth, m_penWidth, m_penWidth, m_penWidth);
+            QRectF cornerCircleRect = QRectF(0, 0, radius * 2, radius * 2).marginsRemoved(adjustmentMargins);
+            cornerPainter.drawRoundedRect(cornerCircleRect, radius, radius);
+        }
+        cornerPainter.end();
+    }
 }
