@@ -48,7 +48,7 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/qmutex.h>
 #include "qjsengine.h"
-
+#include "private/qtqmlglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +58,7 @@ namespace QV4 {
 struct ExecutionEngine;
 }
 
-class QJSEnginePrivate : public QObjectPrivate
+class Q_QML_PRIVATE_EXPORT QJSEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QJSEngine)
 

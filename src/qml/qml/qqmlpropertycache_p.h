@@ -249,6 +249,8 @@ public:
 
     void update(const QMetaObject *);
     void invalidate(const QMetaObject *);
+    // Used by qmlpuppet. Remove as soon Creator requires Qt 5.5.
+    void invalidate(void *, const QMetaObject *mo) { invalidate(mo); }
 
     QQmlPropertyCache *copy();
 
