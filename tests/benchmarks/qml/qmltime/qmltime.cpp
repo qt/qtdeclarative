@@ -256,7 +256,7 @@ int main(int argc, char ** argv)
 
     Timer *timer = Timer::timerInstance();
     if (!timer) {
-        qWarning() << "A Tester.Timer instance is required.";
+        qWarning() << "A QmlTime.Timer instance is required.";
         return -1;
     }
 
