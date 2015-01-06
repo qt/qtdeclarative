@@ -255,6 +255,8 @@ inline QDebug operator << (QDebug d, const Rect &r) {
 struct Buffer {
     GLuint id;
     int size;
+    // Data is only valid while preparing the upload. Exception is if we are using the
+    // broken IBO workaround or we are using a visualization mode.
     char *data;
 };
 
@@ -549,7 +551,7 @@ private:
 
     friend class Updater;
 
-    void map(Buffer *buffer, int size);
+    void map(Buffer *buffer, int size, bool isIndexBuf = false);
     void unmap(Buffer *buffer, bool isIndexBuf = false);
 
     void buildRenderListsFromScratch();
@@ -640,6 +642,10 @@ private:
     const QSGClipNode *m_currentClip;
     ClipType m_currentClipType;
 
+    QDataBuffer<char> m_vertexUploadPool;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    QDataBuffer<char> m_indexUploadPool;
+#endif
     // For minimal OpenGL core profile support
     QOpenGLVertexArrayObject *m_vao;
 

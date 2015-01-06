@@ -760,6 +760,10 @@ Renderer::Renderer(QSGRenderContext *ctx)
     , m_clipMatrixId(0)
     , m_currentClip(0)
     , m_currentClipType(NoClip)
+    , m_vertexUploadPool(256)
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    , m_indexUploadPool(64)
+#endif
     , m_vao(0)
     , m_visualizeMode(VisualizeNothing)
 {
@@ -817,6 +821,11 @@ Renderer::Renderer(QSGRenderContext *ctx)
 static void qsg_wipeBuffer(Buffer *buffer, QOpenGLFunctions *funcs)
 {
     funcs->glDeleteBuffers(1, &buffer->id);
+    // The free here is ok because we're in one of two situations.
+    // 1. We're using the upload pool in which case unmap will have set the
+    //    data pointer to 0 and calling free on 0 is ok.
+    // 2. We're using dedicated buffers because of visualization or IBO workaround
+    //    and the data something we malloced and must be freed.
     free(buffer->data);
 }
 
@@ -870,14 +879,26 @@ void Renderer::invalidateAndRecycleBatch(Batch *b)
  *
  * ref: http://www.opengl.org/wiki/Buffer_Object
  */
-void Renderer::map(Buffer *buffer, int byteSize)
+void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
 {
-    if (buffer->size != byteSize) {
-        if (buffer->data)
-            free(buffer->data);
+    if (!m_context->hasBrokenIndexBufferObjects() && m_visualizeMode == VisualizeNothing) {
+        // Common case, use a shared memory pool for uploading vertex data to avoid
+        // excessive reevaluation
+        QDataBuffer<char> &pool =
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+                isIndexBuf ? m_indexUploadPool : m_vertexUploadPool;
+#else
+                m_vertexUploadPool;
+        Q_UNUSED(isIndexBuf);
+#endif
+        if (byteSize > pool.size())
+            pool.resize(byteSize);
+        buffer->data = pool.data();
+    } else {
         buffer->data = (char *) malloc(byteSize);
-        buffer->size = byteSize;
     }
+    buffer->size = byteSize;
+
 }
 
 void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
@@ -887,6 +908,10 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
     GLenum target = isIndexBuf ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER;
     glBindBuffer(target, buffer->id);
     glBufferData(target, buffer->size, buffer->data, m_bufferStrategy);
+
+    if (!m_context->hasBrokenIndexBufferObjects() && m_visualizeMode == VisualizeNothing) {
+        buffer->data = 0;
+    }
 }
 
 BatchRootInfo *Renderer::batchRootInfo(Node *node)
@@ -1790,7 +1815,7 @@ void Renderer::uploadBatch(Batch *b)
         }
 
 #ifdef QSG_SEPARATE_INDEX_BUFFER
-        map(&b->ibo, ibufferSize);
+        map(&b->ibo, ibufferSize, true);
 #else
         bufferSize += ibufferSize;
 #endif
@@ -2581,14 +2606,37 @@ void Renderer::render()
         m_zRange = 1.0 / (m_nextRenderOrder);
     }
 
+    int largestVBO = 0;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    int largestIBO = 0;
+#endif
 
     if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Opaque Batches:";
-    for (int i=0; i<m_opaqueBatches.size(); ++i)
-        uploadBatch(m_opaqueBatches.at(i));
+    for (int i=0; i<m_opaqueBatches.size(); ++i) {
+        Batch *b = m_opaqueBatches.at(i);
+        largestVBO = qMax(b->vbo.size, largestVBO);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        largestIBO = qMax(b->ibo.size, largestIBO);
+#endif
+        uploadBatch(b);
+    }
 
     if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Alpha Batches:";
-    for (int i=0; i<m_alphaBatches.size(); ++i)
-        uploadBatch(m_alphaBatches.at(i));
+    for (int i=0; i<m_alphaBatches.size(); ++i) {
+        Batch *b = m_alphaBatches.at(i);
+        uploadBatch(b);
+        largestVBO = qMax(b->vbo.size, largestVBO);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        largestIBO = qMax(b->ibo.size, largestIBO);
+#endif
+    }
+
+    if (largestVBO * 2 < m_vertexUploadPool.size())
+        m_vertexUploadPool.resize(largestVBO * 2);
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+    if (largestIBO * 2 < m_indexUploadPool.size())
+        m_indexUploadPool.resize(largestIBO * 2);
+#endif
 
     renderBatches();
 
