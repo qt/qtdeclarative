@@ -185,8 +185,10 @@ void SoftwareLayer::grab()
     m_renderer->setDevicePixelRatio(m_device_pixel_ratio);
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
-    if (m_pixmap.size() != m_size)
+    if (m_pixmap.size() != m_size) {
         m_pixmap = QPixmap(m_size);
+        m_pixmap.setDevicePixelRatio(m_device_pixel_ratio);
+    }
 
     // Render texture.
     root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
@@ -196,7 +198,10 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    m_renderer->m_projectionRect = m_rect.toRect();
+    m_renderer->m_projectionRect = QRect(m_rect.x() * m_device_pixel_ratio,
+                                         m_rect.y() * m_device_pixel_ratio,
+                                         m_rect.width() * m_device_pixel_ratio,
+                                         m_rect.height() * m_device_pixel_ratio);
     m_renderer->setClearColor(Qt::transparent);
 
     m_renderer->renderScene();

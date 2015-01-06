@@ -143,7 +143,6 @@ void PixmapRenderer::render()
 
 void PixmapRenderer::render(QPixmap *target)
 {
-    const QRect rect(0, 0, target->width(), target->height());
     target->fill(clearColor());
     QPainter painter(target);
     painter.setRenderHint(QPainter::Antialiasing);
