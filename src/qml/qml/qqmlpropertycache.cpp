@@ -1510,6 +1510,39 @@ bool QQmlMetaObject::canConvert(const QQmlMetaObject &from, const QQmlMetaObject
     return false;
 }
 
+void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, const QMetaObject **metaObject, int *index)
+{
+    int offset;
+
+    switch (type) {
+    case QMetaObject::ReadProperty:
+    case QMetaObject::WriteProperty:
+    case QMetaObject::ResetProperty:
+    case QMetaObject::QueryPropertyDesignable:
+    case QMetaObject::QueryPropertyEditable:
+    case QMetaObject::QueryPropertyScriptable:
+    case QMetaObject::QueryPropertyStored:
+    case QMetaObject::QueryPropertyUser:
+        offset = (*metaObject)->propertyOffset();
+        while (*index < offset) {
+            *metaObject = (*metaObject)->superClass();
+            offset = (*metaObject)->propertyOffset();
+        }
+        break;
+    case QMetaObject::InvokeMetaMethod:
+        offset = (*metaObject)->methodOffset();
+        while (*index < offset) {
+            *metaObject = (*metaObject)->superClass();
+            offset = (*metaObject)->methodOffset();
+        }
+        break;
+    default:
+        Q_UNIMPLEMENTED();
+    }
+
+    *index -= offset;
+}
+
 QQmlPropertyCache *QQmlMetaObject::propertyCache(QQmlEnginePrivate *e) const
 {
     if (_m.isNull()) return 0;
@@ -1652,8 +1685,11 @@ void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv
 {
     if (ptr.isT1())
         QMetaObject::metacall(ptr.asT1(), type, index, argv);
-    else
-        _m.asT1()->metaObject()->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
+    else {
+        const QMetaObject *metaObject = _m.asT1()->metaObject();
+        QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &index);
+        metaObject->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
+    }
 }
 
 QT_END_NAMESPACE

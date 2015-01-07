@@ -5,4 +5,7 @@ TypeWithCustomValueType {
     desk {
         monitorCount: 3
     }
+    derivedGadget {
+        baseProperty: 42
+    }
 }

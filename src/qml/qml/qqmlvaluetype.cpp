@@ -231,7 +231,9 @@ void QQmlValueType::objectDestroyed(QObject *)
 
 int QQmlValueType::metaCall(QObject *, QMetaObject::Call type, int _id, void **argv)
 {
-    d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), type, _id, argv);
+    const QMetaObject *mo = _metaObject;
+    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &mo, &_id);
+    mo->d.static_metacall(reinterpret_cast<QObject*>(gadgetPtr), type, _id, argv);
     return _id;
 }
 

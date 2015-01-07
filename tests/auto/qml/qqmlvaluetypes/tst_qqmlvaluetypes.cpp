@@ -90,6 +90,7 @@ private slots:
     void groupedInterceptors_data();
     void customValueType();
     void customValueTypeInQml();
+    void gadgetInheritance();
 
 private:
     QQmlEngine engine;
@@ -1484,13 +1485,48 @@ void tst_qqmlvaluetypes::customValueType()
     QCOMPARE(cppOffice.desk().monitorCount, 2);
 }
 
+struct BaseGadget
+{
+    Q_GADGET
+    Q_PROPERTY(int baseProperty READ baseProperty WRITE setBaseProperty)
+public:
+    BaseGadget() : m_baseProperty(0) {}
+
+    int baseProperty() const { return m_baseProperty; }
+    void setBaseProperty(int value) { m_baseProperty = value; }
+    int m_baseProperty;
+
+    Q_INVOKABLE void functionInBaseGadget(int value) { m_baseProperty = value; }
+};
+
+Q_DECLARE_METATYPE(BaseGadget)
+
+struct DerivedGadget : public BaseGadget
+{
+    Q_GADGET
+    Q_PROPERTY(int derivedProperty READ derivedProperty WRITE setDerivedProperty)
+public:
+    DerivedGadget() : m_derivedProperty(0) {}
+
+    int derivedProperty() const { return m_derivedProperty; }
+    void setDerivedProperty(int value) { m_derivedProperty = value; }
+    int m_derivedProperty;
+
+    Q_INVOKABLE void functionInDerivedGadget(int value) { m_derivedProperty = value; }
+};
+
 class TypeWithCustomValueType : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(MyDesk desk MEMBER m_desk)
+    Q_PROPERTY(DerivedGadget derivedGadget READ derivedGadget WRITE setDerivedGadget)
 public:
 
     MyDesk m_desk;
+
+    DerivedGadget derivedGadget() const { return m_derivedGadget; }
+    void setDerivedGadget(const DerivedGadget &value) { m_derivedGadget = value; }
+    DerivedGadget m_derivedGadget;
 };
 
 void tst_qqmlvaluetypes::customValueTypeInQml()
@@ -1503,6 +1539,24 @@ void tst_qqmlvaluetypes::customValueTypeInQml()
     TypeWithCustomValueType *t = qobject_cast<TypeWithCustomValueType*>(object.data());
     Q_ASSERT(t);
     QCOMPARE(t->m_desk.monitorCount, 3);
+    QCOMPARE(t->m_derivedGadget.baseProperty(), 42);
+}
+
+Q_DECLARE_METATYPE(DerivedGadget)
+
+void tst_qqmlvaluetypes::gadgetInheritance()
+{
+    QJSEngine engine;
+
+    QJSValue value = engine.toScriptValue(DerivedGadget());
+
+    QCOMPARE(value.property("baseProperty").toInt(), 0);
+    value.setProperty("baseProperty", 10);
+    QCOMPARE(value.property("baseProperty").toInt(), 10);
+
+    QJSValue method = value.property("functionInBaseGadget");
+    method.call(QJSValueList() << QJSValue(42));
+    QCOMPARE(value.property("baseProperty").toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypes)

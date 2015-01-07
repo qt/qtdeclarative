@@ -307,11 +307,15 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
     if (result->propType == metatype) { \
         cpptype v; \
         void *args[] = { &v, 0 }; \
-        metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, result->coreIndex, args); \
+        metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, index, args); \
         return QV4::Encode(constructor(v)); \
     }
 
     const QMetaObject *metaObject = r->d()->propertyCache->metaObject();
+
+    int index = result->coreIndex;
+    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::ReadProperty, &metaObject, &index);
+
     void *gadget = r->d()->gadget();
 
     // These four types are the most common used by the value type wrappers
@@ -322,9 +326,9 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
 
     QVariant v(result->propType, (void *)0);
     void *args[] = { v.data(), 0 };
-    metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, result->coreIndex, args);
+    metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, index, args);
     return QV8Engine::fromVariant(v4, v);
-#undef VALUE_TYPE_ACCESSOR
+#undef VALUE_TYPE_LOAD
 }
 
 void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)

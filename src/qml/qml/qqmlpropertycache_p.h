@@ -432,6 +432,10 @@ public:
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
 
+    // static_metacall (on Gadgets) doesn't call the base implementation and therefore
+    // we need a helper to find the correct meta object and property/method index.
+    static void resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, const QMetaObject **metaObject, int *index);
+
 protected:
     QBiPointer<QQmlPropertyCache, const QMetaObject> _m;
 };
