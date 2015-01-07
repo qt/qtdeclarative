@@ -1999,7 +1999,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
     Q_D(QQmlEngine);
-    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), errors);
+    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), -1, errors);
 }
 
 /*!

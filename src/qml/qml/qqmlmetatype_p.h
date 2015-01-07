@@ -114,7 +114,7 @@ public:
 
     static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri);
 
-    static bool namespaceContainsRegistrations(const QString &);
+    static bool namespaceContainsRegistrations(const QString &, int majorVersion);
 
     static void protectNamespace(const QString &);
 

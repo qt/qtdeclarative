@@ -508,6 +508,27 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
         << QString()
         << QString();
 
+    QTest::newRow("two strict modules with different major version")
+        << "import org.qtproject.StrictModule 1.0\n"
+           "import org.qtproject.StrictModule 2.0\n"
+           "MyPluginType {}"
+        << QString()
+        << QString();
+
+    QTest::newRow("old namespaced strict module")
+        << "import org.qtproject.StrictModule 1.0 as Old\n"
+           "import org.qtproject.StrictModule 2.0 as New\n"
+           "Old.MyPluginType {}"
+        << QString()
+        << QString();
+
+    QTest::newRow("new namespaced strict modules")
+        << "import org.qtproject.StrictModule 1.0 as Old\n"
+           "import org.qtproject.StrictModule 2.0 as New\n"
+           "New.MyPluginType {}"
+        << QString()
+        << QString();
+
     QTest::newRow("wrong target")
         << "import org.qtproject.InvalidStrictModule 1.0\n"
            "MyPluginType {}"

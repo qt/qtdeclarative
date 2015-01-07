@@ -926,7 +926,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
             if (!resolvedFilePath.isEmpty()) {
                 dynamicPluginsFound++;
-                if (!database->importDynamicPlugin(resolvedFilePath, uri, typeNamespace, errors)) {
+                if (!database->importDynamicPlugin(resolvedFilePath, uri, typeNamespace, vmaj, errors)) {
                     if (errors) {
                         // XXX TODO: should we leave the import plugin error alone?
                         // Here, we pop it off the top and coalesce it into this error's message.
@@ -962,7 +962,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.first.instance();
-                            if (!database->importStaticPlugin(instance, basePath, uri, typeNamespace, errors)) {
+                            if (!database->importStaticPlugin(instance, basePath, uri, typeNamespace, vmaj, errors)) {
                                 if (errors) {
                                     QQmlError poppedError = errors->takeFirst();
                                     QQmlError error;
@@ -1811,7 +1811,7 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
     \internal
 */
 bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &basePath,
-                                      const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors)
+                                      const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::registerPluginTypes: " << uri << " from " << basePath;
@@ -1847,7 +1847,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
                 return false;
             }
 
-            if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace)) {
+            if (QQmlMetaType::namespaceContainsRegistrations(typeNamespace, vmaj)) {
                 // Other modules have already installed to this namespace
                 if (errors) {
                     QQmlError error;
@@ -1894,7 +1894,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
     \internal
 */
 bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &basePath,
-                                      const QString &uri, const QString &typeNamespace, QList<QQmlError> *errors)
+                                      const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
 #ifndef QT_NO_LIBRARY
     // Dynamic plugins are differentiated by their filepath. For static plugins we
@@ -1918,7 +1918,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
         plugin.loader = 0;
         plugins->insert(uniquePluginID, plugin);
 
-        if (!registerPluginTypes(instance, basePath, uri, typeNamespace, errors))
+        if (!registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
             return false;
     }
 
@@ -1941,7 +1941,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
     \internal
 */
 bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QString &uri,
-                                             const QString &typeNamespace, QList<QQmlError> *errors)
+                                             const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
 {
 #ifndef QT_NO_LIBRARY
     QFileInfo fileInfo(filePath);
@@ -1995,7 +1995,7 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
             plugins->insert(absoluteFilePath, plugin);
 
             // Continue with shared code path for dynamic and static plugins:
-            if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, errors))
+            if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, vmaj, errors))
                 return false;
         }
 
