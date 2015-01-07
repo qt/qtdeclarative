@@ -54,5 +54,11 @@
     The Sprite item depends on OpenGL functions we dont have access to and will
     not be visible.
 
+    \target Text
+    \section1 Text
+    The text rendering with \RENDERER is based on software rasterization and does
+    not respond as well to transformations such as scaling as when using OpenGL.
+    The quality is similar to choosing \c Text.NativeRendering with QtQuick.Text
+    items.
 
 */
