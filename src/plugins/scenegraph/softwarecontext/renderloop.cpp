@@ -106,7 +106,6 @@ void RenderLoop::renderWindow(QQuickWindow *window)
 
     if (profileFrames) {
         polishTime = renderTimer.nsecsElapsed();
-        Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphPolishFrame, (polishTime));
     }
 
     emit window->afterAnimating();
@@ -147,11 +146,6 @@ void RenderLoop::renderWindow(QQuickWindow *window)
                 int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
-
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphRenderLoopFrame, (
-            syncTime - polishTime,
-            renderTime - syncTime,
-            swapTime - renderTime));
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
