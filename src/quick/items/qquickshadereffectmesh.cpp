@@ -59,7 +59,6 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
     : QQuickShaderEffectMesh(parent)
     , m_resolution(1, 1)
 {
-    connect(this, SIGNAL(resolutionChanged()), this, SIGNAL(geometryChanged()));
 }
 
 QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QByteArray> &attributes, const QRectF &srcRect, const QRectF &dstRect)
@@ -204,6 +203,7 @@ void QQuickGridMesh::setResolution(const QSize &res)
     }
     m_resolution = res;
     emit resolutionChanged();
+    emit geometryChanged();
 }
 
 QSize QQuickGridMesh::resolution() const
