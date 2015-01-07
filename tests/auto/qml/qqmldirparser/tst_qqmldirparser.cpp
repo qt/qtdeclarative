@@ -247,7 +247,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("invalid-versioned-component")
         << "invalid-versioned-component/qmldir"
-        << (QStringList() << "qmldir:1: expected '.'")
+        << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
         << QStringList()
         << QStringList()
         << QStringList()
@@ -259,6 +259,15 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << (QStringList() << "foo|bar|33|66|false")
+        << QStringList()
+        << QStringList()
+        << false;
+
+    QTest::newRow("invalid-versioned-script")
+        << "invalid-versioned-script/qmldir"
+        << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
+        << QStringList()
+        << QStringList()
         << QStringList()
         << QStringList()
         << false;
@@ -296,6 +305,15 @@ void tst_qqmldirparser::parse_data()
         << "designersupported-no/qmldir"
         << QStringList()
         << (QStringList() << "foo|")
+        << QStringList()
+        << QStringList()
+        << QStringList()
+        << false;
+
+    QTest::newRow("invalid-versioned-dependency")
+        << "invalid-versioned-dependency/qmldir"
+        << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
+        << QStringList()
         << QStringList()
         << QStringList()
         << QStringList()

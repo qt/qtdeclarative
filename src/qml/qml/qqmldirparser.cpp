@@ -55,6 +55,19 @@ static int parseInt(const QStringRef &str, bool *ok)
     return number;
 }
 
+static bool parseVersion(const QString &str, int *major, int *minor)
+{
+    const int dotIndex = str.indexOf(QLatin1Char('.'));
+    if (dotIndex != -1 && str.indexOf(QLatin1Char('.'), dotIndex + 1) == -1) {
+        bool ok = false;
+        *major = parseInt(QStringRef(&str, 0, dotIndex), &ok);
+        if (ok)
+            *minor = parseInt(QStringRef(&str, dotIndex + 1, str.length() - dotIndex - 1), &ok);
+        return ok;
+    }
+    return false;
+}
+
 QQmlDirParser::QQmlDirParser() : _designerSupported(false)
 {
 }
@@ -192,27 +205,14 @@ bool QQmlDirParser::parse(const QString &source)
             } else {
                 // handle qmldir module listing case where singleton is defined in the following pattern:
                 // singleton TestSingletonType 2.0 TestSingletonType20.qml
-                const QString &version = sections[2];
-                const int dotIndex = version.indexOf(QLatin1Char('.'));
-
-                if (dotIndex == -1) {
-                    reportError(lineNumber, 0, QLatin1String("expected '.'"));
-                } else if (version.indexOf(QLatin1Char('.'), dotIndex + 1) != -1) {
-                    reportError(lineNumber, 0, QLatin1String("unexpected '.'"));
+                int major, minor;
+                if (parseVersion(sections[2], &major, &minor)) {
+                    const QString &fileName = sections[3];
+                    Component entry(sections[1], fileName, major, minor);
+                    entry.singleton = true;
+                    _components.insertMulti(entry.typeName, entry);
                 } else {
-                    bool validVersionNumber = false;
-                    const int majorVersion = parseInt(QStringRef(&version, 0, dotIndex), &validVersionNumber);
-
-                    if (validVersionNumber) {
-                        const int minorVersion = parseInt(QStringRef(&version, dotIndex+1, version.length()-dotIndex-1), &validVersionNumber);
-
-                        if (validVersionNumber) {
-                            const QString &fileName = sections[3];
-                            Component entry(sections[1], fileName, majorVersion, minorVersion);
-                            entry.singleton = true;
-                            _components.insertMulti(entry.typeName, entry);
-                        }
-                    }
+                    reportError(lineNumber, 0, QStringLiteral("invalid version %1, expected <major>.<minor>").arg(sections[2]));
                 }
             }
         } else if (sections[0] == QLatin1String("typeinfo")) {
@@ -238,53 +238,33 @@ bool QQmlDirParser::parse(const QString &source)
                 continue;
             }
 
-            const QString &version = sections[2];
-            const int dotIndex = version.indexOf(QLatin1Char('.'));
-            bool validVersionNumber = false;
-            const int majorVersion = parseInt(QStringRef(&version, 0, dotIndex), &validVersionNumber);
-            if (validVersionNumber) {
-                const int minorVersion = parseInt(QStringRef(&version, dotIndex+1, version.length()-dotIndex-1), &validVersionNumber);
-
-                if (validVersionNumber) {
-                    Component entry(sections[1], QString(), majorVersion, minorVersion);
-                    entry.internal = true;
-                    _dependencies.insert(entry.typeName, entry);
-                }
+            int major, minor;
+            if (parseVersion(sections[2], &major, &minor)) {
+                Component entry(sections[1], QString(), major, minor);
+                entry.internal = true;
+                _dependencies.insert(entry.typeName, entry);
             } else {
-                reportError(lineNumber, 0, QString(QLatin1String("invalid version %1")).arg(version));
+                reportError(lineNumber, 0, QStringLiteral("invalid version %1, expected <major>.<minor>").arg(sections[2]));
             }
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], -1, -1);
             _components.insertMulti(entry.typeName, entry);
         } else if (sectionCount == 3) {
-            const QString &version = sections[1];
-            const int dotIndex = version.indexOf(QLatin1Char('.'));
+            int major, minor;
+            if (parseVersion(sections[1], &major, &minor)) {
+                const QString &fileName = sections[2];
 
-            if (dotIndex == -1) {
-                reportError(lineNumber, 0, QLatin1String("expected '.'"));
-            } else if (version.indexOf(QLatin1Char('.'), dotIndex + 1) != -1) {
-                reportError(lineNumber, 0, QLatin1String("unexpected '.'"));
-            } else {
-                bool validVersionNumber = false;
-                const int majorVersion = parseInt(QStringRef(&version, 0, dotIndex), &validVersionNumber);
-
-                if (validVersionNumber) {
-                    const int minorVersion = parseInt(QStringRef(&version, dotIndex+1, version.length()-dotIndex-1), &validVersionNumber);
-
-                    if (validVersionNumber) {
-                        const QString &fileName = sections[2];
-
-                        if (fileName.endsWith(QLatin1String(".js"))) {
-                            // A 'js' extension indicates a namespaced script import
-                            const Script entry(sections[0], fileName, majorVersion, minorVersion);
-                            _scripts.append(entry);
-                        } else {
-                            const Component entry(sections[0], fileName, majorVersion, minorVersion);
-                            _components.insertMulti(entry.typeName, entry);
-                        }
-                    }
+                if (fileName.endsWith(QLatin1String(".js"))) {
+                    // A 'js' extension indicates a namespaced script import
+                    const Script entry(sections[0], fileName, major, minor);
+                    _scripts.append(entry);
+                } else {
+                    const Component entry(sections[0], fileName, major, minor);
+                    _components.insertMulti(entry.typeName, entry);
                 }
+            } else {
+                reportError(lineNumber, 0, QStringLiteral("invalid version %1, expected <major>.<minor>").arg(sections[1]));
             }
         } else {
             reportError(lineNumber, 0,
