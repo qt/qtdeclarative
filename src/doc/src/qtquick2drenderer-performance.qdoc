@@ -24,61 +24,54 @@
 
     \title Performance Guide
 
-    Since \RENDERER does not use OpenGL we loose the ability to use many
+    Since \RENDERER does not use OpenGL, we lose the ability to use many
     optimizations that can improve rendering speed. To get the most out of
     \RENDERER there are some guidelines that should be followed.
 
-    \target 2D Hardware Acceleration
     \section1 2D Hardware Acceleration
 
     \RENDERER is designed to use operations that can be accelerated by 2D
-    acceleration hardware.  By using platform plugins that take advantage of
-    the QBlitter API (like DirectFB) is is possible to make use of such 2D
-    hardware acceleration.
+    acceleration hardware.  2D hardware acceleration uses platform plugins that take advantage of
+    the QBlitter API (like DirectFB).
 
-    \target Animation
     \section1 Animation
 
-    It is important to keep in mind the fact that with Qt Quick 2 every time
-    a node in the scene graph is marked dirty the entire window will need to be
-    rendered again. There is no partial update mechanimism that will only
-    update the regions of the window that are dirty. This means that any
-    animation that is running will be forcing a full repaint of the window and
-    with \RENDERER this can cause heavy CPU load.
+    It is important to keep in mind that with Qt Quick 2 the entire window will
+    need to be rendered every time a node in the scene graph is marked dirty.
+    There is no partial update mechanimism that will update only the dirty regions
+    of the window. This means that any animation that is running will be forcing
+    a full repaint of the window, and with \RENDERER this can cause a heavy CPU load.
 
-    \target Transforms
     \section1 Transforms
 
-    When rendering the scene graph with the OpenGL renderer transformations
-    come with no performance penality. This is not the case with \RENDERER.
-    Translation operations do not come with performance penalties but scaling
-    and rotation transformations should be avoided when possible.
+    Transformations come with no performance penalty when rendering the scene
+    graph with the OpenGL renderer. This is not the case with \RENDERER.
+    Translation operations do not come with performance penalties, but scaling
+    and rotation transformations should be avoided whenever possible.
 
-    \target Hidden Items
     \section1 Hidden Items
 
     \RENDERER will paint all items that are not hidden explicitly with either
-    the visibility property or an opacity of 0. Without OpenGL there is no
+    the visibility property or with an opacity of 0. Without OpenGL there is no
     depth buffer to check for items completely obscured by opaque items, so
-    everything will be painted even if it is unnecessary.
+    everything will be painted - even if it is unnecessary.
 
-    \target Pixel Fill Budget
     \section1 Pixel Fill Budget
 
-    When developing an application that will be using \RENDERER it is important
+    When developing an application that will be using \RENDERER, it is important
     to keep in mind your pixel fill budget, or the the amount of pixels you
     can push to the screen in the time needed for your target framerate.  For
-    example if your goal is to render your application at 60 frames per second
+    example, if your goal is to render your application at 60 frames per second,
     then you have about 16 milliseconds render to the framebuffer before
-    needing flush the pixels to screen.  Depending on your hardware's
-    performance you will only be able to handle a finite amount of pixel write
-    operations before the 16 milliseconds expires.  The interface you design
-    should take into consideration that each item that is added subtracts from
+    needing to flush the pixels to the screen.  Depending on your hardware's
+    performance, you will only be able to handle a finite amount of pixel write
+    operations before the 16 milliseconds expire.  The interface you design
+    should take into consideration that each added item subtracts from
     your pixel fill budget.
 
     \RENDERER uses the painters algorithm to paint each item in the scene
     back-to-front.  If you have an interface that stacks many items on top of
-    each other keep in mind that each layer is painted completely, not just the
+    each other, keep in mind that each layer is painted completely, not just the
     parts that are visible.  It can be very easy to waste your pixel fill
     budget with too many over-paints.
 

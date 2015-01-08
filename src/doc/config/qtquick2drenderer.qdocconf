@@ -52,3 +52,6 @@ qhp.QtQuick2dRenderer.manual.type           = manual
 macro.RENDERER                    = "Qt Quick 2D Renderer"
 
 navigation.landingpage = "Qt Quick 2D Renderer"
+indexes = $QT_INSTALL_DOCS/qtgui/qtgui.index \
+          $QT_INSTALL_DOCS/qtquick/qtquick.index \
+          $QT_INSTALL_DOCS/qtgraphicaleffects/qtgraphicaleffects.index

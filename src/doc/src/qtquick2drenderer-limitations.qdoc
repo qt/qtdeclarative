@@ -18,7 +18,6 @@
 ****************************************************************************/
 
 /*!
-    \contentspage{index.html}{Qt Quick 2D Renderer}
     \page qtquick2drenderer-limitations.html
     \previouspage qtquick2drenderer-installation-guide.html
     \nextpage qtquick2drenderer-performance.html
@@ -29,29 +28,25 @@
     out of available graphics hardware.  By not relying on OpenGL, \RENDERER
     presents certain limitations regarding the available features.
 
-    Since \RENDERER does not use OpenGL there are some features that can not be
+    Since \RENDERER does not use OpenGL, there are some features that cannot be
     supported.  The following are known limitations:
 
-    \target ShaderEffects
-    \section1 ShaderEffects
+    \section1 Shader Effects
     ShaderEffect components in QtQuick 2 can not be rendered with \RENDERER.
 
-    \target QtGraphicalEffects
-    \section1 QtGraphicalEffects
+    \section1 Qt Graphical Effects Module
     QtGraphicalEffects uses ShaderEffect items to render effects.  If you use a
-    graphical effect from QtGraphicalEffects the you should not hide the source
+    graphical effect from QtGraphicalEffects, then you should not hide the source
     item so that the original item can still be rendered.
 
-    \target Particles
-    \section1 Particles
+    \section1 Particle Effects
     It is not possible to render particle effects with \RENDERER. Whenever
-    possible, remove particles completely from the scene. Otherwise, even
-    though they are not visible with \RENDERER, a certain amount of processing
-    is done for them.
+    possible, remove particles completely from the scene. Otherwise they will still
+    require some processing, even though they are not visible with \RENDERER.
 
     \target Sprites
     \section1 Sprites
-    The Sprite item depends on OpenGL functions we dont have access to and will
+    The Sprite item depends on inaccessible OpenGL functions and will
     not be visible.
 
     \target Text
