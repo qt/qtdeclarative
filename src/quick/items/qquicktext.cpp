@@ -2608,7 +2608,7 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     \qmlproperty string QtQuick::Text::hoveredLink
     \since 5.2
 
-    This property contains the link string when user hovers a link
+    This property contains the link string when the user hovers a link
     embedded in the text. The link must be in rich text or HTML format
     and the \a hoveredLink string provides access to the particular link.
 
