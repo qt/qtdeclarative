@@ -431,7 +431,7 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     d->fireFrameSwapped();
 
     qCDebug(QSG_LOG_TIME_RENDERLOOP()).nospace()
-            << "Frame rendered with 'windows' renderloop in: " << time_swapped << "ms"
+            << "Frame rendered with 'windows' renderloop in: " << (time_swapped - time_start) / 1000000 << "ms"
             << ", polish=" << (time_polished - time_start) / 1000000
             << ", sync=" << (time_synced - time_polished) / 1000000
             << ", render=" << (time_rendered - time_synced) / 1000000
