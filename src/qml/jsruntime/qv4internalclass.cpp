@@ -40,14 +40,6 @@
 
 QT_BEGIN_NAMESPACE
 
-uint QV4::qHash(const QV4::InternalClassTransition &t, uint)
-{
-    if (t.flags & QV4::InternalClassTransition::VTableChange)
-        // INT_MAX is prime, so this should give a decent distribution of keys
-        return (uint)((quintptr)t.vtable * INT_MAX);
-    return t.id->hashValue ^ t.flags;
-}
-
 using namespace QV4;
 
 static const uchar prime_deltas[] = {
@@ -125,7 +117,6 @@ InternalClass::InternalClass(ExecutionEngine *engine)
     , m_frozen(0)
     , size(0)
 {
-    transitions.reserve(17);
 }
 
 
@@ -136,12 +127,10 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
-    , transitions()
     , m_sealed(0)
     , m_frozen(0)
     , size(other.size)
 {
-    transitions.reserve(17);
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
@@ -161,6 +150,17 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
     object->setInternalClass(newClass);
 }
 
+InternalClassTransition &InternalClass::lookupOrInsertTransition(const InternalClassTransition &t)
+{
+    std::vector<Transition>::iterator it = std::lower_bound(transitions.begin(), transitions.end(), t);
+    if (it != transitions.end() && *it == t) {
+        return *it;
+    } else {
+        it = transitions.insert(it, t);
+        return *it;
+    }
+}
+
 InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttributes data, uint *index)
 {
     data.resolve();
@@ -173,10 +173,10 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
     if (data == propertyData.at(idx))
         return this;
 
-    Transition t = { { identifier }, (int)data.flags() };
-    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
-    if (tit != transitions.constEnd())
-        return tit.value();
+    Transition temp = { { identifier }, 0, (int)data.flags() };
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->emptyClass->changeVTable(vtable);
@@ -188,7 +188,7 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
         }
     }
 
-    transitions.insert(t, newClass);
+    t.lookup = newClass;
     return newClass;
 }
 
@@ -202,13 +202,14 @@ InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
     if (vtable == vt)
         return this;
 
-    Transition t;
-    t.vtable = vt;
-    t.flags = Transition::VTableChange;
+    Transition temp;
+    temp.vtable = vt;
+    temp.lookup = 0;
+    temp.flags = Transition::VTableChange;
 
-    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
-    if (tit != transitions.constEnd())
-        return tit.value();
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
 
     // create a new class and add it to the tree
     InternalClass *newClass;
@@ -223,7 +224,7 @@ InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
         }
     }
 
-    transitions.insert(t, newClass);
+    t.lookup = newClass;
     return newClass;
 }
 
@@ -262,13 +263,14 @@ InternalClass *InternalClass::addMember(Identifier *identifier, PropertyAttribut
 
 InternalClass *InternalClass::addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index)
 {
-    Transition t = { { identifier }, (int)data.flags() };
-    QHash<Transition, InternalClass *>::const_iterator tit = transitions.constFind(t);
+    Transition temp = { { identifier }, 0, (int)data.flags() };
+    Transition &t = lookupOrInsertTransition(temp);
 
     if (index)
         *index = size;
-    if (tit != transitions.constEnd())
-        return tit.value();
+
+    if (t.lookup)
+        return t.lookup;
 
     // create a new class and add it to the tree
     InternalClass *newClass = engine->newClass(*this);
@@ -286,7 +288,7 @@ InternalClass *InternalClass::addMemberImpl(Identifier *identifier, PropertyAttr
         ++newClass->size;
     }
 
-    transitions.insert(t, newClass);
+    t.lookup = newClass;
     return newClass;
 }
 
@@ -296,11 +298,11 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     uint propIdx = oldClass->propertyTable.lookup(id);
     Q_ASSERT(propIdx < oldClass->size);
 
-    Transition t = { { id } , -1 };
-    QHash<Transition, InternalClass *>::const_iterator tit = object->internalClass()->transitions.constFind(t);
+    Transition t = { { id }, 0, -1 };
+    t = object->internalClass()->lookupOrInsertTransition(t); // take a copy
 
-    if (tit != object->internalClass()->transitions.constEnd()) {
-        object->setInternalClass(tit.value());
+    if (t.lookup) {
+        object->setInternalClass(t.lookup);
     } else {
         // create a new class and add it to the tree
         InternalClass *newClass = oldClass->engine->emptyClass->changeVTable(oldClass->vtable);
@@ -316,7 +318,8 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     // remove the entry in memberdata
     memmove(object->memberData()->data + propIdx, object->memberData()->data + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
 
-    oldClass->transitions.insert(t, object->internalClass());
+    t.lookup = object->internalClass();
+    oldClass->lookupOrInsertTransition(t);
 }
 
 uint InternalClass::find(const String *string)
@@ -397,7 +400,11 @@ void InternalClass::destroy()
             destroyStack.append(next->m_sealed);
         if (next->m_frozen)
             destroyStack.append(next->m_frozen);
-        destroyStack.append(next->transitions.values());
+
+        for (size_t i = 0; i < transitions.size(); ++i) {
+            destroyStack.append(next->transitions.at(i).lookup);
+        }
+
         next->transitions.clear();
     }
 }
