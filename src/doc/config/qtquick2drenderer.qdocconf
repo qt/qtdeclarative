@@ -22,7 +22,7 @@ HTML.footer = \
     "      Digia, Qt and their respective logos are trademarks of Digia Plc \n" \
     "      in Finland and/or other countries worldwide. All other trademarks are property\n" \
     "      of their respective owners. <a title=\"Privacy Policy\"\n" \
-    "      href=\"http://qt.digia.com/Digia-Legal-Notice--Privacy-Policy/\">Privacy Policy</a></p>\n" \
+    "      href=\"http://www.qt.io/terms-conditions/#section-3\">Privacy Policy</a></p>\n" \
     "</div>\n"
 
 naturallanguate             = en_US

@@ -24,7 +24,7 @@
 
     \title Limitations
 
-    Qt Quick 2 was designed to take full advantage of OpenGL to make the most
+    \l {Qt Quick} 2 was designed to take full advantage of OpenGL to make the most
     out of available graphics hardware.  By not relying on OpenGL, \RENDERER
     presents certain limitations regarding the available features.
 
@@ -35,8 +35,8 @@
     ShaderEffect components in QtQuick 2 can not be rendered with \RENDERER.
 
     \section1 Qt Graphical Effects Module
-    QtGraphicalEffects uses ShaderEffect items to render effects.  If you use a
-    graphical effect from QtGraphicalEffects, then you should not hide the source
+    \l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use
+    graphical effects from this module, then you should not hide the source
     item so that the original item can still be rendered.
 
     \section1 Particle Effects
@@ -44,16 +44,14 @@
     possible, remove particles completely from the scene. Otherwise they will still
     require some processing, even though they are not visible with \RENDERER.
 
-    \target Sprites
     \section1 Sprites
     The Sprite item depends on inaccessible OpenGL functions and will
     not be visible.
 
-    \target Text
-    \section1 Text
+    \section1 Rendering Text
     The text rendering with \RENDERER is based on software rasterization and does
     not respond as well to transformations such as scaling as when using OpenGL.
-    The quality is similar to choosing \c Text.NativeRendering with QtQuick.Text
-    items.
+    The quality is similar to choosing \l {QtQuick::Text::renderType}
+    {Text.NativeRendering} with \l {QtQuick::}{Text} items.
 
 */

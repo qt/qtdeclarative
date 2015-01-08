@@ -23,7 +23,7 @@
     \nextpage qtquick2drenderer-installation-guide.html
     \title Qt Quick 2D Renderer
 
-    \RENDERER is an alternative renderer for Qt Quick 2 that uses the Raster
+    \RENDERER is an alternative renderer for \l {Qt Quick} 2 that uses the Raster
     paint engine to render the contents of the scene graph instead of OpenGL.
     As a result of not using OpenGL to render the scene graph, some features
     and optimizations are no longer available. Most Qt Quick 2 applications

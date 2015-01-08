@@ -24,7 +24,7 @@
 
     \title Installation Guide
 
-    The building of \RENDERER is complicated by the fact that Qt Quick 2
+    The building of \RENDERER is complicated by the fact that \l{Qt Quick} 2
     always requires OpenGL support regardless of whether it is being used or
     not. You will need to build Qt with support for OpenGL even if the target
     system does not support it. If you have a Qt build that already supports
