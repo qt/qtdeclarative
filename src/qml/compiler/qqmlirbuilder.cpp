@@ -1754,7 +1754,6 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
     resolver->flags = 0;
-    resolver->isQObjectResolver = true;
 }
 
 #endif // V4_BOOTSTRAP

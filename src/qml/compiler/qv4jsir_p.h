@@ -226,7 +226,7 @@ struct MemberExpressionResolver
     typedef Type (*ResolveFunction)(QQmlEnginePrivate *engine, MemberExpressionResolver *resolver, Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0), extraData(0), flags(0), isQObjectResolver(false) {}
+        : resolveMember(0), data(0), extraData(0), flags(0) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
@@ -234,8 +234,7 @@ struct MemberExpressionResolver
     ResolveFunction resolveMember;
     void *data; // Could be pointer to meta object, importNameSpace, etc. - depends on resolveMember implementation
     void *extraData; // Could be QQmlTypeNameCache
-    unsigned int flags : 31;
-    unsigned int isQObjectResolver; // neede for IR dump helpers
+    unsigned int flags;
 };
 
 struct Q_AUTOTEST_EXPORT Expr {
