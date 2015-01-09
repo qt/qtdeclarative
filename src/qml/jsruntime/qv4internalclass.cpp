@@ -116,6 +116,7 @@ InternalClass::InternalClass(ExecutionEngine *engine)
     , m_sealed(0)
     , m_frozen(0)
     , size(0)
+    , extensible(true)
 {
 }
 
@@ -130,7 +131,9 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     , m_sealed(0)
     , m_frozen(0)
     , size(other.size)
+    , extensible(other.extensible)
 {
+    Q_ASSERT(extensible);
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
@@ -223,6 +226,27 @@ InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
                 newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
         }
     }
+
+    t.lookup = newClass;
+    return newClass;
+}
+
+InternalClass *InternalClass::nonExtensible()
+{
+    if (!extensible)
+        return this;
+
+    Transition temp;
+    temp.vtable = 0;
+    temp.lookup = 0;
+    temp.flags = Transition::NotExtensible;
+
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
+
+    InternalClass *newClass = engine->newClass(*this);
+    newClass->extensible = false;
 
     t.lookup = newClass;
     return newClass;
@@ -357,6 +381,7 @@ InternalClass *InternalClass::sealed()
         attrs.setConfigurable(false);
         m_sealed = m_sealed->addMember(nameMap.at(i), attrs);
     }
+    m_sealed = m_sealed->nonExtensible();
 
     m_sealed->m_sealed = m_sealed;
     return m_sealed;
@@ -377,6 +402,7 @@ InternalClass *InternalClass::frozen()
         attrs.setConfigurable(false);
         m_frozen = m_frozen->addMember(nameMap.at(i), attrs);
     }
+    m_frozen = m_frozen->nonExtensible();
 
     m_frozen->m_frozen = m_frozen;
     m_frozen->m_sealed = m_frozen;

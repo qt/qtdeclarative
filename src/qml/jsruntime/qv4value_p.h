@@ -50,7 +50,6 @@ struct Q_QML_EXPORT Base {
     Base() {}
     Base(InternalClass *internal)
         : internalClass(internal)
-        , extensible(1)
     {
         Q_ASSERT(inUse() && !isMarked());
         // ####
@@ -59,20 +58,6 @@ struct Q_QML_EXPORT Base {
     union {
         InternalClass *internalClass;
         quintptr mm_data;
-    };
-    struct {
-        uchar _markBit :  1;
-        uchar _inUse   :  1;
-        uchar extensible : 1; // used by Object
-        uchar _needsActivation : 1; // used by FunctionObject
-        uchar _strictMode : 1; // used by FunctionObject
-        uchar _bindingKeyFlag : 1;
-        uchar _hasAccessorProperty : 1;
-        uchar _unused : 1;
-        mutable uchar _subtype;
-        uchar _unused2;
-        uchar _unused3;
-
     };
 
     void setVTable(const ManagedVTable *vt);

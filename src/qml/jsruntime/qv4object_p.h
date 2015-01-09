@@ -140,8 +140,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
-    bool isExtensible() const { return d()->extensible; }
-    void setExtensible(bool b) { d()->extensible = b; }
+    bool isExtensible() const { return d()->internalClass->extensible; }
 
     // Array handling
 

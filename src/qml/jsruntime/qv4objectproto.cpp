@@ -244,8 +244,6 @@ ReturnedValue ObjectPrototype::method_seal(CallContext *ctx)
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    o->setExtensible(false);
-
     o->setInternalClass(o->internalClass()->sealed());
 
     if (o->arrayData()) {
@@ -269,8 +267,6 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
     if (ArgumentsObject::isNonStrictArgumentsObject(o))
         Scoped<ArgumentsObject>(scope, o)->fullyCreate();
 
-    o->setExtensible(false);
-
     o->setInternalClass(o->internalClass()->frozen());
 
     if (o->arrayData()) {
@@ -292,7 +288,7 @@ ReturnedValue ObjectPrototype::method_preventExtensions(CallContext *ctx)
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    o->setExtensible(false);
+    o->setInternalClass(o->internalClass()->nonExtensible());
     return o.asReturnedValue();
 }
 

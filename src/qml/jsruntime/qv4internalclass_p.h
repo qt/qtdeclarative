@@ -197,7 +197,8 @@ struct InternalClassTransition
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
-        VTableChange = 0x100
+        VTableChange = 0x100,
+        NotExtensible = 0x200
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -223,9 +224,11 @@ struct InternalClass : public QQmlJS::Managed {
     InternalClass *m_frozen;
 
     uint size;
+    bool extensible;
 
     static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable);
     InternalClass *changeVTable(const ManagedVTable *vt);
+    InternalClass *nonExtensible();
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
     InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
