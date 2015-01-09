@@ -66,7 +66,7 @@ struct Q_QML_EXPORT Base {
         uchar _bindingKeyFlag : 1;
         uchar _hasAccessorProperty : 1;
         uchar _unused : 1;
-        mutable uchar subtype;
+        mutable uchar _subtype;
         uchar _unused2;
         uchar _unused3;
 

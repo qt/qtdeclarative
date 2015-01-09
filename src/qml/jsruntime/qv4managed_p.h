@@ -290,9 +290,6 @@ public:
     InternalClass *internalClass() const { return d()->internalClass; }
     void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
-    uchar subtype() const { return d()->subtype; }
-    void setSubtype(uchar subtype) const { d()->subtype = subtype; }
-
     bool inUse() const { return d()->inUse; }
     bool markBit() const { return d()->markBit; }
 

@@ -103,6 +103,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         mutable Identifier *identifier;
         mutable String *right;
     };
+    mutable uint subtype;
     mutable uint stringHash;
     mutable uint largestSubLength;
     uint len;
@@ -122,6 +123,9 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     enum {
         IsString = true
     };
+
+    uchar subtype() const { return d()->subtype; }
+    void setSubtype(uchar subtype) const { d()->subtype = subtype; }
 
     bool equals(String *other) const {
         return d()->isEqualTo(other->d());
