@@ -206,6 +206,11 @@ bool FunctionObject::isBinding() const
     return d()->internalClass->vtable == QQmlBindingFunction::staticVTable();
 }
 
+bool FunctionObject::isBoundFunction() const
+{
+    return d()->internalClass->vtable == BoundFunction::staticVTable();
+}
+
 DEFINE_OBJECT_VTABLE(FunctionCtor);
 
 Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)
@@ -623,7 +628,6 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
 {
     this->boundThis = boundThis;
     setVTable(QV4::BoundFunction::staticVTable());
-    subtype = FunctionObject::BoundFunction;
 
     Scope s(scope);
     ScopedObject f(s, this);

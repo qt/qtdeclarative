@@ -1758,7 +1758,6 @@ Heap::QObjectMethod::QObjectMethod(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope)
 {
     setVTable(QV4::QObjectMethod::staticVTable());
-    subtype = WrappedQtMethod;
 }
 
 const QMetaObject *Heap::QObjectMethod::metaObject()

@@ -45,13 +45,6 @@ namespace QV4 {
 namespace Heap {
 
 struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
-    // Used with Managed::subType
-    enum FunctionType {
-        RegularFunction = 0,
-        WrappedQtMethod = 1,
-        BoundFunction
-    };
-
     enum {
         Index_Prototype = 0,
         Index_ProtoConstructor = 0
@@ -145,6 +138,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool needsActivation() const { return d()->needsActivation(); }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
+    bool isBoundFunction() const;
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

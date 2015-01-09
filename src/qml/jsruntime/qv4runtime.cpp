@@ -318,7 +318,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const ValueRef l
     if (!f)
         return engine->throwTypeError();
 
-    if (f->subtype() == Heap::FunctionObject::BoundFunction)
+    if (f->isBoundFunction())
         f = static_cast<BoundFunction *>(f.getPointer())->target();
 
     ScopedObject v(scope, left->asObject());
