@@ -59,6 +59,8 @@ struct ErrorObject : Object {
     ErrorObject(InternalClass *ic, QV4::Object *prototype, const ValueRef message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
+
+    ErrorType errorType;
     StackTrace stackTrace;
     String *stack;
 };
@@ -269,7 +271,7 @@ struct URIErrorPrototype : ErrorObject
 
 inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 {
-    return subtype() == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+    return d()->errorType == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
 }
 
 }

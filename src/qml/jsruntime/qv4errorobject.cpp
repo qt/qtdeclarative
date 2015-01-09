@@ -76,7 +76,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype)
 Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const ValueRef message, ErrorType t)
     : Heap::Object(ic, prototype)
 {
-    subtype = t;
+    errorType = t;
 
     Scope scope(ic->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
@@ -98,7 +98,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const 
 Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, ErrorObject::ErrorType t)
     : Heap::Object(ic, prototype)
 {
-    subtype = t;
+    errorType = t;
 
     Scope scope(ic->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
@@ -120,7 +120,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const 
 Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, const QString &fileName, int line, int column, ErrorObject::ErrorType t)
     : Heap::Object(ic, prototype)
 {
-    subtype = t;
+    errorType = t;
 
     Scope scope(ic->engine);
     Scoped<QV4::ErrorObject> e(scope, this);

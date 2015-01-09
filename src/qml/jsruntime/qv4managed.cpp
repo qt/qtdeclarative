@@ -100,7 +100,7 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        switch (Heap::ErrorObject::ErrorType(subtype())) {
+        switch (static_cast<Heap::ErrorObject *>(d())->errorType) {
         case Heap::ErrorObject::Error:
             s = "Error";
             break;
