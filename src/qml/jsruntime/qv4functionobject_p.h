@@ -143,7 +143,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     bool needsActivation() const { return d()->needsActivation; }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
-    bool bindingKeyFlag() const { return d()->bindingKeyFlag; }
+    bool isBinding() const;
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

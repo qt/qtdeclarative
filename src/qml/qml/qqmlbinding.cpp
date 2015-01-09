@@ -169,7 +169,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     QV4::Scope scope(ep->v4engine());
     QV4::ScopedFunctionObject f(scope, v4function.value());
     Q_ASSERT(f);
-    if (f->bindingKeyFlag()) {
+    if (f->isBinding()) {
         Q_ASSERT(f->as<QV4::QQmlBindingFunction>());
         QQmlSourceLocation loc = static_cast<QV4::Heap::QQmlBindingFunction *>(f->d())->bindingLocation;
         url = loc.sourceFile;

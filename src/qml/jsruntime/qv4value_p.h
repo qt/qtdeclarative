@@ -63,7 +63,7 @@ struct Q_QML_EXPORT Base {
         uchar extensible : 1; // used by Object
         uchar needsActivation : 1; // used by FunctionObject
         uchar _strictMode : 1; // used by FunctionObject
-        uchar bindingKeyFlag : 1;
+        uchar _bindingKeyFlag : 1;
         uchar hasAccessorProperty : 1;
         uchar _unused : 1;
         mutable uchar subtype;

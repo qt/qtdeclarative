@@ -1149,7 +1149,6 @@ Heap::QQmlBindingFunction::QQmlBindingFunction(QV4::FunctionObject *originalFunc
     , originalFunction(originalFunction->d())
 {
     setVTable(QV4::QQmlBindingFunction::staticVTable());
-    bindingKeyFlag = true;
 }
 
 void QQmlBindingFunction::initBindingLocation()

@@ -50,6 +50,7 @@
 #include <private/qqmlengine_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
+#include "private/qqmlbuiltinfunctions_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
@@ -200,6 +201,11 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
         function->isNamedExpression())
         return scope->d()->engine->memoryManager->alloc<ScriptFunction>(scope, function);
     return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto);
+}
+
+bool FunctionObject::isBinding() const
+{
+    return d()->internalClass->vtable == QQmlBindingFunction::staticVTable();
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
