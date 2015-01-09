@@ -64,20 +64,29 @@
 #include <pthread_np.h>
 #endif
 
+using namespace WTF;
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
-using namespace WTF;
 
 struct MemoryManager::Data
 {
+    struct ChunkHeader {
+        Heap::Base freeItems;
+        ChunkHeader *nextNonFull;
+        char *itemStart;
+        char *itemEnd;
+        int itemSize;
+    };
+
     bool gcBlocked;
     bool aggressiveGC;
     bool gcStats;
     ExecutionEngine *engine;
 
     enum { MaxItemSize = 512 };
-    Heap::Base smallItems[MaxItemSize/16];
+    ChunkHeader *nonFullChunks[MaxItemSize/16];
     uint nChunks[MaxItemSize/16];
     uint availableItems[MaxItemSize/16];
     uint allocCount[MaxItemSize/16];
@@ -85,13 +94,7 @@ struct MemoryManager::Data
     int totalAlloc;
     uint maxShift;
     std::size_t maxChunkSize;
-    struct Chunk {
-        PageAllocation memory;
-        int chunkSize;
-    };
-
-    QVector<Chunk> heapChunks;
-
+    QVector<PageAllocation> heapChunks;
 
     struct LargeItem {
         LargeItem *next;
@@ -124,8 +127,7 @@ struct MemoryManager::Data
         , totalLargeItemsAllocated(0)
         , deletable(0)
     {
-        for (int i = 0; i < MaxItemSize/16; ++i)
-            smallItems[i].setNextFree(0);
+        memset(nonFullChunks, 0, sizeof(nonFullChunks));
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
@@ -146,42 +148,24 @@ struct MemoryManager::Data
 
     ~Data()
     {
-        for (QVector<Chunk>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i) {
-            Q_V4_PROFILE_DEALLOC(engine, 0, i->memory.size(), Profiling::HeapPage);
-            i->memory.deallocate();
+        for (QVector<PageAllocation>::iterator i = heapChunks.begin(), ei = heapChunks.end(); i != ei; ++i) {
+            Q_V4_PROFILE_DEALLOC(engine, 0, i->size(), Profiling::HeapPage);
+            i->deallocate();
         }
     }
 };
 
-
-namespace QV4 {
-
-bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::Chunk &b)
-{
-    return a.memory.base() < b.memory.base();
-}
-
-} // namespace QV4
-
 namespace {
 
-struct ChunkSweepData {
-    ChunkSweepData() : tail(&head), isEmpty(true) { head.setNextFree(0); }
-    Heap::Base *tail;
-    Heap::Base head;
-    bool isEmpty;
-};
-
-void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepData, uint *itemsInUse, ExecutionEngine *engine)
+bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine)
 {
-    char *chunkStart = reinterpret_cast<char*>(chunk.memory.base());
-    std::size_t itemSize = chunk.chunkSize;
-//    qDebug("chunkStart @ %p, size=%x, pos=%x", chunkStart, chunk.chunkSize, chunk.chunkSize>>4);
-
+    bool isEmpty = true;
+    Heap::Base *tail = &header->freeItems;
+//    qDebug("chunkStart @ %p, size=%x, pos=%x", header->itemStart, header->itemSize, header->itemSize>>4);
 #ifdef V4_USE_VALGRIND
     VALGRIND_DISABLE_ERROR_REPORTING;
 #endif
-    for (char *item = chunkStart, *chunkEnd = item + chunk.memory.size() - itemSize; item <= chunkEnd; item += itemSize) {
+    for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
         Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
 //        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
 //               item, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
@@ -191,34 +175,35 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
         if (m->isMarked()) {
             Q_ASSERT(m->inUse());
             m->clearMarkBit();
-            sweepData->isEmpty = false;
+            isEmpty = false;
             ++(*itemsInUse);
         } else {
             if (m->inUse()) {
-//                qDebug() << "-- collecting it." << m << sweepData->tail << m->nextFree();
+//                qDebug() << "-- collecting it." << m << tail << m->nextFree();
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
                 if (m->gcGetInternalClass()->vtable->destroy)
                     m->gcGetInternalClass()->vtable->destroy(m);
 
-                memset(m, 0, itemSize);
+                memset(m, 0, header->itemSize);
 #ifdef V4_USE_VALGRIND
                 VALGRIND_DISABLE_ERROR_REPORTING;
                 VALGRIND_MEMPOOL_FREE(engine->memoryManager, m);
 #endif
-                Q_V4_PROFILE_DEALLOC(engine, m, itemSize, Profiling::SmallItem);
+                Q_V4_PROFILE_DEALLOC(engine, m, header->itemSize, Profiling::SmallItem);
                 ++(*itemsInUse);
             }
             // Relink all free blocks to rewrite references to any released chunk.
-            sweepData->tail->setNextFree(m);
-            sweepData->tail = m;
+            tail->setNextFree(m);
+            tail = m;
         }
     }
-    sweepData->tail->setNextFree(0);
+    tail->setNextFree(0);
 #ifdef V4_USE_VALGRIND
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
+    return isEmpty;
 }
 
 } // namespace
@@ -263,16 +248,21 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
         return item->heapObject();
     }
 
-    Heap::Base *m = m_d->smallItems[pos].nextFree();
-    if (m)
+    Heap::Base *m = 0;
+    Data::ChunkHeader *header = m_d->nonFullChunks[pos];
+    if (header) {
+        m = header->freeItems.nextFree();
         goto found;
+    }
 
     // try to free up space, otherwise allocate
     if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
         runGC();
-        m = m_d->smallItems[pos].nextFree();
-        if (m)
+        header = m_d->nonFullChunks[pos];
+        if (header) {
+            m = header->freeItems.nextFree();
             goto found;
+        }
     }
 
     // no free item available, allocate a new chunk
@@ -283,30 +273,35 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
             shift = m_d->maxShift;
         std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
-        Data::Chunk allocation;
-        allocation.memory = PageAllocation::allocate(
+        PageAllocation allocation = PageAllocation::allocate(
                     Q_V4_PROFILE_ALLOC(m_d->engine, allocSize, Profiling::HeapPage),
                     OSAllocator::JSGCHeapPages);
-        allocation.chunkSize = int(size);
         m_d->heapChunks.append(allocation);
         std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
-        char *chunk = (char *)allocation.memory.base();
-        char *end = chunk + allocation.memory.size() - size;
 
-        Heap::Base *last = &m_d->smallItems[pos];
-        while (chunk <= end) {
-            Heap::Base *o = reinterpret_cast<Heap::Base *>(chunk);
+        header = reinterpret_cast<Data::ChunkHeader *>(allocation.base());
+        header->itemSize = int(size);
+        header->itemStart = reinterpret_cast<char *>(allocation.base()) + roundUpToMultipleOf(16, sizeof(Data::ChunkHeader));
+        header->itemEnd = reinterpret_cast<char *>(allocation.base()) + allocation.size() - header->itemSize;
+
+        header->nextNonFull = m_d->nonFullChunks[pos];
+        m_d->nonFullChunks[pos] = header;
+
+        Heap::Base *last = &header->freeItems;
+        for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
+            Heap::Base *o = reinterpret_cast<Heap::Base *>(item);
             last->setNextFree(o);
             last = o;
-            chunk += size;
+
         }
         last->setNextFree(0);
-        m = m_d->smallItems[pos].nextFree();
-        const size_t increase = allocation.memory.size()/size - 1;
+        m = header->freeItems.nextFree();
+        const size_t increase = (header->itemEnd - header->itemStart) / header->itemSize;
         m_d->availableItems[pos] += uint(increase);
         m_d->totalItems += int(increase);
 #ifdef V4_USE_VALGRIND
-        VALGRIND_MAKE_MEM_NOACCESS(allocation.memory.base(), allocSize);
+        VALGRIND_MAKE_MEM_NOACCESS(allocation.base(), allocSize);
+        VALGRIND_MEMPOOL_ALLOC(this, header, sizeof(Data::ChunkHeader));
 #endif
     }
 
@@ -318,7 +313,9 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     ++m_d->allocCount[pos];
     ++m_d->totalAlloc;
-    m_d->smallItems[pos].setNextFree(m->nextFree());
+    header->freeItems.setNextFree(m->nextFree());
+    if (!header->freeItems.nextFree())
+        m_d->nonFullChunks[pos] = header->nextNonFull;
     return m;
 }
 
@@ -425,58 +422,41 @@ void MemoryManager::sweep(bool lastSweep)
         }
     }
 
-    QVarLengthArray<ChunkSweepData> chunkSweepData(m_d->heapChunks.size());
+    bool *chunkIsEmpty = (bool *)alloca(m_d->heapChunks.size() * sizeof(bool));
     uint itemsInUse[MemoryManager::Data::MaxItemSize/16];
     memset(itemsInUse, 0, sizeof(itemsInUse));
+    memset(m_d->nonFullChunks, 0, sizeof(m_d->nonFullChunks));
 
     for (int i = 0; i < m_d->heapChunks.size(); ++i) {
-        const MemoryManager::Data::Chunk &chunk = m_d->heapChunks[i];
-        sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d->engine);
+        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(m_d->heapChunks[i].base());
+        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], m_d->engine);
     }
 
-    Heap::Base *tails[MemoryManager::Data::MaxItemSize/16];
-    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos) {
-        m_d->smallItems[pos].setNextFree(0);
-        tails[pos] = &m_d->smallItems[pos];
-    }
-
-#ifdef V4_USE_VALGRIND
-    VALGRIND_DISABLE_ERROR_REPORTING;
-#endif
-    QVector<Data::Chunk>::iterator chunkIter = m_d->heapChunks.begin();
-    for (int i = 0; i < chunkSweepData.size(); ++i) {
+    QVector<PageAllocation>::iterator chunkIter = m_d->heapChunks.begin();
+    for (int i = 0; i < m_d->heapChunks.size(); ++i) {
         Q_ASSERT(chunkIter != m_d->heapChunks.end());
-        const size_t pos = chunkIter->chunkSize >> 4;
-        const size_t decrease = chunkIter->memory.size()/chunkIter->chunkSize - 1;
+        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(chunkIter->base());
+        const size_t pos = header->itemSize >> 4;
+        const size_t decrease = (header->itemEnd - header->itemStart) / header->itemSize;
 
         // Release that chunk if it could have been spared since the last GC run without any difference.
-        if (chunkSweepData[i].isEmpty && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
-            Q_V4_PROFILE_DEALLOC(m_d->engine, 0, chunkIter->memory.size(), Profiling::HeapPage);
+        if (chunkIsEmpty[i] && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
+            Q_V4_PROFILE_DEALLOC(m_d->engine, 0, chunkIter->size(), Profiling::HeapPage);
+#ifdef V4_USE_VALGRIND
+            VALGRIND_MEMPOOL_FREE(this, header);
+#endif
             --m_d->nChunks[pos];
             m_d->availableItems[pos] -= uint(decrease);
             m_d->totalItems -= int(decrease);
-            chunkIter->memory.deallocate();
+            chunkIter->deallocate();
             chunkIter = m_d->heapChunks.erase(chunkIter);
             continue;
-        } else if (chunkSweepData[i].head.nextFree()) {
-#ifdef V4_USE_VALGRIND
-            VALGRIND_DISABLE_ERROR_REPORTING;
-#endif
-            tails[pos]->setNextFree(chunkSweepData[i].head.nextFree());
-#ifdef V4_USE_VALGRIND
-            VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
-            tails[pos] = chunkSweepData[i].tail;
+        } else if (header->freeItems.nextFree()) {
+            header->nextNonFull = m_d->nonFullChunks[pos];
+            m_d->nonFullChunks[pos] = header;
         }
         ++chunkIter;
     }
-
-#ifdef V4_USE_VALGRIND
-    VALGRIND_DISABLE_ERROR_REPORTING;
-    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
-        Q_ASSERT(tails[pos]->nextFree() == 0);
-    VALGRIND_ENABLE_ERROR_REPORTING;
-#endif
 
     Data::LargeItem *i = m_d->largeItems;
     Data::LargeItem **last = &m_d->largeItems;
@@ -570,14 +550,13 @@ void MemoryManager::runGC()
 size_t MemoryManager::getUsedMem() const
 {
     size_t usedMem = 0;
-    for (QVector<Data::Chunk>::const_iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
-        char *chunkStart = reinterpret_cast<char *>(i->memory.base());
-        char *chunkEnd = chunkStart + i->memory.size() - i->chunkSize;
-        for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
-            Heap::Base *m = reinterpret_cast<Heap::Base *>(chunk);
-            Q_ASSERT((qintptr) chunk % 16 == 0);
+    for (QVector<PageAllocation>::const_iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
+        Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(i->base());
+        for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
+            Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
+            Q_ASSERT((qintptr) item % 16 == 0);
             if (m->inUse())
-                usedMem += i->chunkSize;
+                usedMem += header->itemSize;
         }
     }
     return usedMem;
@@ -587,7 +566,7 @@ size_t MemoryManager::getAllocatedMem() const
 {
     size_t total = 0;
     for (int i = 0; i < m_d->heapChunks.size(); ++i)
-        total += m_d->heapChunks.at(i).memory.size();
+        total += m_d->heapChunks.at(i).size();
     return total;
 }
 

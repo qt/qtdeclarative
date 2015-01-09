@@ -86,6 +86,7 @@ public:
     // control warning when a client tries to use operator bool exposed above via "using PageBlock::operator bool".
     operator bool() const { return PageBlock::operator bool(); }
 #endif
+    bool operator<(const PageAllocation &b) { return base() < b.base(); }
 
     static PageAllocation allocate(size_t size,
                                    OSAllocator::Usage usage = OSAllocator::UnknownUsage,
