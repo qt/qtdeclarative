@@ -140,9 +140,6 @@ struct Q_QML_EXPORT Object: Managed {
 
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
-    inline bool hasAccessorProperty() const { return d()->hasAccessorProperty; }
-    inline void setHasAccessorProperty() { d()->hasAccessorProperty = true; }
-
     bool isExtensible() const { return d()->extensible; }
     void setExtensible(bool b) { d()->extensible = b; }
 
@@ -367,10 +364,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 {
     // ### Clean up
     arrayCreate();
-    if (attributes.isAccessor()) {
-        setHasAccessorProperty();
-        initSparseArray();
-    } else if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
+    if (attributes.isAccessor() || (index > 0x1000 && index > 2*d()->arrayData->alloc)) {
         initSparseArray();
     } else {
         arrayData()->vtable()->reallocate(this, index + 1, false);

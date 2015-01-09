@@ -326,7 +326,7 @@ ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
     ScopedCallData callData(scope, len);
 
     if (len) {
-        if (arr->arrayType() != Heap::ArrayData::Simple || arr->protoHasArray() || arr->hasAccessorProperty()) {
+        if (arr->arrayType() != Heap::ArrayData::Simple || arr->protoHasArray()) {
             for (quint32 i = 0; i < len; ++i)
                 callData->args[i] = arr->getIndexed(i);
         } else {

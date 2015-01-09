@@ -64,7 +64,6 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
         args->arrayPut(0, context->d()->callData->args, context->d()->callData->argc);
         args->d()->fullyCreated = true;
     } else {
-        args->setHasAccessorProperty();
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
         args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }

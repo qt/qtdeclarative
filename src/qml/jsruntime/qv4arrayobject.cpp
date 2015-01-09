@@ -35,6 +35,7 @@
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4argumentsobject_p.h"
 #include "qv4runtime_p.h"
 
 using namespace QV4;
@@ -605,7 +606,8 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
 
     ScopedValue value(scope);
 
-    if (instance->hasAccessorProperty() || (instance->arrayType() >= Heap::ArrayData::Sparse) || instance->protoHasArray()) {
+    if (ArgumentsObject::isNonStrictArgumentsObject(instance) ||
+        (instance->arrayType() >= Heap::ArrayData::Sparse) || instance->protoHasArray()) {
         // lets be safe and slow
         for (uint i = fromIndex; i < len; ++i) {
             bool exists;

@@ -35,6 +35,7 @@
 #include "qv4functionobject_p.h"
 #include "qv4mm_p.h"
 #include "qv4runtime_p.h"
+#include "qv4argumentsobject_p.h"
 
 using namespace QV4;
 
@@ -570,9 +571,13 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
 
     uint oldSize = obj->getLength();
 
-    if (other && other->isSparse()) {
+    if (!other || ArgumentsObject::isNonStrictArgumentsObject(otherObj)) {
+        ScopedValue v(scope);
+        for (uint i = 0; i < n; ++i)
+            obj->arraySet(oldSize + i, (v = otherObj->getIndexed(i)));
+    } else if (other && other->isSparse()) {
         Heap::SparseArrayData *os = static_cast<Heap::SparseArrayData *>(other->d());
-        if (otherObj->hasAccessorProperty() && other->hasAttributes()) {
+        if (other->hasAttributes()) {
             ScopedValue v(scope);
             for (const SparseArrayNode *it = os->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode()) {

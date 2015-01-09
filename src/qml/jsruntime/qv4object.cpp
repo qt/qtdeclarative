@@ -210,7 +210,6 @@ void Object::insertMember(String *s, const Property *p, PropertyAttributes attri
     ensureMemberIndex(internalClass()->size);
 
     if (attributes.isAccessor()) {
-        setHasAccessorProperty();
         Property *pp = propertyAt(idx);
         pp->value = p->value;
         pp->set = p->set;
@@ -882,8 +881,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
             cattrs->setWritable(false);
         if (!succeeded)
             goto reject;
-        if (attrs.isAccessor())
-            setHasAccessorProperty();
         return true;
     }
 
@@ -1047,8 +1044,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     } else {
         setArrayAttributes(index, cattrs);
     }
-    if (cattrs.isAccessor())
-        setHasAccessorProperty();
     return true;
   reject:
     if (engine->currentContext()->strictMode)
@@ -1070,7 +1065,8 @@ void Object::copyArrayData(Object *other)
     Q_ASSERT(isArrayObject());
     Scope scope(engine());
 
-    if (other->protoHasArray() || other->hasAccessorProperty()) {
+    if (other->protoHasArray() || ArgumentsObject::isNonStrictArgumentsObject(other) ||
+        (other->arrayType() == Heap::ArrayData::Sparse && other->arrayData()->attrs)) {
         uint len = other->getLength();
         Q_ASSERT(len);
 
@@ -1080,14 +1076,6 @@ void Object::copyArrayData(Object *other)
         }
     } else if (!other->arrayData()) {
         ;
-    } else if (other->hasAccessorProperty() && other->d()->arrayData->attrs && other->d()->arrayData->isSparse()){
-        // do it the slow way
-        ScopedValue v(scope);
-        Heap::ArrayData *osa = other->d()->arrayData;
-        for (const SparseArrayNode *it = osa->sparse->begin(); it != osa->sparse->end(); it = it->nextNode()) {
-            v = other->getValue(reinterpret_cast<Property *>(osa->arrayData + it->value), osa->attrs[it->value]);
-            arraySet(it->key(), v);
-        }
     } else {
         Q_ASSERT(!arrayData() && other->arrayData());
         ArrayData::realloc(this, other->d()->arrayData->type, other->d()->arrayData->alloc, false);
