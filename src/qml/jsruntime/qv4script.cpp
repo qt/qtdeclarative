@@ -97,7 +97,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     function = f;
     if (function)
         function->compilationUnit->addref();
-    needsActivation = function ? function->needsActivation() : false;
 
     Scope s(scope);
     Scoped<QV4::QmlBindingWrapper> o(s, this);
@@ -116,7 +115,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
     Q_ASSERT(scope->inUse());
 
     setVTable(QV4::QmlBindingWrapper::staticVTable());
-    needsActivation = false;
 
     Scope s(scope);
     Scoped<QV4::QmlBindingWrapper> o(s, this);

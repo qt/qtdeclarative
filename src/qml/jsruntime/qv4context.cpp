@@ -245,7 +245,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return d()->function->needsActivation || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
+    return d()->function->needsActivation() || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
 }
 
 void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)

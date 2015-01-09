@@ -383,8 +383,6 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     if (!function)
         return Encode::undefined();
 
-    d()->needsActivation = function->needsActivation();
-
     if (function->isStrict() || (ctx->d()->strictMode)) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);

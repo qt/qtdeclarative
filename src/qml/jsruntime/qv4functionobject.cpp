@@ -144,8 +144,6 @@ void FunctionObject::init(String *n, bool createProto)
     Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
 
-    d()->needsActivation = true;
-
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
         ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.asObject()));
@@ -455,8 +453,6 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
     function->compilationUnit->addref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
-
-    needsActivation = function->needsActivation();
 
     // global function
     if (!scope)

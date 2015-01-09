@@ -68,6 +68,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
 
     unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
+    bool needsActivation() const { return function ? function->needsActivation() : false; }
 
     ExecutionContext *scope;
     Function *function;
@@ -141,7 +142,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ReturnedValue protoProperty() { return memberData()->data[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
 
-    bool needsActivation() const { return d()->needsActivation; }
+    bool needsActivation() const { return d()->needsActivation(); }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
 
