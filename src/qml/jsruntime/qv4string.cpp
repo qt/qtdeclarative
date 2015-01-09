@@ -43,9 +43,8 @@
 
 using namespace QV4;
 
-static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
+static uint toArrayIndex(const QChar *ch, const QChar *end)
 {
-    *ok = false;
     uint i = ch->unicode() - '0';
     if (i > 9)
         return UINT_MAX;
@@ -65,15 +64,13 @@ static uint toArrayIndex(const QChar *ch, const QChar *end, bool *ok)
         i = n;
         ++ch;
     }
-    *ok = true;
     return i;
 }
 
 #ifndef V4_BOOTSTRAP
 
-static uint toArrayIndex(const char *ch, const char *end, bool *ok)
+static uint toArrayIndex(const char *ch, const char *end)
 {
-    *ok = false;
     uint i = *ch - '0';
     if (i > 9)
         return UINT_MAX;
@@ -93,7 +90,6 @@ static uint toArrayIndex(const char *ch, const char *end, bool *ok)
         i = n;
         ++ch;
     }
-    *ok = true;
     return i;
 }
 
@@ -225,16 +221,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (!o->internalClass()->vtable->isString)
         return false;
 
-    String *that = static_cast<String *>(t);
-    String *other = static_cast<String *>(o);
-    if (that->hashValue() != other->hashValue())
-        return false;
-    if (that->identifier() && that->identifier() == other->identifier())
-        return true;
-    if (that->subtype() >= Heap::String::StringType_UInt && that->subtype() == other->subtype())
-        return true;
-
-    return that->toQString() == other->toQString();
+    return static_cast<String *>(t)->isEqualTo(static_cast<String *>(o));
 }
 
 
@@ -278,30 +265,16 @@ uint String::toUInt(bool *ok) const
 
     if (subtype() == Heap::String::StringType_Unknown)
         d()->createHashValue();
-    if (subtype() >= Heap::String::StringType_UInt)
+    if (subtype() == Heap::String::StringType_ArrayIndex)
         return d()->stringHash;
 
-    // ### this conversion shouldn't be required
+    // required for UINT_MAX or numbers starting with a leading 0
     double d = RuntimeHelpers::stringToNumber(toQString());
     uint l = (uint)d;
     if (d == l)
         return l;
     *ok = false;
     return UINT_MAX;
-}
-
-bool String::equals(String *other) const
-{
-    if (this == other)
-        return true;
-    if (hashValue() != other->hashValue())
-        return false;
-    if (identifier() && identifier() == other->identifier())
-        return true;
-    if (subtype() >= Heap::String::StringType_UInt && subtype() == other->subtype())
-        return true;
-
-    return toQString() == other->toQString();
 }
 
 void String::makeIdentifierImpl() const
@@ -335,10 +308,9 @@ void Heap::String::createHashValue() const
     const QChar *end = ch + text->size;
 
     // array indices get their number as hash value
-    bool ok;
-    stringHash = ::toArrayIndex(ch, end, &ok);
-    if (ok) {
-        subtype = (stringHash == UINT_MAX) ? Heap::String::StringType_UInt : Heap::String::StringType_ArrayIndex;
+    stringHash = ::toArrayIndex(ch, end);
+    if (stringHash != UINT_MAX) {
+        subtype = Heap::String::StringType_ArrayIndex;
         return;
     }
 
@@ -380,9 +352,8 @@ uint String::createHashValue(const QChar *ch, int length)
     const QChar *end = ch + length;
 
     // array indices get their number as hash value
-    bool ok;
-    uint stringHash = ::toArrayIndex(ch, end, &ok);
-    if (ok)
+    uint stringHash = ::toArrayIndex(ch, end);
+    if (stringHash != UINT_MAX)
         return stringHash;
 
     uint h = 0xffffffff;
@@ -399,9 +370,8 @@ uint String::createHashValue(const char *ch, int length)
     const char *end = ch + length;
 
     // array indices get their number as hash value
-    bool ok;
-    uint stringHash = ::toArrayIndex(ch, end, &ok);
-    if (ok)
+    uint stringHash = ::toArrayIndex(ch, end);
+    if (stringHash != UINT_MAX)
         return stringHash;
 
     uint h = 0xffffffff;
@@ -424,7 +394,6 @@ uint String::getLength(const Managed *m)
 
 uint String::toArrayIndex(const QString &str)
 {
-    bool ok;
-    return ::toArrayIndex(str.constData(), str.constData() + str.length(), &ok);
+    return ::toArrayIndex(str.constData(), str.constData() + str.length());
 }
 

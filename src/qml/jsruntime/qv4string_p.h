@@ -50,7 +50,6 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     enum StringType {
         StringType_Unknown,
         StringType_Regular,
-        StringType_UInt,
         StringType_ArrayIndex
     };
 
@@ -90,7 +89,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         Q_ASSERT(!largestSubLength);
         if (identifier && identifier == other->identifier)
             return true;
-        if (subtype >= Heap::String::StringType_UInt && subtype == other->subtype)
+        if (subtype == Heap::String::StringType_ArrayIndex && other->subtype == Heap::String::StringType_ArrayIndex)
             return true;
 
         return toQString() == other->toQString();
@@ -124,7 +123,9 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         IsString = true
     };
 
-    bool equals(String *other) const;
+    bool equals(String *other) const {
+        return d()->isEqualTo(other->d());
+    }
     inline bool isEqualTo(const String *other) const {
         return d()->isEqualTo(other->d());
     }
