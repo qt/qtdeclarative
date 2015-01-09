@@ -383,11 +383,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     if (!function)
         return Encode::undefined();
 
-    d()->strictMode = function->isStrict() || (ctx->d()->strictMode);
-
     d()->needsActivation = function->needsActivation();
 
-    if (strictMode()) {
+    if (function->isStrict() || (ctx->d()->strictMode)) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->d()->callData->thisObject;
@@ -397,7 +395,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
     ContextStateSaver stateSaver(scope, ctx);
 
     // set the correct strict mode flag on the context
-    ctx->d()->strictMode = strictMode();
+    ctx->d()->strictMode = false;
     ctx->d()->compilationUnit = function->compilationUnit;
 
     return function->code(ctx->engine(), function->codeData);

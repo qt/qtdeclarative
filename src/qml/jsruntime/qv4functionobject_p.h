@@ -142,7 +142,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     ReturnedValue protoProperty() { return memberData()->data[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
 
     bool needsActivation() const { return d()->needsActivation; }
-    bool strictMode() const { return d()->strictMode; }
+    bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool bindingKeyFlag() const { return d()->bindingKeyFlag; }
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);

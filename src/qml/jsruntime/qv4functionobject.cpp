@@ -144,7 +144,6 @@ void FunctionObject::init(String *n, bool createProto)
     ScopedValue protectThis(s, this);
 
     d()->needsActivation = true;
-    d()->strictMode = false;
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
@@ -452,7 +451,6 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
     Q_ASSERT(function->code);
 
     needsActivation = function->needsActivation();
-    strictMode = function->isStrict();
 
     // global function
     if (!scope)
