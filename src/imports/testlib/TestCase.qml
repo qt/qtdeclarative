@@ -934,12 +934,13 @@ Item {
     }
 
     /*!
-        \qmlmethod TestCase::mousePress(item, x, y, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+        \qmlmethod TestCase::mousePress(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates pressing a mouse \a button with an optional \a modifier
-        on an \a item.  The position is defined by \a x and \a y.  If \a delay is
-        specified, the test will wait for the specified amount of milliseconds
-        before the press.
+        on an \a item.  The position is defined by \a x and \a y.
+        If \a x or \a y are not defined the position will be the center of \a item.
+        If \a delay is specified, the test will wait for the specified amount of
+        milliseconds before the press.
 
         The position given by \a x and \a y is transformed from the co-ordinate
         system of \a item into window co-ordinates and then delivered.
@@ -955,15 +956,20 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        if (x === undefined)
+            x = item.width / 2
+        if (y === undefined)
+            y = item.height / 2
         if (!qtest_events.mousePress(item, x, y, button, modifiers, delay))
             qtest_fail("window not shown", 2)
     }
 
     /*!
-        \qmlmethod TestCase::mouseRelease(item, x, y, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+        \qmlmethod TestCase::mouseRelease(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates releasing a mouse \a button with an optional \a modifier
         on an \a item.  The position of the release is defined by \a x and \a y.
+        If \a x or \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
         milliseconds before releasing the button.
 
@@ -981,6 +987,10 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        if (x === undefined)
+            x = item.width / 2
+        if (y === undefined)
+            y = item.height / 2
         if (!qtest_events.mouseRelease(item, x, y, button, modifiers, delay))
             qtest_fail("window not shown", 2)
     }
@@ -1035,10 +1045,11 @@ Item {
     }
 
     /*!
-        \qmlmethod TestCase::mouseClick(item, x, y, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+        \qmlmethod TestCase::mouseClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates clicking a mouse \a button with an optional \a modifier
         on an \a item.  The position of the click is defined by \a x and \a y.
+        If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
         milliseconds before pressing and before releasing the button.
 
@@ -1056,15 +1067,20 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        if (x === undefined)
+            x = item.width / 2
+        if (y === undefined)
+            y = item.height / 2
         if (!qtest_events.mouseClick(item, x, y, button, modifiers, delay))
             qtest_fail("window not shown", 2)
     }
 
     /*!
-        \qmlmethod TestCase::mouseDoubleClick(item, x, y, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
+        \qmlmethod TestCase::mouseDoubleClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates double-clicking a mouse \a button with an optional \a modifier
         on an \a item.  The position of the click is defined by \a x and \a y.
+        If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
         milliseconds before pressing and before releasing the button.
 
@@ -1082,6 +1098,10 @@ Item {
             modifiers = Qt.NoModifier
         if (delay == undefined)
             delay = -1
+        if (x === undefined)
+            x = item.width / 2
+        if (y === undefined)
+            y = item.height / 2
         if (!qtest_events.mouseDoubleClick(item, x, y, button, modifiers, delay))
             qtest_fail("window not shown", 2)
     }
