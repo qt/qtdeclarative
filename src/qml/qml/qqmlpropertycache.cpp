@@ -1538,6 +1538,7 @@ void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, 
         break;
     default:
         Q_UNIMPLEMENTED();
+        offset = INT_MAX;
     }
 
     *index -= offset;
