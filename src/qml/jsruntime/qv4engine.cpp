@@ -913,7 +913,7 @@ void ExecutionEngine::markObjects()
 
     Heap::ExecutionContext *c = currentContext();
     while (c) {
-        Q_ASSERT(c->inUse);
+        Q_ASSERT(c->inUse());
         if (!c->markBit) {
             c->markBit = 1;
             c->internalClass->vtable->markObjects(c, this);

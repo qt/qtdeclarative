@@ -47,10 +47,10 @@ typedef uint Bool;
 namespace Heap {
 
 struct Q_QML_EXPORT Base {
+    Base() {}
     Base(InternalClass *internal)
         : internalClass(internal)
         , markBit(0)
-        , inUse(1)
         , extensible(1)
     {
         // ####
@@ -59,7 +59,7 @@ struct Q_QML_EXPORT Base {
     InternalClass *internalClass;
     struct {
         uchar markBit :  1;
-        uchar inUse   :  1;
+        uchar _inUse   :  1;
         uchar extensible : 1; // used by Object
         uchar _needsActivation : 1; // used by FunctionObject
         uchar _strictMode : 1; // used by FunctionObject
@@ -76,14 +76,23 @@ struct Q_QML_EXPORT Base {
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
 
-    Base **nextFreeRef() {
-        return reinterpret_cast<Base **>(this);
+    inline bool isMarked() const {
+        return markBit;
     }
+
+    enum {
+        NotInUse = 0x2,
+        PointerMask = ~0x3
+    };
+    inline bool inUse() const {
+        return !((quintptr)internalClass & NotInUse);
+    }
+
     Base *nextFree() {
-        return *reinterpret_cast<Base **>(this);
+        return reinterpret_cast<Base *>(reinterpret_cast<quintptr>(internalClass) & PointerMask);
     }
     void setNextFree(Base *m) {
-        *reinterpret_cast<Base **>(this) = m;
+        internalClass = reinterpret_cast<InternalClass *>(reinterpret_cast<quintptr>(m) | NotInUse);
     }
 
     void *operator new(size_t, Managed *m) { return m; }

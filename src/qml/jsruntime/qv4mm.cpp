@@ -77,7 +77,7 @@ struct MemoryManager::Data
     ExecutionEngine *engine;
 
     enum { MaxItemSize = 512 };
-    Heap::Base *smallItems[MaxItemSize/16];
+    Heap::Base smallItems[MaxItemSize/16];
     uint nChunks[MaxItemSize/16];
     uint availableItems[MaxItemSize/16];
     uint allocCount[MaxItemSize/16];
@@ -124,7 +124,8 @@ struct MemoryManager::Data
         , totalLargeItemsAllocated(0)
         , deletable(0)
     {
-        memset(smallItems, 0, sizeof(smallItems));
+        for (int i = 0; i < MaxItemSize/16; ++i)
+            smallItems[i].setNextFree(0);
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
@@ -165,9 +166,9 @@ bool operator<(const MemoryManager::Data::Chunk &a, const MemoryManager::Data::C
 namespace {
 
 struct ChunkSweepData {
-    ChunkSweepData() : tail(&head), head(0), isEmpty(true) { }
-    Heap::Base **tail;
-    Heap::Base *head;
+    ChunkSweepData() : tail(&head), isEmpty(true) { head.setNextFree(0); }
+    Heap::Base *tail;
+    Heap::Base head;
     bool isEmpty;
 };
 
@@ -188,12 +189,12 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
         Q_ASSERT((qintptr) item % 16 == 0);
 
         if (m->markBit) {
-            Q_ASSERT(m->inUse);
+            Q_ASSERT(m->inUse());
             m->markBit = 0;
             sweepData->isEmpty = false;
             ++(*itemsInUse);
         } else {
-            if (m->inUse) {
+            if (m->inUse()) {
 //                qDebug() << "-- collecting it." << m << sweepData->tail << m->nextFree();
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
@@ -210,11 +211,11 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
                 ++(*itemsInUse);
             }
             // Relink all free blocks to rewrite references to any released chunk.
-            *sweepData->tail = m;
-            sweepData->tail = m->nextFreeRef();
+            sweepData->tail->setNextFree(m);
+            sweepData->tail = m;
         }
     }
-    *sweepData->tail = 0;
+    sweepData->tail->setNextFree(0);
 #ifdef V4_USE_VALGRIND
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
@@ -262,14 +263,14 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
         return item->heapObject();
     }
 
-    Heap::Base *m = m_d->smallItems[pos];
+    Heap::Base *m = m_d->smallItems[pos].nextFree();
     if (m)
         goto found;
 
     // try to free up space, otherwise allocate
     if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
         runGC();
-        m = m_d->smallItems[pos];
+        m = m_d->smallItems[pos].nextFree();
         if (m)
             goto found;
     }
@@ -292,15 +293,15 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
         char *chunk = (char *)allocation.memory.base();
         char *end = chunk + allocation.memory.size() - size;
 
-        Heap::Base **last = &m_d->smallItems[pos];
+        Heap::Base *last = &m_d->smallItems[pos];
         while (chunk <= end) {
             Heap::Base *o = reinterpret_cast<Heap::Base *>(chunk);
-            *last = o;
-            last = o->nextFreeRef();
+            last->setNextFree(o);
+            last = o;
             chunk += size;
         }
-        *last = 0;
-        m = m_d->smallItems[pos];
+        last->setNextFree(0);
+        m = m_d->smallItems[pos].nextFree();
         const size_t increase = allocation.memory.size()/size - 1;
         m_d->availableItems[pos] += uint(increase);
         m_d->totalItems += int(increase);
@@ -317,7 +318,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     ++m_d->allocCount[pos];
     ++m_d->totalAlloc;
-    m_d->smallItems[pos] = m->nextFree();
+    m_d->smallItems[pos].setNextFree(m->nextFree());
     return m;
 }
 
@@ -431,10 +432,11 @@ void MemoryManager::sweep(bool lastSweep)
         sweepChunk(chunk, &chunkSweepData[i], &itemsInUse[chunk.chunkSize >> 4], m_d->engine);
     }
 
-    Heap::Base **tails[MemoryManager::Data::MaxItemSize/16];
-    memset(m_d->smallItems, 0, sizeof(m_d->smallItems));
-    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
+    Heap::Base *tails[MemoryManager::Data::MaxItemSize/16];
+    for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos) {
+        m_d->smallItems[pos].setNextFree(0);
         tails[pos] = &m_d->smallItems[pos];
+    }
 
 #ifdef V4_USE_VALGRIND
     VALGRIND_DISABLE_ERROR_REPORTING;
@@ -454,11 +456,11 @@ void MemoryManager::sweep(bool lastSweep)
             chunkIter->memory.deallocate();
             chunkIter = m_d->heapChunks.erase(chunkIter);
             continue;
-        } else if (chunkSweepData[i].head) {
+        } else if (chunkSweepData[i].head.nextFree()) {
 #ifdef V4_USE_VALGRIND
             VALGRIND_DISABLE_ERROR_REPORTING;
 #endif
-            *tails[pos] = chunkSweepData[i].head;
+            tails[pos]->setNextFree(chunkSweepData[i].head.nextFree());
 #ifdef V4_USE_VALGRIND
             VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
@@ -470,7 +472,7 @@ void MemoryManager::sweep(bool lastSweep)
 #ifdef V4_USE_VALGRIND
     VALGRIND_DISABLE_ERROR_REPORTING;
     for (int pos = 0; pos < MemoryManager::Data::MaxItemSize/16; ++pos)
-        Q_ASSERT(*tails[pos] == 0);
+        Q_ASSERT(tails[pos]->nextFree() == 0);
     VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
 
@@ -478,7 +480,7 @@ void MemoryManager::sweep(bool lastSweep)
     Data::LargeItem **last = &m_d->largeItems;
     while (i) {
         Heap::Base *m = i->heapObject();
-        Q_ASSERT(m->inUse);
+        Q_ASSERT(m->inUse());
         if (m->markBit) {
             m->markBit = 0;
             last = &i->next;
@@ -563,7 +565,7 @@ size_t MemoryManager::getUsedMem() const
         for (char *chunk = chunkStart; chunk <= chunkEnd; chunk += i->chunkSize) {
             Heap::Base *m = reinterpret_cast<Heap::Base *>(chunk);
             Q_ASSERT((qintptr) chunk % 16 == 0);
-            if (m->inUse)
+            if (m->inUse())
                 usedMem += i->chunkSize;
         }
     }

@@ -290,7 +290,7 @@ public:
     InternalClass *internalClass() const { return d()->internalClass; }
     void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
-    bool inUse() const { return d()->inUse; }
+    bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->markBit; }
 
     static void destroy(Heap::Base *) {}
