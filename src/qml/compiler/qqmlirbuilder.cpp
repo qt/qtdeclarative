@@ -1573,8 +1573,6 @@ QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache
     return pd;
 }
 
-static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
-
 enum MetaObjectResolverFlags {
     AllPropertiesAreFinal      = 0x1,
     LookupsIncludeEnums        = 0x2,
@@ -1630,6 +1628,8 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
 
 static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
 {
+    Q_ASSERT(resolver);
+
     resolver->resolveMember = &resolveQmlType;
     resolver->data = qmlType;
     resolver->extraData = 0;
@@ -1751,6 +1751,8 @@ static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4
 
 static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject)
 {
+    Q_ASSERT(resolver);
+
     resolver->resolveMember = &resolveMetaObjectProperty;
     resolver->data = metaObject;
     resolver->flags = 0;
@@ -1767,11 +1769,13 @@ void JSCodeGen::beginFunctionBodyHook()
 
 #ifndef V4_BOOTSTRAP
     QV4::IR::Temp *temp = _block->TEMP(_contextObjectTemp);
-    initMetaObjectResolver(&temp->memberResolver, _contextObject);
+    temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+    initMetaObjectResolver(temp->memberResolver, _contextObject);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context_object, 0, 0));
 
     temp = _block->TEMP(_scopeObjectTemp);
-    initMetaObjectResolver(&temp->memberResolver, _scopeObject);
+    temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+    initMetaObjectResolver(temp->memberResolver, _scopeObject);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_scope_object, 0, 0));
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
@@ -1806,8 +1810,9 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);
             if (mapping.type) {
-                initMetaObjectResolver(&result->memberResolver, mapping.type);
-                result->memberResolver.flags |= AllPropertiesAreFinal;
+                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                initMetaObjectResolver(result->memberResolver, mapping.type);
+                result->memberResolver->flags |= AllPropertiesAreFinal;
             }
             result->isReadOnly = true; // don't allow use as lvalue
             return result;
@@ -1827,14 +1832,16 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
                 _block->MOVE(result, typeName);
 
                 result = _block->TEMP(result->index);
-                initQmlTypeResolver(&result->memberResolver, r.type);
+                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                initQmlTypeResolver(result->memberResolver, r.type);
                 return result;
             } else {
                 Q_ASSERT(r.importNamespace);
                 QV4::IR::Name *namespaceName = _block->NAME(name, line, col);
                 namespaceName->freeOfSideEffects = true;
                 QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
-                initImportNamespaceResolver(&result->memberResolver, imports, r.importNamespace);
+                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+                initImportNamespaceResolver(result->memberResolver, imports, r.importNamespace);
 
                 _block->MOVE(result, namespaceName);
                 return _block->TEMP(result->index);
@@ -1849,7 +1856,8 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             return 0;
         if (pd) {
             QV4::IR::Temp *base = _block->TEMP(_scopeObjectTemp);
-            initMetaObjectResolver(&base->memberResolver, _scopeObject);
+            base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+            initMetaObjectResolver(base->memberResolver, _scopeObject);
             return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlScopeObject);
         }
     }
@@ -1861,7 +1869,8 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             return 0;
         if (pd) {
             QV4::IR::Temp *base = _block->TEMP(_contextObjectTemp);
-            initMetaObjectResolver(&base->memberResolver, _contextObject);
+            base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+            initMetaObjectResolver(base->memberResolver, _contextObject);
             return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlContextObject);
         }
     }

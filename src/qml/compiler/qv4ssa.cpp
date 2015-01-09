@@ -2079,12 +2079,15 @@ protected:
 
 struct DiscoveredType {
     int type;
-    MemberExpressionResolver memberResolver;
+    MemberExpressionResolver *memberResolver;
 
-    DiscoveredType() : type(UnknownType) {}
-    DiscoveredType(Type t) : type(t) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(int t) : type(t) { Q_ASSERT(type != QObjectType); }
-    explicit DiscoveredType(MemberExpressionResolver memberResolver) : type(QObjectType), memberResolver(memberResolver) {}
+    DiscoveredType() : type(UnknownType), memberResolver(0) {}
+    DiscoveredType(Type t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
+    explicit DiscoveredType(int t) : type(t), memberResolver(0) { Q_ASSERT(type != QObjectType); }
+    explicit DiscoveredType(MemberExpressionResolver *memberResolver)
+        : type(QObjectType)
+        , memberResolver(memberResolver)
+    { Q_ASSERT(memberResolver); }
 
     bool test(Type t) const { return type & t; }
     bool isNumber() const { return (type & NumberType) && !(type & ~NumberType); }
@@ -2189,7 +2192,7 @@ class TypeInference: public StmtVisitor, public ExprVisitor
             this->type = type;
             fullyTyped = type.type != UnknownType;
         }
-        explicit TypingResult(MemberExpressionResolver memberResolver)
+        explicit TypingResult(MemberExpressionResolver *memberResolver)
             : type(memberResolver)
             , fullyTyped(true)
         {}
@@ -2323,7 +2326,7 @@ protected:
     virtual void visitRegExp(IR::RegExp *) { _ty = TypingResult(VarType); }
     virtual void visitName(Name *) { _ty = TypingResult(VarType); }
     virtual void visitTemp(Temp *e) {
-        if (e->memberResolver.isValid())
+        if (e->memberResolver && e->memberResolver->isValid())
             _ty = TypingResult(e->memberResolver);
         else
             _ty = TypingResult(_tempTypes[e->index]);
@@ -2434,9 +2437,9 @@ protected:
     virtual void visitMember(Member *e) {
         _ty = run(e->base);
 
-        if (_ty.fullyTyped && _ty.type.memberResolver.isValid()) {
-            MemberExpressionResolver &resolver = _ty.type.memberResolver;
-            _ty.type.type = resolver.resolveMember(qmlEngine, &resolver, e);
+        if (_ty.fullyTyped && _ty.type.memberResolver && _ty.type.memberResolver->isValid()) {
+            MemberExpressionResolver *resolver = _ty.type.memberResolver;
+            _ty.type.type = resolver->resolveMember(qmlEngine, resolver, e);
         } else
             _ty.type = VarType;
     }
@@ -2470,8 +2473,8 @@ protected:
             }
             _ty.type.type |= ty.type.type;
             _ty.fullyTyped &= ty.fullyTyped;
-            if (_ty.type.test(QObjectType))
-                _ty.type.memberResolver.clear(); // ### TODO: find common ancestor meta-object
+            if (_ty.type.test(QObjectType) && _ty.type.memberResolver)
+                _ty.type.memberResolver->clear(); // ### TODO: find common ancestor meta-object
         }
 
         switch (_ty.type.type) {
