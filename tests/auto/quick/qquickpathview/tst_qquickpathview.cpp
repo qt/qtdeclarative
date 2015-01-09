@@ -1485,7 +1485,7 @@ void tst_QQuickPathView::mouseDrag()
     QTest::qWait(100);
 
     {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QMouseEvent mv(QEvent::MouseMove, QPoint(50,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
         QGuiApplication::sendEvent(window.data(), &mv);
     }
     // first move beyond threshold does not trigger drag
@@ -1540,7 +1540,7 @@ void tst_QQuickPathView::nestedMouseAreaDrag()
     QVERIFY(pathview != 0);
 
     // Dragging the child mouse area should move it and not animate the PathView
-    flick(window.data(), QPoint(200,200), QPoint(300,200), 200);
+    flick(window.data(), QPoint(200,200), QPoint(400,200), 200);
     QVERIFY(!pathview->isMoving());
 
     // Dragging outside the mouse are should animate the PathView.
@@ -1795,8 +1795,8 @@ void tst_QQuickPathView::cancelDrag()
     // drag between snap points
     QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(10,100));
     QTest::qWait(100);
-    QTest::mouseMove(window.data(), QPoint(30, 100));
-    QTest::mouseMove(window.data(), QPoint(85, 100));
+    QTest::mouseMove(window.data(), QPoint(80, 100));
+    QTest::mouseMove(window.data(), QPoint(130, 100));
 
     QTRY_VERIFY(hasFraction(pathview->offset()));
     QTRY_VERIFY(pathview->isMoving());
@@ -2213,7 +2213,7 @@ void tst_QQuickPathView::nestedinFlickable()
     QTest::mouseMove(window.data(), QPoint(26,218), waitInterval);
     QTest::mouseMove(window.data(), QPoint(28,219), waitInterval);
     QTest::mouseMove(window.data(), QPoint(31,219), waitInterval);
-    QTest::mouseMove(window.data(), QPoint(39,219), waitInterval);
+    QTest::mouseMove(window.data(), QPoint(53,219), waitInterval);
 
     // first move beyond threshold does not trigger drag
     QVERIFY(!pathview->isMoving());
@@ -2226,7 +2226,7 @@ void tst_QQuickPathView::nestedinFlickable()
     QCOMPARE(fflickEndedSpy.count(), 0);
 
     // no further moves after the initial move beyond threshold
-    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(53,219));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(73,219));
     QTRY_COMPARE(movingSpy.count(), 2);
     QTRY_COMPARE(moveEndedSpy.count(), 1);
     QCOMPARE(moveStartedSpy.count(), 1);
