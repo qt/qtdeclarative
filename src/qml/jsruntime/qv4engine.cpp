@@ -914,9 +914,9 @@ void ExecutionEngine::markObjects()
     Heap::ExecutionContext *c = currentContext();
     while (c) {
         Q_ASSERT(c->inUse());
-        if (!c->markBit) {
-            c->markBit = 1;
-            c->internalClass->vtable->markObjects(c, this);
+        if (!c->isMarked()) {
+            c->setMarkBit();
+            c->gcGetInternalClass()->vtable->markObjects(c, this);
         }
         c = c->parent;
     }

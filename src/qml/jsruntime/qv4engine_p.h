@@ -403,7 +403,7 @@ void Managed::mark(QV4::ExecutionEngine *engine)
     Q_ASSERT(inUse());
     if (markBit())
         return;
-    d()->markBit = 1;
+    d()->setMarkBit();
     engine->pushForGC(d());
 }
 
@@ -412,9 +412,9 @@ inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)
 {
     Q_ASSERT(inUse());
-    if (markBit)
+    if (isMarked())
         return;
-    markBit = 1;
+    setMarkBit();
     engine->pushForGC(this);
 }
 

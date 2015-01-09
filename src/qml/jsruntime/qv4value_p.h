@@ -50,15 +50,18 @@ struct Q_QML_EXPORT Base {
     Base() {}
     Base(InternalClass *internal)
         : internalClass(internal)
-        , markBit(0)
         , extensible(1)
     {
+        Q_ASSERT(inUse() && !isMarked());
         // ####
     //            Q_ASSERT(internal && internal->vtable);
     }
-    InternalClass *internalClass;
+    union {
+        InternalClass *internalClass;
+        quintptr mm_data;
+    };
     struct {
-        uchar markBit :  1;
+        uchar _markBit :  1;
         uchar _inUse   :  1;
         uchar extensible : 1; // used by Object
         uchar _needsActivation : 1; // used by FunctionObject
@@ -76,23 +79,34 @@ struct Q_QML_EXPORT Base {
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
 
-    inline bool isMarked() const {
-        return markBit;
-    }
-
     enum {
+        MarkBit = 0x1,
         NotInUse = 0x2,
         PointerMask = ~0x3
     };
+
+    InternalClass *gcGetInternalClass() const {
+        return reinterpret_cast<InternalClass *>(mm_data & PointerMask);
+    }
+    inline bool isMarked() const {
+        return mm_data & MarkBit;
+    }
+    inline void setMarkBit() {
+        mm_data |= MarkBit;
+    }
+    inline void clearMarkBit() {
+        mm_data &= ~MarkBit;
+    }
+
     inline bool inUse() const {
-        return !((quintptr)internalClass & NotInUse);
+        return !(mm_data & NotInUse);
     }
 
     Base *nextFree() {
-        return reinterpret_cast<Base *>(reinterpret_cast<quintptr>(internalClass) & PointerMask);
+        return reinterpret_cast<Base *>(mm_data & PointerMask);
     }
     void setNextFree(Base *m) {
-        internalClass = reinterpret_cast<InternalClass *>(reinterpret_cast<quintptr>(m) | NotInUse);
+        mm_data = (reinterpret_cast<quintptr>(m) | NotInUse);
     }
 
     void *operator new(size_t, Managed *m) { return m; }

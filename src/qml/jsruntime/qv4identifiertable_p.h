@@ -77,11 +77,11 @@ public:
     void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i) {
             Heap::String *entry = entries[i];
-            if (!entry || entry->markBit)
+            if (!entry || entry->isMarked())
                 continue;
-            entry->markBit = 1;
-            Q_ASSERT(entry->internalClass->vtable->markObjects);
-            entry->internalClass->vtable->markObjects(entry, e);
+            entry->setMarkBit();
+            Q_ASSERT(entry->gcGetInternalClass()->vtable->markObjects);
+            entry->gcGetInternalClass()->vtable->markObjects(entry, e);
         }
     }
 };

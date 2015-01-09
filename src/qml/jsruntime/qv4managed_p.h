@@ -291,7 +291,7 @@ public:
     void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
     bool inUse() const { return d()->inUse(); }
-    bool markBit() const { return d()->markBit; }
+    bool markBit() const { return d()->isMarked(); }
 
     static void destroy(Heap::Base *) {}
 private:

@@ -188,9 +188,9 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
 
         Q_ASSERT((qintptr) item % 16 == 0);
 
-        if (m->markBit) {
+        if (m->isMarked()) {
             Q_ASSERT(m->inUse());
-            m->markBit = 0;
+            m->clearMarkBit();
             sweepData->isEmpty = false;
             ++(*itemsInUse);
         } else {
@@ -199,8 +199,8 @@ void sweepChunk(const MemoryManager::Data::Chunk &chunk, ChunkSweepData *sweepDa
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->internalClass->vtable->destroy)
-                    m->internalClass->vtable->destroy(m);
+                if (m->gcGetInternalClass()->vtable->destroy)
+                    m->gcGetInternalClass()->vtable->destroy(m);
 
                 memset(m, 0, itemSize);
 #ifdef V4_USE_VALGRIND
@@ -326,8 +326,8 @@ static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
-        Q_ASSERT (h->internalClass->vtable->markObjects);
-        h->internalClass->vtable->markObjects(h, engine);
+        Q_ASSERT (h->gcGetInternalClass()->vtable->markObjects);
+        h->gcGetInternalClass()->vtable->markObjects(h, engine);
     }
 }
 
@@ -364,7 +364,9 @@ void MemoryManager::mark()
     for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
         if (!weak->refcount || !weak->value.isManaged())
             continue;
-        QObjectWrapper *qobjectWrapper = weak->value.managed()->as<QObjectWrapper>();
+        if (weak->value.asManaged()->d()->gcGetInternalClass()->vtable != QObjectWrapper::staticVTable())
+            continue;
+        QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>(weak->value.managed());
         if (!qobjectWrapper)
             continue;
         QObject *qobject = qobjectWrapper->object();
@@ -481,14 +483,14 @@ void MemoryManager::sweep(bool lastSweep)
     while (i) {
         Heap::Base *m = i->heapObject();
         Q_ASSERT(m->inUse());
-        if (m->markBit) {
-            m->markBit = 0;
+        if (m->isMarked()) {
+            m->clearMarkBit();
             last = &i->next;
             i = i->next;
             continue;
         }
-        if (m->internalClass->vtable->destroy)
-            m->internalClass->vtable->destroy(m);
+        if (m->gcGetInternalClass()->vtable->destroy)
+            m->gcGetInternalClass()->vtable->destroy(m);
 
         *last = i->next;
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
@@ -503,6 +505,15 @@ void MemoryManager::sweep(bool lastSweep)
         deletable->lastCall = lastSweep;
         delete deletable;
         deletable = next;
+    }
+
+    // some execution contexts are allocated on the stack, make sure we clear their markBit as well
+    if (!lastSweep) {
+        Heap::ExecutionContext *ctx = engine()->current;
+        while (ctx) {
+            ctx->clearMarkBit();
+            ctx = ctx->parent;
+        }
     }
 }
 
