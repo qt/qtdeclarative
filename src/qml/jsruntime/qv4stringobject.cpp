@@ -83,7 +83,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
 }
 
 Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
-    : Heap::Object(engine->stringObjectClass, engine->stringPrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->stringPrototype.asObject())
 {
     value = val;
     Q_ASSERT(value.isString());

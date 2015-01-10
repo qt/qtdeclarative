@@ -45,7 +45,7 @@ namespace Heap {
 
 struct Object : Base {
     Object(ExecutionEngine *engine)
-        : Base(engine->objectClass),
+        : Base(engine->emptyClass),
           prototype(static_cast<Object *>(engine->objectPrototype.m))
     {
     }
@@ -275,7 +275,7 @@ struct BooleanObject : Object {
     }
 
     BooleanObject(ExecutionEngine *engine, const ValueRef val)
-        : Object(engine->booleanClass, engine->booleanPrototype.asObject())
+        : Object(engine->emptyClass, engine->booleanPrototype.asObject())
     {
         value = val;
     }
@@ -290,7 +290,7 @@ struct NumberObject : Object {
     }
 
     NumberObject(ExecutionEngine *engine, const ValueRef val)
-        : Object(engine->numberClass, engine->numberPrototype.asObject())
+        : Object(engine->emptyClass, engine->numberPrototype.asObject())
     {
         value = val;
     }

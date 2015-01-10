@@ -880,7 +880,7 @@ QString Stringify::JA(ArrayObject *a)
 
 
 Heap::JsonObject::JsonObject(ExecutionEngine *e)
-    : Heap::Object(QV4::InternalClass::create(e, QV4::JsonObject::staticVTable()), e->objectPrototype.asObject())
+    : Heap::Object(e->emptyClass, e->objectPrototype.asObject())
 {
     Scope scope(e);
     ScopedObject o(scope, this);

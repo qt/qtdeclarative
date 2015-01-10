@@ -183,57 +183,57 @@ DEFINE_OBJECT_VTABLE(ErrorObject);
 DEFINE_OBJECT_VTABLE(SyntaxErrorObject);
 
 Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg)
-    : Heap::ErrorObject(engine->syntaxErrorClass, engine->syntaxErrorPrototype.asObject(), msg, SyntaxError)
+    : Heap::ErrorObject(engine->emptyClass, engine->syntaxErrorPrototype.asObject(), msg, SyntaxError)
 {
 }
 
 Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : Heap::ErrorObject(engine->syntaxErrorClass, engine->syntaxErrorPrototype.asObject(), msg, fileName, lineNumber, columnNumber, SyntaxError)
+    : Heap::ErrorObject(engine->emptyClass, engine->syntaxErrorPrototype.asObject(), msg, fileName, lineNumber, columnNumber, SyntaxError)
 {
 }
 
 Heap::EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const ValueRef message)
-    : Heap::ErrorObject(engine->evalErrorClass, engine->evalErrorPrototype.asObject(), message, EvalError)
+    : Heap::ErrorObject(engine->emptyClass, engine->evalErrorPrototype.asObject(), message, EvalError)
 {
 }
 
 Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const ValueRef message)
-    : Heap::ErrorObject(engine->rangeErrorClass, engine->rangeErrorPrototype.asObject(), message, RangeError)
+    : Heap::ErrorObject(engine->emptyClass, engine->rangeErrorPrototype.asObject(), message, RangeError)
 {
 }
 
 Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString &message)
-    : Heap::ErrorObject(engine->rangeErrorClass, engine->rangeErrorPrototype.asObject(), message, RangeError)
+    : Heap::ErrorObject(engine->emptyClass, engine->rangeErrorPrototype.asObject(), message, RangeError)
 {
 }
 
 Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message)
-    : Heap::ErrorObject(engine->referenceErrorClass, engine->referenceErrorPrototype.asObject(), message, ReferenceError)
+    : Heap::ErrorObject(engine->emptyClass, engine->referenceErrorPrototype.asObject(), message, ReferenceError)
 {
 }
 
 Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &message)
-    : Heap::ErrorObject(engine->referenceErrorClass, engine->referenceErrorPrototype.asObject(), message, ReferenceError)
+    : Heap::ErrorObject(engine->emptyClass, engine->referenceErrorPrototype.asObject(), message, ReferenceError)
 {
 }
 
 Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber)
-    : Heap::ErrorObject(engine->referenceErrorClass, engine->referenceErrorPrototype.asObject(), msg, fileName, lineNumber, columnNumber, ReferenceError)
+    : Heap::ErrorObject(engine->emptyClass, engine->referenceErrorPrototype.asObject(), msg, fileName, lineNumber, columnNumber, ReferenceError)
 {
 }
 
 Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const ValueRef message)
-    : Heap::ErrorObject(engine->typeErrorClass, engine->typeErrorPrototype.asObject(), message, TypeError)
+    : Heap::ErrorObject(engine->emptyClass, engine->typeErrorPrototype.asObject(), message, TypeError)
 {
 }
 
 Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &message)
-    : Heap::ErrorObject(engine->typeErrorClass, engine->typeErrorPrototype.asObject(), message, TypeError)
+    : Heap::ErrorObject(engine->emptyClass, engine->typeErrorPrototype.asObject(), message, TypeError)
 {
 }
 
 Heap::URIErrorObject::URIErrorObject(ExecutionEngine *engine, const ValueRef message)
-    : Heap::ErrorObject(engine->uriErrorClass, engine->uRIErrorPrototype.asObject(), message, URIError)
+    : Heap::ErrorObject(engine->emptyClass, engine->uRIErrorPrototype.asObject(), message, URIError)
 {
 }
 

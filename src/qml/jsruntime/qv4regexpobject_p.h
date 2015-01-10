@@ -146,7 +146,7 @@ struct RegExpPrototype: RegExpObject
 };
 
 inline Heap::RegExpPrototype::RegExpPrototype(ExecutionEngine *e)
-    : RegExpObject(InternalClass::create(e, QV4::RegExpPrototype::staticVTable()), e->objectPrototype.asObject())
+    : RegExpObject(e->emptyClass, e->objectPrototype.asObject())
 {
 }
 

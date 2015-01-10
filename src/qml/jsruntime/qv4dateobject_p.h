@@ -53,7 +53,7 @@ struct DateObject : Object {
     }
 
     DateObject(QV4::ExecutionEngine *engine, const ValueRef date)
-        : Object(engine->dateClass, engine->datePrototype.asObject())
+        : Object(engine->emptyClass, engine->datePrototype.asObject())
     {
         value = date;
     }

@@ -244,9 +244,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     classPool = new InternalClassPool;
 
     emptyClass =  new (classPool) InternalClass(this);
-    executionContextClass = InternalClass::create(this, ExecutionContext::staticVTable());
-    stringClass = InternalClass::create(this, String::staticVTable());
-    regExpValueClass = InternalClass::create(this, RegExp::staticVTable());
 
     id_empty = newIdentifier(QString());
     id_undefined = newIdentifier(QStringLiteral("undefined"));
@@ -285,77 +282,49 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     id_buffer = newIdentifier(QStringLiteral("buffer"));
     id_lastIndex = newIdentifier(QStringLiteral("lastIndex"));
 
-    memberDataClass = InternalClass::create(this, MemberData::staticVTable());
+    objectPrototype = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
 
-    objectPrototype = memoryManager->alloc<ObjectPrototype>(InternalClass::create(this, ObjectPrototype::staticVTable()), (QV4::Object *)0);
-    objectClass = InternalClass::create(this, Object::staticVTable());
-    Q_ASSERT(objectClass->vtable == Object::staticVTable());
-
-    arrayClass = InternalClass::create(this, ArrayObject::staticVTable());
-    arrayClass = arrayClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
+    arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
     arrayPrototype = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype.asObject());
 
-    simpleArrayDataClass = InternalClass::create(this, SimpleArrayData::staticVTable());
-
-    InternalClass *argsClass = InternalClass::create(this, ArgumentsObject::staticVTable());
-    argsClass = argsClass->addMember(id_length, Attr_NotEnumerable);
+    InternalClass *argsClass = emptyClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
     strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    Q_ASSERT(argumentsObjectClass->vtable == ArgumentsObject::staticVTable());
-    Q_ASSERT(strictArgumentsObjectClass->vtable == ArgumentsObject::staticVTable());
 
     m_globalObject = newObject();
     Q_ASSERT(globalObject()->d()->vtable);
     initRootContext();
 
-    stringPrototype = memoryManager->alloc<StringPrototype>(InternalClass::create(this, StringPrototype::staticVTable()), objectPrototype.asObject());
-    stringObjectClass = InternalClass::create(this, String::staticVTable());
+    stringPrototype = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype.asObject());
+    numberPrototype = memoryManager->alloc<NumberPrototype>(emptyClass, objectPrototype.asObject());
+    booleanPrototype = memoryManager->alloc<BooleanPrototype>(emptyClass, objectPrototype.asObject());
+    datePrototype = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype.asObject());
 
-    numberPrototype = memoryManager->alloc<NumberPrototype>(InternalClass::create(this, NumberPrototype::staticVTable()), objectPrototype.asObject());
-    numberClass = InternalClass::create(this, NumberObject::staticVTable());
-
-    booleanPrototype = memoryManager->alloc<BooleanPrototype>(InternalClass::create(this, BooleanPrototype::staticVTable()), objectPrototype.asObject());
-    booleanClass = InternalClass::create(this, BooleanObject::staticVTable());
-
-    datePrototype = memoryManager->alloc<DatePrototype>(InternalClass::create(this, DatePrototype::staticVTable()), objectPrototype.asObject());
-    dateClass = InternalClass::create(this, DateObject::staticVTable());
-
-    InternalClass *functionProtoClass = InternalClass::create(this, FunctionObject::staticVTable());
     uint index;
-    functionProtoClass = functionProtoClass->addMember(id_prototype, Attr_NotEnumerable, &index);
+    InternalClass *functionProtoClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     functionPrototype = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype.asObject());
-    functionClass = InternalClass::create(this, FunctionObject::staticVTable());
-    functionClass = functionClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    functionClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    protoClass = objectClass->addMember(id_constructor, Attr_NotEnumerable, &index);
+    protoClass = emptyClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
     regExpPrototype = memoryManager->alloc<RegExpPrototype>(this);
-    regExpClass = InternalClass::create(this, RegExpObject::staticVTable());
     regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    errorPrototype = memoryManager->alloc<ErrorPrototype>(InternalClass::create(this, ErrorObject::staticVTable()), objectPrototype.asObject());
-    errorClass = InternalClass::create(this, ErrorObject::staticVTable());
-    evalErrorPrototype = memoryManager->alloc<EvalErrorPrototype>(errorClass, errorPrototype.asObject());
-    evalErrorClass = InternalClass::create(this, EvalErrorObject::staticVTable());
-    rangeErrorPrototype = memoryManager->alloc<RangeErrorPrototype>(errorClass, errorPrototype.asObject());
-    rangeErrorClass = InternalClass::create(this, RangeErrorObject::staticVTable());
-    referenceErrorPrototype = memoryManager->alloc<ReferenceErrorPrototype>(errorClass, errorPrototype.asObject());
-    referenceErrorClass = InternalClass::create(this, ReferenceErrorObject::staticVTable());
-    syntaxErrorPrototype = memoryManager->alloc<SyntaxErrorPrototype>(errorClass, errorPrototype.asObject());
-    syntaxErrorClass = InternalClass::create(this, SyntaxErrorObject::staticVTable());
-    typeErrorPrototype = memoryManager->alloc<TypeErrorPrototype>(errorClass, errorPrototype.asObject());
-    typeErrorClass = InternalClass::create(this, TypeErrorObject::staticVTable());
-    uRIErrorPrototype = memoryManager->alloc<URIErrorPrototype>(errorClass, errorPrototype.asObject());
-    uriErrorClass = InternalClass::create(this, URIErrorObject::staticVTable());
+    errorPrototype = memoryManager->alloc<ErrorPrototype>(emptyClass, objectPrototype.asObject());
+    evalErrorPrototype = memoryManager->alloc<EvalErrorPrototype>(emptyClass, errorPrototype.asObject());
+    rangeErrorPrototype = memoryManager->alloc<RangeErrorPrototype>(emptyClass, errorPrototype.asObject());
+    referenceErrorPrototype = memoryManager->alloc<ReferenceErrorPrototype>(emptyClass, errorPrototype.asObject());
+    syntaxErrorPrototype = memoryManager->alloc<SyntaxErrorPrototype>(emptyClass, errorPrototype.asObject());
+    typeErrorPrototype = memoryManager->alloc<TypeErrorPrototype>(emptyClass, errorPrototype.asObject());
+    uRIErrorPrototype = memoryManager->alloc<URIErrorPrototype>(emptyClass, errorPrototype.asObject());
 
-    variantPrototype = memoryManager->alloc<VariantPrototype>(InternalClass::create(this, VariantPrototype::staticVTable()), objectPrototype.asObject());
-    variantClass = InternalClass::create(this, VariantObject::staticVTable());
+    variantPrototype = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype.asObject());
     Q_ASSERT(variantPrototype.asObject()->prototype() == objectPrototype.asObject()->d());
 
     sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.asObject()));
@@ -400,20 +369,17 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     // typed arrays
 
     arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(global);
-    arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(objectClass, objectPrototype.asObject());
+    arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype.asObject());
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype.asObject())->init(this, arrayBufferCtor.asObject());
-    arrayBufferClass = InternalClass::create(this, ArrayBuffer::staticVTable());
 
     dataViewCtor = memoryManager->alloc<DataViewCtor>(global);
-    dataViewPrototype = memoryManager->alloc<DataViewPrototype>(objectClass, objectPrototype.asObject());
+    dataViewPrototype = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype.asObject());
     static_cast<DataViewPrototype *>(dataViewPrototype.asObject())->init(this, dataViewCtor.asObject());
-    dataViewClass = InternalClass::create(this, DataView::staticVTable());
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         typedArrayPrototype[i] = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
-        typedArrayClasses[i] = InternalClass::create(this, TypedArray::staticVTable());
     }
 
     //
@@ -662,7 +628,7 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 Heap::Object *ExecutionEngine::newErrorObject(const ValueRef value)
 {
     Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(errorClass, errorPrototype.asObject(), value));
+    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(emptyClass, errorPrototype.asObject(), value));
     return object->d();
 }
 

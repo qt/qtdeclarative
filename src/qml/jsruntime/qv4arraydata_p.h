@@ -119,7 +119,7 @@ struct ArrayData : public Base {
 
 struct SimpleArrayData : public ArrayData {
     SimpleArrayData(ExecutionEngine *engine)
-        : ArrayData(engine->simpleArrayDataClass)
+        : ArrayData(engine->emptyClass)
     {}
 
     uint mappedIndex(uint index) const { return (index + offset) % alloc; }

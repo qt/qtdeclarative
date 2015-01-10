@@ -148,14 +148,12 @@ void Managed::setVTable(const ManagedVTable *vt)
 {
     d()->vtable = vt;
     Q_ASSERT(internalClass());
-    d()->internalClass = internalClass()->changeVTable(vt);
 }
 
 void Heap::Base::setVTable(const ManagedVTable *vt)
 {
     vtable = vt;
     Q_ASSERT(internalClass);
-    internalClass = internalClass->changeVTable(vt);
 }
 
 

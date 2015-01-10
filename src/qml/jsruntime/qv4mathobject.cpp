@@ -48,7 +48,7 @@ DEFINE_OBJECT_VTABLE(MathObject);
 static const double qt_PI = 2.0 * ::asin(1.0);
 
 Heap::MathObject::MathObject(ExecutionEngine *e)
-    : Heap::Object(QV4::InternalClass::create(e, QV4::MathObject::staticVTable()), e->objectPrototype.asObject())
+    : Heap::Object(e->emptyClass, e->objectPrototype.asObject())
 {
     Scope scope(e);
     ScopedObject m(scope, this);

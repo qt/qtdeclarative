@@ -86,7 +86,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
 }
 
 Heap::RegExp::RegExp(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
-    : Base(engine->regExpValueClass)
+    : Base(engine->emptyClass)
     , pattern(pattern)
     , ignoreCase(ignoreCase)
     , multiLine(multiline)

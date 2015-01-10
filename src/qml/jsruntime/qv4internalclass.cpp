@@ -112,7 +112,6 @@ uint PropertyHash::lookup(const Identifier *identifier) const
 
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
-    , vtable(&QV4::Managed::static_vtbl)
     , m_sealed(0)
     , m_frozen(0)
     , size(0)
@@ -124,7 +123,6 @@ InternalClass::InternalClass(ExecutionEngine *engine)
 InternalClass::InternalClass(const QV4::InternalClass &other)
     : QQmlJS::Managed()
     , engine(other.engine)
-    , vtable(other.vtable)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
@@ -176,55 +174,18 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
     if (data == propertyData.at(idx))
         return this;
 
-    Transition temp = { { identifier }, 0, (int)data.flags() };
+    Transition temp = { identifier, 0, (int)data.flags() };
     Transition &t = lookupOrInsertTransition(temp);
     if (t.lookup)
         return t.lookup;
 
     // create a new class and add it to the tree
-    InternalClass *newClass = engine->emptyClass->changeVTable(vtable);
+    InternalClass *newClass = engine->emptyClass;
     for (uint i = 0; i < size; ++i) {
         if (i == idx) {
             newClass = newClass->addMember(nameMap.at(i), data);
         } else if (!propertyData.at(i).isEmpty()) {
             newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
-        }
-    }
-
-    t.lookup = newClass;
-    Q_ASSERT(t.lookup);
-    return newClass;
-}
-
-InternalClass *InternalClass::create(ExecutionEngine *engine, const ManagedVTable *vtable)
-{
-    return engine->emptyClass->changeVTable(vtable);
-}
-
-InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
-{
-    if (vtable == vt)
-        return this;
-
-    Transition temp;
-    temp.vtable = vt;
-    temp.lookup = 0;
-    temp.flags = Transition::VTableChange;
-
-    Transition &t = lookupOrInsertTransition(temp);
-    if (t.lookup)
-        return t.lookup;
-
-    // create a new class and add it to the tree
-    InternalClass *newClass;
-    if (this == engine->emptyClass) {
-        newClass = engine->newClass(*this);
-        newClass->vtable = vt;
-    } else {
-        newClass = engine->emptyClass->changeVTable(vt);
-        for (uint i = 0; i < size; ++i) {
-            if (!propertyData.at(i).isEmpty())
-                newClass = newClass->addMember(nameMap.at(i), propertyData.at(i));
         }
     }
 
@@ -239,7 +200,6 @@ InternalClass *InternalClass::nonExtensible()
         return this;
 
     Transition temp;
-    temp.vtable = 0;
     temp.lookup = 0;
     temp.flags = Transition::NotExtensible;
 
@@ -290,7 +250,7 @@ InternalClass *InternalClass::addMember(Identifier *identifier, PropertyAttribut
 
 InternalClass *InternalClass::addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index)
 {
-    Transition temp = { { identifier }, 0, (int)data.flags() };
+    Transition temp = { identifier, 0, (int)data.flags() };
     Transition &t = lookupOrInsertTransition(temp);
 
     if (index)
@@ -326,14 +286,14 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     uint propIdx = oldClass->propertyTable.lookup(id);
     Q_ASSERT(propIdx < oldClass->size);
 
-    Transition temp = { { id }, 0, -1 };
+    Transition temp = { id, 0, -1 };
     Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
 
     if (t.lookup) {
         object->setInternalClass(t.lookup);
     } else {
         // create a new class and add it to the tree
-        InternalClass *newClass = oldClass->engine->emptyClass->changeVTable(oldClass->vtable);
+        InternalClass *newClass = oldClass->engine->emptyClass;
         for (uint i = 0; i < oldClass->size; ++i) {
             if (i == propIdx)
                 continue;
@@ -377,7 +337,6 @@ InternalClass *InternalClass::sealed()
         return m_sealed;
 
     m_sealed = engine->emptyClass;
-    m_sealed = m_sealed->changeVTable(vtable);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
@@ -397,7 +356,6 @@ InternalClass *InternalClass::frozen()
         return m_frozen;
 
     m_frozen = engine->emptyClass;
-    m_frozen = m_frozen->changeVTable(vtable);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())

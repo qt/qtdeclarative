@@ -189,16 +189,12 @@ private:
 
 struct InternalClassTransition
 {
-    union {
-        Identifier *id;
-        const ManagedVTable *vtable;
-    };
+    Identifier *id;
     InternalClass *lookup;
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
-        VTableChange = 0x100,
-        NotExtensible = 0x200
+        NotExtensible = 0x100
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -210,7 +206,6 @@ struct InternalClassTransition
 
 struct InternalClass : public QQmlJS::Managed {
     ExecutionEngine *engine;
-    const ManagedVTable *vtable;
 
     PropertyHash propertyTable; // id to valueIndex
     SharedInternalClassData<Identifier *> nameMap;
@@ -226,8 +221,6 @@ struct InternalClass : public QQmlJS::Managed {
     uint size;
     bool extensible;
 
-    static InternalClass *create(ExecutionEngine *engine, const ManagedVTable *vtable);
-    InternalClass *changeVTable(const ManagedVTable *vt);
     InternalClass *nonExtensible();
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
     InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);

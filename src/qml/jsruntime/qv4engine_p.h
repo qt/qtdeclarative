@@ -165,40 +165,16 @@ public:
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
-    InternalClass *executionContextClass;
-    InternalClass *stringClass;
 
-    InternalClass *objectClass;
     InternalClass *arrayClass;
-    InternalClass *simpleArrayDataClass;
-    InternalClass *stringObjectClass;
-    InternalClass *booleanClass;
-    InternalClass *numberClass;
-    InternalClass *dateClass;
 
     InternalClass *functionClass;
     InternalClass *protoClass;
 
-    InternalClass *regExpClass;
     InternalClass *regExpExecArrayClass;
-    InternalClass *regExpValueClass;
 
-    InternalClass *errorClass;
-    InternalClass *evalErrorClass;
-    InternalClass *rangeErrorClass;
-    InternalClass *referenceErrorClass;
-    InternalClass *syntaxErrorClass;
-    InternalClass *typeErrorClass;
-    InternalClass *uriErrorClass;
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
-
-    InternalClass *variantClass;
-    InternalClass *memberDataClass;
-
-    InternalClass *arrayBufferClass;
-    InternalClass *dataViewClass;
-    InternalClass *typedArrayClasses[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
 
     Heap::EvalFunction *evalFunction;
     Heap::FunctionObject *thrower;
@@ -382,7 +358,7 @@ inline Heap::ExecutionContext *ExecutionEngine::popContext()
 
 inline
 Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : Heap::Base(engine->executionContextClass)
+    : Heap::Base(engine->emptyClass)
     , type(t)
     , strictMode(false)
     , engine(engine)

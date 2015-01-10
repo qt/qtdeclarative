@@ -403,7 +403,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
 
-    InternalClass *ic = scope.engine->objectClass;
+    InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
 
@@ -487,7 +487,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     Scope scope(v4);
     Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
 
-    InternalClass *ic = scope.engine->objectClass;
+    InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
 
