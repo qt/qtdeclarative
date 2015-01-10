@@ -73,7 +73,7 @@ DEFINE_OBJECT_VTABLE(StringObject);
 Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
 {
-    Q_ASSERT(internalClass->vtable == QV4::StringObject::staticVTable());
+    Q_ASSERT(vtable == QV4::StringObject::staticVTable());
     value = ic->engine->newString()->asReturnedValue();
     tmpProperty.value = Primitive::undefinedValue();
 

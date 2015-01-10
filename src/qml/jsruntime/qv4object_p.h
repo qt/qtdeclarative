@@ -77,7 +77,7 @@ struct Q_QML_EXPORT Object: Managed {
     const Property *propertyAt(uint index) const { return d()->propertyAt(index); }
     Property *propertyAt(uint index) { return d()->propertyAt(index); }
 
-    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(internalClass()->vtable); }
+    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable); }
     Heap::Object *prototype() const { return d()->prototype; }
     bool setPrototype(Object *proto);
 

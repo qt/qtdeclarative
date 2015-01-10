@@ -53,7 +53,7 @@ Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, Ca
 {
     Q_ASSERT(function->function());
 
-    Heap::CallContext *c = static_cast<Heap::CallContext *>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(function, callData->argc)));
+    Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(requiredMemoryForExecutionContect(function, callData->argc));
     new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
     c->function = function->d();
@@ -95,7 +95,7 @@ Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, 
 Heap::CallContext *ExecutionContext::newQmlContext(FunctionObject *f, Object *qml)
 {
     Scope scope(this);
-    Scoped<CallContext> c(scope, static_cast<Heap::CallContext*>(d()->engine->memoryManager->allocManaged(requiredMemoryForExecutionContect(f, 0))));
+    Scoped<CallContext> c(scope, d()->engine->memoryManager->allocManaged<CallContext>(requiredMemoryForExecutionContect(f, 0)));
     new (c->d()) Heap::CallContext(d()->engine, qml, f);
     return c->d();
 }

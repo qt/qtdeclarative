@@ -56,13 +56,6 @@ const ManagedVTable Managed::static_vtbl =
 };
 
 
-void *Managed::operator new(size_t size, MemoryManager *mm)
-{
-    assert(mm);
-
-    return mm->allocManaged(size);
-}
-
 ExecutionEngine *Managed::engine() const
 {
     return internalClass()->engine;
@@ -71,7 +64,7 @@ ExecutionEngine *Managed::engine() const
 QString Managed::className() const
 {
     const char *s = 0;
-    switch (Type(internalClass()->vtable->type)) {
+    switch (Type(d()->vtable->type)) {
     case Type_Invalid:
     case Type_String:
         return QString();
@@ -153,12 +146,14 @@ QString Managed::className() const
 
 void Managed::setVTable(const ManagedVTable *vt)
 {
+    d()->vtable = vt;
     Q_ASSERT(internalClass());
     d()->internalClass = internalClass()->changeVTable(vt);
 }
 
 void Heap::Base::setVTable(const ManagedVTable *vt)
 {
+    vtable = vt;
     Q_ASSERT(internalClass);
     internalClass = internalClass->changeVTable(vt);
 }

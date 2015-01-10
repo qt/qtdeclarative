@@ -51,14 +51,15 @@ struct Q_QML_EXPORT Base {
     Base(InternalClass *internal)
         : internalClass(internal)
     {
-        Q_ASSERT(inUse() && !isMarked());
+//        Q_ASSERT(vtable && inUse() && !isMarked());
         // ####
     //            Q_ASSERT(internal && internal->vtable);
     }
     union {
-        InternalClass *internalClass;
+        const ManagedVTable *vtable;
         quintptr mm_data;
     };
+    InternalClass *internalClass;
 
     void setVTable(const ManagedVTable *vt);
     inline ReturnedValue asReturnedValue() const;
@@ -70,8 +71,8 @@ struct Q_QML_EXPORT Base {
         PointerMask = ~0x3
     };
 
-    InternalClass *gcGetInternalClass() const {
-        return reinterpret_cast<InternalClass *>(mm_data & PointerMask);
+    ManagedVTable *gcGetVtable() const {
+        return reinterpret_cast<ManagedVTable *>(mm_data & PointerMask);
     }
     inline bool isMarked() const {
         return mm_data & MarkBit;

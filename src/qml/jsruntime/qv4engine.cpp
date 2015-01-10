@@ -306,7 +306,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Q_ASSERT(strictArgumentsObjectClass->vtable == ArgumentsObject::staticVTable());
 
     m_globalObject = newObject();
-    Q_ASSERT(globalObject()->internalClass()->vtable);
+    Q_ASSERT(globalObject()->d()->vtable);
     initRootContext();
 
     stringPrototype = memoryManager->alloc<StringPrototype>(InternalClass::create(this, StringPrototype::staticVTable()), objectPrototype.asObject());
@@ -421,7 +421,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     rootContext()->global = globalObject()->d();
     rootContext()->callData->thisObject = globalObject();
-    Q_ASSERT(globalObject()->internalClass()->vtable);
+    Q_ASSERT(globalObject()->d()->vtable);
 
     globalObject()->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
     globalObject()->defineDefaultProperty(QStringLiteral("String"), stringCtor);
@@ -515,7 +515,7 @@ void ExecutionEngine::enableProfiler()
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<GlobalContext> r(scope, static_cast<Heap::GlobalContext*>(memoryManager->allocManaged(sizeof(GlobalContext::Data) + sizeof(CallData))));
+    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(sizeof(GlobalContext::Data) + sizeof(CallData)));
     new (r->d()) GlobalContext::Data(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = QV4::Value::_Integer_Type;
@@ -913,7 +913,7 @@ void ExecutionEngine::markObjects()
         Q_ASSERT(c->inUse());
         if (!c->isMarked()) {
             c->setMarkBit();
-            c->gcGetInternalClass()->vtable->markObjects(c, this);
+            c->gcGetVtable()->markObjects(c, this);
         }
         c = c->parent;
     }

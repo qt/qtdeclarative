@@ -82,18 +82,20 @@ public:
     static inline std::size_t align(std::size_t size)
     { return (size + 15) & ~0xf; }
 
-    inline Heap::Base *allocManaged(std::size_t size)
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
         size = align(size);
         Heap::Base *o = allocData(size);
-        return o;
+        o->vtable = ManagedType::staticVTable();
+        return static_cast<typename ManagedType::Data *>(o);
     }
 
     template <typename ManagedType>
     typename ManagedType::Data *alloc()
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data();
         return t->d();
     }
@@ -102,7 +104,7 @@ public:
     typename ManagedType::Data *alloc(Arg1 arg1)
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1);
         return t->d();
     }
@@ -111,7 +113,7 @@ public:
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2);
         return t->d();
     }
@@ -120,7 +122,7 @@ public:
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3);
         return t->d();
     }
@@ -129,7 +131,7 @@ public:
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4);
         return t->d();
     }
@@ -138,7 +140,7 @@ public:
     typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
     {
         Scope scope(engine());
-        Scoped<ManagedType> t(scope, static_cast<typename ManagedType::Data *>(allocManaged(sizeof(typename ManagedType::Data))));
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1, arg2, arg3, arg4, arg5);
         return t->d();
     }

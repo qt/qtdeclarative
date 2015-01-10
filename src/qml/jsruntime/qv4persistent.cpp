@@ -180,8 +180,8 @@ static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
-        Q_ASSERT (h->gcGetInternalClass()->vtable->markObjects);
-        h->gcGetInternalClass()->vtable->markObjects(h, engine);
+        Q_ASSERT (h->gcGetVtable()->markObjects);
+        h->gcGetVtable()->markObjects(h, engine);
     }
 }
 

@@ -42,14 +42,15 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-#define V4_ARRAYDATA(Data) \
+#define V4_ARRAYDATA(DataClass) \
     public: \
         Q_MANAGED_CHECK \
+        typedef QV4::Heap::DataClass Data; \
         static const QV4::ArrayVTable static_vtbl; \
         static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
         V4_MANAGED_SIZE_TEST \
-        const QV4::Heap::Data *d() const { return static_cast<const QV4::Heap::Data *>(m); } \
-        QV4::Heap::Data *d() { return static_cast<QV4::Heap::Data *>(m); }
+        const Data *d() const { return static_cast<const Data *>(m); } \
+        Data *d() { return static_cast<Data *>(m); }
 
 
 struct ArrayData;
@@ -98,7 +99,7 @@ struct ArrayData : public Base {
 
     bool isSparse() const { return type == Sparse; }
 
-    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(Base::vtable); }
 
     inline ReturnedValue get(uint i) const {
         return vtable()->get(this, i);
@@ -182,7 +183,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     const Value *arrayData() const { return &d()->arrayData[0]; }
     Value *arrayData() { return &d()->arrayData[0]; }
 
-    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass()->vtable); }
+    const ArrayVTable *vtable() const { return d()->vtable(); }
     bool isSparse() const { return type() == Heap::ArrayData::Sparse; }
 
     uint length() const {

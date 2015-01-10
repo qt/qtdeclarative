@@ -237,7 +237,7 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
-        const ManagedVTable *vt = internalClass()->vtable;
+        const ManagedVTable *vt = d()->vtable;
         while (vt) {
             if (vt == T::staticVTable())
                 return static_cast<T *>(this);
@@ -251,7 +251,7 @@ public:
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
-        const ManagedVTable *vt = internalClass()->vtable;
+        const ManagedVTable *vt = d()->vtable;
         while (vt) {
             if (vt == T::staticVTable())
                 return static_cast<T *>(this);
@@ -260,28 +260,28 @@ public:
         return 0;
     }
 
-    String *asString() { return internalClass()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
-    Object *asObject() { return internalClass()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
-    ArrayObject *asArrayObject() { return internalClass()->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
-    FunctionObject *asFunctionObject() { return internalClass()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
-    BooleanObject *asBooleanObject() { return internalClass()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
-    NumberObject *asNumberObject() { return internalClass()->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
-    StringObject *asStringObject() { return internalClass()->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
-    DateObject *asDateObject() { return internalClass()->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
-    ErrorObject *asErrorObject() { return internalClass()->vtable->isErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
-    ArgumentsObject *asArgumentsObject() { return internalClass()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
+    String *asString() { return d()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
+    Object *asObject() { return d()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
+    ArrayObject *asArrayObject() { return d()->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
+    FunctionObject *asFunctionObject() { return d()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
+    BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
+    NumberObject *asNumberObject() { return d()->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
+    StringObject *asStringObject() { return d()->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
+    DateObject *asDateObject() { return d()->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
+    ErrorObject *asErrorObject() { return d()->vtable->isErrorObject ? reinterpret_cast<ErrorObject *>(this) : 0; }
+    ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
-    bool isListType() const { return internalClass()->vtable->type == Type_QmlSequence; }
+    bool isListType() const { return d()->vtable->type == Type_QmlSequence; }
 
-    bool isArrayObject() const { return internalClass()->vtable->type == Type_ArrayObject; }
-    bool isStringObject() const { return internalClass()->vtable->type == Type_StringObject; }
+    bool isArrayObject() const { return d()->vtable->type == Type_ArrayObject; }
+    bool isStringObject() const { return d()->vtable->type == Type_StringObject; }
 
     QString className() const;
 
     void setVTable(const ManagedVTable *vt);
 
     bool isEqualTo(const Managed *other) const
-    { return internalClass()->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
+    { return d()->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 
     static bool isEqualTo(Managed *m, Managed *other);
 

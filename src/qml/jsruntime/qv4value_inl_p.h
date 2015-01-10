@@ -49,13 +49,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return m && m->internalClass->vtable->isString;
+    return m && m->vtable->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return m && m->internalClass->vtable->isObject;
+    return m && m->vtable->isObject;
 }
 
 inline bool Value::isPrimitive() const

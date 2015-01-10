@@ -128,13 +128,13 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
     Scoped<ArrayData> newData(scope);
     if (newType < Heap::ArrayData::Sparse) {
-        Heap::SimpleArrayData *n = static_cast<Heap::SimpleArrayData *>(scope.engine->memoryManager->allocManaged(size));
+        Heap::SimpleArrayData *n = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
         new (n) Heap::SimpleArrayData(scope.engine);
         n->offset = 0;
         n->len = d ? d->d()->len : 0;
         newData = n;
     } else {
-        Heap::SparseArrayData *n = static_cast<Heap::SparseArrayData *>(scope.engine->memoryManager->allocManaged(size));
+        Heap::SparseArrayData *n = scope.engine->memoryManager->allocManaged<SparseArrayData>(size);
         new (n) Heap::SparseArrayData(scope.engine);
         newData = n;
     }

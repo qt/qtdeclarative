@@ -203,12 +203,12 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
 
 bool FunctionObject::isBinding() const
 {
-    return d()->internalClass->vtable == QQmlBindingFunction::staticVTable();
+    return d()->vtable == QQmlBindingFunction::staticVTable();
 }
 
 bool FunctionObject::isBoundFunction() const
 {
-    return d()->internalClass->vtable == BoundFunction::staticVTable();
+    return d()->vtable == BoundFunction::staticVTable();
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
@@ -494,6 +494,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
+    ctx.vtable = CallContext::staticVTable();
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -530,6 +531,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
+    ctx.vtable = CallContext::staticVTable();
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -588,6 +590,7 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
+    ctx.vtable = CallContext::staticVTable();
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
@@ -608,6 +611,7 @@ ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
+    ctx.vtable = CallContext::staticVTable();
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);

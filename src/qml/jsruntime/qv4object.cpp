@@ -290,7 +290,7 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
                 *attrs = o->arrayData->attributes(index);
             return p;
         }
-        if (o->internalClass->vtable->type == Type_StringObject) {
+        if (o->vtable->type == Type_StringObject) {
             Property *p = static_cast<const Heap::StringObject *>(o)->getIndex(index);
             if (p) {
                 if (attrs)
