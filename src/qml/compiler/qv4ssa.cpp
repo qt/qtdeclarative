@@ -1073,10 +1073,7 @@ public:
 
 private:
     std::vector<DefUse> _defUses;
-    class Temps: public QVector<Temp> {
-    public:
-        Temps() { reserve(4); }
-    };
+    typedef QVarLengthArray<Temp, 4> Temps;
     std::vector<Temps> _usesPerStatement;
 
     void ensure(Temp *newTemp)
@@ -1219,7 +1216,7 @@ public:
         ensure(s);
     }
 
-    const QVector<Temp> &usedVars(Stmt *s) const
+    const Temps &usedVars(Stmt *s) const
     {
         Q_ASSERT(s->id() >= 0);
         Q_ASSERT(static_cast<unsigned>(s->id()) < _usesPerStatement.size());
