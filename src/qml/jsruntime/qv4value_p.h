@@ -379,8 +379,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline uint asArrayIndex() const;
     inline uint asArrayLength(bool *ok) const;
 
-    inline ExecutionEngine *engine() const;
-
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
 

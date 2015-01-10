@@ -516,8 +516,8 @@ QVariant QJSValue::toVariant() const
     if (d->value.isEmpty())
         return d->unboundData;
 
-    if (d->value.asObject())
-        return d->value.engine()->toVariant(d->value, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
+    if (Object *o = d->value.asObject())
+        return o->engine()->toVariant(d->value, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
 
     if (d->value.isString())
         return QVariant(d->value.stringValue()->toQString());

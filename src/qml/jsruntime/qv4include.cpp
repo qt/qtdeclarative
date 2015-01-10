@@ -92,9 +92,9 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
 
 void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef status)
 {
-    QV4::ExecutionEngine *v4 = callback->engine();
-    if (!v4)
+    if (!callback->isObject())
         return;
+    QV4::ExecutionEngine *v4 = callback->asObject()->engine();
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, callback);
     if (!f)

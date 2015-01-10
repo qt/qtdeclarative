@@ -70,12 +70,6 @@ inline String *Value::asString() const
     return 0;
 }
 
-inline ExecutionEngine *Value::engine() const
-{
-    Managed *m = asManaged();
-    return m ? m->engine() : 0;
-}
-
 inline void Value::mark(ExecutionEngine *e) const
 {
     if (!val)

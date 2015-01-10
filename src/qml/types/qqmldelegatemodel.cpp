@@ -1630,10 +1630,10 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     QQmlDelegateModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), -1);
     if (!cacheItem)
         return false;
-    QV4::ExecutionEngine *v4 = object->engine();
-    if (!v4)
+    if (!object->isObject())
         return false;
 
+    QV4::ExecutionEngine *v4 = object->asObject()->engine();
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, object);
     if (!o)
@@ -2502,10 +2502,10 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::ValueRef value, int *i
         return true;
     }
 
-    QV4::ExecutionEngine *v4 = value->engine();
-    if (!v4)
+    if (!value->isObject())
         return false;
 
+    QV4::ExecutionEngine *v4 = value->asObject()->engine();
     QV4::Scope scope(v4);
     QV4::Scoped<QQmlDelegateModelItemObject> object(scope, value);
 

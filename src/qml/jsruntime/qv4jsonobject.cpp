@@ -984,9 +984,11 @@ QJsonValue JsonObject::toJsonValue(const ValueRef value,
         return QJsonValue(QJsonValue::Null);
     else if (value->isUndefined())
         return QJsonValue(QJsonValue::Undefined);
+    else if (value->isString())
+        return QJsonValue(value->toQString());
 
-    Q_ASSERT(value->engine());
-    Scope scope(value->engine());
+    Q_ASSERT(value->isObject());
+    Scope scope(value->asObject()->engine());
     ScopedArrayObject a(scope, value);
     if (a)
         return toJsonArray(a, visitedObjects);

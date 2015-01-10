@@ -73,7 +73,7 @@ void ObjectIterator::init(Object *o)
 #endif
 
     if (object->as<ArgumentsObject>()) {
-        Scope scope(object->engine());
+        Scope scope(engine);
         Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
     }
 }
@@ -136,7 +136,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
 
     PropertyAttributes attrs;
     uint index;
-    Scope scope(object->engine());
+    Scope scope(engine);
     ScopedProperty p(scope);
     ScopedString name(scope);
     next(name.getRef(), &index, p, &attrs);
@@ -158,7 +158,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
 
     PropertyAttributes attrs;
     uint index;
-    Scope scope(object->engine());
+    Scope scope(engine);
     ScopedProperty p(scope);
     ScopedString name(scope);
     next(name.getRef(), &index, p, &attrs);
@@ -170,7 +170,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     if (!!name)
         return name->asReturnedValue();
     assert(index < UINT_MAX);
-    return Encode(object->engine()->newString(QString::number(index)));
+    return Encode(engine->newString(QString::number(index)));
 }
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString()
@@ -180,7 +180,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
     PropertyAttributes attrs;
     uint index;
-    Scope scope(object->engine());
+    Scope scope(engine);
     ScopedProperty p(scope);
     ScopedString name(scope);
     next(name.getRef(), &index, p, &attrs);
@@ -190,7 +190,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
     if (!!name)
         return name->asReturnedValue();
     Q_ASSERT(index < UINT_MAX);
-    return Encode(object->engine()->newString(QString::number(index)));
+    return Encode(engine->newString(QString::number(index)));
 }
 
 

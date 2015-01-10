@@ -102,10 +102,10 @@ QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
 
 QQmlContextData *QmlContextWrapper::getContext(const ValueRef value)
 {
-    QV4::ExecutionEngine *v4 = value->engine();
-    if (!v4)
+    if (!value->isObject())
         return 0;
 
+    QV4::ExecutionEngine *v4 = value->asObject()->engine();
     Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> c(scope, value);
 
@@ -114,9 +114,9 @@ QQmlContextData *QmlContextWrapper::getContext(const ValueRef value)
 
 void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
 {
-    QV4::ExecutionEngine *v4 = qmlglobal->engine();
-    Q_ASSERT(v4);
+    Q_ASSERT(qmlglobal->isObject());
 
+    QV4::ExecutionEngine *v4 = qmlglobal->asObject()->engine();
     Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> c(scope, qmlglobal);
     Q_ASSERT(c);

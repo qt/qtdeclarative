@@ -96,8 +96,8 @@ static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
 
 static QPair<QObject *, int> extractQtSignal(const ValueRef value)
 {
-    QV4::ExecutionEngine *v4 = value->engine();
-    if (v4) {
+    if (value->isObject()) {
+        QV4::ExecutionEngine *v4 = value->asObject()->engine();
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope, value);
         if (function)

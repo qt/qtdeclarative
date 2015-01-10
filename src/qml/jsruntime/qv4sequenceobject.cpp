@@ -650,7 +650,7 @@ QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, b
         *succeeded = false;
         return QVariant();
     }
-    QV4::Scope scope(array->engine());
+    QV4::Scope scope(array->asObject()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
