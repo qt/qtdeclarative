@@ -172,7 +172,6 @@ QV4::Heap::QQmlDelegateModelItemObject::QQmlDelegateModelItemObject(QV4::Executi
     : QV4::Heap::Object(engine)
     , item(item)
 {
-    setVTable(::QQmlDelegateModelItemObject::staticVTable());
 }
 
 

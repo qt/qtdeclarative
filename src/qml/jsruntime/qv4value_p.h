@@ -61,7 +61,6 @@ struct Q_QML_EXPORT Base {
     };
     InternalClass *internalClass;
 
-    void setVTable(const ManagedVTable *vt);
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
 

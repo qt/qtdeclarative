@@ -66,8 +66,8 @@ struct Print: FunctionObject
 {
     struct Data : Heap::FunctionObject {
         Data(ExecutionContext *scope)
-            : Heap::FunctionObject(scope, QStringLiteral("print")) {
-            setVTable(staticVTable());
+            : Heap::FunctionObject(scope, QStringLiteral("print"))
+        {
         }
     };
     V4_OBJECT(FunctionObject)
@@ -93,7 +93,6 @@ struct GC: public FunctionObject
         Data(ExecutionContext *scope)
             : Heap::FunctionObject(scope, QStringLiteral("gc"))
         {
-            setVTable(staticVTable());
         }
 
     };

@@ -236,7 +236,6 @@ Heap::QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
     : Heap::Object(engine)
     , object(object)
 {
-    setVTable(QV4::QObjectWrapper::staticVTable());
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
@@ -1761,7 +1760,6 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QQmlValueTypeWrappe
 Heap::QObjectMethod::QObjectMethod(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope)
 {
-    setVTable(QV4::QObjectMethod::staticVTable());
 }
 
 const QMetaObject *Heap::QObjectMethod::metaObject()
@@ -1904,7 +1902,6 @@ Heap::QmlSignalHandler::QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *
     , object(object)
     , signalIndex(signalIndex)
 {
-    setVTable(QV4::QmlSignalHandler::staticVTable());
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);

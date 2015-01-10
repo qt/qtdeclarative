@@ -138,7 +138,6 @@ DEFINE_OBJECT_VTABLE(QV4::QQmlSqlDatabaseWrapper);
 QV4::Heap::QQmlSqlDatabaseWrapper::QQmlSqlDatabaseWrapper(ExecutionEngine *e)
     : QV4::Heap::Object(e)
 {
-    setVTable(QV4::QQmlSqlDatabaseWrapper::staticVTable());
     type = Database;
 }
 

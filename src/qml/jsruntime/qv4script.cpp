@@ -75,7 +75,6 @@ Heap::CompilationUnitHolder::CompilationUnitHolder(ExecutionEngine *engine, Comp
     : Heap::Object(engine)
     , unit(unit)
 {
-    setVTable(QV4::CompilationUnitHolder::staticVTable());
 }
 
 }
@@ -93,7 +92,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 {
     Q_ASSERT(scope->inUse());
 
-    setVTable(QV4::QmlBindingWrapper::staticVTable());
     function = f;
     if (function)
         function->compilationUnit->addref();
@@ -113,8 +111,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
     , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
-
-    setVTable(QV4::QmlBindingWrapper::staticVTable());
 
     Scope s(scope);
     Scoped<QV4::QmlBindingWrapper> o(s, this);

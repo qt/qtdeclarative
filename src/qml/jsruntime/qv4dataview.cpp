@@ -44,7 +44,6 @@ DEFINE_OBJECT_VTABLE(DataView);
 Heap::DataViewCtor::DataViewCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("DataView"))
 {
-    setVTable(QV4::DataViewCtor::staticVTable());
 }
 
 ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)

@@ -120,7 +120,6 @@ Heap::QQuickRootItemMarker::QQuickRootItemMarker(QV4::ExecutionEngine *engine, Q
     : Heap::Object(engine)
     , window(window)
 {
-    setVTable(QV4::QQuickRootItemMarker::staticVTable());
 }
 
 }

@@ -341,7 +341,6 @@ DEFINE_OBJECT_VTABLE(EvalFunction);
 Heap::EvalFunction::EvalFunction(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval)
 {
-    setVTable(QV4::EvalFunction::staticVTable());
     Scope s(scope);
     ScopedFunctionObject f(s, this);
     f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(1));

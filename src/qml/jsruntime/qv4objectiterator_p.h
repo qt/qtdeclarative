@@ -89,7 +89,6 @@ Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::ExecutionEngine *engine,
     : Heap::Object(engine)
     , it(engine, workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
 {
-    setVTable(QV4::ForEachIteratorObject::staticVTable());
 }
 
 

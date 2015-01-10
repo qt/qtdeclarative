@@ -275,7 +275,6 @@ namespace Heap {
 inline SparseArrayData::SparseArrayData(ExecutionEngine *engine)
     : ArrayData(engine->emptyClass)
 {
-    setVTable(QV4::SparseArrayData::staticVTable());
 }
 
 inline SparseArrayData::~SparseArrayData()

@@ -48,8 +48,6 @@ DEFINE_OBJECT_VTABLE(QmlListWrapper);
 Heap::QmlListWrapper::QmlListWrapper(ExecutionEngine *engine)
     : Heap::Object(engine)
 {
-    setVTable(QV4::QmlListWrapper::staticVTable());
-
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);

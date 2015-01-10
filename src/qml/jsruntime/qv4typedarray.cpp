@@ -197,7 +197,6 @@ Heap::TypedArrayCtor::TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::T
     : Heap::FunctionObject(scope, QLatin1String(operations[t].name))
     , type(t)
 {
-    setVTable(QV4::TypedArrayCtor::staticVTable());
 }
 
 ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)

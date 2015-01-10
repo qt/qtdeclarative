@@ -110,7 +110,6 @@ Heap::DelegateModelGroupFunction::DelegateModelGroupFunction(QV4::ExecutionConte
     , flag(flag)
     , code(code)
 {
-    setVTable(QV4::DelegateModelGroupFunction::staticVTable());
 }
 
 }
@@ -3263,7 +3262,6 @@ struct QQmlDelegateModelGroupChange : QV4::Object
 QV4::Heap::QQmlDelegateModelGroupChange::QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine)
     : QV4::Heap::Object(engine)
 {
-    setVTable(::QQmlDelegateModelGroupChange::staticVTable());
 }
 
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
@@ -3325,7 +3323,6 @@ QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(
     : QV4::Heap::Object(engine)
     , changes(changes)
 {
-    setVTable(::QQmlDelegateModelGroupChangeArray::staticVTable());
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);

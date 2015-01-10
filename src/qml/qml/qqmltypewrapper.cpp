@@ -52,7 +52,6 @@ Heap::QmlTypeWrapper::QmlTypeWrapper(ExecutionEngine *engine)
     : Heap::Object(engine)
     , mode(IncludeEnums)
 {
-    setVTable(QV4::QmlTypeWrapper::staticVTable());
 }
 
 Heap::QmlTypeWrapper::~QmlTypeWrapper()

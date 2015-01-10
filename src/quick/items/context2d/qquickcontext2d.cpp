@@ -557,7 +557,6 @@ struct QQuickJSContext2D : public QV4::Object
 QV4::Heap::QQuickJSContext2D::QQuickJSContext2D(QV4::ExecutionEngine *engine)
     : QV4::Heap::Object(engine)
 {
-    setVTable(::QQuickJSContext2D::staticVTable());
 }
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
@@ -683,7 +682,6 @@ QV4::Heap::QQuickContext2DStyle::QQuickContext2DStyle(QV4::ExecutionEngine *e)
 {
     patternRepeatX = false;
     patternRepeatY = false;
-    setVTable(::QQuickContext2DStyle::staticVTable());
 }
 
 DEFINE_OBJECT_VTABLE(QQuickContext2DStyle);
@@ -897,7 +895,6 @@ struct QQuickJSContext2DPixelData : public QV4::Object
 QV4::Heap::QQuickJSContext2DPixelData::QQuickJSContext2DPixelData(QV4::ExecutionEngine *engine)
     : QV4::Heap::Object(engine)
 {
-    setVTable(::QQuickJSContext2DPixelData::staticVTable());
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);
@@ -922,7 +919,6 @@ struct QQuickJSContext2DImageData : public QV4::Object
 QV4::Heap::QQuickJSContext2DImageData::QQuickJSContext2DImageData(QV4::ExecutionEngine *engine)
     : QV4::Heap::Object(engine)
 {
-    setVTable(::QQuickJSContext2DImageData::staticVTable());
     pixelData = QV4::Primitive::undefinedValue();
 
     QV4::Scope scope(engine);

@@ -68,8 +68,6 @@ DEFINE_OBJECT_VTABLE(RegExpPrototype);
 Heap::RegExpObject::RegExpObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
 {
-    setVTable(QV4::RegExpObject::staticVTable());
-
     Scope scope(ic->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
     o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false);
@@ -82,8 +80,6 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *valu
     , value(value->d())
     , global(global)
 {
-    setVTable(QV4::RegExpObject::staticVTable());
-
     Scope scope(engine);
     Scoped<QV4::RegExpObject> o(scope, this);
     o->init(engine);
@@ -95,8 +91,6 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *valu
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
     : Heap::Object(engine->emptyClass, engine->regExpPrototype.asObject())
 {
-    setVTable(QV4::RegExpObject::staticVTable());
-
     value = 0;
     global = false;
 
@@ -232,7 +226,6 @@ DEFINE_OBJECT_VTABLE(RegExpCtor);
 Heap::RegExpCtor::RegExpCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("RegExp"))
 {
-    setVTable(QV4::RegExpCtor::staticVTable());
     clearLastMatch();
 }
 

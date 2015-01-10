@@ -88,7 +88,6 @@ Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
     value = val;
     Q_ASSERT(value.isString());
     tmpProperty.value = Primitive::undefinedValue();
-    setVTable(QV4::StringObject::staticVTable());
 
     Scope scope(engine);
     ScopedObject s(scope, this);
@@ -163,7 +162,6 @@ DEFINE_OBJECT_VTABLE(StringCtor);
 Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("String"))
 {
-    setVTable(QV4::StringCtor::staticVTable());
 }
 
 ReturnedValue StringCtor::construct(Managed *m, CallData *callData)

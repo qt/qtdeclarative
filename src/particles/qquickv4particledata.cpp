@@ -270,7 +270,6 @@ struct QV4ParticleData : public QV4::Object
             : QV4::Heap::Object(engine)
             , datum(datum)
         {
-            setVTable(QV4ParticleData::staticVTable());
         }
         QQuickParticleData* datum;//TODO: Guard needed?
     };

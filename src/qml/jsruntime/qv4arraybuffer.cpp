@@ -42,7 +42,6 @@ DEFINE_OBJECT_VTABLE(ArrayBuffer);
 Heap::ArrayBufferCtor::ArrayBufferCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("ArrayBuffer"))
 {
-    setVTable(QV4::ArrayBufferCtor::staticVTable());
 }
 
 ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)

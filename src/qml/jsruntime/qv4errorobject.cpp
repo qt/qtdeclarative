@@ -248,13 +248,11 @@ DEFINE_OBJECT_VTABLE(URIErrorCtor);
 Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Error"))
 {
-    setVTable(QV4::ErrorCtor::staticVTable());
 }
 
 Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope, const QString &name)
     : Heap::FunctionObject(scope, name)
 {
-    setVTable(QV4::ErrorCtor::staticVTable());
 }
 
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
@@ -272,7 +270,6 @@ ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
 Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("EvalError"))
 {
-    setVTable(QV4::EvalErrorCtor::staticVTable());
 }
 
 ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
@@ -285,7 +282,6 @@ ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("RangeError"))
 {
-    setVTable(QV4::RangeErrorCtor::staticVTable());
 }
 
 ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
@@ -298,7 +294,6 @@ ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("ReferenceError"))
 {
-    setVTable(QV4::ReferenceErrorCtor::staticVTable());
 }
 
 ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
@@ -311,7 +306,6 @@ ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("SyntaxError"))
 {
-    setVTable(QV4::SyntaxErrorCtor::staticVTable());
 }
 
 ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
@@ -324,7 +318,6 @@ ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("TypeError"))
 {
-    setVTable(QV4::TypeErrorCtor::staticVTable());
 }
 
 ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
@@ -337,7 +330,6 @@ ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
     : Heap::ErrorCtor(scope, QStringLiteral("URIError"))
 {
-    setVTable(QV4::URIErrorCtor::staticVTable());
 }
 
 ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)

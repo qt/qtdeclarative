@@ -144,19 +144,6 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-void Managed::setVTable(const ManagedVTable *vt)
-{
-    d()->vtable = vt;
-    Q_ASSERT(internalClass());
-}
-
-void Heap::Base::setVTable(const ManagedVTable *vt)
-{
-    vtable = vt;
-    Q_ASSERT(internalClass);
-}
-
-
 bool Managed::isEqualTo(Managed *, Managed *)
 {
     return false;

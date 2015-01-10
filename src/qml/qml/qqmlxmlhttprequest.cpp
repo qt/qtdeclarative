@@ -230,8 +230,6 @@ Heap::NamedNodeMap::NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const 
     , list(list)
     , d(data)
 {
-    setVTable(QV4::NamedNodeMap::staticVTable());
-
     if (d)
         d->addref();
 }
@@ -257,8 +255,6 @@ Heap::NodeList::NodeList(ExecutionEngine *engine, NodeImpl *data)
     : Heap::Object(engine)
     , d(data)
 {
-    setVTable(QV4::NodeList::staticVTable());
-
     if (d)
         d->addref();
 }
@@ -299,8 +295,6 @@ public:
 Heap::NodePrototype::NodePrototype(ExecutionEngine *engine)
     : Heap::Object(engine)
 {
-    setVTable(QV4::NodePrototype::staticVTable());
-
     Scope scope(engine);
     ScopedObject o(scope, this);
 
@@ -339,8 +333,6 @@ Heap::Node::Node(ExecutionEngine *engine, NodeImpl *data)
     : Heap::Object(engine)
     , d(data)
 {
-    setVTable(QV4::Node::staticVTable());
-
     if (d)
         d->addref();
 }
@@ -1609,7 +1601,6 @@ Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(ExecutionEngine *engi
     : Heap::Object(engine)
     , request(request)
 {
-    setVTable(QV4::QQmlXMLHttpRequestWrapper::staticVTable());
 }
 
 struct QQmlXMLHttpRequestCtor : public FunctionObject
@@ -1662,7 +1653,6 @@ DEFINE_OBJECT_VTABLE(QQmlXMLHttpRequestWrapper);
 Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
     : Heap::FunctionObject(engine->rootContext(), QStringLiteral("XMLHttpRequest"))
 {
-    setVTable(QV4::QQmlXMLHttpRequestCtor::staticVTable());
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 

@@ -81,7 +81,6 @@ Heap::QQmlValueTypeWrapper::QQmlValueTypeWrapper(ExecutionEngine *engine)
     : Heap::Object(engine)
     , gadgetPtr(0)
 {
-    setVTable(QV4::QQmlValueTypeWrapper::staticVTable());
 }
 
 Heap::QQmlValueTypeWrapper::~QQmlValueTypeWrapper()
@@ -107,7 +106,6 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 Heap::QQmlValueTypeReference::QQmlValueTypeReference(ExecutionEngine *engine)
     : Heap::QQmlValueTypeWrapper(engine)
 {
-    setVTable(QV4::QQmlValueTypeReference::staticVTable());
 }
 
 bool QQmlValueTypeReference::readReferenceValue() const

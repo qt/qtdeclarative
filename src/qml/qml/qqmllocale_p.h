@@ -178,7 +178,6 @@ struct QQmlLocaleData : public QV4::Object
 Heap::QQmlLocaleData::QQmlLocaleData(ExecutionEngine *engine)
     : Heap::Object(engine)
 {
-    setVTable(QV4::QQmlLocaleData::staticVTable());
 }
 
 }

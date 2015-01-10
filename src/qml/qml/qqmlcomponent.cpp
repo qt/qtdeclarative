@@ -1481,8 +1481,6 @@ QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(ExecutionEngine *engine, QQmlI
     , qmlGlobal(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
 {
-    setVTable(QV4::QmlIncubatorObject::staticVTable());
-
     incubator.reset(new QQmlComponentIncubator(this, m));
 }
 

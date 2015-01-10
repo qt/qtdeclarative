@@ -41,7 +41,6 @@ DEFINE_OBJECT_VTABLE(BooleanObject);
 Heap::BooleanCtor::BooleanCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Boolean"))
 {
-    setVTable(QV4::BooleanCtor::staticVTable());
 }
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)

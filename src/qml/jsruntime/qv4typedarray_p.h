@@ -133,7 +133,6 @@ Heap::TypedArrayPrototype::TypedArrayPrototype(ExecutionEngine *e, TypedArray::T
     : Heap::Object(e)
     , type(t)
 {
-    setVTable(QV4::TypedArrayPrototype::staticVTable());
 }
 
 } // namespace QV4

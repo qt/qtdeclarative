@@ -52,7 +52,6 @@ DEFINE_OBJECT_VTABLE(ObjectCtor);
 Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Object"))
 {
-    setVTable(QV4::ObjectCtor::staticVTable());
 }
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)

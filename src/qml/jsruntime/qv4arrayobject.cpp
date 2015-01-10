@@ -45,7 +45,6 @@ DEFINE_OBJECT_VTABLE(ArrayCtor);
 Heap::ArrayCtor::ArrayCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Array"))
 {
-    setVTable(QV4::ArrayCtor::staticVTable());
 }
 
 ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)

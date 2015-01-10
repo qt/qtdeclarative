@@ -198,7 +198,6 @@ Heap::IndexedBuiltinFunction::IndexedBuiltinFunction(QV4::ExecutionContext *scop
       code(code)
     , index(index)
 {
-    setVTable(QV4::IndexedBuiltinFunction::staticVTable());
 }
 
 

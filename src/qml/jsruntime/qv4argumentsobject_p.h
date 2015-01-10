@@ -79,7 +79,6 @@ Heap::ArgumentsGetterFunction::ArgumentsGetterFunction(QV4::ExecutionContext *sc
     : Heap::FunctionObject(scope)
     , index(index)
 {
-    setVTable(QV4::ArgumentsGetterFunction::staticVTable());
 }
 
 struct ArgumentsSetterFunction: FunctionObject
@@ -95,7 +94,6 @@ Heap::ArgumentsSetterFunction::ArgumentsSetterFunction(QV4::ExecutionContext *sc
     : Heap::FunctionObject(scope)
     , index(index)
 {
-    setVTable(QV4::ArgumentsSetterFunction::staticVTable());
 }
 
 

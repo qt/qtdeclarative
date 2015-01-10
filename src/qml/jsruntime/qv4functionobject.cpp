@@ -216,7 +216,6 @@ DEFINE_OBJECT_VTABLE(FunctionCtor);
 Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Function"))
 {
-    setVTable(QV4::FunctionCtor::staticVTable());
 }
 
 // 15.3.2
@@ -390,7 +389,6 @@ DEFINE_OBJECT_VTABLE(ScriptFunction);
 Heap::ScriptFunction::ScriptFunction(QV4::ExecutionContext *scope, Function *function)
     : Heap::SimpleScriptFunction(scope, function, true)
 {
-    setVTable(QV4::ScriptFunction::staticVTable());
 }
 
 ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
@@ -452,8 +450,6 @@ DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto)
     : Heap::FunctionObject(scope, function, createProto)
 {
-    setVTable(QV4::SimpleScriptFunction::staticVTable());
-
     this->function = function;
     function->compilationUnit->addref();
     Q_ASSERT(function);
@@ -570,7 +566,6 @@ Heap::BuiltinFunction::BuiltinFunction(QV4::ExecutionContext *scope, QV4::String
     : Heap::FunctionObject(scope, name)
     , code(code)
 {
-    setVTable(QV4::BuiltinFunction::staticVTable());
 }
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
@@ -631,7 +626,6 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
     , boundArgs(boundArgs ? boundArgs->d() : 0)
 {
     this->boundThis = boundThis;
-    setVTable(QV4::BoundFunction::staticVTable());
 
     Scope s(scope);
     ScopedObject f(s, this);

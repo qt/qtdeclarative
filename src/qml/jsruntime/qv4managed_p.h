@@ -278,8 +278,6 @@ public:
 
     QString className() const;
 
-    void setVTable(const ManagedVTable *vt);
-
     bool isEqualTo(const Managed *other) const
     { return d()->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 

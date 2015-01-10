@@ -61,7 +61,6 @@ Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlCon
     , context(context)
     , scopeObject(scopeObject)
 {
-    setVTable(QV4::QmlContextWrapper::staticVTable());
 }
 
 Heap::QmlContextWrapper::~QmlContextWrapper()
@@ -425,7 +424,6 @@ Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlCo
     : Heap::Object(engine)
     , contextWrapper(contextWrapper->d())
 {
-    setVTable(QV4::QQmlIdObjectsArray::staticVTable());
 }
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)

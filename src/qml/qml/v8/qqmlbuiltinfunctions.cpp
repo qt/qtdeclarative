@@ -81,8 +81,6 @@ struct StaticQtMetaObject : public QObject
 Heap::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     : Heap::Object(v4)
 {
-    setVTable(QV4::QtObject::staticVTable());
-
     Scope scope(v4);
     ScopedObject o(scope, this);
 
@@ -1149,7 +1147,6 @@ Heap::QQmlBindingFunction::QQmlBindingFunction(QV4::FunctionObject *originalFunc
     : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
     , originalFunction(originalFunction->d())
 {
-    setVTable(QV4::QQmlBindingFunction::staticVTable());
 }
 
 void QQmlBindingFunction::initBindingLocation()

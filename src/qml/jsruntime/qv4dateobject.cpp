@@ -633,7 +633,6 @@ DEFINE_OBJECT_VTABLE(DateObject);
 Heap::DateObject::DateObject(QV4::ExecutionEngine *engine, const QDateTime &date)
     : Heap::Object(engine->emptyClass, engine->datePrototype.asObject())
 {
-    setVTable(QV4::DateObject::staticVTable());
     value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
 
@@ -647,7 +646,6 @@ DEFINE_OBJECT_VTABLE(DateCtor);
 Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Date"))
 {
-    setVTable(QV4::DateCtor::staticVTable());
 }
 
 ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
