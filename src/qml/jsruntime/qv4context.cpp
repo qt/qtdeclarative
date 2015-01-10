@@ -46,6 +46,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(WithContext);
+DEFINE_MANAGED_VTABLE(CatchContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
 
 Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
