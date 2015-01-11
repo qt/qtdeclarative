@@ -229,8 +229,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    ExecutionEngine *engine() const;
-
     template <typename T>
     T *as() {
         Q_ASSERT(internalClass());

@@ -45,10 +45,10 @@ Heap::BooleanCtor::BooleanCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<BooleanCtor *>(m)->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
     ScopedValue b(scope, QV4::Primitive::fromBoolean(n));
-    return Encode(m->engine()->newBooleanObject(b));
+    return Encode(scope.engine->newBooleanObject(b));
 }
 
 ReturnedValue BooleanCtor::call(Managed *, CallData *callData)

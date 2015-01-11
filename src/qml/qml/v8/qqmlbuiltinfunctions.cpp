@@ -1158,7 +1158,7 @@ void QQmlBindingFunction::initBindingLocation()
 
 ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
 {
-    Scope scope(that->engine());
+    Scope scope(static_cast<QQmlBindingFunction*>(that)->engine());
     ScopedFunctionObject function(scope, static_cast<QQmlBindingFunction*>(that)->d()->originalFunction);
     return function->call(callData);
 }

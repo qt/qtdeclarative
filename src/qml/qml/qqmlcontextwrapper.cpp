@@ -126,9 +126,9 @@ void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
 ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
-    QV4::ExecutionEngine *v4 = m->engine();
-    QV4::Scope scope(v4);
     QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
+    QV4::ExecutionEngine *v4 = resource->engine();
+    QV4::Scope scope(v4);
 
     // In V8 the JS global object would come _before_ the QML global object,
     // so simulate that here.
@@ -268,11 +268,12 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
 void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
-    ExecutionEngine *v4 = m->engine();
+    QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
+    ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
     if (scope.hasException())
         return;
-    QV4::Scoped<QmlContextWrapper> wrapper(scope, static_cast<QmlContextWrapper *>(m));
+    QV4::Scoped<QmlContextWrapper> wrapper(scope, resource);
 
     PropertyAttributes attrs;
     Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
@@ -428,7 +429,7 @@ Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlCo
 
 ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<QV4::QQmlIdObjectsArray*>(m)->engine());
     Scoped<QQmlIdObjectsArray> This(scope, static_cast<QV4::QQmlIdObjectsArray*>(m));
     Scoped<QmlContextWrapper> contextWrapper(scope, This->d()->contextWrapper);
     QQmlContextData *context = contextWrapper->getContext();
@@ -446,8 +447,7 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasPr
     if (hasProperty)
         *hasProperty = true;
 
-    ExecutionEngine *v4 = m->engine();
-    QQmlEnginePrivate *ep = v4->qmlEngine() ? QQmlEnginePrivate::get(v4->qmlEngine()) : 0;
+    QQmlEnginePrivate *ep = scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : 0;
     if (ep)
         ep->captureProperty(&context->idValues[index].bindings);
 

@@ -186,7 +186,7 @@ struct IndexedBuiltinFunction: FunctionObject
 
     static ReturnedValue construct(Managed *m, CallData *)
     {
-        return m->engine()->throwTypeError();
+        return static_cast<IndexedBuiltinFunction *>(m)->engine()->throwTypeError();
     }
 
     static ReturnedValue call(Managed *that, CallData *callData);

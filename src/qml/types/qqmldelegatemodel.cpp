@@ -88,12 +88,12 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 
     static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
     {
-        return m->engine()->throwTypeError();
+        return static_cast<DelegateModelGroupFunction *>(m)->engine()->throwTypeError();
     }
 
     static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
     {
-        QV4::ExecutionEngine *v4 = that->engine();
+        QV4::ExecutionEngine *v4 = static_cast<DelegateModelGroupFunction *>(that)->engine();
         QV4::Scope scope(v4);
         QV4::Scoped<DelegateModelGroupFunction> f(scope, that, QV4::Scoped<DelegateModelGroupFunction>::Cast);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
@@ -3282,7 +3282,7 @@ public:
     static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
     {
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
-        QV4::ExecutionEngine *v4 = m->engine();
+        QV4::ExecutionEngine *v4 = static_cast<QQmlDelegateModelGroupChangeArray *>(m)->engine();
         QV4::Scope scope(v4);
         QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<QQmlDelegateModelGroupChangeArray *>(m));
 
@@ -3309,7 +3309,7 @@ public:
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
         QQmlDelegateModelGroupChangeArray *array = static_cast<QQmlDelegateModelGroupChangeArray *>(m);
 
-        if (name->equals(m->engine()->id_length)) {
+        if (name->equals(array->engine()->id_length)) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Encode(array->count());

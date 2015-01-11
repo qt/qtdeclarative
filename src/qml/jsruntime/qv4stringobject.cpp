@@ -105,13 +105,10 @@ Property *Heap::StringObject::getIndex(uint index) const
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
 {
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = static_cast<StringObject *>(m)->engine();
     Scope scope(v4);
     Scoped<StringObject> o(scope, m->asStringObject());
-    if (!o) {
-        v4->throwTypeError();
-        return false;
-    }
+    Q_ASSERT(!!o);
 
     if (index < static_cast<uint>(o->d()->value.stringValue()->toQString().length())) {
         if (v4->currentContext()->strictMode)
@@ -166,7 +163,7 @@ Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
@@ -178,7 +175,7 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
 
 ReturnedValue StringCtor::call(Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)

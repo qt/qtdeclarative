@@ -52,10 +52,10 @@ Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<NumberCtor *>(m)->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
     ScopedValue d(scope, QV4::Primitive::fromDouble(dbl));
-    return Encode(m->engine()->newNumberObject(d));
+    return Encode(scope.engine->newNumberObject(d));
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)

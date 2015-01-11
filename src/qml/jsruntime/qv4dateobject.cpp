@@ -650,13 +650,13 @@ Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
 {
+    Scope scope(static_cast<DateCtor *>(m)->engine());
     double t = 0;
 
     if (callData->argc == 0)
         t = currentTime();
 
     else if (callData->argc == 1) {
-        Scope scope(m->engine());
         ScopedValue arg(scope, callData->args[0]);
         if (DateObject *d = arg->asDateObject())
             arg = d->date();
@@ -683,13 +683,13 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    return Encode(m->engine()->newDateObject(Primitive::fromDouble(t)));
+    return Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
 }
 
 ReturnedValue DateCtor::call(Managed *m, CallData *)
 {
     double t = currentTime();
-    return m->engine()->newString(ToString(t))->asReturnedValue();
+    return static_cast<DateCtor *>(m)->engine()->newString(ToString(t))->asReturnedValue();
 }
 
 void DatePrototype::init(ExecutionEngine *engine, Object *ctor)

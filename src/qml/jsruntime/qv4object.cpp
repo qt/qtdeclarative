@@ -367,12 +367,12 @@ bool Object::hasOwnProperty(uint index) const
 
 ReturnedValue Object::construct(Managed *m, CallData *)
 {
-    return m->engine()->throwTypeError();
+    return static_cast<Object *>(m)->engine()->throwTypeError();
 }
 
 ReturnedValue Object::call(Managed *m, CallData *)
 {
-    return m->engine()->throwTypeError();
+    return static_cast<Object *>(m)->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
@@ -466,7 +466,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
 
 void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<Object *>(m)->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
     ScopedString name(scope, scope.engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
 
@@ -574,7 +574,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            *name = m->engine()->newString(n->string);
+            *name = o->engine()->newString(n->string);
             *attrs = a;
             pd->copy(p, a);
             return;
@@ -1096,7 +1096,7 @@ void Object::copyArrayData(Object *other)
 
 uint Object::getLength(const Managed *m)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<const Object *>(m)->engine());
     ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length));
     return v->toUInt32();
 }
@@ -1157,9 +1157,9 @@ Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
 
 ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
 {
-    Scope scope(m->engine());
-    ScopedString name(scope, m->engine()->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (name->equals(m->engine()->id_length)) {
+    Scope scope(static_cast<Object *>(m)->engine());
+    ScopedString name(scope, scope.engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+    if (name->equals(scope.engine->id_length)) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         ArrayObject *a = static_cast<ArrayObject *>(m);

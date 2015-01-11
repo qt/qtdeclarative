@@ -100,7 +100,7 @@ struct GC: public FunctionObject
 
     static ReturnedValue call(Managed *m, CallData *)
     {
-        m->engine()->memoryManager->runGC();
+        static_cast<GC *>(m)->engine()->memoryManager->runGC();
         return Encode::undefined();
     }
 };

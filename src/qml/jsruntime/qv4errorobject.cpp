@@ -257,9 +257,9 @@ Heap::ErrorCtor::ErrorCtor(QV4::ExecutionContext *scope, const QString &name)
 
 ReturnedValue ErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<ErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return Encode(m->engine()->newErrorObject(v));
+    return Encode(scope.engine->newErrorObject(v));
 }
 
 ReturnedValue ErrorCtor::call(Managed *that, CallData *callData)
@@ -274,9 +274,9 @@ Heap::EvalErrorCtor::EvalErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue EvalErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<EvalErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<EvalErrorObject>(m->engine(), v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<EvalErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
@@ -286,9 +286,9 @@ Heap::RangeErrorCtor::RangeErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue RangeErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<RangeErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<RangeErrorObject>(scope.engine, v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<RangeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
@@ -298,9 +298,9 @@ Heap::ReferenceErrorCtor::ReferenceErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue ReferenceErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<ReferenceErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<ReferenceErrorObject>(scope.engine, v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<ReferenceErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
@@ -310,9 +310,9 @@ Heap::SyntaxErrorCtor::SyntaxErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue SyntaxErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<SyntaxErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<SyntaxErrorObject>(scope.engine, v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<SyntaxErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
@@ -322,9 +322,9 @@ Heap::TypeErrorCtor::TypeErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue TypeErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<TypeErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<TypeErrorObject>(scope.engine, v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<TypeErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
@@ -334,9 +334,9 @@ Heap::URIErrorCtor::URIErrorCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue URIErrorCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<URIErrorCtor *>(m)->engine());
     ScopedValue v(scope, callData->argument(0));
-    return (m->engine()->memoryManager->alloc<URIErrorObject>(scope.engine, v))->asReturnedValue();
+    return (scope.engine->memoryManager->alloc<URIErrorObject>(scope.engine, v))->asReturnedValue();
 }
 
 void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj)

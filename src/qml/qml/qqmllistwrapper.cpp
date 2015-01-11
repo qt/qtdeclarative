@@ -95,8 +95,8 @@ QVariant QmlListWrapper::toVariant() const
 ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
-    QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
+    QV4::ExecutionEngine *v4 = w->engine();
 
     if (name->equals(v4->id_length) && !w->d()->object.isNull()) {
         quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
@@ -115,8 +115,8 @@ ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProper
     Q_UNUSED(hasProperty);
 
     Q_ASSERT(m->as<QmlListWrapper>());
-    QV4::ExecutionEngine *v4 = m->engine();
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
+    QV4::ExecutionEngine *v4 = w->engine();
 
     quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
     if (index < count && w->d()->property.at) {

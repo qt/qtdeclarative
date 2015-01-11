@@ -201,7 +201,7 @@ DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
 ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 {
-    ExecutionEngine *v4 = getter->engine();
+    ExecutionEngine *v4 = static_cast<ArgumentsGetterFunction *>(getter)->engine();
     Scope scope(v4);
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
@@ -216,7 +216,7 @@ DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
 ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
 {
-    ExecutionEngine *v4 = setter->engine();
+    ExecutionEngine *v4 = static_cast<ArgumentsSetterFunction *>(setter)->engine();
     Scope scope(v4);
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());

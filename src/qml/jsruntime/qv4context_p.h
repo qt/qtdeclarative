@@ -140,6 +140,8 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     V4_MANAGED(ExecutionContext, Managed)
     Q_MANAGED_TYPE(ExecutionContext)
 
+    ExecutionEngine *engine() const { return d()->engine; }
+
     Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);

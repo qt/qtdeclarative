@@ -46,7 +46,7 @@ Heap::ArrayBufferCtor::ArrayBufferCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
 
     Scope scope(v4);
     ScopedValue l(scope, callData->argument(0));

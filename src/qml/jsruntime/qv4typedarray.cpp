@@ -201,7 +201,7 @@ Heap::TypedArrayCtor::TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::T
 
 ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<Object *>(m)->engine());
     Scoped<TypedArrayCtor> that(scope, static_cast<TypedArrayCtor *>(m));
 
     if (!callData->argc || !callData->args[0].isObject()) {
@@ -346,7 +346,7 @@ void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
 
     uint bytesPerElement = a->d()->type->bytesPerElement;
@@ -363,10 +363,11 @@ ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)
 
 void TypedArray::putIndexed(Managed *m, uint index, const ValueRef value)
 {
-    if (m->engine()->hasException)
+    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
+    if (v4->hasException)
         return;
 
-    Scope scope(m->engine());
+    Scope scope(v4);
     Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
 
     uint bytesPerElement = a->d()->type->bytesPerElement;

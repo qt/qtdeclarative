@@ -240,13 +240,13 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
 
 ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    QV4::Scope scope(m->engine());
+    QV4::Scope scope(static_cast<QQmlSqlDatabaseWrapper *>(m)->engine());
     Q_ASSERT(m->as<QQmlSqlDatabaseWrapper>());
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, static_cast<QQmlSqlDatabaseWrapper *>(m));
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         return Object::getIndexed(m, index, hasProperty);
 
-    return qmlsqldatabase_rows_index(r, m->engine(), index, hasProperty);
+    return qmlsqldatabase_rows_index(r, scope.engine, index, hasProperty);
 }
 
 static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)

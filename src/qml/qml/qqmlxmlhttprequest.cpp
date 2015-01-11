@@ -872,8 +872,8 @@ bool Node::isNull() const
 
 ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    QV4::ExecutionEngine *v4 = m->engine();
     NamedNodeMap *r = m->as<NamedNodeMap>();
+    QV4::ExecutionEngine *v4 = r->engine();
     if (!r) {
         if (hasProperty)
             *hasProperty = false;
@@ -894,7 +894,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
     NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
-    QV4::ExecutionEngine *v4 = m->engine();
+    QV4::ExecutionEngine *v4 = r->engine();
 
     name->makeIdentifier(v4);
     if (name->equals(v4->id_length))
@@ -922,8 +922,8 @@ ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QL
 ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
-    QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = static_cast<NodeList *>(m);
+    QV4::ExecutionEngine *v4 = r->engine();
 
     if ((int)index < r->d()->d->children.count()) {
         if (hasProperty)
@@ -938,8 +938,8 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
 ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
-    QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = static_cast<NodeList *>(m);
+    QV4::ExecutionEngine *v4 = r->engine();
 
     name->makeIdentifier(v4);
 
@@ -1614,13 +1614,13 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     }
     static ReturnedValue construct(Managed *that, QV4::CallData *)
     {
-        Scope scope(that->engine());
+        Scope scope(static_cast<QQmlXMLHttpRequestCtor *>(that)->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
-            return that->engine()->throwTypeError();
+            return scope.engine->throwTypeError();
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine, scope.engine->v8Engine->networkAccessManager());
-        Scoped<QQmlXMLHttpRequestWrapper> w(scope, that->engine()->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(that->engine(), r));
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(scope.engine, r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
         return w.asReturnedValue();

@@ -56,11 +56,6 @@ const ManagedVTable Managed::static_vtbl =
 };
 
 
-ExecutionEngine *Managed::engine() const
-{
-    return internalClass()->engine;
-}
-
 QString Managed::className() const
 {
     const char *s = 0;

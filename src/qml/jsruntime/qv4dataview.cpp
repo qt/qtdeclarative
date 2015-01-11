@@ -48,7 +48,7 @@ Heap::DataViewCtor::DataViewCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<Object *>(m)->engine());
     Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
     if (!buffer)
         return scope.engine->throwTypeError();

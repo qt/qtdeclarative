@@ -125,10 +125,10 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlTypeWrapper>());
 
-    QV4::ExecutionEngine *v4 = m->engine();
+    QV4::ExecutionEngine *v4 = static_cast<QmlTypeWrapper *>(m)->engine();
     QV4::Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope,  static_cast<QmlTypeWrapper *>(m));
+    Scoped<QmlTypeWrapper> w(scope, static_cast<QmlTypeWrapper *>(m));
 
     if (hasProperty)
         *hasProperty = true;
@@ -232,7 +232,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     Q_ASSERT(m->as<QmlTypeWrapper>());
     QmlTypeWrapper *w = static_cast<QmlTypeWrapper *>(m);
-    QV4::ExecutionEngine *v4 = m->engine();
+    QV4::ExecutionEngine *v4 = w->engine();
     if (v4->hasException)
         return;
 

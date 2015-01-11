@@ -88,7 +88,8 @@ double Value::toNumberImpl() const
         if (isString())
             return RuntimeHelpers::stringToNumber(stringValue()->toQString());
         {
-            Scope scope(managed()->engine());
+            Q_ASSERT(isObject());
+            Scope scope(objectValue()->engine());
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), NUMBER_HINT));
             if (scope.engine->hasException)
                 return 0;
@@ -123,7 +124,8 @@ QString Value::toQStringNoThrow() const
         if (isString())
             return stringValue()->toQString();
         {
-            Scope scope(managed()->engine());
+            Q_ASSERT(isObject());
+            Scope scope(objectValue()->engine());
             ScopedValue ex(scope);
             bool caughtException = false;
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
@@ -175,7 +177,8 @@ QString Value::toQString() const
         if (isString())
             return stringValue()->toQString();
         {
-            Scope scope(managed()->engine());
+            Q_ASSERT(isObject());
+            Scope scope(objectValue()->engine());
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
             return prim->toQString();
         }

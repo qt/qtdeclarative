@@ -56,9 +56,9 @@ Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
-    Scope scope(v4);
     ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
+    ExecutionEngine *v4 = ctor->engine();
+    Scope scope(v4);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         ScopedObject obj(scope, v4->newObject());
         ScopedObject proto(scope, ctor->get(v4->id_prototype));
@@ -71,9 +71,11 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
 {
+    ObjectCtor *ctor = static_cast<ObjectCtor *>(m);
+    ExecutionEngine *v4 = ctor->engine();
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
-        return m->engine()->newObject()->asReturnedValue();
-    return RuntimeHelpers::toObject(m->engine(), ValueRef(&callData->args[0]));
+        return v4->newObject()->asReturnedValue();
+    return RuntimeHelpers::toObject(v4, ValueRef(&callData->args[0]));
 }
 
 void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)

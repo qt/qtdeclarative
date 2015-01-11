@@ -239,7 +239,7 @@ void Heap::RegExpCtor::clearLastMatch()
 
 ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(m->engine());
+    Scope scope(static_cast<Object *>(m)->engine());
     ScopedContext ctx(scope, scope.engine->currentContext());
 
     ScopedValue r(scope, callData->argument(0));

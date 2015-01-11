@@ -221,7 +221,7 @@ Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)
 // 15.3.2
 ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 {
-    Scope scope(that->engine());
+    Scope scope(static_cast<Object *>(that)->engine());
     Scoped<FunctionCtor> f(scope, static_cast<FunctionCtor *>(that));
     ScopedContext ctx(scope, scope.engine->currentContext());
     QString arguments;
@@ -393,7 +393,7 @@ Heap::ScriptFunction::ScriptFunction(QV4::ExecutionContext *scope, Function *fun
 
 ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -425,7 +425,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -475,7 +475,7 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
 
 ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
+    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);

@@ -287,7 +287,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
     QQmlValueTypeWrapper *r = static_cast<QQmlValueTypeWrapper *>(m);
-    QV4::ExecutionEngine *v4 = m->engine();
+    QV4::ExecutionEngine *v4 = r->engine();
 
     // Note: readReferenceValue() can change the reference->type.
     if (QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
@@ -340,7 +340,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
 void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = static_cast<QQmlValueTypeWrapper *>(m)->engine();
     Scope scope(v4);
     if (scope.hasException())
         return;

@@ -124,7 +124,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
 
 ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
 {
-    ExecutionEngine *engine = that->engine();
+    ExecutionEngine *engine = static_cast<Object *>(that)->engine();
     CHECK_STACK_LIMITS(engine);
 
     Scope scope(engine);

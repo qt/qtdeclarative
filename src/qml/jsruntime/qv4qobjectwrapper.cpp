@@ -677,14 +677,14 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(m->engine());
+    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(that->engine());
     return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
 void QObjectWrapper::put(Managed *m, String *name, const ValueRef value)
 {
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = that->engine();
 
     if (v4->hasException || QQmlData::wasDeleted(that->d()->object))
         return;
