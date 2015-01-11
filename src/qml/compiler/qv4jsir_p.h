@@ -602,16 +602,11 @@ struct Member: Expr {
 };
 
 struct Stmt {
-    struct Data {
-        QVector<Expr *> incoming; // used by Phi nodes
-    };
-
     enum { InvalidId = -1 };
 
-    Data *d;
     QQmlJS::AST::SourceLocation location;
 
-    explicit Stmt(int id): d(0), _id(id) {}
+    explicit Stmt(int id): _id(id) {}
 
     virtual ~Stmt()
     {
@@ -635,10 +630,6 @@ struct Stmt {
 
 private: // For memory management in BasicBlock
     friend struct BasicBlock;
-    void destroyData() {
-        delete d;
-        d = 0;
-    }
 
 private:
     friend struct Function;
@@ -735,11 +726,21 @@ struct Ret: Stmt {
 
 struct Phi: Stmt {
     Temp *targetTemp;
+    struct Data {
+        QVector<Expr *> incoming; // used by Phi nodes
+    };
 
-    Phi(int id): Stmt(id) {}
+    Data *d;
+
+    Phi(int id): Stmt(id), d(0) {}
 
     virtual void accept(StmtVisitor *v) { v->visitPhi(this); }
     virtual Phi *asPhi() { return this; }
+
+    void destroyData() {
+        delete d;
+        d = 0;
+    }
 };
 
 struct Q_QML_PRIVATE_EXPORT Module {

@@ -511,8 +511,11 @@ void Function::setStatementCount(int cnt)
 
 BasicBlock::~BasicBlock()
 {
-    foreach (Stmt *s, _statements)
-        s->destroyData();
+    foreach (Stmt *s, _statements) {
+        Phi *p = s->asPhi();
+        if (p)
+            p->destroyData();
+    }
 }
 
 unsigned BasicBlock::newTemp()
@@ -766,8 +769,12 @@ void BasicBlock::setStatements(const QVector<Stmt *> &newStatements)
     Q_ASSERT(newStatements.size() >= _statements.size());
     // FIXME: this gets quite inefficient for large basic-blocks, so this function/case should be re-worked.
     foreach (Stmt *s, _statements) {
-        if (!newStatements.contains(s))
-            s->destroyData();
+        Phi *p = s->asPhi();
+        if (!p)
+            continue;
+
+        if (!newStatements.contains(p))
+            p->destroyData();
     }
     _statements = newStatements;
 }
@@ -816,21 +823,27 @@ void BasicBlock::insertStatementBeforeTerminator(Stmt *stmt)
 void BasicBlock::replaceStatement(int index, Stmt *newStmt)
 {
     Q_ASSERT(!isRemoved());
-    _statements[index]->destroyData();
+    Phi *p = _statements[index]->asPhi();
+    if (p)
+        p->destroyData();
     _statements[index] = newStmt;
 }
 
 void BasicBlock::removeStatement(Stmt *stmt)
 {
     Q_ASSERT(!isRemoved());
-    stmt->destroyData();
+    Phi *p = stmt->asPhi();
+    if (p)
+        p->destroyData();
     _statements.remove(_statements.indexOf(stmt));
 }
 
 void BasicBlock::removeStatement(int idx)
 {
     Q_ASSERT(!isRemoved());
-    _statements[idx]->destroyData();
+    Phi *p = _statements[idx]->asPhi();
+    if (p)
+        p->destroyData();
     _statements.remove(idx);
 }
 

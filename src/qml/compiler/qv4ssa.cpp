@@ -1277,7 +1277,7 @@ public:
 
 void insertPhiNode(const Temp &a, BasicBlock *y, IR::Function *f) {
     Phi *phiNode = f->NewStmt<Phi>();
-    phiNode->d = new Stmt::Data;
+    phiNode->d = new Phi::Data;
     phiNode->targetTemp = f->New<Temp>();
     phiNode->targetTemp->init(a.kind, a.index);
     y->prependStatement(phiNode);
@@ -4532,7 +4532,7 @@ protected:
         clonedStmt = phi;
 
         phi->targetTemp = clone(stmt->targetTemp);
-        phi->d = new Stmt::Data;
+        phi->d = new Phi::Data;
         foreach (Expr *in, stmt->d->incoming)
             phi->d->incoming.append(clone(in));
         block->appendStatement(phi);
