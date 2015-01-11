@@ -134,7 +134,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
 
     //restore the original stack position.
     //### if stackBefore has also been reparented this won't work
-    if (stackBefore)
+    if (target && stackBefore)
         target->stackBefore(stackBefore);
 }
 
