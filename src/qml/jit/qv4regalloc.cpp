@@ -128,6 +128,10 @@ protected:
 
 class RegAllocInfo: public IRDecoder
 {
+public:
+    typedef QVarLengthArray<Temp, 4> Hints;
+
+private:
     struct Def {
         unsigned valid : 1;
         unsigned canHaveReg : 1;
@@ -148,7 +152,7 @@ class RegAllocInfo: public IRDecoder
     std::vector<Def> _defs;
     std::vector<std::vector<Use> > _uses;
     std::vector<int> _calls;
-    std::vector<QList<Temp> > _hints;
+    std::vector<Hints> _hints;
 
     int usePosition(Stmt *s) const
     {
@@ -207,15 +211,15 @@ public:
     }
 
     const std::vector<int> &calls() const { return _calls; }
-    const QList<Temp> &hints(const Temp &t) const { return _hints[t.index]; }
+    const Hints &hints(const Temp &t) const { return _hints[t.index]; }
     void addHint(const Temp &t, int physicalRegister)
     { addHint(t, Temp::PhysicalRegister, physicalRegister); }
 
     void addHint(const Temp &t, Temp::Kind kind, int hintedIndex)
     {
-        QList<Temp> &hints = _hints[t.index];
-        foreach (const Temp &hint, hints)
-            if (hint.index == hintedIndex)
+        Hints &hints = _hints[t.index];
+        for (Hints::iterator i = hints.begin(), ei = hints.end(); i != ei; ++i)
+            if (i->index == hintedIndex)
                 return;
 
         Temp hint;
@@ -264,7 +268,7 @@ public:
             if (_uses[t].empty())
                 continue;
             qout << "\t%" << t << ": ";
-            QList<Temp> hints = _hints[t];
+            const Hints &hints = _hints[t];
             for (int i = 0; i < hints.size(); ++i) {
                 if (i > 0) qout << ", ";
                 printer.print(hints[i]);
@@ -1575,7 +1579,9 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
     int reg = LifeTimeInterval::InvalidRegister;
     int freeUntilPos_reg = 0;
 
-    foreach (const Temp &hint, _info->hints(current.temp())) {
+    const RegAllocInfo::Hints &hints = _info->hints(current.temp());
+    for (RegAllocInfo::Hints::const_iterator i = hints.begin(), ei = hints.end(); i != ei; ++i) {
+        const Temp &hint = *i;
         int candidate;
         if (hint.kind == Temp::PhysicalRegister)
             candidate = hint.index;
