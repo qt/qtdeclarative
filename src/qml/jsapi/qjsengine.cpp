@@ -421,11 +421,18 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
     QJSValuePrivate *vp = QJSValuePrivate::get(value);
-    if (vp->engine) {
-        QV4::Scope scope(vp->engine);
-        QV4::ScopedValue v(scope, vp->getValue(scope.engine));
+    QV4::ExecutionEngine *v4 = vp->engine();
+    QV4::Value scratch;
+    QV4::Value *val = vp->valueForData(&scratch);
+    if (v4) {
+        QV4::Scope scope(v4);
+        QV4::ScopedValue v(scope, *val);
         return scope.engine->metaTypeFromJS(v, type, ptr);
-    } else if (vp->value.isEmpty()) {
+    }
+
+    Q_ASSERT(vp->persistent.isEmpty());
+
+    if (!val) {
         if (vp->unboundData.userType() == QMetaType::QString) {
             QString string = vp->unboundData.toString();
             // have a string based value without engine. Do conversion manually
@@ -478,50 +485,52 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
         } else {
             return QMetaType::convert(&vp->unboundData.data_ptr(), vp->unboundData.userType(), ptr, type);
         }
-    } else {
-        switch (type) {
-            case QMetaType::Bool:
-                *reinterpret_cast<bool*>(ptr) = vp->value.toBoolean();
-                return true;
-            case QMetaType::Int:
-                *reinterpret_cast<int*>(ptr) = vp->value.toInt32();
-                return true;
-            case QMetaType::UInt:
-                *reinterpret_cast<uint*>(ptr) = vp->value.toUInt32();
-                return true;
-            case QMetaType::LongLong:
-                *reinterpret_cast<qlonglong*>(ptr) = vp->value.toInteger();
-                return true;
-            case QMetaType::ULongLong:
-                *reinterpret_cast<qulonglong*>(ptr) = vp->value.toInteger();
-                return true;
-            case QMetaType::Double:
-                *reinterpret_cast<double*>(ptr) = vp->value.toNumber();
-                return true;
-            case QMetaType::QString:
-                *reinterpret_cast<QString*>(ptr) = value.toString();
-                return true;
-            case QMetaType::Float:
-                *reinterpret_cast<float*>(ptr) = vp->value.toNumber();
-                return true;
-            case QMetaType::Short:
-                *reinterpret_cast<short*>(ptr) = vp->value.toInt32();
-                return true;
-            case QMetaType::UShort:
-                *reinterpret_cast<unsigned short*>(ptr) = vp->value.toUInt16();
-                return true;
-            case QMetaType::Char:
-                *reinterpret_cast<char*>(ptr) = vp->value.toInt32();
-                return true;
-            case QMetaType::UChar:
-                *reinterpret_cast<unsigned char*>(ptr) = vp->value.toUInt16();
-                return true;
-            case QMetaType::QChar:
-                *reinterpret_cast<QChar*>(ptr) = vp->value.toUInt16();
-                return true;
-            default:
-                return false;
-        }
+    }
+
+    Q_ASSERT(val);
+
+    switch (type) {
+        case QMetaType::Bool:
+            *reinterpret_cast<bool*>(ptr) = val->toBoolean();
+            return true;
+        case QMetaType::Int:
+            *reinterpret_cast<int*>(ptr) = val->toInt32();
+            return true;
+        case QMetaType::UInt:
+            *reinterpret_cast<uint*>(ptr) = val->toUInt32();
+            return true;
+        case QMetaType::LongLong:
+            *reinterpret_cast<qlonglong*>(ptr) = val->toInteger();
+            return true;
+        case QMetaType::ULongLong:
+            *reinterpret_cast<qulonglong*>(ptr) = val->toInteger();
+            return true;
+        case QMetaType::Double:
+            *reinterpret_cast<double*>(ptr) = val->toNumber();
+            return true;
+        case QMetaType::QString:
+            *reinterpret_cast<QString*>(ptr) = val->toQStringNoThrow();
+            return true;
+        case QMetaType::Float:
+            *reinterpret_cast<float*>(ptr) = val->toNumber();
+            return true;
+        case QMetaType::Short:
+            *reinterpret_cast<short*>(ptr) = val->toInt32();
+            return true;
+        case QMetaType::UShort:
+            *reinterpret_cast<unsigned short*>(ptr) = val->toUInt16();
+            return true;
+        case QMetaType::Char:
+            *reinterpret_cast<char*>(ptr) = val->toInt32();
+            return true;
+        case QMetaType::UChar:
+            *reinterpret_cast<unsigned char*>(ptr) = val->toUInt16();
+            return true;
+        case QMetaType::QChar:
+            *reinterpret_cast<QChar*>(ptr) = val->toUInt16();
+            return true;
+        default:
+            return false;
     }
 }
 

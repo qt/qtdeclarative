@@ -198,7 +198,7 @@ typedef Scoped<ArrayObject> ScopedArrayObject;
 typedef Scoped<FunctionObject> ScopedFunctionObject;
 typedef Scoped<ExecutionContext> ScopedContext;
 
-struct PersistentValuePrivate;
+struct PersistentValueStorage;
 class PersistentValue;
 class WeakValue;
 

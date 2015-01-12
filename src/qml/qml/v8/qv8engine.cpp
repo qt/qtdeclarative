@@ -106,12 +106,15 @@ static void restoreJSValue(QDataStream &stream, void *data)
 
     quint32 isNullOrUndefined;
     stream >> isNullOrUndefined;
+
+    // ### Optimize for the common case where we have an valid persistent
+    d->persistent.clear();
+
     if (isNullOrUndefined & 0x1) {
-        d->value = QV4::Primitive::nullValue().asReturnedValue();
+        d->unboundData = QVariant(QMetaType::VoidStar, (void *)0);
     } else if (isNullOrUndefined & 0x2) {
-        d->value = QV4::Primitive::undefinedValue().asReturnedValue();
+        d->unboundData = QVariant();
     } else {
-        d->value = QV4::Primitive::emptyValue().asReturnedValue();
         d->unboundData.load(stream);
     }
 }

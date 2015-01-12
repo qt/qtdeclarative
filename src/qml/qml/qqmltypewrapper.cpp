@@ -255,7 +255,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         if (qobjectSingleton) {
             QV4::QObjectWrapper::setQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
-            QV4::ScopedObject apiprivate(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->value);
+            QV4::ScopedObject apiprivate(scope, QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(v4));
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
                 v4->throwError(error);

@@ -52,6 +52,8 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
 #include <private/qflagpointer_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4persistent_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,30 +61,60 @@ QT_BEGIN_NAMESPACE
   \internal
   \class QJSValuePrivate
 */
-class Q_QML_PRIVATE_EXPORT QJSValuePrivate : public QV4::PersistentValuePrivate
+class Q_QML_PRIVATE_EXPORT QJSValuePrivate
 {
 public:
-    QJSValuePrivate(QV4::ExecutionEngine *engine, const QV4::ValueRef v)
-        : PersistentValuePrivate(v.asReturnedValue(), engine)
+    QJSValuePrivate()
+        : refcount(1)
+    {}
+    QJSValuePrivate(QV4::ExecutionEngine *e, const QV4::ValueRef v)
+        : refcount(1),
+          persistent(e, v)
     {
-        Q_ASSERT(!value.isEmpty());
+        Q_ASSERT(!v->isEmpty());
     }
-    QJSValuePrivate(QV4::ReturnedValue v)
-        : PersistentValuePrivate(v)
+    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::ReturnedValue v)
+        : refcount(1),
+          persistent(e, v)
     {
-        Q_ASSERT(!value.isEmpty());
     }
-    QJSValuePrivate(const QString &s)
-        : PersistentValuePrivate(QV4::Primitive::emptyValue().asReturnedValue()),
-          unboundData(s)
+    explicit QJSValuePrivate(const QVariant &v)
+        : refcount(1),
+          unboundData(v)
     {
+    }
+
+    bool checkEngine(QV4::ExecutionEngine *e) {
+        if (persistent.isEmpty())
+            getValue(e);
+        return persistent.engine() == e;
     }
 
     QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);
 
     static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
+    QV4::ExecutionEngine *engine() const { return persistent.engine(); }
 
+    void ref() { ++refcount; }
+    void deref() {
+        if (!--refcount)
+            delete this;
+    }
+
+    QV4::Value *valueForData(QV4::Value *scratch) const {
+        QV4::Value *v = persistent.valueRef();
+        if (v)
+            return v;
+        *scratch = primitiveValueForUnboundData();
+        return (scratch->isEmpty() ? 0 : scratch);
+    }
+    QV4::Value primitiveValueForUnboundData() const;
+
+    int refcount;
+    QV4::PersistentValue persistent;
     QVariant unboundData;
+private:
+    QJSValuePrivate(QV4::ReturnedValue v) Q_DECL_EQ_DELETE;
 };
 
 QT_END_NAMESPACE

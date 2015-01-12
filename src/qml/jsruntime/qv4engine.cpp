@@ -183,7 +183,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
-    , memoryManager(new QV4::MemoryManager)
+    , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
@@ -217,8 +217,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 #endif // V4_ENABLE_JIT
     }
     iselFactory.reset(factory);
-
-    memoryManager->setExecutionEngine(this);
 
     // reserve space for the JS stack
     // we allow it to grow to 2 times JSStackLimit, as we can overshoot due to garbage collection
@@ -1291,7 +1289,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, in
         return re->toQRegExp();
 
     if (createJSValueForObjects)
-        return QVariant::fromValue(QJSValue(new QJSValuePrivate(o->asReturnedValue())));
+        return QVariant::fromValue(QJSValue(new QJSValuePrivate(scope.engine, o->asReturnedValue())));
 
     return objectToVariant(e, o, visitedObjects);
 }

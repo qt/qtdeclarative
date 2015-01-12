@@ -39,114 +39,126 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_PRIVATE_EXPORT PersistentValuePrivate
+struct Q_QML_EXPORT PersistentValueStorage
 {
-    PersistentValuePrivate(ReturnedValue v, ExecutionEngine *engine = 0, bool weak = false);
-    virtual ~PersistentValuePrivate();
-    Value value;
-    uint refcount;
-    bool weak;
-    QV4::ExecutionEngine *engine;
-    PersistentValuePrivate **prev;
-    PersistentValuePrivate *next;
+    PersistentValueStorage(ExecutionEngine *engine);
+    ~PersistentValueStorage();
 
-    void init();
-    void removeFromList();
-    void ref() { ++refcount; }
-    void deref();
-    PersistentValuePrivate *detach(const ReturnedValue value, bool weak = false);
+    Value *allocate();
+    static void free(Value *e);
 
-    bool checkEngine(QV4::ExecutionEngine *otherEngine) {
-        if (!engine) {
-            Q_ASSERT(!value.isObject());
-            engine = otherEngine;
+    void mark(ExecutionEngine *e);
+
+    struct Iterator {
+        Q_DECL_CONSTEXPR Iterator(void *p, int idx)
+            : p(p), index(idx) {}
+        void *p;
+        int index;
+        Iterator &operator++();
+        bool operator !=(const Iterator &other) {
+            return p != other.p || index != other.index;
         }
-        return (engine == otherEngine);
-    }
+        Value &operator *();
+    };
+    Iterator begin() { return Iterator(firstPage, 0); }
+    Iterator end() { return Iterator(0, 0); }
+
+    static ExecutionEngine *getEngine(Value *v);
+
+    ExecutionEngine *engine;
+    void *firstPage;
 };
 
 class Q_QML_EXPORT PersistentValue
 {
 public:
-    PersistentValue() : d(0) {}
+    PersistentValue() : val(0) {}
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const WeakValue &other);
     PersistentValue &operator=(Object *object);
     ~PersistentValue();
 
-    PersistentValue(ExecutionEngine *engine, const ValueRef val);
-    PersistentValue(ExecutionEngine *engine, ReturnedValue val);
+    PersistentValue(ExecutionEngine *engine, const ValueRef value);
+    PersistentValue(ExecutionEngine *engine, ReturnedValue value);
 
-    void set(ExecutionEngine *engine, const ValueRef val);
-    void set(ExecutionEngine *engine, ReturnedValue val);
+    void set(ExecutionEngine *engine, const ValueRef value);
+    void set(ExecutionEngine *engine, ReturnedValue value);
     void set(ExecutionEngine *engine, Heap::Base *obj);
 
     ReturnedValue value() const {
-        return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
+        return (val ? val->asReturnedValue() : Encode::undefined());
+    }
+    Value *valueRef() const {
+        return val;
     }
     Managed *asManaged() const {
-        if (!d)
+        if (!val)
             return 0;
-        return d->value.asManaged();
+        return val->asManaged();
     }
 
     ExecutionEngine *engine() const {
-        if (!d)
+        if (!val)
             return 0;
-        if (d->engine)
-            return d->engine;
-        Managed *m = d->value.asManaged();
-        return m ? m->engine() : 0;
+        return PersistentValueStorage::getEngine(val);
     }
 
-    bool isUndefined() const { return !d || d->value.isUndefined(); }
-    bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }
+    bool isUndefined() const { return !val || val->isUndefined(); }
+    bool isNullOrUndefined() const { return !val || val->isNullOrUndefined(); }
     void clear() {
-        *this = PersistentValue();
+        PersistentValueStorage::free(val);
+        val = 0;
     }
+    bool isEmpty() { return !val; }
 
 private:
     friend struct ValueRef;
-    PersistentValuePrivate *d;
+
+    Value *val;
 };
 
 class Q_QML_EXPORT WeakValue
 {
 public:
-    WeakValue() : d(0) {}
+    WeakValue() : val(0) {}
     WeakValue(const WeakValue &other);
     WeakValue &operator=(const WeakValue &other);
     ~WeakValue();
 
-    void set(ExecutionEngine *e, const ValueRef val);
-    void set(ExecutionEngine *e, ReturnedValue val);
-    void set(ExecutionEngine *e, Heap::Base *obj);
+    void set(ExecutionEngine *engine, const ValueRef value);
+    void set(ExecutionEngine *engine, ReturnedValue value);
+    void set(ExecutionEngine *engine, Heap::Base *obj);
 
     ReturnedValue value() const {
-        return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
+        return (val ? val->asReturnedValue() : Encode::undefined());
+    }
+    Value *valueRef() const {
+        return val;
+    }
+    Managed *asManaged() const {
+        if (!val)
+            return 0;
+        return val->asManaged();
     }
 
     ExecutionEngine *engine() const {
-        if (!d)
+        if (!val)
             return 0;
-        if (d->engine)
-            return d->engine;
-        Managed *m = d->value.asManaged();
-        return m ? m->engine() : 0;
+        return PersistentValueStorage::getEngine(val);
     }
 
-    bool isUndefined() const { return !d || d->value.isUndefined(); }
-    bool isNullOrUndefined() const { return !d || d->value.isNullOrUndefined(); }
+    bool isUndefined() const { return !val || val->isUndefined(); }
+    bool isNullOrUndefined() const { return !val || val->isNullOrUndefined(); }
     void clear() {
-        *this = WeakValue();
+        PersistentValueStorage::free(val);
+        val = 0;
     }
 
     void markOnce(ExecutionEngine *e);
 
 private:
-    friend struct ValueRef;
-    PersistentValuePrivate *d;
+    Value *val;
 };
 
 } // namespace QV4

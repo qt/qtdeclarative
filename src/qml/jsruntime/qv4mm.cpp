@@ -208,14 +208,15 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 
 } // namespace
 
-MemoryManager::MemoryManager()
+MemoryManager::MemoryManager(ExecutionEngine *engine)
     : m_d(new Data)
-    , m_persistentValues(0)
-    , m_weakValues(0)
+    , m_persistentValues(new PersistentValueStorage(engine))
+    , m_weakValues(new PersistentValueStorage(engine))
 {
 #ifdef V4_USE_VALGRIND
     VALGRIND_CREATE_MEMPOOL(this, 0, true);
 #endif
+    m_d->engine = engine;
 }
 
 Heap::Base *MemoryManager::allocData(std::size_t size)
@@ -334,21 +335,7 @@ void MemoryManager::mark()
 
     m_d->engine->markObjects();
 
-    PersistentValuePrivate *persistent = m_persistentValues;
-    while (persistent) {
-        if (!persistent->refcount) {
-            PersistentValuePrivate *n = persistent->next;
-            persistent->removeFromList();
-            delete persistent;
-            persistent = n;
-            continue;
-        }
-        persistent->value.mark(m_d->engine);
-        persistent = persistent->next;
-
-        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
-            drainMarkStack(m_d->engine, markBase);
-    }
+    m_persistentValues->mark(m_d->engine);
 
     collectFromJSStack();
 
@@ -358,12 +345,12 @@ void MemoryManager::mark()
     // Do this _after_ collectFromStack to ensure that processing the weak
     // managed objects in the loop down there doesn't make then end up as leftovers
     // on the stack and thus always get collected.
-    for (PersistentValuePrivate *weak = m_weakValues; weak; weak = weak->next) {
-        if (!weak->refcount || !weak->value.isManaged())
+    for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
+        if (!(*it).isManaged())
             continue;
-        if (weak->value.asManaged()->d()->gcGetInternalClass()->vtable != QObjectWrapper::staticVTable())
+        if ((*it).managed()->d()->gcGetInternalClass()->vtable != QObjectWrapper::staticVTable())
             continue;
-        QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>(weak->value.managed());
+        QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
         if (!qobjectWrapper)
             continue;
         QObject *qobject = qobjectWrapper->object();
@@ -392,25 +379,13 @@ void MemoryManager::mark()
 
 void MemoryManager::sweep(bool lastSweep)
 {
-    PersistentValuePrivate *weak = m_weakValues;
-    while (weak) {
-        if (!weak->refcount) {
-            PersistentValuePrivate *n = weak->next;
-            weak->removeFromList();
-            delete weak;
-            weak = n;
-            continue;
-        }
-        if (Managed *m = weak->value.asManaged()) {
-            if (!m->markBit()) {
-                weak->value = Primitive::undefinedValue();
-                PersistentValuePrivate *n = weak->next;
-                weak->removeFromList();
-                weak = n;
-                continue;
+    if (m_weakValues) {
+        for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
+            if (Managed *m = (*it).asManaged()) {
+                if (!m->markBit())
+                    (*it) = Primitive::undefinedValue();
             }
         }
-        weak = weak->next;
     }
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
@@ -580,15 +555,9 @@ size_t MemoryManager::getLargeItemsMem() const
 
 MemoryManager::~MemoryManager()
 {
-    PersistentValuePrivate *persistent = m_persistentValues;
-    while (persistent) {
-        PersistentValuePrivate *n = persistent->next;
-        persistent->value = Primitive::undefinedValue();
-        persistent->engine = 0;
-        persistent->prev = 0;
-        persistent->next = 0;
-        persistent = n;
-    }
+    delete m_persistentValues;
+    delete m_weakValues;
+    m_weakValues = 0;
 
     sweep(/*lastSweep*/true);
 #ifdef V4_USE_VALGRIND
@@ -599,11 +568,6 @@ MemoryManager::~MemoryManager()
 ExecutionEngine *MemoryManager::engine() const
 {
     return m_d->engine;
-}
-
-void MemoryManager::setExecutionEngine(ExecutionEngine *engine)
-{
-    m_d->engine = engine;
 }
 
 void MemoryManager::dumpStats() const

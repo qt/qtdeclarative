@@ -48,8 +48,7 @@ struct GCDeletable;
 
 class Q_QML_EXPORT MemoryManager
 {
-    MemoryManager(const MemoryManager &);
-    MemoryManager &operator=(const MemoryManager&);
+    Q_DISABLE_COPY(MemoryManager);
 
 public:
     struct Data;
@@ -75,7 +74,7 @@ public:
     };
 
 public:
-    MemoryManager();
+    MemoryManager(ExecutionEngine *engine);
     ~MemoryManager();
 
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
@@ -149,7 +148,6 @@ public:
     void runGC();
 
     ExecutionEngine *engine() const;
-    void setExecutionEngine(ExecutionEngine *engine);
 
     void dumpStats() const;
 
@@ -176,8 +174,8 @@ private:
 protected:
     QScopedPointer<Data> m_d;
 public:
-    PersistentValuePrivate *m_persistentValues;
-    PersistentValuePrivate *m_weakValues;
+    PersistentValueStorage *m_persistentValues;
+    PersistentValueStorage *m_weakValues;
 };
 
 }

@@ -534,7 +534,6 @@ struct ValueRef {
     template <typename T>
     ValueRef(const Scoped<T> &v);
     ValueRef(const PersistentValue &v);
-    ValueRef(PersistentValuePrivate *p);
     ValueRef(Value &v) { ptr = &v; }
     // Important: Do NOT add a copy constructor to this class
     // adding a copy constructor actually changes the calling convention, ie.

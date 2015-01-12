@@ -478,11 +478,7 @@ inline ValueRef::ValueRef(const Scoped<T> &v)
 {}
 
 inline ValueRef::ValueRef(const PersistentValue &v)
-    : ptr(&v.d->value)
-{}
-
-inline ValueRef::ValueRef(PersistentValuePrivate *p)
-    : ptr(&p->value)
+    : ptr(v.val)
 {}
 
 inline ValueRef &ValueRef::operator=(const ScopedValue &o)
