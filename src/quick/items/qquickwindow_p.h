@@ -49,7 +49,6 @@
 #include "qquickwindow.h"
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qsgbatchrenderer_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
