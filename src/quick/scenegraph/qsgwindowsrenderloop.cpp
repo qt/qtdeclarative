@@ -401,8 +401,17 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
     if (!d->isRenderable())
         return;
 
-    if (!m_gl->makeCurrent(window))
-        return;
+    if (!m_gl->makeCurrent(window)) {
+        // Check for context loss.
+        if (!m_gl->isValid()) {
+            d->cleanupNodesOnShutdown();
+            m_rc->invalidate();
+            if (m_gl->create() && m_gl->makeCurrent(window))
+                m_rc->initialize(m_gl);
+            else
+                return;
+        }
+    }
 
     d->flushDelayedTouchEvent();
     // Event delivery or processing has caused the window to stop rendering.
