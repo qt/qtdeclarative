@@ -2771,7 +2771,8 @@ public:
     int color;
     int matrix;
     int rotation;
-    int tweak;
+    int pattern;
+    int projection;
 };
 
 void Renderer::visualizeDrawGeometry(const QSGGeometry *g)
@@ -2804,8 +2805,7 @@ void Renderer::visualizeBatch(Batch *b)
     if (b->root)
         matrix = matrix * qsg_matrixForRoot(b->root);
 
-    QRect viewport = viewportRect();
-    shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), b->merged ? 0 : 1, 0);
+    shader->setUniformValue(shader->pattern, float(b->merged ? 0 : 1));
 
     QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0, 1.0, 1.0);
     float cr = color.redF();
@@ -2885,9 +2885,7 @@ void Renderer::visualizeChanges(Node *n)
         float cg = color.greenF() * ca;
         float cb = color.blueF() * ca;
         shader->setUniformValue(shader->color, cr, cg, cb, ca);
-
-        QRect viewport = viewportRect();
-        shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), tinted ? 0.5 : 0, 0);
+        shader->setUniformValue(shader->pattern, float(tinted ? 0.5 : 0));
 
         QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(n->sgNode);
 
@@ -2939,10 +2937,8 @@ void Renderer::visualizeOverdraw_helper(Node *node)
 void Renderer::visualizeOverdraw()
 {
     VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
-    shader->setUniformValue(shader->color, 0.5, 0.5, 1, 1);
-
-    QRect viewport = viewportRect();
-    shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), 0, 1);
+    shader->setUniformValue(shader->color, 0.5f, 0.5f, 1.0f, 1.0f);
+    shader->setUniformValue(shader->projection, 1);
 
     glBlendFunc(GL_ONE, GL_ONE);
 
@@ -3022,7 +3018,8 @@ void Renderer::visualize()
         prog->link();
         prog->bind();
         prog->color = prog->uniformLocation("color");
-        prog->tweak = prog->uniformLocation("tweak");
+        prog->pattern = prog->uniformLocation("pattern");
+        prog->projection = prog->uniformLocation("projection");
         prog->matrix = prog->uniformLocation("matrix");
         prog->rotation = prog->uniformLocation("rotation");
         m_shaderManager->visualizeProgram = prog;
@@ -3032,7 +3029,6 @@ void Renderer::visualize()
     VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
 
     glDisable(GL_DEPTH_TEST);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glEnableVertexAttribArray(0);
@@ -3042,10 +3038,11 @@ void Renderer::visualize()
     if (m_visualizeMode == VisualizeBatches)
         bgOpacity = 1.0;
     float v[] = { -1, 1,   1, 1,   -1, -1,   1, -1 };
-    shader->setUniformValue(shader->color, 0, 0, 0, bgOpacity);
+    shader->setUniformValue(shader->color, 0.0f, 0.0f, 0.0f, bgOpacity);
     shader->setUniformValue(shader->matrix, QMatrix4x4());
     shader->setUniformValue(shader->rotation, QMatrix4x4());
-    shader->setUniformValue(shader->tweak, 0, 0, 0, 0);
+    shader->setUniformValue(shader->pattern, 0.0f);
+    shader->setUniformValue(shader->projection, false);
     glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, v);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -3054,9 +3051,8 @@ void Renderer::visualize()
         for (int i=0; i<m_opaqueBatches.size(); ++i) visualizeBatch(m_opaqueBatches.at(i));
         for (int i=0; i<m_alphaBatches.size(); ++i) visualizeBatch(m_alphaBatches.at(i));
     } else if (m_visualizeMode == VisualizeClipping) {
-        QRect viewport = viewportRect();
-        shader->setUniformValue(shader->tweak, viewport.width(), viewport.height(), 0.5, 0);
-        shader->setUniformValue(shader->color, GLfloat(0.2), 0, 0, GLfloat(0.2));
+        shader->setUniformValue(shader->pattern, 0.5f);
+        shader->setUniformValue(shader->color, 0.2f, 0.0f, 0.0f, 0.2f);
         visualizeClipping(rootNode());
     } else if (m_visualizeMode == VisualizeChanges) {
         visualizeChanges(m_nodes.value(rootNode()));
