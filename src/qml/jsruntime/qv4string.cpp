@@ -94,24 +94,7 @@ static uint toArrayIndex(const char *ch, const char *end)
 }
 
 
-const ObjectVTable String::static_vtbl =
-{
-    DEFINE_MANAGED_VTABLE_INT(String, 0),
-    0,
-    0,
-    get,
-    getIndexed,
-    put,
-    putIndexed,
-    query,
-    queryIndexed,
-    deleteProperty,
-    deleteIndexedProperty,
-    0 /*getLookup*/,
-    0 /*setLookup*/,
-    0,
-    0 /*advanceIterator*/,
-};
+DEFINE_MANAGED_VTABLE(String);
 
 void String::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
@@ -120,97 +103,6 @@ void String::markObjects(Heap::Base *that, ExecutionEngine *e)
         s->left->mark(e);
         s->right->mark(e);
     }
-}
-
-ReturnedValue String::get(Managed *m, String *name, bool *hasProperty)
-{
-    ExecutionEngine *v4 = m->engine();
-    Scope scope(v4);
-    ScopedString that(scope, static_cast<String *>(m));
-
-    if (name->equals(v4->id_length)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Primitive::fromInt32(that->d()->text->size).asReturnedValue();
-    }
-    PropertyAttributes attrs;
-    Property *pd = v4->stringPrototype.asObject()->__getPropertyDescriptor__(name, &attrs);
-    if (!pd || attrs.isGeneric()) {
-        if (hasProperty)
-            *hasProperty = false;
-        return Primitive::undefinedValue().asReturnedValue();
-    }
-    if (hasProperty)
-        *hasProperty = true;
-    return v4->stringPrototype.asObject()->getValue(that, pd, attrs);
-}
-
-ReturnedValue String::getIndexed(Managed *m, uint index, bool *hasProperty)
-{
-    ExecutionEngine *engine = m->engine();
-    Scope scope(engine);
-    ScopedString that(scope, static_cast<String *>(m));
-
-    if (index < static_cast<uint>(that->d()->text->size)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Encode(engine->newString(that->toQString().mid(index, 1)));
-    }
-    PropertyAttributes attrs;
-    Property *pd = engine->stringPrototype.asObject()->__getPropertyDescriptor__(index, &attrs);
-    if (!pd || attrs.isGeneric()) {
-        if (hasProperty)
-            *hasProperty = false;
-        return Primitive::undefinedValue().asReturnedValue();
-    }
-    if (hasProperty)
-        *hasProperty = true;
-    return engine->stringPrototype.asObject()->getValue(that, pd, attrs);
-}
-
-void String::put(Managed *m, String *name, const ValueRef value)
-{
-    Scope scope(m->engine());
-    if (scope.hasException())
-        return;
-    ScopedString that(scope, static_cast<String *>(m));
-    ScopedObject o(scope, that->engine()->newStringObject(that));
-    o->put(name, value);
-}
-
-void String::putIndexed(Managed *m, uint index, const ValueRef value)
-{
-    Scope scope(m->engine());
-    if (scope.hasException())
-        return;
-
-    ScopedString that(scope, static_cast<String *>(m));
-    ScopedObject o(scope, that->engine()->newStringObject(that));
-    o->putIndexed(index, value);
-}
-
-PropertyAttributes String::query(const Managed *m, String *name)
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return queryIndexed(m, idx);
-    return Attr_Invalid;
-}
-
-PropertyAttributes String::queryIndexed(const Managed *m, uint index)
-{
-    const String *that = static_cast<const String *>(m);
-    return (index < static_cast<uint>(that->d()->text->size)) ? Attr_NotConfigurable|Attr_NotWritable : Attr_Invalid;
-}
-
-bool String::deleteProperty(Managed *, String *)
-{
-    return false;
-}
-
-bool String::deleteIndexedProperty(Managed *, uint)
-{
-    return false;
 }
 
 bool String::isEqualTo(Managed *t, Managed *o)

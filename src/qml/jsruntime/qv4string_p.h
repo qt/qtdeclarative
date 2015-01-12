@@ -116,8 +116,7 @@ private:
 
 struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
-    // ### FIXME: Should this be a V4_OBJECT
-    V4_OBJECT2(String, Managed)
+    V4_MANAGED(String, Managed)
     Q_MANAGED_TYPE(String)
     V4_NEEDS_DESTROY
     enum {
@@ -177,14 +176,6 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const ValueRef value);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
-    static PropertyAttributes query(const Managed *m, String *name);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *, String *);
-    static bool deleteIndexedProperty(Managed *m, uint index);
     static bool isEqualTo(Managed *that, Managed *o);
     static uint getLength(const Managed *m);
 #endif
