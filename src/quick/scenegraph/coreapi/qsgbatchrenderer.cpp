@@ -1642,6 +1642,26 @@ void Renderer::prepareAlphaBatches()
 
 }
 
+static inline int qsg_fixIndexCount(int iCount, GLenum drawMode) {
+    switch (drawMode) {
+    case GL_TRIANGLE_STRIP:
+        // Merged triangle strips need to contain degenerate triangles at the beginning and end.
+        // One could save 2 uploaded ushorts here by ditching the padding for the front of the
+        // first and the end of the last, but for simplicity, we simply don't care.
+        // Those extra triangles will be skipped while drawing to preserve the strip's parity
+        // anyhow.
+        return iCount + 2;
+    case GL_LINES:
+        // For lines we drop the last vertex if the number of vertices is uneven.
+        return iCount - (iCount % 2);
+    case GL_TRIANGLES:
+        // For triangles we drop trailing vertices until the result is divisible by 3.
+        return iCount - (iCount % 3);
+    default:
+        return iCount;
+    }
+}
+
 /* These parameters warrant some explanation...
  *
  * vaOffset: The byte offset into the vertex data to the location of the
@@ -1695,15 +1715,21 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     quint16 *indices = (quint16 *) *indexData;
 
     if (iCount == 0) {
+        iCount = vCount;
         if (g->drawingMode() == GL_TRIANGLE_STRIP)
             *indices++ = *iBase;
-        iCount = vCount;
+        else
+            iCount = qsg_fixIndexCount(iCount, g->drawingMode());
+
         for (int i=0; i<iCount; ++i)
             indices[i] = *iBase + i;
     } else {
         const quint16 *srcIndices = g->indexDataAsUShort();
         if (g->drawingMode() == GL_TRIANGLE_STRIP)
             *indices++ = *iBase + srcIndices[0];
+        else
+            iCount = qsg_fixIndexCount(iCount, g->drawingMode());
+
         for (int i=0; i<iCount; ++i)
             indices[i] = *iBase + srcIndices[i];
     }
@@ -1775,12 +1801,7 @@ void Renderer::uploadBatch(Batch *b)
             if (b->merged) {
                 if (iCount == 0)
                     iCount = eg->vertexCount();
-                // Merged triangle strips need to contain degenerate triangles at the beginning and end.
-                // One could save 2 uploaded ushorts here by ditching the padding for the front of the
-                // first and the end of the last, but for simplicity, we simply don't care.
-                // Those extra triangles will be skipped while drawing to preserve the strip's parity anyhow.
-                if (g->drawingMode() == GL_TRIANGLE_STRIP)
-                    iCount += 2;
+                iCount = qsg_fixIndexCount(iCount, g->drawingMode());
             } else {
                 unmergedIndexSize += iCount * eg->sizeOfIndex();
             }
