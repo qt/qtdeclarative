@@ -234,8 +234,6 @@ QQuickParticleEmitter::QQuickParticleEmitter(QQuickItem *parent) :
 
 {
     //TODO: Reset velocity/acc back to null vector? Or allow null pointer?
-    connect(this, SIGNAL(maximumEmittedChanged(int)),
-            this, SIGNAL(particleCountChanged()));
     connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
             this, SIGNAL(particleCountChanged()));
     connect(this, SIGNAL(particleDurationChanged(int)),
@@ -311,6 +309,7 @@ void QQuickParticleEmitter::setMaxParticleCount(int arg)
         m_overwrite = arg < 0;
         m_maxParticleCount = arg;
         emit maximumEmittedChanged(arg);
+        emit particleCountChanged();
     }
 }
 
