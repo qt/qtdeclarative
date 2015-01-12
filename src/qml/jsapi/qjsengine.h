@@ -127,6 +127,8 @@ inline QVariant qjsvalue_cast<QVariant>(const QJSValue &value)
     return value.toVariant();
 }
 
+Q_QML_EXPORT QJSEngine *qjsEngine(const QObject *);
+
 QT_END_NAMESPACE
 
 #endif // QJSENGINE_H

@@ -174,6 +174,8 @@ private slots:
 
     void privateMethods();
 
+    void engineForObject();
+
 signals:
     void testSignal();
 };
@@ -3622,6 +3624,19 @@ void tst_QJSEngine::privateMethods()
         it.next();
         QVERIFY(!privateMethods.contains(it.name()));
     }
+}
+
+void tst_QJSEngine::engineForObject()
+{
+    QObject object;
+    {
+        QJSEngine engine;
+        QVERIFY(!qjsEngine(&object));
+        QJSValue wrapper = engine.newQObject(&object);
+        QQmlEngine::setObjectOwnership(&object, QQmlEngine::CppOwnership);
+        QCOMPARE(qjsEngine(&object), wrapper.engine());
+    }
+    QVERIFY(!qjsEngine(&object));
 }
 
 QTEST_MAIN(tst_QJSEngine)

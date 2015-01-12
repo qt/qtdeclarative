@@ -565,6 +565,24 @@ QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
     }
 }
 
+/*!
+   \since 5.5
+   \relates QJSEngine
+
+   Returns the QJSEngine associated with \a object, if any.
+
+   This function is useful if you have exposed a QObject to the JavaScript environment
+   and later in your program would like to regain access. It does not require you to
+   keep the wrapper around that was returned from QJSEngine::newQObject().
+ */
+QJSEngine *qjsEngine(const QObject *object)
+{
+    QQmlData *data = QQmlData::get(object, false);
+    if (!data || data->jsWrapper.isNullOrUndefined())
+        return 0;
+    return data->jsWrapper.engine()->jsEngine();
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qjsengine.cpp"
