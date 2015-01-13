@@ -974,7 +974,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (idx < UINT_MAX)
         return property(idx);
 
-    s->makeIdentifier();
+    s->makeIdentifier(engine);
     QV4::ScopedValue result(scope, o->get(s));
     if (engine->hasException)
         result = engine->catchException();
@@ -1045,7 +1045,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     }
 
-    s->makeIdentifier();
+    s->makeIdentifier(scope.engine);
     QV4::ScopedValue v(scope, value.d->getValue(engine));
     o->put(s, v);
     if (engine->hasException)

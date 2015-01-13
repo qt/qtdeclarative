@@ -154,13 +154,13 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
     uint toUInt(bool *ok) const;
 
-    void makeIdentifier() const {
+    void makeIdentifier(ExecutionEngine *e) const {
         if (d()->identifier)
             return;
-        makeIdentifierImpl();
+        makeIdentifierImpl(e);
     }
 
-    void makeIdentifierImpl() const;
+    void makeIdentifierImpl(ExecutionEngine *e) const;
 
     static uint createHashValue(const QChar *ch, int length);
     static uint createHashValue(const char *ch, int length);

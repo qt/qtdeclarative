@@ -904,7 +904,7 @@ ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
     NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = m->engine();
 
-    name->makeIdentifier();
+    name->makeIdentifier(v4);
     if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->d()->list.count()).asReturnedValue();
 
@@ -949,7 +949,7 @@ ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
     QV4::ExecutionEngine *v4 = m->engine();
     NodeList *r = static_cast<NodeList *>(m);
 
-    name->makeIdentifier();
+    name->makeIdentifier(v4);
 
     if (name->equals(v4->id_length))
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();

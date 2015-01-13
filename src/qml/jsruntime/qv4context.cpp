@@ -343,7 +343,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
 {
     Scope scope(this);
     ScopedValue v(scope);
-    name->makeIdentifier();
+    name->makeIdentifier(scope.engine);
 
     if (name->equals(d()->engine->id_this))
         return d()->callData->thisObject.asReturnedValue();
@@ -410,7 +410,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
     Scope scope(this);
     ScopedValue v(scope);
     *base = (Heap::Object *)0;
-    name->makeIdentifier();
+    name->makeIdentifier(scope.engine);
 
     if (name->equals(d()->engine->id_this))
         return d()->callData->thisObject.asReturnedValue();

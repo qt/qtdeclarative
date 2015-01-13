@@ -591,9 +591,9 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
     if (idx != UINT_MAX)
         return getIndexed(idx, hasProperty);
 
-    name->makeIdentifier();
-
     Scope scope(engine());
+    name->makeIdentifier(scope.engine);
+
     ScopedObject o(scope, this);
     while (o) {
         uint idx = o->internalClass()->find(name);
@@ -656,7 +656,7 @@ void Object::internalPut(String *name, const ValueRef value)
     if (idx != UINT_MAX)
         return putIndexed(idx, value);
 
-    name->makeIdentifier();
+    name->makeIdentifier(engine());
 
     uint member = internalClass()->find(name);
     Property *pd = 0;
@@ -813,7 +813,7 @@ bool Object::internalDeleteProperty(String *name)
     if (idx != UINT_MAX)
         return deleteIndexedProperty(idx);
 
-    name->makeIdentifier();
+    name->makeIdentifier(engine());
 
     uint memberIdx = internalClass()->find(name);
     if (memberIdx != UINT_MAX) {
@@ -851,9 +851,9 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     if (idx != UINT_MAX)
         return __defineOwnProperty__(engine, idx, p, attrs);
 
-    name->makeIdentifier();
-
     Scope scope(engine);
+    name->makeIdentifier(scope.engine);
+
     Property *current;
     PropertyAttributes *cattrs;
     uint memberIndex;

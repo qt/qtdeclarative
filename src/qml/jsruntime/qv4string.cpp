@@ -169,12 +169,12 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-void String::makeIdentifierImpl() const
+void String::makeIdentifierImpl(ExecutionEngine *e) const
 {
     if (d()->largestSubLength)
         d()->simplifyString();
     Q_ASSERT(!d()->largestSubLength);
-    engine()->identifierTable->identifier(this);
+    e->identifierTable->identifier(this);
 }
 
 void Heap::String::simplifyString() const
