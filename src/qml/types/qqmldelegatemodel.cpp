@@ -1757,7 +1757,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
         p->setSetter(0);
         proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
     }
-    modelItemProto = proto;
+    modelItemProto.set(v4, proto);
 }
 
 int QQmlDelegateModelItemMetaType::parseGroups(const QStringList &groups) const
@@ -3341,7 +3341,7 @@ QQmlDelegateModelEngineData::QQmlDelegateModelEngineData(QV4::ExecutionEngine *v
     proto->defineAccessorProperty(QStringLiteral("index"), QQmlDelegateModelGroupChange::method_get_index, 0);
     proto->defineAccessorProperty(QStringLiteral("count"), QQmlDelegateModelGroupChange::method_get_count, 0);
     proto->defineAccessorProperty(QStringLiteral("moveId"), QQmlDelegateModelGroupChange::method_get_moveId, 0);
-    changeProto = proto;
+    changeProto.set(v4, proto);
 }
 
 QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()

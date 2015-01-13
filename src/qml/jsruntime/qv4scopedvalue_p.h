@@ -468,11 +468,6 @@ inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
     return *this;
 }
 
-inline PersistentValue &PersistentValue::operator=(const ScopedValue &other)
-{
-    return operator=(other.asReturnedValue());
-}
-
 inline ValueRef::ValueRef(const ScopedValue &v)
     : ptr(v.ptr)
 {}

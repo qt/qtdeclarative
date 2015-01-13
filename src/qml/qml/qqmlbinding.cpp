@@ -74,7 +74,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
     setScopeObject(obj);
 
-    v4function = qmlBinding(context(), obj, str, QString(), 0);
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
+    v4function.set(v4, qmlBinding(context(), obj, str, QString(), 0));
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
@@ -102,11 +103,12 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
     setScopeObject(obj ? obj : scriptPrivate->scope);
 
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
     if (runtimeFunction) {
-        v4function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, scopeObject(), runtimeFunction);
+        v4function.set(v4, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, scopeObject(), runtimeFunction));
     } else {
         QString code = scriptPrivate->script;
-        v4function = qmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);
+        v4function.set(v4, qmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber));
     }
 }
 
@@ -117,7 +119,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function = qmlBinding(ctxt, obj, str, QString(), 0);
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
+    v4function.set(v4, qmlBinding(ctxt, obj, str, QString(), 0));
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
@@ -130,7 +133,8 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function = qmlBinding(ctxt, obj, str, url, lineNumber);
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
+    v4function.set(v4, qmlBinding(ctxt, obj, str, url, lineNumber));
 }
 
 QQmlBinding::QQmlBinding(const QV4::ValueRef functionPtr, QObject *obj, QQmlContextData *ctxt)
@@ -140,7 +144,7 @@ QQmlBinding::QQmlBinding(const QV4::ValueRef functionPtr, QObject *obj, QQmlCont
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function = functionPtr;
+    v4function.set(functionPtr->asObject()->engine(), functionPtr);
 }
 
 QQmlBinding::~QQmlBinding()

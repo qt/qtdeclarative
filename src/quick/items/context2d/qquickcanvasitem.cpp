@@ -864,7 +864,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4Function *args)
 
     static int id = 0;
 
-    d->animationCallbacks.insert(++id, QV4::PersistentValue(f));
+    d->animationCallbacks.insert(++id, QV4::PersistentValue(scope.engine, f));
 
     if (isVisible())
         polish();

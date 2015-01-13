@@ -193,7 +193,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
 
 Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , qml(qml->asReturnedValue()), vmFunction(0), parseAsBinding(true)
+    , qml(v4, qml->asReturnedValue()), vmFunction(0), parseAsBinding(true)
 {
     parsed = true;
 
@@ -201,7 +201,7 @@ Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *
     if (vmFunction) {
         Scope valueScope(v4);
         ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
-        compilationUnitHolder = holder.asReturnedValue();
+        compilationUnitHolder.set(v4, holder);
     }
 }
 
@@ -272,7 +272,7 @@ void Script::parse()
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
         ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
-        compilationUnitHolder = holder.asReturnedValue();
+        compilationUnitHolder.set(v4, holder);
     }
 
     if (!vmFunction) {

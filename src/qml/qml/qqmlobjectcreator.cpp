@@ -208,7 +208,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     if (subComponentIndex == -1) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
-        context->importedScripts = scripts;
+        context->importedScripts.set(v4, scripts);
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
             QQmlScriptData *s = compiledData->scripts.at(i);
             scripts->putIndexed(i, s->scriptValueForContext(context));

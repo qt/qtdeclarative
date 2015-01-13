@@ -172,7 +172,7 @@ Debugger::Debugger(QV4::ExecutionEngine *engine)
     , m_pauseRequested(false)
     , m_haveBreakPoints(false)
     , m_breakOnThrow(false)
-    , m_returnedValue(Primitive::undefinedValue())
+    , m_returnedValue(engine, Primitive::undefinedValue())
     , m_gatherSources(0)
     , m_runningJob(0)
 {
@@ -230,9 +230,9 @@ void Debugger::resume(Speed speed)
         return;
 
     if (!m_returnedValue.isUndefined())
-        m_returnedValue = Encode::undefined();
+        m_returnedValue.set(m_engine, Encode::undefined());
 
-    m_currentContext = m_engine->currentContext();
+    m_currentContext.set(m_engine, m_engine->currentContext());
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -559,7 +559,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_currentContext = m_engine->currentContext();
+        m_currentContext.set(m_engine, m_engine->currentContext());
     }
 }
 
@@ -571,11 +571,10 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    Scope scope(m_engine);
     if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()) {
-        m_currentContext = m_engine->currentContext()->parent;
+        m_currentContext.set(m_engine, m_engine->currentContext()->parent);
         m_stepping = StepOver;
-        m_returnedValue = retVal;
+        m_returnedValue.set(m_engine, retVal);
     }
 }
 

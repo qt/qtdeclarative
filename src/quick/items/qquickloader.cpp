@@ -466,7 +466,7 @@ void QQuickLoader::setSourceComponent(QQmlComponent *comp)
     d->component = comp;
     if (comp) {
         if (QQmlData *ddata = QQmlData::get(comp))
-            d->componentStrongReference = ddata->jsWrapper.value();
+            d->componentStrongReference = ddata->jsWrapper;
     }
     d->loadingFromSource = false;
 
@@ -574,8 +574,8 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     QUrl sourceUrl = d->resolveSourceUrl(args);
     if (!ipv->isUndefined()) {
         d->disposeInitialPropertyValues();
-        d->initialPropertyValues = ipv.asReturnedValue();
-        d->qmlGlobalForIpv = args->qmlGlobal();
+        d->initialPropertyValues.set(args->v4engine(), ipv);
+        d->qmlGlobalForIpv.set(args->v4engine(), args->qmlGlobal());
     }
 
     setSource(sourceUrl, false); // already cleared and set ipv above.

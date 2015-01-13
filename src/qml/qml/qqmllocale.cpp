@@ -683,7 +683,7 @@ QV4LocaleDataDeletable::QV4LocaleDataDeletable(QV4::ExecutionEngine *engine)
     o->defineAccessorProperty(QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, 0);
     o->defineAccessorProperty(QStringLiteral("exponential"), QQmlLocaleData::method_get_exponential, 0);
 
-    prototype = o;
+    prototype.set(engine, o);
 }
 
 QV4LocaleDataDeletable::~QV4LocaleDataDeletable()

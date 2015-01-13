@@ -2504,7 +2504,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::ScopedObject scriptsArray(scope);
     if (ctxt->importedScripts.isNullOrUndefined()) {
         scriptsArray = v4->newArrayObject(scripts.count());
-        ctxt->importedScripts = scriptsArray;
+        ctxt->importedScripts.set(v4, scriptsArray);
     } else {
         scriptsArray = ctxt->importedScripts;
     }
@@ -2523,7 +2523,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, 0));
     QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
 
-    m_program->qml = qmlglobal;
+    m_program->qml.set(scope.engine, qmlglobal);
     m_program->run();
     if (scope.engine->hasException) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
@@ -2531,7 +2531,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
             ep->warning(error);
     }
 
-    rv = qmlglobal;
+    rv.set(scope.engine, qmlglobal);
     if (shared) {
         m_value = rv;
         m_loaded = true;

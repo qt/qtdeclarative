@@ -593,7 +593,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
         QV4::ScopedValue rv(scope, create(engine, object));
-        ddata->jsWrapper = rv;
+        ddata->jsWrapper.set(scope.engine, rv);
         ddata->jsEngineId = engine->m_engineId;
         return rv.asReturnedValue();
 
@@ -608,7 +608,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
         // a handle in the ddata, we can assume ownership of the ddata->v8object
         if (ddata->jsWrapper.isUndefined() && !alternateWrapper) {
             QV4::ScopedValue result(scope, create(engine, object));
-            ddata->jsWrapper = result;
+            ddata->jsWrapper.set(scope.engine, result);
             ddata->jsEngineId = engine->m_engineId;
             return result.asReturnedValue();
         }
@@ -919,8 +919,8 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
     QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
     slot->signalIndex = signalIndex;
 
-    slot->thisObject = thisObject;
-    slot->function = f;
+    slot->thisObject.set(scope.engine, thisObject);
+    slot->function.set(scope.engine, f);
 
     if (QQmlData *ddata = QQmlData::get(signalObject)) {
         if (QQmlPropertyCache *propertyCache = ddata->propertyCache) {

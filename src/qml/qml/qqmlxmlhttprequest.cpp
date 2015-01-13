@@ -589,7 +589,7 @@ ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
     QQmlXMLHttpRequestData *d = xhrdata(v4);
     if (d->nodePrototype.isUndefined()) {
         ScopedObject p(scope, v4->memoryManager->alloc<NodePrototype>(v4));
-        d->nodePrototype = p;
+        d->nodePrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
     return d->nodePrototype.value();
@@ -638,7 +638,7 @@ ReturnedValue Element::prototype(ExecutionEngine *engine)
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
-        d->elementPrototype = p;
+        d->elementPrototype.set(engine, p);
         engine->v8Engine->freezeObject(p);
     }
     return d->elementPrototype.value();
@@ -655,7 +655,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
         p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
         p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
         p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
-        d->attrPrototype = p;
+        d->attrPrototype.set(engine, p);
         engine->v8Engine->freezeObject(p);
     }
     return d->attrPrototype.value();
@@ -711,7 +711,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
         p->setPrototype((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
         p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
-        d->characterDataPrototype = p;
+        d->characterDataPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
     return d->characterDataPrototype.value();
@@ -746,7 +746,7 @@ ReturnedValue Text::prototype(ExecutionEngine *v4)
         p->setPrototype((pp = CharacterData::prototype(v4)));
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
         p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
-        d->textPrototype = p;
+        d->textPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
     return d->textPrototype.value();
@@ -761,7 +761,7 @@ ReturnedValue CDATA::prototype(ExecutionEngine *v4)
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = Text::prototype(v4)));
-        d->cdataPrototype = p;
+        d->cdataPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
     return d->cdataPrototype.value();
@@ -779,7 +779,7 @@ ReturnedValue Document::prototype(ExecutionEngine *v4)
         p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
         p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
         p->defineAccessorProperty(QStringLiteral("documentElement"), method_documentElement, 0);
-        d->documentPrototype = p;
+        d->documentPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
     return d->documentPrototype.value();
@@ -1308,7 +1308,7 @@ ReturnedValue QQmlXMLHttpRequest::getMe() const
 
 void QQmlXMLHttpRequest::setMe(const ValueRef me)
 {
-    m_me = me;
+    m_me.set(v4, me);
 }
 
 void QQmlXMLHttpRequest::readyRead()

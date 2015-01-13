@@ -73,7 +73,8 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
 {
     expressionFunctionValid = true;
-    function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, me, runtimeFunction);
+    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    function.set(engine, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, me, runtimeFunction));
 
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(me);
@@ -247,12 +248,13 @@ QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
     Q_Q(QQmlExpression);
 
+    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(q->engine())->v4engine();
+
     if (!expressionFunctionValid) {
-        function = qmlBinding(context(), scopeObject(), expression, url, line, &qmlscope);
+        function.set(v4, qmlBinding(context(), scopeObject(), expression, url, line, &qmlscope));
         expressionFunctionValid = true;
     }
 
-    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(q->engine())->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue f(scope, function.value());
     return evaluate(context(), f, isUndefined);

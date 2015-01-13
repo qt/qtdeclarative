@@ -71,14 +71,16 @@ public:
     PersistentValue() : d(0) {}
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
-
-    PersistentValue(const ValueRef val);
-    PersistentValue(ReturnedValue val);
-    PersistentValue &operator=(const ValueRef other);
-    PersistentValue &operator=(const ScopedValue &other);
-    PersistentValue &operator =(ReturnedValue other);
-    PersistentValue &operator=(Heap::Base *obj);
+    PersistentValue &operator=(const WeakValue &other);
+    PersistentValue &operator=(Object *object);
     ~PersistentValue();
+
+    PersistentValue(ExecutionEngine *engine, const ValueRef val);
+    PersistentValue(ExecutionEngine *engine, ReturnedValue val);
+
+    void set(ExecutionEngine *engine, const ValueRef val);
+    void set(ExecutionEngine *engine, ReturnedValue val);
+    void set(ExecutionEngine *engine, Heap::Base *obj);
 
     ReturnedValue value() const {
         return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
@@ -89,7 +91,7 @@ public:
         return d->value.asManaged();
     }
 
-    ExecutionEngine *engine() {
+    ExecutionEngine *engine() const {
         if (!d)
             return 0;
         if (d->engine)
@@ -113,20 +115,19 @@ class Q_QML_EXPORT WeakValue
 {
 public:
     WeakValue() : d(0) {}
-    WeakValue(const ValueRef val);
     WeakValue(const WeakValue &other);
-    WeakValue(ReturnedValue val);
     WeakValue &operator=(const WeakValue &other);
-    WeakValue &operator=(const ValueRef other);
-    WeakValue &operator =(const ReturnedValue &other);
-
     ~WeakValue();
+
+    void set(ExecutionEngine *e, const ValueRef val);
+    void set(ExecutionEngine *e, ReturnedValue val);
+    void set(ExecutionEngine *e, Heap::Base *obj);
 
     ReturnedValue value() const {
         return (d ? d->value.asReturnedValue() : Primitive::undefinedValue().asReturnedValue());
     }
 
-    ExecutionEngine *engine() {
+    ExecutionEngine *engine() const {
         if (!d)
             return 0;
         if (d->engine)

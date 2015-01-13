@@ -89,7 +89,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::ValueRef &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_index(index),
-      m_v8function(function),
+      m_function(function->asObject()->engine(), function),
       m_target(target),
       m_extra(0)
 {
@@ -113,7 +113,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 
     QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
     QString error;
-    m_v8function = QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error);
+    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    m_function.set(engine, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
     if (!error.isEmpty()) {
         qmlInfo(scopeObject()) << error;
         setInvalidParameterName(true);
@@ -168,7 +169,7 @@ QString QQmlBoundSignalExpression::expression() const
     if (expressionFunctionValid()) {
         Q_ASSERT (context() && engine());
         QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedValue v(scope, m_v8function.value());
+        QV4::ScopedValue v(scope, m_function.value());
         return v->toQStringNoThrow();
     } else {
         Q_ASSERT(!m_extra.isNull());
@@ -181,7 +182,7 @@ QV4::Function *QQmlBoundSignalExpression::function() const
     if (expressionFunctionValid()) {
         Q_ASSERT (context() && engine());
         QV4::Scope scope(QQmlEnginePrivate::get(engine())->v4engine());
-        QV4::ScopedFunctionObject v(scope, m_v8function.value());
+        QV4::ScopedFunctionObject v(scope, m_function.value());
         return v ? v->function() : 0;
     }
     return 0;
@@ -236,10 +237,10 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             m_extra->m_handlerName.clear();
             m_extra->m_parameterString.clear();
 
-            m_v8function = evalFunction(context(), scopeObject(), expression,
-                                        m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_extra->m_v8qmlscope);
+            m_function.set(scope.engine, evalFunction(context(), scopeObject(), expression,
+                                                      m_extra->m_sourceLocation.sourceFile, m_extra->m_sourceLocation.line, &m_extra->m_v8qmlscope));
 
-            if (m_v8function.isNullOrUndefined()) {
+            if (m_function.isNullOrUndefined()) {
                 ep->dereferenceScarceResources();
                 return; // could not evaluate function.  Not valid.
             }
@@ -253,7 +254,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, dummy, 0);
         int argCount = argsTypes ? *argsTypes : 0;
 
-        QV4::ScopedValue f(scope, m_v8function.value());
+        QV4::ScopedValue f(scope, m_function.value());
         QV4::ScopedCallData callData(scope, argCount);
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];

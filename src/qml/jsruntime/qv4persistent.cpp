@@ -33,16 +33,17 @@
 
 #include "qv4persistent_p.h"
 #include "qv4mm_p.h"
+#include "qv4object_p.h"
 
 using namespace QV4;
 
-PersistentValue::PersistentValue(const ValueRef val)
-    : d(new PersistentValuePrivate(val.asReturnedValue()))
+PersistentValue::PersistentValue(ExecutionEngine *engine, const ValueRef val)
+    : d(new PersistentValuePrivate(val.asReturnedValue(), engine))
 {
 }
 
-PersistentValue::PersistentValue(ReturnedValue val)
-    : d(new PersistentValuePrivate(val))
+PersistentValue::PersistentValue(ExecutionEngine *engine, ReturnedValue val)
+    : d(new PersistentValuePrivate(val, engine))
 {
 }
 
@@ -51,6 +52,12 @@ PersistentValue::PersistentValue(const PersistentValue &other)
 {
     if (d)
         d->ref();
+}
+
+PersistentValue::~PersistentValue()
+{
+    if (d)
+        d->deref();
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)
@@ -69,45 +76,48 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
     return *this;
 }
 
-PersistentValue &PersistentValue::operator =(const ValueRef other)
+PersistentValue &PersistentValue::operator=(const WeakValue &other)
 {
-    if (!d) {
-        d = new PersistentValuePrivate(other.asReturnedValue());
-        return *this;
-    }
-    d = d->detach(other.asReturnedValue());
+    QV4::ExecutionEngine *engine = other.engine();
+    if (!d)
+        d = new PersistentValuePrivate(other.value(), engine);
+    else
+        d = d->detach(other.value());
     return *this;
 }
 
-PersistentValue &PersistentValue::operator =(ReturnedValue other)
+PersistentValue &PersistentValue::operator=(Object *object)
 {
-    if (!d) {
-        d = new PersistentValuePrivate(other);
-        return *this;
-    }
-    d = d->detach(other);
+    QV4::ExecutionEngine *engine = object->engine();
+    if (!d)
+        d = new PersistentValuePrivate(object->asReturnedValue(), engine);
+    else
+        d = d->detach(object->asReturnedValue());
     return *this;
 }
 
-PersistentValue &PersistentValue::operator=(Heap::Base *obj)
+void PersistentValue::set(ExecutionEngine *engine, const ValueRef val)
 {
-    if (!d) {
-        d = new PersistentValuePrivate(Value::fromHeapObject(obj).asReturnedValue());
-        return *this;
-    }
-    d = d->detach(Value::fromHeapObject(obj).asReturnedValue());
-    return *this;
+    if (!d)
+        d = new PersistentValuePrivate(val.asReturnedValue(), engine);
+    else
+        d = d->detach(val.asReturnedValue());
 }
 
-PersistentValue::~PersistentValue()
+void PersistentValue::set(ExecutionEngine *engine, ReturnedValue val)
 {
-    if (d)
-        d->deref();
+    if (!d)
+        d = new PersistentValuePrivate(val, engine);
+    else
+        d = d->detach(val);
 }
 
-WeakValue::WeakValue(const ValueRef val)
-    : d(new PersistentValuePrivate(val.asReturnedValue(), /*engine*/0, /*weak*/true))
+void PersistentValue::set(ExecutionEngine *engine, Heap::Base *obj)
 {
+    if (!d)
+        d = new PersistentValuePrivate(obj->asReturnedValue(), engine);
+    else
+        d = d->detach(obj->asReturnedValue());
 }
 
 WeakValue::WeakValue(const WeakValue &other)
@@ -115,11 +125,6 @@ WeakValue::WeakValue(const WeakValue &other)
 {
     if (d)
         d->ref();
-}
-
-WeakValue::WeakValue(ReturnedValue val)
-    : d(new PersistentValuePrivate(val, /*engine*/0, /*weak*/true))
-{
 }
 
 WeakValue &WeakValue::operator=(const WeakValue &other)
@@ -138,31 +143,34 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
     return *this;
 }
 
-WeakValue &WeakValue::operator =(const ValueRef other)
-{
-    if (!d) {
-        d = new PersistentValuePrivate(other.asReturnedValue(), /*engine*/0, /*weak*/true);
-        return *this;
-    }
-    d = d->detach(other.asReturnedValue(), /*weak*/true);
-    return *this;
-}
-
-WeakValue &WeakValue::operator =(const ReturnedValue &other)
-{
-    if (!d) {
-        d = new PersistentValuePrivate(other, /*engine*/0, /*weak*/true);
-        return *this;
-    }
-    d = d->detach(other, /*weak*/true);
-    return *this;
-}
-
-
 WeakValue::~WeakValue()
 {
     if (d)
         d->deref();
+}
+
+void WeakValue::set(ExecutionEngine *e, const ValueRef val)
+{
+    if (!d)
+        d = new PersistentValuePrivate(val.asReturnedValue(), e, /*weak*/true);
+    else
+        d = d->detach(val.asReturnedValue(), /*weak*/true);
+}
+
+void WeakValue::set(ExecutionEngine *e, ReturnedValue val)
+{
+    if (!d)
+        d = new PersistentValuePrivate(val, e, /*weak*/true);
+    else
+        d = d->detach(val, /*weak*/true);
+}
+
+void WeakValue::set(ExecutionEngine *e, Heap::Base *obj)
+{
+    if (!d)
+        d = new PersistentValuePrivate(obj->asReturnedValue(), e, /*weak*/true);
+    else
+        d = d->detach(obj->asReturnedValue(), /*weak*/true);
 }
 
 void WeakValue::markOnce(ExecutionEngine *e)

@@ -308,7 +308,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
         return QV4::Encode::undefined();
     }
     if (qmlscope)
-        *qmlscope = qmlScopeObject;
+        qmlscope->set(v4, qmlScopeObject);
     return result.asReturnedValue();
 }
 
@@ -341,7 +341,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
         return QV4::Encode::undefined();
     }
     if (qmlscope)
-        *qmlscope = qmlScopeObject;
+        qmlscope->set(v4, qmlScopeObject);
     return result.asReturnedValue();
 }
 

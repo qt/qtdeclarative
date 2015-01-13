@@ -226,7 +226,7 @@ public:
             p->setSetter(s);
             proto->insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
         }
-        prototype = proto;
+        prototype.set(v4, proto);
     }
 
     // QAbstractDynamicMetaObject
@@ -963,7 +963,7 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)
     proto->defineAccessorProperty(QStringLiteral("index"), get_index, 0);
     proto->defineAccessorProperty(QStringLiteral("modelData"),
                                   QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
-    listItemProto = proto;
+    listItemProto.set(v4, proto);
 }
 
 QQmlAdaptorModelEngineData::~QQmlAdaptorModelEngineData()

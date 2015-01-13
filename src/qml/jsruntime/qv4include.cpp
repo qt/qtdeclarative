@@ -53,11 +53,11 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContex
                        const QV4::ValueRef qmlglobal, const QV4::ValueRef callback)
     : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = qmlglobal;
+    m_qmlglobal.set(engine, qmlglobal);
     if (callback->asFunctionObject())
-        m_callbackFunction = callback;
+        m_callbackFunction.set(engine, callback);
 
-    m_resultObject = resultValue(v4);
+    m_resultObject.set(v4, resultValue(v4));
 
     m_network = engine->v8Engine->networkAccessManager();
 

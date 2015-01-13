@@ -608,7 +608,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[data->runtimeFunctionIndex];
             o = QV4::FunctionObject::createScriptFunction(qmlBindingContext, runtimeFunction);
-            v8methods[index] = o;
+            v8methods[index].set(qmlBindingContext->engine(), o);
         }
     }
 }
@@ -1183,7 +1183,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, QV4::ValueRef function)
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;
-    v8methods[methodIndex] = function;
+    v8methods[methodIndex].set(function->asObject()->engine(), function);
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
@@ -1253,7 +1253,7 @@ void QQmlVMEMetaObject::allocateVarPropertiesArray()
     assert(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
     QV4::Scope scope(v4);
-    varProperties = QV4::ScopedValue(scope, v4->newArrayObject(metaData->varPropertyCount));
+    varProperties.set(scope.engine, v4->newArrayObject(metaData->varPropertyCount));
     varPropertiesInitialized = true;
 }
 

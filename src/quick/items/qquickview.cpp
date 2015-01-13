@@ -83,7 +83,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine.data());
         QV4::Scope scope(v4);
         QV4::Scoped<QV4::QQuickRootItemMarker> v(scope, QV4::QQuickRootItemMarker::create(engine.data(), q));
-        rootItemMarker = v;
+        rootItemMarker.set(v4, v);
     }
 
     if (QQmlDebugService::isDebuggingEnabled())

@@ -1414,7 +1414,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
     proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, 0);
     proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QV4::QmlIncubatorObject::method_forceCompletion);
 
-    incubationProto = proto;
+    incubationProto.set(v4, proto);
 }
 
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(QV4::CallContext *ctx)

@@ -222,7 +222,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
 
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedContext globalContext(scope, scope.engine->rootContext());
-    onmessage = QV4::Script(globalContext, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run(); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
+    onmessage.set(scope.engine, QV4::Script(globalContext, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run()); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     Q_ASSERT(!scope.engine->hasException);
     QV4::Script createsendscript(globalContext, QString::fromUtf8(SEND_MESSAGE_CREATE_SCRIPT)); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     QV4::ScopedFunctionObject createsendconstructor(scope, createsendscript.run());
@@ -233,7 +233,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
-    createsend = createsendconstructor->call(callData);
+    createsend.set(scope.engine, createsendconstructor->call(callData));
 }
 
 // Requires handle and context scope
@@ -300,7 +300,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
         QV4::Scope scope(v4);
 
-        script->object = QV4::QmlContextWrapper::urlScope(v4, script->source);
+        script->object.set(v4, QV4::QmlContextWrapper::urlScope(v4, script->source));
 
         QV4::Scoped<QV4::QmlContextWrapper> w(scope, script->object.value());
         Q_ASSERT(!!w);

@@ -1390,13 +1390,13 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::CallContext *ctx
        if (color.isValid()) {
            r->d()->context->state.fillStyle = color;
            r->d()->context->buffer()->setFillStyle(color);
-           r->d()->context->m_fillStyle = value;
+           r->d()->context->m_fillStyle.set(scope.engine, value);
        } else {
            QV4::Scoped<QQuickContext2DStyle> style(scope, value->as<QQuickContext2DStyle>());
            if (style && style->d()->brush != r->d()->context->state.fillStyle) {
                r->d()->context->state.fillStyle = style->d()->brush;
                r->d()->context->buffer()->setFillStyle(style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
-               r->d()->context->m_fillStyle = value;
+               r->d()->context->m_fillStyle.set(scope.engine, value);
                r->d()->context->state.fillPatternRepeatX = style->d()->patternRepeatX;
                r->d()->context->state.fillPatternRepeatY = style->d()->patternRepeatY;
            }
@@ -1406,7 +1406,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::CallContext *ctx
        if (color.isValid() && r->d()->context->state.fillStyle != QBrush(color)) {
             r->d()->context->state.fillStyle = QBrush(color);
             r->d()->context->buffer()->setFillStyle(r->d()->context->state.fillStyle);
-            r->d()->context->m_fillStyle = value;
+            r->d()->context->m_fillStyle.set(scope.engine, value);
        }
    }
    return QV4::Encode::undefined();
@@ -1499,13 +1499,13 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::CallContext *c
         if (color.isValid()) {
             r->d()->context->state.fillStyle = color;
             r->d()->context->buffer()->setStrokeStyle(color);
-            r->d()->context->m_strokeStyle = value;
+            r->d()->context->m_strokeStyle.set(scope.engine, value);
         } else {
             QV4::Scoped<QQuickContext2DStyle> style(scope, value->as<QQuickContext2DStyle>());
             if (style && style->d()->brush != r->d()->context->state.strokeStyle) {
                 r->d()->context->state.strokeStyle = style->d()->brush;
                 r->d()->context->buffer()->setStrokeStyle(style->d()->brush, style->d()->patternRepeatX, style->d()->patternRepeatY);
-                r->d()->context->m_strokeStyle = value;
+                r->d()->context->m_strokeStyle.set(scope.engine, value);
                 r->d()->context->state.strokePatternRepeatX = style->d()->patternRepeatX;
                 r->d()->context->state.strokePatternRepeatY = style->d()->patternRepeatY;
 
@@ -1516,7 +1516,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::CallContext *c
         if (color.isValid() && r->d()->context->state.strokeStyle != QBrush(color)) {
              r->d()->context->state.strokeStyle = QBrush(color);
              r->d()->context->buffer()->setStrokeStyle(r->d()->context->state.strokeStyle);
-             r->d()->context->m_strokeStyle = value;
+             r->d()->context->m_strokeStyle.set(scope.engine, value);
         }
     }
     return QV4::Encode::undefined();
@@ -2076,7 +2076,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_path(QV4::CallContext *ctx)
         QString path =value->toQStringNoThrow();
         QQuickSvgParser::parsePathDataFast(path, r->d()->context->m_path);
     }
-    r->d()->context->m_v4path = value;
+    r->d()->context->m_v4path.set(scope.engine, value);
     return QV4::Encode::undefined();
 }
 
