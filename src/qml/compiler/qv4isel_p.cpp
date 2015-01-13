@@ -182,7 +182,7 @@ void IRDecoder::visitMove(IR::Move *s)
             } else if (Subscript *ss = c->base->asSubscript()) {
                 callSubscript(ss->base, ss->index, c->args, s->target);
                 return;
-            } else if (c->base->asTemp() || c->base->asArgLocal()) {
+            } else if (c->base->asTemp() || c->base->asArgLocal() || c->base->asConst()) {
                 callValue(c->base, c->args, s->target);
                 return;
             }

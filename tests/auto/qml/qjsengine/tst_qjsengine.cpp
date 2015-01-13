@@ -3140,6 +3140,8 @@ void tst_QJSEngine::callConstants()
                     "  var one; one();\n"
                     "  var two = null; two();\n"
                     "}\n");
+    QJSValue exceptionResult = engine.evaluate("true()");
+    QCOMPARE(exceptionResult.toString(), QString("TypeError: true is not a function"));
 }
 
 void tst_QJSEngine::installTranslatorFunctions()

@@ -961,7 +961,7 @@ ReturnedValue Runtime::callElement(ExecutionContext *context, const ValueRef ind
 ReturnedValue Runtime::callValue(ExecutionContext *context, const ValueRef func, CallData *callData)
 {
     if (!func->isObject())
-        return context->throwTypeError();
+        return context->throwTypeError(QStringLiteral("%1 is not a function").arg(func->toQStringNoThrow()));
 
     return func->objectValue()->call(callData);
 }
