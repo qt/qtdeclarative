@@ -906,6 +906,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             if (qt_gl_global_share_context())
                 w->thread->gl->setShareContext(qt_gl_global_share_context());
             w->thread->gl->setFormat(w->window->requestedFormat());
+            w->thread->gl->setScreen(w->window->screen());
             if (!w->thread->gl->create()) {
                 const bool isEs = w->thread->gl->isOpenGLES();
                 delete w->thread->gl;
