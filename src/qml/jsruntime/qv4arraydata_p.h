@@ -74,9 +74,6 @@ struct ArrayVTable
 namespace Heap {
 
 struct ArrayData : public Base {
-    ArrayData(InternalClass *ic)
-        : Base(ic)
-    {}
     enum Type {
         Simple = 0,
         Complex = 1,
@@ -118,10 +115,6 @@ struct ArrayData : public Base {
 };
 
 struct SimpleArrayData : public ArrayData {
-    SimpleArrayData(ExecutionEngine *engine)
-        : ArrayData(engine->emptyClass)
-    {}
-
     uint mappedIndex(uint index) const { return (index + offset) % alloc; }
     Value data(uint index) const { return arrayData[mappedIndex(index)]; }
     Value &data(uint index) { return arrayData[mappedIndex(index)]; }
@@ -141,7 +134,6 @@ struct SimpleArrayData : public ArrayData {
 };
 
 struct SparseArrayData : public ArrayData {
-    inline SparseArrayData(ExecutionEngine *engine);
     inline ~SparseArrayData();
 
     uint mappedIndex(uint index) const {
@@ -272,10 +264,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 };
 
 namespace Heap {
-inline SparseArrayData::SparseArrayData(ExecutionEngine *engine)
-    : ArrayData(engine->emptyClass)
-{
-}
 
 inline SparseArrayData::~SparseArrayData()
 {

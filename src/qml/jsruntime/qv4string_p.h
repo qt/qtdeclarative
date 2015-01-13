@@ -53,8 +53,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         StringType_ArrayIndex
     };
 
-    String(ExecutionEngine *engine, const QString &text);
-    String(ExecutionEngine *engine, String *l, String *n);
+    String(const QString &text);
+    String(String *l, String *n);
     ~String() {
         if (!largestSubLength && !text->ref.deref())
             QStringData::deallocate(text);

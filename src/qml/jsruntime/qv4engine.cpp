@@ -525,7 +525,7 @@ Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Obje
 Heap::String *ExecutionEngine::newString(const QString &s)
 {
     Scope scope(this);
-    return ScopedString(scope, memoryManager->alloc<String>(this, s))->d();
+    return ScopedString(scope, memoryManager->alloc<String>(s))->d();
 }
 
 Heap::String *ExecutionEngine::newIdentifier(const QString &text)

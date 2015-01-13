@@ -43,8 +43,6 @@ namespace QV4 {
 namespace Heap {
 
 struct MemberData : Base {
-    MemberData(InternalClass *c)
-        : Base(c), size(0) {}
     union {
         uint size;
         double _dummy;

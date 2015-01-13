@@ -66,7 +66,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
                 break;
             }
             // duplicate arguments, need some trick to store them
-            arg = engine->memoryManager->alloc<String>(engine, arg->d(), engine->newString(QString(0xfffe)));
+            arg = engine->memoryManager->alloc<String>(arg->d(), engine->newString(QString(0xfffe)));
         }
     }
 

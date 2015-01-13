@@ -45,7 +45,7 @@ namespace Heap {
 
 struct Object : Base {
     Object(ExecutionEngine *engine)
-        : Base(engine->emptyClass),
+        : internalClass(engine->emptyClass),
           prototype(static_cast<Object *>(engine->objectPrototype.m))
     {
     }
@@ -54,6 +54,7 @@ struct Object : Base {
     const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData->data + index); }
     Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData->data + index); }
 
+    InternalClass *internalClass;
     Heap::Object *prototype;
     MemberData *memberData;
     ArrayData *arrayData;
@@ -68,6 +69,9 @@ struct Q_QML_EXPORT Object: Managed {
     enum {
         IsObject = true
     };
+
+    InternalClass *internalClass() const { return d()->internalClass; }
+    void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
     Heap::MemberData *memberData() { return d()->memberData; }
     const Heap::MemberData *memberData() const { return d()->memberData; }

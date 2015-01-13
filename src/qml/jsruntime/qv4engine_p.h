@@ -358,8 +358,7 @@ inline Heap::ExecutionContext *ExecutionEngine::popContext()
 
 inline
 Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : Heap::Base(engine->emptyClass)
-    , type(t)
+    : type(t)
     , strictMode(false)
     , engine(engine)
     , parent(engine->currentContext())

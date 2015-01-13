@@ -173,7 +173,7 @@ ReturnedValue FunctionObject::newInstance()
 
 ReturnedValue FunctionObject::construct(Managed *that, CallData *)
 {
-    that->internalClass()->engine->throwTypeError();
+    static_cast<FunctionObject *>(that)->internalClass()->engine->throwTypeError();
     return Encode::undefined();
 }
 
@@ -516,7 +516,7 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
 
 ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->internalClass()->engine;
+    ExecutionEngine *v4 = static_cast<SimpleScriptFunction *>(that)->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
@@ -570,7 +570,7 @@ Heap::BuiltinFunction::BuiltinFunction(QV4::ExecutionContext *scope, QV4::String
 
 ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
 {
-    return f->internalClass()->engine->throwTypeError();
+    return static_cast<BuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
 }
 
 ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)

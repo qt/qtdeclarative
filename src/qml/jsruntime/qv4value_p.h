@@ -47,19 +47,10 @@ typedef uint Bool;
 namespace Heap {
 
 struct Q_QML_EXPORT Base {
-    Base() {}
-    Base(InternalClass *internal)
-        : internalClass(internal)
-    {
-//        Q_ASSERT(vtable && inUse() && !isMarked());
-        // ####
-    //            Q_ASSERT(internal && internal->vtable);
-    }
     union {
         const ManagedVTable *vtable;
         quintptr mm_data;
     };
-    InternalClass *internalClass;
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);

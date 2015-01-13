@@ -231,7 +231,7 @@ public:
 
     template <typename T>
     T *as() {
-        Q_ASSERT(internalClass());
+        Q_ASSERT(d()->vtable);
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
 #endif
@@ -245,7 +245,7 @@ public:
     }
     template <typename T>
     const T *as() const {
-        Q_ASSERT(internalClass());
+        Q_ASSERT(d()->vtable);
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
 #endif
@@ -282,9 +282,6 @@ public:
     static bool isEqualTo(Managed *m, Managed *other);
 
     ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
-
-    InternalClass *internalClass() const { return d()->internalClass; }
-    void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
 
     bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->isMarked(); }

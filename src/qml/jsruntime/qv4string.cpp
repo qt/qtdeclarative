@@ -117,8 +117,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
 }
 
 
-Heap::String::String(ExecutionEngine *engine, const QString &t)
-    : Heap::Base(engine->emptyClass)
+Heap::String::String(const QString &t)
 {
     subtype = String::StringType_Unknown;
 
@@ -130,8 +129,7 @@ Heap::String::String(ExecutionEngine *engine, const QString &t)
     len = text->size;
 }
 
-Heap::String::String(ExecutionEngine *engine, String *l, String *r)
-    : Heap::Base(engine->emptyClass)
+Heap::String::String(String *l, String *r)
 {
     subtype = String::StringType_Unknown;
 

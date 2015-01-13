@@ -51,7 +51,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(Object);
 
 Heap::Object::Object(InternalClass *internalClass, QV4::Object *prototype)
-    : Heap::Base(internalClass),
+    : internalClass(internalClass),
       prototype(prototype ? prototype->d() : 0)
 {
     if (internalClass->size) {
