@@ -1596,6 +1596,11 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
     QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
     hoverEvent.setAccepted(accepted);
 
+    QSet<QQuickItem *> hasFiltered;
+    if (sendFilteredMouseEvent(item->parentItem(), item, &hoverEvent, &hasFiltered)) {
+        return true;
+    }
+
     q->sendEvent(item, &hoverEvent);
 
     return hoverEvent.isAccepted();

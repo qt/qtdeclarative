@@ -365,6 +365,7 @@ private slots:
 
     void testRenderJob();
 
+    void testHoverChildMouseEventFilter();
 private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
@@ -2044,6 +2045,113 @@ void tst_qquickwindow::testRenderJob()
     }
     QCOMPARE(completedJobs.size(), 0);
     QCOMPARE(RenderJob::deleted, 5);
+}
+
+class EventCounter : public QQuickRectangle
+{
+    Q_OBJECT
+public:
+    EventCounter(QQuickItem *parent = 0)
+        : QQuickRectangle(parent)
+    { }
+
+    void addFilterEvent(QEvent::Type type)
+    {
+        m_returnTrueForType.append(type);
+    }
+
+    int childMouseEventFilterEventCount(QEvent::Type type)
+    {
+        return m_childMouseEventFilterEventCount.value(type, 0);
+    }
+
+    int eventCount(QEvent::Type type)
+    {
+        return m_eventCount.value(type, 0);
+    }
+
+    void reset()
+    {
+        m_eventCount.clear();
+        m_childMouseEventFilterEventCount.clear();
+    }
+protected:
+    bool childMouseEventFilter(QQuickItem *, QEvent *event) Q_DECL_OVERRIDE
+    {
+        m_childMouseEventFilterEventCount[event->type()]++;
+        return m_returnTrueForType.contains(event->type());
+    }
+
+    bool event(QEvent *event) Q_DECL_OVERRIDE
+    {
+        m_eventCount[event->type()]++;
+        return QQuickRectangle::event(event);
+    }
+
+
+private:
+    QList<QEvent::Type> m_returnTrueForType;
+    QMap<QEvent::Type, int> m_childMouseEventFilterEventCount;
+    QMap<QEvent::Type, int> m_eventCount;
+};
+
+void tst_qquickwindow::testHoverChildMouseEventFilter()
+{
+    QQuickWindow window;
+
+    window.resize(250, 250);
+    window.setPosition(100, 100);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    EventCounter *bottomItem = new EventCounter(window.contentItem());
+    bottomItem->setObjectName("Bottom Item");
+    bottomItem->setSize(QSizeF(150, 150));
+    bottomItem->setAcceptHoverEvents(true);
+
+    EventCounter *middleItem = new EventCounter(bottomItem);
+    middleItem->setObjectName("Middle Item");
+    middleItem->setPosition(QPointF(50, 50));
+    middleItem->setSize(QSizeF(150, 150));
+    middleItem->setAcceptHoverEvents(true);
+
+    EventCounter *topItem = new EventCounter(middleItem);
+    topItem->setObjectName("Top Item");
+    topItem->setPosition(QPointF(50, 50));
+    topItem->setSize(QSizeF(150, 150));
+    topItem->setAcceptHoverEvents(true);
+
+    QPoint pos(10, 10);
+
+    QTest::mouseMove(&window, pos);
+
+    QTRY_VERIFY(bottomItem->eventCount(QEvent::HoverEnter) > 0);
+    QVERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverEnter) == 0);
+    QVERIFY(middleItem->eventCount(QEvent::HoverEnter) == 0);
+    QVERIFY(topItem->eventCount(QEvent::HoverEnter) == 0);
+    bottomItem->reset();
+
+    pos = QPoint(60, 60);
+    QTest::mouseMove(&window, pos);
+    QTRY_VERIFY(middleItem->eventCount(QEvent::HoverEnter) > 0);
+    QVERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverEnter) == 0);
+    middleItem->reset();
+
+    pos = QPoint(70,70);
+    bottomItem->setFiltersChildMouseEvents(true);
+    QTest::mouseMove(&window, pos);
+    QTRY_VERIFY(middleItem->eventCount(QEvent::HoverMove) > 0);
+    QVERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverMove) > 0);
+    QVERIFY(topItem->eventCount(QEvent::HoverEnter) == 0);
+    bottomItem->reset();
+    middleItem->reset();
+
+    pos = QPoint(110,110);
+    bottomItem->addFilterEvent(QEvent::HoverEnter);
+    QTest::mouseMove(&window, pos);
+    QTRY_VERIFY(bottomItem->childMouseEventFilterEventCount(QEvent::HoverEnter) > 0);
+    QVERIFY(topItem->eventCount(QEvent::HoverEnter) == 0);
+    QVERIFY(middleItem->eventCount(QEvent::HoverEnter) == 0);
 }
 
 QTEST_MAIN(tst_qquickwindow)
