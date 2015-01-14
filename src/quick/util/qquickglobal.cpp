@@ -926,7 +926,9 @@ public:
 #ifndef QT_NO_IM
     QInputMethod *inputMethod()
     {
-        return qGuiApp->inputMethod();
+        QInputMethod *im = qGuiApp->inputMethod();
+        QQmlEngine::setObjectOwnership(im, QQmlEngine::CppOwnership);
+        return im;
     }
 #endif
 

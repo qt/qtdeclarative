@@ -1268,7 +1268,6 @@ ReturnedValue QtObject::method_get_application(CallContext *ctx)
 ReturnedValue QtObject::method_get_inputMethod(CallContext *ctx)
 {
     QObject *o = QQml_guiProvider()->inputMethod();
-    QQmlEngine::setObjectOwnership(o, QQmlEngine::CppOwnership);
     return QV4::QObjectWrapper::wrap(ctx->d()->engine, o);
 }
 #endif

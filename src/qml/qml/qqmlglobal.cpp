@@ -33,6 +33,7 @@
 
 #include <private/qqmlglobal_p.h>
 
+#include <QtQml/qqmlengine.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
@@ -358,6 +359,7 @@ QObject *QQmlGuiProvider::inputMethod()
     // We don't have any input method code by default
     QObject *o = new QObject();
     o->setObjectName(QString::fromLatin1("No inputMethod available"));
+    QQmlEngine::setObjectOwnership(o, QQmlEngine::JavaScriptOwnership);
     return o;
 }
 #endif
