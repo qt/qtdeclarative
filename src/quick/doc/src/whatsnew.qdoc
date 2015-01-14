@@ -193,7 +193,7 @@ relative to its start.
 \endlist
 
 
-\section2 Text
+\section2 Text Rendering and Input
 
 \list
 \li Changes common to \l Text, TextEdit and TextInput:
