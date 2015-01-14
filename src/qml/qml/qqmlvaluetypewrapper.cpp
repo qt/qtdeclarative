@@ -263,17 +263,25 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
         if (!ref->readReferenceValue())
             return Encode::undefined();
 
-    QString result = QString::fromUtf8(QMetaType::typeName(w->d()->metaType));
-    result += QLatin1Char('(');
-    const QMetaObject *mo = w->d()->propertyCache->metaObject();
-    const int propCount = mo->propertyCount();
-    for (int i = 0; i < propCount; ++i) {
-        QVariant value = mo->property(i).readOnGadget(w->d()->gadget());
-        result += value.toString();
-        if (i < propCount - 1)
-            result += QStringLiteral(", ");
+    QString result;
+    // Prepare a buffer to pass to QMetaType::convert()
+    QString convertResult;
+    convertResult.~QString();
+    if (QMetaType::convert(w->d()->gadgetPtr, w->d()->metaType, &convertResult, QMetaType::QString)) {
+        result = convertResult;
+    } else {
+        result = QString::fromUtf8(QMetaType::typeName(w->d()->metaType));
+        result += QLatin1Char('(');
+        const QMetaObject *mo = w->d()->propertyCache->metaObject();
+        const int propCount = mo->propertyCount();
+        for (int i = 0; i < propCount; ++i) {
+            QVariant value = mo->property(i).readOnGadget(w->d()->gadget());
+            result += value.toString();
+            if (i < propCount - 1)
+                result += QStringLiteral(", ");
+        }
+        result += QLatin1Char(')');
     }
-    result += QLatin1Char(')');
     return Encode(ctx->engine()->newString(result));
 }
 

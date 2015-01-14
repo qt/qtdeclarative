@@ -91,6 +91,7 @@ private slots:
     void customValueType();
     void customValueTypeInQml();
     void gadgetInheritance();
+    void toStringConversion();
 
 private:
     QQmlEngine engine;
@@ -1558,6 +1559,35 @@ void tst_qqmlvaluetypes::gadgetInheritance()
     method.call(QJSValueList() << QJSValue(42));
     QCOMPARE(value.property("baseProperty").toInt(), 42);
 }
+
+struct StringLessGadget {
+    Q_GADGET
+};
+
+Q_DECLARE_METATYPE(StringLessGadget)
+
+static QString StringLessGadget_to_QString(const StringLessGadget &)
+{
+    return QLatin1String("Surprise!");
+}
+
+void tst_qqmlvaluetypes::toStringConversion()
+{
+    QJSEngine engine;
+
+    StringLessGadget g;
+    QJSValue value = engine.toScriptValue(g);
+
+    QJSValue method = value.property("toString");
+    QJSValue stringConversion = method.callWithInstance(value);
+    QCOMPARE(stringConversion.toString(), QString("StringLessGadget()"));
+
+    QMetaType::registerConverter<StringLessGadget, QString>(StringLessGadget_to_QString);
+
+    stringConversion = method.callWithInstance(value);
+    QCOMPARE(stringConversion.toString(), StringLessGadget_to_QString(g));
+}
+
 
 QTEST_MAIN(tst_qqmlvaluetypes)
 
