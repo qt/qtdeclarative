@@ -246,6 +246,11 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     return renderControl->grab();
 }
 
+QObject *QQuickWidgetPrivate::focusObject()
+{
+    return offscreenWindow ? offscreenWindow->focusObject() : 0;
+}
+
 /*!
     \module QtQuickWidgets
     \title Qt Quick Widgets C++ Classes
@@ -1086,6 +1091,9 @@ bool QQuickWidget::event(QEvent *e)
         e->accept();
         return true;
 #endif
+    case QEvent::InputMethod:
+    case QEvent::InputMethodQuery:
+
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:

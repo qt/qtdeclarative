@@ -113,7 +113,7 @@ void tst_qquickpixmapcache::initTestCase()
     // This avoids a race condition/deadlock bug in network config
     // manager when it is accessed by the HTTP server thread before
     // anything else. Bug report can be found at:
-    // https://bugreports.qt-project.org/browse/QTBUG-26355
+    // QTBUG-26355
     QNetworkConfigurationManager cm;
     cm.updateConfigurations();
 

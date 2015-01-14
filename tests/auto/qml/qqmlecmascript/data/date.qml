@@ -17,4 +17,10 @@ Item {
         var dt = new Date("");
         return isNaN(dt);
     }
+
+    function test_rfc2822_date()
+    {
+        var dt = new Date("Wed, 18 Sep 2013 07:00:51 -0700");
+        return dt.getTime();
+    }
 }

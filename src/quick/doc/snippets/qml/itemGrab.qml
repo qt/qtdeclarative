@@ -70,7 +70,7 @@ Image {
 
     // ...
     source.grabToImage(function(result) {
-                           result.save("something.png");
+                           result.saveToFile("something.png");
                        });
 //! [grab-to-file]
 

@@ -294,6 +294,52 @@ This is useful when deriving from base classes provided by other authors,
 e.g. when extending classes from the Qt Quick module.
 
 
+\section2 Registering Extension Objects
+
+When integrating existing classes and technology into QML, APIs will
+often need tweaking to fit better into the declarative environment.
+Although the best results are usually obtained by modifying the original
+classes directly, if this is either not possible or is complicated by some
+other concerns, extension objects allow limited extension possibilities
+without direct modifications.
+
+\e{Extension objects} add additional properties to an existing type. Extension
+objects can only add properties, not signals or methods. An extended type
+definition allows the programmer to supply an additional type, known as the
+\e{extension type}, when registering the class. The properties are transparently
+merged with the original target class when used from within QML. For example:
+
+\snippet referenceexamples/extended/example.qml 0
+
+The \c leftMargin property is a new property added to an existing C++ type, \l
+QLineEdit, without modifying its source code.
+
+The \l qmlRegisterExtendedType() function is for registering extended types.
+Note that it has two forms.
+
+\code
+template<typename T, typename ExtendedT>
+int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+
+template<typename T, typename ExtendedT>
+int qmlRegisterExtendedType()
+\endcode
+
+This functions should be used instead of the regular \c qmlRegisterType()
+variations. The arguments are identical to the corresponding non-extension
+registration functions, except for the ExtendedT parameter which is the type of
+the extension object.
+
+An extension class is a regular QObject, with a constructor that takes a QObject
+pointer. However, the extension class creation is delayed until the first
+extended property is accessed. The extension class is created and the target
+object is passed in as the parent. When the property on the original is
+accessed, the corresponding property on the extension object is used instead.
+
+The \l{Extending QML - Extension Objects Example}{Extension Objects Example}
+demonstrates a usage of extension objects.
+
+
 \section1 Defining QML-Specific Types and Attributes
 
 

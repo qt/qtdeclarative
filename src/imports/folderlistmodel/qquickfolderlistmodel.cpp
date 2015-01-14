@@ -541,7 +541,7 @@ void QQuickFolderListModel::componentComplete()
     \list
     \li Unsorted - no sorting is applied.
     \li Name - sort by filename
-    \li LastModified - sort by time modified
+    \li Time - sort by time modified
     \li Size - sort by file size
     \li Type - sort by file type (extension)
     \endlist

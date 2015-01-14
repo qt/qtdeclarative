@@ -87,7 +87,13 @@ Q_SIGNALS:
     void mySignal();
 
 public Q_SLOTS:
-    inline void mySlot() { mySignal(); }
+    inline void mySlot()
+    {
+        Q_UNUSED(signals);
+        Q_UNUSED(slots);
+
+        mySignal();
+    }
 
 private:
     int signals;

@@ -175,6 +175,7 @@ private slots:
     void privateMethods();
 
     void engineForObject();
+    void intConversion_QTBUG43309();
 
 signals:
     void testSignal();
@@ -3637,6 +3638,16 @@ void tst_QJSEngine::engineForObject()
         QCOMPARE(qjsEngine(&object), wrapper.engine());
     }
     QVERIFY(!qjsEngine(&object));
+}
+
+void tst_QJSEngine::intConversion_QTBUG43309()
+{
+    // This failed in the interpreter:
+    QJSEngine engine;
+    QString jsCode = "var n = 0.1; var m = (n*255) | 0; m";
+    QJSValue result = engine.evaluate( jsCode );
+    QVERIFY(result.isNumber());
+    QCOMPARE(result.toNumber(), 25.0);
 }
 
 QTEST_MAIN(tst_QJSEngine)
