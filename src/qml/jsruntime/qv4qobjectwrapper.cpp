@@ -194,7 +194,7 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
     } else if (property.propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         ReadFunction(object, property, &v, notifier);
-        return QJSValuePrivate::get(v)->getValue(v4);
+        return QJSValuePrivate::convertedToValue(v4, v);
     } else if (property.isQVariant()) {
         QVariant v;
         ReadFunction(object, property, &v, notifier);
@@ -1680,7 +1680,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
     QV4::Scope scope(engine);
 
     if (type == qMetaTypeId<QJSValue>()) {
-        return QJSValuePrivate::get(*qjsValuePtr)->getValue(scope.engine);
+        return QJSValuePrivate::convertedToValue(scope.engine, *qjsValuePtr);
     } else if (type == QMetaType::Int) {
         return QV4::Encode(int(intValue));
     } else if (type == QMetaType::UInt) {

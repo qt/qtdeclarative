@@ -45,13 +45,12 @@ QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
     , currentIndex(UINT_MAX)
     , nextIndex(UINT_MAX)
 {
-    QJSValuePrivate *jsp = QJSValuePrivate::get(value);
-    QV4::ExecutionEngine *e = jsp->persistent.engine();
+    QV4::ExecutionEngine *e = QJSValuePrivate::engine(&v);
     if (!e)
         return;
 
     QV4::Scope scope(e);
-    QV4::ScopedObject o(scope, jsp->persistent.value());
+    QV4::ScopedObject o(scope, QJSValuePrivate::getValue(&v));
     iterator.set(e, e->newForEachIteratorObject(o));
 
     currentName = (QV4::String *)0;
@@ -123,7 +122,7 @@ QJSValueIterator::~QJSValueIterator()
 */
 bool QJSValueIterator::hasNext() const
 {
-    QV4::Value *val = QJSValuePrivate::get(d_ptr->value)->persistent.valueRef();
+    QV4::Value *val = QJSValuePrivate::getValue(&d_ptr->value);
     if (!val || !val->isObject())
         return false;
     return !!d_ptr->nextName || d_ptr->nextIndex != UINT_MAX;
@@ -139,7 +138,7 @@ bool QJSValueIterator::hasNext() const
 */
 bool QJSValueIterator::next()
 {
-    QV4::Value *val = QJSValuePrivate::get(d_ptr->value)->persistent.valueRef();
+    QV4::Value *val = QJSValuePrivate::getValue(&d_ptr->value);
     if (!val || !val->isObject())
         return false;
     d_ptr->currentName = d_ptr->nextName;
@@ -166,7 +165,7 @@ bool QJSValueIterator::next()
 */
 QString QJSValueIterator::name() const
 {
-    QV4::Value *val = QJSValuePrivate::get(d_ptr->value)->persistent.valueRef();
+    QV4::Value *val = QJSValuePrivate::getValue(&d_ptr->value);
     if (!val || !val->isObject())
         return QString();
     if (!!d_ptr->currentName)
@@ -189,7 +188,7 @@ QJSValue QJSValueIterator::value() const
     if (!engine)
         return QJSValue();
     QV4::Scope scope(engine);
-    QV4::ScopedObject obj(scope, QJSValuePrivate::get(d_ptr->value)->persistent.value());
+    QV4::ScopedObject obj(scope, QJSValuePrivate::getValue(&d_ptr->value));
     if (!obj)
         return QJSValue();
 
@@ -223,9 +222,8 @@ QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
         return *this;
     }
 
-    QJSValuePrivate *jsp = QJSValuePrivate::get(object);
     QV4::Scope scope(v4);
-    QV4::ScopedObject o(scope, jsp->persistent.value());
+    QV4::ScopedObject o(scope, QJSValuePrivate::getValue(&object));
     d_ptr->iterator.set(v4, v4->newForEachIteratorObject(o));
     QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it.flags =  QV4::ObjectIterator::NoFlags;

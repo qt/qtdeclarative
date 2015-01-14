@@ -102,20 +102,18 @@ static void saveJSValue(QDataStream &stream, const void *data)
 static void restoreJSValue(QDataStream &stream, void *data)
 {
     QJSValue *jsv = reinterpret_cast<QJSValue*>(data);
-    QJSValuePrivate *d = QJSValuePrivate::get(*jsv);
 
     quint32 isNullOrUndefined;
     stream >> isNullOrUndefined;
 
-    // ### Optimize for the common case where we have an valid persistent
-    d->persistent.clear();
-
     if (isNullOrUndefined & 0x1) {
-        d->unboundData = QVariant(QMetaType::VoidStar, (void *)0);
+        *jsv = QJSValue(QJSValue::NullValue);
     } else if (isNullOrUndefined & 0x2) {
-        d->unboundData = QVariant();
+        *jsv = QJSValue();
     } else {
-        d->unboundData.load(stream);
+        QVariant v;
+        v.load(stream);
+        QJSValuePrivate::setVariant(jsv, v);
     }
 }
 

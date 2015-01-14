@@ -49,7 +49,6 @@ struct QMetaObject;
 class QDateTime;
 
 typedef QList<QJSValue> QJSValueList;
-class QJSValuePrivate;
 namespace QV4 {
     struct ExecutionEngine;
     struct Value;
@@ -140,7 +139,7 @@ private:
     // force compile error, prevent QJSValue(bool) to be called
     QJSValue(void *) Q_DECL_EQ_DELETE;
 
-    QJSValuePrivate *d;
+    mutable quintptr d;
 };
 
 QT_END_NAMESPACE

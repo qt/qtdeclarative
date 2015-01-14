@@ -416,7 +416,7 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String
 
     if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
         return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
-    return QJSValuePrivate::get(siinfo->scriptApi(e))->getValue(engine());
+    return QJSValuePrivate::convertedToValue(engine(), siinfo->scriptApi(e));
 }
 
 DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);

@@ -57,64 +57,117 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
-  \internal
-  \class QJSValuePrivate
-*/
-class Q_QML_PRIVATE_EXPORT QJSValuePrivate
+class QJSValuePrivate
 {
 public:
-    QJSValuePrivate()
-        : refcount(1)
-    {}
-    QJSValuePrivate(QV4::ExecutionEngine *e, const QV4::ValueRef v)
-        : refcount(1),
-          persistent(e, v)
+    static inline QV4::Value *getValue(const QJSValue *jsval)
     {
-        Q_ASSERT(!v->isEmpty());
+        if (jsval->d & 3)
+            return 0;
+        return reinterpret_cast<QV4::Value *>(jsval->d);
     }
-    QJSValuePrivate(QV4::ExecutionEngine *e, QV4::ReturnedValue v)
-        : refcount(1),
-          persistent(e, v)
+
+    static inline QVariant *getVariant(const QJSValue *jsval)
     {
+        if (jsval->d & 1)
+            return reinterpret_cast<QVariant *>(jsval->d & ~3);
+        return 0;
     }
-    explicit QJSValuePrivate(const QVariant &v)
-        : refcount(1),
-          unboundData(v)
+
+    static inline void setVariant(QJSValue *jsval, const QVariant &v) {
+        QVariant *val = new QVariant(v);
+        jsval->d = reinterpret_cast<quintptr>(val) | 1;
+    }
+
+    static inline void setValue(QJSValue *jsval, QV4::ExecutionEngine *engine, QV4::ValueRef v) {
+        QV4::Value *value = engine->memoryManager->m_persistentValues->allocate();
+        *value = v;
+        jsval->d = reinterpret_cast<quintptr>(value);
+    }
+
+    static inline void setValue(QJSValue *jsval, QV4::ExecutionEngine *engine, QV4::ReturnedValue v) {
+        QV4::Value *value = engine->memoryManager->m_persistentValues->allocate();
+        *value = v;
+        jsval->d = reinterpret_cast<quintptr>(value);
+    }
+
+    static QV4::ReturnedValue convertedToValue(QV4::ExecutionEngine *e, const QJSValue &jsval)
     {
+        QV4::Value *v = getValue(&jsval);
+        if (!v) {
+            QVariant *variant = getVariant(&jsval);
+            v = e->memoryManager->m_persistentValues->allocate();
+            *v = variant ? e->fromVariant(*variant) : QV4::Encode::undefined();
+            jsval.d = reinterpret_cast<quintptr>(v);
+            delete variant;
+        }
+
+        if (QV4::PersistentValueStorage::getEngine(v) != e) {
+            qWarning("JSValue can't be reassigned to another engine.");
+            return QV4::Encode::undefined();
+        }
+
+        return v->asReturnedValue();
     }
 
-    bool checkEngine(QV4::ExecutionEngine *e) {
-        if (persistent.isEmpty())
-            getValue(e);
-        return persistent.engine() == e;
-    }
-
-    QV4::ReturnedValue getValue(QV4::ExecutionEngine *e);
-
-    static QJSValuePrivate *get(const QJSValue &v) { return v.d; }
-    QV4::ExecutionEngine *engine() const { return persistent.engine(); }
-
-    void ref() { ++refcount; }
-    void deref() {
-        if (!--refcount)
-            delete this;
-    }
-
-    QV4::Value *valueForData(QV4::Value *scratch) const {
-        QV4::Value *v = persistent.valueRef();
+    static QV4::Value *valueForData(const QJSValue *jsval, QV4::Value *scratch)
+    {
+        QV4::Value *v = getValue(jsval);
         if (v)
             return v;
-        *scratch = primitiveValueForUnboundData();
-        return (scratch->isEmpty() ? 0 : scratch);
-    }
-    QV4::Value primitiveValueForUnboundData() const;
+        v = scratch;
+        QVariant *variant = getVariant(jsval);
+        if (!variant) {
+            *v = QV4::Encode::undefined();
+            return v;
+        }
 
-    int refcount;
-    QV4::PersistentValue persistent;
-    QVariant unboundData;
-private:
-    QJSValuePrivate(QV4::ReturnedValue v) Q_DECL_EQ_DELETE;
+        switch (variant->userType()) {
+        case QMetaType::UnknownType:
+        case QMetaType::Void:
+            *v = QV4::Encode::undefined();
+            break;
+        case QMetaType::VoidStar:
+            *v = QV4::Encode::null();
+            break;
+        case QMetaType::Bool:
+            *v = QV4::Encode(variant->toBool());
+            break;
+        case QMetaType::Double:
+            *v = QV4::Encode(variant->toDouble());
+            break;
+        case QMetaType::Int:
+        case QMetaType::Short:
+        case QMetaType::UShort:
+        case QMetaType::Char:
+        case QMetaType::UChar:
+            *v = QV4::Encode(variant->toInt());
+            break;
+        case QMetaType::UInt:
+            *v = QV4::Encode(variant->toUInt());
+            break;
+        default:
+            return 0;
+        }
+        return v;
+    }
+
+    static QV4::ExecutionEngine *engine(const QJSValue *jsval) {
+        QV4::Value *v = getValue(jsval);
+        return v ? QV4::PersistentValueStorage::getEngine(v) : 0;
+    }
+
+    static inline bool checkEngine(QV4::ExecutionEngine *e, const QJSValue &jsval) {
+        QV4::ExecutionEngine *v4 = engine(&jsval);
+        return !v4 || v4 == e;
+    }
+
+    static inline void free(QJSValue *jsval) {
+        if (QV4::Value *v = QJSValuePrivate::getValue(jsval))
+            QV4::PersistentValueStorage::free(v);
+        else if (QVariant *v = QJSValuePrivate::getVariant(jsval))
+            delete v;
+    }
 };
 
 QT_END_NAMESPACE

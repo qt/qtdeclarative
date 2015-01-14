@@ -1433,8 +1433,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             }
         } else if (type == qMetaTypeId<QJSValue>()) {
             const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
-            QJSValuePrivate *valuep = QJSValuePrivate::get(*value);
-            return valuep->getValue(this);
+            return QJSValuePrivate::convertedToValue(this, *value);
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
@@ -1586,7 +1585,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
         return QV4::JsonObject::fromJsonArray(this, *reinterpret_cast<const QJsonArray *>(data));
     default:
         if (type == qMetaTypeId<QJSValue>()) {
-            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->getValue(this);
+            return QJSValuePrivate::convertedToValue(this, *reinterpret_cast<const QJSValue*>(data));
         } else {
             QByteArray typeName = QMetaType::typeName(type);
             if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {

@@ -250,12 +250,18 @@ void QJSEngine::collectGarbage()
 */
 void QJSEngine::installTranslatorFunctions(const QJSValue &object)
 {
-    QV4::ExecutionEngine *v4 = d->m_v4Engine;
-    QV4::Scope scope(v4);
-    QJSValuePrivate *vp = QJSValuePrivate::get(object);
-    QV4::ScopedObject obj(scope, vp->getValue(v4));
+    QV4::ExecutionEngine *otherEngine = QJSValuePrivate::engine(&object);
+    if (otherEngine && otherEngine != d->m_v4Engine) {
+        qWarning("QJSEngine: Trying to install a translator function from a different engine");
+        return;
+    }
+    QV4::Scope scope(d->m_v4Engine);
+    QV4::ScopedObject obj(scope);
+    QV4::Value *val = QJSValuePrivate::getValue(&object);
+    if (val)
+        obj = val;
     if (!obj)
-        obj = v4->globalObject();
+        obj = scope.engine->globalObject();
 #ifndef QT_NO_TRANSLATION
     obj->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
     obj->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
@@ -265,7 +271,7 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
     obj->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
 
     // string prototype extension
-    v4->stringPrototype.asObject()->defineDefaultProperty(QStringLiteral("arg"),
+    scope.engine->stringPrototype.asObject()->defineDefaultProperty(QStringLiteral("arg"),
                                                           QV4::GlobalExtensions::method_string_arg);
 #endif
 }
@@ -420,21 +426,21 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 */
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
-    QJSValuePrivate *vp = QJSValuePrivate::get(value);
-    QV4::ExecutionEngine *v4 = vp->engine();
+    QV4::ExecutionEngine *v4 = QJSValuePrivate::engine(&value);
     QV4::Value scratch;
-    QV4::Value *val = vp->valueForData(&scratch);
+    QV4::Value *val = QJSValuePrivate::valueForData(&value, &scratch);
     if (v4) {
         QV4::Scope scope(v4);
         QV4::ScopedValue v(scope, *val);
         return scope.engine->metaTypeFromJS(v, type, ptr);
     }
 
-    Q_ASSERT(vp->persistent.isEmpty());
-
     if (!val) {
-        if (vp->unboundData.userType() == QMetaType::QString) {
-            QString string = vp->unboundData.toString();
+        QVariant *variant = QJSValuePrivate::getVariant(&value);
+        Q_ASSERT(variant);
+
+        if (variant->userType() == QMetaType::QString) {
+            QString string = variant->toString();
             // have a string based value without engine. Do conversion manually
             if (type == QMetaType::Bool) {
                 *reinterpret_cast<bool*>(ptr) = string.length() != 0;
@@ -483,7 +489,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
                 return false;
             }
         } else {
-            return QMetaType::convert(&vp->unboundData.data_ptr(), vp->unboundData.userType(), ptr, type);
+            return QMetaType::convert(&variant->data_ptr(), variant->userType(), ptr, type);
         }
     }
 

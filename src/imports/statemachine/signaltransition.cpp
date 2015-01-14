@@ -95,7 +95,7 @@ void SignalTransition::setSignal(const QJSValue &signal)
     QV4::ExecutionEngine *jsEngine = QV8Engine::getV4(QQmlEngine::contextForObject(this)->engine());
     QV4::Scope scope(jsEngine);
 
-    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::get(m_signal)->getValue(jsEngine));
+    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
     Q_ASSERT(qobjectSignal);
 
     QObject *sender = qobjectSignal->object();
