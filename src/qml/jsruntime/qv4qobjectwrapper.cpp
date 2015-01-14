@@ -510,7 +510,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
     } else if (value->isUndefined() && property->propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (!newBinding && property->propType == qMetaTypeId<QJSValue>()) {
-        PROPERTY_STORE(QJSValue, new QJSValuePrivate(ctx->d()->engine, value));
+        PROPERTY_STORE(QJSValue, QJSValue(ctx->d()->engine, value.asReturnedValue()));
     } else if (value->isUndefined() && property->propType != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
         if (!QMetaType::typeName(property->propType))
@@ -1573,7 +1573,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
 
     bool queryEngine = false;
     if (callType == qMetaTypeId<QJSValue>()) {
-        qjsValuePtr = new (&allocData) QJSValue(new QJSValuePrivate(scope.engine, value));
+        qjsValuePtr = new (&allocData) QJSValue(scope.engine, value.asReturnedValue());
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
         intValue = quint32(value->toInt32());

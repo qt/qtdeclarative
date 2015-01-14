@@ -41,7 +41,6 @@
 
 QT_BEGIN_NAMESPACE
 
-
 class QJSValue;
 class QJSEngine;
 class QVariant;
@@ -51,6 +50,10 @@ class QDateTime;
 
 typedef QList<QJSValue> QJSValueList;
 class QJSValuePrivate;
+namespace QV4 {
+    struct ExecutionEngine;
+    struct Value;
+}
 
 class Q_QML_EXPORT QJSValue
 {
@@ -64,6 +67,12 @@ public:
     QJSValue(SpecialValue value = UndefinedValue);
     ~QJSValue();
     QJSValue(const QJSValue &other);
+
+#ifdef Q_COMPILER_RVALUE_REFS
+    inline QJSValue(QJSValue && other) : d(other.d) { other.d = 0; }
+    inline QJSValue &operator=(QJSValue &&other)
+    { qSwap(d, other.d); return *this; }
+#endif
 
     QJSValue(bool value);
     QJSValue(int value);
@@ -125,7 +134,7 @@ public:
     QT_DEPRECATED QJSEngine *engine() const;
 #endif
 
-    QJSValue(QJSValuePrivate *dd);
+    QJSValue(QV4::ExecutionEngine *e, quint64 val);
 private:
     friend class QJSValuePrivate;
     // force compile error, prevent QJSValue(bool) to be called

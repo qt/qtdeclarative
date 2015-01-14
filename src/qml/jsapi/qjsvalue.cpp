@@ -172,8 +172,11 @@ QJSValue::QJSValue(bool value)
 {
 }
 
-QJSValue::QJSValue(QJSValuePrivate *dd)
-    : d(dd)
+/*!
+  \internal
+*/
+QJSValue::QJSValue(ExecutionEngine *e, quint64 val)
+    : d(new QJSValuePrivate(e, val))
 {
 }
 
@@ -255,7 +258,8 @@ QJSValue::QJSValue(const QJSValue& other)
 */
 QJSValue::~QJSValue()
 {
-    d->deref();
+    if (d)
+        d->deref();
 }
 
 /*!
@@ -642,7 +646,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     if (engine->hasException)
         result = engine->catchException();
 
-    return new QJSValuePrivate(engine, result);
+    return QJSValue(engine, result.asReturnedValue());
 }
 
 /*!
@@ -697,7 +701,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     if (engine->hasException)
         result = engine->catchException();
 
-    return new QJSValuePrivate(engine, result);
+    return QJSValue(engine, result.asReturnedValue());
 }
 
 /*!
@@ -744,7 +748,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     if (engine->hasException)
         result = engine->catchException();
 
-    return new QJSValuePrivate(engine, result);
+    return QJSValue(engine, result.asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED
@@ -785,7 +789,7 @@ QJSValue QJSValue::prototype() const
     ScopedObject p(scope, o->prototype());
     if (!p)
         return QJSValue(NullValue);
-    return new QJSValuePrivate(o->internalClass()->engine, p);
+    return QJSValue(o->internalClass()->engine, p.asReturnedValue());
 }
 
 /*!
@@ -979,7 +983,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (engine->hasException)
         result = engine->catchException();
 
-    return new QJSValuePrivate(engine, result);
+    return QJSValue(engine, result.asReturnedValue());
 }
 
 /*!
@@ -1008,7 +1012,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex));
     if (engine->hasException)
         engine->catchException();
-    return new QJSValuePrivate(engine, result);
+    return QJSValue(engine, result.asReturnedValue());
 }
 
 /*!

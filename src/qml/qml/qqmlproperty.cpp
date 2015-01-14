@@ -1550,7 +1550,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
             return false;
         }
         writeValueProperty(object, core, QVariant::fromValue(
-                               QJSValue(new QJSValuePrivate(QV8Engine::getV4(v8engine), result))),
+                               QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
                            context, flags);
     } else if (isUndefined) {
         QString errorStr = QLatin1String("Unable to assign [undefined] to ");

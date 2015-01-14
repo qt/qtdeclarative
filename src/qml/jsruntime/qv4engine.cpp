@@ -1183,7 +1183,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, in
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 
     if (typeHint == qMetaTypeId<QJSValue>())
-        return QVariant::fromValue(QJSValue(new QJSValuePrivate(e, value)));
+        return QVariant::fromValue(QJSValue(e, value.asReturnedValue()));
 
     if (value->asObject()) {
         QV4::ScopedObject object(scope, value);
@@ -1255,7 +1255,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::ValueRef value, in
         return re->toQRegExp();
 
     if (createJSValueForObjects)
-        return QVariant::fromValue(QJSValue(new QJSValuePrivate(scope.engine, o->asReturnedValue())));
+        return QVariant::fromValue(QJSValue(scope.engine, o->asReturnedValue()));
 
     return objectToVariant(e, o, visitedObjects);
 }
@@ -1799,7 +1799,7 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::ValueRef value, int type, void *
         *reinterpret_cast<void* *>(data) = 0;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
-        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(this, value));
+        *reinterpret_cast<QJSValue*>(data) = QJSValue(this, value.asReturnedValue());
         return true;
     }
 

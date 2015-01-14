@@ -201,7 +201,7 @@ QJSValue QJSValueIterator::value() const
         engine->catchException();
         return QJSValue();
     }
-    return new QJSValuePrivate(engine, v);
+    return QJSValue(engine, v.asReturnedValue());
 }
 
 
