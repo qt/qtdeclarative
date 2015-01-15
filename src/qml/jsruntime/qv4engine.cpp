@@ -547,10 +547,10 @@ Heap::Object *ExecutionEngine::newNumberObject(const Value &value)
     return object->d();
 }
 
-Heap::Object *ExecutionEngine::newBooleanObject(const Value &value)
+Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 {
     Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, value));
+    ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, b));
     return object->d();
 }
 

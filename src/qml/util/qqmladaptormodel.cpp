@@ -58,7 +58,7 @@ V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
 static QV4::ReturnedValue get_index(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
     if (!o)
         return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
@@ -190,7 +190,7 @@ public:
     static QV4::ReturnedValue get_hasModelChildren(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
         if (!o)
             return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
@@ -338,7 +338,7 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
 QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
     if (!o)
         return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
@@ -358,20 +358,20 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(QV4::CallContext *ctx, ui
 QV4::ReturnedValue QQmlDMCachedModelData::set_property(QV4::CallContext *ctx, uint propertyId)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+    QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
     if (!o)
         return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-    if (!ctx->d()->callData->argc)
+    if (!ctx->argc())
         return ctx->engine()->throwTypeError();
 
     if (o->d()->item->index == -1) {
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
         if (!modelData->cachedData.isEmpty()) {
             if (modelData->cachedData.count() > 1) {
-                modelData->cachedData[propertyId] = scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[propertyId] = scope.engine->toVariant(ctx->args()[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), propertyId, 0);
             } else if (modelData->cachedData.count() == 1) {
-                modelData->cachedData[0] = scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid);
+                modelData->cachedData[0] = scope.engine->toVariant(ctx->args()[0], QVariant::Invalid);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 0, 0);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 1, 0);
             }
@@ -580,7 +580,7 @@ public:
     static QV4::ReturnedValue get_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
         if (!o)
             return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
@@ -590,13 +590,13 @@ public:
     static QV4::ReturnedValue set_modelData(QV4::CallContext *ctx)
     {
         QV4::Scope scope(ctx);
-        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->d()->callData->thisObject.as<QQmlDelegateModelItemObject>());
+        QV4::Scoped<QQmlDelegateModelItemObject> o(scope, ctx->thisObject().as<QQmlDelegateModelItemObject>());
         if (!o)
             return ctx->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-        if (!ctx->d()->callData->argc)
+        if (!ctx->argc())
             return ctx->engine()->throwTypeError();
 
-        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->toVariant(ctx->d()->callData->args[0], QVariant::Invalid));
+        static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(scope.engine->toVariant(ctx->args()[0], QVariant::Invalid));
         return QV4::Encode::undefined();
     }
 

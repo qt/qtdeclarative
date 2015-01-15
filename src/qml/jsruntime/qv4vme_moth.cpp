@@ -627,7 +627,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadThis)
-        VALUE(instr.result) = context->d()->callData->thisObject;
+        VALUE(instr.result) = context->thisObject();
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(LoadQmlIdArray)

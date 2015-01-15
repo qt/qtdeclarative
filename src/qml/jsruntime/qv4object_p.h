@@ -220,7 +220,7 @@ public:
     bool arrayPut(uint index, const Value &value) {
         return arrayData()->vtable()->put(this, index, value);
     }
-    bool arrayPut(uint index, Value *values, uint n) {
+    bool arrayPut(uint index, const Value *values, uint n) {
         return arrayData()->vtable()->putArray(this, index, values, n);
     }
     void setArrayAttributes(uint i, PropertyAttributes a) {
@@ -333,17 +333,17 @@ namespace Heap {
 
 struct BooleanObject : Object {
     BooleanObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype)
+        : Object(ic, prototype),
+          b(false)
     {
-        value = Encode((bool)false);
     }
 
-    BooleanObject(ExecutionEngine *engine, const Value &val)
-        : Object(engine->emptyClass, engine->booleanPrototype.asObject())
+    BooleanObject(ExecutionEngine *engine, bool b)
+        : Object(engine->emptyClass, engine->booleanPrototype.asObject()),
+          b(b)
     {
-        value = val;
     }
-    Value value;
+    bool b;
 };
 
 struct NumberObject : Object {
@@ -383,7 +383,7 @@ struct BooleanObject: Object {
     V4_OBJECT2(BooleanObject, Object)
     Q_MANAGED_TYPE(BooleanObject)
 
-    Value value() const { return d()->value; }
+    bool value() const { return d()->b; }
 
 };
 

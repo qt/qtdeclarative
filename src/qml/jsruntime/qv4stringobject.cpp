@@ -220,7 +220,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 static QString getThisString(ExecutionContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue t(scope, ctx->d()->callData->thisObject);
+    ScopedValue t(scope, ctx->thisObject());
     if (t->isString())
         return t->stringValue()->toQString();
     if (StringObject *thisString = t->asStringObject())
@@ -234,10 +234,10 @@ static QString getThisString(ExecutionContext *ctx)
 
 ReturnedValue StringPrototype::method_toString(CallContext *context)
 {
-    if (context->d()->callData->thisObject.isString())
-        return context->d()->callData->thisObject.asReturnedValue();
+    if (context->thisObject().isString())
+        return context->thisObject().asReturnedValue();
 
-    StringObject *o = context->d()->callData->thisObject.asStringObject();
+    StringObject *o = context->thisObject().asStringObject();
     if (!o)
         return context->engine()->throwTypeError();
     return o->d()->value.asReturnedValue();
@@ -250,8 +250,8 @@ ReturnedValue StringPrototype::method_charAt(CallContext *context)
         return Encode::undefined();
 
     int pos = 0;
-    if (context->d()->callData->argc > 0)
-        pos = (int) context->d()->callData->args[0].toInteger();
+    if (context->argc() > 0)
+        pos = (int) context->args()[0].toInteger();
 
     QString result;
     if (pos >= 0 && pos < str.length())
@@ -267,8 +267,8 @@ ReturnedValue StringPrototype::method_charCodeAt(CallContext *context)
         return Encode::undefined();
 
     int pos = 0;
-    if (context->d()->callData->argc > 0)
-        pos = (int) context->d()->callData->args[0].toInteger();
+    if (context->argc() > 0)
+        pos = (int) context->args()[0].toInteger();
 
 
     if (pos >= 0 && pos < str.length())
@@ -286,8 +286,8 @@ ReturnedValue StringPrototype::method_concat(CallContext *context)
         return Encode::undefined();
 
     ScopedValue v(scope);
-    for (int i = 0; i < context->d()->callData->argc; ++i) {
-        v = RuntimeHelpers::toString(scope.engine, context->d()->callData->args[i]);
+    for (int i = 0; i < context->argc(); ++i) {
+        v = RuntimeHelpers::toString(scope.engine, context->args()[i]);
         if (scope.hasException())
             return Encode::undefined();
         Q_ASSERT(v->isString());
@@ -304,12 +304,12 @@ ReturnedValue StringPrototype::method_indexOf(CallContext *context)
         return Encode::undefined();
 
     QString searchString;
-    if (context->d()->callData->argc)
-        searchString = context->d()->callData->args[0].toQString();
+    if (context->argc())
+        searchString = context->args()[0].toQString();
 
     int pos = 0;
-    if (context->d()->callData->argc > 1)
-        pos = (int) context->d()->callData->args[1].toInteger();
+    if (context->argc() > 1)
+        pos = (int) context->args()[1].toInteger();
 
     int index = -1;
     if (! value.isEmpty())
@@ -327,8 +327,8 @@ ReturnedValue StringPrototype::method_lastIndexOf(CallContext *context)
         return Encode::undefined();
 
     QString searchString;
-    if (context->d()->callData->argc)
-        searchString = context->d()->callData->args[0].toQString();
+    if (context->argc())
+        searchString = context->args()[0].toQString();
 
     ScopedValue posArg(scope, context->argument(1));
     double position = RuntimeHelpers::toNumber(posArg);
@@ -353,20 +353,20 @@ ReturnedValue StringPrototype::method_localeCompare(CallContext *context)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    ScopedValue v(scope, context->d()->callData->argument(0));
+    ScopedValue v(scope, context->argument(0));
     const QString that = v->toQString();
     return Encode(QString::localeAwareCompare(value, that));
 }
 
 ReturnedValue StringPrototype::method_match(CallContext *context)
 {
-    if (context->d()->callData->thisObject.isUndefined() || context->d()->callData->thisObject.isNull())
+    if (context->thisObject().isUndefined() || context->thisObject().isNull())
         return context->engine()->throwTypeError();
 
     Scope scope(context);
-    ScopedString s(scope, context->d()->callData->thisObject.toString(scope.engine));
+    ScopedString s(scope, context->thisObject().toString(scope.engine));
 
-    ScopedValue regexp(scope, context->d()->callData->argument(0));
+    ScopedValue regexp(scope, context->argument(0));
     Scoped<RegExpObject> rx(scope, regexp);
     if (!rx) {
         ScopedCallData callData(scope, 1);
@@ -473,10 +473,10 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
 {
     Scope scope(ctx);
     QString string;
-    if (StringObject *thisString = ctx->d()->callData->thisObject.asStringObject())
+    if (StringObject *thisString = ctx->thisObject().asStringObject())
         string = thisString->d()->value.stringValue()->toQString();
     else
-        string = ctx->d()->callData->thisObject.toQString();
+        string = ctx->thisObject().toQString();
 
     int numCaptures = 0;
     int numStringMatches = 0;
@@ -618,9 +618,9 @@ ReturnedValue StringPrototype::method_slice(CallContext *ctx)
 
     const double length = text.length();
 
-    double start = ctx->d()->callData->argc ? ctx->d()->callData->args[0].toInteger() : 0;
-    double end = (ctx->d()->callData->argc < 2 || ctx->d()->callData->args[1].isUndefined())
-            ? length : ctx->d()->callData->args[1].toInteger();
+    double start = ctx->argc() ? ctx->args()[0].toInteger() : 0;
+    double end = (ctx->argc() < 2 || ctx->args()[1].isUndefined())
+            ? length : ctx->args()[1].toInteger();
 
     if (start < 0)
         start = qMax(length + start, 0.);
@@ -728,12 +728,12 @@ ReturnedValue StringPrototype::method_substr(CallContext *context)
         return Encode::undefined();
 
     double start = 0;
-    if (context->d()->callData->argc > 0)
-        start = context->d()->callData->args[0].toInteger();
+    if (context->argc() > 0)
+        start = context->args()[0].toInteger();
 
     double length = +qInf();
-    if (context->d()->callData->argc > 1)
-        length = context->d()->callData->args[1].toInteger();
+    if (context->argc() > 1)
+        length = context->args()[1].toInteger();
 
     double count = value.length();
     if (start < 0)
@@ -756,8 +756,8 @@ ReturnedValue StringPrototype::method_substring(CallContext *context)
     double start = 0;
     double end = length;
 
-    if (context->d()->callData->argc > 0)
-        start = context->d()->callData->args[0].toInteger();
+    if (context->argc() > 0)
+        start = context->args()[0].toInteger();
 
     Scope scope(context);
     ScopedValue endValue(scope, context->argument(1));
@@ -815,10 +815,10 @@ ReturnedValue StringPrototype::method_toLocaleUpperCase(CallContext *ctx)
 
 ReturnedValue StringPrototype::method_fromCharCode(CallContext *context)
 {
-    QString str(context->d()->callData->argc, Qt::Uninitialized);
+    QString str(context->argc(), Qt::Uninitialized);
     QChar *ch = str.data();
-    for (int i = 0; i < context->d()->callData->argc; ++i) {
-        *ch = QChar(context->d()->callData->args[i].toUInt16());
+    for (int i = 0; i < context->argc(); ++i) {
+        *ch = QChar(context->args()[i].toUInt16());
         ++ch;
     }
     return context->d()->engine->newString(str)->asReturnedValue();

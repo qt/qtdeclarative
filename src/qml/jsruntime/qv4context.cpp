@@ -246,7 +246,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 bool CallContext::needsOwnArguments() const
 {
-    return d()->function->needsActivation() || d()->callData->argc < static_cast<int>(d()->function->formalParameterCount());
+    return d()->function->needsActivation() || argc() < static_cast<int>(d()->function->formalParameterCount());
 }
 
 void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
@@ -346,7 +346,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     name->makeIdentifier(scope.engine);
 
     if (name->equals(d()->engine->id_this))
-        return d()->callData->thisObject.asReturnedValue();
+        return thisObject().asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;
@@ -413,7 +413,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
     name->makeIdentifier(scope.engine);
 
     if (name->equals(d()->engine->id_this))
-        return d()->callData->thisObject.asReturnedValue();
+        return thisObject().asReturnedValue();
 
     bool hasWith = false;
     bool hasCatchScope = false;

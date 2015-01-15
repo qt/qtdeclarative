@@ -153,7 +153,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
     if (!O)
         return context->engine()->throwTypeError();
 
-    ScopedArrayObject array(scope, getOwnPropertyNames(context->d()->engine, context->d()->callData->args[0]));
+    ScopedArrayObject array(scope, getOwnPropertyNames(context->d()->engine, context->args()[0]));
     return array.asReturnedValue();
 }
 
@@ -167,7 +167,7 @@ ReturnedValue ObjectPrototype::method_create(CallContext *ctx)
     ScopedObject newObject(scope, ctx->d()->engine->newObject());
     newObject->setPrototype(O->asObject());
 
-    if (ctx->d()->callData->argc > 1 && !ctx->d()->callData->args[1].isUndefined()) {
+    if (ctx->argc() > 1 && !ctx->args()[1].isUndefined()) {
         ctx->d()->callData->args[0] = newObject.asReturnedValue();
         return method_defineProperties(ctx);
     }
@@ -385,12 +385,12 @@ ReturnedValue ObjectPrototype::method_keys(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
-    if (ctx->d()->callData->thisObject.isUndefined()) {
+    if (ctx->thisObject().isUndefined()) {
         return ctx->d()->engine->newString(QStringLiteral("[object Undefined]"))->asReturnedValue();
-    } else if (ctx->d()->callData->thisObject.isNull()) {
+    } else if (ctx->thisObject().isNull()) {
         return ctx->d()->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
     } else {
-        ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ctx->d()->callData->thisObject));
+        ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ctx->thisObject()));
         QString className = obj->className();
         return ctx->d()->engine->newString(QString::fromLatin1("[object %1]").arg(className))->asReturnedValue();
     }
@@ -399,7 +399,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedObject o(scope, ctx->thisObject().toObject(scope.engine));
     if (!o)
         return Encode::undefined();
     ScopedFunctionObject f(scope, o->get(ctx->d()->engine->id_toString));
@@ -413,7 +413,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedValue v(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
+    ScopedValue v(scope, ctx->thisObject().toObject(scope.engine));
     if (ctx->d()->engine->hasException)
         return Encode::undefined();
     return v->asReturnedValue();
@@ -425,7 +425,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)
     ScopedString P(scope, ctx->argument(0), ScopedString::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
-    ScopedObject O(scope, ctx->d()->callData->thisObject, ScopedObject::Convert);
+    ScopedObject O(scope, ctx->thisObject(), ScopedObject::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
     bool r = O->hasOwnProperty(P);
@@ -441,7 +441,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(CallContext *ctx)
     if (!V)
         return Encode(false);
 
-    ScopedObject O(scope, ctx->d()->callData->thisObject, ScopedObject::Convert);
+    ScopedObject O(scope, ctx->thisObject(), ScopedObject::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
     ScopedObject proto(scope, V->prototype());
@@ -460,7 +460,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    ScopedObject o(scope, ctx->d()->callData->thisObject, ScopedObject::Convert);
+    ScopedObject o(scope, ctx->thisObject(), ScopedObject::Convert);
     if (scope.engine->hasException)
         return Encode::undefined();
     PropertyAttributes attrs;
@@ -470,7 +470,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
 
 ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
 {
-    if (ctx->d()->callData->argc < 2)
+    if (ctx->argc() < 2)
         return ctx->engine()->throwTypeError();
 
     Scope scope(ctx);
@@ -482,9 +482,9 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    ScopedObject o(scope, ctx->d()->callData->thisObject);
+    ScopedObject o(scope, ctx->thisObject());
     if (!o) {
-        if (!ctx->d()->callData->thisObject.isUndefined())
+        if (!ctx->thisObject().isUndefined())
             return Encode::undefined();
         o = ctx->d()->engine->globalObject();
     }
@@ -498,7 +498,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
 
 ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
 {
-    if (ctx->d()->callData->argc < 2)
+    if (ctx->argc() < 2)
         return ctx->engine()->throwTypeError();
 
     Scope scope(ctx);
@@ -510,9 +510,9 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    ScopedObject o(scope, ctx->d()->callData->thisObject);
+    ScopedObject o(scope, ctx->thisObject());
     if (!o) {
-        if (!ctx->d()->callData->thisObject.isUndefined())
+        if (!ctx->thisObject().isUndefined())
             return Encode::undefined();
         o = ctx->d()->engine->globalObject();
     }
@@ -527,7 +527,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_get_proto(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->d()->callData->thisObject.asObject());
+    ScopedObject o(scope, ctx->thisObject().asObject());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -537,16 +537,16 @@ ReturnedValue ObjectPrototype::method_get_proto(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->d()->callData->thisObject);
-    if (!o || !ctx->d()->callData->argc)
+    ScopedObject o(scope, ctx->thisObject());
+    if (!o || !ctx->argc())
         return ctx->engine()->throwTypeError();
 
-    if (ctx->d()->callData->args[0].isNull()) {
+    if (ctx->args()[0].isNull()) {
         o->setPrototype(0);
         return Encode::undefined();
     }
 
-    ScopedObject p(scope, ctx->d()->callData->args[0]);
+    ScopedObject p(scope, ctx->args()[0]);
     bool ok = false;
     if (!!p) {
         if (o->prototype() == p->d()) {

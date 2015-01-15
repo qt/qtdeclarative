@@ -47,8 +47,7 @@ ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(static_cast<BooleanCtor *>(m)->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
-    ScopedValue b(scope, QV4::Primitive::fromBoolean(n));
-    return Encode(scope.engine->newBooleanObject(b));
+    return Encode(scope.engine->newBooleanObject(n));
 }
 
 ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
@@ -71,14 +70,13 @@ void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
 {
     bool result;
-    if (ctx->d()->callData->thisObject.isBoolean()) {
-        result = ctx->d()->callData->thisObject.booleanValue();
+    if (ctx->thisObject().isBoolean()) {
+        result = ctx->thisObject().booleanValue();
     } else {
-        Scope scope(ctx);
-        Scoped<BooleanObject> thisObject(scope, ctx->d()->callData->thisObject);
+        BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
         if (!thisObject)
             return ctx->engine()->throwTypeError();
-        result = thisObject->value().booleanValue();
+        result = thisObject->value();
     }
 
     return Encode(ctx->d()->engine->newString(QLatin1String(result ? "true" : "false")));
@@ -86,13 +84,12 @@ ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
 
 ReturnedValue BooleanPrototype::method_valueOf(CallContext *ctx)
 {
-    if (ctx->d()->callData->thisObject.isBoolean())
-        return ctx->d()->callData->thisObject.asReturnedValue();
+    if (ctx->thisObject().isBoolean())
+        return ctx->thisObject().asReturnedValue();
 
-    Scope scope(ctx);
-    Scoped<BooleanObject> thisObject(scope, ctx->d()->callData->thisObject);
+    BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
     if (!thisObject)
         return ctx->engine()->throwTypeError();
 
-    return thisObject->value().asReturnedValue();
+    return Encode(thisObject->value());
 }

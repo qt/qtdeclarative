@@ -52,7 +52,7 @@ Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
 
 ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<NumberCtor *>(m)->engine());
+    Scope scope(m->cast<NumberCtor>()->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
     ScopedValue d(scope, QV4::Primitive::fromDouble(dbl));
     return Encode(scope.engine->newNumberObject(d));
@@ -96,9 +96,9 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
 {
-    if (ctx->d()->callData->thisObject.isNumber())
-        return ctx->d()->callData->thisObject.asReturnedValue();
-    NumberObject *n = ctx->d()->callData->thisObject.asNumberObject();
+    if (ctx->thisObject().isNumber())
+        return ctx->thisObject().asReturnedValue();
+    NumberObject *n = ctx->thisObject().asNumberObject();
     if (!n)
         return ctx->engine()->throwTypeError();
     return n->value().asReturnedValue();
@@ -106,9 +106,9 @@ inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
 
 inline double thisNumber(ExecutionContext *ctx)
 {
-    if (ctx->d()->callData->thisObject.isNumber())
-        return ctx->d()->callData->thisObject.asDouble();
-    NumberObject *n = ctx->d()->callData->thisObject.asNumberObject();
+    if (ctx->thisObject().isNumber())
+        return ctx->thisObject().asDouble();
+    NumberObject *n = ctx->thisObject().asNumberObject();
     if (!n)
         return ctx->engine()->throwTypeError();
     return n->value().asDouble();
@@ -121,8 +121,8 @@ ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    if (ctx->d()->callData->argc && !ctx->d()->callData->args[0].isUndefined()) {
-        int radix = ctx->d()->callData->args[0].toInt32();
+    if (ctx->argc() && !ctx->args()[0].isUndefined()) {
+        int radix = ctx->args()[0].toInt32();
         if (radix < 2 || radix > 36)
             return ctx->engine()->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
@@ -191,14 +191,14 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
 
     double fdigits = 0;
 
-    if (ctx->d()->callData->argc > 0)
-        fdigits = ctx->d()->callData->args[0].toInteger();
+    if (ctx->argc() > 0)
+        fdigits = ctx->args()[0].toInteger();
 
     if (std::isnan(fdigits))
         fdigits = 0;
 
     if (fdigits < 0 || fdigits > 20)
-        return ctx->engine()->throwRangeError(ctx->d()->callData->thisObject);
+        return ctx->engine()->throwRangeError(ctx->thisObject());
 
     QString str;
     if (std::isnan(v))
@@ -221,8 +221,8 @@ ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
 
     int fdigits = -1;
 
-    if (ctx->d()->callData->argc && !ctx->d()->callData->args[0].isUndefined()) {
-        fdigits = ctx->d()->callData->args[0].toInt32();
+    if (ctx->argc() && !ctx->args()[0].isUndefined()) {
+        fdigits = ctx->args()[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
             return ctx->engine()->throwRangeError(error);
@@ -244,10 +244,10 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    if (!ctx->d()->callData->argc || ctx->d()->callData->args[0].isUndefined())
+    if (!ctx->argc() || ctx->args()[0].isUndefined())
         return RuntimeHelpers::toString(scope.engine, v);
 
-    double precision = ctx->d()->callData->args[0].toInt32();
+    double precision = ctx->args()[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
         return ctx->engine()->throwRangeError(error);

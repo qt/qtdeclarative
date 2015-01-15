@@ -1420,7 +1420,7 @@ QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->thisObject().as<QmlIncubatorObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -1430,7 +1430,7 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(QV4::CallContext *
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->thisObject().as<QmlIncubatorObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -1442,7 +1442,7 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(QV4::CallCont
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->thisObject().as<QmlIncubatorObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -1452,7 +1452,7 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(QV4::CallContext *
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->thisObject().as<QmlIncubatorObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -1462,12 +1462,12 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(QV4::CallCo
 QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(QV4::CallContext *ctx)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->d()->callData->thisObject.as<QmlIncubatorObject>());
-    if (!o || ctx->d()->callData->argc < 1)
+    QV4::Scoped<QmlIncubatorObject> o(scope, ctx->thisObject().as<QmlIncubatorObject>());
+    if (!o || ctx->argc() < 1)
         return ctx->engine()->throwTypeError();
 
 
-    o->d()->statusChanged = ctx->d()->callData->args[0];
+    o->d()->statusChanged = ctx->args()[0];
     return QV4::Encode::undefined();
 }
 

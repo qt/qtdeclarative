@@ -262,7 +262,7 @@ public:
 
     Heap::Object *newStringObject(const Value &value);
     Heap::Object *newNumberObject(const Value &value);
-    Heap::Object *newBooleanObject(const Value &value);
+    Heap::Object *newBooleanObject(bool b);
 
     Heap::ArrayObject *newArrayObject(int count = 0);
     Heap::ArrayObject *newArrayObject(const QStringList &list);

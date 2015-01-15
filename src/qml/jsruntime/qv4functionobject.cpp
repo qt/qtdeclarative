@@ -300,7 +300,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 {
-    FunctionObject *fun = ctx->d()->callData->thisObject.asFunctionObject();
+    FunctionObject *fun = ctx->thisObject().asFunctionObject();
     if (!fun)
         return ctx->engine()->throwTypeError();
 
@@ -310,7 +310,7 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedFunctionObject o(scope, ctx->d()->callData->thisObject.asFunctionObject());
+    ScopedFunctionObject o(scope, ctx->thisObject().asFunctionObject());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -352,14 +352,14 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedFunctionObject o(scope, ctx->d()->callData->thisObject.asFunctionObject());
+    ScopedFunctionObject o(scope, ctx->thisObject().asFunctionObject());
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    ScopedCallData callData(scope, ctx->d()->callData->argc ? ctx->d()->callData->argc - 1 : 0);
-    if (ctx->d()->callData->argc) {
-        for (int i = 1; i < ctx->d()->callData->argc; ++i)
-            callData->args[i - 1] = ctx->d()->callData->args[i];
+    ScopedCallData callData(scope, ctx->argc() ? ctx->argc() - 1 : 0);
+    if (ctx->argc()) {
+        for (int i = 1; i < ctx->argc(); ++i)
+            callData->args[i - 1] = ctx->args()[i];
     }
     callData->thisObject = ctx->argument(0);
     return o->call(callData);
@@ -368,16 +368,16 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedFunctionObject target(scope, ctx->d()->callData->thisObject);
+    ScopedFunctionObject target(scope, ctx->thisObject());
     if (!target)
         return ctx->engine()->throwTypeError();
 
     ScopedValue boundThis(scope, ctx->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
-    if (ctx->d()->callData->argc > 1) {
-        boundArgs = MemberData::reallocate(scope.engine, 0, ctx->d()->callData->argc - 1);
-        boundArgs->d()->size = ctx->d()->callData->argc - 1;
-        memcpy(boundArgs->data(), ctx->d()->callData->args + 1, (ctx->d()->callData->argc - 1)*sizeof(Value));
+    if (ctx->argc() > 1) {
+        boundArgs = MemberData::reallocate(scope.engine, 0, ctx->argc() - 1);
+        boundArgs->d()->size = ctx->argc() - 1;
+        memcpy(boundArgs->data(), ctx->args() + 1, (ctx->argc() - 1)*sizeof(Value));
     }
 
     ScopedContext global(scope, scope.engine->rootContext());

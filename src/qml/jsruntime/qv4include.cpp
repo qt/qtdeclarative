@@ -172,7 +172,7 @@ void QV4Include::finished()
 */
 QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
 {
-    if (!ctx->d()->callData->argc)
+    if (!ctx->argc())
         return QV4::Encode::undefined();
 
     QV4::Scope scope(ctx->engine());
@@ -181,11 +181,11 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");
 
-    QUrl url(scope.engine->resolvedUrl(ctx->d()->callData->args[0].toQStringNoThrow()));
+    QUrl url(scope.engine->resolvedUrl(ctx->args()[0].toQStringNoThrow()));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (ctx->d()->callData->argc >= 2 && ctx->d()->callData->args[1].asFunctionObject())
-        callbackFunction = ctx->d()->callData->args[1];
+    if (ctx->argc() >= 2 && ctx->args()[1].asFunctionObject())
+        callbackFunction = ctx->args()[1];
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 

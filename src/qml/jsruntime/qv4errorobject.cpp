@@ -148,7 +148,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const 
 ReturnedValue ErrorObject::method_get_stack(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<ErrorObject> This(scope, ctx->d()->callData->thisObject);
+    Scoped<ErrorObject> This(scope, ctx->thisObject());
     if (!This)
         return ctx->engine()->throwTypeError();
     if (!This->d()->stack) {
@@ -355,7 +355,7 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    Object *o = ctx->d()->callData->thisObject.asObject();
+    Object *o = ctx->thisObject().asObject();
     if (!o)
         return ctx->engine()->throwTypeError();
 

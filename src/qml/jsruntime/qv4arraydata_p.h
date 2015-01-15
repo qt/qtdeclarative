@@ -65,7 +65,7 @@ struct ArrayVTable
     bool (*putArray)(Object *o, uint index, const Value *values, uint n);
     bool (*del)(Object *o, uint index);
     void (*setAttribute)(Object *o, uint index, PropertyAttributes attrs);
-    void (*push_front)(Object *o, Value *values, uint n);
+    void (*push_front)(Object *o, const Value *values, uint n);
     ReturnedValue (*pop_front)(Object *o);
     uint (*truncate)(Object *o, uint newLen);
     uint (*length)(const Heap::ArrayData *d);
@@ -228,7 +228,7 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static bool putArray(Object *o, uint index, const Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
-    static void push_front(Object *o, Value *values, uint n);
+    static void push_front(Object *o, const Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const Heap::ArrayData *d);
@@ -257,7 +257,7 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static bool putArray(Object *o, uint index, const Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
-    static void push_front(Object *o, Value *values, uint n);
+    static void push_front(Object *o, const Value *values, uint n);
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const Heap::ArrayData *d);

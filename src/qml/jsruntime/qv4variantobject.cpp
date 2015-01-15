@@ -103,7 +103,7 @@ void VariantPrototype::init()
 QV4::ReturnedValue VariantPrototype::method_preserve(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
+    Scoped<VariantObject> o(scope, ctx->thisObject().as<QV4::VariantObject>());
     if (o && o->d()->isScarce())
         o->d()->node.remove();
     return Encode::undefined();
@@ -112,7 +112,7 @@ QV4::ReturnedValue VariantPrototype::method_preserve(CallContext *ctx)
 QV4::ReturnedValue VariantPrototype::method_destroy(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
+    Scoped<VariantObject> o(scope, ctx->thisObject().as<QV4::VariantObject>());
     if (o) {
         if (o->d()->isScarce())
             o->d()->node.remove();
@@ -124,7 +124,7 @@ QV4::ReturnedValue VariantPrototype::method_destroy(CallContext *ctx)
 QV4::ReturnedValue VariantPrototype::method_toString(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
+    Scoped<VariantObject> o(scope, ctx->thisObject().as<QV4::VariantObject>());
     if (!o)
         return Encode::undefined();
     QString result = o->d()->data.toString();
@@ -136,7 +136,7 @@ QV4::ReturnedValue VariantPrototype::method_toString(CallContext *ctx)
 QV4::ReturnedValue VariantPrototype::method_valueOf(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<VariantObject> o(scope, ctx->d()->callData->thisObject.as<QV4::VariantObject>());
+    Scoped<VariantObject> o(scope, ctx->thisObject().as<QV4::VariantObject>());
     if (o) {
         QVariant v = o->d()->data;
         switch (v.type()) {
@@ -157,7 +157,7 @@ QV4::ReturnedValue VariantPrototype::method_valueOf(CallContext *ctx)
             break;
         }
     }
-    return ctx->d()->callData->thisObject.asReturnedValue();
+    return ctx->thisObject().asReturnedValue();
 }
 
 QT_END_NAMESPACE

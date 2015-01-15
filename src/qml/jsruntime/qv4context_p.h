@@ -162,6 +162,19 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Heap::FunctionObject *getFunctionObject() const;
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
+
+    const Value &thisObject() const {
+        return d()->callData->thisObject;
+    }
+    int argc() const {
+        return d()->callData->argc;
+    }
+    const Value *args() const {
+        return d()->callData->args;
+    }
+    ReturnedValue argument(int i) const {
+        return d()->callData->argument(i);
+    }
 };
 
 struct CallContext : public ExecutionContext
@@ -179,7 +192,7 @@ struct CallContext : public ExecutionContext
 };
 
 inline ReturnedValue CallContext::argument(int i) {
-    return i < d()->callData->argc ? d()->callData->args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+    return i < argc() ? args()[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
 }
 
 struct GlobalContext : public ExecutionContext

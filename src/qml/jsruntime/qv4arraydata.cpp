@@ -265,7 +265,7 @@ void SimpleArrayData::setAttribute(Object *o, uint index, PropertyAttributes att
     o->arrayData()->attrs[index] = attrs;
 }
 
-void SimpleArrayData::push_front(Object *o, Value *values, uint n)
+void SimpleArrayData::push_front(Object *o, const Value *values, uint n)
 {
     Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
     Q_ASSERT(!dd->attrs);
@@ -484,7 +484,7 @@ void SparseArrayData::setAttribute(Object *o, uint index, PropertyAttributes att
     d->attrs[n->value] = attrs;
 }
 
-void SparseArrayData::push_front(Object *o, Value *values, uint n)
+void SparseArrayData::push_front(Object *o, const Value *values, uint n)
 {
     Heap::SparseArrayData *d = static_cast<Heap::SparseArrayData *>(o->d()->arrayData);
     Q_ASSERT(!d->attrs);

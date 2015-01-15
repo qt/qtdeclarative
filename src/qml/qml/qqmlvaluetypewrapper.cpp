@@ -250,7 +250,7 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value)
 
 ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
 {
-    Object *o = ctx->d()->callData->thisObject.asObject();
+    Object *o = ctx->thisObject().asObject();
     if (!o)
         return ctx->engine()->throwTypeError();
     QQmlValueTypeWrapper *w = o->as<QQmlValueTypeWrapper>();

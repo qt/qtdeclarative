@@ -404,7 +404,7 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 ReturnedValue TypedArrayPrototype::method_get_buffer(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> v(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> v(scope, ctx->thisObject());
     if (!v)
         return scope.engine->throwTypeError();
 
@@ -414,7 +414,7 @@ ReturnedValue TypedArrayPrototype::method_get_buffer(CallContext *ctx)
 ReturnedValue TypedArrayPrototype::method_get_byteLength(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> v(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> v(scope, ctx->thisObject());
     if (!v)
         return scope.engine->throwTypeError();
 
@@ -424,7 +424,7 @@ ReturnedValue TypedArrayPrototype::method_get_byteLength(CallContext *ctx)
 ReturnedValue TypedArrayPrototype::method_get_byteOffset(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> v(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> v(scope, ctx->thisObject());
     if (!v)
         return scope.engine->throwTypeError();
 
@@ -434,7 +434,7 @@ ReturnedValue TypedArrayPrototype::method_get_byteOffset(CallContext *ctx)
 ReturnedValue TypedArrayPrototype::method_get_length(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> v(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> v(scope, ctx->thisObject());
     if (!v)
         return scope.engine->throwTypeError();
 
@@ -444,14 +444,14 @@ ReturnedValue TypedArrayPrototype::method_get_length(CallContext *ctx)
 ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> a(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> a(scope, ctx->thisObject());
     if (!a)
         return scope.engine->throwTypeError();
     Scoped<ArrayBuffer> buffer(scope, a->d()->buffer);
     if (!buffer)
         scope.engine->throwTypeError();
 
-    double doffset = ctx->d()->callData->argc >= 2 ? ctx->d()->callData->args[1].toInteger() : 0;
+    double doffset = ctx->argc() >= 2 ? ctx->args()[1].toInteger() : 0;
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -460,10 +460,10 @@ ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
     uint offset = (uint)doffset;
     uint elementSize = a->d()->type->bytesPerElement;
 
-    Scoped<TypedArray> srcTypedArray(scope, ctx->d()->callData->args[0]);
+    Scoped<TypedArray> srcTypedArray(scope, ctx->args()[0]);
     if (!srcTypedArray) {
         // src is a regular object
-        ScopedObject o(scope, ctx->d()->callData->args[0].toObject(scope.engine));
+        ScopedObject o(scope, ctx->args()[0].toObject(scope.engine));
         if (scope.engine->hasException || !o)
             return scope.engine->throwTypeError();
 
@@ -533,7 +533,7 @@ ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
 ReturnedValue TypedArrayPrototype::method_subarray(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<TypedArray> a(scope, ctx->d()->callData->thisObject);
+    Scoped<TypedArray> a(scope, ctx->thisObject());
 
     if (!a)
         return scope.engine->throwTypeError();
@@ -543,12 +543,12 @@ ReturnedValue TypedArrayPrototype::method_subarray(CallContext *ctx)
         return scope.engine->throwTypeError();
 
     int len = a->length();
-    double b = ctx->d()->callData->argc > 0 ? ctx->d()->callData->args[0].toInteger() : 0;
+    double b = ctx->argc() > 0 ? ctx->args()[0].toInteger() : 0;
     if (b < 0)
         b = len + b;
     uint begin = (uint)qBound(0., b, (double)len);
 
-    double e = ctx->d()->callData->argc < 2 || ctx->d()->callData->args[1].isUndefined() ? len : ctx->d()->callData->args[1].toInteger();
+    double e = ctx->argc() < 2 || ctx->args()[1].isUndefined() ? len : ctx->args()[1].toInteger();
     if (e < 0)
         e = len + e;
     uint end = (uint)qBound(0., e, (double)len);

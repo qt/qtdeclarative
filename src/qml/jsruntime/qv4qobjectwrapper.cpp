@@ -886,10 +886,10 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
 {
-    if (ctx->d()->callData->argc == 0)
+    if (ctx->argc() == 0)
         V4THROW_ERROR("Function.prototype.connect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->d()->callData->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject());
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second; // in method range, not signal range!
 
@@ -906,11 +906,11 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
     QV4::ScopedFunctionObject f(scope);
     QV4::ScopedValue thisObject (scope, QV4::Encode::undefined());
 
-    if (ctx->d()->callData->argc == 1) {
-        f = ctx->d()->callData->args[0];
-    } else if (ctx->d()->callData->argc >= 2) {
-        thisObject = ctx->d()->callData->args[0];
-        f = ctx->d()->callData->args[1];
+    if (ctx->argc() == 1) {
+        f = ctx->args()[0];
+    } else if (ctx->argc() >= 2) {
+        thisObject = ctx->args()[0];
+        f = ctx->args()[1];
     }
 
     if (!f)
@@ -937,12 +937,12 @@ ReturnedValue QObjectWrapper::method_connect(CallContext *ctx)
 
 ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
 {
-    if (ctx->d()->callData->argc == 0)
+    if (ctx->argc() == 0)
         V4THROW_ERROR("Function.prototype.disconnect: no arguments given");
 
     QV4::Scope scope(ctx);
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->d()->callData->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(ctx->thisObject());
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -958,11 +958,11 @@ ReturnedValue QObjectWrapper::method_disconnect(CallContext *ctx)
     QV4::ScopedFunctionObject functionValue(scope);
     QV4::ScopedValue functionThisValue(scope, QV4::Encode::undefined());
 
-    if (ctx->d()->callData->argc == 1) {
-        functionValue = ctx->d()->callData->args[0];
-    } else if (ctx->d()->callData->argc >= 2) {
-        functionThisValue = ctx->d()->callData->args[0];
-        functionValue = ctx->d()->callData->args[1];
+    if (ctx->argc() == 1) {
+        functionValue = ctx->args()[0];
+    } else if (ctx->argc() >= 2) {
+        functionThisValue = ctx->args()[0];
+        functionValue = ctx->args()[1];
     }
 
     if (!functionValue)

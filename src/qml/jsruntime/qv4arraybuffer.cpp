@@ -123,7 +123,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<ArrayBuffer> v(scope, ctx->d()->callData->thisObject);
+    Scoped<ArrayBuffer> v(scope, ctx->thisObject());
     if (!v)
         return scope.engine->throwTypeError();
 
@@ -133,13 +133,13 @@ ReturnedValue ArrayBufferPrototype::method_get_byteLength(CallContext *ctx)
 ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<ArrayBuffer> a(scope, ctx->d()->callData->thisObject);
+    Scoped<ArrayBuffer> a(scope, ctx->thisObject());
     if (!a)
         return scope.engine->throwTypeError();
 
-    double start = ctx->d()->callData->argc > 0 ? ctx->d()->callData->args[0].toInteger() : 0;
-    double end = (ctx->d()->callData->argc < 2 || ctx->d()->callData->args[1].isUndefined()) ?
-                a->d()->data->size : ctx->d()->callData->args[1].toInteger();
+    double start = ctx->argc() > 0 ? ctx->args()[0].toInteger() : 0;
+    double end = (ctx->argc() < 2 || ctx->args()[1].isUndefined()) ?
+                a->d()->data->size : ctx->args()[1].toInteger();
     if (scope.engine->hasException)
         return Encode::undefined();
 
