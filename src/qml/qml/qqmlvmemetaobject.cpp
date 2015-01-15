@@ -1170,7 +1170,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index)
 }
 
 // Used by debugger
-void QQmlVMEMetaObject::setVmeMethod(int index, QV4::ValueRef function)
+void QQmlVMEMetaObject::setVmeMethod(int index, const QV4::Value &function)
 {
     if (index < methodOffset()) {
         Q_ASSERT(parentVMEMetaObject());
@@ -1183,7 +1183,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, QV4::ValueRef function)
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;
-    v8methods[methodIndex].set(function->asObject()->engine(), function);
+    v8methods[methodIndex].set(function.asObject()->engine(), function);
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)

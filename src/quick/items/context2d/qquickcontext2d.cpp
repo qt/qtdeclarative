@@ -124,9 +124,9 @@ static const double Q_PI   = 3.14159265358979323846;   // pi
                                        V4THROW_ERROR("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-QColor qt_color_from_string(const QV4::ValueRef name)
+QColor qt_color_from_string(const QV4::Value &name)
 {
-    QByteArray str = name->toQString().toUtf8();
+    QByteArray str = name.toQString().toUtf8();
 
     char *p = str.data();
     int len = str.length();

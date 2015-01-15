@@ -104,7 +104,7 @@ public:
         virtual void addNull(const QString &name) = 0;
         virtual void addBoolean(const QString &name, bool value) = 0;
         virtual void addString(const QString &name, const QString &value) = 0;
-        virtual void addObject(const QString &name, ValueRef value) = 0;
+        virtual void addObject(const QString &name, const Value &value) = 0;
         virtual void addInteger(const QString &name, int value) = 0;
         virtual void addDouble(const QString &name, double value) = 0;
 

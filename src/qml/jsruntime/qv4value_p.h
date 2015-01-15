@@ -420,8 +420,6 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
     static double toInteger(double fromNumber);
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
-
-    inline operator ValueRef();
 };
 
 inline Primitive Primitive::undefinedValue()
@@ -517,61 +515,6 @@ struct Encode {
 private:
     Encode(void *);
 };
-
-struct ValueRef {
-    ValueRef(const ScopedValue &v);
-    template <typename T>
-    ValueRef(const Scoped<T> &v);
-    ValueRef(const PersistentValue &v);
-    ValueRef(Value &v) { ptr = &v; }
-    // Important: Do NOT add a copy constructor to this class
-    // adding a copy constructor actually changes the calling convention, ie.
-    // is not even binary compatible. Adding it would break assumptions made
-    // in the jit'ed code.
-    ValueRef &operator=(const ScopedValue &o);
-    ValueRef &operator=(const Value &v)
-    { *ptr = v; return *this; }
-    ValueRef &operator=(const ReturnedValue &v) {
-        ptr->val = v;
-        return *this;
-    }
-
-    operator const Value *() const {
-        return ptr;
-    }
-    const Value *operator->() const {
-        return ptr;
-    }
-
-    operator Value &() { return *ptr; }
-    operator const Value &() const { return *ptr; }
-
-    operator Value *() {
-        return ptr;
-    }
-    Value *operator->() {
-        return ptr;
-    }
-
-    static ValueRef fromRawValue(Value *v) {
-        return ValueRef(v);
-    }
-    static const Value &fromRawValue(const Value *v) {
-        return ValueRef(const_cast<Value *>(v));
-    }
-
-    ReturnedValue asReturnedValue() const { return ptr->val; }
-
-    // ### get rid of this one!
-    ValueRef(Value *v) { ptr = v; }
-private:
-    Value *ptr;
-};
-
-inline Primitive::operator ValueRef()
-{
-    return ValueRef(this);
-}
 
 inline
 ReturnedValue Heap::Base::asReturnedValue() const

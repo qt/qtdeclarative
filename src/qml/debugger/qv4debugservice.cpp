@@ -227,10 +227,10 @@ protected:
         addHandle(name, o, QStringLiteral("string"));
     }
 
-    virtual void addObject(const QString &name, QV4::ValueRef value)
+    virtual void addObject(const QString &name, const QV4::Value &value)
     {
         QV4::Scope scope(engine());
-        QV4::ScopedObject obj(scope, value->asObject());
+        QV4::ScopedObject obj(scope, value.asObject());
 
         int ref = cachedObjectRef(obj);
         if (ref != -1) {

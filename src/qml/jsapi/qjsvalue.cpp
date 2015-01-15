@@ -205,7 +205,7 @@ QJSValue::QJSValue(const QJSValue& other)
 {
     QV4::Value *v = QJSValuePrivate::getValue(&other);
     if (v) {
-        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), v);
+        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), *v);
     } else if (QVariant *v = QJSValuePrivate::getVariant(&other)) {
         QJSValuePrivate::setVariant(this, *v);
     }
@@ -854,7 +854,7 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
 
     QV4::Value *v = QJSValuePrivate::getValue(&other);
     if (v) {
-        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), v);
+        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), *v);
     } else if (QVariant *v = QJSValuePrivate::getVariant(&other)) {
         QJSValuePrivate::setVariant(this, *v);
     }

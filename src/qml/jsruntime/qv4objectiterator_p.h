@@ -60,8 +60,8 @@ struct Q_QML_EXPORT ObjectIterator
     ObjectIterator(Scope &scope, Object *o, uint flags);
     void init(Object *o);
     void next(Heap::String **name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
-    ReturnedValue nextPropertyName(ValueRef value);
-    ReturnedValue nextPropertyNameAsString(ValueRef value);
+    ReturnedValue nextPropertyName(Value *value);
+    ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();
 };
 

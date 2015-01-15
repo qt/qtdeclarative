@@ -105,8 +105,6 @@ private:
     Q_DISABLE_COPY(Scope)
 };
 
-struct ValueRef;
-
 struct ScopedValue
 {
     ScopedValue(const Scope &scope)
@@ -457,25 +455,6 @@ template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
 {
     val = t.val;
-    return *this;
-}
-
-inline ValueRef::ValueRef(const ScopedValue &v)
-    : ptr(v.ptr)
-{}
-
-template <typename T>
-inline ValueRef::ValueRef(const Scoped<T> &v)
-    : ptr(v.ptr)
-{}
-
-inline ValueRef::ValueRef(const PersistentValue &v)
-    : ptr(v.val)
-{}
-
-inline ValueRef &ValueRef::operator=(const ScopedValue &o)
-{
-    *ptr = *o.ptr;
     return *this;
 }
 

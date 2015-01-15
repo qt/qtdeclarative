@@ -166,7 +166,7 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
                 result->putIndexed(startIndex + i, entry);
             }
         } else {
-            result->arraySet(result->getLength(), ValueRef(ctx->d()->callData->args[i]));
+            result->arraySet(result->getLength(), ctx->d()->callData->args[i]);
         }
     }
 

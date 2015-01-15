@@ -79,7 +79,7 @@ public:
         jsval->d = reinterpret_cast<quintptr>(val) | 1;
     }
 
-    static inline void setValue(QJSValue *jsval, QV4::ExecutionEngine *engine, QV4::ValueRef v) {
+    static inline void setValue(QJSValue *jsval, QV4::ExecutionEngine *engine, const QV4::Value &v) {
         QV4::Value *value = engine->memoryManager->m_persistentValues->allocate();
         *value = v;
         jsval->d = reinterpret_cast<quintptr>(value);

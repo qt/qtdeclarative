@@ -960,7 +960,7 @@ ReturnedValue Runtime::callProperty(ExecutionEngine *engine, int nameIndex, Call
             return engine->throwTypeError(message);
         }
 
-        baseObject = RuntimeHelpers::convertToObject(scope.engine, ValueRef(&callData->thisObject));
+        baseObject = RuntimeHelpers::convertToObject(scope.engine, callData->thisObject);
         if (!baseObject) // type error
             return Encode::undefined();
         callData->thisObject = baseObject.asReturnedValue();

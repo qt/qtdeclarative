@@ -190,7 +190,6 @@ typedef quint64 ReturnedValue;
 struct CallData;
 struct Scope;
 struct ScopedValue;
-struct ValueRef;
 template<typename T> struct Scoped;
 typedef Scoped<String> ScopedString;
 typedef Scoped<Object> ScopedObject;

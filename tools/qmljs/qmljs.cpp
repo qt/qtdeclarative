@@ -109,10 +109,10 @@ DEFINE_OBJECT_VTABLE(GC);
 
 } // builtins
 
-static void showException(QV4::ExecutionContext *ctx, const QV4::ValueRef exception, const QV4::StackTrace &trace)
+static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exception, const QV4::StackTrace &trace)
 {
     QV4::Scope scope(ctx);
-    QV4::ScopedValue ex(scope, *exception);
+    QV4::ScopedValue ex(scope, exception);
     QV4::ErrorObject *e = ex->asErrorObject();
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(ex->toQString()) << std::endl;

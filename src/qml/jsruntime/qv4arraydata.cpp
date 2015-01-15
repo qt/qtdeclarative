@@ -587,7 +587,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         } else {
             for (const SparseArrayNode *it = other->d()->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode())
-                obj->arraySet(oldSize + it->key(), ValueRef(os->arrayData[it->value]));
+                obj->arraySet(oldSize + it->key(), os->arrayData[it->value]);
         }
     } else {
         Heap::SimpleArrayData *os = static_cast<Heap::SimpleArrayData *>(other->d());

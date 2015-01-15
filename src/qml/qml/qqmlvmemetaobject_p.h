@@ -160,7 +160,7 @@ public:
     void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
     QV4::ReturnedValue vmeMethod(int index);
     quint16 vmeMethodLineNumber(int index);
-    void setVmeMethod(int index, QV4::ValueRef function);
+    void setVmeMethod(int index, const QV4::Value &function);
     QV4::ReturnedValue vmeProperty(int index);
     void setVMEProperty(int index, const QV4::Value &v);
 

@@ -128,7 +128,7 @@ QString Value::toQStringNoThrow() const
             Scope scope(objectValue()->engine());
             ScopedValue ex(scope);
             bool caughtException = false;
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
             if (scope.hasException()) {
                 ex = scope.engine->catchException();
                 caughtException = true;
@@ -179,7 +179,7 @@ QString Value::toQString() const
         {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), STRING_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
             return prim->toQString();
         }
     case Value::Integer_Type: {
@@ -271,14 +271,14 @@ Heap::String *Value::toString(ExecutionEngine *e) const
 {
     if (isString())
         return stringValue()->d();
-    return RuntimeHelpers::convertToString(e, ValueRef::fromRawValue(this));
+    return RuntimeHelpers::convertToString(e, *this);
 }
 
 Heap::Object *Value::toObject(ExecutionEngine *e) const
 {
     if (isObject())
         return objectValue()->d();
-    return RuntimeHelpers::convertToObject(e, ValueRef::fromRawValue(this));
+    return RuntimeHelpers::convertToObject(e, *this);
 }
 
 #endif // V4_BOOTSTRAP

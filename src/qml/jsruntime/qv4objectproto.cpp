@@ -66,7 +66,7 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
             obj->setPrototype(proto);
         return obj.asReturnedValue();
     }
-    return RuntimeHelpers::toObject(scope.engine, ValueRef(&callData->args[0]));
+    return RuntimeHelpers::toObject(scope.engine, callData->args[0]);
 }
 
 ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
@@ -75,7 +75,7 @@ ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
     ExecutionEngine *v4 = ctor->engine();
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return v4->newObject()->asReturnedValue();
-    return RuntimeHelpers::toObject(v4, ValueRef(&callData->args[0]));
+    return RuntimeHelpers::toObject(v4, callData->args[0]);
 }
 
 void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
@@ -390,7 +390,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
     } else if (ctx->d()->callData->thisObject.isNull()) {
         return ctx->d()->engine->newString(QStringLiteral("[object Null]"))->asReturnedValue();
     } else {
-        ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ValueRef(&ctx->d()->callData->thisObject)));
+        ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ctx->d()->callData->thisObject));
         QString className = obj->className();
         return ctx->d()->engine->newString(QString::fromLatin1("[object %1]").arg(className))->asReturnedValue();
     }

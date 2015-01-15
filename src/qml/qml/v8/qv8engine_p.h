@@ -121,7 +121,7 @@ public:
     QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
     QQmlContextData *context() { return ctx; }
     QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
-    void setReturnValue(QV4::ReturnedValue rv) { retVal = rv; }
+    void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:
     friend struct QV4::QObjectMethod;
@@ -129,7 +129,7 @@ private:
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(QV4::CallData *callData, QV4::ValueRef retVal,
+    QQmlV4Function(QV4::CallData *callData, QV4::Value *retVal,
                    const QV4::Value &global, QQmlContextData *c, QV4::ExecutionEngine *e)
         : callData(callData), retVal(retVal), ctx(c), e(e)
     {
@@ -137,7 +137,7 @@ private:
     }
 
     QV4::CallData *callData;
-    QV4::ValueRef retVal;
+    QV4::Value *retVal;
     QQmlContextData *ctx;
     QV4::ExecutionEngine *e;
 };
@@ -146,7 +146,7 @@ class Q_QML_PRIVATE_EXPORT QQmlV4Handle
 {
 public:
     QQmlV4Handle() : d(QV4::Encode::undefined()) {}
-    explicit QQmlV4Handle(QV4::ValueRef v) : d(v.asReturnedValue()) {}
+    explicit QQmlV4Handle(const QV4::Value &v) : d(v.asReturnedValue()) {}
     explicit QQmlV4Handle(QV4::ReturnedValue v) : d(v) {}
 
     operator QV4::ReturnedValue() const { return d; }

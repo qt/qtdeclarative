@@ -77,8 +77,8 @@ private:
     ReturnedValue parseArray();
     bool parseMember(Object *o);
     bool parseString(QString *string);
-    bool parseValue(ValueRef val);
-    bool parseNumber(ValueRef val);
+    bool parseValue(Value *val);
+    bool parseNumber(Value *val);
 
     ExecutionEngine *engine;
     const QChar *head;
@@ -344,7 +344,7 @@ value = false / null / true / object / array / number / string
 
 */
 
-bool JsonParser::parseValue(ValueRef val)
+bool JsonParser::parseValue(Value *val)
 {
     BEGIN << "parse Value" << *json;
 
@@ -401,7 +401,7 @@ bool JsonParser::parseValue(ValueRef val)
             return false;
         DEBUG << "value: string";
         END;
-        val = Value::fromHeapObject(engine->newString(value));
+        *val = Value::fromHeapObject(engine->newString(value));
         return true;
     }
     case BeginArray: {
@@ -452,7 +452,7 @@ bool JsonParser::parseValue(ValueRef val)
 
 */
 
-bool JsonParser::parseNumber(ValueRef val)
+bool JsonParser::parseNumber(Value *val)
 {
     BEGIN << "parseNumber" << *json;
 
@@ -651,11 +651,11 @@ struct Stringify
 
     Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
 
-    QString Str(const QString &key, ValueRef v);
+    QString Str(const QString &key, const Value &v);
     QString JA(ArrayObject *a);
     QString JO(Object *o);
 
-    QString makeMember(const QString &key, ValueRef v);
+    QString makeMember(const QString &key, const Value &v);
 };
 
 static QString quote(const QString &str)
@@ -699,11 +699,11 @@ static QString quote(const QString &str)
     return product;
 }
 
-QString Stringify::Str(const QString &key, ValueRef v)
+QString Stringify::Str(const QString &key, const Value &v)
 {
     Scope scope(ctx);
 
-    ScopedValue value(scope, *v);
+    ScopedValue value(scope, v);
     ScopedObject o(scope, value);
     if (o) {
         ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toJSON")));
@@ -762,7 +762,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
     return QString();
 }
 
-QString Stringify::makeMember(const QString &key, ValueRef v)
+QString Stringify::makeMember(const QString &key, const Value &v)
 {
     QString strP = Str(key, v);
     if (!strP.isEmpty()) {

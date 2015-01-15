@@ -114,8 +114,6 @@ public:
     bool isEmpty() { return !val; }
 
 private:
-    friend struct ValueRef;
-
     Value *val;
 };
 

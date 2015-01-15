@@ -2297,7 +2297,7 @@ void tst_qqmlecmascript::regExpBug()
     }
 }
 
-static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, const char *source)
+static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
@@ -2322,8 +2322,8 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::ValueRef o, cons
     return false;
 }
 
-static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
-                                  const char *source, const QV4::ValueRef result)
+static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
+                                  const char *source, const QV4::Value &result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
@@ -2352,7 +2352,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::ValueRef o,
     return QV4::Runtime::strictEqual(value, result);
 }
 
-static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::ValueRef o,
+static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o,
                                              const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +

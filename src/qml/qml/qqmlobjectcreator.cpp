@@ -1171,8 +1171,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
 
     Q_ASSERT(sharedState->allJavaScriptObjects);
-    QV4::ValueRef ref = QV4::ValueRef::fromRawValue(sharedState->allJavaScriptObjects++);
-    ref = QV4::QObjectWrapper::wrap(v4, instance);
+    *sharedState->allJavaScriptObjects = QV4::QObjectWrapper::wrap(v4, instance);
+    ++sharedState->allJavaScriptObjects;
 
     QV4::Scope valueScope(v4);
     QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));

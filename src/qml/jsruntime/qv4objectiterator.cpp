@@ -129,7 +129,7 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
     *attrs = PropertyAttributes();
 }
 
-ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
+ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
     if (!object->asObject())
         return Encode::null();
@@ -143,7 +143,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->objectValue()->getValue(p, attrs);
+    *value = object->objectValue()->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -151,7 +151,7 @@ ReturnedValue ObjectIterator::nextPropertyName(ValueRef value)
     return Encode(index);
 }
 
-ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
+ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
     if (!object->asObject())
         return Encode::null();
@@ -165,7 +165,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(ValueRef value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    value = object->objectValue()->getValue(p, attrs);
+    *value = object->objectValue()->getValue(p, attrs);
 
     if (!!name)
         return name->asReturnedValue();

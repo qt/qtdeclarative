@@ -128,10 +128,10 @@ protected:
         destination->insert(name, value);
     }
 
-    virtual void addObject(const QString &name, QV4::ValueRef value)
+    virtual void addObject(const QString &name, const QV4::Value &value)
     {
         QV4::Scope scope(engine());
-        QV4::ScopedObject obj(scope, value->asObject());
+        QV4::ScopedObject obj(scope, value.asObject());
 
         QVariantMap props, *prev = &props;
         qSwap(destination, prev);
