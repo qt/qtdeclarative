@@ -83,8 +83,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
 {
     // When setting a parent (especially during dynamic object creation) in QML,
     // also try to set up the analogous item/window relationship.
-    QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent);
-    if (parentItem) {
+    if (QQuickItem *parentItem = qmlobject_cast<QQuickItem *>(parent)) {
         QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
         if (item) {
             // An Item has another Item
@@ -99,26 +98,25 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
             }
         }
         return QQmlPrivate::IncompatibleObject;
-    } else {
-        QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent);
-        if (parentWindow) {
-            QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
-            if (win) {
-                // A Window inside a Window should be transient for it
-                win->setTransientParent(parentWindow);
+    } else if (QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent)) {
+        QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
+        if (win) {
+            // A Window inside a Window should be transient for it
+            win->setTransientParent(parentWindow);
+            return QQmlPrivate::Parented;
+        } else {
+            QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
+            if (item) {
+                // The parent of an Item inside a Window is actually the implicit content Item
+                item->setParentItem(parentWindow->contentItem());
                 return QQmlPrivate::Parented;
-            } else {
-                QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
-                if (item) {
-                    // The parent of an Item inside a Window is actually the implicit content Item
-                    item->setParentItem(parentWindow->contentItem());
-                    return QQmlPrivate::Parented;
-                }
             }
-            return QQmlPrivate::IncompatibleObject;
         }
+        return QQmlPrivate::IncompatibleObject;
+    } else if (qmlobject_cast<QQuickItem *>(obj)) {
+        return QQmlPrivate::IncompatibleParent;
     }
-    return QQmlPrivate::IncompatibleParent;
+    return QQmlPrivate::IncompatibleObject;
 }
 
 static void qt_quickitems_defineModule(const char *uri, int major, int minor)

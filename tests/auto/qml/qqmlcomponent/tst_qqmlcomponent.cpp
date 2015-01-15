@@ -105,7 +105,8 @@ private slots:
     void null();
     void loadEmptyUrl();
     void qmlCreateWindow();
-    void qmlCreateObject();
+    void qmlCreateObjectAutoParent_data();
+    void qmlCreateObjectAutoParent();
     void qmlCreateObjectWithProperties();
     void qmlIncubateObject();
     void qmlCreateParentReference();
@@ -172,21 +173,73 @@ void tst_qqmlcomponent::qmlCreateWindow()
     QVERIFY(window);
 }
 
-void tst_qqmlcomponent::qmlCreateObject()
+void tst_qqmlcomponent::qmlCreateObjectAutoParent_data()
 {
+    QTest::addColumn<QString>("testFile");
+
+    QTest::newRow("createObject") << QStringLiteral("createObject.qml");
+    QTest::newRow("createQmlObject") <<  QStringLiteral("createQmlObject.qml");
+}
+
+
+void tst_qqmlcomponent::qmlCreateObjectAutoParent()
+{
+    QFETCH(QString, testFile);
+
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("createObject.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != 0);
+    QQmlComponent component(&engine, testFileUrl(testFile));
+    QQuickItem *root = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(root);
+    QObject *qtobjectParent = root->property("qtobjectParent").value<QObject*>();
+    QQuickItem *itemParent = qobject_cast<QQuickItem *>(root->property("itemParent").value<QObject*>());
+    QQuickWindow *windowParent = qobject_cast<QQuickWindow *>(root->property("windowParent").value<QObject*>());
+    QVERIFY(qtobjectParent);
+    QVERIFY(itemParent);
+    QVERIFY(windowParent);
 
-    QObject *testObject1 = object->property("qobject").value<QObject*>();
-    QVERIFY(testObject1);
-    QVERIFY(testObject1->parent() == object);
+    QObject *qtobject_qtobject = root->property("qtobject_qtobject").value<QObject*>();
+    QObject *qtobject_item = root->property("qtobject_item").value<QObject*>();
+    QObject *qtobject_window = root->property("qtobject_window").value<QObject*>();
+    QObject *item_qtobject = root->property("item_qtobject").value<QObject*>();
+    QObject *item_item = root->property("item_item").value<QObject*>();
+    QObject *item_window = root->property("item_window").value<QObject*>();
+    QObject *window_qtobject = root->property("window_qtobject").value<QObject*>();
+    QObject *window_item = root->property("window_item").value<QObject*>();
+    QObject *window_window = root->property("window_window").value<QObject*>();
 
-    QObject *testObject2 = object->property("declarativeitem").value<QObject*>();
-    QVERIFY(testObject2);
-    QVERIFY(testObject2->parent() == object);
-    QCOMPARE(testObject2->metaObject()->className(), "QQuickItem");
+    QVERIFY(qtobject_qtobject);
+    QVERIFY(qtobject_item);
+    QVERIFY(qtobject_window);
+    QVERIFY(item_qtobject);
+    QVERIFY(item_item);
+    QVERIFY(item_window);
+    QVERIFY(window_qtobject);
+    QVERIFY(window_item);
+    QVERIFY(window_window);
+
+    QCOMPARE(qtobject_item->metaObject()->className(), "QQuickItem");
+    QCOMPARE(qtobject_window->metaObject()->className(), "QQuickWindow");
+    QCOMPARE(item_item->metaObject()->className(), "QQuickItem");
+    QCOMPARE(item_window->metaObject()->className(), "QQuickWindow");
+    QCOMPARE(window_item->metaObject()->className(), "QQuickItem");
+    QCOMPARE(window_window->metaObject()->className(), "QQuickWindow");
+
+    QCOMPARE(qtobject_qtobject->parent(), qtobjectParent);
+    QCOMPARE(qtobject_item->parent(), qtobjectParent);
+    QCOMPARE(qtobject_window->parent(), qtobjectParent);
+    QCOMPARE(item_qtobject->parent(), itemParent);
+    QCOMPARE(item_item->parent(), itemParent);
+    QCOMPARE(item_window->parent(), itemParent);
+    QCOMPARE(window_qtobject->parent(), windowParent);
+    QCOMPARE(window_item->parent(), windowParent);
+    QCOMPARE(window_window->parent(), windowParent);
+
+    QCOMPARE(qobject_cast<QQuickItem *>(qtobject_item)->parentItem(), (QQuickItem *)0);
+    QCOMPARE(qobject_cast<QQuickWindow *>(qtobject_window)->transientParent(), (QQuickWindow *)0);
+    QCOMPARE(qobject_cast<QQuickItem *>(item_item)->parentItem(), itemParent);
+    QCOMPARE(qobject_cast<QQuickWindow *>(item_window)->transientParent(), itemParent->window());
+    QCOMPARE(qobject_cast<QQuickItem *>(window_item)->parentItem(), windowParent->contentItem());
+    QCOMPARE(qobject_cast<QQuickWindow *>(window_window)->transientParent(), windowParent);
 }
 
 void tst_qqmlcomponent::qmlCreateObjectWithProperties()
