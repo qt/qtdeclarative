@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmldebugjs
-QT += qml testlib gui-private
+QT += qml testlib gui-private core-private
 macx:CONFIG -= app_bundle
 
 SOURCES +=     tst_qqmldebugjs.cpp

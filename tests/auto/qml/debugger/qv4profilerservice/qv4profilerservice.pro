@@ -10,7 +10,7 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-QT += qml testlib gui-private
+QT += qml testlib gui-private core-private
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 CONFIG+=insignificant_test

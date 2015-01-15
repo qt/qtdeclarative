@@ -35,6 +35,7 @@
 
 #include <QtCore/QBuffer>
 #include <QtCore/QElapsedTimer>
+#include <private/qiodevice_p.h> // for qt_subtract_from_timeout
 
 static const unsigned int MAX_PACKET_SIZE = 0x7FFFFFFF;
 
@@ -316,19 +317,6 @@ QPacket QPacketProtocol::read()
     return rv;
 }
 
-/*
-   Returns the difference between msecs and elapsed. If msecs is -1,
-   however, -1 is returned.
-*/
-static int qt_timeout_value(int msecs, int elapsed)
-{
-    if (msecs == -1)
-        return -1;
-
-    int timeout = msecs - elapsed;
-    return timeout < 0 ? 0 : timeout;
-}
-
 /*!
   This function locks until a new packet is available for reading and the
   \l{QIODevice::}{readyRead()} signal has been emitted. The function
@@ -354,7 +342,7 @@ bool QPacketProtocol::waitForReadyRead(int msecs)
             return false;
         if (!d->waitingForPacket)
             return true;
-        msecs = qt_timeout_value(msecs, stopWatch.elapsed());
+        msecs = qt_subtract_from_timeout(msecs, stopWatch.elapsed());
     } while (true);
 }
 
