@@ -62,6 +62,66 @@ struct Object : Base {
 
 }
 
+#define V4_OBJECT(superClass) \
+    public: \
+        Q_MANAGED_CHECK \
+        typedef superClass SuperClass; \
+        static const QV4::ObjectVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        V4_MANAGED_SIZE_TEST \
+        Data *d() const { return static_cast<Data *>(m); }
+
+#define V4_OBJECT2(DataClass, superClass) \
+    public: \
+        Q_MANAGED_CHECK \
+        typedef QV4::Heap::DataClass Data; \
+        typedef superClass SuperClass; \
+        static const QV4::ObjectVTable static_vtbl; \
+        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        V4_MANAGED_SIZE_TEST \
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
+
+struct ObjectVTable
+{
+    ManagedVTable managedVTable;
+    ReturnedValue (*call)(Managed *, CallData *data);
+    ReturnedValue (*construct)(Managed *, CallData *data);
+    ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
+    ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
+    void (*put)(Managed *, String *name, const Value &value);
+    void (*putIndexed)(Managed *, uint index, const Value &value);
+    PropertyAttributes (*query)(const Managed *, String *name);
+    PropertyAttributes (*queryIndexed)(const Managed *, uint index);
+    bool (*deleteProperty)(Managed *m, String *name);
+    bool (*deleteIndexedProperty)(Managed *m, uint index);
+    ReturnedValue (*getLookup)(Managed *m, Lookup *l);
+    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
+    uint (*getLength)(const Managed *m);
+    void (*advanceIterator)(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
+};
+
+#define DEFINE_OBJECT_VTABLE(classname) \
+const QV4::ObjectVTable classname::static_vtbl =    \
+{     \
+    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.managedVTable), \
+    call,                                       \
+    construct,                                  \
+    get,                                        \
+    getIndexed,                                 \
+    put,                                        \
+    putIndexed,                                 \
+    query,                                      \
+    queryIndexed,                               \
+    deleteProperty,                             \
+    deleteIndexedProperty,                      \
+    getLookup,                                  \
+    setLookup,                                  \
+    getLength,                                  \
+    advanceIterator                            \
+}
+
+
+
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
