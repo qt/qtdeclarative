@@ -160,7 +160,7 @@ ReturnedValue ArgumentsObject::getIndexed(Managed *m, uint index, bool *hasPrope
     return Encode::undefined();
 }
 
-void ArgumentsObject::putIndexed(Managed *m, uint index, const ValueRef value)
+void ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->callData->argc))

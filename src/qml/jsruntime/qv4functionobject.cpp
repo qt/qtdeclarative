@@ -620,7 +620,7 @@ DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 DEFINE_OBJECT_VTABLE(BoundFunction);
 
 Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target,
-                                   const ValueRef boundThis, QV4::MemberData *boundArgs)
+                                   const Value &boundThis, QV4::MemberData *boundArgs)
     : Heap::FunctionObject(scope, QStringLiteral("__bound function__"))
     , target(target->d())
     , boundArgs(boundArgs ? boundArgs->d() : 0)

@@ -137,14 +137,14 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
     v4function.set(v4, qmlBinding(ctxt, obj, str, url, lineNumber));
 }
 
-QQmlBinding::QQmlBinding(const QV4::ValueRef functionPtr, QObject *obj, QQmlContextData *ctxt)
+QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function.set(functionPtr->asObject()->engine(), functionPtr);
+    v4function.set(functionPtr.asObject()->engine(), functionPtr);
 }
 
 QQmlBinding::~QQmlBinding()

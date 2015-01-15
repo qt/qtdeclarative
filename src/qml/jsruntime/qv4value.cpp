@@ -90,7 +90,7 @@ double Value::toNumberImpl() const
         {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ValueRef::fromRawValue(this), NUMBER_HINT));
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, NUMBER_HINT));
             if (scope.engine->hasException)
                 return 0;
             return prim->toNumber();

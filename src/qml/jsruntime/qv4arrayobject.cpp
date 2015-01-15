@@ -143,9 +143,8 @@ ReturnedValue ArrayPrototype::method_concat(CallContext *ctx)
     ScopedObject thisObject(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (!thisObject)
         return Encode::undefined();
-    ScopedArrayObject instance(scope, thisObject);
-    if (instance) {
-        result->copyArrayData(instance);
+    if (thisObject->isArrayObject()) {
+        result->copyArrayData(thisObject);
     } else {
         result->arraySet(0, thisObject);
     }

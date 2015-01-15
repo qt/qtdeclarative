@@ -56,7 +56,7 @@ struct ErrorObject : Object {
     };
 
     ErrorObject(InternalClass *ic, QV4::Object *prototype);
-    ErrorObject(InternalClass *ic, QV4::Object *prototype, const ValueRef message, ErrorType t = Error);
+    ErrorObject(InternalClass *ic, QV4::Object *prototype, const Value &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, ErrorType t = Error);
     ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
@@ -66,32 +66,32 @@ struct ErrorObject : Object {
 };
 
 struct EvalErrorObject : ErrorObject {
-    EvalErrorObject(ExecutionEngine *engine, const ValueRef message);
+    EvalErrorObject(ExecutionEngine *engine, const Value &message);
 };
 
 struct RangeErrorObject : ErrorObject {
-    RangeErrorObject(ExecutionEngine *engine, const ValueRef message);
+    RangeErrorObject(ExecutionEngine *engine, const Value &message);
     RangeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct ReferenceErrorObject : ErrorObject {
-    ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message);
+    ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
     ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject : ErrorObject {
-    SyntaxErrorObject(ExecutionEngine *engine, const ValueRef message);
+    SyntaxErrorObject(ExecutionEngine *engine, const Value &message);
     SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct TypeErrorObject : ErrorObject {
-    TypeErrorObject(ExecutionEngine *engine, const ValueRef message);
+    TypeErrorObject(ExecutionEngine *engine, const Value &message);
     TypeErrorObject(ExecutionEngine *engine, const QString &msg);
 };
 
 struct URIErrorObject : ErrorObject {
-    URIErrorObject(ExecutionEngine *engine, const ValueRef message);
+    URIErrorObject(ExecutionEngine *engine, const Value &message);
 };
 
 struct ErrorCtor : Heap::FunctionObject {

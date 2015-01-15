@@ -118,7 +118,7 @@ struct GlobalContext : ExecutionContext {
 };
 
 struct CatchContext : ExecutionContext {
-    CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue);
+    CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue);
     StringValue exceptionVarName;
     Value exceptionValue;
 };
@@ -144,12 +144,12 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
-    Heap::CatchContext *newCatchContext(String *exceptionVarName, const ValueRef exceptionValue);
+    Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
     Heap::CallContext *newQmlContext(FunctionObject *f, Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 
-    void setProperty(String *name, const ValueRef value);
+    void setProperty(String *name, const Value &value);
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyAndBase(String *name, Heap::Object **base);
     bool deleteProperty(String *name);

@@ -245,7 +245,7 @@ private:
 
     int setVariantProperty(const ListLayout::Role &role, const QVariant &d);
 
-    int setJsProperty(const ListLayout::Role &role, const QV4::ValueRef d, QV4::ExecutionEngine *eng);
+    int setJsProperty(const ListLayout::Role &role, const QV4::Value &d, QV4::ExecutionEngine *eng);
 
     int setStringProperty(const ListLayout::Role &role, const QString &s);
     int setDoubleProperty(const ListLayout::Role &role, double n);
@@ -300,7 +300,7 @@ public:
     void destroy();
 
     int setOrCreateProperty(int elementIndex, const QString &key, const QVariant &data);
-    int setExistingProperty(int uid, const QString &key, const QV4::ValueRef data, QV4::ExecutionEngine *eng);
+    int setExistingProperty(int uid, const QString &key, const QV4::Value &data, QV4::ExecutionEngine *eng);
 
     QVariant getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV4::ExecutionEngine *eng);
     ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);

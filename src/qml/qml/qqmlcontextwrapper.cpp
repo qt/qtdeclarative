@@ -99,23 +99,23 @@ QQmlContextData *QmlContextWrapper::callingContext(ExecutionEngine *v4)
     return !!c ? c->getContext() : 0;
 }
 
-QQmlContextData *QmlContextWrapper::getContext(const ValueRef value)
+QQmlContextData *QmlContextWrapper::getContext(const Value &value)
 {
-    if (!value->isObject())
+    if (!value.isObject())
         return 0;
 
-    QV4::ExecutionEngine *v4 = value->asObject()->engine();
+    QV4::ExecutionEngine *v4 = value.asObject()->engine();
     Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> c(scope, value);
 
     return c ? c->getContext() : 0;
 }
 
-void QmlContextWrapper::takeContextOwnership(const ValueRef qmlglobal)
+void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 {
-    Q_ASSERT(qmlglobal->isObject());
+    Q_ASSERT(qmlglobal.isObject());
 
-    QV4::ExecutionEngine *v4 = qmlglobal->asObject()->engine();
+    QV4::ExecutionEngine *v4 = qmlglobal.asObject()->engine();
     Scope scope(v4);
     QV4::Scoped<QmlContextWrapper> c(scope, qmlglobal);
     Q_ASSERT(c);
@@ -182,7 +182,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
             if (hasProperty)
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
-                QV4::ScopedObject scripts(scope, context->importedScripts);
+                QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 return scripts->getIndexed(r.scriptIndex);
             } else if (r.type) {
                 return QmlTypeWrapper::create(v4, scopeObject, r.type);
@@ -265,7 +265,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     return Primitive::undefinedValue().asReturnedValue();
 }
 
-void QmlContextWrapper::put(Managed *m, String *name, const ValueRef value)
+void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
     QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);

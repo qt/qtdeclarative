@@ -195,7 +195,7 @@ QJSValue QJSValueIterator::value() const
     if (!d_ptr->currentName && d_ptr->currentIndex == UINT_MAX)
         return QJSValue();
 
-    QV4::ScopedValue v(scope, obj->getValue(obj, &d_ptr->currentProperty, d_ptr->currentAttributes));
+    QV4::ScopedValue v(scope, obj->getValue(*obj, &d_ptr->currentProperty, d_ptr->currentAttributes));
     if (scope.hasException()) {
         engine->catchException();
         return QJSValue();

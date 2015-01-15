@@ -95,7 +95,7 @@ struct ScriptFunction : SimpleScriptFunction {
 };
 
 struct BoundFunction : FunctionObject {
-    BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const ValueRef boundThis, QV4::MemberData *boundArgs);
+    BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
     FunctionObject *target;
     Value boundThis;
     MemberData *boundArgs;
@@ -221,7 +221,7 @@ struct ScriptFunction: SimpleScriptFunction {
 struct BoundFunction: FunctionObject {
     V4_OBJECT2(BoundFunction, FunctionObject)
 
-    static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const ValueRef boundThis, QV4::MemberData *boundArgs)
+    static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs)
     {
         return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
     }

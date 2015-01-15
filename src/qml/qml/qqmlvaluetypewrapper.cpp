@@ -337,7 +337,7 @@ ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasPrope
 #undef VALUE_TYPE_ACCESSOR
 }
 
-void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
+void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
     ExecutionEngine *v4 = static_cast<QQmlValueTypeWrapper *>(m)->engine();
@@ -389,7 +389,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const ValueRef value)
         cacheData.valueTypeCoreIndex = pd->coreIndex;
         cacheData.valueTypePropType = property.userType();
 
-        QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, f);
+        QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
         bindingFunction->initBindingLocation();
 
         newBinding = new QQmlBinding(value, reference->d()->object, context);

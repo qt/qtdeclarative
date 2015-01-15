@@ -206,7 +206,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
             if (r.type) {
                 return create(scope.engine, object, r.type, w->d()->mode);
             } else if (r.scriptIndex != -1) {
-                QV4::ScopedObject scripts(scope, context->importedScripts);
+                QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 return scripts->getIndexed(r.scriptIndex);
             } else if (r.importNamespace) {
                 return create(scope.engine, object, context->imports, r.importNamespace);
@@ -228,7 +228,7 @@ ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
 }
 
 
-void QmlTypeWrapper::put(Managed *m, String *name, const ValueRef value)
+void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
 {
     Q_ASSERT(m->as<QmlTypeWrapper>());
     QmlTypeWrapper *w = static_cast<QmlTypeWrapper *>(m);

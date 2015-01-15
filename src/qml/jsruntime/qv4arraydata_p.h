@@ -61,8 +61,8 @@ struct ArrayVTable
     uint type;
     Heap::ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
     ReturnedValue (*get)(const Heap::ArrayData *d, uint index);
-    bool (*put)(Object *o, uint index, ValueRef value);
-    bool (*putArray)(Object *o, uint index, Value *values, uint n);
+    bool (*put)(Object *o, uint index, const Value &value);
+    bool (*putArray)(Object *o, uint index, const Value *values, uint n);
     bool (*del)(Object *o, uint index);
     void (*setAttribute)(Object *o, uint index, PropertyAttributes attrs);
     void (*push_front)(Object *o, Value *values, uint n);
@@ -203,7 +203,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     static void ensureAttributes(Object *o);
     static void realloc(Object *o, Type newType, uint alloc, bool enforceAttributes);
 
-    static void sort(ExecutionEngine *engine, Object *thisObject, const ValueRef comparefn, uint dataLen);
+    static void sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint dataLen);
     static uint append(Object *obj, ArrayObject *otherObj, uint n);
     static Property *insert(Object *o, uint index, bool isAccessor = false);
 };
@@ -224,8 +224,8 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static void markObjects(Heap::Base *d, ExecutionEngine *e);
 
     static ReturnedValue get(const Heap::ArrayData *d, uint index);
-    static bool put(Object *o, uint index, ValueRef value);
-    static bool putArray(Object *o, uint index, Value *values, uint n);
+    static bool put(Object *o, uint index, const Value &value);
+    static bool putArray(Object *o, uint index, const Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static void push_front(Object *o, Value *values, uint n);
@@ -253,8 +253,8 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
 
     static Heap::ArrayData *reallocate(Object *o, uint n, bool enforceAttributes);
     static ReturnedValue get(const Heap::ArrayData *d, uint index);
-    static bool put(Object *o, uint index, ValueRef value);
-    static bool putArray(Object *o, uint index, Value *values, uint n);
+    static bool put(Object *o, uint index, const Value &value);
+    static bool putArray(Object *o, uint index, const Value *values, uint n);
     static bool del(Object *o, uint index);
     static void setAttribute(Object *o, uint index, PropertyAttributes attrs);
     static void push_front(Object *o, Value *values, uint n);

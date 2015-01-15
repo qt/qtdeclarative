@@ -229,7 +229,7 @@ ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
     return dd->data(index).asReturnedValue();
 }
 
-bool SimpleArrayData::put(Object *o, uint index, ValueRef value)
+bool SimpleArrayData::put(Object *o, uint index, const Value &value)
 {
     Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
     Q_ASSERT(index >= dd->len || !dd->attrs || !dd->attrs[index].isAccessor());
@@ -317,7 +317,7 @@ uint SimpleArrayData::length(const Heap::ArrayData *d)
     return d->len;
 }
 
-bool SimpleArrayData::putArray(Object *o, uint index, Value *values, uint n)
+bool SimpleArrayData::putArray(Object *o, uint index, const Value *values, uint n)
 {
     Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
     if (index + n > dd->alloc) {
@@ -414,9 +414,9 @@ ReturnedValue SparseArrayData::get(const Heap::ArrayData *d, uint index)
     return s->arrayData[index].asReturnedValue();
 }
 
-bool SparseArrayData::put(Object *o, uint index, ValueRef value)
+bool SparseArrayData::put(Object *o, uint index, const Value &value)
 {
-    if (value->isEmpty())
+    if (value.isEmpty())
         return true;
 
     Heap::SparseArrayData *s = static_cast<Heap::SparseArrayData *>(o->d()->arrayData);
@@ -546,7 +546,7 @@ uint SparseArrayData::length(const Heap::ArrayData *d)
     return n ? n->key() + 1 : 0;
 }
 
-bool SparseArrayData::putArray(Object *o, uint index, Value *values, uint n)
+bool SparseArrayData::putArray(Object *o, uint index, const Value *values, uint n)
 {
     for (uint i = 0; i < n; ++i)
         put(o, index + i, values[i]);
@@ -636,7 +636,7 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionEngine *engine, Object *thisObject, const ValueRef comparefn)
+    inline ArrayElementLessThan(ExecutionEngine *engine, Object *thisObject, const Value &comparefn)
         : m_engine(engine), thisObject(thisObject), m_comparefn(comparefn) {}
 
     bool operator()(Value v1, Value v2) const;
@@ -644,7 +644,7 @@ public:
 private:
     ExecutionEngine *m_engine;
     Object *thisObject;
-    const ValueRef m_comparefn;
+    const Value &m_comparefn;
 };
 
 
@@ -727,7 +727,7 @@ top:
 }
 
 
-void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const ValueRef comparefn, uint len)
+void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint len)
 {
     if (!len)
         return;
@@ -738,7 +738,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const ValueRef
     if (!arrayData || !arrayData->length())
         return;
 
-    if (!(comparefn->isUndefined() || comparefn->asObject())) {
+    if (!(comparefn.isUndefined() || comparefn.asObject())) {
         engine->throwTypeError();
         return;
     }

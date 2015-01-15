@@ -93,7 +93,7 @@ static inline QQmlXMLHttpRequestData *xhrdata(ExecutionEngine *v4)
     return (QQmlXMLHttpRequestData *)v4->v8Engine->xmlHttpRequestData();
 }
 
-static ReturnedValue constructMeObject(const ValueRef thisObj, ExecutionEngine *v4)
+static ReturnedValue constructMeObject(const Value &thisObj, ExecutionEngine *v4)
 {
     Scope scope(v4);
     ScopedObject meObj(scope, v4->newObject());
@@ -1014,9 +1014,9 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    ReturnedValue open(const ValueRef me, const QString &, const QUrl &, LoadType);
-    ReturnedValue send(const ValueRef me, const QByteArray &);
-    ReturnedValue abort(const ValueRef me);
+    ReturnedValue open(const Value &me, const QString &, const QUrl &, LoadType);
+    ReturnedValue send(const Value &me, const QByteArray &);
+    ReturnedValue abort(const Value &me);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name);
@@ -1059,11 +1059,11 @@ private:
     void readEncoding();
 
     ReturnedValue getMe() const;
-    void setMe(const ValueRef me);
+    void setMe(const Value &me);
     PersistentValue m_me;
 
-    void dispatchCallbackImpl(const ValueRef me);
-    void dispatchCallback(const ValueRef me);
+    void dispatchCallbackImpl(const Value &me);
+    void dispatchCallback(const Value &me);
 
     int m_status;
     QString m_statusText;
@@ -1113,7 +1113,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-ReturnedValue QQmlXMLHttpRequest::open(const ValueRef me, const QString &method, const QUrl &url, LoadType loadType)
+ReturnedValue QQmlXMLHttpRequest::open(const Value &me, const QString &method, const QUrl &url, LoadType loadType)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1258,7 +1258,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     }
 }
 
-ReturnedValue QQmlXMLHttpRequest::send(const ValueRef me, const QByteArray &data)
+ReturnedValue QQmlXMLHttpRequest::send(const Value &me, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
@@ -1272,7 +1272,7 @@ ReturnedValue QQmlXMLHttpRequest::send(const ValueRef me, const QByteArray &data
     return Encode::undefined();
 }
 
-ReturnedValue QQmlXMLHttpRequest::abort(const ValueRef me)
+ReturnedValue QQmlXMLHttpRequest::abort(const Value &me)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1298,7 +1298,7 @@ ReturnedValue QQmlXMLHttpRequest::getMe() const
     return m_me.value();
 }
 
-void QQmlXMLHttpRequest::setMe(const ValueRef me)
+void QQmlXMLHttpRequest::setMe(const Value &me)
 {
     m_me.set(v4, me);
 }
@@ -1407,7 +1407,7 @@ void QQmlXMLHttpRequest::finished()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        dispatchCallback(m_me);
+        dispatchCallback(*m_me.valueRef());
     }
     m_responseEntityBody.append(m_network->readAll());
     readEncoding();
@@ -1424,11 +1424,11 @@ void QQmlXMLHttpRequest::finished()
     destroyNetwork();
     if (m_state < Loading) {
         m_state = Loading;
-        dispatchCallback(m_me);
+        dispatchCallback(*m_me.valueRef());
     }
     m_state = Done;
 
-    dispatchCallback(m_me);
+    dispatchCallback(*m_me.valueRef());
 
     Scope scope(v4);
     ScopedValue v(scope, Primitive::undefinedValue());
@@ -1510,7 +1510,7 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
+void QQmlXMLHttpRequest::dispatchCallbackImpl(const Value &me)
 {
     QV4::Scope scope(v4);
     ScopedObject o(scope, me);
@@ -1554,7 +1554,7 @@ void QQmlXMLHttpRequest::dispatchCallbackImpl(const ValueRef me)
 
 }
 
-void QQmlXMLHttpRequest::dispatchCallback(const ValueRef me)
+void QQmlXMLHttpRequest::dispatchCallback(const Value &me)
 {
     dispatchCallbackImpl(me);
     if (v4->hasException) {

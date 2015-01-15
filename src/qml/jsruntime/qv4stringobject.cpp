@@ -82,7 +82,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
     s->defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
 }
 
-Heap::StringObject::StringObject(ExecutionEngine *engine, const ValueRef val)
+Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
     : Heap::Object(engine->emptyClass, engine->stringPrototype.asObject())
 {
     value = val;

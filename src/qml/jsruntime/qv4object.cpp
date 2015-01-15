@@ -73,14 +73,14 @@ bool Object::setPrototype(Object *proto)
     return true;
 }
 
-void Object::put(ExecutionEngine *engine, const QString &name, const ValueRef value)
+void Object::put(ExecutionEngine *engine, const QString &name, const Value &value)
 {
     Scope scope(engine);
     ScopedString n(scope, engine->newString(name));
     put(n, value);
 }
 
-ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs)
+ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
         return p->value.asReturnedValue();
@@ -90,11 +90,11 @@ ReturnedValue Object::getValue(const ValueRef thisObject, const Property *p, Pro
     Scope scope(p->getter()->internalClass->engine);
     ScopedFunctionObject getter(scope, p->getter());
     ScopedCallData callData(scope);
-    callData->thisObject = *thisObject;
+    callData->thisObject = thisObject;
     return getter->call(callData);
 }
 
-void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef value)
+void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
 {
     if (internalClass()->engine->hasException)
         return;
@@ -104,7 +104,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
             Scope scope(set->internalClass->engine);
             ScopedFunctionObject setter(scope, set);
             ScopedCallData callData(scope, 1);
-            callData->args[0] = *value;
+            callData->args[0] = value;
             callData->thisObject = this;
             setter->call(callData);
             return;
@@ -115,7 +115,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
     if (!attrs.isWritable())
         goto reject;
 
-    pd->value = *value;
+    pd->value = value;
     return;
 
   reject:
@@ -123,7 +123,7 @@ void Object::putValue(Property *pd, PropertyAttributes attrs, const ValueRef val
         engine()->throwTypeError();
 }
 
-void Object::defineDefaultProperty(const QString &name, ValueRef value)
+void Object::defineDefaultProperty(const QString &name, const Value &value)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -171,7 +171,7 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallCo
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
-void Object::defineReadonlyProperty(const QString &name, ValueRef value)
+void Object::defineReadonlyProperty(const QString &name, const Value &value)
 {
     QV4::ExecutionEngine *e = engine();
     Scope scope(e);
@@ -179,7 +179,7 @@ void Object::defineReadonlyProperty(const QString &name, ValueRef value)
     defineReadonlyProperty(s, value);
 }
 
-void Object::defineReadonlyProperty(String *name, ValueRef value)
+void Object::defineReadonlyProperty(String *name, const Value &value)
 {
     insertMember(name, value, Attr_ReadOnly);
 }
@@ -385,12 +385,12 @@ ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
     return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-void Object::put(Managed *m, String *name, const ValueRef value)
+void Object::put(Managed *m, String *name, const Value &value)
 {
     static_cast<Object *>(m)->internalPut(name, value);
 }
 
-void Object::putIndexed(Managed *m, uint index, const ValueRef value)
+void Object::putIndexed(Managed *m, uint index, const Value &value)
 {
     static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
@@ -464,7 +464,7 @@ ReturnedValue Object::getLookup(Managed *m, Lookup *l)
     return Encode::undefined();
 }
 
-void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
+void Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Scope scope(static_cast<Object *>(m)->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
@@ -477,7 +477,7 @@ void Object::setLookup(Managed *m, Lookup *l, const ValueRef value)
             l->classList[0] = o->internalClass();
             l->index = idx;
             l->setter = Lookup::setter0;
-            o->memberData()->data[idx] = *value;
+            o->memberData()->data[idx] = value;
             return;
         }
 
@@ -647,7 +647,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
 
 
 // Section 8.12.5
-void Object::internalPut(String *name, const ValueRef value)
+void Object::internalPut(String *name, const Value &value)
 {
     if (internalClass()->engine->hasException)
         return;
@@ -676,7 +676,7 @@ void Object::internalPut(String *name, const ValueRef value)
             goto reject;
         else if (isArrayObject() && name->equals(engine()->id_length)) {
             bool ok;
-            uint l = value->asArrayLength(&ok);
+            uint l = value.asArrayLength(&ok);
             if (!ok) {
                 engine()->throwRangeError(value);
                 return;
@@ -685,7 +685,7 @@ void Object::internalPut(String *name, const ValueRef value)
             if (!ok)
                 goto reject;
         } else {
-            pd->value = *value;
+            pd->value = value;
         }
         return;
     } else if (!prototype()) {
@@ -715,7 +715,7 @@ void Object::internalPut(String *name, const ValueRef value)
         Scope scope(engine());
         ScopedFunctionObject setter(scope, pd->setter());
         ScopedCallData callData(scope, 1);
-        callData->args[0] = *value;
+        callData->args[0] = value;
         callData->thisObject = this;
         setter->call(callData);
         return;
@@ -733,7 +733,7 @@ void Object::internalPut(String *name, const ValueRef value)
     }
 }
 
-void Object::internalPutIndexed(uint index, const ValueRef value)
+void Object::internalPutIndexed(uint index, const Value &value)
 {
     if (internalClass()->engine->hasException)
         return;
@@ -760,7 +760,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
         } else if (!attrs.isWritable())
             goto reject;
         else
-            pd->value = *value;
+            pd->value = value;
         return;
     } else if (!prototype()) {
         if (!isExtensible())
@@ -789,7 +789,7 @@ void Object::internalPutIndexed(uint index, const ValueRef value)
         Scope scope(engine());
         ScopedFunctionObject setter(scope, pd->setter());
         ScopedCallData callData(scope, 1);
-        callData->args[0] = *value;
+        callData->args[0] = value;
         callData->thisObject = this;
         setter->call(callData);
         return;

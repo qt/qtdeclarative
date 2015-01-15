@@ -129,14 +129,14 @@ struct ObjectVTable
     ReturnedValue (*construct)(Managed *, CallData *data);
     ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
-    void (*put)(Managed *, String *name, const ValueRef value);
-    void (*putIndexed)(Managed *, uint index, const ValueRef value);
+    void (*put)(Managed *, String *name, const Value &value);
+    void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(Managed *m, Lookup *l);
-    void (*setLookup)(Managed *m, Lookup *l, const ValueRef v);
+    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
 };

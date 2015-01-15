@@ -106,38 +106,38 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    void put(ExecutionEngine *engine, const QString &name, const ValueRef value);
+    void put(ExecutionEngine *engine, const QString &name, const Value &value);
 
-    static ReturnedValue getValue(const ValueRef thisObject, const Property *p, PropertyAttributes attrs);
+    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
     ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
         Scope scope(this->engine());
         ScopedValue t(scope, const_cast<Object *>(this));
         return getValue(t, p, attrs);
     }
 
-    void putValue(Property *pd, PropertyAttributes attrs, const ValueRef value);
+    void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(String *name, ValueRef value) {
+    void defineDefaultProperty(String *name, const Value &value) {
         insertMember(name, value, Attr_Data|Attr_NotEnumerable);
     }
-    void defineDefaultProperty(const QString &name, ValueRef value);
+    void defineDefaultProperty(const QString &name, const Value &value);
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineDefaultProperty(String *name, ReturnedValue (*code)(CallContext *), int argumentCount = 0);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(CallContext *), ReturnedValue (*setter)(CallContext *));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
-    void defineReadonlyProperty(const QString &name, ValueRef value);
-    void defineReadonlyProperty(String *name, ValueRef value);
+    void defineReadonlyProperty(const QString &name, const Value &value);
+    void defineReadonlyProperty(String *name, const Value &value);
 
     void ensureMemberIndex(QV4::ExecutionEngine *e, uint idx) {
         d()->memberData = MemberData::reallocate(e, d()->memberData, idx);
     }
 
-    void insertMember(String *s, const ValueRef v, PropertyAttributes attributes = Attr_Data) {
+    void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
         ScopedProperty p(scope);
-        p->value = *v;
+        p->value = v;
         insertMember(s, p, attributes);
     }
     void insertMember(String *s, const Property *p, PropertyAttributes attributes);
@@ -155,9 +155,9 @@ public:
     void setArrayLengthUnchecked(uint l);
 
     void arraySet(uint index, const Property *p, PropertyAttributes attributes = Attr_Data);
-    void arraySet(uint index, ValueRef value);
+    void arraySet(uint index, const Value &value);
 
-    bool arrayPut(uint index, ValueRef value) {
+    bool arrayPut(uint index, const Value &value) {
         return arrayData()->vtable()->put(this, index, value);
     }
     bool arrayPut(uint index, Value *values, uint n) {
@@ -172,7 +172,7 @@ public:
         }
     }
 
-    void push_back(const ValueRef v);
+    void push_back(const Value &v);
 
     ArrayData::Type arrayType() const {
         return arrayData() ? d()->arrayData->type : Heap::ArrayData::Simple;
@@ -216,9 +216,9 @@ public:
     { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
     { return vtable()->getIndexed(this, idx, hasProperty); }
-    inline void put(String *name, const ValueRef v)
+    inline void put(String *name, const Value &v)
     { vtable()->put(this, name, v); }
-    inline void putIndexed(uint idx, const ValueRef v)
+    inline void putIndexed(uint idx, const Value &v)
     { vtable()->putIndexed(this, idx, v); }
     PropertyAttributes query(String *name) const
     { return vtable()->query(this, name); }
@@ -230,7 +230,7 @@ public:
     { return vtable()->deleteIndexedProperty(this, index); }
     ReturnedValue getLookup(Lookup *l)
     { return vtable()->getLookup(this, l); }
-    void setLookup(Lookup *l, const ValueRef v)
+    void setLookup(Lookup *l, const Value &v)
     { vtable()->setLookup(this, l, v); }
     void advanceIterator(ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
@@ -246,22 +246,22 @@ protected:
     static ReturnedValue call(Managed *m, CallData *);
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void put(Managed *m, String *name, const ValueRef value);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
+    static void put(Managed *m, String *name, const Value &value);
+    static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(Managed *m, Lookup *l);
-    static void setLookup(Managed *m, Lookup *l, const ValueRef v);
+    static void setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty);
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
-    void internalPut(String *name, const ValueRef value);
-    void internalPutIndexed(uint index, const ValueRef value);
+    void internalPut(String *name, const Value &value);
+    void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
     bool internalDeleteIndexedProperty(uint index);
 
@@ -278,7 +278,7 @@ struct BooleanObject : Object {
         value = Encode((bool)false);
     }
 
-    BooleanObject(ExecutionEngine *engine, const ValueRef val)
+    BooleanObject(ExecutionEngine *engine, const Value &val)
         : Object(engine->emptyClass, engine->booleanPrototype.asObject())
     {
         value = val;
@@ -293,7 +293,7 @@ struct NumberObject : Object {
         value = Encode((int)0);
     }
 
-    NumberObject(ExecutionEngine *engine, const ValueRef val)
+    NumberObject(ExecutionEngine *engine, const Value &val)
         : Object(engine->emptyClass, engine->numberPrototype.asObject())
     {
         value = val;
@@ -353,7 +353,7 @@ inline void Object::setArrayLengthUnchecked(uint l)
         memberData()->data[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
 }
 
-inline void Object::push_back(const ValueRef v)
+inline void Object::push_back(const Value &v)
 {
     arrayCreate();
 
@@ -382,14 +382,14 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
 }
 
 
-inline void Object::arraySet(uint index, ValueRef value)
+inline void Object::arraySet(uint index, const Value &value)
 {
     arrayCreate();
     if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
         initSparseArray();
     }
     Property *pd = ArrayData::insert(this, index);
-    pd->value = value ? *value : Primitive::undefinedValue();
+    pd->value = value;
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }

@@ -79,10 +79,11 @@ public:
     PersistentValue &operator=(Object *object);
     ~PersistentValue();
 
-    PersistentValue(ExecutionEngine *engine, const ValueRef value);
+    PersistentValue(ExecutionEngine *engine, const Value &value);
     PersistentValue(ExecutionEngine *engine, ReturnedValue value);
+    PersistentValue(ExecutionEngine *engine, Object *object);
 
-    void set(ExecutionEngine *engine, const ValueRef value);
+    void set(ExecutionEngine *engine, const Value &value);
     void set(ExecutionEngine *engine, ReturnedValue value);
     void set(ExecutionEngine *engine, Heap::Base *obj);
 
@@ -126,7 +127,7 @@ public:
     WeakValue &operator=(const WeakValue &other);
     ~WeakValue();
 
-    void set(ExecutionEngine *engine, const ValueRef value);
+    void set(ExecutionEngine *engine, const Value &value);
     void set(ExecutionEngine *engine, ReturnedValue value);
     void set(ExecutionEngine *engine, Heap::Base *obj);
 

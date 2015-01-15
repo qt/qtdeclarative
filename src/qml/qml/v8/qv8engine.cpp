@@ -223,7 +223,7 @@ void QV8Engine::initializeGlobal()
     }
 }
 
-void QV8Engine::freezeObject(const QV4::ValueRef value)
+void QV8Engine::freezeObject(const QV4::Value &value)
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedFunctionObject f(scope, m_freezeObject.value());

@@ -128,31 +128,31 @@ static QString convertElementToString(bool element)
         return QStringLiteral("false");
 }
 
-template <typename ElementType> ElementType convertValueToElement(const QV4::ValueRef value);
+template <typename ElementType> ElementType convertValueToElement(const Value &value);
 
-template <> QString convertValueToElement(const QV4::ValueRef value)
+template <> QString convertValueToElement(const Value &value)
 {
-    return value->toQString();
+    return value.toQString();
 }
 
-template <> int convertValueToElement(const QV4::ValueRef value)
+template <> int convertValueToElement(const Value &value)
 {
-    return value->toInt32();
+    return value.toInt32();
 }
 
-template <> QUrl convertValueToElement(const QV4::ValueRef value)
+template <> QUrl convertValueToElement(const Value &value)
 {
-    return QUrl(value->toQString());
+    return QUrl(value.toQString());
 }
 
-template <> qreal convertValueToElement(const QV4::ValueRef value)
+template <> qreal convertValueToElement(const Value &value)
 {
-    return value->toNumber();
+    return value.toNumber();
 }
 
-template <> bool convertValueToElement(const ValueRef value)
+template <> bool convertValueToElement(const Value &value)
 {
-    return value->toBoolean();
+    return value.toBoolean();
 }
 
 namespace QV4 {
@@ -215,7 +215,7 @@ public:
         return Encode::undefined();
     }
 
-    void containerPutIndexed(uint index, const QV4::ValueRef value)
+    void containerPutIndexed(uint index, const QV4::Value &value)
     {
         if (internalClass()->engine->hasException)
             return;
@@ -345,8 +345,8 @@ public:
 
     struct CompareFunctor
     {
-        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::ValueRef compareFn)
-            : m_ctx(ctx), m_compareFn(compareFn)
+        CompareFunctor(QV4::ExecutionContext *ctx, const QV4::Value &compareFn)
+            : m_ctx(ctx), m_compareFn(&compareFn)
         {}
 
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
@@ -363,7 +363,7 @@ public:
 
     private:
         QV4::ExecutionContext *m_ctx;
-        QV4::ValueRef m_compareFn;
+        const QV4::Value *m_compareFn;
     };
 
     void sort(QV4::CallContext *ctx)
@@ -484,7 +484,7 @@ public:
 
     static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
     { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
-    static void putIndexed(Managed *that, uint index, const QV4::ValueRef value)
+    static void putIndexed(Managed *that, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
@@ -642,15 +642,15 @@ QVariant SequencePrototype::toVariant(Object *object)
         return QQml##ElementTypeName##List::toVariant(a); \
     } else
 
-QVariant SequencePrototype::toVariant(const QV4::ValueRef array, int typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
 {
     *succeeded = true;
 
-    if (!array->asArrayObject()) {
+    if (!array.asArrayObject()) {
         *succeeded = false;
         return QVariant();
     }
-    QV4::Scope scope(array->asObject()->engine());
+    QV4::Scope scope(array.asObject()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }

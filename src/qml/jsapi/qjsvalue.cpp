@@ -861,16 +861,16 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
     return *this;
 }
 
-static bool js_equal(const QString &string, QV4::ValueRef value)
+static bool js_equal(const QString &string, const QV4::Value &value)
 {
-    if (value->isString())
-        return string == value->stringValue()->toQString();
-    if (value->isNumber())
-        return RuntimeHelpers::stringToNumber(string) == value->asDouble();
-    if (value->isBoolean())
-        return RuntimeHelpers::stringToNumber(string) == double(value->booleanValue());
-    if (value->isObject()) {
-        Scope scope(value->objectValue()->engine());
+    if (value.isString())
+        return string == value.stringValue()->toQString();
+    if (value.isNumber())
+        return RuntimeHelpers::stringToNumber(string) == value.asDouble();
+    if (value.isBoolean())
+        return RuntimeHelpers::stringToNumber(string) == double(value.booleanValue());
+    if (value.isObject()) {
+        Scope scope(value.objectValue()->engine());
         ScopedValue p(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
         return js_equal(string, p);
     }

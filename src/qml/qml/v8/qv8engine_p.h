@@ -130,7 +130,7 @@ private:
     QQmlV4Function &operator=(const QQmlV4Function &);
 
     QQmlV4Function(QV4::CallData *callData, QV4::ValueRef retVal,
-                   const QV4::ValueRef global, QQmlContextData *c, QV4::ExecutionEngine *e)
+                   const QV4::Value &global, QQmlContextData *c, QV4::ExecutionEngine *e)
         : callData(callData), retVal(retVal), ctx(c), e(e)
     {
         callData->thisObject.val = global.asReturnedValue();
@@ -194,7 +194,7 @@ public:
 
     QQmlContextData *callingContext();
 
-    void freezeObject(const QV4::ValueRef value);
+    void freezeObject(const QV4::Value &value);
 
     // Return the network access manager for this engine.  By default this returns the network
     // access manager of the QQmlEngine.  It is overridden in the case of a threaded v8

@@ -216,7 +216,7 @@ PersistentValue::PersistentValue(const PersistentValue &other)
     }
 }
 
-PersistentValue::PersistentValue(ExecutionEngine *engine, const ValueRef value)
+PersistentValue::PersistentValue(ExecutionEngine *engine, const Value &value)
 {
     val = engine->memoryManager->m_persistentValues->allocate();
     *val = value;
@@ -226,6 +226,16 @@ PersistentValue::PersistentValue(ExecutionEngine *engine, ReturnedValue value)
 {
     val = engine->memoryManager->m_persistentValues->allocate();
     *val = value;
+}
+
+PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
+    : val(0)
+{
+    if (!object)
+        return;
+
+    val = engine->memoryManager->m_persistentValues->allocate();
+    *val = object;
 }
 
 PersistentValue::~PersistentValue()
@@ -274,7 +284,7 @@ PersistentValue &PersistentValue::operator=(Object *object)
     return *this;
 }
 
-void PersistentValue::set(ExecutionEngine *engine, const ValueRef value)
+void PersistentValue::set(ExecutionEngine *engine, const Value &value)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
@@ -323,7 +333,7 @@ WeakValue::~WeakValue()
     PersistentValueStorage::free(val);
 }
 
-void WeakValue::set(ExecutionEngine *engine, const ValueRef value)
+void WeakValue::set(ExecutionEngine *engine, const Value &value)
 {
     if (!val)
         val = engine->memoryManager->m_weakValues->allocate();

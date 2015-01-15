@@ -52,7 +52,7 @@ struct DateObject : Object {
         value = Encode(qSNaN());
     }
 
-    DateObject(QV4::ExecutionEngine *engine, const ValueRef date)
+    DateObject(QV4::ExecutionEngine *engine, const Value &date)
         : Object(engine->emptyClass, engine->datePrototype.asObject())
     {
         value = date;
@@ -74,7 +74,7 @@ struct DateObject: Object {
 
     Value date() const { return d()->value; }
     Value &date() { return d()->value; }
-    void setDate(const ValueRef date) { d()->value = date; }
+    void setDate(const Value &date) { d()->value = date; }
 
     QDateTime toQDateTime() const;
 };

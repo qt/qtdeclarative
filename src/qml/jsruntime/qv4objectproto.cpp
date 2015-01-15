@@ -135,7 +135,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     if (ArgumentsObject::isNonStrictArgumentsObject(O))
-        Scoped<ArgumentsObject>(scope, O)->fullyCreate();
+        static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
     ScopedValue v(scope, ctx->argument(1));
     ScopedString name(scope, v->toString(scope.engine));
@@ -266,7 +266,7 @@ ReturnedValue ObjectPrototype::method_freeze(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     if (ArgumentsObject::isNonStrictArgumentsObject(o))
-        Scoped<ArgumentsObject>(scope, o)->fullyCreate();
+        static_cast<ArgumentsObject *>(o.getPointer())->fullyCreate();
 
     o->setInternalClass(o->internalClass()->frozen());
 
@@ -560,7 +560,7 @@ ReturnedValue ObjectPrototype::method_set_proto(CallContext *ctx)
     return Encode::undefined();
 }
 
-void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const ValueRef v, Property *desc, PropertyAttributes *attrs)
+void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value &v, Property *desc, PropertyAttributes *attrs)
 {
     Scope scope(engine);
     ScopedObject o(scope, v);
@@ -666,7 +666,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
 }
 
 
-Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const ValueRef o)
+Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, const Value &o)
 {
     Scope scope(v4);
     ScopedArrayObject array(scope, v4->newArrayObject());

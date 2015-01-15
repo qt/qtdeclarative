@@ -1016,7 +1016,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
     }
 }
 
-void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::ValueRef value)
+void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
     if (!ensureVarPropertiesAllocated())
@@ -1195,7 +1195,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)
     return readVarProperty(index - propOffset());
 }
 
-void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::ValueRef v)
+void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 {
     if (index < propOffset()) {
         Q_ASSERT(parentVMEMetaObject());

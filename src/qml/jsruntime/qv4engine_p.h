@@ -260,29 +260,29 @@ public:
     Heap::String *newString(const QString &s = QString());
     Heap::String *newIdentifier(const QString &text);
 
-    Heap::Object *newStringObject(const ValueRef value);
-    Heap::Object *newNumberObject(const ValueRef value);
-    Heap::Object *newBooleanObject(const ValueRef value);
+    Heap::Object *newStringObject(const Value &value);
+    Heap::Object *newNumberObject(const Value &value);
+    Heap::Object *newBooleanObject(const Value &value);
 
     Heap::ArrayObject *newArrayObject(int count = 0);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
     Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
-    Heap::DateObject *newDateObject(const ValueRef value);
+    Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);
 
     Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
     Heap::RegExpObject *newRegExpObject(RegExp *re, bool global);
     Heap::RegExpObject *newRegExpObject(const QRegExp &re);
 
-    Heap::Object *newErrorObject(const ValueRef value);
+    Heap::Object *newErrorObject(const Value &value);
     Heap::Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newSyntaxErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
     Heap::Object *newTypeErrorObject(const QString &message);
     Heap::Object *newRangeErrorObject(const QString &message);
-    Heap::Object *newURIErrorObject(const ValueRef message);
+    Heap::Object *newURIErrorObject(const Value &message);
 
     Heap::Object *newVariantObject(const QVariant &v);
 
@@ -310,7 +310,7 @@ public:
     Value exceptionValue;
     StackTrace exceptionStackTrace;
 
-    ReturnedValue throwError(const ValueRef value);
+    ReturnedValue throwError(const Value &value);
     ReturnedValue catchException(StackTrace *trace = 0);
 
     ReturnedValue throwError(const QString &message);
@@ -318,23 +318,23 @@ public:
     ReturnedValue throwSyntaxError(const QString &message, const QString &fileName, int lineNumber, int column);
     ReturnedValue throwTypeError();
     ReturnedValue throwTypeError(const QString &message);
-    ReturnedValue throwReferenceError(const ValueRef value);
+    ReturnedValue throwReferenceError(const Value &value);
     ReturnedValue throwReferenceError(const QString &value, const QString &fileName, int lineNumber, int column);
-    ReturnedValue throwRangeError(const ValueRef value);
+    ReturnedValue throwRangeError(const Value &value);
     ReturnedValue throwRangeError(const QString &message);
-    ReturnedValue throwURIError(const ValueRef msg);
+    ReturnedValue throwURIError(const Value &msg);
     ReturnedValue throwUnimplemented(const QString &message);
 
     // Use only inside catch(...) -- will re-throw if no JS exception
     QQmlError catchExceptionAsQmlError();
 
     // variant conversions
-    QVariant toVariant(const QV4::ValueRef value, int typeHint, bool createJSValueForObjects = true);
+    QVariant toVariant(const QV4::Value &value, int typeHint, bool createJSValueForObjects = true);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
     QVariantMap variantMapFromJS(QV4::Object *o);
 
-    bool metaTypeFromJS(const QV4::ValueRef value, int type, void *data);
+    bool metaTypeFromJS(const Value &value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
 private:

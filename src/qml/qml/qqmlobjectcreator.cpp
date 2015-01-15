@@ -211,7 +211,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         context->importedScripts.set(v4, scripts);
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
             QQmlScriptData *s = compiledData->scripts.at(i);
-            scripts->putIndexed(i, s->scriptValueForContext(context));
+            scripts->putIndexed(i, *s->scriptValueForContext(context).valueRef());
         }
     } else if (sharedState->creationContext) {
         context->importedScripts = sharedState->creationContext->importedScripts;

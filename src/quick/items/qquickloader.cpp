@@ -645,7 +645,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
     Q_ASSERT(v4);
     QV4::Scope scope(v4);
     QV4::ScopedValue ipv(scope, initialPropertyValues.value());
-    d->initializeObjectWithInitialProperties(qmlGlobalForIpv, ipv, obj);
+    d->initializeObjectWithInitialProperties(*qmlGlobalForIpv.valueRef(), ipv, obj);
 }
 
 void QQuickLoaderIncubator::statusChanged(Status status)

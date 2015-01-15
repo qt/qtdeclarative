@@ -43,7 +43,7 @@ namespace QV4 {
 struct ArrayBuffer;
 
 typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(ExecutionEngine *engine, char *data, int index, ValueRef value);
+typedef void (*TypedArrayWrite)(ExecutionEngine *engine, char *data, int index, const Value &value);
 
 struct TypedArrayOperations {
     int bytesPerElement;
@@ -101,7 +101,7 @@ struct TypedArray : Object
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
-    static void putIndexed(Managed *m, uint index, const ValueRef value);
+    static void putIndexed(Managed *m, uint index, const Value &value);
 };
 
 struct TypedArrayCtor: FunctionObject

@@ -50,11 +50,11 @@
 QT_BEGIN_NAMESPACE
 
 QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
-                       const QV4::ValueRef qmlglobal, const QV4::ValueRef callback)
+                       const QV4::Value &qmlglobal, const QV4::Value &callback)
     : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
     m_qmlglobal.set(engine, qmlglobal);
-    if (callback->asFunctionObject())
+    if (callback.asFunctionObject())
         m_callbackFunction.set(engine, callback);
 
     m_resultObject.set(v4, resultValue(v4));
@@ -90,11 +90,11 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
     return o.asReturnedValue();
 }
 
-void QV4Include::callback(const QV4::ValueRef callback, const QV4::ValueRef status)
+void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
 {
-    if (!callback->isObject())
+    if (!callback.isObject())
         return;
-    QV4::ExecutionEngine *v4 = callback->asObject()->engine();
+    QV4::ExecutionEngine *v4 = callback.asObject()->engine();
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, callback);
     if (!f)

@@ -752,8 +752,7 @@ QString Stringify::Str(const QString &key, ValueRef v)
     if (o) {
         if (!o->asFunctionObject()) {
             if (o->asArrayObject()) {
-                ScopedArrayObject a(scope, o);
-                return JA(a);
+                return JA(static_cast<ArrayObject *>(o.getPointer()));
             } else {
                 return JO(o);
             }
@@ -973,29 +972,28 @@ ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValu
         return Encode::undefined();
 }
 
-QJsonValue JsonObject::toJsonValue(const ValueRef value,
-                                       V4ObjectSet &visitedObjects)
+QJsonValue JsonObject::toJsonValue(const Value &value, V4ObjectSet &visitedObjects)
 {
-    if (value->isNumber())
-        return QJsonValue(value->toNumber());
-    else if (value->isBoolean())
-        return QJsonValue((bool)value->booleanValue());
-    else if (value->isNull())
+    if (value.isNumber())
+        return QJsonValue(value.toNumber());
+    else if (value.isBoolean())
+        return QJsonValue((bool)value.booleanValue());
+    else if (value.isNull())
         return QJsonValue(QJsonValue::Null);
-    else if (value->isUndefined())
+    else if (value.isUndefined())
         return QJsonValue(QJsonValue::Undefined);
-    else if (value->isString())
-        return QJsonValue(value->toQString());
+    else if (value.isString())
+        return QJsonValue(value.toQString());
 
-    Q_ASSERT(value->isObject());
-    Scope scope(value->asObject()->engine());
+    Q_ASSERT(value.isObject());
+    Scope scope(value.asObject()->engine());
     ScopedArrayObject a(scope, value);
     if (a)
         return toJsonArray(a, visitedObjects);
     ScopedObject o(scope, value);
     if (o)
         return toJsonObject(o, visitedObjects);
-    return QJsonValue(value->toQString());
+    return QJsonValue(value.toQString());
 }
 
 QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJsonObject &object)

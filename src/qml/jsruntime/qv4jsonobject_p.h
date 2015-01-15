@@ -65,7 +65,7 @@ public:
     static ReturnedValue fromJsonObject(ExecutionEngine *engine, const QJsonObject &object);
     static ReturnedValue fromJsonArray(ExecutionEngine *engine, const QJsonArray &array);
 
-    static inline QJsonValue toJsonValue(const QV4::ValueRef value)
+    static inline QJsonValue toJsonValue(const QV4::Value &value)
     { V4ObjectSet visitedObjects; return toJsonValue(value, visitedObjects); }
     static inline QJsonObject toJsonObject(QV4::Object *o)
     { V4ObjectSet visitedObjects; return toJsonObject(o, visitedObjects); }
@@ -73,7 +73,7 @@ public:
     { V4ObjectSet visitedObjects; return toJsonArray(a, visitedObjects); }
 
 private:
-    static QJsonValue toJsonValue(const QV4::ValueRef value, V4ObjectSet &visitedObjects);
+    static QJsonValue toJsonValue(const QV4::Value &value, V4ObjectSet &visitedObjects);
     static QJsonObject toJsonObject(Object *o, V4ObjectSet &visitedObjects);
     static QJsonArray toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects);
 

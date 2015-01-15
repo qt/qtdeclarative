@@ -106,7 +106,7 @@ void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::ValueRef function, bool *isUndefined)
+                                   const QV4::Value &function, bool *isUndefined)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(context->engine);
     QV4::Scope scope(v4);
@@ -116,13 +116,13 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::ValueRef function,
+                                   const QV4::Value &function,
                                    QV4::CallData *callData,
                                    bool *isUndefined)
 {
     Q_ASSERT(context && context->engine);
 
-    if (function->isUndefined()) {
+    if (function.isUndefined()) {
         if (isUndefined)
             *isUndefined = true;
         return QV4::Encode::undefined();
@@ -154,7 +154,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             callData->thisObject = value;
     }
 
-    result = function->asFunctionObject()->call(callData);
+    result = function.asFunctionObject()->call(callData);
     if (scope.hasException()) {
         if (watcher.wasDeleted())
             scope.engine->catchException(); // ignore exception

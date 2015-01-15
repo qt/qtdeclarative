@@ -87,7 +87,7 @@ Heap::WithContext *ExecutionContext::newWithContext(Object *with)
     return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
 }
 
-Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const ValueRef exceptionValue)
+Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
 {
     return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
 }
@@ -146,7 +146,7 @@ Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
     withObject = with ? with->d() : 0;
 }
 
-Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const ValueRef exceptionValue)
+Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue)
     : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_CatchContext)
 {
     strictMode = parent->strictMode;
@@ -282,7 +282,7 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
     }
 }
 
-void ExecutionContext::setProperty(String *name, const ValueRef value)
+void ExecutionContext::setProperty(String *name, const Value &value)
 {
     Scope scope(this);
     ScopedContext ctx(scope, this);
@@ -294,7 +294,7 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
                 return;
             }
         } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext && static_cast<Heap::CatchContext *>(ctx->d())->exceptionVarName->isEqualTo(name)) {
-            static_cast<Heap::CatchContext *>(ctx->d())->exceptionValue = *value;
+            static_cast<Heap::CatchContext *>(ctx->d())->exceptionValue = value;
             return;
         } else {
             ScopedObject activation(scope, (Object *)0);
@@ -304,10 +304,10 @@ void ExecutionContext::setProperty(String *name, const ValueRef value)
                     uint index = c->function->function->internalClass->find(name);
                     if (index < UINT_MAX) {
                         if (index < c->function->formalParameterCount()) {
-                            c->callData->args[c->function->formalParameterCount() - index - 1] = *value;
+                            c->callData->args[c->function->formalParameterCount() - index - 1] = value;
                         } else {
                             index -= c->function->formalParameterCount();
-                            c->locals[index] = *value;
+                            c->locals[index] = value;
                         }
                         return;
                     }

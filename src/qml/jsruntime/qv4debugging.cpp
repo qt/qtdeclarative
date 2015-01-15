@@ -484,7 +484,7 @@ void Debugger::collectReturnedValue(Collector *collector) const
         return;
 
     Scope scope(m_engine);
-    ScopedObject o(scope, m_returnedValue);
+    ScopedObject o(scope, m_returnedValue.valueRef());
     collector->collect(o);
 }
 

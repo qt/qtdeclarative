@@ -107,28 +107,28 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
     static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
-    static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const ValueRef value);
+    static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
 
     using Object::get;
 
     static ReturnedValue getProperty(QObject *object, ExecutionContext *ctx, int propertyIndex, bool captureRequired);
-    void setProperty(ExecutionContext *ctx, int propertyIndex, const ValueRef value);
+    void setProperty(ExecutionContext *ctx, int propertyIndex, const Value &value);
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
 
 private:
     static ReturnedValue getProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, bool captureRequired = true);
-    static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const ValueRef value);
+    static void setProperty(QObject *object, ExecutionContext *ctx, QQmlPropertyData *property, const Value &value);
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static void put(Managed *m, String *name, const ValueRef value);
+    static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
@@ -147,14 +147,14 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
-    static ReturnedValue create(QV4::ExecutionContext *scope, QQmlValueTypeWrapper *valueType, int index, const ValueRef qmlGlobal = Primitive::undefinedValue());
+    static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal = Primitive::undefinedValue());
+    static ReturnedValue create(QV4::ExecutionContext *scope, QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal = Primitive::undefinedValue());
 
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object.data(); }
 
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
-    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const ValueRef args, int argc);
+    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
 
     static ReturnedValue call(Managed *, CallData *callData);
 

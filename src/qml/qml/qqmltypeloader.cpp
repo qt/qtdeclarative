@@ -2506,10 +2506,10 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         scriptsArray = v4->newArrayObject(scripts.count());
         ctxt->importedScripts.set(v4, scriptsArray);
     } else {
-        scriptsArray = ctxt->importedScripts;
+        scriptsArray = ctxt->importedScripts.valueRef();
     }
     for (int ii = 0; ii < scripts.count(); ++ii)
-        scriptsArray->putIndexed(ii, scripts.at(ii)->scriptData()->scriptValueForContext(ctxt));
+        scriptsArray->putIndexed(ii, *scripts.at(ii)->scriptData()->scriptValueForContext(ctxt).valueRef());
 
     if (!hasEngine())
         initialize(parentCtxt->engine);

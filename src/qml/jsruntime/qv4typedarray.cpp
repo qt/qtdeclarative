@@ -46,9 +46,9 @@ ReturnedValue Int8ArrayRead(const char *data, int index)
     return Encode((int)(signed char)data[index]);
 }
 
-void Int8ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void Int8ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    signed char v = (signed char)value->toUInt32();
+    signed char v = (signed char)value.toUInt32();
     if (e->hasException)
         return;
     data[index] = v;
@@ -59,21 +59,21 @@ ReturnedValue UInt8ArrayRead(const char *data, int index)
     return Encode((int)(unsigned char)data[index]);
 }
 
-void UInt8ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void UInt8ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    unsigned char v = (unsigned char)value->toUInt32();
+    unsigned char v = (unsigned char)value.toUInt32();
     if (e->hasException)
         return;
     data[index] = v;
 }
 
-void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    if (value->isInteger()) {
-        data[index] = (char)(unsigned char)qBound(0, value->integerValue(), 255);
+    if (value.isInteger()) {
+        data[index] = (char)(unsigned char)qBound(0, value.integerValue(), 255);
         return;
     }
-    double d = value->toNumber();
+    double d = value.toNumber();
     if (e->hasException)
         return;
     // ### is there a way to optimise this?
@@ -107,9 +107,9 @@ ReturnedValue Int16ArrayRead(const char *data, int index)
     return Encode((int)*(short *)(data + index));
 }
 
-void Int16ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void Int16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    short v = (short)value->toInt32();
+    short v = (short)value.toInt32();
     if (e->hasException)
         return;
     *(short *)(data + index) = v;
@@ -120,9 +120,9 @@ ReturnedValue UInt16ArrayRead(const char *data, int index)
     return Encode((int)*(unsigned short *)(data + index));
 }
 
-void UInt16ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void UInt16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    unsigned short v = (unsigned short)value->toInt32();
+    unsigned short v = (unsigned short)value.toInt32();
     if (e->hasException)
         return;
     *(unsigned short *)(data + index) = v;
@@ -133,9 +133,9 @@ ReturnedValue Int32ArrayRead(const char *data, int index)
     return Encode(*(int *)(data + index));
 }
 
-void Int32ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void Int32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    int v = (int)value->toInt32();
+    int v = (int)value.toInt32();
     if (e->hasException)
         return;
     *(int *)(data + index) = v;
@@ -146,9 +146,9 @@ ReturnedValue UInt32ArrayRead(const char *data, int index)
     return Encode(*(unsigned int *)(data + index));
 }
 
-void UInt32ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void UInt32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    unsigned int v = (unsigned int)value->toUInt32();
+    unsigned int v = (unsigned int)value.toUInt32();
     if (e->hasException)
         return;
     *(unsigned int *)(data + index) = v;
@@ -159,9 +159,9 @@ ReturnedValue Float32ArrayRead(const char *data, int index)
     return Encode(*(float *)(data + index));
 }
 
-void Float32ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void Float32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    float v = value->toNumber();
+    float v = value.toNumber();
     if (e->hasException)
         return;
     *(float *)(data + index) = v;
@@ -172,9 +172,9 @@ ReturnedValue Float64ArrayRead(const char *data, int index)
     return Encode(*(double *)(data + index));
 }
 
-void Float64ArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef value)
+void Float64ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
 {
-    double v = value->toNumber();
+    double v = value.toNumber();
     if (e->hasException)
         return;
     *(double *)(data + index) = v;
@@ -361,7 +361,7 @@ ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)
     return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
-void TypedArray::putIndexed(Managed *m, uint index, const ValueRef value)
+void TypedArray::putIndexed(Managed *m, uint index, const Value &value)
 {
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     if (v4->hasException)

@@ -73,7 +73,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype)
     e->defineDefaultProperty(QStringLiteral("name"), s);
 }
 
-Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const ValueRef message, ErrorType t)
+Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const Value &message, ErrorType t)
     : Heap::Object(ic, prototype)
 {
     errorType = t;
@@ -83,7 +83,7 @@ Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype, const 
 
     e->defineAccessorProperty(QStringLiteral("stack"), QV4::ErrorObject::method_get_stack, 0);
 
-    if (!message->isUndefined())
+    if (!message.isUndefined())
         e->defineDefaultProperty(QStringLiteral("message"), message);
     ScopedString s(scope);
     e->defineDefaultProperty(QStringLiteral("name"), (s = scope.engine->newString(e->className())));
@@ -182,7 +182,7 @@ DEFINE_OBJECT_VTABLE(ErrorObject);
 
 DEFINE_OBJECT_VTABLE(SyntaxErrorObject);
 
-Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const ValueRef msg)
+Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const Value &msg)
     : Heap::ErrorObject(engine->emptyClass, engine->syntaxErrorPrototype.asObject(), msg, SyntaxError)
 {
 }
@@ -192,12 +192,12 @@ Heap::SyntaxErrorObject::SyntaxErrorObject(ExecutionEngine *engine, const QStrin
 {
 }
 
-Heap::EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const ValueRef message)
+Heap::EvalErrorObject::EvalErrorObject(ExecutionEngine *engine, const Value &message)
     : Heap::ErrorObject(engine->emptyClass, engine->evalErrorPrototype.asObject(), message, EvalError)
 {
 }
 
-Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const ValueRef message)
+Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const Value &message)
     : Heap::ErrorObject(engine->emptyClass, engine->rangeErrorPrototype.asObject(), message, RangeError)
 {
 }
@@ -207,7 +207,7 @@ Heap::RangeErrorObject::RangeErrorObject(ExecutionEngine *engine, const QString 
 {
 }
 
-Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const ValueRef message)
+Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const Value &message)
     : Heap::ErrorObject(engine->emptyClass, engine->referenceErrorPrototype.asObject(), message, ReferenceError)
 {
 }
@@ -222,7 +222,7 @@ Heap::ReferenceErrorObject::ReferenceErrorObject(ExecutionEngine *engine, const 
 {
 }
 
-Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const ValueRef message)
+Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const Value &message)
     : Heap::ErrorObject(engine->emptyClass, engine->typeErrorPrototype.asObject(), message, TypeError)
 {
 }
@@ -232,7 +232,7 @@ Heap::TypeErrorObject::TypeErrorObject(ExecutionEngine *engine, const QString &m
 {
 }
 
-Heap::URIErrorObject::URIErrorObject(ExecutionEngine *engine, const ValueRef message)
+Heap::URIErrorObject::URIErrorObject(ExecutionEngine *engine, const Value &message)
     : Heap::ErrorObject(engine->emptyClass, engine->uRIErrorPrototype.asObject(), message, URIError)
 {
 }

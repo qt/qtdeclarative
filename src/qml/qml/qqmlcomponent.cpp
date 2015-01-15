@@ -1383,7 +1383,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 }
 
 // XXX used by QSGLoader
-void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::ValueRef qmlGlobal, const QV4::ValueRef valuemap, QObject *toCreate)
+void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Value &qmlGlobal, const QV4::Value &valuemap, QObject *toCreate)
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
@@ -1392,7 +1392,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->asObject());
 
-    if (!valuemap->isUndefined()) {
+    if (!valuemap.isUndefined()) {
         QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
         QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4engine,
                                                                  QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));

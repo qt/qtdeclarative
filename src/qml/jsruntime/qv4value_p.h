@@ -394,7 +394,6 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     template<typename T>
     Value &operator=(const Scoped<T> &t);
-    Value &operator=(const ValueRef v);
     Value &operator=(const Value &v) {
         val = v.val;
         return *this;
@@ -423,7 +422,6 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
     static unsigned int toUInt32(double value);
 
     inline operator ValueRef();
-    Value asValue() const { return *this; }
 };
 
 inline Primitive Primitive::undefinedValue()
@@ -545,6 +543,9 @@ struct ValueRef {
         return ptr;
     }
 
+    operator Value &() { return *ptr; }
+    operator const Value &() const { return *ptr; }
+
     operator Value *() {
         return ptr;
     }
@@ -555,7 +556,7 @@ struct ValueRef {
     static ValueRef fromRawValue(Value *v) {
         return ValueRef(v);
     }
-    static const ValueRef fromRawValue(const Value *v) {
+    static const Value &fromRawValue(const Value *v) {
         return ValueRef(const_cast<Value *>(v));
     }
 

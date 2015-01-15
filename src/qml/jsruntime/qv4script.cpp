@@ -189,7 +189,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
 
 Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , qml(v4, qml->asReturnedValue()), vmFunction(0), parseAsBinding(true)
+    , qml(v4, qml), vmFunction(0), parseAsBinding(true)
 {
     parsed = true;
 
