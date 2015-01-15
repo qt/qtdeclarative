@@ -1400,7 +1400,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 QV4::Scope scope(this);
                 QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(this, variant, &succeeded));
                 if (succeeded)
-                    return retn.asReturnedValue();
+                    return retn->asReturnedValue();
                 return QV4::Encode(newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
                 }
             case QMetaType::QVariantList:
@@ -1457,7 +1457,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(this, variant, &succeeded));
         if (succeeded)
-            return retn.asReturnedValue();
+            return retn->asReturnedValue();
 
         if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
             return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);

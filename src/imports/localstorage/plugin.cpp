@@ -337,7 +337,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
     if (err)
         V4THROW_SQL(SQLEXCEPTION_DATABASE_ERR,query.lastError().text());
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 struct TransactionRollback {

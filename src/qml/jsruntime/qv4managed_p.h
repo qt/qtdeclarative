@@ -136,11 +136,8 @@ struct Q_QML_PRIVATE_EXPORT Managed : Value
     };
 private:
     void *operator new(size_t);
-    Managed();
-    Managed(const Managed &other);
-    void operator = (const Managed &other);
-    void *operator new(size_t size, MemoryManager *mm);
-    void *operator new(size_t, Managed *m) { return m; }
+    Managed() Q_DECL_EQ_DELETE;
+    Q_DISABLE_COPY(Managed)
 
 public:
 
@@ -221,8 +218,6 @@ public:
     { return d()->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 
     static bool isEqualTo(Managed *m, Managed *other);
-
-    ReturnedValue asReturnedValue() { return Value::fromManaged(this).asReturnedValue(); }
 
     bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->isMarked(); }

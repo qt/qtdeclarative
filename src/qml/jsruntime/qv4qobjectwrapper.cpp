@@ -217,7 +217,7 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType, object, property.coreIndex, &succeeded));
         if (succeeded)
-            return retn.asReturnedValue();
+            return retn->asReturnedValue();
     }
 
     if (property.propType == QMetaType::UnknownType) {
@@ -277,7 +277,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
         QV4::ScopedValue method(scope, QV4::QObjectMethod::create(global, d()->object, index));
         if (hasProperty)
             *hasProperty = true;
-        return method.asReturnedValue();
+        return method->asReturnedValue();
     }
 
     QQmlPropertyData local;
@@ -376,7 +376,7 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
             }
         }
 
-        return rv.asReturnedValue();
+        return rv->asReturnedValue();
     }
 
     if (captureRequired && ep && !property->isConstant())
@@ -594,7 +594,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
         QV4::ScopedValue rv(scope, create(engine, object));
         ddata->jsWrapper.set(scope.engine, rv);
         ddata->jsEngineId = engine->m_engineId;
-        return rv.asReturnedValue();
+        return rv->asReturnedValue();
 
     } else {
         // If this object is tainted, we have to check to see if it is in our
@@ -609,7 +609,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
             QV4::ScopedValue result(scope, create(engine, object));
             ddata->jsWrapper.set(scope.engine, result);
             ddata->jsEngineId = engine->m_engineId;
-            return result.asReturnedValue();
+            return result->asReturnedValue();
         }
 
         if (!alternateWrapper) {
@@ -1725,7 +1725,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
             if (QObject *object = qobjectWrapper->object())
                 QQmlData::get(object, true)->setImplicitDestructible();
         }
-        return rv.asReturnedValue();
+        return rv->asReturnedValue();
     } else {
         return QV4::Encode::undefined();
     }
@@ -1878,7 +1878,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData)
         void *args[] = { 0, &funcptr };
         object.metacall(QMetaObject::InvokeMetaMethod, method.coreIndex, args);
 
-        return rv.asReturnedValue();
+        return rv->asReturnedValue();
     }
 
     if (!method.isOverload()) {

@@ -169,7 +169,7 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(Managed *m) {
-        ptr->val = m->asReturnedValue();
+        *ptr = *m;
         return *this;
     }
 
@@ -194,8 +194,6 @@ struct ScopedValue
     operator Value *() { return ptr; }
     operator const Value &() const { return *ptr; }
 
-    ReturnedValue asReturnedValue() const { return ptr->val; }
-
     Value *ptr;
 };
 
@@ -203,13 +201,11 @@ template<typename T>
 struct Scoped
 {
     enum _Convert { Convert };
-    enum _Cast { Cast };
 
     inline void setPointer(Managed *p) {
-#if QT_POINTER_SIZE == 8
         ptr->m = p ? p->m : 0;
-#else
-        *ptr = QV4::Value::fromManaged(p);
+#if QT_POINTER_SIZE == 4
+        ptr->tag = QV4::Value::Managed_Type;
 #endif
     }
 
@@ -237,10 +233,7 @@ struct Scoped
     Scoped(const Scope &scope, Heap::Base *o)
     {
         Value v;
-        v.m = o;
-#if QT_POINTER_SIZE == 4
-        v.tag = QV4::Value::Managed_Type;
-#endif
+        v = o;
         ptr = scope.engine->jsStackTop++;
         setPointer(value_cast<T>(v));
 #ifndef QT_NO_DEBUG
@@ -290,15 +283,6 @@ struct Scoped
         ++scope.size;
 #endif
     }
-    template<typename X>
-    Scoped(const Scope &scope, X *t, _Cast)
-    {
-        ptr = scope.engine->jsStackTop++;
-        setPointer(managed_cast<T>(t));
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
-    }
 
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
@@ -319,10 +303,7 @@ struct Scoped
 
     Scoped<T> &operator=(Heap::Base *o) {
         Value v;
-        v.m = o;
-#if QT_POINTER_SIZE == 4
-        v.tag = QV4::Value::Managed_Type;
-#endif
+        v = o;
         setPointer(value_cast<T>(v));
         return *this;
     }
@@ -373,18 +354,14 @@ struct Scoped
     }
 
     T *getPointer() {
-        return static_cast<T *>(ptr->managed());
+        return ptr->cast<T>();
     }
     typename T::Data **getRef() {
         return reinterpret_cast<typename T::Data **>(&ptr->m);
     }
 
     ReturnedValue asReturnedValue() const {
-#if QT_POINTER_SIZE == 8
-        return ptr->val ? ptr->val : Primitive::undefinedValue().asReturnedValue();
-#else
-        return ptr->val;
-#endif
+        return ptr->m ? ptr->val : Encode::undefined();
     }
 
     Value *ptr;
@@ -443,13 +420,6 @@ inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
 #endif
     return *this;
 }
-
-//template<typename T>
-//inline TypedValue<T> &TypedValue<T>::operator =(const ManagedRef<T> &v)
-//{
-//    val = v.asReturnedValue();
-//    return *this;
-//}
 
 template<typename T>
 inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)

@@ -257,7 +257,7 @@ ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
         instance->setArrayLength(len - 1);
     else
         instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - 1)));
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
@@ -389,7 +389,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
         instance->setArrayLengthUnchecked(len - 1);
     else
         instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - 1)));
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_slice(CallContext *ctx)
@@ -905,7 +905,7 @@ ReturnedValue ArrayPrototype::method_reduce(CallContext *ctx)
         }
         ++k;
     }
-    return acc.asReturnedValue();
+    return acc->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
@@ -959,6 +959,6 @@ ReturnedValue ArrayPrototype::method_reduceRight(CallContext *ctx)
         }
         --k;
     }
-    return acc.asReturnedValue();
+    return acc->asReturnedValue();
 }
 

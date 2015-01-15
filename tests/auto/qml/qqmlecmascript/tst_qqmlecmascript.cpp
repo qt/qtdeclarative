@@ -2378,7 +2378,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
         scope.engine->catchException();
         return QV4::Encode::undefined();
     }
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)

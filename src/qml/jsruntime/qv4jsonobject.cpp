@@ -213,7 +213,7 @@ ReturnedValue JsonParser::parse(QJsonParseError *error)
     END;
     error->offset = 0;
     error->error = QJsonParseError::NoError;
-    return v.asReturnedValue();
+    return v->asReturnedValue();
 }
 
 /*
@@ -726,7 +726,7 @@ QString Stringify::Str(const QString &key, const Value &v)
         value = replacerFunction->call(callData);
     }
 
-    o = value.asReturnedValue();
+    o = value->asReturnedValue();
     if (o) {
         if (NumberObject *n = o->asNumberObject())
             value = n->value();
@@ -748,7 +748,7 @@ QString Stringify::Str(const QString &key, const Value &v)
         return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
     }
 
-    o = value.asReturnedValue();
+    o = value->asReturnedValue();
     if (o) {
         if (!o->asFunctionObject()) {
             if (o->asArrayObject()) {
@@ -904,7 +904,7 @@ ReturnedValue JsonObject::method_parse(CallContext *ctx)
         return ctx->engine()->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
     }
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 ReturnedValue JsonObject::method_stringify(CallContext *ctx)

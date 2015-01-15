@@ -182,7 +182,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
 
     ep->propertyCapture = lastPropertyCapture;
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
@@ -309,7 +309,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     }
     if (qmlscope)
         qmlscope->set(v4, qmlScopeObject);
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
@@ -342,7 +342,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
     }
     if (qmlscope)
         qmlscope->set(v4, qmlScopeObject);
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 

@@ -137,7 +137,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
-        return result.asReturnedValue();
+        return result->asReturnedValue();
     }
 
     if (resource->d()->isNullWrapper)
@@ -150,7 +150,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
-        return result.asReturnedValue();
+        return result->asReturnedValue();
     }
 
     // Its possible we could delay the calculation of the "actual" context (in the case
@@ -161,7 +161,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
     if (!context) {
         if (hasProperty)
             *hasProperty = true;
-        return result.asReturnedValue();
+        return result->asReturnedValue();
     }
 
     // Search type (attached property/enum/imported scripts) names
@@ -240,7 +240,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result.asReturnedValue();
+                return result->asReturnedValue();
             }
         }
         scopeObject = 0;
@@ -253,7 +253,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
-                return result.asReturnedValue();
+                return result->asReturnedValue();
             }
         }
 
@@ -262,7 +262,7 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
 
     expressionContext->unresolvedNames = true;
 
-    return Primitive::undefinedValue().asReturnedValue();
+    return Encode::undefined();
 }
 
 void QmlContextWrapper::put(Managed *m, String *name, const Value &value)

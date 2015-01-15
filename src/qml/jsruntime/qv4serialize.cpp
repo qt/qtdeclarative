@@ -325,7 +325,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         for (quint32 ii = 0; ii < size; ++ii) {
             name = deserialize(data, engine);
             value = deserialize(data, engine);
-            n = name.asReturnedValue();
+            n = name->asReturnedValue();
             o->put(n, value);
         }
         return o.asReturnedValue();
@@ -360,7 +360,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
 
         agent->release();
         agent->setEngine(engine);
-        return rv.asReturnedValue();
+        return rv->asReturnedValue();
     }
     case WorkerSequence:
     {

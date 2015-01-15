@@ -235,7 +235,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         callback(callbackFunction, result);
     }
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 QT_END_NAMESPACE

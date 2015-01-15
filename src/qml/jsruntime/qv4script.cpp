@@ -138,7 +138,7 @@ ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
     ScopedValue result(scope, This->function()->code(engine, This->function()->codeData));
     engine->popContext();
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 void QmlBindingWrapper::markObjects(Heap::Base *m, ExecutionEngine *e)
@@ -397,5 +397,5 @@ QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &scr
         scope.engine->catchException();
         return Encode::undefined();
     }
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }

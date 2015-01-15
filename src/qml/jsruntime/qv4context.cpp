@@ -358,7 +358,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             bool hasProperty = false;
             v = w->get(name, &hasProperty);
             if (hasProperty) {
-                return v.asReturnedValue();
+                return v->asReturnedValue();
             }
             continue;
         }
@@ -386,7 +386,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
-                    return v.asReturnedValue();
+                    return v->asReturnedValue();
             }
             if (f->function() && f->function()->isNamedExpression()
                 && name->equals(ScopedString(scope, f->function()->name())))
@@ -398,7 +398,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             bool hasProperty = false;
             v = global->get(name, &hasProperty);
             if (hasProperty)
-                return v.asReturnedValue();
+                return v->asReturnedValue();
         }
     }
     ScopedValue n(scope, name);
@@ -426,7 +426,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
             v = w->get(name, &hasProperty);
             if (hasProperty) {
                 *base = w->d();
-                return v.asReturnedValue();
+                return v->asReturnedValue();
             }
             continue;
         }
@@ -456,7 +456,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
                 if (hasProperty) {
                     if (ctx->d()->type == Heap::ExecutionContext::Type_QmlContext)
                         *base = activation->d();
-                    return v.asReturnedValue();
+                    return v->asReturnedValue();
                 }
             }
             if (f->function() && f->function()->isNamedExpression()
@@ -469,7 +469,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
             bool hasProperty = false;
             v = global->get(name, &hasProperty);
             if (hasProperty)
-                return v.asReturnedValue();
+                return v->asReturnedValue();
         }
     }
     ScopedValue n(scope, name);

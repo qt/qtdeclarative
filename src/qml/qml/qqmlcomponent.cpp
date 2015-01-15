@@ -1259,7 +1259,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     if (!rv)
         args->setReturnValue(QV4::Encode::null());
     else
-        args->setReturnValue(object.asReturnedValue());
+        args->setReturnValue(object->asReturnedValue());
 }
 
 /*!

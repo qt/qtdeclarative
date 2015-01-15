@@ -325,7 +325,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &lef
     if (!v)
         return Encode(false);
 
-    ScopedObject o(scope, QV4::Value::fromReturnedValue(f->protoProperty()).asObject());
+    ScopedObject o(scope, f->protoProperty());
     if (!o)
         return engine->throwTypeError();
 

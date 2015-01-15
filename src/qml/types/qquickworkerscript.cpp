@@ -253,7 +253,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     v = f->call(callData);
     if (scope.hasException())
         v = scope.engine->catchException();
-    return v.asReturnedValue();
+    return v->asReturnedValue();
 }
 
 QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager()

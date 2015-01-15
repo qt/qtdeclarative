@@ -416,7 +416,7 @@ ReturnedValue ObjectPrototype::method_valueOf(CallContext *ctx)
     ScopedValue v(scope, ctx->d()->callData->thisObject.toObject(scope.engine));
     if (ctx->d()->engine->hasException)
         return Encode::undefined();
-    return v.asReturnedValue();
+    return v->asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_hasOwnProperty(CallContext *ctx)

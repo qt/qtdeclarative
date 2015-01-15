@@ -182,7 +182,7 @@ ReturnedValue StringCtor::call(Managed *m, CallData *callData)
         value = callData->args[0].toString(v4);
     else
         value = v4->newString();
-    return value.asReturnedValue();
+    return value->asReturnedValue();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)

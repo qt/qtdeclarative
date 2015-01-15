@@ -951,7 +951,7 @@ QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Funct
         }
     }
 
-    return valuemap.asReturnedValue();
+    return valuemap->asReturnedValue();
 }
 
 #include <moc_qquickloader_p.cpp>

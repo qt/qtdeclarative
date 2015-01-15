@@ -419,7 +419,7 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
         return Encode::undefined();
 
     if (result->isObject())
-        return result.asReturnedValue();
+        return result->asReturnedValue();
     return obj.asReturnedValue();
 }
 
@@ -442,7 +442,7 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(ctx->d()->engine, f->function()->compiledFunction);
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
@@ -546,7 +546,7 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     if (f->function()->compiledFunction->hasQmlDependencies())
         QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
 
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 Heap::Object *SimpleScriptFunction::protoForConstructor()

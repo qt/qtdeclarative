@@ -95,7 +95,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
     {
         QV4::ExecutionEngine *v4 = static_cast<DelegateModelGroupFunction *>(that)->engine();
         QV4::Scope scope(v4);
-        QV4::Scoped<DelegateModelGroupFunction> f(scope, that, QV4::Scoped<DelegateModelGroupFunction>::Cast);
+        QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<DelegateModelGroupFunction *>(that));
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
         if (!o)
             return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));

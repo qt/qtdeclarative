@@ -648,7 +648,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     if (engine->hasException)
         result = engine->catchException();
 
-    return QJSValue(engine, result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!
@@ -704,7 +704,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     if (engine->hasException)
         result = engine->catchException();
 
-    return QJSValue(engine, result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!
@@ -752,7 +752,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     if (engine->hasException)
         result = engine->catchException();
 
-    return QJSValue(engine, result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED
@@ -1001,7 +1001,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (engine->hasException)
         result = engine->catchException();
 
-    return QJSValue(engine, result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!
@@ -1030,7 +1030,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex));
     if (engine->hasException)
         engine->catchException();
-    return QJSValue(engine, result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!

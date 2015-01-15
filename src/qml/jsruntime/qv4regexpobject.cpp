@@ -385,7 +385,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
     array->setArrayLengthUnchecked(len);
     array->memberData()->data[Index_ArrayIndex] = Primitive::fromInt32(result);
-    array->memberData()->data[Index_ArrayInput] = arg.asReturnedValue();
+    array->memberData()->data[Index_ArrayInput] = arg;
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch = array;
@@ -441,7 +441,7 @@ ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
     if (result->isUndefined())
         return ctx->d()->engine->newString()->asReturnedValue();
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
@@ -451,7 +451,7 @@ ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
     if (result->isUndefined())
         return ctx->d()->engine->newString()->asReturnedValue();
-    return result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_input(CallContext *ctx)

@@ -323,7 +323,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         result = v4->catchException();
     if (ctx->d() != v4->rootContext())
         v4->popContext();
-    return QJSValue(v4, result.asReturnedValue());
+    return QJSValue(v4, result->asReturnedValue());
 }
 
 /*!
@@ -338,7 +338,7 @@ QJSValue QJSEngine::newObject()
 {
     QV4::Scope scope(d->m_v4Engine);
     QV4::ScopedValue v(scope, d->m_v4Engine->newObject());
-    return QJSValue(d->m_v4Engine, v.asReturnedValue());
+    return QJSValue(d->m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -387,7 +387,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
             QQmlEngine::setObjectOwnership(object, QQmlEngine::JavaScriptOwnership);
     }
     QV4::ScopedValue v(scope, QV4::QObjectWrapper::wrap(v4, object));
-    return QJSValue(v4, v.asReturnedValue());
+    return QJSValue(v4, v->asReturnedValue());
 }
 
 /*!
@@ -405,7 +405,7 @@ QJSValue QJSEngine::globalObject() const
     Q_D(const QJSEngine);
     QV4::Scope scope(d->m_v4Engine);
     QV4::ScopedValue v(scope, d->m_v4Engine->globalObject());
-    return QJSValue(d->m_v4Engine, v.asReturnedValue());
+    return QJSValue(d->m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -417,7 +417,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
     Q_D(QJSEngine);
     QV4::Scope scope(d->m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
-    return QJSValue(d->m_v4Engine, v.asReturnedValue());
+    return QJSValue(d->m_v4Engine, v->asReturnedValue());
 }
 
 /*!
