@@ -5,6 +5,7 @@ SOURCES += \
     $$PWD/qqmllistmodel.cpp \
     $$PWD/qqmllistmodelworkeragent.cpp \
     $$PWD/qqmlmodelsmodule.cpp \
+    $$PWD/qqmlmodelindexvaluetype.cpp \
     $$PWD/qqmlobjectmodel.cpp \
     $$PWD/qqmltimer.cpp \
     $$PWD/qquickpackage.cpp \
@@ -20,6 +21,7 @@ HEADERS += \
     $$PWD/qqmllistmodel_p_p.h \
     $$PWD/qqmllistmodelworkeragent_p.h \
     $$PWD/qqmlmodelsmodule_p.h \
+    $$PWD/qqmlmodelindexvaluetype_p.h \
     $$PWD/qqmlobjectmodel_p.h \
     $$PWD/qqmltimer_p.h \
     $$PWD/qquickpackage_p.h \

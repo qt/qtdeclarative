@@ -48,6 +48,7 @@ PRIVATETESTS += \
     qqmllistcompositor \
     qqmllistmodel \
     qqmllistmodelworkerscript \
+    qqmlitemmodels \
     qqmltypeloader \
     qqmlparser \
     qquickworkerscript \

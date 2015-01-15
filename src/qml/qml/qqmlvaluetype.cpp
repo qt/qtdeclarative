@@ -37,6 +37,7 @@
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qqmlmodelindexvaluetype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +62,14 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
         valueTypes[ii] = 0;
+
+    // See types wrapped in qqmlmodelindexvaluetype_p.h
+    qRegisterMetaType<QModelIndexList>();
+    qRegisterMetaType<QPersistentModelIndex>();
+    qRegisterMetaType<QItemSelectionRange>();
+    qRegisterMetaType<QItemSelection>();
+    QMetaType::registerConverter<QModelIndex, QPersistentModelIndex>(&QQmlModelIndexValueType::toPersistentModelIndex);
+    QMetaType::registerConverter<QPersistentModelIndex, QModelIndex>(&QQmlPersistentModelIndexValueType::toModelIndex);
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
@@ -101,11 +110,22 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         return &QQmlRectFValueType::staticMetaObject;
     case QVariant::EasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
+    case QVariant::ModelIndex:
+        return &QQmlModelIndexValueType::staticMetaObject;
     default:
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;
         break;
     }
+
+    if (t == qMetaTypeId<QPersistentModelIndex>())
+        return &QQmlPersistentModelIndexValueType::staticMetaObject;
+    else if (t == qMetaTypeId<QModelIndexList>())
+        return &QQmlModelIndexListValueType::staticMetaObject;
+    else if (t == qMetaTypeId<QItemSelectionRange>())
+        return &QQmlItemSelectionRangeValueType::staticMetaObject;
+    else if (t == qMetaTypeId<QItemSelection>())
+        return &QQmlItemSelectionValueType::staticMetaObject;
 
     QMetaType metaType(t);
     if (metaType.flags() & QMetaType::IsGadget)
