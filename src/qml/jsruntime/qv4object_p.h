@@ -348,17 +348,17 @@ struct BooleanObject : Object {
 
 struct NumberObject : Object {
     NumberObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype)
+        : Object(ic, prototype),
+          value(0)
     {
-        value = Encode((int)0);
     }
 
-    NumberObject(ExecutionEngine *engine, const Value &val)
-        : Object(engine->emptyClass, engine->numberPrototype.asObject())
+    NumberObject(ExecutionEngine *engine, double val)
+        : Object(engine->emptyClass, engine->numberPrototype.asObject()),
+          value(val)
     {
-        value = val;
     }
-    Value value;
+    double value;
 };
 
 struct ArrayObject : Object {
@@ -391,7 +391,7 @@ struct NumberObject: Object {
     V4_OBJECT2(NumberObject, Object)
     Q_MANAGED_TYPE(NumberObject)
 
-    Value value() const { return d()->value; }
+    double value() const { return d()->value; }
 };
 
 struct ArrayObject: Object {

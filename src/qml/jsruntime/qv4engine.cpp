@@ -540,7 +540,7 @@ Heap::Object *ExecutionEngine::newStringObject(const Value &value)
     return object->d();
 }
 
-Heap::Object *ExecutionEngine::newNumberObject(const Value &value)
+Heap::Object *ExecutionEngine::newNumberObject(double value)
 {
     Scope scope(this);
     Scoped<NumberObject> object(scope, memoryManager->alloc<NumberObject>(this, value));

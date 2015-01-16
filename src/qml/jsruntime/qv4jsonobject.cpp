@@ -729,11 +729,11 @@ QString Stringify::Str(const QString &key, const Value &v)
     o = value->asReturnedValue();
     if (o) {
         if (NumberObject *n = o->asNumberObject())
-            value = n->value();
+            value = Encode(n->value());
         else if (StringObject *so = o->asStringObject())
             value = so->d()->value;
         else if (BooleanObject *b =o->asBooleanObject())
-            value = b->value();
+            value = Encode(b->value());
     }
 
     if (value->isNull())
@@ -934,7 +934,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 
     ScopedValue s(scope, ctx->argument(2));
     if (NumberObject *n = s->asNumberObject())
-        s = n->value();
+        s = Encode(n->value());
     else if (StringObject *so = s->asStringObject())
         s = so->d()->value;
 

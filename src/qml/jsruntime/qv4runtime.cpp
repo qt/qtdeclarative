@@ -441,7 +441,7 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
         return engine->newStringObject(value);
     case Value::Integer_Type:
     default: // double
-        return engine->newNumberObject(value);
+        return engine->newNumberObject(value.asDouble());
     }
 }
 

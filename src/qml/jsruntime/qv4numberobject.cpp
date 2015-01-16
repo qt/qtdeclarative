@@ -54,8 +54,7 @@ ReturnedValue NumberCtor::construct(Managed *m, CallData *callData)
 {
     Scope scope(m->cast<NumberCtor>()->engine());
     double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
-    ScopedValue d(scope, QV4::Primitive::fromDouble(dbl));
-    return Encode(scope.engine->newNumberObject(d));
+    return Encode(scope.engine->newNumberObject(dbl));
 }
 
 ReturnedValue NumberCtor::call(Managed *, CallData *callData)
@@ -101,7 +100,7 @@ inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
     NumberObject *n = ctx->thisObject().asNumberObject();
     if (!n)
         return ctx->engine()->throwTypeError();
-    return n->value().asReturnedValue();
+    return Encode(n->value());
 }
 
 inline double thisNumber(ExecutionContext *ctx)
@@ -111,7 +110,7 @@ inline double thisNumber(ExecutionContext *ctx)
     NumberObject *n = ctx->thisObject().asNumberObject();
     if (!n)
         return ctx->engine()->throwTypeError();
-    return n->value().asDouble();
+    return n->value();
 }
 
 ReturnedValue NumberPrototype::method_toString(CallContext *ctx)

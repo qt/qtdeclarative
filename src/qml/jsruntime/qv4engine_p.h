@@ -261,7 +261,7 @@ public:
     Heap::String *newIdentifier(const QString &text);
 
     Heap::Object *newStringObject(const Value &value);
-    Heap::Object *newNumberObject(const Value &value);
+    Heap::Object *newNumberObject(double value);
     Heap::Object *newBooleanObject(bool b);
 
     Heap::ArrayObject *newArrayObject(int count = 0);
