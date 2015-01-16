@@ -175,7 +175,7 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 QString QQuickTextEdit::text() const
 {
     Q_D(const QQuickTextEdit);
-    if (!d->textCached) {
+    if (!d->textCached && isComponentComplete()) {
         QQuickTextEditPrivate *d = const_cast<QQuickTextEditPrivate *>(d_func());
 #ifndef QT_NO_TEXTHTMLPARSER
         if (d->richText)
@@ -2578,7 +2578,7 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     \qmlproperty string QtQuick::TextEdit::hoveredLink
     \since 5.2
 
-    This property contains the link string when user hovers a link
+    This property contains the link string when the user hovers a link
     embedded in the text. The link must be in rich text or HTML format
     and the link string provides access to the particular link.
 

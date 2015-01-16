@@ -475,3 +475,19 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
     ScopedValue n(scope, name);
     return engine()->throwReferenceError(n);
 }
+
+Heap::FunctionObject *ExecutionContext::getFunctionObject() const
+{
+    Scope scope(d()->engine);
+    ScopedContext it(scope, this->d());
+    for (; it; it = it->d()->parent) {
+        if (const CallContext *callCtx = it->asCallContext())
+            return callCtx->d()->function;
+        else if (it->asCatchContext() || it->asWithContext())
+            continue; // look in the parent context for a FunctionObject
+        else
+            break;
+    }
+
+    return 0;
+}

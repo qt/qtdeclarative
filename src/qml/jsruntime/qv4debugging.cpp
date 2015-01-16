@@ -523,7 +523,6 @@ void Debugger::maybeBreakAtInstruction()
         return;
 
     QMutexLocker locker(&m_lock);
-    int lineNumber = engine()->currentContext()->lineNumber;
 
     if (m_gatherSources) {
         m_gatherSources->run();
@@ -547,8 +546,12 @@ void Debugger::maybeBreakAtInstruction()
     if (m_pauseRequested) { // Serve debugging requests from the agent
         m_pauseRequested = false;
         pauseAndWait(PauseRequest);
-    } else if (m_haveBreakPoints && reallyHitTheBreakPoint(getFunction()->sourceFile(), lineNumber)) {
-        pauseAndWait(BreakPoint);
+    } else if (m_haveBreakPoints) {
+        if (Function *f = getFunction()) {
+            const int lineNumber = engine()->currentContext()->lineNumber;
+            if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
+                pauseAndWait(BreakPoint);
+        }
     }
 }
 
@@ -594,12 +597,11 @@ Function *Debugger::getFunction() const
 {
     Scope scope(m_engine);
     ScopedContext context(scope, m_engine->currentContext());
-    if (CallContext *callCtx = context->asCallContext())
-        return callCtx->d()->function->function;
-    else {
-        Q_ASSERT(context->d()->type == QV4::Heap::ExecutionContext::Type_GlobalContext);
+    ScopedFunctionObject function(scope, context->getFunctionObject());
+    if (function)
+        return function->function();
+    else
         return context->d()->engine->globalCode;
-    }
 }
 
 void Debugger::pauseAndWait(PauseReason reason)

@@ -814,13 +814,17 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
             f->call(callData);
             if (scope.hasException()) {
+                QQmlError error = v4->catchExceptionAsQmlError();
+                if (error.description().isEmpty()) {
+                    QV4::ScopedString name(scope, f->name());
+                    error.setDescription(QString::fromLatin1("Unknown exception occurred during evaluation of connected function: %1").arg(name->toQString()));
+                }
                 if (QQmlEngine *qmlEngine = v4->qmlEngine()) {
-                    QQmlError error = v4->catchExceptionAsQmlError();
-                    if (error.description().isEmpty()) {
-                        QV4::ScopedString name(scope, f->name());
-                        error.setDescription(QString(QLatin1String("Unknown exception occurred during evaluation of connected function: %1")).arg(name->toQString()));
-                    }
                     QQmlEnginePrivate::get(qmlEngine)->warning(error);
+                } else {
+                    QMessageLogger(error.url().toString().toLatin1().constData(),
+                                   error.line(), 0).warning().noquote()
+                            << error.toString();
                 }
             }
         }

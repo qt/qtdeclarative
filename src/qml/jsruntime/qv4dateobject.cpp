@@ -482,6 +482,8 @@ static inline double ParseString(const QString &s)
     QDateTime dt = QDateTime::fromString(s, Qt::TextDate);
     if (!dt.isValid())
         dt = QDateTime::fromString(s, Qt::ISODate);
+    if (!dt.isValid())
+        dt = QDateTime::fromString(s, Qt::RFC2822Date);
     if (!dt.isValid()) {
         QStringList formats;
         formats << QStringLiteral("M/d/yyyy")

@@ -154,6 +154,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+    inline const CatchContext *asCatchContext() const;
+    inline const WithContext *asWithContext() const;
+
+    Heap::FunctionObject *getFunctionObject() const;
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 };
@@ -200,6 +204,16 @@ inline CallContext *ExecutionContext::asCallContext()
 inline const CallContext *ExecutionContext::asCallContext() const
 {
     return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
+}
+
+inline const CatchContext *ExecutionContext::asCatchContext() const
+{
+    return d()->type == Heap::ExecutionContext::Type_CatchContext ? static_cast<const CatchContext *>(this) : 0;
+}
+
+inline const WithContext *ExecutionContext::asWithContext() const
+{
+    return d()->type == Heap::ExecutionContext::Type_WithContext ? static_cast<const WithContext *>(this) : 0;
 }
 
 /* Function *f, int argc */

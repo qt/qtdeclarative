@@ -36,6 +36,7 @@
 
 #ifndef QT_NO_MOVIE
 
+#include <QtGui/qguiapplication.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlengine.h>
@@ -293,7 +294,13 @@ void QQuickAnimatedImage::load()
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
     } else {
-        QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
+        const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
+        d->devicePixelRatio = 1.0;
+
+        QUrl loadUrl = d->url;
+        resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
+        QString lf = QQmlFile::urlToLocalFileOrQrc(loadUrl);
+
         if (!lf.isEmpty()) {
             d->_movie = new QMovie(lf);
             movieRequestFinished();

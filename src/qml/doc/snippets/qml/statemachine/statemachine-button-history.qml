@@ -58,7 +58,6 @@ Rectangle {
         }
         Button {
             id: quitButton
-            // change the button label to the active state id
             text: "quit"
         }
     }
