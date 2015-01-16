@@ -138,7 +138,7 @@ similar to when there are no focus scopes.
 \li When a focus scope receives active focus, the contained type with
 \c focus set (if any) also gets the active focus. If this type is
 also a \l FocusScope, the proxying behavior continues. Both the
-focus scope and the sub-focused item will have \c activeFocus property set.
+focus scope and the sub-focused item will have the \c activeFocus property set.
 \endlist
 
 Note that, since the FocusScope type is not a visual type, the properties
