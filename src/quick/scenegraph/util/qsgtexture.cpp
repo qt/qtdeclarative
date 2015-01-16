@@ -35,6 +35,7 @@
 #include <qopenglfunctions.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <qthread.h>
+#include <qmath.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
@@ -75,13 +76,11 @@ static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_DEBUG
 inline static bool isPowerOfTwo(int x)
 {
     // Assumption: x >= 1
     return x == (x & -x);
 }
-#endif
 
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)
@@ -683,6 +682,16 @@ void QSGPlainTexture::bind()
         funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
     if (tmp.width() > max || tmp.height() > max) {
         tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        m_texture_size = tmp.size();
+    }
+
+    // Scale to a power of two size if mipmapping is requested and the
+    // texture is npot and npot textures are not properly supported.
+    if (mipmapFiltering() != QSGTexture::None
+        && (!isPowerOfTwo(m_texture_size.width()) || !isPowerOfTwo(m_texture_size.height()))
+        && !funcs->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures)) {
+        tmp = tmp.scaled(qNextPowerOfTwo(m_texture_size.width()), qNextPowerOfTwo(m_texture_size.height()),
+                         Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         m_texture_size = tmp.size();
     }
 
