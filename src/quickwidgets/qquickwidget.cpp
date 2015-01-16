@@ -1076,21 +1076,6 @@ bool QQuickWidget::event(QEvent *e)
     Q_D(QQuickWidget);
 
     switch (e->type()) {
-#ifndef QT_NO_DRAGANDDROP
-    case QEvent::Drop:
-    case QEvent::DragMove:
-    case QEvent::DragLeave:
-        // Drag/drop events only have local pos, so no need to map,
-        // but QQuickWindow::event() does not return true
-        d->offscreenWindow->event(e);
-        return e->isAccepted();
-    case QEvent::DragEnter:
-        // Don't reject drag events for the entire widget when one
-        // item rejects the drag enter
-        d->offscreenWindow->event(e);
-        e->accept();
-        return true;
-#endif
     case QEvent::InputMethod:
     case QEvent::InputMethodQuery:
 
@@ -1121,6 +1106,42 @@ bool QQuickWidget::event(QEvent *e)
     return QWidget::event(e);
 }
 
+#ifndef QT_NO_DRAGANDDROP
+
+/*! \reimp */
+void QQuickWidget::dragEnterEvent(QDragEnterEvent *e)
+{
+    Q_D(QQuickWidget);
+    // Don't reject drag events for the entire widget when one
+    // item rejects the drag enter
+    d->offscreenWindow->event(e);
+    e->accept();
+}
+
+/*! \reimp */
+void QQuickWidget::dragMoveEvent(QDragMoveEvent *e)
+{
+    Q_D(QQuickWidget);
+    // Drag/drop events only have local pos, so no need to map,
+    // but QQuickWindow::event() does not return true
+    d->offscreenWindow->event(e);
+}
+
+/*! \reimp */
+void QQuickWidget::dragLeaveEvent(QDragLeaveEvent *e)
+{
+    Q_D(QQuickWidget);
+    d->offscreenWindow->event(e);
+}
+
+/*! \reimp */
+void QQuickWidget::dropEvent(QDropEvent *e)
+{
+    Q_D(QQuickWidget);
+    d->offscreenWindow->event(e);
+}
+
+#endif // QT_NO_DRAGANDDROP
 
 // TODO: try to separate the two cases of
 // 1. render() unconditionally without sync

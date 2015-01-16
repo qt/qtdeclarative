@@ -126,6 +126,13 @@ protected:
     virtual void wheelEvent(QWheelEvent *);
 #endif
 
+#ifndef QT_NO_DRAGANDDROP
+    virtual void dragEnterEvent(QDragEnterEvent *);
+    virtual void dragMoveEvent(QDragMoveEvent *);
+    virtual void dragLeaveEvent(QDragLeaveEvent *);
+    virtual void dropEvent(QDropEvent *);
+#endif
+
     bool event(QEvent *);
 
 private:
