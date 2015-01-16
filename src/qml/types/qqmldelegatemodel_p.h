@@ -44,8 +44,6 @@
 #include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
 
-Q_DECLARE_METATYPE(QModelIndex)
-
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
