@@ -75,8 +75,8 @@ public:
     QQmlData()
         : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
           hasTaintedV8Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
-          hasVMEMetaObject(false), parentFrozen(false), notifyList(0), context(0), outerContext(0),
-          bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), bindingBits(0),
+          hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
+          bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
           lineNumber(0), columnNumber(0), compiledData(0), deferredData(0), jsEngineId(0),
           propertyCache(0), guards(0), extendedData(0) {
         init();
@@ -123,6 +123,9 @@ public:
     quint32 parentFrozen:1;
     quint32 dummy:22;
 
+    int bindingBitsSize;
+    quint32 *bindingBits;
+
     struct NotifyList {
         quint64 connectionMask;
 
@@ -154,9 +157,6 @@ public:
     // Linked list for QQmlContext::contextObjects
     QQmlData *nextContextObject;
     QQmlData**prevContextObject;
-
-    int bindingBitsSize;
-    quint32 *bindingBits;
 
     inline bool hasBindingBit(int) const;
     void clearBindingBit(int);
