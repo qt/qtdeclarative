@@ -164,7 +164,6 @@ public:
     qreal curVY() const;
     qreal curAY() const { return ay; }
 
-    int group;
     QQuickParticleEmitter* e;//### Needed?
     QQuickParticleSystem* system;
     int index;
@@ -203,18 +202,24 @@ public:
     float animY;
     float animWidth;
     float animHeight;
+
+    int group;
+
     //Used by ImageParticle data shadowing
     QQuickImageParticle* colorOwner;
     QQuickImageParticle* rotationOwner;
     QQuickImageParticle* deformationOwner;
     QQuickImageParticle* animationOwner;
-    //Used by CustomParticle
-    float r;
+
     //Used by ItemParticle
     QQuickItem* delegate;
     int modelIndex;
     //Used by custom affectors
     float update;
+    //Used by CustomParticle
+    float r;
+
+    // 4 bytes wasted
 
 
     void debugDump();

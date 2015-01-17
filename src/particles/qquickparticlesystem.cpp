@@ -427,11 +427,11 @@ void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)
 }
 
 QQuickParticleData::QQuickParticleData(QQuickParticleSystem* sys)
-    : group(0)
-    , e(0)
+    : e(0)
     , system(sys)
     , index(0)
     , systemIndex(-1)
+    , group(0)
     , colorOwner(0)
     , rotationOwner(0)
     , deformationOwner(0)
