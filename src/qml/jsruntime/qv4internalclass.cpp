@@ -427,11 +427,11 @@ void InternalClass::destroy()
         if (next->m_frozen)
             destroyStack.append(next->m_frozen);
 
-        for (size_t i = 0; i < transitions.size(); ++i) {
+        for (size_t i = 0; i < next->transitions.size(); ++i) {
             destroyStack.append(next->transitions.at(i).lookup);
         }
 
-        next->transitions.clear();
+        next->transitions.~vector<Transition>();
     }
 }
 
