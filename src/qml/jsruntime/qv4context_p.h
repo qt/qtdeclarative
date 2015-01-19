@@ -81,9 +81,6 @@ struct ExecutionContext : Base {
 
     inline ExecutionContext(ExecutionEngine *engine, ContextType t);
 
-    ContextType type;
-    bool strictMode;
-
     CallData *callData;
 
     ExecutionEngine *engine;
@@ -92,8 +89,9 @@ struct ExecutionContext : Base {
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
 
+    ContextType type : 8;
+    bool strictMode : 8;
     int lineNumber;
-
 };
 
 struct CallContext : ExecutionContext {

@@ -358,13 +358,13 @@ inline Heap::ExecutionContext *ExecutionEngine::popContext()
 
 inline
 Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : type(t)
-    , strictMode(false)
-    , engine(engine)
+    : engine(engine)
     , parent(engine->currentContext())
     , outer(0)
     , lookups(0)
     , compilationUnit(0)
+    , type(t)
+    , strictMode(false)
     , lineNumber(-1)
 {
     engine->current = this;
