@@ -498,10 +498,8 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
     ctx.locals = scope.alloc(f->varCount());
-    while (callData->argc < (int)f->formalParameterCount()) {
-        callData->args[callData->argc] = Encode::undefined();
-        ++callData->argc;
-    }
+    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
+        callData->args[i] = Encode::undefined();
     Q_ASSERT(v4->currentContext() == &ctx);
 
     ScopedObject result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -535,10 +533,8 @@ ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
     ctx.lookups = ctx.compilationUnit->runtimeLookups;
     ctx.outer = f->scope();
     ctx.locals = scope.alloc(f->varCount());
-    while (callData->argc < (int)f->formalParameterCount()) {
-        callData->args[callData->argc] = Encode::undefined();
-        ++callData->argc;
-    }
+    for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
+        callData->args[i] = Encode::undefined();
     Q_ASSERT(v4->currentContext() == &ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));

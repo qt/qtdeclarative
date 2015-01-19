@@ -68,7 +68,7 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
         args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length));
-    args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->realArgumentCount);
+    args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->callData->argc);
 }
 
 void ArgumentsObject::fullyCreate()
@@ -76,8 +76,8 @@ void ArgumentsObject::fullyCreate()
     if (fullyCreated())
         return;
 
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
-    uint argCount = qMin(context()->realArgumentCount, context()->callData->argc);
+    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->callData->argc);
+    uint argCount = context()->callData->argc;
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     context()->engine->requireArgumentsAccessors(numAccessors);
 
@@ -105,7 +105,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
     bool isMapped = false;
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->realArgumentCount);
+    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->callData->argc);
     if (pd && index < (uint)numAccessors)
         isMapped = arrayData()->attributes(index).isAccessor() &&
                 pd->getter() == context()->engine->argumentsAccessors[index].getter();
@@ -188,8 +188,8 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated())
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context()->function->formalParameterCount(), args->context()->realArgumentCount);
-    uint argCount = qMin(args->context()->realArgumentCount, args->context()->callData->argc);
+    uint numAccessors = qMin((int)args->context()->function->formalParameterCount(), args->context()->callData->argc);
+    uint argCount = args->context()->callData->argc;
     if (index >= argCount)
         return PropertyAttributes();
     if (index >= numAccessors)

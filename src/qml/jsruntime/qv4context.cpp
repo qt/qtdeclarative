@@ -57,7 +57,6 @@ Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, Ca
     new (c) Heap::CallContext(d()->engine, Heap::ExecutionContext::Type_CallContext);
 
     c->function = function->d();
-    c->realArgumentCount = callData->argc;
 
     c->strictMode = function->strictMode();
     c->outer = function->scope();
@@ -77,7 +76,6 @@ Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, Ca
     ::memcpy(c->callData, callData, sizeof(CallData) + (callData->argc - 1) * sizeof(Value));
     if (callData->argc < static_cast<int>(compiledFunction->nFormals))
         std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
-    c->callData->argc = qMax((uint)callData->argc, compiledFunction->nFormals);
 
     return c;
 }
