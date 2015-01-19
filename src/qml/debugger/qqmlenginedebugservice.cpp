@@ -207,8 +207,22 @@ QVariant QQmlEngineDebugService::valueContents(QVariant value) const
         return contents;
     }
 
-    if (QQmlValueTypeFactory::isValueType(userType))
+    if (QQmlValueTypeFactory::isValueType(userType)) {
+        const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(userType);
+        if (mo) {
+            int toStringIndex = mo->indexOfMethod("toString");
+            if (toStringIndex != -1) {
+                QMetaMethod mm = mo->method(toStringIndex);
+                QMetaType info(userType);
+                QString s;
+                if (info.flags() & QMetaType::IsGadget
+                        && mm.invokeOnGadget(value.data(), Q_RETURN_ARG(QString, s)))
+                    return s;
+            }
+        }
+
         return value;
+    }
 
     if (QQmlMetaType::isQObject(userType)) {
         QObject *o = QQmlMetaType::toQObject(value);
