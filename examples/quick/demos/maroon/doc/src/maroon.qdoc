@@ -257,7 +257,7 @@
     appear at the bottom of the new game screen and game canvas and slowly float
     towards the top on varying trajectories.
 
-    To use the ParticleSystem type, we must import \l{Qt Quick Particles}:
+    To use the ParticleSystem type, we must import \l{Qt Quick Particles QML Types}:
 
     \quotefromfile demos/maroon/maroon.qml
     \skipto Particles
