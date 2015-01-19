@@ -192,6 +192,7 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
     }
 
     t.lookup = newClass;
+    Q_ASSERT(t.lookup);
     return newClass;
 }
 
@@ -228,6 +229,7 @@ InternalClass *InternalClass::changeVTable(const ManagedVTable *vt)
     }
 
     t.lookup = newClass;
+    Q_ASSERT(t.lookup);
     return newClass;
 }
 
@@ -249,6 +251,7 @@ InternalClass *InternalClass::nonExtensible()
     newClass->extensible = false;
 
     t.lookup = newClass;
+    Q_ASSERT(t.lookup);
     return newClass;
 }
 
@@ -313,6 +316,7 @@ InternalClass *InternalClass::addMemberImpl(Identifier *identifier, PropertyAttr
     }
 
     t.lookup = newClass;
+    Q_ASSERT(t.lookup);
     return newClass;
 }
 
@@ -322,8 +326,8 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     uint propIdx = oldClass->propertyTable.lookup(id);
     Q_ASSERT(propIdx < oldClass->size);
 
-    Transition t = { { id }, 0, -1 };
-    t = object->internalClass()->lookupOrInsertTransition(t); // take a copy
+    Transition temp = { { id }, 0, -1 };
+    Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
 
     if (t.lookup) {
         object->setInternalClass(t.lookup);
@@ -343,7 +347,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     memmove(object->memberData()->data + propIdx, object->memberData()->data + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
 
     t.lookup = object->internalClass();
-    oldClass->lookupOrInsertTransition(t);
+    Q_ASSERT(t.lookup);
 }
 
 uint InternalClass::find(const String *string)
@@ -428,6 +432,7 @@ void InternalClass::destroy()
             destroyStack.append(next->m_frozen);
 
         for (size_t i = 0; i < next->transitions.size(); ++i) {
+            Q_ASSERT(next->transitions.at(i).lookup);
             destroyStack.append(next->transitions.at(i).lookup);
         }
 
