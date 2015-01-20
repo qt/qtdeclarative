@@ -1079,7 +1079,6 @@ private:
     void ensure(Temp *newTemp)
     {
         if (_defUses.size() <= newTemp->index) {
-            _defUses.reserve(newTemp->index + _defUses.size() / 3 + 1);
             _defUses.resize(newTemp->index + 1);
         }
     }
@@ -1088,7 +1087,6 @@ private:
     {
         Q_ASSERT(s->id() >= 0);
         if (static_cast<unsigned>(s->id()) >= _usesPerStatement.size()) {
-            _usesPerStatement.reserve(s->id() + _usesPerStatement.size() / 3 + 1);
             _usesPerStatement.resize(s->id() + 1);
         }
     }
