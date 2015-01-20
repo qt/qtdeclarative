@@ -3940,14 +3940,14 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
-    \enum QQuickWindow::RenderJobSchedule
+    \enum QQuickWindow::RenderStage
     \since 5.4
 
-    \value ScheduleBeforeSynchronizing Before synchronization.
-    \value ScheduleAfterSynchronizing After synchronization.
-    \value ScheduleBeforeRendering Before rendering.
-    \value ScheduleAfterRendering After rendering.
-    \value ScheduleAfterSwap After the frame is swapped.
+    \value BeforeSynchronizingStage Before synchronization.
+    \value AfterSynchronizingStage After synchronization.
+    \value BeforeRenderingStage Before rendering.
+    \value AfterRenderingStage After rendering.
+    \value AfterSwapStage After the frame is swapped.
 
     \sa {Scene Graph and Rendering}
  */
