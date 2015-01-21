@@ -50,6 +50,23 @@ void consistentWait(int ms)
         QTest::qWait(20);
 }
 
+void eventLoopWait(int ms)
+{
+    // QTest::qWait() always calls sendPostedEvents before exiting, so we can't use it to stop
+    // between an event is posted and it is received; But we can use an event loop instead
+
+    QPauseAnimation waitTimer(ms);
+    waitTimer.start();
+    while (waitTimer.state() == QAbstractAnimation::Running)
+    {
+        QTimer timer;
+        QEventLoop eventLoop;
+        timer.start(0);
+        timer.connect(&timer, &QTimer::timeout, &eventLoop, &QEventLoop::quit);
+        eventLoop.exec();
+    }
+}
+
 class tst_qqmltimer : public QObject
 {
     Q_OBJECT
@@ -69,6 +86,8 @@ private slots:
     void restartFromTriggered();
     void runningFromTriggered();
     void parentProperty();
+    void stopWhenEventPosted();
+    void restartWhenEventPosted();
 };
 
 class TimerHelper : public QObject
@@ -394,6 +413,51 @@ void tst_qqmltimer::parentProperty()
     QVERIFY(timer->isRunning());
 
     delete timer;
+}
+
+void tst_qqmltimer::stopWhenEventPosted()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; running: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
+
+    TimerHelper helper;
+    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    QCOMPARE(helper.count, 0);
+
+    eventLoopWait(200);
+    QCOMPARE(helper.count, 0);
+    QVERIFY(timer->isRunning());
+    timer->stop();
+    QVERIFY(!timer->isRunning());
+
+    consistentWait(300);
+    QCOMPARE(helper.count, 0);
+}
+
+
+void tst_qqmltimer::restartWhenEventPosted()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; running: true }"), QUrl::fromLocalFile(""));
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
+
+    TimerHelper helper;
+    connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
+    QCOMPARE(helper.count, 0);
+
+    eventLoopWait(200);
+    QCOMPARE(helper.count, 0);
+    timer->restart();
+
+    consistentWait(100);
+    QCOMPARE(helper.count, 0);
+    QVERIFY(timer->isRunning());
+
+    consistentWait(200);
+    QCOMPARE(helper.count, 1);
 }
 
 QTEST_MAIN(tst_qqmltimer)
