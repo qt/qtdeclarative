@@ -310,7 +310,7 @@ static QString image2xPath(const QString &path)
 {
     const int dotIndex = path.lastIndexOf(QLatin1Char('.'));
     if (dotIndex == -1)
-        return path;
+        return path + QLatin1String("@2x");
     if (path.contains(QLatin1String("@2x.")))
         return path;
 
