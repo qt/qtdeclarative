@@ -812,8 +812,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
                 QTextLine previousLine = layout.lineAt(visibleCount - 1);
                 elideText = layoutText.at(line.textStart() - 1) != QChar::LineSeparator
-                        ? elidedText(lineWidth, previousLine, &line)
-                        : elidedText(lineWidth, previousLine);
+                        ? elidedText(line.width(), previousLine, &line)
+                        : elidedText(line.width(), previousLine);
                 elideStart = previousLine.textStart();
                 // elideEnd isn't required for right eliding.
 
@@ -824,7 +824,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             const QTextLine previousLine = line;
             line = layout.createLine();
             if (!line.isValid()) {
-                if (singlelineElide && visibleCount == 1 && previousLine.naturalTextWidth() > lineWidth) {
+                if (singlelineElide && visibleCount == 1 && previousLine.naturalTextWidth() > previousLine.width()) {
                     // Elide a single previousLine of  text if its width exceeds the element width.
                     elide = true;
                     widthExceeded = true;
@@ -834,7 +834,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                     truncated = true;
                     elideText = layout.engine()->elidedText(
                             Qt::TextElideMode(elideMode),
-                            QFixed::fromReal(lineWidth),
+                            QFixed::fromReal(previousLine.width()),
                             0,
                             previousLine.textStart(),
                             previousLine.textLength());
@@ -863,8 +863,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                         if (eos != -1)  // There's an abbreviated string available
                             break;
                         elideText = wrappedLine
-                                ? elidedText(lineWidth, previousLine, &line)
-                                : elidedText(lineWidth, previousLine);
+                                ? elidedText(previousLine.width(), previousLine, &line)
+                                : elidedText(previousLine.width(), previousLine);
                         elideStart = previousLine.textStart();
                         // elideEnd isn't required for right eliding.
                     } else {
