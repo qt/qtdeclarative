@@ -502,7 +502,7 @@ ReturnedValue GlobalFunctions::method_parseInt(CallContext *ctx)
     }
 
     if (overflow) {
-        double result = (double) v_overflow * pow(R, overflow_digit_count);
+        double result = (double) v_overflow * pow(static_cast<double>(R), static_cast<double>(overflow_digit_count));
         result += v;
         return Encode(sign * result);
     } else {
