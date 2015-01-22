@@ -787,7 +787,7 @@ QSGBasicGeometryNode::~QSGBasicGeometryNode()
 
 void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 {
-    if (flags() & OwnsGeometry)
+    if ((flags() & OwnsGeometry) != 0 && m_geometry != geometry)
         delete m_geometry;
     m_geometry = geometry;
     markDirty(DirtyGeometry);
@@ -954,7 +954,7 @@ void QSGGeometryNode::setRenderOrder(int order)
  */
 void QSGGeometryNode::setMaterial(QSGMaterial *material)
 {
-    if (flags() & OwnsMaterial)
+    if ((flags() & OwnsMaterial) != 0 && m_material != material)
         delete m_material;
     m_material = material;
 #ifndef QT_NO_DEBUG
@@ -985,7 +985,7 @@ void QSGGeometryNode::setMaterial(QSGMaterial *material)
  */
 void QSGGeometryNode::setOpaqueMaterial(QSGMaterial *material)
 {
-    if (flags() & OwnsOpaqueMaterial)
+    if ((flags() & OwnsOpaqueMaterial) != 0 && m_opaque_material != m_material)
         delete m_opaque_material;
     m_opaque_material = material;
 #ifndef QT_NO_DEBUG
