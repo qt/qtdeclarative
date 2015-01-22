@@ -57,7 +57,7 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 
 #if ENABLE(YARR_JIT)
     if (!jitCode().isFallBack() && jitCode().has16BitCode())
-        return jitCode().execute(s.characters16(), start, s.length(), (int*)matchOffsets).start;
+        return uint(jitCode().execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
 #endif
 
     return JSC::Yarr::interpret(byteCode().get(), s.characters16(), string.length(), start, matchOffsets);

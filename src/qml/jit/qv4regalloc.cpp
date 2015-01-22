@@ -1380,7 +1380,7 @@ LifeTimeInterval *RegisterAllocator::cloneFixedInterval(int reg, bool isFP, cons
 // saved registers.
 void RegisterAllocator::prepareRanges()
 {
-    LifeTimeInterval ltiWithCalls = createFixedInterval(_info->calls().size());
+    LifeTimeInterval ltiWithCalls = createFixedInterval(int(_info->calls().size()));
     foreach (int callPosition, _info->calls())
         ltiWithCalls.addRange(callPosition, callPosition);
 
@@ -1765,9 +1765,12 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
 /// Find the first use after the start position for the given temp.
 int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
 {
+    typedef std::vector<Use>::const_iterator ConstIt;
+
     const std::vector<Use> &usePositions = _info->uses(t);
-    for (int i = 0, ei = usePositions.size(); i != ei; ++i) { //### FIXME: use an iterator
-        const int usePos = usePositions.at(i).pos;
+    const ConstIt cend = usePositions.end();
+    for (ConstIt it = usePositions.begin(); it != cend; ++it) {
+        const int usePos = it->pos;
         if (usePos >= startPosition)
             return usePos;
     }
@@ -1811,7 +1814,7 @@ void RegisterAllocator::split(LifeTimeInterval &current, int beforePosition,
     int lastUse = firstPosition;
     int nextUse = -1;
     const std::vector<Use> &usePositions = _info->uses(current.temp());
-    for (int i = 0, ei = usePositions.size(); i != ei; ++i) {
+    for (size_t i = 0, ei = usePositions.size(); i != ei; ++i) {
         const Use &usePosition = usePositions.at(i);
         const int usePos = usePosition.pos;
         if (lastUse < usePos && usePos < beforePosition) {

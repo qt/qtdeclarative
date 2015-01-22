@@ -493,17 +493,17 @@ void MemoryManager::runGC()
         mark();
         sweep();
     } else {
-        int totalMem = getAllocatedMem();
+        const size_t totalMem = getAllocatedMem();
 
         QTime t;
         t.start();
         mark();
         int markTime = t.elapsed();
         t.restart();
-        int usedBefore = getUsedMem();
+        const size_t usedBefore = getUsedMem();
         int chunksBefore = m_d->heapChunks.size();
         sweep();
-        int usedAfter = getUsedMem();
+        const size_t usedAfter = getUsedMem();
         int sweepTime = t.elapsed();
 
         qDebug() << "========== GC ==========";

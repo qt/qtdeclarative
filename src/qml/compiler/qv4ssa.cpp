@@ -684,7 +684,7 @@ public:
             return;
         for (size_t i = 0, ei = idom.size(); i != ei; ++i) {
             if (idom[i] == dominator) {
-                BasicBlock *bb = function->basicBlock(i);
+                BasicBlock *bb = function->basicBlock(int(i));
                 if (!bb->isRemoved())
                     siblings.insert(bb);
             }
@@ -946,8 +946,9 @@ public:
         for (int i = 0; i < function->tempCount; ++i)
             _defsites[i].init(function);
         nonLocals.resize(function->tempCount);
-        A_orig.resize(function->basicBlockCount());
-        for (int i = 0, ei = A_orig.size(); i != ei; ++i)
+        const size_t ei = function->basicBlockCount();
+        A_orig.resize(ei);
+        for (size_t i = 0; i != ei; ++i)
             A_orig[i].reserve(8);
 
         foreach (BasicBlock *bb, function->basicBlocks()) {
@@ -1114,10 +1115,10 @@ public:
     }
 
     unsigned statementCount() const
-    { return _usesPerStatement.size(); }
+    { return unsigned(_usesPerStatement.size()); }
 
     unsigned tempCount() const
-    { return _defUses.size(); }
+    { return unsigned(_defUses.size()); }
 
     const Temp &temp(int idx) const
     { return _defUses[idx].temp; }
@@ -1144,8 +1145,9 @@ public:
 
     std::vector<const Temp *> defs() const {
         std::vector<const Temp *> res;
-        res.reserve(_defUses.size());
-        for (unsigned i = 0, ei = _defUses.size(); i != ei; ++i) {
+        const size_t ei = _defUses.size();
+        res.reserve(ei);
+        for (size_t i = 0; i != ei; ++i) {
             const DefUse &du = _defUses.at(i);
             if (du.isValid())
                 res.push_back(&du.temp);
@@ -1263,7 +1265,7 @@ public:
             qout << endl;
         }
         qout << "Uses per statement:" << endl;
-        for (unsigned i = 0, ei = _usesPerStatement.size(); i != ei; ++i) {
+        for (size_t i = 0, ei = _usesPerStatement.size(); i != ei; ++i) {
             qout << "    " << i << ":";
             foreach (const Temp &t, _usesPerStatement[i])
                 qout << ' ' << t.index;
@@ -1618,8 +1620,9 @@ void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defU
 
     // Prepare for phi node insertion:
     std::vector<std::vector<bool> > A_phi;
-    A_phi.resize(function->basicBlockCount());
-    for (int i = 0, ei = A_phi.size(); i != ei; ++i)
+    const size_t ei = function->basicBlockCount();
+    A_phi.resize(ei);
+    for (size_t i = 0; i != ei; ++i)
         A_phi[i].assign(function->tempCount, false);
 
     std::vector<BasicBlock *> W;
@@ -2243,8 +2246,8 @@ public:
         }
 
         PropagateTempTypes propagator(_defUses);
-        for (unsigned i = 0, ei = _tempTypes.size(); i != ei; ++i) {
-            const Temp &temp = _defUses.temp(i);
+        for (size_t i = 0, ei = _tempTypes.size(); i != ei; ++i) {
+            const Temp &temp = _defUses.temp(int(i));
             if (temp.kind == Temp::Invalid)
                 continue;
             const DiscoveredType &tempType = _tempTypes[i];
@@ -4286,7 +4289,7 @@ public:
         }
 
         IRPrinter printer(&qout);
-        for (int i = 0, ei = _liveIn.size(); i != ei; ++i) {
+        for (size_t i = 0, ei = _liveIn.size(); i != ei; ++i) {
             qout << "L" << i <<" live-in: ";
             QList<Temp> live = QList<Temp>::fromSet(_liveIn.at(i));
             if (live.isEmpty())
@@ -4348,7 +4351,7 @@ private:
                 _sortedIntervals->add(&lti);
             }
             //### TODO: use DefUses from the optimizer, because it already has all this information
-            for (unsigned i = 0, ei = collector.inputs.size(); i != ei; ++i) {
+            for (size_t i = 0, ei = collector.inputs.size(); i != ei; ++i) {
                 Temp *opd = collector.inputs[i];
                 interval(opd).addRange(start(bb), usePosition(s));
                 live.insert(*opd);

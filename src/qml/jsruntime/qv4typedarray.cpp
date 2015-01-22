@@ -82,7 +82,7 @@ void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, ValueRef 
         return;
     }
     if (d >= 255) {
-        data[index] = 255;
+        data[index] = (unsigned char)(255);
         return;
     }
     double f = floor(d);
