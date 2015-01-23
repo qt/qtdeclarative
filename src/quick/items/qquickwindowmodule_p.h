@@ -35,9 +35,45 @@
 #define QQUICKWINDOWMODULE_H
 
 #include <private/qtquickglobal_p.h>
+#include <qquickwindow.h>
+#include <qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
+class QQuickWindowAttached;
+class QQuickWindowQmlImplPrivate;
+
+class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
+    Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
+
+public:
+    QQuickWindowQmlImpl(QWindow *parent = Q_NULLPTR);
+
+    void setVisible(bool visible);
+    void setVisibility(Visibility visibility);
+
+    static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
+
+Q_SIGNALS:
+    void visibleChanged(bool arg);
+    void visibilityChanged(QWindow::Visibility visibility);
+
+protected:
+    void classBegin() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+
+private Q_SLOTS:
+    void setWindowVisibility();
+
+private:
+    Q_DISABLE_COPY(QQuickWindowQmlImpl)
+    Q_DECLARE_PRIVATE(QQuickWindowQmlImpl)
+};
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowModule
 {
