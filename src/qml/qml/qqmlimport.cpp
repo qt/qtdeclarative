@@ -667,11 +667,7 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         };
         for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
             const QString url = urlsToTry[i];
-
             exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(url)).isEmpty();
-            if (!exists)
-                exists = QQmlMetaType::findCachedCompilationUnit(QUrl(url));
-
             if (exists) {
                 qmlUrl = url;
                 break;

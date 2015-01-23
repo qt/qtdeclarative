@@ -234,10 +234,14 @@ This enum describes the type of the data blob.
 /*!
 Create a new QQmlDataBlob for \a url and of the provided \a type.
 */
-QQmlDataBlob::QQmlDataBlob(const QUrl &url, Type type)
-: m_type(type), m_url(url), m_finalUrl(url), m_manager(0), m_redirectCount(0),
+QQmlDataBlob::QQmlDataBlob(const QUrl &url, Type type, QQmlTypeLoader *manager)
+: m_typeLoader(manager), m_type(type), m_url(url), m_finalUrl(url), m_redirectCount(0),
   m_inCallback(false), m_isDone(false)
 {
+    //Set here because we need to get the engine from the manager
+    if (m_typeLoader->engine() && m_typeLoader->engine()->urlInterceptor())
+        m_url = m_typeLoader->engine()->urlInterceptor()->intercept(m_url,
+                    (QQmlAbstractUrlInterceptor::DataType)m_type);
 }
 
 /*!  \internal */
@@ -249,20 +253,12 @@ QQmlDataBlob::~QQmlDataBlob()
 }
 
 /*!
-  Sets the manager, and does stuff like selection which needs access to the manager.
   Must be called before loading can occur.
 */
-void QQmlDataBlob::startLoading(QQmlTypeLoader *manager)
+void QQmlDataBlob::startLoading()
 {
     Q_ASSERT(status() == QQmlDataBlob::Null);
-    Q_ASSERT(m_manager == 0);
     m_data.setStatus(QQmlDataBlob::Loading);
-    m_manager = manager;
-
-    //Set here because we need to get the engine from the manager
-    if (manager && manager->engine() && manager->engine()->urlInterceptor())
-        m_url = manager->engine()->urlInterceptor()->intercept(m_url,
-                    (QQmlAbstractUrlInterceptor::DataType)m_type);
 }
 
 /*!
@@ -360,7 +356,7 @@ May only be called from the load thread, or after the blob isCompleteOrError().
 */
 QUrl QQmlDataBlob::finalUrl() const
 {
-    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
+    Q_ASSERT(isCompleteOrError() || (m_typeLoader && m_typeLoader->m_thread->isThisThread()));
     return m_finalUrl;
 }
 
@@ -369,7 +365,7 @@ Returns the finalUrl() as a string.
 */
 QString QQmlDataBlob::finalUrlString() const
 {
-    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
+    Q_ASSERT(isCompleteOrError() || (m_typeLoader && m_typeLoader->m_thread->isThisThread()));
     if (m_finalUrlString.isEmpty())
         m_finalUrlString = m_finalUrl.toString();
 
@@ -383,7 +379,7 @@ May only be called from the load thread, or after the blob isCompleteOrError().
 */
 QList<QQmlError> QQmlDataBlob::errors() const
 {
-    Q_ASSERT(isCompleteOrError() || (m_manager && m_manager->m_thread->isThisThread()));
+    Q_ASSERT(isCompleteOrError() || (m_typeLoader && m_typeLoader->m_thread->isThisThread()));
     return m_errors;
 }
 
@@ -617,7 +613,7 @@ void QQmlDataBlob::tryDone()
 #ifdef DATABLOB_DEBUG
         qWarning("QQmlDataBlob: Dispatching completed");
 #endif
-        m_manager->m_thread->callCompleted(this);
+        m_typeLoader->m_thread->callCompleted(this);
 
         release();
     }
@@ -921,7 +917,7 @@ void QQmlTypeLoader::load(QQmlDataBlob *blob, Mode mode)
     qWarning("QQmlTypeLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
-    blob->startLoading(this);
+    blob->startLoading();
 
     if (m_thread->isThisThread()) {
         unlock();
@@ -954,7 +950,7 @@ void QQmlTypeLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &da
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
 
-    blob->startLoading(this);
+    blob->startLoading();
 
     if (m_thread->isThisThread()) {
         unlock();
@@ -982,7 +978,7 @@ void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::C
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
 
-    blob->startLoading(this);
+    blob->startLoading();
 
     if (m_thread->isThisThread()) {
         unlock();
@@ -1235,7 +1231,7 @@ void QQmlTypeLoader::shutdownThread()
 }
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
-  : QQmlDataBlob(url, type), m_typeLoader(loader), m_importCache(loader), m_isSingleton(false)
+  : QQmlDataBlob(url, type, loader), m_importCache(loader), m_isSingleton(false)
 {
 }
 
@@ -1608,7 +1604,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url())) {
             QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
             QQmlTypeLoader::load(typeData, mode);
@@ -1651,7 +1647,7 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
         scriptBlob = new QQmlScriptBlob(url, this);
         m_scriptCache.insert(url, scriptBlob);
 
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url())) {
             QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
         } else {
             QQmlTypeLoader::load(scriptBlob);

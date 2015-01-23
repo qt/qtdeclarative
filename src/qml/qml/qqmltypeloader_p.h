@@ -96,10 +96,12 @@ public:
         QmldirFile = QQmlAbstractUrlInterceptor::QmldirFile
     };
 
-    QQmlDataBlob(const QUrl &, Type);
+    QQmlDataBlob(const QUrl &, Type, QQmlTypeLoader* manager);
     virtual ~QQmlDataBlob();
 
-    void startLoading(QQmlTypeLoader* manager);
+    void startLoading();
+
+    QQmlTypeLoader *typeLoader() const { return m_typeLoader; }
 
     Type type() const;
 
@@ -156,6 +158,11 @@ protected:
     // Callbacks made in main thread
     virtual void downloadProgressChanged(qreal);
     virtual void completed();
+
+protected:
+    // Manager that is currently fetching data for me
+    QQmlTypeLoader *m_typeLoader;
+
 private:
     friend class QQmlTypeLoader;
     friend class QQmlTypeLoaderThread;
@@ -197,8 +204,6 @@ private:
     // List of QQmlDataBlob's that I am waiting for to complete.
     QList<QQmlDataBlob *> m_waitingFor;
 
-    // Manager that is currently fetching data for me
-    QQmlTypeLoader *m_manager;
     int m_redirectCount:30;
     bool m_inCallback:1;
     bool m_isDone:1;
@@ -218,7 +223,6 @@ public:
         Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);
         ~Blob();
 
-        QQmlTypeLoader *typeLoader() const { return m_typeLoader; }
         const QQmlImports &imports() const { return m_importCache; }
 
     protected:
@@ -239,7 +243,6 @@ public:
     protected:
         virtual QString stringAt(int) const { return QString(); }
 
-        QQmlTypeLoader *m_typeLoader;
         QQmlImports m_importCache;
         bool m_isSingleton;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
