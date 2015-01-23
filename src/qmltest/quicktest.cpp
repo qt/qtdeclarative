@@ -362,6 +362,10 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             }
             view->show();
             view->requestActivate();
+
+            while (view->status() == QQuickView::Loading)
+                QTest::qWait(10);
+
             QTest::qWaitForWindowActive(view);
             if (view->isExposed())
                 QTestRootObject::instance()->setWindowShown(true);
