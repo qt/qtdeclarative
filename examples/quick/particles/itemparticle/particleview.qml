@@ -86,7 +86,7 @@ Item {
     ImageParticle {
         system: sys
         groups: ["fireworks"]
-        source: "../trails/../images/star.png"
+        source: "qrc:particleresources/star.png"
         color: "lightsteelblue"
         alpha: 0
         colorVariation: 0
@@ -123,8 +123,7 @@ Item {
     }
     property Item alertItem;
     function alert() {
-        //resetter.active = false
-        force.active = true;
+        force.enabled = true;
         alertItem = alertDelegate.createObject(root);
         alertItem.x = root.width/2 - alertItem.width/2
         alertItem.y = root.height/2 - alertItem.height/2
@@ -139,8 +138,7 @@ Item {
         repeat: false
         interval: 800
         onTriggered: {
-            force.active = false
-            //resetter.active = true;
+            force.enabled = false;
             mp.take(alertItem, true);
             centerEmitter.burst(1);
         }
