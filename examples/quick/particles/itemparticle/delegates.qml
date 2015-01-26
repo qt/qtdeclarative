@@ -72,6 +72,10 @@ Rectangle {
     ParticleSystem {
         anchors.fill: parent
         id: syssy
+        MouseArea {
+            anchors.fill: parent
+            onClicked: syssy.running = !syssy.running
+        }
         Emitter {
             anchors.centerIn: parent
             emitRate: 1

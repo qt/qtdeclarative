@@ -48,6 +48,8 @@ public:
 private slots:
     void initTestCase();
     void test_basic();
+    void test_deletion();
+    void test_noDeletion();
 };
 
 void tst_qquickitemparticle::initTestCase()
@@ -84,6 +86,29 @@ void tst_qquickitemparticle::test_basic()
         QVERIFY(d->delegate);
         QVERIFY(qobject_cast<QQuickImage*>(d->delegate));
     }
+    delete view;
+}
+
+void tst_qquickitemparticle::test_deletion()
+{
+    QQuickView* view = createView(testFileUrl("managed.qml"), 500);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(500, system->m_animation);
+
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 100, 10));
+    //qDebug() << system->property("acc").toInt(); Seems to be around +15 due to the one frame delay in cleanup compared to creation
+    QVERIFY(extremelyFuzzyCompare(system->property("acc").toInt(), 100, 20));
+    delete view;
+}
+
+void tst_qquickitemparticle::test_noDeletion()
+{
+    QQuickView* view = createView(testFileUrl("unmanaged.qml"), 500);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(500, system->m_animation);
+
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 100, 10));
+    QVERIFY(extremelyFuzzyCompare(system->property("acc").toInt(), 100, 10));
     delete view;
 }
 

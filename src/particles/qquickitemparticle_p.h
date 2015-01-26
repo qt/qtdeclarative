@@ -88,8 +88,10 @@ protected:
     virtual void initialize(int gIdx, int pIdx);
     void prepareNextFrame();
 private:
+    void processDeletables();
     void tick(int time = 0);
     QList<QQuickItem* > m_deletables;
+    QList<QQuickItem* > m_managed;
     QList< QQuickParticleData* > m_loadables;
     bool m_fade;
 
