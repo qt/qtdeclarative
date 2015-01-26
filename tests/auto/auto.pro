@@ -7,7 +7,8 @@ SUBDIRS=\
     qmltest \
     qmldevtools \
     cmake \
-    installed_cmake
+    installed_cmake \
+    toolsupport
 
 qtHaveModule(widgets): SUBDIRS += quickwidgets
 
