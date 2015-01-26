@@ -62,6 +62,7 @@ public:
     }
 
 private slots:
+    void initTestCase() Q_DECL_OVERRIDE;
     void layerEnabled();
     void layerSmooth();
     void layerMipmap();
@@ -92,14 +93,20 @@ private:
 };
 
 tst_QQuickItemLayer::tst_QQuickItemLayer()
-    : m_mesaVersion(0)
+    : m_isMesaSoftwareRasterizer(false)
+    , m_mesaVersion(0)
 {
+}
+
+void tst_QQuickItemLayer::initTestCase()
+{
+    QQmlDataTest::initTestCase();
     QWindow window;
     QOpenGLContext context;
     window.setSurfaceType(QWindow::OpenGLSurface);
     window.create();
-    context.create();
-    context.makeCurrent(&window);
+    QVERIFY(context.create());
+    QVERIFY(context.makeCurrent(&window));
     const char *vendor = (const char *)context.functions()->glGetString(GL_VENDOR);
     const char *renderer = (const char *)context.functions()->glGetString(GL_RENDERER);
     m_isMesaSoftwareRasterizer = strcmp(vendor, "Mesa Project") == 0
