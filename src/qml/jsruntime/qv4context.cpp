@@ -254,13 +254,11 @@ void ExecutionContext::markObjects(Heap::Base *m, ExecutionEngine *engine)
     if (ctx->outer)
         ctx->outer->mark(engine);
 
-    // ### shouldn't need these 3 lines
-    ctx->callData->thisObject.mark(engine);
-    for (int arg = 0; arg < ctx->callData->argc; ++arg)
-        ctx->callData->args[arg].mark(engine);
-
     if (ctx->type >= Heap::ExecutionContext::Type_CallContext) {
         QV4::Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
+        ctx->callData->thisObject.mark(engine);
+        for (int arg = 0; arg < qMax(ctx->callData->argc, (int)c->function->formalParameterCount()); ++arg)
+            ctx->callData->args[arg].mark(engine);
         for (unsigned local = 0, lastLocal = c->function->varCount(); local < lastLocal; ++local)
             c->locals[local].mark(engine);
         if (c->activation)
