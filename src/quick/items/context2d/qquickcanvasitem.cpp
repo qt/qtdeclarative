@@ -1124,6 +1124,9 @@ bool QQuickCanvasItem::createContext(const QString &contextType)
 {
     Q_D(QQuickCanvasItem);
 
+    if (!window())
+        return false;
+
     if (contextType == QLatin1String("2d")) {
         if (d->contextType.compare(QLatin1String("2d"), Qt::CaseInsensitive) != 0)  {
             d->contextType = QLatin1String("2d");

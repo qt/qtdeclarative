@@ -25,6 +25,11 @@ TestCase {
      return [];
   }
 
+  function renderStrategyToString(renderStrategy) {
+      return renderStrategy === Canvas.Immediate ? "Canvas.Immediate" :
+            (renderStrategy === Canvas.Threaded ? "Canvas.Threaded" : "Canvas.Cooperative");
+  }
+
   function createCanvasObject(data) {
     return component.createObject(testCase, data.properties);
   }

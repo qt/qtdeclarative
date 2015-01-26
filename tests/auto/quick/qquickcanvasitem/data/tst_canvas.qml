@@ -595,5 +595,51 @@ CanvasTestCase {
 
         canvas.destroy();
     }
+
+    function test_getContextOnDestruction_data() {
+        // We want to test all possible combinations deemed valid by the testcase,
+        // but we can't test FramebufferObject due to difficulties ignoring the "available" warning.
+        var allData = testData("2d");
+        var ourData = [];
+
+        for (var i = 0; i < allData.length; ++i) {
+            if (allData[i].properties.renderTarget !== Canvas.FramebufferObject) {
+                var row = allData[i].properties;
+                row.tag = allData[i].tag;
+                ourData.push(row);
+            }
+        }
+
+        return ourData;
+    }
+
+    function test_getContextOnDestruction(data) {
+        try {
+            var canvasWindow = Qt.createQmlObject("
+                import QtQuick 2.4\n
+                import QtQuick.Window 2.2\n
+                Window {\n
+                    function test() {\n
+                        loader.active = true\n
+                        loader.active = false\n
+                    }\n
+                    Loader {\n
+                        id: loader\n
+                        active: false\n
+                        sourceComponent: Canvas {\n
+                            renderStrategy: " + renderStrategyToString(data.renderStrategy) + "\n
+                            Component.onDestruction: getContext(\"2d\")
+                        }\n
+                    }\n
+                }\n",
+                testCase);
+            verify(canvasWindow);
+            canvasWindow.test();
+            // Shouldn't crash when destruction is done.
+            wait(0);
+        } catch (exception) {
+            fail(exception.message);
+        }
+    }
 }
 
