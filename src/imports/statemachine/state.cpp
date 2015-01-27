@@ -221,15 +221,15 @@ QQmlListProperty<QObject> State::children()
 
     \brief The type of history that this history state records.
 
-    The default value of this property is QHistoryState.ShallowHistory.
+    The default value of this property is HistoryState.ShallowHistory.
 
-    This enum specifies the type of history that a QHistoryState records.
+    This enum specifies the type of history that a HistoryState records.
     \list
-    \li QHistoryState.ShallowHistory Only the immediate child states of the
+    \li HistoryState.ShallowHistory Only the immediate child states of the
         parent state are recorded.  In this case, a transition with the history
         state as its target will end up in the immediate child state that the
         parent was in the last time it was exited.  This is the default.
-    \li QHistoryState.DeepHistory Nested states are recorded.  In this case
+    \li HistoryState.DeepHistory Nested states are recorded.  In this case
         a transition with the history state as its target will end up in the
         most deeply nested descendant state the parent was in the last time
         it was exited.
