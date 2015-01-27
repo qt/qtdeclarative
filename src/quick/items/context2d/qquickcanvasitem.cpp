@@ -592,7 +592,9 @@ void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &
 
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
 
-    QSizeF newSize = newGeometry.size();
+    // Due to indirect recursion, newGeometry may be outdated
+    // after this call, so we use width and height instead.
+    QSizeF newSize = QSizeF(width(), height());
     if (!d->hasCanvasSize && d->canvasSize != newSize) {
         d->canvasSize = newSize;
         emit canvasSizeChanged();

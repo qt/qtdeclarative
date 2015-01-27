@@ -1,5 +1,10 @@
 import QtQuick 2.0
 
+Item {
+    id: container
+    width: 200
+    height: 200
+
 CanvasTestCase {
    id:testCase
    name: "canvas"
@@ -641,5 +646,36 @@ CanvasTestCase {
             fail(exception.message);
         }
     }
-}
 
+    property Component implicitlySizedComponent: Item {
+        implicitWidth: 32
+        implicitHeight: implicitWidth
+        anchors.centerIn: parent
+
+        property alias canvas: canvas
+
+        Canvas {
+            id: canvas
+            width: Math.max(1, Math.min(parent.width, parent.height))
+            height: width
+
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.reset();
+                ctx.beginPath();
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+    }
+
+    function test_implicitlySizedParent() {
+        var implicitlySizedItem = implicitlySizedComponent.createObject(container);
+        verify(implicitlySizedItem);
+
+        var xCenter = implicitlySizedItem.width / 2;
+        var yCenter = implicitlySizedItem.height / 2;
+        waitForRendering(implicitlySizedItem);
+        comparePixel(implicitlySizedItem.canvas.context, xCenter, yCenter, 0, 0, 0, 255);
+    }
+}
+}
