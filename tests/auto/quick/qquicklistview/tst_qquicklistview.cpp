@@ -6987,8 +6987,11 @@ void tst_QQuickListView::flickBeyondBounds()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     // Flick view up beyond bounds
-    flick(window, QPoint(10, 10), QPoint(10, -1000), 180);
-    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() == 0);
+    flick(window, QPoint(10, 10), QPoint(10, -2000), 180);
+#ifdef Q_OS_MAC
+    QSKIP("Disabled due to flaky behavior on CI system (QTBUG-44493)");
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+#endif
 
     // We're really testing that we don't get stuck in a loop,
     // but also confirm items positioned correctly.

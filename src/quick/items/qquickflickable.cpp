@@ -59,6 +59,10 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
+static qreal EaseOvershoot(qreal t) {
+    return qAtan(t);
+}
+
 QQuickFlickableVisibleArea::QQuickFlickableVisibleArea(QQuickFlickable *parent)
     : QObject(parent), flickable(parent), m_xPosition(0.), m_widthRatio(0.)
     , m_yPosition(0.), m_heightRatio(0.)
@@ -212,7 +216,8 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , hData(this, &QQuickFlickablePrivate::setViewportX)
     , vData(this, &QQuickFlickablePrivate::setViewportY)
     , hMoved(false), vMoved(false)
-    , stealMouse(false), pressed(false), interactive(true), calcVelocity(false)
+    , stealMouse(false), pressed(false)
+    , scrollingPhase(false), interactive(true), calcVelocity(false)
     , pixelAligned(false), replayingPressEvent(false)
     , lastPosTime(-1)
     , lastPressTime(0)
@@ -915,7 +920,14 @@ qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event)
 {
     if (0 != event->timestamp())
         return event->timestamp();
+    if (!timer.isValid())
+        return 0LL;
     return timer.elapsed();
+}
+
+qreal QQuickFlickablePrivate::devicePixelRatio()
+{
+    return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }
 
 void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
@@ -945,6 +957,13 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
         flickBoost = 1.0;
     }
     q->setKeepMouseGrab(stealMouse);
+
+    maybeBeginDrag(computeCurrentTime(event), event->localPos());
+}
+
+void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn)
+{
+    Q_Q(QQuickFlickable);
     clearDelayedPress();
     pressed = true;
 
@@ -965,7 +984,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     vData.dragMaxBound = q->maxYExtent() + vData.endMargin;
     fixupMode = Normal;
     lastPos = QPointF();
-    pressPos = event->localPos();
+    pressPos = pressPosn;
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     bool wasFlicking = hData.flicking || vData.flicking;
@@ -979,29 +998,33 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     if (wasFlicking)
         emit q->flickingChanged();
-    lastPosTime = lastPressTime = computeCurrentTime(event);
+    lastPosTime = lastPressTime = currentTimestamp;
     vData.velocityTime.start();
     hData.velocityTime.start();
 }
 
-void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
+void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,
+                                  const QVector2D &deltas, bool overThreshold, bool momentum, const QVector2D &velocity)
 {
     Q_Q(QQuickFlickable);
-    if (!interactive || lastPosTime == -1)
-        return;
     bool rejectY = false;
     bool rejectX = false;
 
-    bool stealY = stealMouse;
-    bool stealX = stealMouse;
+    bool stealY = false;
+    bool stealX = false;
+    if (eventType == QEvent::MouseMove) {
+        stealX = stealY = stealMouse;
+    } else if (eventType == QEvent::Wheel) {
+        stealX = stealY = scrollingPhase;
+    }
 
     bool prevHMoved = hMoved;
     bool prevVMoved = vMoved;
 
-    qint64 elapsedSincePress = computeCurrentTime(event) - lastPressTime;
+    qint64 elapsedSincePress = currentTimestamp - lastPressTime;
+
     if (q->yflick()) {
-        qreal dy = event->localPos().y() - pressPos.y();
-        bool overThreshold = QQuickWindowPrivate::dragOverThreshold(dy, Qt::YAxis, event);
+        qreal dy = deltas.y();
         if (overThreshold || elapsedSincePress > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
@@ -1021,12 +1044,38 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                     rejectY = vData.pressPos == minY && vData.move.value() == minY && dy > 0;
                 }
             } else {
-                if (newY > minY)
-                    newY = minY + (newY - minY) / 2;
-                if (newY < maxY && maxY - minY <= 0)
-                    newY = maxY + (newY - maxY) / 2;
+                qreal vel = velocity.y() / QML_FLICK_OVERSHOOTFRICTION;
+                if (vel > 0. && vel > vData.velocity)
+                    vData.velocity = qMin(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, float(QML_FLICK_DEFAULTMAXVELOCITY));
+                else if (vel < 0. && vel < vData.velocity)
+                    vData.velocity = qMax(velocity.y() / QML_FLICK_OVERSHOOTFRICTION, -float(QML_FLICK_DEFAULTMAXVELOCITY));
+                if (newY > minY) {
+                    // Overshoot beyond the top.  But don't wait for momentum phase to end before returning to bounds.
+                    if (momentum && vData.atBeginning) {
+                        if (!vData.inRebound) {
+                            vData.inRebound = true;
+                            q->returnToBounds();
+                        }
+                        return;
+                    }
+                    qreal overshoot = (newY - minY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                    newY = minY + overshoot;
+                } else if (newY < maxY && maxY - minY <= 0) {
+                    // Overshoot beyond the bottom.  But don't wait for momentum phase to end before returning to bounds.
+                    if (momentum && vData.atEnd) {
+                        if (!vData.inRebound) {
+                            vData.inRebound = true;
+                            q->returnToBounds();
+                        }
+                        return;
+                    }
+                    qreal overshoot = (newY - maxY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                    newY = maxY - overshoot;
+                }
             }
-            if (!rejectY && stealMouse && dy != 0.0) {
+            if (!rejectY && stealMouse && dy != 0.0 && dy != vData.previousDragDelta) {
                 clearTimeline();
                 vData.move.setValue(newY);
                 vMoved = true;
@@ -1034,11 +1083,11 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             if (!rejectY && overThreshold)
                 stealY = true;
         }
+        vData.previousDragDelta = dy;
     }
 
     if (q->xflick()) {
-        qreal dx = event->localPos().x() - pressPos.x();
-        bool overThreshold = QQuickWindowPrivate::dragOverThreshold(dx, Qt::XAxis, event);
+        qreal dx = deltas.x();
         if (overThreshold || elapsedSincePress > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
@@ -1055,13 +1104,39 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                     rejectX = hData.pressPos == minX && hData.move.value() == minX && dx > 0;
                 }
             } else {
-                if (newX > minX)
-                    newX = minX + (newX - minX) / 2;
-                if (newX < maxX && maxX - minX <= 0)
-                    newX = maxX + (newX - maxX) / 2;
+                qreal vel = velocity.x() / QML_FLICK_OVERSHOOTFRICTION;
+                if (vel > 0. && vel > hData.velocity)
+                    hData.velocity = qMin(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, float(QML_FLICK_DEFAULTMAXVELOCITY));
+                else if (vel < 0. && vel < hData.velocity)
+                    hData.velocity = qMax(velocity.x() / QML_FLICK_OVERSHOOTFRICTION, -float(QML_FLICK_DEFAULTMAXVELOCITY));
+                if (newX > minX) {
+                    // Overshoot beyond the left.  But don't wait for momentum phase to end before returning to bounds.
+                    if (momentum && hData.atBeginning) {
+                        if (!hData.inRebound) {
+                            hData.inRebound = true;
+                            q->returnToBounds();
+                        }
+                        return;
+                    }
+                    qreal overshoot = (newX - minX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                    newX = minX + overshoot;
+                } else if (newX < maxX && maxX - minX <= 0) {
+                    // Overshoot beyond the right.  But don't wait for momentum phase to end before returning to bounds.
+                    if (momentum && hData.atEnd) {
+                        if (!hData.inRebound) {
+                            hData.inRebound = true;
+                            q->returnToBounds();
+                        }
+                        return;
+                    }
+                    qreal overshoot = (newX - maxX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                    newX = maxX - overshoot;
+                }
             }
 
-            if (!rejectX && stealMouse && dx != 0.0) {
+            if (!rejectX && stealMouse && dx != 0.0 && dx != hData.previousDragDelta) {
                 clearTimeline();
                 hData.move.setValue(newX);
                 hMoved = true;
@@ -1070,6 +1145,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
             if (!rejectX && overThreshold)
                 stealX = true;
         }
+        hData.previousDragDelta = dx;
     }
 
     stealMouse = stealX || stealY;
@@ -1092,29 +1168,35 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if ((hMoved && !prevHMoved) || (vMoved && !prevVMoved))
         q->movementStarting();
 
+    lastPosTime = currentTimestamp;
+    if (q->yflick() && !rejectY)
+        vData.addVelocitySample(velocity.y(), maxVelocity);
+    if (q->xflick() && !rejectX)
+        hData.addVelocitySample(velocity.x(), maxVelocity);
+    lastPos = localPos;
+}
+
+void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
+{
+    Q_Q(QQuickFlickable);
+    if (!interactive || lastPosTime == -1)
+        return;
+
     qint64 currentTimestamp = computeCurrentTime(event);
     qreal elapsed = qreal(currentTimestamp - (lastPos.isNull() ? lastPressTime : lastPosTime)) / 1000.;
-    if (elapsed <= 0)
-        return;
-    lastPosTime = currentTimestamp;
-    if (q->yflick() && !rejectY) {
-        if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
-            vData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).y(), maxVelocity);
-        } else {
-            qreal dy = event->localPos().y() - (lastPos.isNull() ? pressPos.y() : lastPos.y());
-            vData.addVelocitySample(dy/elapsed, maxVelocity);
-        }
-    }
-    if (q->xflick() && !rejectX) {
-        if (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity) {
-            hData.addVelocitySample(QGuiApplicationPrivate::mouseEventVelocity(event).x(), maxVelocity);
-        } else {
-            qreal dx = event->localPos().x() - (lastPos.isNull() ? pressPos.x() : lastPos.x());
-            hData.addVelocitySample(dx/elapsed, maxVelocity);
-        }
-    }
+    QVector2D deltas = QVector2D(event->localPos() - pressPos);
+    bool overThreshold = false;
+    QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
+    // TODO guarantee that events always have velocity so that it never needs to be computed here
+    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity))
+        velocity = QVector2D(event->localPos() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
 
-    lastPos = event->localPos();
+    if (q->yflick())
+        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, event);
+    if (q->xflick())
+        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, event);
+
+    drag(currentTimestamp, event->type(), event->localPos(), deltas, overThreshold, false, velocity);
 }
 
 void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
@@ -1258,50 +1340,86 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         QQuickItem::wheelEvent(event);
         return;
     }
-
     event->setAccepted(false);
-
-    int yDelta = event->angleDelta().y();
-    int xDelta = event->angleDelta().x();
-    if (yflick() && yDelta != 0) {
-        bool valid = false;
-        if (yDelta > 0 && contentY() > -minYExtent()) {
-            d->vData.velocity = qMax(yDelta*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
-            valid = true;
-        } else if (yDelta < 0 && contentY() < -maxYExtent()) {
-            d->vData.velocity = qMin(yDelta*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
-            valid = true;
-        }
-        if (valid) {
-            d->vData.flicking = false;
-            d->flickY(d->vData.velocity);
-            d->flickingStarted(false, true);
-            if (d->vData.flicking) {
-                d->vMoved = true;
-                movementStarting();
-            }
-            event->accept();
-        }
+    qint64 currentTimestamp = d->computeCurrentTime(event);
+    switch (event->phase()) {
+    case Qt::ScrollBegin:
+        d->scrollingPhase = true;
+        d->accumulatedWheelPixelDelta = QVector2D();
+        d->vData.velocity = 0;
+        d->hData.velocity = 0;
+        d->timer.start();
+        d->maybeBeginDrag(currentTimestamp, event->posF());
+        break;
+    case Qt::ScrollUpdate:
+        break;
+    case Qt::ScrollEnd:
+        d->scrollingPhase = false;
+        d->draggingEnding();
+        event->accept();
+        returnToBounds();
+        d->lastPosTime = -1;
+        return;
     }
-    if (xflick() && xDelta != 0) {
-        bool valid = false;
-        if (xDelta > 0 && contentX() > -minXExtent()) {
-            d->hData.velocity = qMax(xDelta*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
-            valid = true;
-        } else if (xDelta < 0 && contentX() < -maxXExtent()) {
-            d->hData.velocity = qMin(xDelta*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
-            valid = true;
-        }
-        if (valid) {
-            d->hData.flicking = false;
-            d->flickX(d->hData.velocity);
-            d->flickingStarted(true, false);
-            if (d->hData.flicking) {
-                d->hMoved = true;
-                movementStarting();
+
+    if (event->source() == Qt::MouseEventNotSynthesized || event->pixelDelta().isNull()) {
+        // physical mouse wheel, so use angleDelta
+        int xDelta = event->angleDelta().x();
+        int yDelta = event->angleDelta().y();
+        if (yflick() && yDelta != 0) {
+            bool valid = false;
+            if (yDelta > 0 && contentY() > -minYExtent()) {
+                d->vData.velocity = qMax(yDelta*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+                valid = true;
+            } else if (yDelta < 0 && contentY() < -maxYExtent()) {
+                d->vData.velocity = qMin(yDelta*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+                valid = true;
             }
-            event->accept();
+            if (valid) {
+                d->vData.flicking = false;
+                d->flickY(d->vData.velocity);
+                d->flickingStarted(false, true);
+                if (d->vData.flicking) {
+                    d->vMoved = true;
+                    movementStarting();
+                }
+                event->accept();
+            }
         }
+        if (xflick() && xDelta != 0) {
+            bool valid = false;
+            if (xDelta > 0 && contentX() > -minXExtent()) {
+                d->hData.velocity = qMax(xDelta*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+                valid = true;
+            } else if (xDelta < 0 && contentX() < -maxXExtent()) {
+                d->hData.velocity = qMin(xDelta*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+                valid = true;
+            }
+            if (valid) {
+                d->hData.flicking = false;
+                d->flickX(d->hData.velocity);
+                d->flickingStarted(true, false);
+                if (d->hData.flicking) {
+                    d->hMoved = true;
+                    movementStarting();
+                }
+                event->accept();
+            }
+        }
+    } else {
+        // use pixelDelta (probably from a trackpad)
+        int xDelta = event->pixelDelta().x();
+        int yDelta = event->pixelDelta().y();
+
+        qreal elapsed = qreal(currentTimestamp - d->lastPosTime) / 1000.;
+        if (elapsed <= 0) {
+            d->lastPosTime = currentTimestamp;
+            return;
+        }
+        QVector2D velocity(xDelta / elapsed, yDelta / elapsed);
+        d->lastPosTime = currentTimestamp;
+        d->accumulatedWheelPixelDelta += QVector2D(event->pixelDelta());
+        d->drag(currentTimestamp, event->type(), event->posF(), d->accumulatedWheelPixelDelta, true, !d->scrollingPhase, velocity);
     }
 
     if (!event->isAccepted())
@@ -2240,6 +2358,8 @@ void QQuickFlickablePrivate::draggingEnding()
         emit q->draggingChanged();
         emit q->dragEnded();
     }
+    hData.inRebound = false;
+    vData.inRebound = false;
 }
 
 bool QQuickFlickablePrivate::isViewMoving() const
@@ -2389,10 +2509,12 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (hMovementEnding) {
         d->hData.fixingUp = false;
         d->hData.smoothVelocity.setValue(0);
+        d->hData.previousDragDelta = 0.0;
     }
     if (vMovementEnding) {
         d->vData.fixingUp = false;
         d->vData.smoothVelocity.setValue(0);
+        d->vData.previousDragDelta = 0.0;
     }
 }
 

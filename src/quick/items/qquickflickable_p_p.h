@@ -93,7 +93,7 @@ public:
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
             : move(fp, func)
             , transitionToBounds(0)
-            , viewSize(-1), lastPos(0), velocity(0), startMargin(0), endMargin(0)
+            , viewSize(-1), lastPos(0), previousDragDelta(0), velocity(0), startMargin(0), endMargin(0)
             , origin(0)
             , transitionTo(0)
             , continuousFlickVelocity(0), velocityTime(), vTime(0)
@@ -135,6 +135,7 @@ public:
         qreal dragStartOffset;
         qreal dragMinBound;
         qreal dragMaxBound;
+        qreal previousDragDelta;
         qreal velocity;
         qreal flickTarget;
         qreal startMargin;
@@ -151,6 +152,7 @@ public:
         bool transitionToSet : 1;
         bool fixingUp : 1;
         bool inOvershoot : 1;
+        bool inRebound : 1;
         bool moving : 1;
         bool flicking : 1;
         bool dragging : 1;
@@ -205,6 +207,7 @@ public:
     bool vMoved : 1;
     bool stealMouse : 1;
     bool pressed : 1;
+    bool scrollingPhase : 1;
     bool interactive : 1;
     bool calcVelocity : 1;
     bool pixelAligned : 1;
@@ -214,6 +217,7 @@ public:
     qint64 lastPressTime;
     QPointF lastPos;
     QPointF pressPos;
+    QVector2D accumulatedWheelPixelDelta;
     qreal deceleration;
     qreal maxVelocity;
     qreal reportedVelocitySmoothing;
@@ -244,7 +248,12 @@ public:
     void handleMouseMoveEvent(QMouseEvent *);
     void handleMouseReleaseEvent(QMouseEvent *);
 
+    void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn);
+    void drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,
+              const QVector2D &deltas, bool overThreshold, bool momentum, const QVector2D &velocity);
+
     qint64 computeCurrentTime(QInputEvent *event);
+    qreal devicePixelRatio();
 
     // flickableData property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
