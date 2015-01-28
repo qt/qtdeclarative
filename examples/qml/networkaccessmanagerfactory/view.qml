@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
@@ -17,9 +17,9 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
+**   * Neither the name of The Qt Company Ltd and its Subsidiary(-ies) nor the
+**     names of its contributors may be used to endorse or promote products
+**     derived from this software without specific prior written permission.
 **
 **
 ** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -43,5 +43,5 @@ import QtQuick 2.0
 Image {
     width: 100
     height: 100
-    source: "http://qt.digia.com/Documents/Qt_master_logo_CMYK_noback.gif"
+    source: "http://qt.io/Documents/Qt_master_logo_CMYK_noback.gif"
 }
