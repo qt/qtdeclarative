@@ -174,6 +174,7 @@ private slots:
     void privateMethods();
 
     void intConversion_QTBUG43309();
+    void toFixed();
 
 signals:
     void testSignal();
@@ -3613,6 +3614,18 @@ void tst_QJSEngine::intConversion_QTBUG43309()
     QJSValue result = engine.evaluate( jsCode );
     QVERIFY(result.isNumber());
     QCOMPARE(result.toNumber(), 25.0);
+}
+
+// QTBUG-44039 and QTBUG-43885:
+void tst_QJSEngine::toFixed()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(QStringLiteral("(12.5).toFixed()"));
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QStringLiteral("13"));
+    result = engine.evaluate(QStringLiteral("(12.05).toFixed(1)"));
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QStringLiteral("12.1"));
 }
 
 QTEST_MAIN(tst_QJSEngine)
