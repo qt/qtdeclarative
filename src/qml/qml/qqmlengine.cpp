@@ -368,7 +368,7 @@ The following functions are also on the Qt object.
 
 /*!
     \qmlproperty object Qt::platform
-    \since 4.8
+    \since 5.1
 
     The \c platform object provides info about the underlying platform.
 
