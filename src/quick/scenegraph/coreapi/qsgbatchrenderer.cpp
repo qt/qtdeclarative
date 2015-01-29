@@ -2531,17 +2531,6 @@ void Renderer::deleteRemovedElements()
     m_elementsToDelete.reset();
 }
 
-void Renderer::preprocess()
-{
-    // Bind our VAO. It's important that we do this here as the
-    // QSGRenderer::preprocess() call may well do work that requires
-    // a bound VAO.
-    if (m_vao)
-        m_vao->bind();
-
-    QSGRenderer::preprocess();
-}
-
 void Renderer::render()
 {
     if (Q_UNLIKELY(debug_dump())) {
@@ -2567,6 +2556,9 @@ void Renderer::render()
 
         qDebug() << "Renderer::render()" << this << type;
     }
+
+    if (m_vao)
+        m_vao->bind();
 
     if (m_rebuild & (BuildRenderLists | BuildRenderListsForTaggedRoots)) {
         bool complete = (m_rebuild & BuildRenderLists) != 0;

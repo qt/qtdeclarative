@@ -530,7 +530,6 @@ public:
 
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state);
-    void preprocess() Q_DECL_OVERRIDE;
     void render();
 
 private:
