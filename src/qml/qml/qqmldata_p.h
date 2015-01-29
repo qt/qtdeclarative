@@ -123,8 +123,14 @@ public:
     quint32 parentFrozen:1;
     quint32 dummy:22;
 
+    // When bindingBitsSize < 32, we store the binding bit flags inside
+    // bindingBitsValue. When we need more than 32 bits, we allocated
+    // sufficient space and use bindingBits to point to it.
     int bindingBitsSize;
-    quint32 *bindingBits;
+    union {
+        quint32 *bindingBits;
+        quint32 bindingBitsValue;
+    };
 
     struct NotifyList {
         quint64 connectionMask;
@@ -261,19 +267,19 @@ QQmlNotifierEndpoint *QQmlData::notify(int index)
 bool QQmlData::hasBindingBit(int coreIndex) const
 {
     int bit = coreIndex * 2;
-    if (bindingBitsSize > bit)
-        return bindingBits[bit / 32] & (1 << (bit % 32));
-    else
-        return false;
+
+    return bindingBitsSize > bit &&
+           ((bindingBitsSize == 32) ? (bindingBitsValue & (1 << bit)) :
+                                      (bindingBits[bit / 32] & (1 << (bit % 32))));
 }
 
 bool QQmlData::hasPendingBindingBit(int coreIndex) const
 {
     int bit = coreIndex * 2 + 1;
-    if (bindingBitsSize > bit)
-        return bindingBits[bit / 32] & (1 << (bit % 32));
-    else
-        return false;
+
+    return bindingBitsSize > bit &&
+           ((bindingBitsSize == 32) ? (bindingBitsValue & (1 << bit)) :
+                                      (bindingBits[bit / 32] & (1 << (bit % 32))));
 }
 
 void QQmlData::flushPendingBinding(QObject *o, int coreIndex)
