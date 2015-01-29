@@ -191,21 +191,20 @@ void tst_qqmlinfo::types()
 
 void tst_qqmlinfo::chaining()
 {
-    //### should more of these be automatically inserting spaces?
     QString str("Hello World");
     QStringRef ref(&str, 6, 5);
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: false 1.1 1.2 15 hello 'b' QUrl(\"http://www.qt-project.org\") World \"Qt\" true Quick ");
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: false 1.1 1.2 15 hello 'b' World \"Qt\" true Quick QUrl(\"http://www.qt-project.org\") ");
     qmlInfo(0) << false << ' '
                << 1.1 << ' '
                << 1.2f << ' '
                << 15 << ' '
                << QLatin1String("hello") << ' '
                << QChar('b') << ' '
-               << QUrl("http://www.qt-project.org")
-               << ref
-               << QByteArray("Qt")
-               << bool(true)
-               << QString ("Quick");
+               << ref << ' '
+               << QByteArray("Qt") << ' '
+               << bool(true) << ' '
+               << QString ("Quick") << ' '
+               << QUrl("http://www.qt-project.org");
 }
 
 QTEST_MAIN(tst_qqmlinfo)
