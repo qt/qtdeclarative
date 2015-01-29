@@ -87,6 +87,9 @@ public:
 
     QSize size() const { return m_size; }
 
+    GLuint internalFormat() const { return m_internalFormat; }
+    GLuint externalFormat() const { return m_externalFormat; }
+
 private:
     QSGAreaAllocator m_allocator;
     GLuint m_texture_id;
@@ -110,26 +113,26 @@ public:
     ~Texture();
 
     int textureId() const { return m_atlas->textureId(); }
-    QSize textureSize() const { return m_allocated_rect_without_padding.size(); }
-    bool hasAlphaChannel() const { return m_image.hasAlphaChannel(); }
+    QSize textureSize() const { return atlasSubRectWithoutPadding().size(); }
+    bool hasAlphaChannel() const { return m_has_alpha; }
     bool hasMipmaps() const { return false; }
     bool isAtlasTexture() const { return true; }
 
     QRectF normalizedTextureSubRect() const { return m_texture_coords_rect; }
 
     QRect atlasSubRect() const { return m_allocated_rect; }
-    QRect atlasSubRectWithoutPadding() const { return m_allocated_rect_without_padding; }
+    QRect atlasSubRectWithoutPadding() const { return m_allocated_rect.adjusted(1, 1, -1, -1); }
 
     bool isTexture() const { return true; }
 
     QSGTexture *removedFromAtlas() const;
 
+    void releaseImage() { m_image = QImage(); }
     const QImage &image() const { return m_image; }
 
     void bind();
 
 private:
-    QRect m_allocated_rect_without_padding;
     QRect m_allocated_rect;
     QRectF m_texture_coords_rect;
 
@@ -139,6 +142,7 @@ private:
 
     mutable QSGPlainTexture *m_nonatlas_texture;
 
+    uint m_has_alpha : 1;
 };
 
 }
