@@ -806,10 +806,7 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
     m_mutex.unlock();
 
     if (!texture) {
-        if (QQuickDefaultTextureFactory *dtf = qobject_cast<QQuickDefaultTextureFactory *>(factory))
-            texture = createTexture(dtf->image());
-        else
-            texture = factory->createTexture(window);
+        texture = factory->createTexture(window);
 
         m_mutex.lock();
         m_textures.insert(factory, texture);

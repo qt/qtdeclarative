@@ -55,12 +55,13 @@ class QQuickDefaultTextureFactory : public QQuickTextureFactory
 public:
     QQuickDefaultTextureFactory(const QImage &i);
     QSGTexture *createTexture(QQuickWindow *window) const;
-    QSize textureSize() const { return im.size(); }
-    int textureByteCount() const { return im.byteCount(); }
+    QSize textureSize() const { return size; }
+    int textureByteCount() const { return size.width() * size.height() * 4; }
     QImage image() const { return im; }
 
 private:
     QImage im;
+    QSize size;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
