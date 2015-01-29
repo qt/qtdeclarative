@@ -1685,7 +1685,7 @@ void QQmlData::destroyed(QObject *object)
         signalHandler = next;
     }
 
-    if (bindingBits)
+    if (bindingBitsSize > 32)
         free(bindingBits);
 
     if (propertyCache)
@@ -1733,14 +1733,24 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
 
 static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
 {
+    if (data->bindingBitsSize == 0 && bit < 32) {
+        data->bindingBitsSize = 32;
+    }
+
     if (data->bindingBitsSize <= bit) {
         int props = QQmlMetaObject(obj).propertyCount();
         Q_ASSERT(bit < 2 * props);
 
         int arraySize = (2 * props + 31) / 32;
-        int oldArraySize = data->bindingBitsSize / 32;
+        Q_ASSERT(arraySize > 1);
 
-        data->bindingBits = (quint32 *)realloc(data->bindingBits,
+        // special handling for 32 here is to make sure we wipe the first byte
+        // when going from bindingBitsValue to bindingBits, and preserve the old
+        // set bits so we can restore them after the allocation
+        int oldArraySize = data->bindingBitsSize > 32 ? data->bindingBitsSize / 32 : 0;
+        quint32 oldValue = data->bindingBitsSize == 32 ? data->bindingBitsValue : 0;
+
+        data->bindingBits = (quint32 *)realloc((data->bindingBitsSize == 32) ? 0 : data->bindingBits,
                                                arraySize * sizeof(quint32));
 
         memset(data->bindingBits + oldArraySize,
@@ -1748,15 +1758,27 @@ static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
                sizeof(quint32) * (arraySize - oldArraySize));
 
         data->bindingBitsSize = arraySize * 32;
+
+        // reinstate bindingBitsValue after we dropped it
+        if (oldValue) {
+            memcpy(data->bindingBits, &oldValue, sizeof(oldValue));
+        }
     }
 
-    data->bindingBits[bit / 32] |= (1 << (bit % 32));
+    if (data->bindingBitsSize == 32)
+        data->bindingBitsValue |= (1 << (bit % 32));
+    else
+        data->bindingBits[bit / 32] |= (1 << (bit % 32));
 }
 
 static void QQmlData_clearBit(QQmlData *data, int bit)
 {
-    if (data->bindingBitsSize > bit)
-        data->bindingBits[bit / 32] &= ~(1 << (bit % 32));
+    if (data->bindingBitsSize > bit) {
+        if (data->bindingBitsSize == 32)
+            data->bindingBitsValue &= ~(1 << (bit % 32));
+        else
+            data->bindingBits[bit / 32] &= ~(1 << (bit % 32));
+    }
 }
 
 void QQmlData::clearBindingBit(int coreIndex)
