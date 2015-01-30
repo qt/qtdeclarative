@@ -50,26 +50,24 @@ struct Header {
     int freeList;
 };
 
-enum {
-    PageSize = 4096,
-    NEntries = (PageSize - sizeof(Header))/sizeof(Value)
-};
+static const int kEntriesPerPage = (WTF::pageSize() - sizeof(Header)) / sizeof(Value);
+
 struct Page {
     Header header;
-    Value values[NEntries];
+    Value values[1]; // Really kEntriesPerPage, but keep the compiler happy
 };
 
 Page *getPage(Value *val) {
-   return reinterpret_cast<Page *>(reinterpret_cast<quintptr>(val) & ~((quintptr)(PageSize - 1)));
+   return reinterpret_cast<Page *>(reinterpret_cast<quintptr>(val) & ~((quintptr)(WTF::pageSize() - 1)));
 }
 
 
 Page *allocatePage(PersistentValueStorage *storage)
 {
-    PageAllocation page = WTF::PageAllocation::allocate(PageSize);
+    PageAllocation page = WTF::PageAllocation::allocate(WTF::pageSize());
     Page *p = reinterpret_cast<Page *>(page.base());
 
-    Q_ASSERT(!((quintptr)p & (PageSize - 1)));
+    Q_ASSERT(!((quintptr)p & (WTF::pageSize() - 1)));
 
     p->header.engine = storage->engine;
     p->header.alloc = page;
@@ -79,12 +77,12 @@ Page *allocatePage(PersistentValueStorage *storage)
     p->header.freeList = 0;
     if (p->header.next)
         p->header.next->header.prev = &p->header.next;
-    for (int i = 0; i < NEntries - 1; ++i) {
+    for (int i = 0; i < kEntriesPerPage - 1; ++i) {
         p->values[i].tag = QV4::Value::Empty_Type;
         p->values[i].int_32 = i + 1;
     }
-    p->values[NEntries - 1].tag = QV4::Value::Empty_Type;
-    p->values[NEntries - 1].int_32 = -1;
+    p->values[kEntriesPerPage - 1].tag = QV4::Value::Empty_Type;
+    p->values[kEntriesPerPage - 1].int_32 = -1;
 
     storage->firstPage = p;
 
@@ -97,7 +95,7 @@ Page *allocatePage(PersistentValueStorage *storage)
 
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++() {
     while (p) {
-        while (index < NEntries - 1) {
+        while (index < kEntriesPerPage - 1) {
             ++index;
             if (static_cast<Page *>(p)->values[index].tag != QV4::Value::Empty_Type)
                 return *this;
@@ -124,7 +122,7 @@ PersistentValueStorage::~PersistentValueStorage()
 {
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
-        for (int i = 0; i < NEntries; ++i) {
+        for (int i = 0; i < kEntriesPerPage; ++i) {
             if (!p->values[i].isEmpty())
                 p->values[i] = Encode::undefined();
         }
@@ -191,7 +189,7 @@ void PersistentValueStorage::mark(ExecutionEngine *e)
 
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
-        for (int i = 0; i < NEntries; ++i) {
+        for (int i = 0; i < kEntriesPerPage; ++i) {
             if (Managed *m = p->values[i].asManaged())
                 m->mark(e);
         }
