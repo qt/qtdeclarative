@@ -1,0 +1,29 @@
+module QtQuick.Controls
+plugin qtquickcontrols2plugin
+classname QtQuickControls2Plugin
+ApplicationWindow 2.0 ApplicationWindow.qml
+BusyIndicator 2.0 BusyIndicator.qml
+Button 2.0 Button.qml
+CheckBox 2.0 CheckBox.qml
+Frame 2.0 Frame.qml
+GroupBox 2.0 GroupBox.qml
+Label 2.0 Label.qml
+PageIndicator 2.0 PageIndicator.qml
+ProgressBar 2.0 ProgressBar.qml
+RadioButton 2.0 RadioButton.qml
+ScrollBar 2.0 ScrollBar.qml
+ScrollIndicator 2.0 ScrollIndicator.qml
+Slider 2.0 Slider.qml
+SpinBox 2.0 SpinBox.qml
+StackView 2.0 StackView.qml
+StackViewDelegate 2.0 StackViewDelegate.qml
+StackViewTransition 2.0 StackViewTransition.qml
+Switch 2.0 Switch.qml
+TabBar 2.0 TabBar.qml
+TabButton 2.0 TabButton.qml
+TabView 2.0 TabView.qml
+TextArea 2.0 TextArea.qml
+TextField 2.0 TextField.qml
+ToggleButton 2.0 ToggleButton.qml
+ToolBar 2.0 ToolBar.qml
+ToolButton 2.0 ToolButton.qml

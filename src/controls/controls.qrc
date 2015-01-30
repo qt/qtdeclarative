@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/qtquickcontrols">
+    <file>style.json</file>
+</qresource>
+</RCC>
