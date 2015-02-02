@@ -187,6 +187,15 @@ void tst_QQuickView::errors()
         QVERIFY(view.status() == QQuickView::Error);
         QVERIFY(view.errors().count() == 1);
     }
+
+    {
+        QQuickView view;
+        QQmlTestMessageHandler messageHandler;
+        view.setSource(testFileUrl("error2.qml"));
+        QVERIFY(view.status() == QQuickView::Error);
+        QVERIFY(view.errors().count() == 1);
+        view.show();
+    }
 }
 
 void tst_QQuickView::engine()

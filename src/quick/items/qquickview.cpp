@@ -345,6 +345,9 @@ QQuickView::Status QQuickView::status() const
     if (!d->component)
         return QQuickView::Null;
 
+    if (d->component->status() == QQmlComponent::Ready && !d->root)
+        return QQuickView::Error;
+
     return QQuickView::Status(d->component->status());
 }
 
@@ -363,6 +366,10 @@ QList<QQmlError> QQuickView::errors() const
     if (!d->engine) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickView: invalid qml engine."));
+        errs << error;
+    } else if (d->component->status() == QQmlComponent::Ready && !d->root) {
+        QQmlError error;
+        error.setDescription(QLatin1String("QQuickView: invalid root object."));
         errs << error;
     }
 

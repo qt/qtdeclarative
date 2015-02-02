@@ -530,6 +530,9 @@ QQuickWidget::Status QQuickWidget::status() const
     if (!d->component)
         return QQuickWidget::Null;
 
+    if (d->component->status() == QQmlComponent::Ready && !d->root)
+        return QQuickWidget::Error;
+
     return QQuickWidget::Status(d->component->status());
 }
 
@@ -550,6 +553,10 @@ QList<QQmlError> QQuickWidget::errors() const
     if (!d->engine) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid qml engine."));
+        errs << error;
+    } else if (d->component->status() == QQmlComponent::Ready && !d->root) {
+        QQmlError error;
+        error.setDescription(QLatin1String("QQuickWidget: invalid root object."));
         errs << error;
     }
 
