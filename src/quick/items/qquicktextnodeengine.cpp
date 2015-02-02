@@ -1027,6 +1027,13 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 fragmentEnd += preeditLength;
             }
 #endif
+            if (charFormat.background().style() != Qt::NoBrush) {
+                QTextLayout::FormatRange additionalFormat;
+                additionalFormat.start = textPos - block.position();
+                additionalFormat.length = fragmentEnd - textPos;
+                additionalFormat.format = charFormat;
+                colorChanges << additionalFormat;
+            }
 
             textPos = addText(block, charFormat, textColor, colorChanges, textPos, fragmentEnd,
                                                  selectionStart, selectionEnd);
