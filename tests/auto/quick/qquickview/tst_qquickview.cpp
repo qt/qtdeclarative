@@ -180,13 +180,13 @@ void tst_QQuickView::resizemodeitem()
 
 void tst_QQuickView::errors()
 {
-    QQuickView *view = new QQuickView;
-    QVERIFY(view);
-    QQmlTestMessageHandler messageHandler;
-    view->setSource(testFileUrl("error1.qml"));
-    QVERIFY(view->status() == QQuickView::Error);
-    QVERIFY(view->errors().count() == 1);
-    delete view;
+    {
+        QQuickView view;
+        QQmlTestMessageHandler messageHandler;
+        view.setSource(testFileUrl("error1.qml"));
+        QVERIFY(view.status() == QQuickView::Error);
+        QVERIFY(view.errors().count() == 1);
+    }
 }
 
 void tst_QQuickView::engine()
