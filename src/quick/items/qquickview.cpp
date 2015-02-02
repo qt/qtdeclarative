@@ -508,6 +508,10 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
         sgItem->setParentItem(q->QQuickWindow::contentItem());
+    } else if (qobject_cast<QWindow *>(obj)) {
+        qWarning() << "QQuickView does not support using windows as a root item." << endl
+                   << endl
+                   << "If you wish to create your root window from QML, consider using QQmlApplicationEngine instead." << endl;
     } else {
         qWarning() << "QQuickView only supports loading of root objects that derive from QQuickItem." << endl
                    << endl
