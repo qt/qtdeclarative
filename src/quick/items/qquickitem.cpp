@@ -1756,11 +1756,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     QQmlProperty(), or QMetaProperty::write() when you need to modify those
     properties from C++. This ensures that the QML engine knows about the
     property change. Otherwise, the engine won't be able to carry out your
-    requested animation. For example, if you call \l setPosition() directly,
-    any behavior that reacts to changes in the x or y properties will not take
-    effect, as you are bypassing Qt's meta-object system. Note that these
-    functions incur a slight performance penalty. For more details, see
-    \l {Accessing Members of a QML Object Type from C++}.
+    requested animation.
+    Note that these functions incur a slight performance penalty. For more
+    details, see \l {Accessing Members of a QML Object Type from C++}.
 
     \sa QQuickWindow, QQuickPaintedItem
 */
@@ -5059,7 +5057,7 @@ void QQuickItem::setZ(qreal v)
   \endqml
   \endtable
 
-  \sa transform, Rotation
+  \sa Transform, Rotation
 */
 /*!
   \property QQuickItem::rotation
@@ -5085,7 +5083,7 @@ void QQuickItem::setZ(qreal v)
   \endqml
   \endtable
 
-  \sa transform, Rotation
+  \sa Transform, Rotation
   */
 qreal QQuickItem::rotation() const
 {
@@ -5145,7 +5143,7 @@ void QQuickItem::setRotation(qreal r)
   \endqml
   \endtable
 
-  \sa transform, Scale
+  \sa Transform, Scale
 */
 /*!
   \property QQuickItem::scale
@@ -5184,7 +5182,7 @@ void QQuickItem::setRotation(qreal r)
   \endqml
   \endtable
 
-  \sa transform, Scale
+  \sa Transform, Scale
   */
 qreal QQuickItem::scale() const
 {

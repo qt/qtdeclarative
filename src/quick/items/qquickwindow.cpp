@@ -3008,7 +3008,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
     (e.g. the user clicked the title bar close button). The CloseEvent contains
     an accepted property which can be set to false to abort closing the window.
 
-    \sa Window.closing()
+    \sa QQuickWindow::closing()
 */
 
 /*!
@@ -3032,7 +3032,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 
     This signal is emitted when the user tries to close the window.
 
-    This signal includes a \a close parameter. The \a close \l accepted
+    This signal includes a \a close parameter. The \c {close.accepted}
     property is true by default so that the window is allowed to close; but you
     can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
@@ -3894,7 +3894,7 @@ void QQuickWindow::resetOpenGLState()
     This is equivalent to calling showFullScreen(), showMaximized(), or showNormal(),
     depending on the platform's default behavior for the window type and flags.
 
-    \sa showFullScreen(), showMaximized(), showNormal(), hide(), flags()
+    \sa showFullScreen(), showMaximized(), showNormal(), hide(), QQuickItem::flags()
 */
 
 /*!

@@ -95,7 +95,6 @@ has now been replaced by the new \l {Qt QML} and \l {Qt Quick} modules. See the
 \li New \l var property type. This is a general-purpose property type which obsoletes the \l variant type.
     Properties of the \l var type may hold JavaScript references.
 \li QML properties of type \l var and \l variant can now hold pixmaps.
-    See \l {Scarce Resources in JavaScript} for more information.
 \li Value type improvements:
     \list
     \li QML now supports defining properties of value type basic types within QML documents.  Supported types include

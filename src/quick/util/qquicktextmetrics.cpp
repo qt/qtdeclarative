@@ -131,7 +131,7 @@ void QQuickTextMetrics::setText(const QString &text)
         \li \c Qt::ElideRight - For example: "Hello..."
     \endlist
 
-    \sa elideWidth, elidedText
+    \sa elideWidth, QFontMetrics::elidedText
 */
 Qt::TextElideMode QQuickTextMetrics::elide() const
 {
@@ -153,7 +153,7 @@ void QQuickTextMetrics::setElide(Qt::TextElideMode elide)
     This property holds the largest width the text can have (in pixels) before
     eliding will occur.
 
-    \sa elide, elidedText
+    \sa elide, QFontMetrics::elidedText
 */
 qreal QQuickTextMetrics::elideWidth() const
 {

@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \snippet package/Delegate.qml 0
 
     These named items are used as the delegates by the two views who
-    reference the special \l{VisualDataModel::parts} property to select
+    reference the special \l{DelegateModel::parts} property to select
     a model which provides the chosen delegate.
 
     \snippet package/view.qml 0
