@@ -74,6 +74,15 @@ public:
     QQuickTextInputPrivate()
         : hscroll(0)
         , vscroll(0)
+        , padding(0)
+        , topPadding(0)
+        , leftPadding(0)
+        , rightPadding(0)
+        , bottomPadding(0)
+        , explicitTopPadding(false)
+        , explicitLeftPadding(false)
+        , explicitRightPadding(false)
+        , explicitBottomPadding(false)
         , cursorItem(0)
         , textNode(0)
         , m_maskData(0)
@@ -188,6 +197,16 @@ public:
 
     qreal hscroll;
     qreal vscroll;
+
+    qreal padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
+    bool explicitTopPadding;
+    bool explicitLeftPadding;
+    bool explicitRightPadding;
+    bool explicitBottomPadding;
 
     QTextLayout m_textLayout;
     QString m_text;
@@ -419,6 +438,11 @@ public:
     void updateBaselineOffset();
 
     qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
 
 private:
     void removeSelectedText();

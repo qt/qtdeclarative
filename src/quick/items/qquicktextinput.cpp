@@ -776,8 +776,8 @@ QRectF QQuickTextInput::cursorRectangle() const
     QTextLine l = d->m_textLayout.lineForTextPosition(c);
     if (!l.isValid())
         return QRectF();
-    qreal x = l.cursorToX(c) - d->hscroll;
-    qreal y = l.y() - d->vscroll;
+    qreal x = l.cursorToX(c) - d->hscroll + leftPadding();
+    qreal y = l.y() - d->vscroll + topPadding();
     return QRectF(x, y, 1, l.height());
 }
 
@@ -1479,8 +1479,9 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
 
 int QQuickTextInputPrivate::positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const
 {
-    x += hscroll;
-    y += vscroll;
+    Q_Q(const QQuickTextInput);
+    x += hscroll - q->leftPadding();
+    y += vscroll - q->topPadding();
     QTextLine line = m_textLayout.lineAt(0);
     for (int i = 1; i < m_textLayout.lineCount(); ++i) {
         QTextLine nextLine = m_textLayout.lineAt(i);
@@ -1741,7 +1742,7 @@ void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int 
 {
     Q_Q(QQuickTextInput);
     QTextLine textLine = m_textLayout.lineForTextPosition(position + preeditCursor);
-    const qreal width = qMax<qreal>(0, q->width());
+    const qreal width = qMax<qreal>(0, q->width() - q->leftPadding() - q->rightPadding());
     qreal cix = 0;
     qreal widthUsed = 0;
     if (textLine.isValid()) {
@@ -1804,7 +1805,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
 #ifndef QT_NO_IM
     const int preeditLength = m_textLayout.preeditAreaText().length();
 #endif
-    const qreal height = qMax<qreal>(0, q->height());
+    const qreal height = qMax<qreal>(0, q->height() - q->topPadding() - q->bottomPadding());
     qreal heightUsed = contentSize.height();
     qreal previousScroll = vscroll;
 
@@ -1900,13 +1901,13 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->deleteContent();
         node->setMatrix(QMatrix4x4());
 
-        QPointF offset(0, 0);
+        QPointF offset(leftPadding(), topPadding());
         if (d->autoScroll && d->m_textLayout.lineCount() > 0) {
             QFontMetricsF fm(d->font);
             // the y offset is there to keep the baseline constant in case we have script changes in the text.
-            offset = -QPointF(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
+            offset += -QPointF(d->hscroll, d->vscroll + d->m_textLayout.lineAt(0).ascent() - fm.ascent());
         } else {
-            offset = -QPointF(d->hscroll, d->vscroll);
+            offset += -QPointF(d->hscroll, d->vscroll);
         }
 
         if (!d->m_textLayout.text().isEmpty()
@@ -2861,12 +2862,60 @@ qreal QQuickTextInputPrivate::getImplicitWidth() const
 
             QTextLine line = layout.createLine();
             line.setLineWidth(INT_MAX);
-            d->implicitWidth = qCeil(line.naturalTextWidth());
+            d->implicitWidth = qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding();
 
             layout.endLayout();
         }
     }
     return implicitWidth;
+}
+
+void QQuickTextInputPrivate::setTopPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextInput);
+    qreal oldPadding = q->topPadding();
+    topPadding = value;
+    explicitTopPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        updateLayout();
+        emit q->topPaddingChanged();
+    }
+}
+
+void QQuickTextInputPrivate::setLeftPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextInput);
+    qreal oldPadding = q->leftPadding();
+    leftPadding = value;
+    explicitLeftPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        updateLayout();
+        emit q->leftPaddingChanged();
+    }
+}
+
+void QQuickTextInputPrivate::setRightPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextInput);
+    qreal oldPadding = q->rightPadding();
+    rightPadding = value;
+    explicitRightPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        updateLayout();
+        emit q->rightPaddingChanged();
+    }
+}
+
+void QQuickTextInputPrivate::setBottomPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextInput);
+    qreal oldPadding = q->bottomPadding();
+    bottomPadding = value;
+    explicitBottomPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        updateLayout();
+        emit q->bottomPaddingChanged();
+    }
 }
 
 void QQuickTextInputPrivate::updateLayout()
@@ -2894,12 +2943,12 @@ void QQuickTextInputPrivate::updateLayout()
         line.setLineWidth(INT_MAX);
         const bool wasInLayout = inLayout;
         inLayout = true;
-        q->setImplicitWidth(qCeil(line.naturalTextWidth()));
+        q->setImplicitWidth(qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding());
         inLayout = wasInLayout;
         if (inLayout)       // probably the result of a binding loop, but by letting it
             return;         // get this far we'll get a warning to that effect.
     }
-    qreal lineWidth = q->widthValid() ? q->width() : INT_MAX;
+    qreal lineWidth = q->widthValid() ? q->width() - q->leftPadding() - q->rightPadding() : INT_MAX;
     qreal height = 0;
     qreal width = 0;
     do {
@@ -2926,9 +2975,9 @@ void QQuickTextInputPrivate::updateLayout()
     q->update();
 
     if (!requireImplicitWidth && !q->widthValid())
-        q->setImplicitSize(width, height);
+        q->setImplicitSize(width + q->leftPadding() + q->rightPadding(), height + q->topPadding() + q->bottomPadding());
     else
-        q->setImplicitHeight(height);
+        q->setImplicitHeight(height + q->topPadding() + q->bottomPadding());
 
     updateBaselineOffset();
 
@@ -2950,13 +2999,13 @@ void QQuickTextInputPrivate::updateBaselineOffset()
     QFontMetricsF fm(font);
     qreal yoff = 0;
     if (q->heightValid()) {
-        const qreal surplusHeight = q->height() - contentSize.height();
+        const qreal surplusHeight = q->height() - contentSize.height() - q->topPadding() - q->bottomPadding();
         if (vAlign == QQuickTextInput::AlignBottom)
             yoff = surplusHeight;
         else if (vAlign == QQuickTextInput::AlignVCenter)
             yoff = surplusHeight/2;
     }
-    q->setBaselineOffset(fm.ascent() + yoff);
+    q->setBaselineOffset(fm.ascent() + yoff + q->topPadding());
 }
 
 #ifndef QT_NO_CLIPBOARD
@@ -4485,6 +4534,126 @@ void QQuickTextInput::ensureVisible(int position)
     Q_D(QQuickTextInput);
     d->ensureVisible(position);
     updateCursorRectangle(false);
+}
+
+/*!
+    \since 5.6
+    \qmlproperty real QtQuick::TextInput::padding
+    \qmlproperty real QtQuick::TextInput::topPadding
+    \qmlproperty real QtQuick::TextInput::leftPadding
+    \qmlproperty real QtQuick::TextInput::bottomPadding
+    \qmlproperty real QtQuick::TextInput::rightPadding
+
+    These properties hold the padding around the content. This space is reserved
+    in addition to the contentWidth and contentHeight.
+*/
+qreal QQuickTextInput::padding() const
+{
+    Q_D(const QQuickTextInput);
+    return d->padding;
+}
+
+void QQuickTextInput::setPadding(qreal padding)
+{
+    Q_D(QQuickTextInput);
+    if (qFuzzyCompare(d->padding, padding))
+        return;
+    d->padding = padding;
+    d->updateLayout();
+    emit paddingChanged();
+    if (!d->explicitTopPadding)
+        emit topPaddingChanged();
+    if (!d->explicitLeftPadding)
+        emit leftPaddingChanged();
+    if (!d->explicitRightPadding)
+        emit rightPaddingChanged();
+    if (!d->explicitBottomPadding)
+        emit bottomPaddingChanged();
+}
+
+void QQuickTextInput::resetPadding()
+{
+    setPadding(0);
+}
+
+qreal QQuickTextInput::topPadding() const
+{
+    Q_D(const QQuickTextInput);
+    if (d->explicitTopPadding)
+        return d->topPadding;
+    return d->padding;
+}
+
+void QQuickTextInput::setTopPadding(qreal padding)
+{
+    Q_D(QQuickTextInput);
+    d->setTopPadding(padding);
+}
+
+void QQuickTextInput::resetTopPadding()
+{
+    Q_D(QQuickTextInput);
+    d->setTopPadding(0, true);
+}
+
+qreal QQuickTextInput::leftPadding() const
+{
+    Q_D(const QQuickTextInput);
+    if (d->explicitLeftPadding)
+        return d->leftPadding;
+    return d->padding;
+}
+
+void QQuickTextInput::setLeftPadding(qreal padding)
+{
+    Q_D(QQuickTextInput);
+    d->setLeftPadding(padding);
+}
+
+void QQuickTextInput::resetLeftPadding()
+{
+    Q_D(QQuickTextInput);
+    d->setLeftPadding(0, true);
+}
+
+qreal QQuickTextInput::rightPadding() const
+{
+    Q_D(const QQuickTextInput);
+    if (d->explicitRightPadding)
+        return d->rightPadding;
+    return d->padding;
+}
+
+void QQuickTextInput::setRightPadding(qreal padding)
+{
+    Q_D(QQuickTextInput);
+    d->setRightPadding(padding);
+}
+
+void QQuickTextInput::resetRightPadding()
+{
+    Q_D(QQuickTextInput);
+    d->setRightPadding(0, true);
+}
+
+qreal QQuickTextInput::bottomPadding() const
+{
+    Q_D(const QQuickTextInput);
+    if (d->explicitBottomPadding)
+        return d->bottomPadding;
+    return d->padding;
+}
+
+void QQuickTextInput::setBottomPadding(qreal padding)
+{
+    Q_D(QQuickTextInput);
+    d->setBottomPadding(padding);
+}
+
+void QQuickTextInput::resetBottomPadding()
+{
+    Q_D(QQuickTextInput);
+    d->setBottomPadding(0, true);
 }
 
 QT_END_NAMESPACE

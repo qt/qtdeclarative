@@ -96,6 +96,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+
 public:
     QQuickTextInput(QQuickItem * parent=0);
     ~QQuickTextInput();
@@ -260,6 +266,26 @@ public:
     qreal contentWidth() const;
     qreal contentHeight() const;
 
+    qreal padding() const;
+    void setPadding(qreal padding);
+    void resetPadding();
+
+    qreal topPadding() const;
+    void setTopPadding(qreal padding);
+    void resetTopPadding();
+
+    qreal leftPadding() const;
+    void setLeftPadding(qreal padding);
+    void resetLeftPadding();
+
+    qreal rightPadding() const;
+    void setRightPadding(qreal padding);
+    void resetRightPadding();
+
+    qreal bottomPadding() const;
+    void setBottomPadding(qreal padding);
+    void resetBottomPadding();
+
 Q_SIGNALS:
     void textChanged();
     void cursorPositionChanged();
@@ -300,6 +326,11 @@ Q_SIGNALS:
     void contentSizeChanged();
     void inputMethodHintsChanged();
     void renderTypeChanged();
+    Q_REVISION(6) void paddingChanged();
+    Q_REVISION(6) void topPaddingChanged();
+    Q_REVISION(6) void leftPaddingChanged();
+    Q_REVISION(6) void rightPaddingChanged();
+    Q_REVISION(6) void bottomPaddingChanged();
 
 private:
     void invalidateFontCaches();

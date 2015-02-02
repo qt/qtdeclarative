@@ -225,6 +225,7 @@ private slots:
     void baselineOffset();
 
     void ensureVisible();
+    void padding();
 
 private:
     void simulateKey(QWindow *, int key);
@@ -6371,25 +6372,25 @@ Q_DECLARE_METATYPE(ExpectedBaseline)
 static qreal expectedBaselineTop(QQuickTextInput *item)
 {
     QFontMetricsF fm(item->font());
-    return fm.ascent();
+    return fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineBottom(QQuickTextInput *item)
 {
     QFontMetricsF fm(item->font());
-    return item->height() - item->contentHeight() + fm.ascent();
+    return item->height() - item->contentHeight() - item->bottomPadding() + fm.ascent();
 }
 
 static qreal expectedBaselineCenter(QQuickTextInput *item)
 {
     QFontMetricsF fm(item->font());
-    return ((item->height() - item->contentHeight()) / 2) + fm.ascent();
+    return ((item->height() - item->contentHeight() - item->topPadding() - item->bottomPadding()) / 2) + fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineMultilineBottom(QQuickTextInput *item)
 {
     QFontMetricsF fm(item->font());
-    return item->height() - item->contentHeight() + fm.ascent();
+    return item->height() - item->contentHeight() - item->bottomPadding() + fm.ascent();
 }
 
 void tst_qquicktextinput::baselineOffset_data()
@@ -6434,6 +6435,41 @@ void tst_qquicktextinput::baselineOffset_data()
             << -1.
             << &expectedBaselineMultilineBottom
             << &expectedBaselineBottom;
+
+    QTest::newRow("padding")
+            << "Typography"
+            << QByteArray("topPadding: 10; bottomPadding: 20")
+            << -1.
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("top align with padding")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignTop; topPadding: 10; bottomPadding: 20")
+            << -1.
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("bottom align with padding")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignBottom; topPadding: 10; bottomPadding: 20")
+            << 100.
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+
+    QTest::newRow("center align with padding")
+            << "Typography"
+            << QByteArray("height: 200; verticalAlignment: Text.AlignVCenter; topPadding: 10; bottomPadding: 20")
+            << 100.
+            << &expectedBaselineCenter
+            << &expectedBaselineCenter;
+
+    QTest::newRow("multiline bottom aligned with padding")
+            << "The quick brown fox jumps over the lazy dog"
+            << QByteArray("height: 200; width: 30; verticalAlignment: Text.AlignBottom; wrapMode: TextInput.WordWrap; topPadding: 10; bottomPadding: 20")
+            << -1.
+            << &expectedBaselineMultilineBottom
+            << &expectedBaselineBottom;
 }
 
 void tst_qquicktextinput::baselineOffset()
@@ -6446,7 +6482,7 @@ void tst_qquicktextinput::baselineOffset()
 
     QQmlComponent component(&engine);
     component.setData(
-            "import QtQuick 2.0\n"
+            "import QtQuick 2.6\n"
             "TextInput {\n"
                 + bindings + "\n"
             "}", QUrl());
@@ -6509,6 +6545,85 @@ void tst_qquicktextinput::ensureVisible()
     QCOMPARE(input->boundingRect().y(), qreal(0));
     QCOMPARE(input->boundingRect().width(), line.naturalTextWidth() + input->cursorRectangle().width());
     QCOMPARE(input->boundingRect().height(), line.height());
+}
+
+void tst_qquicktextinput::padding()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("padding.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickTextInput *obj = qobject_cast<QQuickTextInput*>(root);
+    QVERIFY(obj != 0);
+
+    qreal cw = obj->contentWidth();
+    qreal ch = obj->contentHeight();
+
+    QVERIFY(cw > 0);
+    QVERIFY(ch > 0);
+
+    QCOMPARE(obj->padding(), 10.0);
+    QCOMPARE(obj->topPadding(), 20.0);
+    QCOMPARE(obj->leftPadding(), 30.0);
+    QCOMPARE(obj->rightPadding(), 40.0);
+    QCOMPARE(obj->bottomPadding(), 50.0);
+
+    QCOMPARE(obj->implicitWidth(), qCeil(cw) + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), qCeil(ch) + obj->topPadding() + obj->bottomPadding());
+
+    obj->setTopPadding(2.25);
+    QCOMPARE(obj->topPadding(), 2.25);
+    QCOMPARE(obj->implicitHeight(), qCeil(ch) + obj->topPadding() + obj->bottomPadding());
+
+    obj->setLeftPadding(3.75);
+    QCOMPARE(obj->leftPadding(), 3.75);
+    QCOMPARE(obj->implicitWidth(), qCeil(cw) + obj->leftPadding() + obj->rightPadding());
+
+    obj->setRightPadding(4.4);
+    QCOMPARE(obj->rightPadding(), 4.4);
+    QCOMPARE(obj->implicitWidth(), qCeil(cw) + obj->leftPadding() + obj->rightPadding());
+
+    obj->setBottomPadding(1.11);
+    QCOMPARE(obj->bottomPadding(), 1.11);
+    QCOMPARE(obj->implicitHeight(), qCeil(ch) + obj->topPadding() + obj->bottomPadding());
+
+    obj->setText("Qt");
+    QVERIFY(obj->contentWidth() < cw);
+    QCOMPARE(obj->contentHeight(), ch);
+    cw = obj->contentWidth();
+
+    QCOMPARE(obj->implicitWidth(), qCeil(cw) + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), qCeil(ch) + obj->topPadding() + obj->bottomPadding());
+
+    obj->setFont(QFont("Courier", 96));
+    QVERIFY(obj->contentWidth() > cw);
+    QVERIFY(obj->contentHeight() > ch);
+    cw = obj->contentWidth();
+    ch = obj->contentHeight();
+
+    QCOMPARE(obj->implicitWidth(), qCeil(cw) + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), qCeil(ch) + obj->topPadding() + obj->bottomPadding());
+
+    obj->resetTopPadding();
+    QCOMPARE(obj->topPadding(), 10.0);
+    obj->resetLeftPadding();
+    QCOMPARE(obj->leftPadding(), 10.0);
+    obj->resetRightPadding();
+    QCOMPARE(obj->rightPadding(), 10.0);
+    obj->resetBottomPadding();
+    QCOMPARE(obj->bottomPadding(), 10.0);
+
+    obj->resetPadding();
+    QCOMPARE(obj->padding(), 0.0);
+    QCOMPARE(obj->topPadding(), 0.0);
+    QCOMPARE(obj->leftPadding(), 0.0);
+    QCOMPARE(obj->rightPadding(), 0.0);
+    QCOMPARE(obj->bottomPadding(), 0.0);
+
+    delete root;
 }
 
 QTEST_MAIN(tst_qquicktextinput)
