@@ -52,7 +52,6 @@ QUICKTESTS =  \
     qquickitem \
     qquickitem2 \
     qquickitemlayer \
-    qquicklistview \
     qquickloader \
     qquickmousearea \
     qquickmultipointtoucharea \

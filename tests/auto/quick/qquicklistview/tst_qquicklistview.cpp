@@ -58,7 +58,6 @@ Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::PositionMode)
 Q_DECLARE_METATYPE(QQuickListView::Orientation)
 Q_DECLARE_METATYPE(Qt::Key)
-Q_DECLARE_METATYPE(QPersistentModelIndex)
 
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
