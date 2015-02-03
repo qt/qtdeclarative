@@ -578,6 +578,7 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
     emit verticalAlignmentChanged(d->vAlign);
     if (isComponentComplete()) {
         updateCursorRectangle();
+        d->updateBaselineOffset();
     }
 }
 
