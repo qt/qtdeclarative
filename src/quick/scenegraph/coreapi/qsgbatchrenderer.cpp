@@ -2815,7 +2815,7 @@ void Renderer::visualizeChangesPrepare(Node *n, uint parentChanges)
 void Renderer::visualizeChanges(Node *n)
 {
 
-    if (n->type() == QSGNode::GeometryNodeType && m_visualizeChanceSet.contains(n)) {
+    if (n->type() == QSGNode::GeometryNodeType && n->element()->batch && m_visualizeChanceSet.contains(n)) {
         uint dirty = m_visualizeChanceSet.value(n);
         bool tinted = (dirty & QSGNODE_DIRTY_PARENT) != 0;
 
@@ -2852,7 +2852,7 @@ void Renderer::visualizeChanges(Node *n)
 
 void Renderer::visualizeOverdraw_helper(Node *node)
 {
-    if (node->type() == QSGNode::GeometryNodeType) {
+    if (node->type() == QSGNode::GeometryNodeType && node->element()->batch) {
         VisualizeShader *shader = static_cast<VisualizeShader *>(m_shaderManager->visualizeProgram);
         QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(node->sgNode);
 
