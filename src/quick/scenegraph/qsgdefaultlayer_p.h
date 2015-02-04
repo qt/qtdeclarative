@@ -50,41 +50,41 @@ public:
 
     // The item's "paint node", not effect node.
     QSGNode *item() const { return m_item; }
-    void setItem(QSGNode *item);
+    void setItem(QSGNode *item) Q_DECL_OVERRIDE;
 
     QRectF rect() const { return m_rect; }
-    void setRect(const QRectF &rect);
+    void setRect(const QRectF &rect) Q_DECL_OVERRIDE;
 
     QSize size() const { return m_size; }
-    void setSize(const QSize &size);
+    void setSize(const QSize &size) Q_DECL_OVERRIDE;
 
-    void setHasMipmaps(bool mipmap);
+    void setHasMipmaps(bool mipmap) Q_DECL_OVERRIDE;
 
-    void bind();
+    void bind() Q_DECL_OVERRIDE;
 
-    bool hasAlphaChannel() const;
-    bool hasMipmaps() const;
-    int textureId() const;
-    QSize textureSize() const { return m_size; }
+    bool hasAlphaChannel() const Q_DECL_OVERRIDE;
+    bool hasMipmaps() const Q_DECL_OVERRIDE;
+    int textureId() const Q_DECL_OVERRIDE;
+    QSize textureSize() const Q_DECL_OVERRIDE { return m_size; }
 
     GLenum format() const { return m_format; }
-    void setFormat(GLenum format);
+    void setFormat(GLenum format) Q_DECL_OVERRIDE;
 
     bool live() const { return bool(m_live); }
-    void setLive(bool live);
+    void setLive(bool live) Q_DECL_OVERRIDE;
 
     bool recursive() const { return bool(m_recursive); }
-    void setRecursive(bool recursive);
+    void setRecursive(bool recursive) Q_DECL_OVERRIDE;
 
-    void setDevicePixelRatio(qreal ratio) { m_device_pixel_ratio = ratio; }
+    void setDevicePixelRatio(qreal ratio) Q_DECL_OVERRIDE { m_device_pixel_ratio = ratio; }
 
-    void scheduleUpdate();
+    void scheduleUpdate() Q_DECL_OVERRIDE;
 
-    QImage toImage() const;
+    QImage toImage() const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
-    void markDirtyTexture();
-    void invalidated();
+    void markDirtyTexture() Q_DECL_OVERRIDE;
+    void invalidated() Q_DECL_OVERRIDE;
 
 private:
     void grab();

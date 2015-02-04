@@ -343,7 +343,7 @@ protected:
     void inputMethodEvent(QInputMethodEvent *e) Q_DECL_OVERRIDE;
 #endif
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) Q_DECL_OVERRIDE;
-    void updatePolish();
+    void updatePolish() Q_DECL_OVERRIDE;
 
     friend class QQuickTextUtil;
     friend class QQuickTextDocument;

@@ -389,8 +389,8 @@ protected:
     bool heightValid() const; // ### better name?
     void setImplicitSize(qreal, qreal);
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);

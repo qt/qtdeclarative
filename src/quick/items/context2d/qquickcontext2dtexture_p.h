@@ -165,21 +165,21 @@ class QQuickContext2DFBOTexture : public QQuickContext2DTexture
 public:
     QQuickContext2DFBOTexture();
     ~QQuickContext2DFBOTexture();
-    virtual QQuickContext2DTile* createTile() const;
-    virtual QPaintDevice* beginPainting();
-    virtual void endPainting();
+    QQuickContext2DTile* createTile() const Q_DECL_OVERRIDE;
+    QPaintDevice* beginPainting() Q_DECL_OVERRIDE;
+    void endPainting() Q_DECL_OVERRIDE;
     QRectF normalizedTextureSubRect() const;
-    virtual QQuickCanvasItem::RenderTarget renderTarget() const;
-    virtual void compositeTile(QQuickContext2DTile* tile);
-    QSize adjustedTileSize(const QSize &ts);
+    QQuickCanvasItem::RenderTarget renderTarget() const Q_DECL_OVERRIDE;
+    void compositeTile(QQuickContext2DTile* tile) Q_DECL_OVERRIDE;
+    QSize adjustedTileSize(const QSize &ts) Q_DECL_OVERRIDE;
 
-    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window);
+    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window) Q_DECL_OVERRIDE;
 
 protected:
     QVector2D scaleFactor() const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
-    virtual void grabImage(const QRectF& region = QRectF());
+    void grabImage(const QRectF& region = QRectF()) Q_DECL_OVERRIDE;
 
 private:
     bool doMultisampling() const;

@@ -322,7 +322,7 @@ protected:
     void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
-    void updatePolish();
+    void updatePolish() Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
     void selectAll();

@@ -95,7 +95,7 @@ public:
     QQuickItem *contentItem() const;
 
     QQuickItem *activeFocusItem() const;
-    QObject *focusObject() const;
+    QObject *focusObject() const Q_DECL_OVERRIDE;
 
     QQuickItem *mouseGrabberItem() const;
 
