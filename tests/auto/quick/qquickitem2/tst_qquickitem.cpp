@@ -40,7 +40,7 @@
 #include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
-#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
@@ -119,9 +119,7 @@ private slots:
 private:
     QQmlEngine engine;
     bool qt_tab_all_widgets() {
-        if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-            return theme->themeHint(QPlatformTheme::TabAllWidgets).toBool();
-        return true;
+        return QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
     }
 };
 

@@ -46,6 +46,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qpen.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qdebug.h>
@@ -2292,16 +2293,6 @@ QQuickItem::~QQuickItem()
 /*!
     \internal
 */
-bool QQuickItemPrivate::qt_tab_all_widgets()
-{
-    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        return theme->themeHint(QPlatformTheme::TabAllWidgets).toBool();
-    return true;
-}
-
-/*!
-    \internal
-*/
 bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
 {
     if (!item->window())
@@ -2364,7 +2355,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     if (!contentItem)
         return item;
 
-    bool all = QQuickItemPrivate::qt_tab_all_widgets();
+    bool all = QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
 
     QQuickItem *from = 0;
     if (forward) {
