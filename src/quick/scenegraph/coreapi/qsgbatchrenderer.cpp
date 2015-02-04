@@ -46,6 +46,7 @@
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QOpenGLVertexArrayObject>
 #include <QtGui/QOpenGLFunctions_1_0>
+#include <QtGui/QOpenGLFunctions_3_2_Core>
 
 #include <private/qquickprofiler_p.h>
 #include "qsgmaterialshader_p.h"
@@ -2411,9 +2412,20 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
             glLineWidth(g->lineWidth());
 #if !defined(QT_OPENGL_ES_2)
         else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
-            QOpenGLFunctions_1_0 *gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
-            gl1funcs->initializeOpenGLFunctions();
-            gl1funcs->glPointSize(g->lineWidth());
+            QOpenGLFunctions_1_0 *gl1funcs = 0;
+            QOpenGLFunctions_3_2_Core *gl3funcs = 0;
+            if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+                gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
+                gl3funcs->initializeOpenGLFunctions();
+            } else {
+                gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
+                gl1funcs->initializeOpenGLFunctions();
+            }
+            Q_ASSERT(gl1funcs || gl3funcs);
+            if (gl1funcs)
+                gl1funcs->glPointSize(g->lineWidth());
+            else
+                gl3funcs->glPointSize(g->lineWidth());
         }
 #endif
 
