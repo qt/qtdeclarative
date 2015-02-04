@@ -695,6 +695,62 @@ Qt::InputMethodHints QQuickTextEditPrivate::effectiveInputMethodHints() const
 }
 #endif
 
+void QQuickTextEditPrivate::setTopPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextEdit);
+    qreal oldPadding = q->topPadding();
+    topPadding = value;
+    explicitTopPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        q->updateSize();
+        emit q->topPaddingChanged();
+    }
+}
+
+void QQuickTextEditPrivate::setLeftPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextEdit);
+    qreal oldPadding = q->topPadding();
+    leftPadding = value;
+    explicitLeftPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        q->updateSize();
+        emit q->leftPaddingChanged();
+        if (q->isComponentComplete()) {
+            updateType = QQuickTextEditPrivate::UpdatePaintNode;
+            q->update();
+        }
+    }
+}
+
+void QQuickTextEditPrivate::setRightPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextEdit);
+    qreal oldPadding = q->topPadding();
+    rightPadding = value;
+    explicitRightPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        q->updateSize();
+        emit q->rightPaddingChanged();
+        if (q->isComponentComplete()) {
+            updateType = QQuickTextEditPrivate::UpdatePaintNode;
+            q->update();
+        }
+    }
+}
+
+void QQuickTextEditPrivate::setBottomPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickTextEdit);
+    qreal oldPadding = q->topPadding();
+    bottomPadding = value;
+    explicitBottomPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+        q->updateSize();
+        emit q->bottomPaddingChanged();
+    }
+}
+
 QQuickTextEdit::VAlignment QQuickTextEdit::vAlign() const
 {
     Q_D(const QQuickTextEdit);
@@ -2220,7 +2276,7 @@ void QQuickTextEdit::updateSize()
         return;
     }
 
-    qreal naturalWidth = d->implicitWidth;
+    qreal naturalWidth = d->implicitWidth - leftPadding() - rightPadding();
 
     qreal newWidth = d->document->idealWidth();
     // ### assumes that if the width is set, the text will fill to edges
@@ -2238,13 +2294,13 @@ void QQuickTextEdit::updateSize()
 
             const bool wasInLayout = d->inLayout;
             d->inLayout = true;
-            setImplicitWidth(naturalWidth);
+            setImplicitWidth(naturalWidth + leftPadding() + rightPadding());
             d->inLayout = wasInLayout;
             if (d->inLayout)    // probably the result of a binding loop, but by letting it
                 return;         // get this far we'll get a warning to that effect.
         }
         if (d->document->textWidth() != width()) {
-            d->document->setTextWidth(width());
+            d->document->setTextWidth(width() - leftPadding() - rightPadding());
             newWidth = d->document->idealWidth();
         }
         //### need to confirm cost of always setting these
@@ -2259,12 +2315,12 @@ void QQuickTextEdit::updateSize()
 
     // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
     if (!widthValid() && !d->requireImplicitWidth)
-        setImplicitSize(newWidth, newHeight);
+        setImplicitSize(newWidth + leftPadding() + rightPadding(), newHeight + topPadding() + bottomPadding());
     else
-        setImplicitHeight(newHeight);
+        setImplicitHeight(newHeight + topPadding() + bottomPadding());
 
-    d->xoff = qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width(), effectiveHAlign()));
-    d->yoff = QQuickTextUtil::alignedY(d->document->size().height(), height(), d->vAlign);
+    d->xoff = leftPadding() + qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width() - leftPadding() - rightPadding(), effectiveHAlign()));
+    d->yoff = topPadding() + QQuickTextUtil::alignedY(d->document->size().height(), height() - topPadding() - bottomPadding(), d->vAlign);
     setBaselineOffset(fm.ascent() + d->yoff + d->textMargin);
 
     QSizeF size(newWidth, newHeight);
@@ -2679,7 +2735,131 @@ void QQuickTextEdit::append(const QString &text)
 QString QQuickTextEdit::linkAt(qreal x, qreal y) const
 {
     Q_D(const QQuickTextEdit);
-    return d->control->anchorAt(QPointF(x, y));
+    return d->control->anchorAt(QPointF(x + topPadding(), y + leftPadding()));
+}
+
+/*!
+    \since 5.6
+    \qmlproperty real QtQuick::TextEdit::padding
+    \qmlproperty real QtQuick::TextEdit::topPadding
+    \qmlproperty real QtQuick::TextEdit::leftPadding
+    \qmlproperty real QtQuick::TextEdit::bottomPadding
+    \qmlproperty real QtQuick::TextEdit::rightPadding
+
+    These properties hold the padding around the content. This space is reserved
+    in addition to the contentWidth and contentHeight.
+*/
+qreal QQuickTextEdit::padding() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->padding;
+}
+
+void QQuickTextEdit::setPadding(qreal padding)
+{
+    Q_D(QQuickTextEdit);
+    if (qFuzzyCompare(d->padding, padding))
+        return;
+    d->padding = padding;
+    updateSize();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+        update();
+    }
+    emit paddingChanged();
+    if (!d->explicitTopPadding)
+        emit topPaddingChanged();
+    if (!d->explicitLeftPadding)
+        emit leftPaddingChanged();
+    if (!d->explicitRightPadding)
+        emit rightPaddingChanged();
+    if (!d->explicitBottomPadding)
+        emit bottomPaddingChanged();
+}
+
+void QQuickTextEdit::resetPadding()
+{
+    setPadding(0);
+}
+
+qreal QQuickTextEdit::topPadding() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->explicitTopPadding)
+        return d->topPadding;
+    return d->padding;
+}
+
+void QQuickTextEdit::setTopPadding(qreal padding)
+{
+    Q_D(QQuickTextEdit);
+    d->setTopPadding(padding);
+}
+
+void QQuickTextEdit::resetTopPadding()
+{
+    Q_D(QQuickTextEdit);
+    d->setTopPadding(0, true);
+}
+
+qreal QQuickTextEdit::leftPadding() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->explicitLeftPadding)
+        return d->leftPadding;
+    return d->padding;
+}
+
+void QQuickTextEdit::setLeftPadding(qreal padding)
+{
+    Q_D(QQuickTextEdit);
+    d->setLeftPadding(padding);
+}
+
+void QQuickTextEdit::resetLeftPadding()
+{
+    Q_D(QQuickTextEdit);
+    d->setLeftPadding(0, true);
+}
+
+qreal QQuickTextEdit::rightPadding() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->explicitRightPadding)
+        return d->rightPadding;
+    return d->padding;
+}
+
+void QQuickTextEdit::setRightPadding(qreal padding)
+{
+    Q_D(QQuickTextEdit);
+    d->setRightPadding(padding);
+}
+
+void QQuickTextEdit::resetRightPadding()
+{
+    Q_D(QQuickTextEdit);
+    d->setRightPadding(0, true);
+}
+
+qreal QQuickTextEdit::bottomPadding() const
+{
+    Q_D(const QQuickTextEdit);
+    if (d->explicitBottomPadding)
+        return d->bottomPadding;
+    return d->padding;
+}
+
+void QQuickTextEdit::setBottomPadding(qreal padding)
+{
+    Q_D(QQuickTextEdit);
+    d->setBottomPadding(padding);
+}
+
+void QQuickTextEdit::resetBottomPadding()
+{
+    Q_D(QQuickTextEdit);
+    d->setBottomPadding(0, true);
 }
 
 QT_END_NAMESPACE

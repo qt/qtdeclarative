@@ -205,6 +205,8 @@ private slots:
     void cursorRectangle_QTBUG_38947();
     void textCached_QTBUG_41583();
 
+    void padding();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
@@ -5361,6 +5363,84 @@ void tst_qquicktextedit::textCached_QTBUG_41583()
     QCOMPARE(textedit->textMargin(), qreal(10.0));
     QCOMPARE(textedit->text(), QString("TextEdit"));
     QVERIFY(!textedit->property("empty").toBool());
+}
+
+void tst_qquicktextedit::padding()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("padding.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(root);
+    QVERIFY(obj != 0);
+
+    qreal cw = obj->contentWidth();
+    qreal ch = obj->contentHeight();
+
+    QVERIFY(cw > 0);
+    QVERIFY(ch > 0);
+
+    QCOMPARE(obj->topPadding(), 20.0);
+    QCOMPARE(obj->leftPadding(), 30.0);
+    QCOMPARE(obj->rightPadding(), 40.0);
+    QCOMPARE(obj->bottomPadding(), 50.0);
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setTopPadding(2.25);
+    QCOMPARE(obj->topPadding(), 2.25);
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setLeftPadding(3.75);
+    QCOMPARE(obj->leftPadding(), 3.75);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+
+    obj->setRightPadding(4.4);
+    QCOMPARE(obj->rightPadding(), 4.4);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+
+    obj->setBottomPadding(1.11);
+    QCOMPARE(obj->bottomPadding(), 1.11);
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setText("Qt");
+    QVERIFY(obj->contentWidth() < cw);
+    QCOMPARE(obj->contentHeight(), ch);
+    cw = obj->contentWidth();
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setFont(QFont("Courier", 96));
+    QVERIFY(obj->contentWidth() > cw);
+    QVERIFY(obj->contentHeight() > ch);
+    cw = obj->contentWidth();
+    ch = obj->contentHeight();
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->resetTopPadding();
+    QCOMPARE(obj->topPadding(), 10.0);
+    obj->resetLeftPadding();
+    QCOMPARE(obj->leftPadding(), 10.0);
+    obj->resetRightPadding();
+    QCOMPARE(obj->rightPadding(), 10.0);
+    obj->resetBottomPadding();
+    QCOMPARE(obj->bottomPadding(), 10.0);
+
+    obj->resetPadding();
+    QCOMPARE(obj->padding(), 0.0);
+    QCOMPARE(obj->topPadding(), 0.0);
+    QCOMPARE(obj->leftPadding(), 0.0);
+    QCOMPARE(obj->rightPadding(), 0.0);
+    QCOMPARE(obj->bottomPadding(), 0.0);
+
+    delete root;
 }
 
 QTEST_MAIN(tst_qquicktextedit)
