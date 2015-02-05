@@ -496,7 +496,9 @@ void QuickTestResult::stringify(QQmlV4Function *args)
         } else {
             result = QLatin1String("Object");
         }
-    } else {
+    }
+
+    if (result.isEmpty()) {
         QString tmp = value->toQStringNoThrow();
         if (value->asArrayObject())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
