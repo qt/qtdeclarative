@@ -249,20 +249,22 @@ void QQuickWindow::focusInEvent(QFocusEvent *ev)
 
 void QQuickWindowPrivate::polishItems()
 {
-    int maxPolishCycles = 100000;
-
-    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
-        QSet<QQuickItem *> itms = itemsToPolish;
-        itemsToPolish.clear();
-
-        for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
-            QQuickItem *item = *it;
-            QQuickItemPrivate::get(item)->polishScheduled = false;
-            item->updatePolish();
-        }
+    // An item can trigger polish on another item, or itself for that matter,
+    // during its updatePolish() call. Because of this, we cannot simply
+    // iterate through the set, we must continue pulling items out until it
+    // is empty.
+    // In the case where polish is called from updatePolish() either directly
+    // or indirectly, we use a recursionSafeguard to print a warning to
+    // the user.
+    int recursionSafeguard = INT_MAX;
+    while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
+        QQuickItem *item = *itemsToPolish.begin();
+        itemsToPolish.remove(item);
+        QQuickItemPrivate::get(item)->polishScheduled = false;
+        item->updatePolish();
     }
 
-    if (maxPolishCycles == 0)
+    if (recursionSafeguard == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
     updateFocusItemTransform();
