@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qqmlmodelsmodule_p.h"
+#include <QtCore/qitemselectionmodel.h>
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qqmlobjectmodel_p.h>
@@ -47,6 +48,8 @@ void QQmlModelsModule::defineModule()
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
+
+    qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");
 }
 
 QT_END_NAMESPACE
