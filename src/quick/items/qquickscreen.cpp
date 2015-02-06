@@ -197,7 +197,7 @@ QT_BEGIN_NAMESPACE
     This contains the update mask for the orientation. Screen::orientation
     only emits changes for the screen orientations matching this mask.
 
-    The default, \c 0, means Screen::orientation never updates.
+    By default it is set to the value of the QScreen that the window uses.
 */
 
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
@@ -205,6 +205,7 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     , m_screen(NULL)
     , m_window(NULL)
     , m_updateMask(0)
+    , m_updateMaskSet(false)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
 
@@ -297,6 +298,7 @@ Qt::ScreenOrientations QQuickScreenAttached::orientationUpdateMask() const
 
 void QQuickScreenAttached::setOrientationUpdateMask(Qt::ScreenOrientations mask)
 {
+    m_updateMaskSet = true;
     if (m_updateMask == mask)
         return;
 
@@ -338,7 +340,12 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
         if (!screen)
             return; //Don't bother emitting signals, because the new values are garbage anyways
 
-        screen->setOrientationUpdateMask(m_updateMask);
+        if (m_updateMaskSet) {
+            screen->setOrientationUpdateMask(m_updateMask);
+        } else if (m_updateMask != screen->orientationUpdateMask()) {
+            m_updateMask = screen->orientationUpdateMask();
+            emit orientationUpdateMaskChanged();
+        }
 
         if (!oldScreen || screen->size() != oldScreen->size()) {
             emit widthChanged();
