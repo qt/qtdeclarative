@@ -2871,7 +2871,7 @@ void tst_qquicktext::imgTagsMultipleImages()
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
     QVERIFY(textPrivate != 0);
-    QVERIFY(textPrivate->visibleImgTags.count() == 2);
+    QVERIFY(textPrivate->extra->visibleImgTags.count() == 2);
 
     delete textObject;
 }
@@ -2884,9 +2884,9 @@ void tst_qquicktext::imgTagsElide()
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
     QVERIFY(textPrivate != 0);
-    QVERIFY(textPrivate->visibleImgTags.count() == 0);
+    QVERIFY(textPrivate->extra->visibleImgTags.count() == 0);
     myText->setMaximumLineCount(20);
-    QTRY_VERIFY(textPrivate->visibleImgTags.count() == 1);
+    QTRY_VERIFY(textPrivate->extra->visibleImgTags.count() == 1);
 
     delete myText;
     delete window;
@@ -2904,12 +2904,12 @@ void tst_qquicktext::imgTagsUpdates()
     QVERIFY(textPrivate != 0);
 
     myText->setText("This is a heart<img src=\"images/heart200.png\">.");
-    QVERIFY(textPrivate->visibleImgTags.count() == 1);
+    QVERIFY(textPrivate->extra->visibleImgTags.count() == 1);
     QVERIFY(spy.count() == 1);
 
     myText->setMaximumLineCount(2);
     myText->setText("This is another heart<img src=\"images/heart200.png\">.");
-    QTRY_VERIFY(textPrivate->visibleImgTags.count() == 1);
+    QTRY_VERIFY(textPrivate->extra->visibleImgTags.count() == 1);
 
     // if maximumLineCount is set and the img tag doesn't have an explicit size
     // we relayout twice.

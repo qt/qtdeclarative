@@ -97,6 +97,8 @@ public:
         int maximumLineCount;
         QQuickText::LineHeightMode lineHeightMode;
         QQuickText::FontSizeMode fontSizeMode;
+        QList<QQuickStyledTextImgTag*> imgTags;
+        QList<QQuickStyledTextImgTag*> visibleImgTags;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -104,8 +106,6 @@ public:
     QUrl baseUrl;
     QFont font;
     QFont sourceFont;
-    QList<QQuickStyledTextImgTag*> imgTags;
-    QList<QQuickStyledTextImgTag*> visibleImgTags;
 
     QTextLayout layout;
     QTextLayout *elideLayout;
