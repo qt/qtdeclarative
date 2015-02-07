@@ -2070,18 +2070,21 @@ void QQuickText::setElideMode(QQuickText::TextElideMode mode)
 QUrl QQuickText::baseUrl() const
 {
     Q_D(const QQuickText);
-    if (d->baseUrl.isEmpty()) {
+    if (!d->extra.isAllocated() || d->extra->baseUrl.isEmpty()) {
         if (QQmlContext *context = qmlContext(this))
-            const_cast<QQuickTextPrivate *>(d)->baseUrl = context->baseUrl();
+            return context->baseUrl();
+        else
+            return QUrl();
+    } else {
+        return d->extra->baseUrl;
     }
-    return d->baseUrl;
 }
 
 void QQuickText::setBaseUrl(const QUrl &url)
 {
     Q_D(QQuickText);
     if (baseUrl() != url) {
-        d->baseUrl = url;
+        d->extra.value().baseUrl = url;
 
         if (d->richText) {
             d->ensureDoc();

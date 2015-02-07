@@ -99,11 +99,11 @@ public:
         QQuickText::FontSizeMode fontSizeMode;
         QList<QQuickStyledTextImgTag*> imgTags;
         QList<QQuickStyledTextImgTag*> visibleImgTags;
+        QUrl baseUrl;
     };
     QLazilyAllocated<ExtraData> extra;
 
     QString text;
-    QUrl baseUrl;
     QFont font;
     QFont sourceFont;
 
