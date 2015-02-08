@@ -43,7 +43,7 @@ class QQuickItemViewTransitionableItem;
 class QQuickItemViewTransitionJob;
 
 
-class QQuickItemViewTransitionChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickItemViewTransitionChangeListener
 {
 public:
     QQuickItemViewTransitionChangeListener() {}
@@ -53,7 +53,7 @@ public:
 };
 
 
-class QQuickItemViewTransitioner
+class Q_QUICK_PRIVATE_EXPORT QQuickItemViewTransitioner
 {
 public:
     enum TransitionType {
@@ -113,7 +113,7 @@ private:
 /*
   An item that can be transitioned using QQuickViewTransitionJob.
   */
-class QQuickItemViewTransitionableItem
+class Q_QUICK_PRIVATE_EXPORT QQuickItemViewTransitionableItem
 {
 public:
     QQuickItemViewTransitionableItem(QQuickItem *i);
