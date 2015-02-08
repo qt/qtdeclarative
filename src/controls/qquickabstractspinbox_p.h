@@ -55,7 +55,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickAbstractSpinBox : public QQuickControl
     Q_PROPERTY(QQuickItem *upButton READ upButton WRITE setUpButton NOTIFY upButtonChanged FINAL)
     Q_PROPERTY(QQuickItem *downButton READ downButton WRITE setDownButton NOTIFY downButtonChanged FINAL)
     Q_PROPERTY(SubControl pressed READ pressed WRITE setPressed NOTIFY pressedChanged FINAL)
-    Q_ENUMS(SubControl)
 
 public:
     explicit QQuickAbstractSpinBox(QQuickItem *parent = Q_NULLPTR);
@@ -83,6 +82,7 @@ public:
         UpButton,
         DownButton
     };
+    Q_ENUM(SubControl)
 
     SubControl pressed() const;
     void setPressed(SubControl control);

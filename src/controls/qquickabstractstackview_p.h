@@ -51,7 +51,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickAbstractStackView : public QQuickAbstractCont
     Q_PROPERTY(int depth READ depth WRITE setDepth NOTIFY depthChanged FINAL) // TODO: hide setDepth
     Q_PROPERTY(QQuickItem *currentItem READ currentItem WRITE setCurrentItem NOTIFY currentItemChanged FINAL) // TODO: hide setCurrentItem
     Q_PROPERTY(QVariant initialItem READ initialItem WRITE setInitialItem FINAL)
-    Q_ENUMS(Operation)
 
 public:
     explicit QQuickAbstractStackView(QQuickItem *parent = Q_NULLPTR);
@@ -73,6 +72,7 @@ public:
         Transition,
         Immediate
     };
+    Q_ENUM(Operation)
 
     Q_INVOKABLE QQuickItem *qpush(QQmlV4Function *args);
     Q_INVOKABLE QQuickItem *qpop(QQmlV4Function *args);
@@ -99,7 +99,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickStackAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(Status status READ status WRITE setStatus NOTIFY statusChanged)
-    Q_ENUMS(Status)
 
 public:
     explicit QQuickStackAttached(QObject *parent = Q_NULLPTR);
@@ -112,6 +111,7 @@ public:
         Activating = 2,
         Active = 3
     };
+    Q_ENUM(Status)
 
     Status status() const;
     void setStatus(Status status);

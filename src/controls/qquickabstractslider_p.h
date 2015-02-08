@@ -57,7 +57,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickAbstractSlider : public QQuickControl
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     Q_PROPERTY(QQuickItem *track READ track WRITE setTrack NOTIFY trackChanged FINAL)
-    Q_ENUMS(SnapMode)
 
 public:
     explicit QQuickAbstractSlider(QQuickItem *parent = Q_NULLPTR);
@@ -77,6 +76,7 @@ public:
         SnapAlways,
         SnapOnRelease
     };
+    Q_ENUM(SnapMode)
 
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
