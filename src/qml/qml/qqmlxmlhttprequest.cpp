@@ -872,13 +872,9 @@ bool Node::isNull() const
 
 ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
 {
-    NamedNodeMap *r = m->as<NamedNodeMap>();
+    Q_ASSERT(m->as<NamedNodeMap>());
+    NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
-    if (!r) {
-        if (hasProperty)
-            *hasProperty = false;
-        return v4->throwTypeError();
-    }
 
     if ((int)index < r->d()->list.count()) {
         if (hasProperty)
