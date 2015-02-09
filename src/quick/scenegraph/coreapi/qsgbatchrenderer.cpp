@@ -2414,13 +2414,10 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
         else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
             QOpenGLFunctions_1_0 *gl1funcs = 0;
             QOpenGLFunctions_3_2_Core *gl3funcs = 0;
-            if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile) {
+            if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile)
                 gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
-                gl3funcs->initializeOpenGLFunctions();
-            } else {
+            else
                 gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
-                gl1funcs->initializeOpenGLFunctions();
-            }
             Q_ASSERT(gl1funcs || gl3funcs);
             if (gl1funcs)
                 gl1funcs->glPointSize(g->lineWidth());
