@@ -10,6 +10,7 @@
 /tests/auto/controls/tst_controls
 /tests/auto/extras/tst_extras
 /tests/benchmark/creation/tst_creation
+/tests/benchmark/objects/tst_objects
 
 /src/controls/doc/qtquickcontrols2.tags
 
