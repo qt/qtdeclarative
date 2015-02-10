@@ -46,8 +46,8 @@ struct ArrayBufferCtor : FunctionObject {
     ArrayBufferCtor(QV4::ExecutionContext *scope);
 };
 
-struct ArrayBuffer : Object {
-    ArrayBuffer(ExecutionEngine *e, int length);
+struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
+    ArrayBuffer(ExecutionEngine *e, size_t length);
     ~ArrayBuffer();
     QTypedArrayData<char> *data;
 
@@ -67,7 +67,7 @@ struct ArrayBufferCtor: FunctionObject
 
 };
 
-struct ArrayBuffer : Object
+struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object
 {
     V4_OBJECT2(ArrayBuffer, Object)
     V4_NEEDS_DESTROY

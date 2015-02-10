@@ -35,6 +35,7 @@
 
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4arraybuffer_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -74,6 +75,7 @@ struct TypedArray : Object {
     ArrayBuffer *buffer;
     uint byteLength;
     uint byteOffset;
+    Type arrayType;
 };
 
 struct TypedArrayCtor : FunctionObject {
@@ -90,14 +92,25 @@ struct TypedArrayPrototype : Object {
 
 }
 
-struct TypedArray : Object
+struct Q_QML_PRIVATE_EXPORT TypedArray : Object
 {
     V4_OBJECT2(TypedArray, Object)
+
+    uint byteLength() const {
+        return d()->byteLength;
+    }
 
     uint length() const {
         return d()->byteLength/d()->type->bytesPerElement;
     }
 
+    QTypedArrayData<char> *arrayData() {
+        return d()->buffer->data;
+    }
+
+    Heap::TypedArray::Type arrayType() const {
+        return d()->arrayType;
+    }
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
