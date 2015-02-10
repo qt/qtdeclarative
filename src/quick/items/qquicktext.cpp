@@ -2737,7 +2737,7 @@ void QQuickText::invalidateFontCaches()
 {
     Q_D(QQuickText);
 
-    if (d->richText && d->extra->doc != 0) {
+    if (d->richText && d->extra.isAllocated() && d->extra->doc != 0) {
         QTextBlock block;
         for (block = d->extra->doc->firstBlock(); block.isValid(); block = block.next()) {
             if (block.layout() != 0 && block.layout()->engine() != 0)
