@@ -36,7 +36,7 @@
 #include "qv4regexp_p.h"
 #include "qv4regexpobject_p.h"
 #include "qv4objectproto_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
 
 #include <QtCore/QDateTime>

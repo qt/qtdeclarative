@@ -37,7 +37,7 @@
 #include "qv4value_inl_p.h"
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 
 QT_BEGIN_NAMESPACE
 

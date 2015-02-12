@@ -36,7 +36,7 @@
 #include <qv4context_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include <qv4argumentsobject_p.h>
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"

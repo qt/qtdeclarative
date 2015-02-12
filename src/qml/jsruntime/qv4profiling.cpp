@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qv4profiling_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 
 QT_BEGIN_NAMESPACE
 

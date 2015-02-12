@@ -37,74 +37,13 @@
 
 #include <QtCore/QString>
 #include "qv4global_p.h"
+#include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
 typedef uint Bool;
-
-namespace Heap {
-
-struct Q_QML_EXPORT Base {
-    union {
-        const ManagedVTable *vtable;
-        quintptr mm_data;
-    };
-
-    inline ReturnedValue asReturnedValue() const;
-    inline void mark(QV4::ExecutionEngine *engine);
-
-    enum {
-        MarkBit = 0x1,
-        NotInUse = 0x2,
-        PointerMask = ~0x3
-    };
-
-    ManagedVTable *gcGetVtable() const {
-        return reinterpret_cast<ManagedVTable *>(mm_data & PointerMask);
-    }
-    inline bool isMarked() const {
-        return mm_data & MarkBit;
-    }
-    inline void setMarkBit() {
-        mm_data |= MarkBit;
-    }
-    inline void clearMarkBit() {
-        mm_data &= ~MarkBit;
-    }
-
-    inline bool inUse() const {
-        return !(mm_data & NotInUse);
-    }
-
-    Base *nextFree() {
-        return reinterpret_cast<Base *>(mm_data & PointerMask);
-    }
-    void setNextFree(Base *m) {
-        mm_data = (reinterpret_cast<quintptr>(m) | NotInUse);
-    }
-
-    void *operator new(size_t, Managed *m) { return m; }
-    void *operator new(size_t, Heap::Base *m) { return m; }
-    void operator delete(void *, Heap::Base *) {}
-};
-
-template <typename T>
-struct Pointer {
-    Pointer() {}
-    Pointer(T *t) : ptr(t) {}
-
-    T *operator->() const { return static_cast<T *>(ptr); }
-    operator T *() const { return static_cast<T *>(ptr); }
-
-    Pointer &operator =(T *t) { ptr = t; return *this; }
-
-    // Use Base, not T here, to ensure T inherits from ptr
-    Base *ptr;
-};
-
-}
 
 struct Q_QML_PRIVATE_EXPORT Value
 {

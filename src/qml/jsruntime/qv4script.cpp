@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qv4script_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include "qv4functionobject_p.h"
 #include "qv4function_p.h"
 #include "qv4context_p.h"

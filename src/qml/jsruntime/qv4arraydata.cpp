@@ -33,7 +33,7 @@
 #include "qv4arraydata_p.h"
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include "qv4runtime_p.h"
 #include "qv4argumentsobject_p.h"
 

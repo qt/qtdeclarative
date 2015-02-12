@@ -48,7 +48,7 @@
 #include <qv4regexp_p.h>
 #include <qv4variantobject_p.h>
 #include <qv4runtime_p.h>
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include <qv4argumentsobject_p.h>
 #include <qv4dateobject_p.h>
 #include <qv4jsonobject_p.h>

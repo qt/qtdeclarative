@@ -33,6 +33,7 @@ HEADERS += qtqmlglobal.h \
 
 #modules
 include(util/util.pri)
+include(memory/memory.pri)
 include(parser/parser.pri)
 include(compiler/compiler.pri)
 include(jsapi/jsapi.pri)

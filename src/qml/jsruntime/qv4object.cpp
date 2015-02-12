@@ -37,7 +37,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include "qv4lookup_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4memberdata_p.h"

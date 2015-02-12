@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qv4memberdata_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 
 using namespace QV4;
 

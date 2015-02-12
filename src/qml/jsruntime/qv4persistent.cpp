@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qv4persistent_p.h"
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #include "qv4object_p.h"
 #include "PageAllocation.h"
 

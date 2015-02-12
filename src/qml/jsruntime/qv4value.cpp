@@ -35,7 +35,7 @@
 #ifndef V4_BOOTSTRAP
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
-#include "qv4mm_p.h"
+#include <private/qv4mm_p.h>
 #endif
 
 #include <wtf/MathExtras.h>

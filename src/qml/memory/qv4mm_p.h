@@ -34,9 +34,9 @@
 #ifndef QV4GC_H
 #define QV4GC_H
 
-#include "qv4global_p.h"
-#include "qv4value_inl_p.h"
-#include "qv4scopedvalue_p.h"
+#include <private/qv4global_p.h>
+#include <private/qv4value_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 //#define DETAILED_MM_STATS
 
