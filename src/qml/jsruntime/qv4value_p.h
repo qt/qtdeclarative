@@ -90,6 +90,20 @@ struct Q_QML_EXPORT Base {
     void operator delete(void *, Heap::Base *) {}
 };
 
+template <typename T>
+struct Pointer {
+    Pointer() {}
+    Pointer(T *t) : ptr(t) {}
+
+    T *operator->() const { return static_cast<T *>(ptr); }
+    operator T *() const { return static_cast<T *>(ptr); }
+
+    Pointer &operator =(T *t) { ptr = t; return *this; }
+
+    // Use Base, not T here, to ensure T inherits from ptr
+    Base *ptr;
+};
+
 }
 
 struct Q_QML_PRIVATE_EXPORT Value

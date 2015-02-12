@@ -55,7 +55,7 @@ struct Object : Base {
     Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData->data + index); }
 
     InternalClass *internalClass;
-    Heap::Object *prototype;
+    Pointer<Object> prototype;
     MemberData *memberData;
     ArrayData *arrayData;
 };
