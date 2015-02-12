@@ -6372,7 +6372,7 @@ void QQuickItem::setSize(const QSizeF &size)
     d->heightValid = true;
     d->widthValid = true;
 
-    if (QSizeF(d->width, d->height) == size)
+    if (d->width == size.width() && d->height == size.height())
         return;
 
     qreal oldHeight = d->height;
