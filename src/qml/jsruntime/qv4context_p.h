@@ -45,6 +45,7 @@ struct CompilationUnit;
 struct Function;
 }
 
+struct Identifier;
 struct CallContext;
 struct CatchContext;
 struct WithContext;

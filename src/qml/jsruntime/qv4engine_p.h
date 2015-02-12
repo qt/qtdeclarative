@@ -37,6 +37,7 @@
 #include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
+#include "qv4internalclass_p.h"
 #include <private/qintrusivelist_p.h>
 
 namespace WTF {

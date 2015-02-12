@@ -37,11 +37,14 @@
 
 #include <QtCore/QString>
 #include "qv4global_p.h"
-#include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
+
+namespace Heap {
+    struct Base;
+}
 
 typedef uint Bool;
 
@@ -471,13 +474,6 @@ struct Encode {
 private:
     Encode(void *);
 };
-
-inline
-ReturnedValue Heap::Base::asReturnedValue() const
-{
-    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
-}
-
 
 template<typename T>
 T *value_cast(const Value &v)

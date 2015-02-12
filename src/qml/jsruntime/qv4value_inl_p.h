@@ -36,7 +36,7 @@
 #include <cmath> // this HAS to come
 
 #include "qv4value_p.h"
-
+#include <private/qv4heap_p.h>
 #include "qv4string_p.h"
 #include "qv4managed_p.h"
 #include "qv4engine_p.h"
@@ -178,6 +178,13 @@ inline bool Value::toBoolean() const
     }
 }
 
+inline
+ReturnedValue Heap::Base::asReturnedValue() const
+{
+    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
+}
+
+
 #ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
@@ -269,8 +276,6 @@ inline ErrorObject *Value::asErrorObject() const
 template<typename T>
 inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
 
-#ifndef V4_BOOTSTRAP
-
 template<>
 inline String *value_cast(const Value &v) {
     return v.asString();
@@ -281,8 +286,6 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {
     return v.toString(e)->asReturnedValue();
 }
-
-#endif
 
 #endif
 
