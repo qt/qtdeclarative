@@ -144,12 +144,6 @@ inline const FunctionObject *Value::as() const {
     return isManaged() && m && m->vtable->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
 }
 
-template<>
-inline FunctionObject *managed_cast(Managed *m)
-{
-    return m ? m->as<FunctionObject>() : 0;
-}
-
 
 struct FunctionCtor: FunctionObject
 {

@@ -188,23 +188,6 @@ inline const Object *Value::as() const {
     return isManaged() && m && m->vtable->isObject ? objectValue() : 0;
 }
 
-template<typename T>
-inline T *managed_cast(Managed *m)
-{
-    return m ? m->as<T>() : 0;
-}
-
-template<>
-inline String *managed_cast(Managed *m)
-{
-    return m ? m->as<String>() : 0;
-}
-template<>
-inline Object *managed_cast(Managed *m)
-{
-    return m ? m->as<Object>() : 0;
-}
-
 }
 
 
