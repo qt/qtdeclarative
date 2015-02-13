@@ -253,11 +253,6 @@ inline NumberObject *Value::asNumberObject() const
     return isObject() ? managed()->asNumberObject() : 0;
 }
 
-inline StringObject *Value::asStringObject() const
-{
-    return isObject() ? managed()->asStringObject() : 0;
-}
-
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {

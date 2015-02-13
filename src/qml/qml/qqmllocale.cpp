@@ -820,10 +820,10 @@ void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 
 QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::CallContext *ctx)
 {
-    if (ctx->argc() != 1 || (!ctx->args()[0].isString() && !ctx->args()[0].asStringObject()))
+    if (ctx->argc() != 1 || (!ctx->args()[0].isString() && !ctx->args()[0].as<StringObject>()))
         return QV4::StringPrototype::method_localeCompare(ctx);
 
-    if (!ctx->thisObject().isString() && !ctx->thisObject().asStringObject())
+    if (!ctx->thisObject().isString() && !ctx->thisObject().as<StringObject>())
         return QV4::StringPrototype::method_localeCompare(ctx);
 
     QString thisString = ctx->thisObject().toQStringNoThrow();

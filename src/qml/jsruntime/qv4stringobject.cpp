@@ -104,7 +104,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
 {
     ExecutionEngine *v4 = static_cast<StringObject *>(m)->engine();
     Scope scope(v4);
-    Scoped<StringObject> o(scope, m->asStringObject());
+    Scoped<StringObject> o(scope, m->as<StringObject>());
     Q_ASSERT(!!o);
 
     if (index < static_cast<uint>(o->d()->value.stringValue()->toQString().length())) {
@@ -220,7 +220,7 @@ static QString getThisString(ExecutionContext *ctx)
     ScopedValue t(scope, ctx->thisObject());
     if (t->isString())
         return t->stringValue()->toQString();
-    if (StringObject *thisString = t->asStringObject())
+    if (StringObject *thisString = t->as<StringObject>())
         return thisString->d()->value.stringValue()->toQString();
     if (t->isUndefined() || t->isNull()) {
         scope.engine->throwTypeError();
@@ -234,7 +234,7 @@ ReturnedValue StringPrototype::method_toString(CallContext *context)
     if (context->thisObject().isString())
         return context->thisObject().asReturnedValue();
 
-    StringObject *o = context->thisObject().asStringObject();
+    StringObject *o = context->thisObject().as<StringObject>();
     if (!o)
         return context->engine()->throwTypeError();
     return o->d()->value.asReturnedValue();
@@ -470,7 +470,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
 {
     Scope scope(ctx);
     QString string;
-    if (StringObject *thisString = ctx->thisObject().asStringObject())
+    if (StringObject *thisString = ctx->thisObject().as<StringObject>())
         string = thisString->d()->value.stringValue()->toQString();
     else
         string = ctx->thisObject().toQString();

@@ -702,7 +702,7 @@ QString Stringify::Str(const QString &key, const Value &v)
     if (o) {
         if (NumberObject *n = o->asNumberObject())
             value = Encode(n->value());
-        else if (StringObject *so = o->asStringObject())
+        else if (StringObject *so = o->as<StringObject>())
             value = so->d()->value;
         else if (BooleanObject *b =o->asBooleanObject())
             value = Encode(b->value());
@@ -893,7 +893,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
             ScopedValue v(scope);
             for (uint i = 0; i < arrayLen; ++i) {
                 v = o->getIndexed(i);
-                if (v->asNumberObject() || v->asStringObject() || v->isNumber())
+                if (v->asNumberObject() || v->as<StringObject>() || v->isNumber())
                     v = RuntimeHelpers::toString(scope.engine, v);
                 if (v->isString()) {
                     String *s = v->stringValue();
@@ -907,7 +907,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
     ScopedValue s(scope, ctx->argument(2));
     if (NumberObject *n = s->asNumberObject())
         s = Encode(n->value());
-    else if (StringObject *so = s->asStringObject())
+    else if (StringObject *so = s->as<StringObject>())
         s = so->d()->value;
 
     if (s->isNumber()) {
