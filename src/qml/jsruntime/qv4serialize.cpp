@@ -199,7 +199,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         reserve(data, sizeof(quint32) + sizeof(double));
         push(data, valueheader(WorkerDate));
         push(data, d->date().asDouble());
-    } else if (RegExpObject *re = v.as<RegExpObject>()) {
+    } else if (const RegExpObject *re = v.as<RegExpObject>()) {
         quint32 flags = re->flags();
         QString pattern = re->source();
         int length = pattern.length() + 1;
@@ -218,7 +218,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         char *buffer = data.data() + offset;
 
         memcpy(buffer, pattern.constData(), length*sizeof(QChar));
-    } else if (QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
+    } else if (const QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so
         // that others can trivially plug in their elements.
         QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object());

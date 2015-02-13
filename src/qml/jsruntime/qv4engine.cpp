@@ -1184,7 +1184,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     Q_ASSERT (!value.isEmpty());
     QV4::Scope scope(e);
 
-    if (QV4::VariantObject *v = value.as<QV4::VariantObject>())
+    if (const QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->d()->data;
 
     if (typeHint == QVariant::Bool)
@@ -1253,7 +1253,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return value.asDouble();
     if (value.isString())
         return value.stringValue()->toQString();
-    if (QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
+    if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
         return ld->d()->locale;
     if (QV4::DateObject *d = value.asDateObject())
         return d->toQDateTime();
@@ -1681,12 +1681,12 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::Value &value, int type, void *da
             return true;
         } break;
     case QMetaType::QRegExp:
-        if (QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
+        if (const QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
             *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
     case QMetaType::QObjectStar: {
-        QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>();
+        const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>();
         if (qobjectWrapper || value.isNull()) {
             *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(scope.engine, value);
             return true;
@@ -1766,7 +1766,7 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::Value &value, int type, void *da
     }
 #endif
 
-    // Try to use magic; for compatibility with qscriptvalue_cast.
+    // Try to use magic; for compatibility with qjsvalue_cast.
 
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(this, value, name, reinterpret_cast<void* *>(data)))

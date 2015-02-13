@@ -46,7 +46,7 @@ struct String;
 struct ExecutionEngine;
 struct Object;
 struct Identifier;
-struct ManagedVTable;
+struct VTable;
 
 struct PropertyHashData;
 struct PropertyHash

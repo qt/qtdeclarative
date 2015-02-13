@@ -141,8 +141,8 @@ struct ErrorObject: Object {
 };
 
 template<>
-inline ErrorObject *value_cast(const Value &v) {
-    return v.asErrorObject();
+inline const ErrorObject *Value::as() const {
+    return asErrorObject();
 }
 
 struct EvalErrorObject: ErrorObject {

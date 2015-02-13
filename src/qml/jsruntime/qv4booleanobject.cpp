@@ -74,7 +74,7 @@ ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)
     if (ctx->thisObject().isBoolean()) {
         result = ctx->thisObject().booleanValue();
     } else {
-        BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
+        const BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
         if (!thisObject)
             return ctx->engine()->throwTypeError();
         result = thisObject->value();
@@ -88,7 +88,7 @@ ReturnedValue BooleanPrototype::method_valueOf(CallContext *ctx)
     if (ctx->thisObject().isBoolean())
         return ctx->thisObject().asReturnedValue();
 
-    BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
+    const BooleanObject *thisObject = ctx->thisObject().as<BooleanObject>();
     if (!thisObject)
         return ctx->engine()->throwTypeError();
 

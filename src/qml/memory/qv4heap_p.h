@@ -40,11 +40,28 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct VTable
+{
+    const VTable * const parent;
+    uint isExecutionContext : 1;
+    uint isString : 1;
+    uint isObject : 1;
+    uint isFunctionObject : 1;
+    uint isErrorObject : 1;
+    uint isArrayData : 1;
+    uint unused : 18;
+    uint type : 8;
+    const char *className;
+    void (*destroy)(Heap::Base *);
+    void (*markObjects)(Heap::Base *, ExecutionEngine *e);
+    bool (*isEqualTo)(Managed *m, Managed *other);
+};
+
 namespace Heap {
 
 struct Q_QML_EXPORT Base {
     union {
-        const ManagedVTable *vtable;
+        const VTable *vtable;
         quintptr mm_data;
     };
 
@@ -57,8 +74,8 @@ struct Q_QML_EXPORT Base {
         PointerMask = ~0x3
     };
 
-    ManagedVTable *gcGetVtable() const {
-        return reinterpret_cast<ManagedVTable *>(mm_data & PointerMask);
+    VTable *gcGetVtable() const {
+        return reinterpret_cast<VTable *>(mm_data & PointerMask);
     }
     inline bool isMarked() const {
         return mm_data & MarkBit;

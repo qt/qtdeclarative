@@ -65,8 +65,8 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \
         typedef superClass SuperClass; \
-        static const QV4::ManagedVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl; } \
+        static const QV4::VTable static_vtbl; \
+        static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
 
@@ -84,23 +84,6 @@ struct GCDeletable
     virtual ~GCDeletable() {}
     GCDeletable *next;
     bool lastCall;
-};
-
-struct ManagedVTable
-{
-    const ManagedVTable * const parent;
-    uint isExecutionContext : 1;
-    uint isString : 1;
-    uint isObject : 1;
-    uint isFunctionObject : 1;
-    uint isErrorObject : 1;
-    uint isArrayData : 1;
-    uint unused : 18;
-    uint type : 8;
-    const char *className;
-    void (*destroy)(Heap::Base *);
-    void (*markObjects)(Heap::Base *, ExecutionEngine *e);
-    bool (*isEqualTo)(Managed *m, Managed *other);
 };
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
@@ -121,7 +104,7 @@ struct ManagedVTable
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \
-const QV4::ManagedVTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0)
+const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0)
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
 {
@@ -167,35 +150,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    template <typename T>
-    T *as() {
-        Q_ASSERT(d()->vtable);
-#if !defined(QT_NO_QOBJECT_CHECK)
-        static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(this));
-#endif
-        const ManagedVTable *vt = d()->vtable;
-        while (vt) {
-            if (vt == T::staticVTable())
-                return static_cast<T *>(this);
-            vt = vt->parent;
-        }
-        return 0;
-    }
-    template <typename T>
-    const T *as() const {
-        Q_ASSERT(d()->vtable);
-#if !defined(QT_NO_QOBJECT_CHECK)
-        static_cast<T *>(this)->qt_check_for_QMANAGED_macro(static_cast<T *>(const_cast<Managed *>(this)));
-#endif
-        const ManagedVTable *vt = d()->vtable;
-        while (vt) {
-            if (vt == T::staticVTable())
-                return static_cast<T *>(this);
-            vt = vt->parent;
-        }
-        return 0;
-    }
-
     String *asString() { return d()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
     Object *asObject() { return d()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
     ArrayObject *asArrayObject() { return d()->vtable->type == Type_ArrayObject ? reinterpret_cast<ArrayObject *>(this) : 0; }
@@ -231,8 +185,8 @@ private:
 
 
 template<>
-inline Managed *value_cast(const Value &v) {
-    return v.asManaged();
+inline const Managed *Value::as() const {
+    return asManaged();
 }
 
 template<typename T>

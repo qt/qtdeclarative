@@ -1598,9 +1598,9 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = 0;
-        if (QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+        if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
             qobjectPtr = qobjectWrapper->object();
-        else if (QV4::QmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QmlTypeWrapper>())
+        else if (const QV4::QmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QmlTypeWrapper>())
             queryEngine = qmlTypeWrapper->isSingleton();
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
@@ -1622,7 +1622,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
             }
         } else {
             QObject *o = 0;
-            if (QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+            if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
                 o = qobjectWrapper->object();
             qlistPtr->append(o);
         }

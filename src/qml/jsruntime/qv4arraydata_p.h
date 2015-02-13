@@ -47,7 +47,7 @@ namespace QV4 {
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \
         static const QV4::ArrayVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
         const Data *d() const { return static_cast<const Data *>(m); } \
         Data *d() { return static_cast<Data *>(m); }
@@ -57,7 +57,7 @@ struct ArrayData;
 
 struct ArrayVTable
 {
-    ManagedVTable managedVTable;
+    VTable vTable;
     uint type;
     Heap::ArrayData *(*reallocate)(Object *o, uint n, bool enforceAttributes);
     ReturnedValue (*get)(const Heap::ArrayData *d, uint index);

@@ -39,7 +39,7 @@
 
 using namespace QV4;
 
-const QV4::ManagedVTable QV4::ArrayData::static_vtbl = {
+const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
     QV4::ArrayData::IsExecutionContext,
     QV4::ArrayData::IsString,

@@ -273,12 +273,9 @@ inline ErrorObject *Value::asErrorObject() const
     return isObject() ? managed()->asErrorObject() : 0;
 }
 
-template<typename T>
-inline T *Value::as() const { Managed *m = isObject() ? managed() : 0; return m ? m->as<T>() : 0; }
-
 template<>
-inline String *value_cast(const Value &v) {
-    return v.asString();
+inline const String *Value::as() const {
+    return asString();
 }
 
 template<>

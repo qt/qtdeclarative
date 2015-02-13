@@ -37,6 +37,7 @@
 
 #include <QtCore/QString>
 #include "qv4global_p.h"
+#include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -313,7 +314,28 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline ArrayObject *asArrayObject() const;
     inline ErrorObject *asErrorObject() const;
 
-    template<typename T> inline T *as() const;
+    template <typename T>
+    const T *as() const {
+        if (!m || !isManaged())
+            return 0;
+
+        Q_ASSERT(m->vtable);
+#if !defined(QT_NO_QOBJECT_CHECK)
+        static_cast<const T *>(this)->qt_check_for_QMANAGED_macro(static_cast<const T *>(this));
+#endif
+        const VTable *vt = m->vtable;
+        while (vt) {
+            if (vt == T::staticVTable())
+                return static_cast<const T *>(this);
+            vt = vt->parent;
+        }
+        return 0;
+    }
+    template <typename T>
+    T *as() {
+        return const_cast<T *>(const_cast<const Value *>(this)->as<T>());
+    }
+
     template<typename T> inline T *cast() {
         return static_cast<T *>(managed());
     }
@@ -477,12 +499,6 @@ struct Encode {
 private:
     Encode(void *);
 };
-
-template<typename T>
-T *value_cast(const Value &v)
-{
-    return v.as<T>();
-}
 
 template<typename T>
 ReturnedValue value_convert(ExecutionEngine *e, const Value &v);

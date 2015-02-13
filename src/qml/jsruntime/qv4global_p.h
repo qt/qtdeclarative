@@ -168,7 +168,7 @@ struct Property;
 struct Value;
 struct Lookup;
 struct ArrayData;
-struct ManagedVTable;
+struct VTable;
 
 struct BooleanObject;
 struct NumberObject;

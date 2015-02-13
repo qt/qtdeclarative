@@ -202,7 +202,7 @@ struct Scoped
 {
     enum _Convert { Convert };
 
-    inline void setPointer(Managed *p) {
+    inline void setPointer(const Managed *p) {
         ptr->m = p ? p->m : 0;
 #if QT_POINTER_SIZE == 4
         ptr->tag = QV4::Value::Managed_Type;
@@ -225,7 +225,7 @@ struct Scoped
     Scoped(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
-        setPointer(value_cast<T>(v));
+        setPointer(v.as<T>());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -235,7 +235,7 @@ struct Scoped
         Value v;
         v = o;
         ptr = scope.engine->jsStackTop++;
-        setPointer(value_cast<T>(v));
+        setPointer(v.as<T>());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -243,7 +243,7 @@ struct Scoped
     Scoped(const Scope &scope, const ScopedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
-        setPointer(value_cast<T>(*v.ptr));
+        setPointer(v.ptr->as<T>());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -261,7 +261,7 @@ struct Scoped
     Scoped(const Scope &scope, const Value *v)
     {
         ptr = scope.engine->jsStackTop++;
-        setPointer(v ? value_cast<T>(*v) : 0);
+        setPointer(v ? v->as<T>() : 0);
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -287,7 +287,7 @@ struct Scoped
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
-        setPointer(value_cast<T>(QV4::Value::fromReturnedValue(v)));
+        setPointer(QV4::Value::fromReturnedValue(v).as<T>());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -302,9 +302,7 @@ struct Scoped
     }
 
     Scoped<T> &operator=(Heap::Base *o) {
-        Value v;
-        v = o;
-        setPointer(value_cast<T>(v));
+        setPointer(Value::fromHeapObject(o).as<T>());
         return *this;
     }
     Scoped<T> &operator=(typename T::Data *t) {
@@ -312,16 +310,16 @@ struct Scoped
         return *this;
     }
     Scoped<T> &operator=(const Value &v) {
-        setPointer(value_cast<T>(v));
+        setPointer(v.as<T>());
         return *this;
     }
     Scoped<T> &operator=(Value *v) {
-        setPointer(v ? value_cast<T>(*v) : 0);
+        setPointer(v ? v->as<T>() : 0);
         return *this;
     }
 
     Scoped<T> &operator=(const ReturnedValue &v) {
-        setPointer(value_cast<T>(QV4::Value::fromReturnedValue(v)));
+        setPointer(QV4::Value::fromReturnedValue(v).as<T>());
         return *this;
     }
 

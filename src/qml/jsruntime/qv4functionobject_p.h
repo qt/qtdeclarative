@@ -144,8 +144,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
 };
 
 template<>
-inline FunctionObject *value_cast(const Value &v) {
-    return v.asFunctionObject();
+inline const FunctionObject *Value::as() const {
+    return asFunctionObject();
 }
 
 struct FunctionCtor: FunctionObject

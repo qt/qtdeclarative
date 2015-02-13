@@ -70,7 +70,7 @@ struct Object : Base {
         Q_MANAGED_CHECK \
         typedef superClass SuperClass; \
         static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
         Data *d() const { return static_cast<Data *>(m); }
 
@@ -80,13 +80,13 @@ struct Object : Base {
         typedef QV4::Heap::DataClass Data; \
         typedef superClass SuperClass; \
         static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::ManagedVTable *staticVTable() { return &static_vtbl.managedVTable; } \
+        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
 
 struct ObjectVTable
 {
-    ManagedVTable managedVTable;
+    VTable vTable;
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
     ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
@@ -106,7 +106,7 @@ struct ObjectVTable
 #define DEFINE_OBJECT_VTABLE(classname) \
 const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
-    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.managedVTable), \
+    DEFINE_MANAGED_VTABLE_INT(classname, &classname::SuperClass::static_vtbl == &Object::static_vtbl ? 0 : &classname::SuperClass::static_vtbl.vTable), \
     call,                                       \
     construct,                                  \
     get,                                        \
@@ -458,13 +458,13 @@ inline void Object::arraySet(uint index, const Value &value)
 }
 
 template<>
-inline Object *value_cast(const Value &v) {
-    return v.asObject();
+inline const Object *Value::as() const {
+    return asObject();
 }
 
 template<>
-inline ArrayObject *value_cast(const Value &v) {
-    return v.asArrayObject();
+inline const ArrayObject *Value::as() const {
+    return asArrayObject();
 }
 
 #ifndef V4_BOOTSTRAP
