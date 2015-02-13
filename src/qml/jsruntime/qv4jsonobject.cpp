@@ -704,7 +704,7 @@ QString Stringify::Str(const QString &key, const Value &v)
             value = Encode(n->value());
         else if (StringObject *so = o->as<StringObject>())
             value = so->d()->value;
-        else if (BooleanObject *b =o->asBooleanObject())
+        else if (BooleanObject *b = o->as<BooleanObject>())
             value = Encode(b->value());
     }
 

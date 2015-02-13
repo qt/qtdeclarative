@@ -186,7 +186,7 @@ public:
 
 template<>
 inline const String *Value::as() const {
-    return isManaged() && m->vtable->isString ? static_cast<const String *>(this) : 0;
+    return isManaged() && m && m->vtable->isString ? static_cast<const String *>(this) : 0;
 }
 
 }

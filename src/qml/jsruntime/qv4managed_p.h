@@ -150,9 +150,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
-    ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
-
     bool isListType() const { return d()->vtable->type == Type_QmlSequence; }
 
     bool isArrayObject() const { return d()->vtable->type == Type_ArrayObject; }
