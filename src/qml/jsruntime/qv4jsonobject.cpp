@@ -751,7 +751,7 @@ QString Stringify::Str(const QString &key, const Value &v)
     o = value->asReturnedValue();
     if (o) {
         if (!o->asFunctionObject()) {
-            if (o->asArrayObject()) {
+            if (o->as<ArrayObject>()) {
                 return JA(static_cast<ArrayObject *>(o.getPointer()));
             } else {
                 return JO(o);

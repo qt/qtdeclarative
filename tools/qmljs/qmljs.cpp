@@ -113,7 +113,7 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
 {
     QV4::Scope scope(ctx);
     QV4::ScopedValue ex(scope, exception);
-    QV4::ErrorObject *e = ex->asErrorObject();
+    QV4::ErrorObject *e = ex->as<QV4::ErrorObject>();
     if (!e) {
         std::cerr << "Uncaught exception: " << qPrintable(ex->toQString()) << std::endl;
     } else {

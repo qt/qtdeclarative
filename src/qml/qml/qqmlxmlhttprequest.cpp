@@ -222,8 +222,8 @@ public:
     static ReturnedValue create(ExecutionEngine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
 Heap::NamedNodeMap::NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
@@ -244,8 +244,8 @@ public:
     V4_NEEDS_DESTROY
 
     // JS API
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 
     // C++ API
     static ReturnedValue create(ExecutionEngine *, NodeImpl *);
@@ -871,10 +871,10 @@ bool Node::isNull() const
     return d()->d == 0;
 }
 
-ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
-    NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
+    const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
     if ((int)index < r->d()->list.count()) {
@@ -887,10 +887,10 @@ ReturnedValue NamedNodeMap::getIndexed(Managed *m, uint index, bool *hasProperty
     return Encode::undefined();
 }
 
-ReturnedValue NamedNodeMap::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
-    NamedNodeMap *r = static_cast<NamedNodeMap *>(m);
+    const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
     name->makeIdentifier(v4);
@@ -916,10 +916,10 @@ ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QL
     return (v4->memoryManager->alloc<NamedNodeMap>(v4, data, list))->asReturnedValue();
 }
 
-ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue NodeList::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
-    NodeList *r = static_cast<NodeList *>(m);
+    const NodeList *r = static_cast<const NodeList *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
     if ((int)index < r->d()->d->children.count()) {
@@ -932,10 +932,10 @@ ReturnedValue NodeList::getIndexed(Managed *m, uint index, bool *hasProperty)
     return Encode::undefined();
 }
 
-ReturnedValue NodeList::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
-    NodeList *r = static_cast<NodeList *>(m);
+    const NodeList *r = static_cast<const NodeList *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
     name->makeIdentifier(v4);

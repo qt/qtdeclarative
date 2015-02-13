@@ -142,7 +142,7 @@ struct ErrorObject: Object {
 
 template<>
 inline const ErrorObject *Value::as() const {
-    return asErrorObject();
+    return isManaged() && m->vtable->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : 0;
 }
 
 struct EvalErrorObject: ErrorObject {

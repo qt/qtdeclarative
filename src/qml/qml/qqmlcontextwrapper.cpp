@@ -123,10 +123,10 @@ void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
 }
 
 
-ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
-    QmlContextWrapper *resource = static_cast<QmlContextWrapper *>(m);
+    const QmlContextWrapper *resource = static_cast<const QmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
@@ -427,10 +427,10 @@ Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlCo
 {
 }
 
-ReturnedValue QQmlIdObjectsArray::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QQmlIdObjectsArray::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-    Scope scope(static_cast<QV4::QQmlIdObjectsArray*>(m)->engine());
-    Scoped<QQmlIdObjectsArray> This(scope, static_cast<QV4::QQmlIdObjectsArray*>(m));
+    Scope scope(static_cast<const QV4::QQmlIdObjectsArray*>(m)->engine());
+    Scoped<QQmlIdObjectsArray> This(scope, static_cast<const QV4::QQmlIdObjectsArray*>(m));
     Scoped<QmlContextWrapper> contextWrapper(scope, This->d()->contextWrapper);
     QQmlContextData *context = contextWrapper->getContext();
     if (!context) {

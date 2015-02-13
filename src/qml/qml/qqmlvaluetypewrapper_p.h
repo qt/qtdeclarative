@@ -87,7 +87,7 @@ public:
     void toGadget(void *data) const;
     bool isEqual(const QVariant& value);
 
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes query(const Managed *, String *name);

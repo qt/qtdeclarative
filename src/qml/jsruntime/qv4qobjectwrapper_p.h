@@ -104,7 +104,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     QObject *object() const { return d()->object.data(); }
 
-    ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false);
+    ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false) const;
     static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
 
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
@@ -127,7 +127,7 @@ private:
 
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
@@ -148,7 +148,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
     static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal = Primitive::undefinedValue());
-    static ReturnedValue create(QV4::ExecutionContext *scope, QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal = Primitive::undefinedValue());
+    static ReturnedValue create(QV4::ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal = Primitive::undefinedValue());
 
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object.data(); }

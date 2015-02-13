@@ -1199,7 +1199,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (value.asObject()) {
         QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
-                   && !value.asArrayObject() && !value.asFunctionObject()) {
+                   && !value.as<ArrayObject>() && !value.asFunctionObject()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
@@ -1215,7 +1215,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return QV4::SequencePrototype::toVariant(object);
     }
 
-    if (value.asArrayObject()) {
+    if (value.as<ArrayObject>()) {
         QV4::ScopedArrayObject a(scope, value);
         if (typeHint == qMetaTypeId<QList<QObject *> >()) {
             QList<QObject *> list;
@@ -1282,7 +1282,7 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V4Objec
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
-        if (o->asArrayObject())
+        if (o->as<ArrayObject>())
             return QVariantList();
         return QVariantMap();
     }
@@ -1290,7 +1290,7 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V4Objec
 
     QVariant result;
 
-    if (o->asArrayObject()) {
+    if (o->as<ArrayObject>()) {
         QV4::Scope scope(e);
         QV4::ScopedArrayObject a(scope, o->asReturnedValue());
         QV4::ScopedValue v(scope);

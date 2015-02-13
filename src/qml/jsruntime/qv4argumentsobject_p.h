@@ -111,7 +111,7 @@ struct ArgumentsObject: Object {
     }
 
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);

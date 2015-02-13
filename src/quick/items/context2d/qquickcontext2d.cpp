@@ -884,7 +884,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     V4_OBJECT2(QQuickJSContext2DPixelData, QV4::Object)
     V4_NEEDS_DESTROY
 
-    static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty);
+    static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty);
     static void putIndexed(QV4::Managed *m, uint index, const QV4::Value &value);
 
     static QV4::ReturnedValue proto_get_length(QV4::CallContext *ctx);
@@ -3089,12 +3089,12 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::proto_get_length(QV4::CallContext
     return QV4::Encode(r->d()->image.width() * r->d()->image.height() * 4);
 }
 
-QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
+QV4::ReturnedValue QQuickJSContext2DPixelData::getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQuickJSContext2DPixelData>());
-    QV4::ExecutionEngine *v4 = static_cast<QQuickJSContext2DPixelData *>(m)->engine();
+    QV4::ExecutionEngine *v4 = static_cast<const QQuickJSContext2DPixelData *>(m)->engine();
     QV4::Scope scope(v4);
-    QV4::Scoped<QQuickJSContext2DPixelData> r(scope, static_cast<QQuickJSContext2DPixelData *>(m));
+    QV4::Scoped<QQuickJSContext2DPixelData> r(scope, static_cast<const QQuickJSContext2DPixelData *>(m));
 
     if (index < static_cast<quint32>(r->d()->image.width() * r->d()->image.height() * 4)) {
         if (hasProperty)

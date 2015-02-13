@@ -375,14 +375,14 @@ ReturnedValue Object::call(Managed *m, CallData *)
     return static_cast<Object *>(m)->engine()->throwTypeError();
 }
 
-ReturnedValue Object::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)
 {
-    return static_cast<Object *>(m)->internalGet(name, hasProperty);
+    return static_cast<const Object *>(m)->internalGet(name, hasProperty);
 }
 
-ReturnedValue Object::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-    return static_cast<Object *>(m)->internalGetIndexed(index, hasProperty);
+    return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
 void Object::put(Managed *m, String *name, const Value &value)
@@ -585,7 +585,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(String *name, bool *hasProperty)
+ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -611,7 +611,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty)
     return Encode::undefined();
 }
 
-ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty)
+ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 {
     Property *pd = 0;
     PropertyAttributes attrs;

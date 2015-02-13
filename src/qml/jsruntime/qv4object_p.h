@@ -89,8 +89,8 @@ struct ObjectVTable
     VTable vTable;
     ReturnedValue (*call)(Managed *, CallData *data);
     ReturnedValue (*construct)(Managed *, CallData *data);
-    ReturnedValue (*get)(Managed *, String *name, bool *hasProperty);
-    ReturnedValue (*getIndexed)(Managed *, uint index, bool *hasProperty);
+    ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
+    ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
     void (*putIndexed)(Managed *, uint index, const Value &value);
     PropertyAttributes (*query)(const Managed *, String *name);
@@ -275,9 +275,9 @@ public:
     }
     void ensureMemberIndex(uint idx);
 
-    inline ReturnedValue get(String *name, bool *hasProperty = 0)
+    inline ReturnedValue get(String *name, bool *hasProperty = 0) const
     { return vtable()->get(this, name, hasProperty); }
-    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0)
+    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
     inline void put(String *name, const Value &v)
     { vtable()->put(this, name, v); }
@@ -307,8 +307,8 @@ protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
     static ReturnedValue construct(Managed *m, CallData *);
     static ReturnedValue call(Managed *m, CallData *);
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void putIndexed(Managed *m, uint index, const Value &value);
     static PropertyAttributes query(const Managed *m, String *name);
@@ -321,8 +321,8 @@ protected:
     static uint getLength(const Managed *m);
 
 private:
-    ReturnedValue internalGet(String *name, bool *hasProperty);
-    ReturnedValue internalGetIndexed(uint index, bool *hasProperty);
+    ReturnedValue internalGet(String *name, bool *hasProperty) const;
+    ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
     void internalPut(String *name, const Value &value);
     void internalPutIndexed(uint index, const Value &value);
     bool internalDeleteProperty(String *name);
@@ -464,7 +464,7 @@ inline const Object *Value::as() const {
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return asArrayObject();
+    return isManaged() && m->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
 }
 
 #ifndef V4_BOOTSTRAP

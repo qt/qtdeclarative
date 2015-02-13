@@ -126,7 +126,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
 }
@@ -214,7 +214,7 @@ static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV4::E
     return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
 }
 
-static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
+static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
 {
     Scope scope(v4);
 
@@ -238,15 +238,14 @@ static ReturnedValue qmlsqldatabase_rows_index(QQmlSqlDatabaseWrapper *r, Execut
     }
 }
 
-ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-    QV4::Scope scope(static_cast<QQmlSqlDatabaseWrapper *>(m)->engine());
     Q_ASSERT(m->as<QQmlSqlDatabaseWrapper>());
-    QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, static_cast<QQmlSqlDatabaseWrapper *>(m));
+    const QQmlSqlDatabaseWrapper *r = static_cast<const QQmlSqlDatabaseWrapper *>(m);
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         return Object::getIndexed(m, index, hasProperty);
 
-    return qmlsqldatabase_rows_index(r, scope.engine, index, hasProperty);
+    return qmlsqldatabase_rows_index(r, r->engine(), index, hasProperty);
 }
 
 static ReturnedValue qmlsqldatabase_rows_item(CallContext *ctx)
@@ -285,7 +284,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
     if (query.prepare(sql)) {
         if (ctx->argc() > 1) {
             ScopedValue values(scope, ctx->args()[1]);
-            if (values->asArrayObject()) {
+            if (values->as<ArrayObject>()) {
                 ScopedArrayObject array(scope, values);
                 quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);

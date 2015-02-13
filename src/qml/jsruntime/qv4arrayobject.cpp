@@ -110,7 +110,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue ArrayPrototype::method_isArray(CallContext *ctx)
 {
-    bool isArray = ctx->argc() && ctx->args()[0].asArrayObject();
+    bool isArray = ctx->argc() && ctx->args()[0].as<ArrayObject>();
     return Encode(isArray);
 }
 
@@ -194,7 +194,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
     QString R;
 
     // ### FIXME
-    if (ArrayObject *a = self->asArrayObject()) {
+    if (ArrayObject *a = self->as<ArrayObject>()) {
         ScopedValue e(scope);
         for (uint i = 0; i < a->getLength(); ++i) {
             if (i)

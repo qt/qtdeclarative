@@ -172,7 +172,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         // XXX TODO: Implement passing function objects between the main and
         // worker scripts
         push(data, valueheader(WorkerUndefined));
-    } else if (QV4::ArrayObject *array = v.asArrayObject()) {
+    } else if (const QV4::ArrayObject *array = v.as<ArrayObject>()) {
         uint length = array->getLength();
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));

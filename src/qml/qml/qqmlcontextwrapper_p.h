@@ -103,7 +103,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     void setReadOnly(bool b) { d()->readOnly = b; }
 
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static void markObjects(Heap::Base *m, ExecutionEngine *engine);
 
@@ -118,7 +118,7 @@ struct QQmlIdObjectsArray : public Object
 {
     V4_OBJECT2(QQmlIdObjectsArray, Object)
 
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void markObjects(Heap::Base *that, ExecutionEngine *engine);
 
 };

@@ -1372,7 +1372,7 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
         if (i != 0)
             result.append(QLatin1Char(' '));
 
-        if (ctx->args()[i].asArrayObject())
+        if (ctx->args()[i].as<ArrayObject>())
             result.append(QStringLiteral("[") + ctx->args()[i].toQStringNoThrow() + QStringLiteral("]"));
         else
             result.append(ctx->args()[i].toQStringNoThrow());

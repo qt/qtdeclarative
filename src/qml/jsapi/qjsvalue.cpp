@@ -44,6 +44,7 @@
 #include "qv4runtime_p.h"
 #include "qv4variantobject_p.h"
 #include "qv4regexpobject_p.h"
+#include "qv4errorobject_p.h"
 #include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4scopedvalue_p.h>
@@ -315,8 +316,7 @@ bool QJSValue::isError() const
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
         return false;
-    Object *o = val->asObject();
-    return o && o->asErrorObject();
+    return val->as<ErrorObject>();
 }
 
 /*!
@@ -330,7 +330,7 @@ bool QJSValue::isArray() const
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
         return false;
-    return val->asArrayObject();
+    return val->as<ArrayObject>();
 }
 
 /*!

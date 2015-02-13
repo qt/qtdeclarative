@@ -231,7 +231,7 @@ public:
         defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     }
 
-    QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty)
+    QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty) const
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX) {
@@ -526,8 +526,8 @@ public:
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 
-    static QV4::ReturnedValue getIndexed(QV4::Managed *that, uint index, bool *hasProperty)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
+    static QV4::ReturnedValue getIndexed(const QV4::Managed *that, uint index, bool *hasProperty)
+    { return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
     static void putIndexed(Managed *that, uint index, const QV4::Value &value)
     { static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
@@ -700,7 +700,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
 {
     *succeeded = true;
 
-    if (!array.asArrayObject()) {
+    if (!array.as<ArrayObject>()) {
         *succeeded = false;
         return QVariant();
     }

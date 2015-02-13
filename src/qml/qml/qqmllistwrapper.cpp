@@ -92,10 +92,10 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
-    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
+    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
     if (name->equals(v4->id_length) && !w->d()->object.isNull()) {
@@ -110,12 +110,12 @@ ReturnedValue QmlListWrapper::get(Managed *m, String *name, bool *hasProperty)
     return Object::get(m, name, hasProperty);
 }
 
-ReturnedValue QmlListWrapper::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
     Q_UNUSED(hasProperty);
 
     Q_ASSERT(m->as<QmlListWrapper>());
-    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
+    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
     quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;

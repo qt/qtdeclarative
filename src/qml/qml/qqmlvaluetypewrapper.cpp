@@ -283,14 +283,14 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
     return Encode(ctx->engine()->newString(result));
 }
 
-ReturnedValue QQmlValueTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
-    QQmlValueTypeWrapper *r = static_cast<QQmlValueTypeWrapper *>(m);
+    const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
     // Note: readReferenceValue() can change the reference->type.
-    if (QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
+    if (const QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
         if (!reference->readReferenceValue())
             return Primitive::undefinedValue().asReturnedValue();
     }

@@ -260,7 +260,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlCont
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String *n, QObjectWrapper::RevisionMode revisionMode,
-                                             bool *hasProperty, bool includeImports)
+                                             bool *hasProperty, bool includeImports) const
 {
     if (QQmlData::wasDeleted(d()->object)) {
         if (hasProperty)
@@ -674,9 +674,9 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (engine->memoryManager->alloc<QV4::QObjectWrapper>(engine, object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(Managed *m, String *name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
-    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+    const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(that->engine());
     return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
@@ -1239,7 +1239,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.asArrayObject()) {
+    } else if (actual.as<ArrayObject>()) {
         switch (conversionType) {
         case QMetaType::QJsonArray:
             return 3;
@@ -1746,14 +1746,14 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
     return method.asReturnedValue();
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal)
+ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal)
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope));
     method->d()->propertyCache = valueType->d()->propertyCache;
     method->d()->index = index;
     method->d()->qmlGlobal = qmlGlobal;
-    method->d()->valueTypeWrapper = valueType;
+    method->d()->valueTypeWrapper = *valueType;
     return method.asReturnedValue();
 }
 

@@ -2579,7 +2579,7 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
         groups |= model->m_cacheMetaType->parseGroups(val);
     }
 
-    if (v->asArrayObject()) {
+    if (v->as<QV4::ArrayObject>()) {
         return;
     } else if (v->asObject()) {
         model->insert(before, v, groups);
@@ -3286,12 +3286,12 @@ public:
     quint32 count() const { return d()->changes.count(); }
     const QQmlChangeSet::Change &at(int index) const { return d()->changes.at(index); }
 
-    static QV4::ReturnedValue getIndexed(QV4::Managed *m, uint index, bool *hasProperty)
+    static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)
     {
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
-        QV4::ExecutionEngine *v4 = static_cast<QQmlDelegateModelGroupChangeArray *>(m)->engine();
+        QV4::ExecutionEngine *v4 = static_cast<const QQmlDelegateModelGroupChangeArray *>(m)->engine();
         QV4::Scope scope(v4);
-        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<QQmlDelegateModelGroupChangeArray *>(m));
+        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<const QQmlDelegateModelGroupChangeArray *>(m));
 
         if (index >= array->count()) {
             if (hasProperty)
@@ -3311,10 +3311,10 @@ public:
         return object.asReturnedValue();
     }
 
-    static QV4::ReturnedValue get(QV4::Managed *m, QV4::String *name, bool *hasProperty)
+    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::String *name, bool *hasProperty)
     {
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
-        QQmlDelegateModelGroupChangeArray *array = static_cast<QQmlDelegateModelGroupChangeArray *>(m);
+        const QQmlDelegateModelGroupChangeArray *array = static_cast<const QQmlDelegateModelGroupChangeArray *>(m);
 
         if (name->equals(array->engine()->id_length)) {
             if (hasProperty)

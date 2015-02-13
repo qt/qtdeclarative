@@ -113,7 +113,7 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     }
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static ReturnedValue getIndexed(Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void putIndexed(Managed *m, uint index, const Value &value);
 };
 

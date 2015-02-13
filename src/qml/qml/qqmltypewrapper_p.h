@@ -94,7 +94,7 @@ struct Q_QML_EXPORT QmlTypeWrapper : Object
                                 Heap::QmlTypeWrapper::TypeNameMode = Heap::QmlTypeWrapper::IncludeEnums);
 
 
-    static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static bool isEqualTo(Managed *that, Managed *o);

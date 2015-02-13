@@ -263,16 +263,6 @@ inline DateObject *Value::asDateObject() const
     return isObject() ? managed()->asDateObject() : 0;
 }
 
-inline ArrayObject *Value::asArrayObject() const
-{
-    return isObject() ? managed()->asArrayObject() : 0;
-}
-
-inline ErrorObject *Value::asErrorObject() const
-{
-    return isObject() ? managed()->asErrorObject() : 0;
-}
-
 template<>
 inline const String *Value::as() const {
     return asString();

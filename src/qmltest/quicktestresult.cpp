@@ -479,7 +479,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     //Check for Object Type
     if (value->isObject()
         && !value->asFunctionObject()
-        && !value->asArrayObject()) {
+        && !value->as<QV4::ArrayObject>()) {
         QVariant v = scope.engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {
             switch (v.type()) {
@@ -500,7 +500,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
 
     if (result.isEmpty()) {
         QString tmp = value->toQStringNoThrow();
-        if (value->asArrayObject())
+        if (value->as<QV4::ArrayObject>())
             result.append(QString::fromLatin1("[%1]").arg(tmp));
         else
             result.append(tmp);

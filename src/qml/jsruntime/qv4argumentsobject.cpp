@@ -144,9 +144,9 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     return result;
 }
 
-ReturnedValue ArgumentsObject::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
+    const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     if (args->fullyCreated())
         return Object::getIndexed(m, index, hasProperty);
 

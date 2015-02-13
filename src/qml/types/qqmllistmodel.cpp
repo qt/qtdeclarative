@@ -427,7 +427,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
         } else if (propertyValue->isNumber()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
             roleIndex = e->setDoubleProperty(r, propertyValue->asDouble());
-        } else if (QV4::ArrayObject *a = propertyValue->asArrayObject()) {
+        } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             ListModel *subModel = new ListModel(r.subLayout, 0, -1);
 
@@ -502,7 +502,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
             if (r.type == ListLayout::Role::Number) {
                 e->setDoublePropertyFast(r, propertyValue->asDouble());
             }
-        } else if (QV4::ArrayObject *a = propertyValue->asArrayObject()) {
+        } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             if (r.type == ListLayout::Role::List) {
                 ListModel *subModel = new ListModel(r.subLayout, 0, -1);
@@ -1169,7 +1169,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         roleIndex = setStringProperty(role, qstr);
     } else if (d.isNumber()) {
         roleIndex = setDoubleProperty(role, d.asDouble());
-    } else if (d.asArrayObject()) {
+    } else if (d.as<QV4::ArrayObject>()) {
         QV4::ScopedArrayObject a(scope, d);
         if (role.type == ListLayout::Role::List) {
             QV4::Scope scope(a->engine());

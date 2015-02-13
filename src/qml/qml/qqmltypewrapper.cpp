@@ -121,14 +121,14 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, Q
 }
 
 
-ReturnedValue QmlTypeWrapper::get(Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlTypeWrapper>());
 
-    QV4::ExecutionEngine *v4 = static_cast<QmlTypeWrapper *>(m)->engine();
+    QV4::ExecutionEngine *v4 = static_cast<const QmlTypeWrapper *>(m)->engine();
     QV4::Scope scope(v4);
 
-    Scoped<QmlTypeWrapper> w(scope, static_cast<QmlTypeWrapper *>(m));
+    Scoped<QmlTypeWrapper> w(scope, static_cast<const QmlTypeWrapper *>(m));
 
     if (hasProperty)
         *hasProperty = true;

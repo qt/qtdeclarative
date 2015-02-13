@@ -311,8 +311,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline NumberObject *asNumberObject() const;
     inline StringObject *asStringObject() const;
     inline DateObject *asDateObject() const;
-    inline ArrayObject *asArrayObject() const;
-    inline ErrorObject *asErrorObject() const;
 
     template <typename T>
     const T *as() const {

@@ -347,10 +347,10 @@ void TypedArray::markObjects(Heap::Base *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-ReturnedValue TypedArray::getIndexed(Managed *m, uint index, bool *hasProperty)
+ReturnedValue TypedArray::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-    Scope scope(static_cast<Object *>(m)->engine());
-    Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
+    Scope scope(static_cast<const Object *>(m)->engine());
+    Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
 
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
