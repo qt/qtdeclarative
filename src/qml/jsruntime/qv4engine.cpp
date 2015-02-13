@@ -410,7 +410,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject()->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
     ScopedString str(scope);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        globalObject()->defineDefaultProperty((str = typedArrayCtors[i].asFunctionObject()->name())->toQString(), typedArrayCtors[i]);
+        globalObject()->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
     globalObject()->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(this)));
     globalObject()->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(this)));
@@ -1199,7 +1199,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (value.as<Object>()) {
         QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
-                   && !value.as<ArrayObject>() && !value.asFunctionObject()) {
+                   && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
             return qVariantFromValue<QObject *>(wrapper->object());
@@ -1303,7 +1303,7 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, QV4::Object *o, V4Objec
         }
 
         result = list;
-    } else if (!o->asFunctionObject()) {
+    } else if (!o->as<FunctionObject>()) {
         QVariantMap map;
         QV4::Scope scope(e);
         QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);

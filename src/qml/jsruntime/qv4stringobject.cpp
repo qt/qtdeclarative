@@ -368,7 +368,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        rx = context->d()->engine->regExpCtor.asFunctionObject()->construct(callData);
+        rx = context->d()->engine->regExpCtor.as<FunctionObject>()->construct(callData);
     }
 
     if (!rx)
@@ -593,7 +593,7 @@ ReturnedValue StringPrototype::method_search(CallContext *ctx)
     if (!regExp) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regExpValue;
-        regExpValue = ctx->d()->engine->regExpCtor.asFunctionObject()->construct(callData);
+        regExpValue = ctx->d()->engine->regExpCtor.as<FunctionObject>()->construct(callData);
         if (scope.engine->hasException)
             return Encode::undefined();
         regExp = regExpValue->as<RegExpObject>();

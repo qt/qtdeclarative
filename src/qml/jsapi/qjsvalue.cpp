@@ -361,7 +361,7 @@ bool QJSValue::isCallable() const
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
         return false;
-    return val->asFunctionObject();
+    return val->as<FunctionObject>();
 }
 
 /*!
@@ -626,7 +626,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     if (!val)
         return QJSValue();
 
-    FunctionObject *f = val->asFunctionObject();
+    FunctionObject *f = val->as<FunctionObject>();
     if (!f)
         return QJSValue();
 
@@ -677,7 +677,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     if (!val)
         return QJSValue();
 
-    FunctionObject *f = val->asFunctionObject();
+    FunctionObject *f = val->as<FunctionObject>();
     if (!f)
         return QJSValue();
 
@@ -731,7 +731,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     if (!val)
         return QJSValue();
 
-    FunctionObject *f = val->asFunctionObject();
+    FunctionObject *f = val->as<FunctionObject>();
     if (!f)
         return QJSValue();
 

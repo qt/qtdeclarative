@@ -314,7 +314,7 @@ ReturnedValue Runtime::deleteName(ExecutionEngine *engine, int nameIndex)
 QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     Scope scope(engine);
-    ScopedFunctionObject f(scope, right.asFunctionObject());
+    ScopedFunctionObject f(scope, right.as<FunctionObject>());
     if (!f)
         return engine->throwTypeError();
 
@@ -405,7 +405,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     callData->thisObject = *object;
 
     ScopedValue conv(scope, object->get(*meth1));
-    if (FunctionObject *o = conv->asFunctionObject()) {
+    if (FunctionObject *o = conv->as<FunctionObject>()) {
         ScopedValue r(scope, o->call(callData));
         if (r->isPrimitive())
             return r->asReturnedValue();
@@ -415,7 +415,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
         return Encode::undefined();
 
     conv = object->get(*meth2);
-    if (FunctionObject *o = conv->asFunctionObject()) {
+    if (FunctionObject *o = conv->as<FunctionObject>()) {
         ScopedValue r(scope, o->call(callData));
         if (r->isPrimitive())
             return r->asReturnedValue();
@@ -932,7 +932,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionEngine *engine, int nameI
     if (base)
         callData->thisObject = base;
 
-    FunctionObject *o = func->asFunctionObject();
+    FunctionObject *o = func->as<FunctionObject>();
     if (!o) {
         QString objectAsString = QStringLiteral("[null]");
         if (base)
@@ -1101,7 +1101,7 @@ ReturnedValue Runtime::typeofValue(ExecutionEngine *engine, const Value &value)
     case Value::Managed_Type:
         if (value.isString())
             res = engine->id_string;
-        else if (value.objectValue()->asFunctionObject())
+        else if (value.objectValue()->as<FunctionObject>())
             res = engine->id_function;
         else
             res = engine->id_object; // ### implementation-defined

@@ -419,7 +419,7 @@ public:
         }
 
         QV4::Scope scope(ctx);
-        if (ctx->argc() == 1 && ctx->args()[0].asFunctionObject()) {
+        if (ctx->argc() == 1 && ctx->args()[0].as<FunctionObject>()) {
             CompareFunctor cf(ctx, ctx->args()[0]);
             std::sort(d()->container.begin(), d()->container.end(), cf);
         } else {

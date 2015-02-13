@@ -114,7 +114,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Heap::ExecutionContext *scope() const { return d()->scope; }
     Function *function() const { return d()->function; }
 
-    ReturnedValue name();
+    ReturnedValue name() const;
     unsigned int formalParameterCount() { return d()->formalParameterCount(); }
     unsigned int varCount() { return d()->varCount(); }
 
@@ -126,10 +126,6 @@ struct Q_QML_EXPORT FunctionObject: Object {
     using Object::call;
     static ReturnedValue construct(const Managed *that, CallData *);
     static ReturnedValue call(const Managed *that, CallData *d);
-
-    static FunctionObject *cast(const Value &v) {
-        return v.asFunctionObject();
-    }
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
 
@@ -145,8 +141,15 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
 template<>
 inline const FunctionObject *Value::as() const {
-    return asFunctionObject();
+    return isManaged() && m && m->vtable->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
 }
+
+template<>
+inline FunctionObject *managed_cast(Managed *m)
+{
+    return m ? m->as<FunctionObject>() : 0;
+}
+
 
 struct FunctionCtor: FunctionObject
 {

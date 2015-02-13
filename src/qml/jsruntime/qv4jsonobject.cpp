@@ -722,7 +722,7 @@ QString Stringify::Str(const QString &key, const Value &v)
 
     o = value->asReturnedValue();
     if (o) {
-        if (!o->asFunctionObject()) {
+        if (!o->as<FunctionObject>()) {
             if (o->as<ArrayObject>()) {
                 return JA(static_cast<ArrayObject *>(o.getPointer()));
             } else {
@@ -887,7 +887,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 
     ScopedObject o(scope, ctx->argument(1));
     if (o) {
-        stringify.replacerFunction = o->asFunctionObject();
+        stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
             uint arrayLen = o->getLength();
             ScopedValue v(scope);
@@ -984,7 +984,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
 QJsonObject JsonObject::toJsonObject(Object *o, V4ObjectSet &visitedObjects)
 {
     QJsonObject result;
-    if (!o || o->asFunctionObject())
+    if (!o || o->as<FunctionObject>())
         return result;
 
     Scope scope(o->engine());
@@ -1007,7 +1007,7 @@ QJsonObject JsonObject::toJsonObject(Object *o, V4ObjectSet &visitedObjects)
             break;
 
         QString key = name->toQStringNoThrow();
-        if (!val->asFunctionObject())
+        if (!val->as<FunctionObject>())
             result.insert(key, toJsonValue(val, visitedObjects));
     }
 
@@ -1050,7 +1050,7 @@ QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
     quint32 length = a->getLength();
     for (quint32 i = 0; i < length; ++i) {
         v = a->getIndexed(i);
-        if (v->asFunctionObject())
+        if (v->as<FunctionObject>())
             v = Encode::null();
         result.append(toJsonValue(v, visitedObjects));
     }

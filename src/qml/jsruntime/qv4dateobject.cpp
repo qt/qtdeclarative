@@ -1297,7 +1297,7 @@ ReturnedValue DatePrototype::method_toJSON(CallContext *ctx)
 
     ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toISOString")));
     ScopedValue v(scope, O->objectValue()->get(s));
-    FunctionObject *toIso = v->asFunctionObject();
+    FunctionObject *toIso = v->as<FunctionObject>();
 
     if (!toIso)
         return ctx->engine()->throwTypeError();

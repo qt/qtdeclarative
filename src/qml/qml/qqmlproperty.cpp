@@ -1545,7 +1545,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     if (expression->hasError()) {
         return false;
     } else if (isVarProperty) {
-        QV4::FunctionObject *f = result.asFunctionObject();
+        const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {
             // we explicitly disallow this case to avoid confusion.  Users can still store one
             // in an array in a var property if they need to, but the common case is user error.
@@ -1563,7 +1563,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         writeValueProperty(object, core, QVariant(), context, flags);
     } else if (type == qMetaTypeId<QJSValue>()) {
-        QV4::FunctionObject *f = result.asFunctionObject();
+        const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             expression->delayedError()->setErrorObject(object);
@@ -1581,7 +1581,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         expression->delayedError()->setErrorDescription(errorStr);
         expression->delayedError()->setErrorObject(object);
         return false;
-    } else if (QV4::FunctionObject *f = result.asFunctionObject()) {
+    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
         if (f->isBinding())
             expression->delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else

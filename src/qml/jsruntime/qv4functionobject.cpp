@@ -157,7 +157,7 @@ void FunctionObject::init(String *n, bool createProto)
     defineReadonlyProperty(s.engine->id_name, v);
 }
 
-ReturnedValue FunctionObject::name()
+ReturnedValue FunctionObject::name() const
 {
     return get(scope()->engine->id_name);
 }
@@ -298,7 +298,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 {
-    FunctionObject *fun = ctx->thisObject().asFunctionObject();
+    FunctionObject *fun = ctx->thisObject().as<FunctionObject>();
     if (!fun)
         return ctx->engine()->throwTypeError();
 
@@ -308,7 +308,7 @@ ReturnedValue FunctionPrototype::method_toString(CallContext *ctx)
 ReturnedValue FunctionPrototype::method_apply(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedFunctionObject o(scope, ctx->thisObject().asFunctionObject());
+    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 
@@ -350,7 +350,7 @@ ReturnedValue FunctionPrototype::method_call(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    ScopedFunctionObject o(scope, ctx->thisObject().asFunctionObject());
+    ScopedFunctionObject o(scope, ctx->thisObject().as<FunctionObject>());
     if (!o)
         return ctx->engine()->throwTypeError();
 

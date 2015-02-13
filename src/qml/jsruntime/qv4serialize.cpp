@@ -168,7 +168,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         char *buffer = data.data() + offset;
 
         memcpy(buffer, qstr.constData(), length*sizeof(QChar));
-    } else if (v.asFunctionObject()) {
+    } else if (v.as<FunctionObject>()) {
         // XXX TODO: Implement passing function objects between the main and
         // worker scripts
         push(data, valueheader(WorkerUndefined));

@@ -304,8 +304,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         return b;
     }
 
-    inline FunctionObject *asFunctionObject() const;
-
     template <typename T>
     const T *as() const {
         if (!m || !isManaged())

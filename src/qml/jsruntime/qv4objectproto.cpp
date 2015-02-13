@@ -580,7 +580,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
 
     if (o->hasProperty(engine->id_get)) {
         ScopedValue get(scope, o->get(engine->id_get));
-        FunctionObject *f = get->asFunctionObject();
+        FunctionObject *f = get->as<FunctionObject>();
         if (f || get->isUndefined()) {
             desc->value = get;
         } else {
@@ -592,7 +592,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
 
     if (o->hasProperty(engine->id_set)) {
         ScopedValue set(scope, o->get(engine->id_set));
-        FunctionObject *f = set->asFunctionObject();
+        FunctionObject *f = set->as<FunctionObject>();
         if (f || set->isUndefined()) {
             desc->set = set;
         } else {

@@ -154,7 +154,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
             callData->thisObject = value;
     }
 
-    result = function.asFunctionObject()->call(callData);
+    result = function.as<QV4::FunctionObject>()->call(callData);
     if (scope.hasException()) {
         if (watcher.wasDeleted())
             scope.engine->catchException(); // ignore exception

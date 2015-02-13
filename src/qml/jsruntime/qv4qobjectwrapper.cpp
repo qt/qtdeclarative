@@ -520,7 +520,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
             error += QLatin1String(QMetaType::typeName(property->propType));
         ctx->engine()->throwError(error);
         return;
-    } else if (value.asFunctionObject()) {
+    } else if (value.as<FunctionObject>()) {
         // this is handled by the binding creation above
     } else if (property->propType == QMetaType::Int && value.isNumber()) {
         PROPERTY_STORE(int, value.asDouble());

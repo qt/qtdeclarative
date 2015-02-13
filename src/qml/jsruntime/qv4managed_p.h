@@ -150,7 +150,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    FunctionObject *asFunctionObject() { return d()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
@@ -204,11 +203,6 @@ template<>
 inline Object *managed_cast(Managed *m)
 {
     return m ? m->as<Object>() : 0;
-}
-template<>
-inline FunctionObject *managed_cast(Managed *m)
-{
-    return m ? m->asFunctionObject() : 0;
 }
 
 }

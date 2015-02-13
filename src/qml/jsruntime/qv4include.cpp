@@ -54,7 +54,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContex
     : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
     m_qmlglobal.set(engine, qmlglobal);
-    if (callback.asFunctionObject())
+    if (callback.as<QV4::FunctionObject>())
         m_callbackFunction.set(engine, callback);
 
     m_resultObject.set(v4, resultValue(v4));
@@ -184,7 +184,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     QUrl url(scope.engine->resolvedUrl(ctx->args()[0].toQStringNoThrow()));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (ctx->argc() >= 2 && ctx->args()[1].asFunctionObject())
+    if (ctx->argc() >= 2 && ctx->args()[1].as<QV4::FunctionObject>())
         callbackFunction = ctx->args()[1];
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);

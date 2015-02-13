@@ -432,7 +432,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool re
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    FunctionObject *callback = ctx->argc() ? ctx->args()[0].asFunctionObject() : 0;
+    const FunctionObject *callback = ctx->argc() ? ctx->args()[0].as<FunctionObject>() : 0;
     if (!callback)
         V4THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR, QQmlEngine::tr("transaction: missing callback"));
 
@@ -672,7 +672,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     QString dbversion = (v = (*args)[1])->toQStringNoThrow();
     QString dbdescription = (v = (*args)[2])->toQStringNoThrow();
     int dbestimatedsize = (v = (*args)[3])->toInt32();
-    FunctionObject *dbcreationCallback = (v = (*args)[4])->asFunctionObject();
+    FunctionObject *dbcreationCallback = (v = (*args)[4])->as<FunctionObject>();
 
     QCryptographicHash md5(QCryptographicHash::Md5);
     md5.addData(dbname.toUtf8());

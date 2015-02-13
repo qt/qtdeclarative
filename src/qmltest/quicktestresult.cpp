@@ -486,7 +486,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
 
     //Check for Object Type
     if (value->isObject()
-        && !value->asFunctionObject()
+        && !value->as<QV4::FunctionObject>()
         && !value->as<QV4::ArrayObject>()) {
         QVariant v = scope.engine->toVariant(value, QMetaType::UnknownType);
         if (v.isValid()) {

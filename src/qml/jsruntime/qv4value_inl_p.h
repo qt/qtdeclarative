@@ -231,11 +231,6 @@ inline uint Value::asArrayLength(bool *ok) const
     return idx;
 }
 
-inline FunctionObject *Value::asFunctionObject() const
-{
-    return isObject() ? managed()->asFunctionObject() : 0;
-}
-
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {

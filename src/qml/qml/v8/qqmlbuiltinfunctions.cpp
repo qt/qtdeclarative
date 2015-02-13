@@ -1172,7 +1172,7 @@ ReturnedValue QtObject::method_locale(CallContext *ctx)
     return QQmlLocale::locale(ctx->engine(), code);
 }
 
-Heap::QQmlBindingFunction::QQmlBindingFunction(QV4::FunctionObject *originalFunction)
+Heap::QQmlBindingFunction::QQmlBindingFunction(const QV4::FunctionObject *originalFunction)
     : QV4::Heap::FunctionObject(originalFunction->scope(), originalFunction->name())
     , originalFunction(originalFunction->d())
 {
@@ -1250,7 +1250,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
 {
     if (ctx->argc() != 1)
         V4THROW_ERROR("binding() requires 1 argument");
-    QV4::FunctionObject *f = ctx->args()[0].asFunctionObject();
+    const QV4::FunctionObject *f = ctx->args()[0].as<FunctionObject>();
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
