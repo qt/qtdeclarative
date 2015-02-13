@@ -97,7 +97,7 @@ inline ReturnedValue thisNumberValue(ExecutionContext *ctx)
 {
     if (ctx->thisObject().isNumber())
         return ctx->thisObject().asReturnedValue();
-    NumberObject *n = ctx->thisObject().asNumberObject();
+    NumberObject *n = ctx->thisObject().as<NumberObject>();
     if (!n)
         return ctx->engine()->throwTypeError();
     return Encode(n->value());
@@ -107,7 +107,7 @@ inline double thisNumber(ExecutionContext *ctx)
 {
     if (ctx->thisObject().isNumber())
         return ctx->thisObject().asDouble();
-    NumberObject *n = ctx->thisObject().asNumberObject();
+    NumberObject *n = ctx->thisObject().as<NumberObject>();
     if (!n)
         return ctx->engine()->throwTypeError();
     return n->value();

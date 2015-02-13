@@ -154,7 +154,6 @@ public:
     Object *asObject() { return d()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
     FunctionObject *asFunctionObject() { return d()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
-    NumberObject *asNumberObject() { return d()->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
     bool isListType() const { return d()->vtable->type == Type_QmlSequence; }

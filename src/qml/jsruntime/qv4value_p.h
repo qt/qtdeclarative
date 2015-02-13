@@ -308,7 +308,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline Managed *asManaged() const;
     inline Object *asObject() const;
     inline FunctionObject *asFunctionObject() const;
-    inline NumberObject *asNumberObject() const;
 
     template <typename T>
     const T *as() const {

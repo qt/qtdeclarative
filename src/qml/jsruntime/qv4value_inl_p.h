@@ -248,11 +248,6 @@ inline FunctionObject *Value::asFunctionObject() const
     return isObject() ? managed()->asFunctionObject() : 0;
 }
 
-inline NumberObject *Value::asNumberObject() const
-{
-    return isObject() ? managed()->asNumberObject() : 0;
-}
-
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {
