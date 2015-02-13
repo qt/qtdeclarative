@@ -40,6 +40,7 @@
 #include <qv4argumentsobject_p.h>
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
+#include "qv4string_p.h"
 
 using namespace QV4;
 

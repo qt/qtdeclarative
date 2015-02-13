@@ -1250,7 +1250,7 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 void QQmlVMEMetaObject::allocateVarPropertiesArray()
 {
     QQmlEngine *qml = qmlEngine(object);
-    assert(qml);
+    Q_ASSERT(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
     QV4::Scope scope(v4);
     varProperties.set(scope.engine, v4->newArrayObject(metaData->varPropertyCount));

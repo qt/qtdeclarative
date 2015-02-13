@@ -147,7 +147,7 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 
     if (!!name)
         return name->asReturnedValue();
-    assert(index < UINT_MAX);
+    Q_ASSERT(index < UINT_MAX);
     return Encode(index);
 }
 
@@ -169,7 +169,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 
     if (!!name)
         return name->asReturnedValue();
-    assert(index < UINT_MAX);
+    Q_ASSERT(index < UINT_MAX);
     return Encode(engine->newString(QString::number(index)));
 }
 

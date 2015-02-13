@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qv4booleanobject_p.h"
+#include "qv4string_p.h"
 
 using namespace QV4;
 

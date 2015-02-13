@@ -304,7 +304,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                     if (key->isString()) {
                         query.bindValue(key->stringValue()->toQString(), v);
                     } else {
-                        assert(key->isInteger());
+                        Q_ASSERT(key->isInteger());
                         query.bindValue(key->integerValue(), v);
                     }
                 }

@@ -710,7 +710,7 @@ void Object::internalPut(String *name, const Value &value)
 
     // Clause 5
     if (pd && attrs.isAccessor()) {
-        assert(pd->setter() != 0);
+        Q_ASSERT(pd->setter() != 0);
 
         Scope scope(engine());
         ScopedFunctionObject setter(scope, pd->setter());
@@ -784,7 +784,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
 
     // Clause 5
     if (pd && attrs.isAccessor()) {
-        assert(pd->setter() != 0);
+        Q_ASSERT(pd->setter() != 0);
 
         Scope scope(engine());
         ScopedFunctionObject setter(scope, pd->setter());

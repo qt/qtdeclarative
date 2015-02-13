@@ -33,7 +33,7 @@
 #ifndef QV4PERSISTENT_H
 #define QV4PERSISTENT_H
 
-#include "qv4value_inl_p.h"
+#include "qv4value_p.h"
 
 QT_BEGIN_NAMESPACE
 
