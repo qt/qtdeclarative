@@ -38,6 +38,7 @@
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include "qv4string_p.h"
+#include "qv4value_inl_p.h"
 #include "qv4internalclass_p.h"
 #include <private/qintrusivelist_p.h>
 
@@ -373,18 +374,6 @@ Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     , lineNumber(-1)
 {
     engine->current = this;
-}
-
-
-// ### Remove me
-inline
-void Managed::mark(QV4::ExecutionEngine *engine)
-{
-    Q_ASSERT(inUse());
-    if (markBit())
-        return;
-    d()->setMarkBit();
-    engine->pushForGC(d());
 }
 
 

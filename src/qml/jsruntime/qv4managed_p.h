@@ -124,8 +124,6 @@ private:
 
 public:
 
-    inline void mark(QV4::ExecutionEngine *engine);
-
     enum Type {
         Type_Invalid,
         Type_String,

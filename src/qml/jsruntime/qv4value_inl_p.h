@@ -39,7 +39,6 @@
 #include <private/qv4heap_p.h>
 #include "qv4string_p.h"
 #include "qv4managed_p.h"
-#include "qv4engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -54,52 +53,6 @@ inline void Value::mark(ExecutionEngine *e)
         m->mark(e);
 }
 
-inline Primitive Primitive::nullValue()
-{
-    Primitive v;
-#if QT_POINTER_SIZE == 8
-    v.val = quint64(_Null_Type) << Tag_Shift;
-#else
-    v.tag = _Null_Type;
-    v.int_32 = 0;
-#endif
-    return v;
-}
-
-inline Primitive Primitive::fromBoolean(bool b)
-{
-    Primitive v;
-    v.tag = _Boolean_Type;
-    v.int_32 = (bool)b;
-    return v;
-}
-
-inline Primitive Primitive::fromDouble(double d)
-{
-    Primitive v;
-    v.setDouble(d);
-    return v;
-}
-
-inline Primitive Primitive::fromInt32(int i)
-{
-    Primitive v;
-    v.tag = _Integer_Type;
-    v.int_32 = i;
-    return v;
-}
-
-inline Primitive Primitive::fromUInt32(uint i)
-{
-    Primitive v;
-    if (i < INT_MAX) {
-        v.tag = _Integer_Type;
-        v.int_32 = (int)i;
-    } else {
-        v.setDouble(i);
-    }
-    return v;
-}
 
 inline double Value::toNumber() const
 {
@@ -131,27 +84,7 @@ inline unsigned int Value::toUInt32() const
 }
 
 
-inline bool Value::toBoolean() const
-{
-    switch (type()) {
-    case Value::Undefined_Type:
-    case Value::Null_Type:
-        return false;
-    case Value::Boolean_Type:
-    case Value::Integer_Type:
-        return (bool)int_32;
-    case Value::Managed_Type:
-#ifdef V4_BOOTSTRAP
-        Q_UNIMPLEMENTED();
-#else
-        if (isString())
-            return stringValue()->toQString().length() > 0;
-#endif
-        return true;
-    default: // double
-        return doubleValue() && !std::isnan(doubleValue());
-    }
-}
+
 
 inline
 ReturnedValue Heap::Base::asReturnedValue() const
@@ -181,37 +114,7 @@ inline uint Value::asArrayIndex() const
     return idx;
 }
 
-inline uint Value::asArrayLength(bool *ok) const
-{
-    *ok = true;
-    if (isInteger()) {
-        if (int_32 >= 0) {
-            return (uint)int_32;
-        } else {
-            *ok = false;
-            return UINT_MAX;
-        }
-    }
-    if (isNumber()) {
-        double d = doubleValue();
-        uint idx = (uint)d;
-        if (idx != d) {
-            *ok = false;
-            return UINT_MAX;
-        }
-        return idx;
-    }
-    if (isString())
-        return stringValue()->toUInt(ok);
 
-    uint idx = toUInt32();
-    double d = toNumber();
-    if (d != idx) {
-        *ok = false;
-        return UINT_MAX;
-    }
-    return idx;
-}
 
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
@@ -220,6 +123,35 @@ inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 }
 
 #endif
+
+template <typename T>
+struct TypedValue : public Value
+{
+    template<typename X>
+    TypedValue &operator =(X *x) {
+        m = x;
+#if QT_POINTER_SIZE == 4
+        tag = Managed_Type;
+#endif
+        return *this;
+    }
+    TypedValue &operator =(T *t);
+    TypedValue &operator =(const Scoped<T> &v);
+//    TypedValue &operator =(const ManagedRef<T> &v);
+
+    TypedValue &operator =(const TypedValue<T> &t);
+
+    bool operator!() const { return !managed(); }
+
+    operator T *() { return static_cast<T *>(managed()); }
+    T *operator->() { return static_cast<T *>(managed()); }
+    const T *operator->() const { return static_cast<T *>(managed()); }
+    T *getPointer() const { return static_cast<T *>(managed()); }
+
+    void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
+};
+typedef TypedValue<String> StringValue;
+
 
 } // namespace QV4
 

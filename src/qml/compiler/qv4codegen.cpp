@@ -33,6 +33,7 @@
 
 #include "qv4codegen_p.h"
 #include "qv4util_p.h"
+#include "qv4engine_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>

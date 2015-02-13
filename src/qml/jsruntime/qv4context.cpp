@@ -154,7 +154,7 @@ Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exception
     lookups = parent->lookups;
     compilationUnit = parent->compilationUnit;
 
-    this->exceptionVarName = exceptionVarName;
+    this->exceptionVarName = exceptionVarName->d();
     this->exceptionValue = exceptionValue;
 }
 
@@ -217,7 +217,7 @@ bool ExecutionContext::deleteProperty(String *name)
                 return withObject->deleteProperty(name);
         } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx->d());
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name->d()))
                 return false;
         } else if (ctx->d()->type >= Heap::ExecutionContext::Type_CallContext) {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
@@ -290,7 +290,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
                 w->put(name, value);
                 return;
             }
-        } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext && static_cast<Heap::CatchContext *>(ctx->d())->exceptionVarName->isEqualTo(name)) {
+        } else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext && static_cast<Heap::CatchContext *>(ctx->d())->exceptionVarName->isEqualTo(name->d())) {
             static_cast<Heap::CatchContext *>(ctx->d())->exceptionValue = value;
             return;
         } else {
@@ -363,7 +363,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             hasCatchScope = true;
             Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx->d());
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name->d()))
                 return c->exceptionValue.asReturnedValue();
         }
 
@@ -431,7 +431,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
         else if (ctx->d()->type == Heap::ExecutionContext::Type_CatchContext) {
             hasCatchScope = true;
             Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx->d());
-            if (c->exceptionVarName->isEqualTo(name))
+            if (c->exceptionVarName->isEqualTo(name->d()))
                 return c->exceptionValue.asReturnedValue();
         }
 

@@ -287,7 +287,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline int toInt32() const;
     inline unsigned int toUInt32() const;
 
-    inline bool toBoolean() const;
+    bool toBoolean() const;
     double toInteger() const;
     inline double toNumber() const;
     double toNumberImpl() const;
@@ -334,7 +334,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     inline uint asArrayIndex() const;
-    inline uint asArrayLength(bool *ok) const;
+    uint asArrayLength(bool *ok) const;
 
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
@@ -428,34 +428,52 @@ inline Primitive Primitive::emptyValue()
     return v;
 }
 
-template <typename T>
-struct TypedValue : public Value
+inline Primitive Primitive::nullValue()
 {
-    template<typename X>
-    TypedValue &operator =(X *x) {
-        m = x;
-#if QT_POINTER_SIZE == 4
-        tag = Managed_Type;
+    Primitive v;
+#if QT_POINTER_SIZE == 8
+    v.val = quint64(_Null_Type) << Tag_Shift;
+#else
+    v.tag = _Null_Type;
+    v.int_32 = 0;
 #endif
-        return *this;
+    return v;
+}
+
+inline Primitive Primitive::fromBoolean(bool b)
+{
+    Primitive v;
+    v.tag = _Boolean_Type;
+    v.int_32 = (bool)b;
+    return v;
+}
+
+inline Primitive Primitive::fromDouble(double d)
+{
+    Primitive v;
+    v.setDouble(d);
+    return v;
+}
+
+inline Primitive Primitive::fromInt32(int i)
+{
+    Primitive v;
+    v.tag = _Integer_Type;
+    v.int_32 = i;
+    return v;
+}
+
+inline Primitive Primitive::fromUInt32(uint i)
+{
+    Primitive v;
+    if (i < INT_MAX) {
+        v.tag = _Integer_Type;
+        v.int_32 = (int)i;
+    } else {
+        v.setDouble(i);
     }
-    TypedValue &operator =(T *t);
-    TypedValue &operator =(const Scoped<T> &v);
-//    TypedValue &operator =(const ManagedRef<T> &v);
-
-    TypedValue &operator =(const TypedValue<T> &t);
-
-    bool operator!() const { return !managed(); }
-
-    operator T *() { return static_cast<T *>(managed()); }
-    T *operator->() { return static_cast<T *>(managed()); }
-    const T *operator->() const { return static_cast<T *>(managed()); }
-    T *getPointer() const { return static_cast<T *>(managed()); }
-
-    void mark(ExecutionEngine *e) { if (managed()) managed()->mark(e); }
-};
-typedef TypedValue<String> StringValue;
-
+    return v;
+}
 
 struct Encode {
     static ReturnedValue undefined() {

@@ -117,7 +117,7 @@ struct GlobalContext : ExecutionContext {
 
 struct CatchContext : ExecutionContext {
     CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue);
-    StringValue exceptionVarName;
+    Pointer<String> exceptionVarName;
     Value exceptionValue;
 };
 
