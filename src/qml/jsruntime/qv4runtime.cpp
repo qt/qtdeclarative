@@ -40,6 +40,7 @@
 #include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4dateobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "private/qlocale_tools_p.h"
@@ -383,7 +384,7 @@ Heap::String *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double n
 ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
-        if (object->asDateObject())
+        if (object->as<DateObject>())
             typeHint = STRING_HINT;
         else
             typeHint = NUMBER_HINT;

@@ -441,7 +441,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
         } else if (propertyValue->isBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue->booleanValue());
-        } else if (QV4::DateObject *dd = propertyValue->asDateObject()) {
+        } else if (QV4::DateObject *dd = propertyValue->as<QV4::DateObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             QDateTime dt = dd->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
@@ -520,7 +520,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
             if (r.type == ListLayout::Role::Bool) {
                 e->setBoolPropertyFast(r, propertyValue->booleanValue());
             }
-        } else if (QV4::DateObject *date = propertyValue->asDateObject()) {
+        } else if (QV4::DateObject *date = propertyValue->as<QV4::DateObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             if (r.type == ListLayout::Role::DateTime) {
                 QDateTime dt = date->toQDateTime();;
@@ -1187,7 +1187,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         }
     } else if (d.isBoolean()) {
         roleIndex = setBoolProperty(role, d.booleanValue());
-    } else if (d.asDateObject()) {
+    } else if (d.as<QV4::DateObject>()) {
         QV4::Scoped<QV4::DateObject> dd(scope, d);
         QDateTime dt = dd->toQDateTime();
         roleIndex = setDateTimeProperty(role, dt);

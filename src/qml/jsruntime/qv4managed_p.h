@@ -156,7 +156,6 @@ public:
     BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
     NumberObject *asNumberObject() { return d()->vtable->type == Type_NumberObject ? reinterpret_cast<NumberObject *>(this) : 0; }
     StringObject *asStringObject() { return d()->vtable->type == Type_StringObject ? reinterpret_cast<StringObject *>(this) : 0; }
-    DateObject *asDateObject() { return d()->vtable->type == Type_DateObject ? reinterpret_cast<DateObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
 
     bool isListType() const { return d()->vtable->type == Type_QmlSequence; }

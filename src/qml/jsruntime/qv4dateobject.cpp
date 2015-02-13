@@ -655,7 +655,7 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
 
     else if (callData->argc == 1) {
         ScopedValue arg(scope, callData->args[0]);
-        if (DateObject *d = arg->asDateObject())
+        if (DateObject *d = arg->as<DateObject>())
             arg = d->date();
         else
             arg = RuntimeHelpers::toPrimitive(arg, PREFERREDTYPE_HINT);
@@ -752,7 +752,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
 
 double DatePrototype::getThisDate(ExecutionContext *ctx)
 {
-    if (DateObject *thisObject = ctx->thisObject().asDateObject())
+    if (DateObject *thisObject = ctx->thisObject().as<DateObject>())
         return thisObject->date().asDouble();
     else {
         ctx->engine()->throwTypeError();
@@ -1013,7 +1013,7 @@ ReturnedValue DatePrototype::method_setMilliseconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1025,7 +1025,7 @@ ReturnedValue DatePrototype::method_setUTCMilliseconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1039,7 +1039,7 @@ ReturnedValue DatePrototype::method_setSeconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1053,7 +1053,7 @@ ReturnedValue DatePrototype::method_setUTCSeconds(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1068,7 +1068,7 @@ ReturnedValue DatePrototype::method_setMinutes(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1083,7 +1083,7 @@ ReturnedValue DatePrototype::method_setUTCMinutes(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1099,7 +1099,7 @@ ReturnedValue DatePrototype::method_setHours(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1115,7 +1115,7 @@ ReturnedValue DatePrototype::method_setUTCHours(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1128,7 +1128,7 @@ ReturnedValue DatePrototype::method_setDate(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1141,7 +1141,7 @@ ReturnedValue DatePrototype::method_setUTCDate(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1155,7 +1155,7 @@ ReturnedValue DatePrototype::method_setMonth(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1169,7 +1169,7 @@ ReturnedValue DatePrototype::method_setUTCMonth(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1195,7 +1195,7 @@ ReturnedValue DatePrototype::method_setYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1210,7 +1210,7 @@ ReturnedValue DatePrototype::method_setUTCFullYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1227,7 +1227,7 @@ ReturnedValue DatePrototype::method_setFullYear(CallContext *ctx)
 
 ReturnedValue DatePrototype::method_toUTCString(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 
@@ -1250,7 +1250,7 @@ static void addZeroPrefixedInt(QString &str, int num, int nDigits)
 
 ReturnedValue DatePrototype::method_toISOString(CallContext *ctx)
 {
-    DateObject *self = ctx->thisObject().asDateObject();
+    DateObject *self = ctx->thisObject().as<DateObject>();
     if (!self)
         return ctx->engine()->throwTypeError();
 

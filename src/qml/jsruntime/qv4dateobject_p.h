@@ -61,6 +61,7 @@ struct DateObject : Object {
     Value value;
 };
 
+
 struct DateCtor : FunctionObject {
     DateCtor(QV4::ExecutionContext *scope);
 };
@@ -78,6 +79,11 @@ struct DateObject: Object {
 
     QDateTime toQDateTime() const;
 };
+
+template<>
+inline const DateObject *Value::as() const {
+    return isManaged() && m->vtable->type == Managed::Type_DateObject ? static_cast<const DateObject *>(this) : 0;
+}
 
 struct DateCtor: FunctionObject
 {

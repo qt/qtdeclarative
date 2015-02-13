@@ -258,16 +258,6 @@ inline StringObject *Value::asStringObject() const
     return isObject() ? managed()->asStringObject() : 0;
 }
 
-inline DateObject *Value::asDateObject() const
-{
-    return isObject() ? managed()->asDateObject() : 0;
-}
-
-template<>
-inline const String *Value::as() const {
-    return asString();
-}
-
 template<>
 inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
 {

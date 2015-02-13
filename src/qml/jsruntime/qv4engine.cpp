@@ -1255,7 +1255,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return value.stringValue()->toQString();
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
         return ld->d()->locale;
-    if (QV4::DateObject *d = value.asDateObject())
+    if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
@@ -1671,12 +1671,12 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::Value &value, int type, void *da
         }
         return true;
     case QMetaType::QDateTime:
-        if (QV4::DateObject *d = value.asDateObject()) {
+        if (const QV4::DateObject *d = value.as<DateObject>()) {
             *reinterpret_cast<QDateTime *>(data) = d->toQDateTime();
             return true;
         } break;
     case QMetaType::QDate:
-        if (QV4::DateObject *d = value.asDateObject()) {
+        if (const QV4::DateObject *d = value.as<DateObject>()) {
             *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
             return true;
         } break;

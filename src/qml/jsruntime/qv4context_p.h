@@ -161,7 +161,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 
-    const Value &thisObject() const {
+    Value &thisObject() const {
         return d()->callData->thisObject;
     }
     int argc() const {

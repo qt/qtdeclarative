@@ -81,7 +81,7 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::CallContext *ct
 
     QV4::Scope scope(ctx);
 
-    QV4::DateObject *date = ctx->thisObject().asDateObject();
+    QV4::DateObject *date = ctx->thisObject().as<DateObject>();
     if (!date)
         return QV4::DatePrototype::method_toLocaleString(ctx);
 
@@ -125,7 +125,7 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleTimeString(QV4::CallContext
 
     QV4::Scope scope(ctx);
 
-    QV4::DateObject *date = ctx->thisObject().asDateObject();
+    QV4::DateObject *date = ctx->thisObject().as<DateObject>();
     if (!date)
         return QV4::DatePrototype::method_toLocaleTimeString(ctx);
 
@@ -170,7 +170,7 @@ QV4::ReturnedValue QQmlDateExtension::method_toLocaleDateString(QV4::CallContext
 
     QV4::Scope scope(ctx);
 
-    QV4::DateObject *dateObj = ctx->thisObject().asDateObject();
+    QV4::DateObject *dateObj = ctx->thisObject().as<DateObject>();
     if (!dateObj)
         return QV4::DatePrototype::method_toLocaleDateString(ctx);
 

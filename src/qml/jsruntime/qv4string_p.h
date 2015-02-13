@@ -184,6 +184,11 @@ public:
     static uint toArrayIndex(const QString &str);
 };
 
+template<>
+inline const String *Value::as() const {
+    return isManaged() && m->vtable->isString ? static_cast<const String *>(this) : 0;
+}
+
 }
 
 QT_END_NAMESPACE

@@ -51,6 +51,7 @@
 #include <private/qv4include_p.h>
 #include <private/qv4context_p.h>
 #include <private/qv4stringobject_p.h>
+#include <private/qv4dateobject_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4objectproto_p.h>
@@ -669,7 +670,7 @@ ReturnedValue QtObject::method_formatTime(QV4::CallContext *ctx)
 
     QVariant argVariant = ctx->engine()->toVariant(ctx->args()[0], -1);
     QTime time;
-    if (ctx->args()[0].asDateObject() || (argVariant.type() == QVariant::String))
+    if (ctx->args()[0].as<DateObject>() || (argVariant.type() == QVariant::String))
         time = argVariant.toDateTime().time();
     else // if (argVariant.type() == QVariant::Time), or invalid.
         time = argVariant.toTime();

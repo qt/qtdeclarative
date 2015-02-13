@@ -195,7 +195,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         reserve(data, sizeof(quint32) + sizeof(double));
         push(data, valueheader(WorkerNumber));
         push(data, v.asDouble());
-    } else if (QV4::DateObject *d = v.asDateObject()) {
+    } else if (const QV4::DateObject *d = v.as<DateObject>()) {
         reserve(data, sizeof(quint32) + sizeof(double));
         push(data, valueheader(WorkerDate));
         push(data, d->date().asDouble());

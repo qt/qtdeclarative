@@ -1222,7 +1222,7 @@ QDateTime QJSValue::toDateTime() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (val) {
-        QV4::DateObject *date = val->asDateObject();
+        QV4::DateObject *date = val->as<DateObject>();
         if (date)
             return date->toQDateTime();
     }
@@ -1236,7 +1236,7 @@ QDateTime QJSValue::toDateTime() const
 bool QJSValue::isDate() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->asDateObject();
+    return val && val->as<DateObject>();
 }
 
 /*!

@@ -55,6 +55,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4dateobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qqmlscriptstring_p.h>
@@ -1221,7 +1222,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         default:
             return 10;
         }
-    } else if (actual.asDateObject()) {
+    } else if (actual.as<DateObject>()) {
         switch (conversionType) {
         case QMetaType::QDateTime:
             return 0;
