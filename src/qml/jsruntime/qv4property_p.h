@@ -72,8 +72,8 @@ struct Property {
 
     inline Heap::FunctionObject *getter() const { return value.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(value.heapObject()) : 0; }
     inline Heap::FunctionObject *setter() const { return set.isManaged() ? reinterpret_cast<Heap::FunctionObject *>(set.heapObject()) : 0; }
-    inline void setGetter(FunctionObject *g) { value = Primitive::fromManaged(reinterpret_cast<Managed *>(g)); }
-    inline void setSetter(FunctionObject *s) { set = s ? Primitive::fromManaged(reinterpret_cast<Managed *>(s)) : Value::fromHeapObject(0); }
+    inline void setGetter(FunctionObject *g) { value = reinterpret_cast<Managed *>(g); }
+    inline void setSetter(FunctionObject *s) { set = (s ? reinterpret_cast<Managed *>(s) : 0); }
 
     void copy(const Property *other, PropertyAttributes attrs) {
         value = other->value;
@@ -84,8 +84,8 @@ struct Property {
     explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(0); }
     explicit Property(Value v) : value(v) { set = Value::fromHeapObject(0); }
     Property(FunctionObject *getter, FunctionObject *setter) {
-        value = Primitive::fromManaged(reinterpret_cast<Managed *>(getter));
-        set = Primitive::fromManaged(reinterpret_cast<Managed *>(setter));
+        value = reinterpret_cast<Managed *>(getter);
+        set = reinterpret_cast<Managed *>(setter);
     }
     Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
         value.m = reinterpret_cast<Heap::Base *>(getter);

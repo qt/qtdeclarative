@@ -257,13 +257,6 @@ inline FunctionObject *managed_cast(Managed *m)
     return m ? m->asFunctionObject() : 0;
 }
 
-inline Value Value::fromManaged(Managed *m)
-{
-    if (!m)
-        return QV4::Primitive::undefinedValue();
-    return *m;
-}
-
 }
 
 

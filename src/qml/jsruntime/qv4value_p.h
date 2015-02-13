@@ -282,8 +282,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         return v;
     }
 
-    static inline Value fromManaged(Managed *m);
-
     int toUInt16() const;
     inline int toInt32() const;
     inline unsigned int toUInt32() const;
@@ -337,7 +335,12 @@ struct Q_QML_PRIVATE_EXPORT Value
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { val = v; return *this; }
     Value &operator=(Managed *m) {
-        val = Value::fromManaged(m).val;
+        if (!m) {
+            tag = Undefined_Type;
+            uint_32 = 0;
+        } else {
+            val = reinterpret_cast<Value *>(m)->val;
+        }
         return *this;
     }
     Value &operator=(Heap::Base *o) {
