@@ -371,6 +371,24 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 };
 
+inline bool Value::isString() const
+{
+    if (!isManaged())
+        return false;
+    return m && m->vtable->isString;
+}
+inline bool Value::isObject() const
+{
+    if (!isManaged())
+        return false;
+    return m && m->vtable->isObject;
+}
+
+inline bool Value::isPrimitive() const
+{
+    return !isObject();
+}
+
 
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
