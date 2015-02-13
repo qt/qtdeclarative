@@ -51,7 +51,7 @@ struct Lookup {
         void (*indexedSetter)(Lookup *l, const Value &object, const Value &index, const Value &v);
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
-        void (*setter)(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &v);
+        void (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
     union {
         ExecutionEngine *engine;
@@ -107,14 +107,14 @@ struct Lookup {
     static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionEngine *engine);
     static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionEngine *engine);
 
-    static void setterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setter0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setterInsert0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setterInsert1(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setterInsert2(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
-    static void setter0setter0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value);
+    static void setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static void setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
 
     ReturnedValue lookup(const Value &thisObject, Object *obj, PropertyAttributes *attrs);
     ReturnedValue lookup(Object *obj, PropertyAttributes *attrs);

@@ -576,7 +576,7 @@ ReturnedValue Runtime::getElement(ExecutionEngine *engine, const Value &object, 
     ScopedObject o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
-            if (String *str = object.asString()) {
+            if (const String *str = object.as<String>()) {
                 if (idx >= (uint)str->toQString().length()) {
                     return Encode::undefined();
                 }

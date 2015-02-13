@@ -190,7 +190,7 @@ void PersistentValueStorage::mark(ExecutionEngine *e)
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
-            if (Managed *m = p->values[i].asManaged())
+            if (Managed *m = p->values[i].as<Managed>())
                 m->mark(e);
         }
         drainMarkStack(e, markBase);

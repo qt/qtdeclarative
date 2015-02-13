@@ -63,18 +63,11 @@ inline bool Value::isPrimitive() const
     return !isObject();
 }
 
-inline String *Value::asString() const
-{
-    if (isString())
-        return stringValue();
-    return 0;
-}
-
-inline void Value::mark(ExecutionEngine *e) const
+inline void Value::mark(ExecutionEngine *e)
 {
     if (!val)
         return;
-    Managed *m = asManaged();
+    Managed *m = as<Managed>();
     if (m)
         m->mark(e);
 }

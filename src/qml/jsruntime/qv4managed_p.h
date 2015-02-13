@@ -150,7 +150,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    String *asString() { return d()->vtable->isString ? reinterpret_cast<String *>(this) : 0; }
     Object *asObject() { return d()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
     FunctionObject *asFunctionObject() { return d()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
@@ -181,7 +180,9 @@ private:
 
 template<>
 inline const Managed *Value::as() const {
-    return asManaged();
+    if (isManaged())
+        return managed();
+    return 0;
 }
 
 template<typename T>
@@ -193,7 +194,7 @@ inline T *managed_cast(Managed *m)
 template<>
 inline String *managed_cast(Managed *m)
 {
-    return m ? m->asString() : 0;
+    return m ? m->as<String>() : 0;
 }
 template<>
 inline Object *managed_cast(Managed *m)

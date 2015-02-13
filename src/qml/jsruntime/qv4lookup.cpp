@@ -123,7 +123,7 @@ ReturnedValue Lookup::indexedGetterFallback(Lookup *l, const Value &object, cons
     ScopedObject o(scope, object);
     if (!o) {
         if (idx < UINT_MAX) {
-            if (String *str = object.asString()) {
+            if (const String *str = object.as<String>()) {
                 if (idx >= (uint)str->toQString().length()) {
                     return Encode::undefined();
                 }
@@ -560,7 +560,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engin
 
 ReturnedValue Lookup::stringLengthGetter(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (String *s = object.asString())
+    if (const String *s = object.as<String>())
         return Encode(s->d()->length());
 
     l->getter = getterGeneric;
@@ -701,7 +701,7 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
     return globalGetterGeneric(l, engine);
 }
 
-void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Scope scope(engine);
     ScopedObject o(scope, object);
@@ -716,7 +716,7 @@ void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, const Value &obje
     o->setLookup(l, value);
 }
 
-void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Lookup l1 = *l;
 
@@ -735,7 +735,7 @@ void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &o
     setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, object.toObject(scope.engine));
@@ -745,9 +745,9 @@ void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, const Value &obj
     }
 }
 
-void Lookup::setter0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.asManaged());
+    Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
         o->memberData()->data[l->index] = value;
         return;
@@ -756,9 +756,9 @@ void Lookup::setter0(Lookup *l, ExecutionEngine *engine, const Value &object, co
     setterTwoClasses(l, engine, object, value);
 }
 
-void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.asManaged());
+    Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
         if (!o->prototype()) {
             if (!o->memberData() || l->index >= o->memberData()->size)
@@ -773,9 +773,9 @@ void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, const Value &obje
     setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.asManaged());
+    Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
         Heap::Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
@@ -791,9 +791,9 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, const Value &obje
     setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.asManaged());
+    Object *o = object.as<Object>();
     if (o && o->internalClass() == l->classList[0]) {
         Heap::Object *p = o->prototype();
         if (p && p->internalClass == l->classList[1]) {
@@ -812,9 +812,9 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, const Value &obje
     setterFallback(l, engine, object, value);
 }
 
-void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, const Value &object, const Value &value)
+void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.asManaged());
+    Object *o = object.as<Object>();
     if (o) {
         if (o->internalClass() == l->classList[0]) {
             o->memberData()->data[l->index] = value;

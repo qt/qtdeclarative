@@ -96,7 +96,7 @@ public:
     Managed *asManaged() const {
         if (!val)
             return 0;
-        return val->asManaged();
+        return val->as<Managed>();
     }
 
     ExecutionEngine *engine() const {
@@ -138,7 +138,7 @@ public:
     Managed *asManaged() const {
         if (!val)
             return 0;
-        return val->asManaged();
+        return val->as<Managed>();
     }
 
     ExecutionEngine *engine() const {

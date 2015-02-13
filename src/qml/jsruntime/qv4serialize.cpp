@@ -265,7 +265,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             s = properties->getIndexed(ii);
             serialize(data, s, engine);
 
-            QV4::String *str = s->asString();
+            QV4::String *str = s->as<String>();
             val = o->get(str);
             if (scope.hasException())
                 scope.engine->catchException();

@@ -793,7 +793,7 @@ void Debugger::Collector::collect(const QString &name, const ScopedValue &value)
         addBoolean(name, value->booleanValue());
         break;
     case Value::Managed_Type:
-        if (String *s = value->asString())
+        if (const String *s = value->as<String>())
             addString(name, s->toQString());
         else
             addObject(name, value);

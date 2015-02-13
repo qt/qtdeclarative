@@ -381,7 +381,7 @@ void MemoryManager::sweep(bool lastSweep)
 {
     if (m_weakValues) {
         for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
-            if (Managed *m = (*it).asManaged()) {
+            if (Managed *m = (*it).as<Managed>()) {
                 if (!m->markBit())
                     (*it) = Primitive::undefinedValue();
             }
@@ -607,7 +607,7 @@ void MemoryManager::collectFromJSStack() const
     Value *v = m_d->engine->jsStackBase;
     Value *top = m_d->engine->jsStackTop;
     while (v < top) {
-        Managed *m = v->asManaged();
+        Managed *m = v->as<Managed>();
         if (m && m->inUse())
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(m_d->engine);

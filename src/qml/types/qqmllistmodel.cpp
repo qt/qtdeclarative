@@ -421,7 +421,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
         int roleIndex = -1;
 
         // Add the value now
-        if (QV4::String *s = propertyValue->asString()) {
+        if (const QV4::String *s = propertyValue->as<QV4::String>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::String);
             roleIndex = e->setStringProperty(r, s->toQString());
         } else if (propertyValue->isNumber()) {

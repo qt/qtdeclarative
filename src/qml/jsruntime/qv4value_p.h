@@ -304,8 +304,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         return b;
     }
 
-    inline String *asString() const;
-    inline Managed *asManaged() const;
     inline Object *asObject() const;
     inline FunctionObject *asFunctionObject() const;
 
@@ -347,7 +345,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     // Section 9.12
     bool sameValue(Value other) const;
 
-    inline void mark(ExecutionEngine *e) const;
+    inline void mark(ExecutionEngine *e);
 
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { val = v; return *this; }
@@ -376,12 +374,6 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 };
 
-inline Managed *Value::asManaged() const
-{
-    if (isManaged())
-        return managed();
-    return 0;
-}
 
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
