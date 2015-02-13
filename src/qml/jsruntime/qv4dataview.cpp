@@ -46,9 +46,9 @@ Heap::DataViewCtor::DataViewCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
+ReturnedValue DataViewCtor::construct(const Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<Object *>(m)->engine());
+    Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
     if (!buffer)
         return scope.engine->throwTypeError();
@@ -69,14 +69,14 @@ ReturnedValue DataViewCtor::construct(Managed *m, CallData *callData)
 
 }
 
-ReturnedValue DataViewCtor::call(Managed *that, CallData *callData)
+ReturnedValue DataViewCtor::call(const Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }
 
 
 Heap::DataView::DataView(ExecutionEngine *e)
-    : Heap::Object(e->emptyClass, e->dataViewPrototype.asObject()),
+    : Heap::Object(e->emptyClass, e->dataViewPrototype.objectValue()),
       buffer(0),
       byteLength(0),
       byteOffset(0)

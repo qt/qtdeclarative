@@ -72,7 +72,7 @@ struct Print: FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(Managed *, CallData *callData)
+    static ReturnedValue call(const Managed *, CallData *callData)
     {
         for (int i = 0; i < callData->argc; ++i) {
             QString s = callData->args[i].toQStringNoThrow();
@@ -98,9 +98,9 @@ struct GC: public FunctionObject
     };
     V4_OBJECT(FunctionObject)
 
-    static ReturnedValue call(Managed *m, CallData *)
+    static ReturnedValue call(const Managed *m, CallData *)
     {
-        static_cast<GC *>(m)->engine()->memoryManager->runGC();
+        static_cast<const GC *>(m)->engine()->memoryManager->runGC();
         return Encode::undefined();
     }
 };

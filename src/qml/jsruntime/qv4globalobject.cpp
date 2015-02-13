@@ -346,7 +346,7 @@ Heap::EvalFunction::EvalFunction(QV4::ExecutionContext *scope)
     f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(1));
 }
 
-ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
+ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 {
     if (callData->argc < 1)
         return Encode::undefined();
@@ -399,10 +399,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall)
 }
 
 
-ReturnedValue EvalFunction::call(Managed *that, CallData *callData)
+ReturnedValue EvalFunction::call(const Managed *that, CallData *callData)
 {
     // indirect call
-    return static_cast<EvalFunction *>(that)->evalCall(callData, false);
+    return static_cast<const EvalFunction *>(that)->evalCall(callData, false);
 }
 
 

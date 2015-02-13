@@ -1216,7 +1216,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (args->length() >= 2) {
         QV4::ScopedValue v(scope, (*args)[1]);
-        if (!v->asObject() || v->as<QV4::ArrayObject>()) {
+        if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
             qmlInfo(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
@@ -1342,7 +1342,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     if (args->length() >= 2) {
         QV4::ScopedValue v(scope, (*args)[1]);
         if (v->isNull()) {
-        } else if (!v->asObject() || v->as<QV4::ArrayObject>()) {
+        } else if (!v->as<QV4::Object>() || v->as<QV4::ArrayObject>()) {
             qmlInfo(this) << tr("createObject: value is not an object");
             args->setReturnValue(QV4::Encode::null());
             return;
@@ -1390,7 +1390,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::Scope scope(v4engine);
 
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
-    Q_ASSERT(object->asObject());
+    Q_ASSERT(object->as<QV4::Object>());
 
     if (!valuemap.isUndefined()) {
         QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
@@ -1492,7 +1492,7 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
         QV4::ExecutionEngine *v4 = engine();
         QV4::Scope scope(v4);
 
-        QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.asObject()));
+        QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.as<Object>()));
         QV4::ScopedCallData callData(scope, 2);
         callData->thisObject = v4->globalObject();
         callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);

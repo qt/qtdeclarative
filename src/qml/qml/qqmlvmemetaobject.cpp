@@ -1183,7 +1183,7 @@ void QQmlVMEMetaObject::setVmeMethod(int index, const QV4::Value &function)
         v8methods = new QV4::PersistentValue[metaData->methodCount];
 
     int methodIndex = index - methodOffset() - plainSignals;
-    v8methods[methodIndex].set(function.asObject()->engine(), function);
+    v8methods[methodIndex].set(function.as<QV4::Object>()->engine(), function);
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeProperty(int index)

@@ -131,7 +131,7 @@ protected:
     virtual void addObject(const QString &name, const QV4::Value &value)
     {
         QV4::Scope scope(engine());
-        QV4::ScopedObject obj(scope, value.asObject());
+        QV4::ScopedObject obj(scope, value.as<Object>());
 
         QVariantMap props, *prev = &props;
         qSwap(destination, prev);

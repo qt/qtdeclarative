@@ -89,7 +89,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
     : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
       m_index(index),
-      m_function(function.asObject()->engine(), function),
+      m_function(function.as<QV4::Object>()->engine(), function),
       m_target(target),
       m_extra(0)
 {

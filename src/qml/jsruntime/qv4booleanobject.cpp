@@ -44,14 +44,14 @@ Heap::BooleanCtor::BooleanCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue BooleanCtor::construct(Managed *m, CallData *callData)
+ReturnedValue BooleanCtor::construct(const Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<BooleanCtor *>(m)->engine());
+    Scope scope(static_cast<const BooleanCtor *>(m)->engine());
     bool n = callData->argc ? callData->args[0].toBoolean() : false;
     return Encode(scope.engine->newBooleanObject(n));
 }
 
-ReturnedValue BooleanCtor::call(Managed *, CallData *callData)
+ReturnedValue BooleanCtor::call(const Managed *, CallData *callData)
 {
     bool value = callData->argc ? callData->args[0].toBoolean() : 0;
     return Encode(value);

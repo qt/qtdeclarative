@@ -87,8 +87,8 @@ struct Object : Base {
 struct ObjectVTable
 {
     VTable vTable;
-    ReturnedValue (*call)(Managed *, CallData *data);
-    ReturnedValue (*construct)(Managed *, CallData *data);
+    ReturnedValue (*call)(const Managed *, CallData *data);
+    ReturnedValue (*construct)(const Managed *, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     void (*put)(Managed *, String *name, const Value &value);
@@ -97,7 +97,7 @@ struct ObjectVTable
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    ReturnedValue (*getLookup)(Managed *m, Lookup *l);
+    ReturnedValue (*getLookup)(const Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
@@ -291,7 +291,7 @@ public:
     { return vtable()->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtable()->deleteIndexedProperty(this, index); }
-    ReturnedValue getLookup(Lookup *l)
+    ReturnedValue getLookup(Lookup *l) const
     { return vtable()->getLookup(this, l); }
     void setLookup(Lookup *l, const Value &v)
     { vtable()->setLookup(this, l, v); }
@@ -299,14 +299,14 @@ public:
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
 
-    inline ReturnedValue construct(CallData *d)
+    inline ReturnedValue construct(CallData *d) const
     { return vtable()->construct(this, d); }
-    inline ReturnedValue call(CallData *d)
+    inline ReturnedValue call(CallData *d) const
     { return vtable()->call(this, d); }
 protected:
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
-    static ReturnedValue construct(Managed *m, CallData *);
-    static ReturnedValue call(Managed *m, CallData *);
+    static ReturnedValue construct(const Managed *m, CallData *);
+    static ReturnedValue call(const Managed *m, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
@@ -315,7 +315,7 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static ReturnedValue getLookup(Managed *m, Lookup *l);
+    static ReturnedValue getLookup(const Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
@@ -342,7 +342,7 @@ struct BooleanObject : Object {
     }
 
     BooleanObject(ExecutionEngine *engine, bool b)
-        : Object(engine->emptyClass, engine->booleanPrototype.asObject()),
+        : Object(engine->emptyClass, engine->booleanPrototype.objectValue()),
           b(b)
     {
     }
@@ -357,7 +357,7 @@ struct NumberObject : Object {
     }
 
     NumberObject(ExecutionEngine *engine, double val)
-        : Object(engine->emptyClass, engine->numberPrototype.asObject()),
+        : Object(engine->emptyClass, engine->numberPrototype.objectValue()),
           value(val)
     {
     }
@@ -370,7 +370,7 @@ struct ArrayObject : Object {
     };
 
     ArrayObject(ExecutionEngine *engine)
-        : Heap::Object(engine->arrayClass, engine->arrayPrototype.asObject())
+        : Heap::Object(engine->arrayClass, engine->arrayPrototype.objectValue())
     { init(); }
     ArrayObject(ExecutionEngine *engine, const QStringList &list);
     ArrayObject(InternalClass *ic, QV4::Object *prototype)
@@ -403,7 +403,7 @@ struct ArrayObject: Object {
 
     void init(ExecutionEngine *engine);
 
-    static ReturnedValue getLookup(Managed *m, Lookup *l);
+    static ReturnedValue getLookup(const Managed *m, Lookup *l);
     using Object::getLength;
     static uint getLength(const Managed *m);
 
@@ -457,10 +457,6 @@ inline void Object::arraySet(uint index, const Value &value)
         setArrayLengthUnchecked(index + 1);
 }
 
-template<>
-inline const Object *Value::as() const {
-    return asObject();
-}
 
 template<>
 inline const ArrayObject *Value::as() const {

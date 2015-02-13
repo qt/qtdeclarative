@@ -52,10 +52,10 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 {
     V4_OBJECT2(EvalFunction, FunctionObject)
 
-    ReturnedValue evalCall(CallData *callData, bool directCall);
+    ReturnedValue evalCall(CallData *callData, bool directCall) const;
 
     using Object::construct;
-    static ReturnedValue call(Managed *that, CallData *callData);
+    static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
 struct GlobalFunctions

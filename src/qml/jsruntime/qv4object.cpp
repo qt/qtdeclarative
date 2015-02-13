@@ -365,14 +365,14 @@ bool Object::hasOwnProperty(uint index) const
     return false;
 }
 
-ReturnedValue Object::construct(Managed *m, CallData *)
+ReturnedValue Object::construct(const Managed *m, CallData *)
 {
-    return static_cast<Object *>(m)->engine()->throwTypeError();
+    return static_cast<const Object *>(m)->engine()->throwTypeError();
 }
 
-ReturnedValue Object::call(Managed *m, CallData *)
+ReturnedValue Object::call(const Managed *m, CallData *)
 {
-    return static_cast<Object *>(m)->engine()->throwTypeError();
+    return static_cast<const Object *>(m)->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)
@@ -433,9 +433,9 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-ReturnedValue Object::getLookup(Managed *m, Lookup *l)
+ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
 {
-    Object *o = static_cast<Object *>(m);
+    const Object *o = static_cast<const Object *>(m);
     PropertyAttributes attrs;
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
@@ -1137,7 +1137,7 @@ void Object::initSparseArray()
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
 Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Heap::Object(engine->arrayClass, engine->arrayPrototype.asObject())
+    : Heap::Object(engine->arrayClass, engine->arrayPrototype.objectValue())
 {
     init();
     Scope scope(engine);
@@ -1155,14 +1155,14 @@ Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     a->setArrayLengthUnchecked(len);
 }
 
-ReturnedValue ArrayObject::getLookup(Managed *m, Lookup *l)
+ReturnedValue ArrayObject::getLookup(const Managed *m, Lookup *l)
 {
-    Scope scope(static_cast<Object *>(m)->engine());
+    Scope scope(static_cast<const Object *>(m)->engine());
     ScopedString name(scope, scope.engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
     if (name->equals(scope.engine->id_length)) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
-        ArrayObject *a = static_cast<ArrayObject *>(m);
+        const ArrayObject *a = static_cast<const ArrayObject *>(m);
         return a->memberData()->data[Heap::ArrayObject::LengthPropertyIndex].asReturnedValue();
     }
     return Object::getLookup(m, l);

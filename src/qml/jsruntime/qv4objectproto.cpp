@@ -52,9 +52,9 @@ Heap::ObjectCtor::ObjectCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
+ReturnedValue ObjectCtor::construct(const Managed *that, CallData *callData)
 {
-    ObjectCtor *ctor = static_cast<ObjectCtor *>(that);
+    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(that);
     ExecutionEngine *v4 = ctor->engine();
     Scope scope(v4);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
@@ -67,9 +67,9 @@ ReturnedValue ObjectCtor::construct(Managed *that, CallData *callData)
     return RuntimeHelpers::toObject(scope.engine, callData->args[0]);
 }
 
-ReturnedValue ObjectCtor::call(Managed *m, CallData *callData)
+ReturnedValue ObjectCtor::call(const Managed *m, CallData *callData)
 {
-    ObjectCtor *ctor = static_cast<ObjectCtor *>(m);
+    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
     ExecutionEngine *v4 = ctor->engine();
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull())
         return v4->newObject()->asReturnedValue();
@@ -163,7 +163,7 @@ ReturnedValue ObjectPrototype::method_create(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     ScopedObject newObject(scope, ctx->d()->engine->newObject());
-    newObject->setPrototype(O->asObject());
+    newObject->setPrototype(O->as<Object>());
 
     if (ctx->argc() > 1 && !ctx->args()[1].isUndefined()) {
         ctx->d()->callData->args[0] = newObject.asReturnedValue();
@@ -525,7 +525,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
 ReturnedValue ObjectPrototype::method_get_proto(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedObject o(scope, ctx->thisObject().asObject());
+    ScopedObject o(scope, ctx->thisObject().as<Object>());
     if (!o)
         return ctx->engine()->throwTypeError();
 

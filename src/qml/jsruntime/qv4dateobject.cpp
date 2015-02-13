@@ -628,7 +628,7 @@ static double getLocalTZA()
 DEFINE_OBJECT_VTABLE(DateObject);
 
 Heap::DateObject::DateObject(QV4::ExecutionEngine *engine, const QDateTime &date)
-    : Heap::Object(engine->emptyClass, engine->datePrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->datePrototype.objectValue())
 {
     value.setDouble(date.isValid() ? date.toMSecsSinceEpoch() : qSNaN());
 }
@@ -645,9 +645,9 @@ Heap::DateCtor::DateCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
+ReturnedValue DateCtor::construct(const Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<DateCtor *>(m)->engine());
+    Scope scope(static_cast<const DateCtor *>(m)->engine());
     double t = 0;
 
     if (callData->argc == 0)
@@ -683,10 +683,10 @@ ReturnedValue DateCtor::construct(Managed *m, CallData *callData)
     return Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
 }
 
-ReturnedValue DateCtor::call(Managed *m, CallData *)
+ReturnedValue DateCtor::call(const Managed *m, CallData *)
 {
     double t = currentTime();
-    return static_cast<DateCtor *>(m)->engine()->newString(ToString(t))->asReturnedValue();
+    return static_cast<const DateCtor *>(m)->engine()->newString(ToString(t))->asReturnedValue();
 }
 
 void DatePrototype::init(ExecutionEngine *engine, Object *ctor)

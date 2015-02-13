@@ -201,10 +201,10 @@ Heap::TypedArrayCtor::TypedArrayCtor(QV4::ExecutionContext *scope, TypedArray::T
 {
 }
 
-ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
+ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<Object *>(m)->engine());
-    Scoped<TypedArrayCtor> that(scope, static_cast<TypedArrayCtor *>(m));
+    Scope scope(static_cast<const Object *>(m)->engine());
+    Scoped<TypedArrayCtor> that(scope, static_cast<const TypedArrayCtor *>(m));
 
     if (!callData->argc || !callData->args[0].isObject()) {
         // ECMA 6 22.2.1.1
@@ -329,13 +329,13 @@ ReturnedValue TypedArrayCtor::construct(Managed *m, CallData *callData)
     return array.asReturnedValue();
 }
 
-ReturnedValue TypedArrayCtor::call(Managed *that, CallData *callData)
+ReturnedValue TypedArrayCtor::call(const Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }
 
 Heap::TypedArray::TypedArray(ExecutionEngine *e, Type t)
-    : Heap::Object(e->emptyClass, e->typedArrayPrototype[t].asObject()),
+    : Heap::Object(e->emptyClass, e->typedArrayPrototype[t].objectValue()),
       type(operations + t),
       arrayType(t)
 {

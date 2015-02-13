@@ -47,9 +47,9 @@ Heap::ArrayCtor::ArrayCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
+ReturnedValue ArrayCtor::construct(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<ArrayCtor *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const ArrayCtor *>(m)->engine();
     Scope scope(v4);
     ScopedArrayObject a(scope, v4->newArrayObject());
     uint len;
@@ -72,7 +72,7 @@ ReturnedValue ArrayCtor::construct(Managed *m, CallData *callData)
     return a.asReturnedValue();
 }
 
-ReturnedValue ArrayCtor::call(Managed *that, CallData *callData)
+ReturnedValue ArrayCtor::call(const Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }

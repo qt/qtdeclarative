@@ -544,7 +544,7 @@ public:
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->sequencePrototype.objectValue())
     , container(container)
     , propertyIndex(-1)
     , isReference(false)
@@ -557,7 +557,7 @@ Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const 
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->sequencePrototype.objectValue())
     , object(object)
     , propertyIndex(propertyIndex)
     , isReference(true)
@@ -704,7 +704,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
         *succeeded = false;
         return QVariant();
     }
-    QV4::Scope scope(array.asObject()->engine());
+    QV4::Scope scope(array.as<Object>()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
     FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
@@ -717,7 +717,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
         return qMetaTypeId<SequenceType>(); \
     } else
 
-int SequencePrototype::metaTypeForSequence(QV4::Object *object)
+int SequencePrototype::metaTypeForSequence(const QV4::Object *object)
 {
     FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
     /*else*/ {

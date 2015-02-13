@@ -153,12 +153,12 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object.data(); }
 
-    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx);
-    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc);
+    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
+    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
 
-    static ReturnedValue call(Managed *, CallData *callData);
+    static ReturnedValue call(const Managed *, CallData *callData);
 
-    ReturnedValue callInternal(CallData *callData);
+    ReturnedValue callInternal(CallData *callData) const;
 
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
 };

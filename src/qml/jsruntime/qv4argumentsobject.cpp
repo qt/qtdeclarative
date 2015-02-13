@@ -40,7 +40,7 @@ DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass,
-                   context->d()->engine->objectPrototype.asObject())
+                   context->d()->engine->objectPrototype.objectValue())
     , context(context->d())
     , fullyCreated(false)
 {
@@ -199,11 +199,11 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
-ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
+ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<ArgumentsGetterFunction *>(getter)->engine();
+    ExecutionEngine *v4 = static_cast<const ArgumentsGetterFunction *>(getter)->engine();
     Scope scope(v4);
-    Scoped<ArgumentsGetterFunction> g(scope, static_cast<ArgumentsGetterFunction *>(getter));
+    Scoped<ArgumentsGetterFunction> g(scope, static_cast<const ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
         return v4->throwTypeError();
@@ -214,11 +214,11 @@ ReturnedValue ArgumentsGetterFunction::call(Managed *getter, CallData *callData)
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
-ReturnedValue ArgumentsSetterFunction::call(Managed *setter, CallData *callData)
+ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<ArgumentsSetterFunction *>(setter)->engine();
+    ExecutionEngine *v4 = static_cast<const ArgumentsSetterFunction *>(setter)->engine();
     Scope scope(v4);
-    Scoped<ArgumentsSetterFunction> s(scope, static_cast<ArgumentsSetterFunction *>(setter));
+    Scoped<ArgumentsSetterFunction> s(scope, static_cast<const ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
     if (!o)
         return v4->throwTypeError();

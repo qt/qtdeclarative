@@ -271,7 +271,7 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
     obj->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
 
     // string prototype extension
-    scope.engine->stringPrototype.asObject()->defineDefaultProperty(QStringLiteral("arg"),
+    scope.engine->stringPrototype.as<QV4::Object>()->defineDefaultProperty(QStringLiteral("arg"),
                                                           QV4::GlobalExtensions::method_string_arg);
 #endif
 }

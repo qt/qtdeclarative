@@ -99,7 +99,7 @@ struct QmlBindingWrapper : Heap::FunctionObject {
 struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     V4_OBJECT2(QmlBindingWrapper, FunctionObject)
 
-    static ReturnedValue call(Managed *that, CallData *);
+    static ReturnedValue call(const Managed *that, CallData *);
     static void markObjects(Heap::Base *m, ExecutionEngine *e);
 
     Heap::CallContext *context() const { return d()->qmlContext; }

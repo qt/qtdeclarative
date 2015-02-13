@@ -121,8 +121,8 @@ struct RegExpCtor: FunctionObject
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
-    static ReturnedValue construct(Managed *m, CallData *callData);
-    static ReturnedValue call(Managed *that, CallData *callData);
+    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue call(const Managed *that, CallData *callData);
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };
 
@@ -146,7 +146,7 @@ struct RegExpPrototype: RegExpObject
 };
 
 inline Heap::RegExpPrototype::RegExpPrototype(ExecutionEngine *e)
-    : RegExpObject(e->emptyClass, e->objectPrototype.asObject())
+    : RegExpObject(e->emptyClass, e->objectPrototype.objectValue())
 {
 }
 

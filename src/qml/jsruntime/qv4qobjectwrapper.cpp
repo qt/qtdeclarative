@@ -98,7 +98,7 @@ static QPair<QObject *, int> extractQtMethod(QV4::FunctionObject *function)
 static QPair<QObject *, int> extractQtSignal(const Value &value)
 {
     if (value.isObject()) {
-        QV4::ExecutionEngine *v4 = value.asObject()->engine();
+        QV4::ExecutionEngine *v4 = value.as<Object>()->engine();
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope, value);
         if (function)
@@ -241,8 +241,8 @@ Heap::QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
-    engine->functionPrototype.asObject()->defineDefaultProperty(QStringLiteral("connect"), method_connect);
-    engine->functionPrototype.asObject()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
+    engine->functionPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("connect"), method_connect);
+    engine->functionPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
@@ -347,8 +347,8 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
             QV4::ScopedString connect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(connect)));
-            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.asObject()->get(disconnect)));
+            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.as<Object>()->get(connect)));
+            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.as<Object>()->get(disconnect)));
 
             return handler.asReturnedValue();
         } else {
@@ -659,7 +659,7 @@ bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QV4::QObjectWrapper>());
     QV4::QObjectWrapper *qobjectWrapper = static_cast<QV4::QObjectWrapper *>(a);
-    QV4::Object *o = b->asObject();
+    QV4::Object *o = b->as<Object>();
     if (o) {
         if (QV4::QmlTypeWrapper *qmlTypeWrapper = o->as<QV4::QmlTypeWrapper>())
             return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
@@ -1269,7 +1269,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
                 return 10;
         }
         }
-    } else if (QV4::Object *obj = actual.asObject()) {
+    } else if (const Object *obj = actual.as<Object>()) {
         if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
@@ -1770,7 +1770,7 @@ const QMetaObject *Heap::QObjectMethod::metaObject()
     return object->metaObject();
 }
 
-QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
+QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) const
 {
     QString result;
     if (const QMetaObject *metaObject = d()->metaObject()) {
@@ -1796,7 +1796,7 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx)
     return ctx->d()->engine->newString(result)->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc)
+QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const
 {
     if (!d()->object)
         return Encode::undefined();
@@ -1815,13 +1815,13 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, con
     return Encode::undefined();
 }
 
-ReturnedValue QObjectMethod::call(Managed *m, CallData *callData)
+ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
 {
-    QObjectMethod *This = static_cast<QObjectMethod*>(m);
+    const QObjectMethod *This = static_cast<const QObjectMethod*>(m);
     return This->callInternal(callData);
 }
 
-ReturnedValue QObjectMethod::callInternal(CallData *callData)
+ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
     Scope scope(engine());
     ScopedContext context(scope, scope.engine->currentContext());

@@ -72,7 +72,7 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
     return Primitive::emptyValue().asReturnedValue();
 }
 
-ReturnedValue Lookup::lookup(Object *thisObject, PropertyAttributes *attrs)
+ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs)
 {
     Heap::Object *obj = thisObject->d();
     ExecutionEngine *engine = thisObject->engine();
@@ -235,7 +235,7 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value 
 
 ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (Object *o = object.asObject())
+    if (const Object *o = object.as<Object>())
         return o->getLookup(l);
 
     Object *proto;
@@ -244,11 +244,11 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
     case Value::Null_Type:
         return engine->throwTypeError();
     case Value::Boolean_Type:
-        proto = engine->booleanPrototype.asObject();
+        proto = engine->booleanPrototype.as<Object>();
         break;
     case Value::Managed_Type: {
         Q_ASSERT(object.isString());
-        proto = engine->stringPrototype.asObject();
+        proto = engine->stringPrototype.as<Object>();
         Scope scope(engine);
         ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
         if (name->equals(engine->id_length)) {
@@ -260,7 +260,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
     }
     case Value::Integer_Type:
     default: // Number
-        proto = engine->numberPrototype.asObject();
+        proto = engine->numberPrototype.as<Object>();
     }
 
     PropertyAttributes attrs;
@@ -291,7 +291,7 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const
     Lookup l1 = *l;
 
     if (l1.getter == Lookup::getter0 || l1.getter == Lookup::getter1) {
-        if (Object *o = object.asObject()) {
+        if (const Object *o = object.as<Object>()) {
             ReturnedValue v = o->getLookup(l);
             Lookup l2 = *l;
 
@@ -720,7 +720,7 @@ void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object,
 {
     Lookup l1 = *l;
 
-    if (Object *o = object.asObject()) {
+    if (Object *o = object.as<Object>()) {
         o->setLookup(l, value);
 
         if (l->setter == Lookup::setter0) {

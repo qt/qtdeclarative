@@ -347,7 +347,7 @@ bool QJSValue::isObject() const
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
         return false;
-    return val->asObject();
+    return val->as<Object>();
 }
 
 /*!
@@ -587,7 +587,7 @@ QVariant QJSValue::toVariant() const
     QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
     Q_ASSERT(val);
 
-    if (Object *o = val->asObject())
+    if (Object *o = val->as<Object>())
         return o->engine()->toVariant(*val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
 
     if (val->isString())
@@ -787,7 +787,7 @@ QJSValue QJSValue::prototype() const
     if (!engine)
         return QJSValue();
     QV4::Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this)->asObject());
+    ScopedObject o(scope, QJSValuePrivate::getValue(this)->as<Object>());
     if (!o)
         return QJSValue();
     ScopedObject p(scope, o->prototype());

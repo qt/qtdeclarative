@@ -290,7 +290,7 @@ static ReturnedValue qmlsqldatabase_executeSql(CallContext *ctx)
                 QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii)
                     query.bindValue(ii, scope.engine->toVariant((v = array->getIndexed(ii)), -1));
-            } else if (values->asObject()) {
+            } else if (values->as<Object>()) {
                 ScopedObject object(scope, values);
                 ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);

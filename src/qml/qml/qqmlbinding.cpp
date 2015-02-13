@@ -144,7 +144,7 @@ QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContex
     QQmlAbstractExpression::setContext(ctxt);
     setScopeObject(obj);
 
-    v4function.set(functionPtr.asObject()->engine(), functionPtr);
+    v4function.set(functionPtr.as<QV4::Object>()->engine(), functionPtr);
 }
 
 QQmlBinding::~QQmlBinding()

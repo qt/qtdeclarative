@@ -231,11 +231,6 @@ inline uint Value::asArrayLength(bool *ok) const
     return idx;
 }
 
-inline Object *Value::asObject() const
-{
-    return isObject() ? objectValue() : 0;
-}
-
 inline FunctionObject *Value::asFunctionObject() const
 {
     return isObject() ? managed()->asFunctionObject() : 0;

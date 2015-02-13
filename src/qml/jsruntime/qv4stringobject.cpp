@@ -80,7 +80,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
 }
 
 Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
-    : Heap::Object(engine->emptyClass, engine->stringPrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->stringPrototype.objectValue())
 {
     value = val;
     Q_ASSERT(value.isString());
@@ -158,9 +158,9 @@ Heap::StringCtor::StringCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
+ReturnedValue StringCtor::construct(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
@@ -170,9 +170,9 @@ ReturnedValue StringCtor::construct(Managed *m, CallData *callData)
     return Encode(v4->newStringObject(value));
 }
 
-ReturnedValue StringCtor::call(Managed *m, CallData *callData)
+ReturnedValue StringCtor::call(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
     Scope scope(v4);
     ScopedValue value(scope);
     if (callData->argc)
@@ -379,7 +379,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
     ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
-    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype.asObject()->get(execString));
+    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype.as<Object>()->get(execString));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;

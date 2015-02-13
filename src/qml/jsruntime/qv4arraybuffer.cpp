@@ -44,9 +44,9 @@ Heap::ArrayBufferCtor::ArrayBufferCtor(QV4::ExecutionContext *scope)
 {
 }
 
-ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)
+ReturnedValue ArrayBufferCtor::construct(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
 
     Scope scope(v4);
     ScopedValue l(scope, callData->argument(0));
@@ -64,7 +64,7 @@ ReturnedValue ArrayBufferCtor::construct(Managed *m, CallData *callData)
 }
 
 
-ReturnedValue ArrayBufferCtor::call(Managed *that, CallData *callData)
+ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }
@@ -83,7 +83,7 @@ ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
 
 
 Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, size_t length)
-    : Heap::Object(e->emptyClass, e->arrayBufferPrototype.asObject())
+    : Heap::Object(e->emptyClass, e->arrayBufferPrototype.objectValue())
 {
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {

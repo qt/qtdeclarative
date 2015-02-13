@@ -304,7 +304,6 @@ struct Q_QML_PRIVATE_EXPORT Value
         return b;
     }
 
-    inline Object *asObject() const;
     inline FunctionObject *asFunctionObject() const;
 
     template <typename T>

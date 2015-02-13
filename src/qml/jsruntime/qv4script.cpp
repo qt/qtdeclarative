@@ -122,13 +122,13 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
     s.engine->popContext();
 }
 
-ReturnedValue QmlBindingWrapper::call(Managed *that, CallData *)
+ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *)
 {
-    ExecutionEngine *engine = static_cast<Object *>(that)->engine();
+    ExecutionEngine *engine = static_cast<const Object *>(that)->engine();
     CHECK_STACK_LIMITS(engine);
 
     Scope scope(engine);
-    QmlBindingWrapper *This = static_cast<QmlBindingWrapper *>(that);
+    const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
     if (!This->function())
         return QV4::Encode::undefined();
 

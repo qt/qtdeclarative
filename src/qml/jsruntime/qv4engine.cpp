@@ -286,7 +286,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     objectPrototype = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
 
     arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
-    arrayPrototype = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype.asObject());
+    arrayPrototype = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype.as<Object>());
 
     InternalClass *argsClass = emptyClass->addMember(id_length, Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
@@ -297,15 +297,15 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Q_ASSERT(globalObject()->d()->vtable);
     initRootContext();
 
-    stringPrototype = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype.asObject());
-    numberPrototype = memoryManager->alloc<NumberPrototype>(emptyClass, objectPrototype.asObject());
-    booleanPrototype = memoryManager->alloc<BooleanPrototype>(emptyClass, objectPrototype.asObject());
-    datePrototype = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype.asObject());
+    stringPrototype = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype.as<Object>());
+    numberPrototype = memoryManager->alloc<NumberPrototype>(emptyClass, objectPrototype.as<Object>());
+    booleanPrototype = memoryManager->alloc<BooleanPrototype>(emptyClass, objectPrototype.as<Object>());
+    datePrototype = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype.as<Object>());
 
     uint index;
     InternalClass *functionProtoClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    functionPrototype = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype.asObject());
+    functionPrototype = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype.as<Object>());
     functionClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     protoClass = emptyClass->addMember(id_constructor, Attr_NotEnumerable, &index);
@@ -317,18 +317,18 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    errorPrototype = memoryManager->alloc<ErrorPrototype>(emptyClass, objectPrototype.asObject());
-    evalErrorPrototype = memoryManager->alloc<EvalErrorPrototype>(emptyClass, errorPrototype.asObject());
-    rangeErrorPrototype = memoryManager->alloc<RangeErrorPrototype>(emptyClass, errorPrototype.asObject());
-    referenceErrorPrototype = memoryManager->alloc<ReferenceErrorPrototype>(emptyClass, errorPrototype.asObject());
-    syntaxErrorPrototype = memoryManager->alloc<SyntaxErrorPrototype>(emptyClass, errorPrototype.asObject());
-    typeErrorPrototype = memoryManager->alloc<TypeErrorPrototype>(emptyClass, errorPrototype.asObject());
-    uRIErrorPrototype = memoryManager->alloc<URIErrorPrototype>(emptyClass, errorPrototype.asObject());
+    errorPrototype = memoryManager->alloc<ErrorPrototype>(emptyClass, objectPrototype.as<Object>());
+    evalErrorPrototype = memoryManager->alloc<EvalErrorPrototype>(emptyClass, errorPrototype.as<Object>());
+    rangeErrorPrototype = memoryManager->alloc<RangeErrorPrototype>(emptyClass, errorPrototype.as<Object>());
+    referenceErrorPrototype = memoryManager->alloc<ReferenceErrorPrototype>(emptyClass, errorPrototype.as<Object>());
+    syntaxErrorPrototype = memoryManager->alloc<SyntaxErrorPrototype>(emptyClass, errorPrototype.as<Object>());
+    typeErrorPrototype = memoryManager->alloc<TypeErrorPrototype>(emptyClass, errorPrototype.as<Object>());
+    uRIErrorPrototype = memoryManager->alloc<URIErrorPrototype>(emptyClass, errorPrototype.as<Object>());
 
-    variantPrototype = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype.asObject());
-    Q_ASSERT(variantPrototype.asObject()->prototype() == objectPrototype.asObject()->d());
+    variantPrototype = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype.as<Object>());
+    Q_ASSERT(variantPrototype.as<Object>()->prototype() == objectPrototype.as<Object>()->d());
 
-    sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.asObject()));
+    sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.as<Object>()));
 
     ScopedContext global(scope, rootContext());
     objectCtor = memoryManager->alloc<ObjectCtor>(global);
@@ -347,40 +347,40 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(global);
     uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(global);
 
-    static_cast<ObjectPrototype *>(objectPrototype.asObject())->init(this, objectCtor.asObject());
-    static_cast<StringPrototype *>(stringPrototype.asObject())->init(this, stringCtor.asObject());
-    static_cast<NumberPrototype *>(numberPrototype.asObject())->init(this, numberCtor.asObject());
-    static_cast<BooleanPrototype *>(booleanPrototype.asObject())->init(this, booleanCtor.asObject());
-    static_cast<ArrayPrototype *>(arrayPrototype.asObject())->init(this, arrayCtor.asObject());
-    static_cast<DatePrototype *>(datePrototype.asObject())->init(this, dateCtor.asObject());
-    static_cast<FunctionPrototype *>(functionPrototype.asObject())->init(this, functionCtor.asObject());
-    static_cast<RegExpPrototype *>(regExpPrototype.asObject())->init(this, regExpCtor.asObject());
-    static_cast<ErrorPrototype *>(errorPrototype.asObject())->init(this, errorCtor.asObject());
-    static_cast<EvalErrorPrototype *>(evalErrorPrototype.asObject())->init(this, evalErrorCtor.asObject());
-    static_cast<RangeErrorPrototype *>(rangeErrorPrototype.asObject())->init(this, rangeErrorCtor.asObject());
-    static_cast<ReferenceErrorPrototype *>(referenceErrorPrototype.asObject())->init(this, referenceErrorCtor.asObject());
-    static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype.asObject())->init(this, syntaxErrorCtor.asObject());
-    static_cast<TypeErrorPrototype *>(typeErrorPrototype.asObject())->init(this, typeErrorCtor.asObject());
-    static_cast<URIErrorPrototype *>(uRIErrorPrototype.asObject())->init(this, uRIErrorCtor.asObject());
+    static_cast<ObjectPrototype *>(objectPrototype.as<Object>())->init(this, objectCtor.as<Object>());
+    static_cast<StringPrototype *>(stringPrototype.as<Object>())->init(this, stringCtor.as<Object>());
+    static_cast<NumberPrototype *>(numberPrototype.as<Object>())->init(this, numberCtor.as<Object>());
+    static_cast<BooleanPrototype *>(booleanPrototype.as<Object>())->init(this, booleanCtor.as<Object>());
+    static_cast<ArrayPrototype *>(arrayPrototype.as<Object>())->init(this, arrayCtor.as<Object>());
+    static_cast<DatePrototype *>(datePrototype.as<Object>())->init(this, dateCtor.as<Object>());
+    static_cast<FunctionPrototype *>(functionPrototype.as<Object>())->init(this, functionCtor.as<Object>());
+    static_cast<RegExpPrototype *>(regExpPrototype.as<Object>())->init(this, regExpCtor.as<Object>());
+    static_cast<ErrorPrototype *>(errorPrototype.as<Object>())->init(this, errorCtor.as<Object>());
+    static_cast<EvalErrorPrototype *>(evalErrorPrototype.as<Object>())->init(this, evalErrorCtor.as<Object>());
+    static_cast<RangeErrorPrototype *>(rangeErrorPrototype.as<Object>())->init(this, rangeErrorCtor.as<Object>());
+    static_cast<ReferenceErrorPrototype *>(referenceErrorPrototype.as<Object>())->init(this, referenceErrorCtor.as<Object>());
+    static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype.as<Object>())->init(this, syntaxErrorCtor.as<Object>());
+    static_cast<TypeErrorPrototype *>(typeErrorPrototype.as<Object>())->init(this, typeErrorCtor.as<Object>());
+    static_cast<URIErrorPrototype *>(uRIErrorPrototype.as<Object>())->init(this, uRIErrorCtor.as<Object>());
 
-    static_cast<VariantPrototype *>(variantPrototype.asObject())->init();
+    static_cast<VariantPrototype *>(variantPrototype.as<Object>())->init();
     sequencePrototype.cast<SequencePrototype>()->init();
 
 
     // typed arrays
 
     arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(global);
-    arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype.asObject());
-    static_cast<ArrayBufferPrototype *>(arrayBufferPrototype.asObject())->init(this, arrayBufferCtor.asObject());
+    arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype.as<Object>());
+    static_cast<ArrayBufferPrototype *>(arrayBufferPrototype.as<Object>())->init(this, arrayBufferCtor.as<Object>());
 
     dataViewCtor = memoryManager->alloc<DataViewCtor>(global);
-    dataViewPrototype = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype.asObject());
-    static_cast<DataViewPrototype *>(dataViewPrototype.asObject())->init(this, dataViewCtor.asObject());
+    dataViewPrototype = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype.as<Object>());
+    static_cast<DataViewPrototype *>(dataViewPrototype.as<Object>())->init(this, dataViewCtor.as<Object>());
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         typedArrayPrototype[i] = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
-        typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].asObject()));
+        typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
 
     //
@@ -639,7 +639,7 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(emptyClass, errorPrototype.asObject(), value));
+    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(emptyClass, errorPrototype.as<Object>(), value));
     return object->d();
 }
 
@@ -1196,7 +1196,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     if (typeHint == qMetaTypeId<QJSValue>())
         return QVariant::fromValue(QJSValue(e, value.asReturnedValue()));
 
-    if (value.asObject()) {
+    if (value.as<Object>()) {
         QV4::ScopedObject object(scope, value);
         if (typeHint == QMetaType::QJsonObject
                    && !value.as<ArrayObject>() && !value.asFunctionObject()) {

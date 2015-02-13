@@ -1185,10 +1185,10 @@ void QQmlBindingFunction::initBindingLocation()
     d()->bindingLocation.line = frame.line;
 }
 
-ReturnedValue QQmlBindingFunction::call(Managed *that, CallData *callData)
+ReturnedValue QQmlBindingFunction::call(const Managed *that, CallData *callData)
 {
-    Scope scope(static_cast<QQmlBindingFunction*>(that)->engine());
-    ScopedFunctionObject function(scope, static_cast<QQmlBindingFunction*>(that)->d()->originalFunction);
+    Scope scope(static_cast<const QQmlBindingFunction*>(that)->engine());
+    ScopedFunctionObject function(scope, static_cast<const QQmlBindingFunction*>(that)->d()->originalFunction);
     return function->call(callData);
 }
 
@@ -1261,7 +1261,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
 ReturnedValue QtObject::method_get_platform(CallContext *ctx)
 {
     // ### inefficient. Should be just a value based getter
-    Object *o = ctx->thisObject().asObject();
+    Object *o = ctx->thisObject().as<Object>();
     if (!o)
         return ctx->engine()->throwTypeError();
     QtObject *qt = o->as<QtObject>();
@@ -1278,7 +1278,7 @@ ReturnedValue QtObject::method_get_platform(CallContext *ctx)
 ReturnedValue QtObject::method_get_application(CallContext *ctx)
 {
     // ### inefficient. Should be just a value based getter
-    Object *o = ctx->thisObject().asObject();
+    Object *o = ctx->thisObject().as<Object>();
     if (!o)
         return ctx->engine()->throwTypeError();
     QtObject *qt = o->as<QtObject>();
@@ -1606,7 +1606,7 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension
-    v4->stringPrototype.asObject()->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
+    v4->stringPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
 }
 
 

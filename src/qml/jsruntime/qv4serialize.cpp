@@ -231,7 +231,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         }
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
-    } else if (Object *o = v.asObject()) {
+    } else if (const Object *o = v.as<Object>()) {
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
             uint seqLength = ScopedValue(scope, o->get(engine->id_length))->toUInt32();
@@ -356,7 +356,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         QVariant var = qVariantFromValue(ref);
         QV4::ScopedValue v(scope, scope.engine->fromVariant(var));
         QV4::ScopedString s(scope, engine->newString(QStringLiteral("__qml:hidden:ref")));
-        rv->asObject()->defineReadonlyProperty(s, v);
+        rv->as<Object>()->defineReadonlyProperty(s, v);
 
         agent->release();
         agent->setEngine(engine);

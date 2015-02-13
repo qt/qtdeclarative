@@ -150,7 +150,6 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    Object *asObject() { return d()->vtable->isObject ? reinterpret_cast<Object *>(this) : 0; }
     FunctionObject *asFunctionObject() { return d()->vtable->isFunctionObject ? reinterpret_cast<FunctionObject *>(this) : 0; }
     BooleanObject *asBooleanObject() { return d()->vtable->type == Type_BooleanObject ? reinterpret_cast<BooleanObject *>(this) : 0; }
     ArgumentsObject *asArgumentsObject() { return d()->vtable->type == Type_ArgumentsObject ? reinterpret_cast<ArgumentsObject *>(this) : 0; }
@@ -185,6 +184,11 @@ inline const Managed *Value::as() const {
     return 0;
 }
 
+template<>
+inline const Object *Value::as() const {
+    return isManaged() && m && m->vtable->isObject ? objectValue() : 0;
+}
+
 template<typename T>
 inline T *managed_cast(Managed *m)
 {
@@ -199,7 +203,7 @@ inline String *managed_cast(Managed *m)
 template<>
 inline Object *managed_cast(Managed *m)
 {
-    return m ? m->asObject() : 0;
+    return m ? m->as<Object>() : 0;
 }
 template<>
 inline FunctionObject *managed_cast(Managed *m)

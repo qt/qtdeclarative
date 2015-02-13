@@ -83,7 +83,7 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
     *name = 0;
     *index = UINT_MAX;
 
-    if (!object->asObject()) {
+    if (!object->as<Object>()) {
         *attrs = PropertyAttributes();
         return;
     }
@@ -92,19 +92,19 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
     ScopedString n(scope);
 
     while (1) {
-        if (!current->asObject())
+        if (!current->as<Object>())
             break;
 
         while (1) {
-            current->asObject()->advanceIterator(this, name, index, pd, attrs);
+            current->as<Object>()->advanceIterator(this, name, index, pd, attrs);
             if (attrs->isEmpty())
                 break;
             // check the property is not already defined earlier in the proto chain
             if (current->heapObject() != object->heapObject()) {
-                o = object->asObject();
+                o = object->as<Object>();
                 n = *name;
                 bool shadowed = false;
-                while (o->asObject()->d() != current->heapObject()) {
+                while (o->d() != current->heapObject()) {
                     if ((!!n && o->hasOwnProperty(n)) ||
                         (*index != UINT_MAX && o->hasOwnProperty(*index))) {
                         shadowed = true;
@@ -131,7 +131,7 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
 
 ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
-    if (!object->asObject())
+    if (!object->as<Object>())
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -153,7 +153,7 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
-    if (!object->asObject())
+    if (!object->as<Object>())
         return Encode::null();
 
     PropertyAttributes attrs;
@@ -175,7 +175,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString()
 {
-    if (!object->asObject())
+    if (!object->as<Object>())
         return Encode::null();
 
     PropertyAttributes attrs;

@@ -1648,9 +1648,9 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
             c->proto->mark(e);
         FunctionObject::markObjects(that, e);
     }
-    static ReturnedValue construct(Managed *that, QV4::CallData *)
+    static ReturnedValue construct(const Managed *that, QV4::CallData *)
     {
-        Scope scope(static_cast<QQmlXMLHttpRequestCtor *>(that)->engine());
+        Scope scope(static_cast<const QQmlXMLHttpRequestCtor *>(that)->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
         if (!ctor)
             return scope.engine->throwTypeError();
@@ -1662,7 +1662,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return w.asReturnedValue();
     }
 
-    static ReturnedValue call(Managed *, QV4::CallData *) {
+    static ReturnedValue call(const Managed *, QV4::CallData *) {
         return Primitive::undefinedValue().asReturnedValue();
     }
 

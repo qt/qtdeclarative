@@ -63,7 +63,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -72,7 +72,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -82,7 +82,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
 {
     Scope s(scope->engine());
@@ -92,7 +92,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
+    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.objectValue())
     , scope(scope)
 {
     Scope s(scope->engine);
@@ -102,7 +102,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
+    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
 {
     Scope s(scope);
@@ -112,7 +112,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
+    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.objectValue())
     , scope(scope)
 {
     Scope s(scope->engine);
@@ -145,7 +145,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.asObject()));
+        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.as<Object>()));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
         proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
         memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
@@ -170,13 +170,12 @@ ReturnedValue FunctionObject::newInstance()
     return construct(callData);
 }
 
-ReturnedValue FunctionObject::construct(Managed *that, CallData *)
+ReturnedValue FunctionObject::construct(const Managed *that, CallData *)
 {
-    static_cast<FunctionObject *>(that)->internalClass()->engine->throwTypeError();
-    return Encode::undefined();
+    return static_cast<const FunctionObject *>(that)->engine()->throwTypeError();
 }
 
-ReturnedValue FunctionObject::call(Managed *, CallData *)
+ReturnedValue FunctionObject::call(const Managed *, CallData *)
 {
     return Encode::undefined();
 }
@@ -218,10 +217,10 @@ Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)
 }
 
 // 15.3.2
-ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
 {
-    Scope scope(static_cast<Object *>(that)->engine());
-    Scoped<FunctionCtor> f(scope, static_cast<FunctionCtor *>(that));
+    Scope scope(static_cast<const Object *>(that)->engine());
+    Scoped<FunctionCtor> f(scope, static_cast<const FunctionCtor *>(that));
     ScopedContext ctx(scope, scope.engine->currentContext());
     QString arguments;
     QString body;
@@ -268,7 +267,7 @@ ReturnedValue FunctionCtor::construct(Managed *that, CallData *callData)
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-ReturnedValue FunctionCtor::call(Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::call(const Managed *that, CallData *callData)
 {
     return construct(that, callData);
 }
@@ -390,15 +389,15 @@ Heap::ScriptFunction::ScriptFunction(QV4::ExecutionContext *scope, Function *fun
 {
 }
 
-ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
+    Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
     InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
@@ -422,15 +421,15 @@ ReturnedValue ScriptFunction::construct(Managed *that, CallData *callData)
     return obj.asReturnedValue();
 }
 
-ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<ScriptFunction> f(scope, static_cast<ScriptFunction *>(that));
+    Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
     ScopedContext context(scope, v4->currentContext());
 
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
@@ -472,15 +471,15 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
     }
 }
 
-ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
+ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<Object *>(that)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
+    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
@@ -511,15 +510,15 @@ ReturnedValue SimpleScriptFunction::construct(Managed *that, CallData *callData)
     return result.asReturnedValue();
 }
 
-ReturnedValue SimpleScriptFunction::call(Managed *that, CallData *callData)
+ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<SimpleScriptFunction *>(that)->internalClass()->engine;
+    ExecutionEngine *v4 = static_cast<const SimpleScriptFunction *>(that)->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<SimpleScriptFunction> f(scope, static_cast<SimpleScriptFunction *>(that));
+    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
@@ -550,7 +549,7 @@ Heap::Object *SimpleScriptFunction::protoForConstructor()
     ScopedObject p(scope, protoProperty());
     if (p)
         return p->d();
-    return scope.engine->objectPrototype.asObject()->d();
+    return scope.engine->objectPrototype.as<Object>()->d();
 }
 
 
@@ -563,14 +562,14 @@ Heap::BuiltinFunction::BuiltinFunction(QV4::ExecutionContext *scope, QV4::String
 {
 }
 
-ReturnedValue BuiltinFunction::construct(Managed *f, CallData *)
+ReturnedValue BuiltinFunction::construct(const Managed *f, CallData *)
 {
-    return static_cast<BuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
+    return static_cast<const BuiltinFunction *>(f)->internalClass()->engine->throwTypeError();
 }
 
-ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
+ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
 {
-    BuiltinFunction *f = static_cast<BuiltinFunction *>(that);
+    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(that);
     ExecutionEngine *v4 = f->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
@@ -589,9 +588,9 @@ ReturnedValue BuiltinFunction::call(Managed *that, CallData *callData)
     return f->d()->code(sctx);
 }
 
-ReturnedValue IndexedBuiltinFunction::call(Managed *that, CallData *callData)
+ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callData)
 {
-    IndexedBuiltinFunction *f = static_cast<IndexedBuiltinFunction *>(that);
+    const IndexedBuiltinFunction *f = static_cast<const IndexedBuiltinFunction *>(that);
     ExecutionEngine *v4 = f->internalClass()->engine;
     if (v4->hasException)
         return Encode::undefined();
@@ -640,9 +639,9 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
     f->insertMember(s.engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
-ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
+ReturnedValue BoundFunction::call(const Managed *that, CallData *dd)
 {
-    BoundFunction *f = static_cast<BoundFunction *>(that);
+    const BoundFunction *f = static_cast<const BoundFunction *>(that);
     Scope scope(f->engine());
     if (scope.hasException())
         return Encode::undefined();
@@ -660,9 +659,9 @@ ReturnedValue BoundFunction::call(Managed *that, CallData *dd)
     return t->call(callData);
 }
 
-ReturnedValue BoundFunction::construct(Managed *that, CallData *dd)
+ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
 {
-    BoundFunction *f = static_cast<BoundFunction *>(that);
+    const BoundFunction *f = static_cast<const BoundFunction *>(that);
     Scope scope(f->engine());
     if (scope.hasException())
         return Encode::undefined();

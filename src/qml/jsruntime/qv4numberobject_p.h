@@ -53,8 +53,8 @@ struct NumberCtor: FunctionObject
 {
     V4_OBJECT2(NumberCtor, FunctionObject)
 
-    static ReturnedValue construct(Managed *that, CallData *callData);
-    static ReturnedValue call(Managed *, CallData *callData);
+    static ReturnedValue construct(const Managed *that, CallData *callData);
+    static ReturnedValue call(const Managed *, CallData *callData);
 };
 
 struct NumberPrototype: NumberObject

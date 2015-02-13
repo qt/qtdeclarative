@@ -218,7 +218,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 };
 
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
-    static ReturnedValue objectDefaultValue(Object *object, int typeHint);
+    static ReturnedValue objectDefaultValue(const Object *object, int typeHint);
     static ReturnedValue toPrimitive(const Value &value, int typeHint);
 
     static double stringToNumber(const QString &s);
@@ -243,7 +243,7 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
 #ifndef V4_BOOTSTRAP
 inline ReturnedValue RuntimeHelpers::toPrimitive(const Value &value, int typeHint)
 {
-    Object *o = value.asObject();
+    const Object *o = value.as<Object>();
     if (!o)
         return value.asReturnedValue();
     return RuntimeHelpers::objectDefaultValue(o, typeHint);

@@ -86,16 +86,11 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
         return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
     }
 
-    static QV4::ReturnedValue construct(QV4::Managed *m, QV4::CallData *)
+    static QV4::ReturnedValue call(const QV4::Managed *that, QV4::CallData *callData)
     {
-        return static_cast<DelegateModelGroupFunction *>(m)->engine()->throwTypeError();
-    }
-
-    static QV4::ReturnedValue call(QV4::Managed *that, QV4::CallData *callData)
-    {
-        QV4::ExecutionEngine *v4 = static_cast<DelegateModelGroupFunction *>(that)->engine();
+        QV4::ExecutionEngine *v4 = static_cast<const DelegateModelGroupFunction *>(that)->engine();
         QV4::Scope scope(v4);
-        QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<DelegateModelGroupFunction *>(that));
+        QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<const DelegateModelGroupFunction *>(that));
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject);
         if (!o)
             return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));
@@ -1637,7 +1632,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     if (!object.isObject())
         return false;
 
-    QV4::ExecutionEngine *v4 = object.asObject()->engine();
+    QV4::ExecutionEngine *v4 = object.as<QV4::Object>()->engine();
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, object);
     if (!o)
@@ -2511,7 +2506,7 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *ind
     if (!value.isObject())
         return false;
 
-    QV4::ExecutionEngine *v4 = value.asObject()->engine();
+    QV4::ExecutionEngine *v4 = value.as<QV4::Object>()->engine();
     QV4::Scope scope(v4);
     QV4::Scoped<QQmlDelegateModelItemObject> object(scope, value);
 
@@ -2581,7 +2576,7 @@ void QQmlDelegateModelGroup::insert(QQmlV4Function *args)
 
     if (v->as<QV4::ArrayObject>()) {
         return;
-    } else if (v->asObject()) {
+    } else if (v->as<QV4::Object>()) {
         model->insert(before, v, groups);
         model->emitChanges();
     }
@@ -2626,7 +2621,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
 
     if (i < args->length() && index >= 0 && index <= model->m_compositor.count(group)) {
         v = (*args)[i];
-        if (v->asObject()) {
+        if (v->as<QV4::Object>()) {
             int groups = 1 << d->group;
             if (++i < args->length()) {
                 QV4::ScopedValue val(scope, (*args)[i]);

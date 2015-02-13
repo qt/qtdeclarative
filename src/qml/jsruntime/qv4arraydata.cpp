@@ -738,7 +738,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     if (!arrayData || !arrayData->length())
         return;
 
-    if (!(comparefn.isUndefined() || comparefn.asObject())) {
+    if (!(comparefn.isUndefined() || comparefn.as<Object>())) {
         engine->throwTypeError();
         return;
     }

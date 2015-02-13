@@ -53,8 +53,8 @@ struct BooleanCtor: FunctionObject
 {
     V4_OBJECT2(BooleanCtor, FunctionObject)
 
-    static ReturnedValue construct(Managed *, CallData *callData);
-    static ReturnedValue call(Managed *that, CallData *callData);
+    static ReturnedValue construct(const Managed *, CallData *callData);
+    static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
 struct BooleanPrototype: BooleanObject

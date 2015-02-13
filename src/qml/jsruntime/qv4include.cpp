@@ -94,7 +94,7 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
 {
     if (!callback.isObject())
         return;
-    QV4::ExecutionEngine *v4 = callback.asObject()->engine();
+    QV4::ExecutionEngine *v4 = callback.as<QV4::Object>()->engine();
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, callback);
     if (!f)
@@ -224,7 +224,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
                 QV4::ScopedValue ex(scope, scope.engine->catchException());
                 result = resultValue(scope.engine, Exception);
                 QV4::ScopedString exception(scope, scope.engine->newString(QStringLiteral("exception")));
-                result->asObject()->put(exception, ex);
+                result->as<QV4::Object>()->put(exception, ex);
             } else {
                 result = resultValue(scope.engine, Ok);
             }

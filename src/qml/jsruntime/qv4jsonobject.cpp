@@ -851,7 +851,7 @@ QString Stringify::JA(ArrayObject *a)
 
 
 Heap::JsonObject::JsonObject(ExecutionEngine *e)
-    : Heap::Object(e->emptyClass, e->objectPrototype.asObject())
+    : Heap::Object(e->emptyClass, e->objectPrototype.objectValue())
 {
     Scope scope(e);
     ScopedObject o(scope, this);
@@ -958,7 +958,7 @@ QJsonValue JsonObject::toJsonValue(const Value &value, V4ObjectSet &visitedObjec
         return QJsonValue(value.toQString());
 
     Q_ASSERT(value.isObject());
-    Scope scope(value.asObject()->engine());
+    Scope scope(value.as<Object>()->engine());
     ScopedArrayObject a(scope, value);
     if (a)
         return toJsonArray(a, visitedObjects);

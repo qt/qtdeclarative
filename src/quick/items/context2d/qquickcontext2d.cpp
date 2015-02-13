@@ -1379,7 +1379,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(QV4::CallContext *ctx
 
     QV4::ScopedValue value(scope, ctx->argument(0));
 
-   if (value->asObject()) {
+   if (value->as<Object>()) {
        QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->d()->context->state.fillStyle = color;
@@ -1488,7 +1488,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(QV4::CallContext *c
 
     QV4::ScopedValue value(scope, ctx->argument(0));
 
-    if (value->asObject()) {
+    if (value->as<Object>()) {
         QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->d()->context->state.fillStyle = color;
@@ -1719,7 +1719,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(QV4::CallCon
         } else {
             QImage patternTexture;
 
-            if (QV4::Object *o = ctx->args()[0].asObject()) {
+            if (const QV4::Object *o = ctx->args()[0].as<Object>()) {
                 QV4::ScopedString s(scope, scope.engine->newString(QStringLiteral("data")));
                 QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, o->get(s));
                 if (!!pixelData) {
@@ -3357,7 +3357,7 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(QV4::CallCo
         qreal pos = ctx->args()[0].toNumber();
         QColor color;
 
-        if (ctx->args()[1].asObject()) {
+        if (ctx->args()[1].as<Object>()) {
             color = scope.engine->toVariant(ctx->args()[1], qMetaTypeId<QColor>()).value<QColor>();
         } else {
             color = qt_color_from_string(ctx->args()[1]);

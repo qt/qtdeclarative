@@ -75,7 +75,7 @@ Heap::RegExpObject::RegExpObject(InternalClass *ic, QV4::Object *prototype)
 }
 
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->regExpPrototype.objectValue())
     , value(value->d())
     , global(global)
 {
@@ -88,7 +88,7 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *valu
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype.asObject())
+    : Heap::Object(engine->emptyClass, engine->regExpPrototype.objectValue())
 {
     value = 0;
     global = false;
@@ -236,9 +236,9 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
+ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
 {
-    Scope scope(static_cast<Object *>(m)->engine());
+    Scope scope(static_cast<const Object *>(m)->engine());
     ScopedContext ctx(scope, scope.engine->currentContext());
 
     ScopedValue r(scope, callData->argument(0));
@@ -286,7 +286,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
     return Encode(ctx->d()->engine->newRegExpObject(regexp, global));
 }
 
-ReturnedValue RegExpCtor::call(Managed *that, CallData *callData)
+ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
 {
     if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
         if (callData->argc == 1 || callData->args[1].isUndefined())
@@ -372,7 +372,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     // fill in result data
-    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.asObject()));
+    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.as<Object>()));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);

@@ -117,7 +117,7 @@ struct Lookup {
     static void setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
 
     ReturnedValue lookup(const Value &thisObject, Object *obj, PropertyAttributes *attrs);
-    ReturnedValue lookup(Object *obj, PropertyAttributes *attrs);
+    ReturnedValue lookup(const Object *obj, PropertyAttributes *attrs);
 
 };
 

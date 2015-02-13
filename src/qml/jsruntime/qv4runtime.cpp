@@ -321,7 +321,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &lef
     if (f->isBoundFunction())
         f = static_cast<BoundFunction *>(f.getPointer())->target();
 
-    ScopedObject v(scope, left.asObject());
+    ScopedObject v(scope, left.as<Object>());
     if (!v)
         return Encode(false);
 
@@ -381,7 +381,7 @@ Heap::String *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double n
     return engine->newString(qstr);
 }
 
-ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
+ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeHint)
 {
     if (typeHint == PREFERREDTYPE_HINT) {
         if (object->as<DateObject>())
@@ -402,7 +402,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(Object *object, int typeHint)
 
     Scope scope(engine);
     ScopedCallData callData(scope, 0);
-    callData->thisObject = object;
+    callData->thisObject = *object;
 
     ScopedValue conv(scope, object->get(*meth1));
     if (FunctionObject *o = conv->asFunctionObject()) {
@@ -1035,7 +1035,7 @@ ReturnedValue Runtime::constructActivationProperty(ExecutionEngine *engine, int 
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    Object *f = func->asObject();
+    Object *f = func->as<Object>();
     if (!f)
         return engine->throwTypeError();
 
@@ -1044,7 +1044,7 @@ ReturnedValue Runtime::constructActivationProperty(ExecutionEngine *engine, int 
 
 ReturnedValue Runtime::constructValue(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
-    Object *f = func.asObject();
+    const Object *f = func.as<Object>();
     if (!f)
         return engine->throwTypeError();
 
@@ -1200,7 +1200,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
 {
     Scope scope(engine);
     QV4::InternalClass *klass = engine->currentContext()->compilationUnit->runtimeClasses[classId];
-    ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype.asObject()));
+    ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype.as<Object>()));
 
     {
         bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;

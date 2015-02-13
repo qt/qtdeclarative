@@ -53,7 +53,7 @@ struct DateObject : Object {
     }
 
     DateObject(QV4::ExecutionEngine *engine, const Value &date)
-        : Object(engine->emptyClass, engine->datePrototype.asObject())
+        : Object(engine->emptyClass, engine->datePrototype.objectValue())
     {
         value = date;
     }
@@ -89,8 +89,8 @@ struct DateCtor: FunctionObject
 {
     V4_OBJECT2(DateCtor, FunctionObject)
 
-    static ReturnedValue construct(Managed *, CallData *callData);
-    static ReturnedValue call(Managed *that, CallData *);
+    static ReturnedValue construct(const Managed *, CallData *callData);
+    static ReturnedValue call(const Managed *that, CallData *);
 };
 
 struct DatePrototype: DateObject
