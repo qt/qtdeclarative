@@ -44,16 +44,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-inline void Value::mark(ExecutionEngine *e)
-{
-    if (!val)
-        return;
-    Managed *m = as<Managed>();
-    if (m)
-        m->mark(e);
-}
-
-
 inline double Value::toNumber() const
 {
     if (isInteger())

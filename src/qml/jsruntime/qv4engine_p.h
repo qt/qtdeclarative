@@ -387,6 +387,15 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
     engine->pushForGC(this);
 }
 
+inline void Value::mark(ExecutionEngine *e)
+{
+    if (!val)
+        return;
+    Managed *m = as<Managed>();
+    if (m)
+        m->d()->mark(e);
+}
+
 
 
 } // namespace QV4
