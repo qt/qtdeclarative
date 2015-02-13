@@ -41,7 +41,6 @@
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
-#include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QtQuick/private/qsgdefaultlayer_p.h>
@@ -60,9 +59,6 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtCore/private/qabstractanimation_p.h>
-#include <qpa/qplatformintegration.h>
-
-#include <qpa/qplatformsharedgraphicscache.h>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>
@@ -572,35 +568,7 @@ QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRaw
 
     QSGDistanceFieldGlyphCache *cache = m_distanceFieldCacheManager->cache(font);
     if (!cache) {
-        QPlatformIntegration *platformIntegration = QGuiApplicationPrivate::platformIntegration();
-        if (platformIntegration != 0
-            && platformIntegration->hasCapability(QPlatformIntegration::SharedGraphicsCache)) {
-            QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-            if (!fe->faceId().filename.isEmpty()) {
-                QByteArray keyName = fe->faceId().filename;
-                if (font.style() != QFont::StyleNormal)
-                    keyName += QByteArray(" I");
-                if (font.weight() != QFont::Normal)
-                    keyName += ' ' + QByteArray::number(font.weight());
-                keyName += QByteArray(" DF");
-                QPlatformSharedGraphicsCache *sharedGraphicsCache =
-                        platformIntegration->createPlatformSharedGraphicsCache(keyName);
-
-                if (sharedGraphicsCache != 0) {
-                    sharedGraphicsCache->ensureCacheInitialized(keyName,
-                                                                QPlatformSharedGraphicsCache::OpenGLTexture,
-                                                                QPlatformSharedGraphicsCache::Alpha8);
-
-                    cache = new QSGSharedDistanceFieldGlyphCache(keyName,
-                                                                 sharedGraphicsCache,
-                                                                 m_distanceFieldCacheManager,
-                                                                 openglContext(),
-                                                                 font);
-                }
-            }
-        }
-        if (!cache)
-            cache = new QSGDefaultDistanceFieldGlyphCache(m_distanceFieldCacheManager, openglContext(), font);
+        cache = new QSGDefaultDistanceFieldGlyphCache(m_distanceFieldCacheManager, openglContext(), font);
         m_distanceFieldCacheManager->insertCache(font, cache);
     }
 

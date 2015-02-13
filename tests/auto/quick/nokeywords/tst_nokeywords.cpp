@@ -67,7 +67,6 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QtQuick/private/qsgrendernode_p.h>
-#include <QtQuick/private/qsgshareddistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgtexturematerial_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgthreadedrenderloop_p.h>
