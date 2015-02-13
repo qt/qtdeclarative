@@ -114,7 +114,7 @@ struct Pointer {
     Pointer &operator =(T *t) { ptr = t; return *this; }
 
     template <typename Type>
-    Type *as() { return static_cast<Type *>(ptr); }
+    Type *cast() { return static_cast<Type *>(ptr); }
 
     // Use Base, not T here, to ensure T inherits from ptr
     Base *ptr;
