@@ -41,8 +41,7 @@
 
 #include <private/qobject_p.h>
 
-#include <limits.h>
-#include <math.h>
+#include <cmath>
 
 #define DELAY_STOP_TIMER_INTERVAL 32
 
@@ -282,11 +281,11 @@ void QSpringAnimation::updateCurrentTime(int time)
         if (diff > 0) {
             currentValue += moveBy;
             if (haveModulus)
-                currentValue = fmod(currentValue, modulus);
+                currentValue = std::fmod(currentValue, modulus);
         } else {
             currentValue -= moveBy;
             if (haveModulus && currentValue < 0.0)
-                currentValue = fmod(currentValue, modulus) + modulus;
+                currentValue = std::fmod(currentValue, modulus) + modulus;
         }
         if (lastTime - startTime >= dura) {
             currentValue = to;

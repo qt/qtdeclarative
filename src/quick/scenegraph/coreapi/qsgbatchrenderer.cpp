@@ -2971,7 +2971,7 @@ void Renderer::visualizeOverdraw()
     step += static_cast<float>(M_PI * 2 / 1000.);
     if (step > M_PI * 2)
         step = 0;
-    float angle = 80.0 * sin(step);
+    float angle = 80.0 * std::sin(step);
 
     QMatrix4x4 xrot; xrot.rotate(20, 1, 0, 0);
     QMatrix4x4 zrot; zrot.rotate(angle, 0, 0, 1);

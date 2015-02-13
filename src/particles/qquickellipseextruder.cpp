@@ -32,12 +32,8 @@
 ****************************************************************************/
 
 #include "qquickellipseextruder_p.h"
+#include <qmath.h>
 #include <stdlib.h>
-#include <cmath>
-
-#ifdef Q_OS_QNX
-#include <math.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -68,8 +64,8 @@ QPointF QQuickEllipseExtruder::extrude(const QRectF & r)
 {
     qreal theta = ((qreal)rand()/RAND_MAX) * 6.2831853071795862;
     qreal mag = m_fill ? ((qreal)rand()/RAND_MAX) : 1;
-    return QPointF(r.x() + r.width()/2 + mag * (r.width()/2) * cos(theta),
-                   r.y() + r.height()/2 + mag * (r.height()/2) * sin(theta));
+    return QPointF(r.x() + r.width()/2 + mag * (r.width()/2) * qCos(theta),
+                   r.y() + r.height()/2 + mag * (r.height()/2) * qSin(theta));
 }
 
 bool QQuickEllipseExtruder::contains(const QRectF &bounds, const QPointF &point)

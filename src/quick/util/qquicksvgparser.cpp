@@ -159,8 +159,8 @@ static void pathArcSegment(QPainterPath &path,
     qreal t;
     qreal thHalf;
 
-    sinTh = qSin(xAxisRotation * (Q_PI / 180.0));
-    cosTh = qCos(xAxisRotation * (Q_PI / 180.0));
+    sinTh = qSin(qDegreesToRadians(xAxisRotation));
+    cosTh = qCos(qDegreesToRadians(xAxisRotation));
 
     a00 =  cosTh * rx;
     a01 = -sinTh * ry;
@@ -202,8 +202,8 @@ void QQuickSvgParser::pathArc(QPainterPath &path,
     rx = qAbs(rx);
     ry = qAbs(ry);
 
-    sin_th = qSin(x_axis_rotation * (Q_PI / 180.0));
-    cos_th = qCos(x_axis_rotation * (Q_PI / 180.0));
+    sin_th = qSin(qDegreesToRadians(x_axis_rotation));
+    cos_th = qCos(qDegreesToRadians(x_axis_rotation));
 
     dx = (curx - x) / 2.0;
     dy = (cury - y) / 2.0;

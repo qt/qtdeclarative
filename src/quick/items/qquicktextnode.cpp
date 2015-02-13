@@ -42,7 +42,6 @@
 #include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtCore/qpoint.h>
-#include <qmath.h>
 #include <qtextdocument.h>
 #include <qtextlayout.h>
 #include <qabstracttextdocumentlayout.h>

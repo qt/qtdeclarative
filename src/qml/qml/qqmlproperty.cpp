@@ -55,8 +55,6 @@
 #include <private/qmetaobject_p.h>
 #include <QtCore/qdebug.h>
 
-#include <math.h>
-
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
 Q_DECLARE_METATYPE(QList<bool>)

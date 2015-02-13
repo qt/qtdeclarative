@@ -34,12 +34,12 @@
 #include "qv4mathobject_p.h"
 #include "qv4objectproto_p.h"
 
-#include <cmath>
-#include <qmath.h>
-#include <qnumeric.h>
-
 #include <QtCore/qdatetime.h>
+#include <QtCore/qmath.h>
+#include <QtCore/qnumeric.h>
 #include <QtCore/qthreadstorage.h>
+
+#include <cmath>
 
 using namespace QV4;
 
@@ -53,14 +53,14 @@ Heap::MathObject::MathObject(ExecutionEngine *e)
     Scope scope(e);
     ScopedObject m(scope, this);
 
-    m->defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(::exp(1.0)));
-    m->defineReadonlyProperty(QStringLiteral("LN2"), Primitive::fromDouble(::log(2.0)));
-    m->defineReadonlyProperty(QStringLiteral("LN10"), Primitive::fromDouble(::log(10.0)));
-    m->defineReadonlyProperty(QStringLiteral("LOG2E"), Primitive::fromDouble(1.0/::log(2.0)));
-    m->defineReadonlyProperty(QStringLiteral("LOG10E"), Primitive::fromDouble(1.0/::log(10.0)));
-    m->defineReadonlyProperty(QStringLiteral("PI"), Primitive::fromDouble(qt_PI));
-    m->defineReadonlyProperty(QStringLiteral("SQRT1_2"), Primitive::fromDouble(::sqrt(0.5)));
-    m->defineReadonlyProperty(QStringLiteral("SQRT2"), Primitive::fromDouble(::sqrt(2.0)));
+    m->defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(M_E));
+    m->defineReadonlyProperty(QStringLiteral("LN2"), Primitive::fromDouble(M_LN2));
+    m->defineReadonlyProperty(QStringLiteral("LN10"), Primitive::fromDouble(M_LN10));
+    m->defineReadonlyProperty(QStringLiteral("LOG2E"), Primitive::fromDouble(M_LOG2E));
+    m->defineReadonlyProperty(QStringLiteral("LOG10E"), Primitive::fromDouble(M_LOG10E));
+    m->defineReadonlyProperty(QStringLiteral("PI"), Primitive::fromDouble(M_PI));
+    m->defineReadonlyProperty(QStringLiteral("SQRT1_2"), Primitive::fromDouble(M_SQRT1_2));
+    m->defineReadonlyProperty(QStringLiteral("SQRT2"), Primitive::fromDouble(M_SQRT2));
 
     m->defineDefaultProperty(QStringLiteral("abs"), QV4::MathObject::method_abs, 1);
     m->defineDefaultProperty(QStringLiteral("acos"), QV4::MathObject::method_acos, 1);
@@ -117,7 +117,7 @@ ReturnedValue MathObject::method_acos(CallContext *context)
     if (v > 1)
         return Encode(qSNaN());
 
-    return Encode(::acos(v));
+    return Encode(std::acos(v));
 }
 
 ReturnedValue MathObject::method_asin(CallContext *context)
@@ -126,7 +126,7 @@ ReturnedValue MathObject::method_asin(CallContext *context)
     if (v > 1)
         return Encode(qSNaN());
     else
-        return Encode(::asin(v));
+        return Encode(std::asin(v));
 }
 
 ReturnedValue MathObject::method_atan(CallContext *context)
@@ -135,7 +135,7 @@ ReturnedValue MathObject::method_atan(CallContext *context)
     if (v == 0.0)
         return Encode(v);
     else
-        return Encode(::atan(v));
+        return Encode(std::atan(v));
 }
 
 ReturnedValue MathObject::method_atan2(CallContext *context)
@@ -148,12 +148,12 @@ ReturnedValue MathObject::method_atan2(CallContext *context)
 
     if ((v1 == 0.0) && (v2 == 0.0)) {
         if ((copySign(1.0, v1) == 1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Encode(qt_PI);
+            return Encode(M_PI);
         } else if ((copySign(1.0, v1) == -1.0) && (copySign(1.0, v2) == -1.0)) {
-            return Encode(-qt_PI);
+            return Encode(-M_PI);
         }
     }
-    return Encode(::atan2(v1, v2));
+    return Encode(std::atan2(v1, v2));
 }
 
 ReturnedValue MathObject::method_ceil(CallContext *context)
@@ -162,13 +162,13 @@ ReturnedValue MathObject::method_ceil(CallContext *context)
     if (v < 0.0 && v > -1.0)
         return Encode(copySign(0, -1.0));
     else
-        return Encode(::ceil(v));
+        return Encode(std::ceil(v));
 }
 
 ReturnedValue MathObject::method_cos(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : qSNaN();
-    return Encode(::cos(v));
+    return Encode(std::cos(v));
 }
 
 ReturnedValue MathObject::method_exp(CallContext *context)
@@ -180,14 +180,14 @@ ReturnedValue MathObject::method_exp(CallContext *context)
         else
             return Encode(qInf());
     } else {
-        return Encode(::exp(v));
+        return Encode(std::exp(v));
     }
 }
 
 ReturnedValue MathObject::method_floor(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : qSNaN();
-    return Encode(::floor(v));
+    return Encode(std::floor(v));
 }
 
 ReturnedValue MathObject::method_log(CallContext *context)
@@ -196,7 +196,7 @@ ReturnedValue MathObject::method_log(CallContext *context)
     if (v < 0)
         return Encode(qSNaN());
     else
-        return Encode(::log(v));
+        return Encode(std::log(v));
 }
 
 ReturnedValue MathObject::method_max(CallContext *context)
@@ -239,12 +239,12 @@ ReturnedValue MathObject::method_pow(CallContext *context)
         return Encode(qInf());
     } else if ((x == 0) && copySign(1.0, x) == -1.0) {
         if (y < 0) {
-            if (::fmod(-y, 2.0) == 1.0)
+            if (std::fmod(-y, 2.0) == 1.0)
                 return Encode(-qInf());
             else
                 return Encode(qInf());
         } else if (y > 0) {
-            if (::fmod(y, 2.0) == 1.0)
+            if (std::fmod(y, 2.0) == 1.0)
                 return Encode(copySign(0, -1.0));
             else
                 return Encode(0);
@@ -254,12 +254,12 @@ ReturnedValue MathObject::method_pow(CallContext *context)
 #ifdef Q_OS_AIX
     else if (qIsInf(x) && copySign(1.0, x) == -1.0) {
         if (y > 0) {
-            if (::fmod(y, 2.0) == 1.0)
+            if (std::fmod(y, 2.0) == 1.0)
                 return Encode(-qInf());
             else
                 return Encode(qInf());
         } else if (y < 0) {
-            if (::fmod(-y, 2.0) == 1.0)
+            if (std::fmod(-y, 2.0) == 1.0)
                 return Encode(copySign(0, -1.0));
             else
                 return Encode(0);
@@ -267,7 +267,7 @@ ReturnedValue MathObject::method_pow(CallContext *context)
     }
 #endif
     else {
-        return Encode(::pow(x, y));
+        return Encode(std::pow(x, y));
     }
     // ###
     return Encode(qSNaN());
@@ -287,20 +287,20 @@ ReturnedValue MathObject::method_random(CallContext *context)
 ReturnedValue MathObject::method_round(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : qSNaN();
-    v = copySign(::floor(v + 0.5), v);
+    v = copySign(std::floor(v + 0.5), v);
     return Encode(v);
 }
 
 ReturnedValue MathObject::method_sin(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : qSNaN();
-    return Encode(::sin(v));
+    return Encode(std::sin(v));
 }
 
 ReturnedValue MathObject::method_sqrt(CallContext *context)
 {
     double v = context->argc() ? context->args()[0].toNumber() : qSNaN();
-    return Encode(::sqrt(v));
+    return Encode(std::sqrt(v));
 }
 
 ReturnedValue MathObject::method_tan(CallContext *context)
@@ -309,6 +309,6 @@ ReturnedValue MathObject::method_tan(CallContext *context)
     if (v == 0.0)
         return Encode(v);
     else
-        return Encode(::tan(v));
+        return Encode(std::tan(v));
 }
 

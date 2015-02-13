@@ -52,7 +52,6 @@
 #include "private/qlocale_tools_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
 
-#include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <algorithm>
 #include "qv4alloca_p.h"

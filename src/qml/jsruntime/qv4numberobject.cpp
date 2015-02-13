@@ -139,22 +139,22 @@ ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
                 negative = true;
                 num = -num;
             }
-            double frac = num - ::floor(num);
+            double frac = num - std::floor(num);
             num = Primitive::toInteger(num);
             do {
-                char c = (char)::fmod(num, radix);
+                char c = (char)std::fmod(num, radix);
                 c = (c < 10) ? (c + '0') : (c - 10 + 'a');
                 str.prepend(QLatin1Char(c));
-                num = ::floor(num / radix);
+                num = std::floor(num / radix);
             } while (num != 0);
             if (frac != 0) {
                 str.append(QLatin1Char('.'));
                 do {
                     frac = frac * radix;
-                    char c = (char)::floor(frac);
+                    char c = (char)std::floor(frac);
                     c = (c < 10) ? (c + '0') : (c - 10 + 'a');
                     str.append(QLatin1Char(c));
-                    frac = frac - ::floor(frac);
+                    frac = frac - std::floor(frac);
                 } while (frac != 0);
             }
             if (negative)

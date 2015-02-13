@@ -36,7 +36,6 @@
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
 
 #include <QtQuick/private/qquickstate_p.h>

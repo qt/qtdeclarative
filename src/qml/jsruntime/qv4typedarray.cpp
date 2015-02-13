@@ -33,6 +33,8 @@
 #include "qv4typedarray_p.h"
 #include "qv4arraybuffer_p.h"
 
+#include <cmath>
+
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(TypedArrayCtor);
@@ -85,7 +87,7 @@ void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Val
         data[index] = (unsigned char)(255);
         return;
     }
-    double f = floor(d);
+    double f = std::floor(d);
     if (f + 0.5 < d) {
         data[index] = (unsigned char)(f + 1);
         return;

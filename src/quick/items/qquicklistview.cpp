@@ -39,8 +39,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
-#include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qmath.h>
 
 #include <private/qquicksmoothedanimation_p_p.h>
 #include "qplatformdefs.h"

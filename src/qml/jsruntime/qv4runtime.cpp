@@ -50,13 +50,12 @@
 #include <private/qv8engine_p.h>
 #endif
 
-#include <QtCore/qmath.h>
-#include <QtCore/qnumeric.h>
 #include <QtCore/QDebug>
-#include <cstdio>
 #include <cassert>
-#include <typeinfo>
+#include <cstdio>
 #include <stdlib.h>
+
+#include <wtf/MathExtras.h>
 
 #include "../../3rdparty/double-conversion/double-conversion.h"
 

@@ -33,10 +33,8 @@
 
 #include "qquickangledirection_p.h"
 #include <stdlib.h>
-#include <cmath>
-#ifdef Q_OS_QNX
-#include <math.h>
-#endif
+#include <qmath.h>
+
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292519943295;
 /*!
@@ -106,8 +104,8 @@ const QPointF QQuickAngleDirection::sample(const QPointF &from)
     QPointF ret;
     qreal theta = m_angle*CONV - m_angleVariation*CONV + rand()/float(RAND_MAX) * m_angleVariation*CONV * 2;
     qreal mag = m_magnitude- m_magnitudeVariation + rand()/float(RAND_MAX) * m_magnitudeVariation * 2;
-    ret.setX(mag * cos(theta));
-    ret.setY(mag * sin(theta));
+    ret.setX(mag * qCos(theta));
+    ret.setY(mag * qSin(theta));
     return ret;
 }
 

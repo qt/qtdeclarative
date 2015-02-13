@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qquickfriction_p.h"
-#include <math.h>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -87,16 +87,16 @@ bool QQuickFrictionAffector::affectParticle(QQuickParticleData *d, qreal dt)
         if (sign(curVY) != sign(newVY))
             newVY = 0;
     } else {
-        qreal curMag = sqrt(curVX*curVX + curVY*curVY);
+        qreal curMag = qSqrt(curVX*curVX + curVY*curVY);
         if (curMag <= m_threshold + epsilon)
             return false;
-        qreal newMag = sqrt(newVX*newVX + newVY*newVY);
+        qreal newMag = qSqrt(newVX*newVX + newVY*newVY);
         if (newMag <= m_threshold + epsilon || //went past the threshold, stop there instead
             sign(curVX) != sign(newVX) || //went so far past maybe it came out the other side!
             sign(curVY) != sign(newVY)) {
-            qreal theta = atan2(curVY, curVX);
-            newVX = m_threshold * cos(theta);
-            newVY = m_threshold * sin(theta);
+            qreal theta = qAtan2(curVY, curVX);
+            newVX = m_threshold * qCos(theta);
+            newVY = m_threshold * qSin(theta);
         }
     }
 

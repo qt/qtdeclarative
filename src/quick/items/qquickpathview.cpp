@@ -47,8 +47,8 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
-#include <math.h>
 
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,12 +56,8 @@ const qreal MinimumFlickVelocity = 75.0;
 
 inline qreal qmlMod(qreal x, qreal y)
 {
-#ifdef QT_USE_MATH_H_FLOATS
-    if (sizeof(qreal) == sizeof(float))
-        return fmodf(float(x), float(y));
-    else
-#endif
-        return fmod(x, y);
+    using std::fmod;
+    return fmod(x, y);
 }
 
 static QQmlOpenMetaObjectType *qPathViewAttachedType = 0;

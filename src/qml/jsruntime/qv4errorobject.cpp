@@ -34,14 +34,9 @@
 
 #include "qv4errorobject_p.h"
 #include "qv4mm_p.h"
-#include <QtCore/qnumeric.h>
-#include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
 #include <QtCore/QDebug>
-#include <cmath>
-#include <qmath.h>
-#include <qnumeric.h>
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

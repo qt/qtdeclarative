@@ -37,14 +37,10 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4runtime_p.h"
 
-#include <QtCore/qnumeric.h>
-#include <QtCore/qmath.h>
+#include <QtCore/QDebug>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
-#include <QtCore/QDebug>
-#include <cmath>
-#include <qmath.h>
-#include <qnumeric.h>
+
 #include <time.h>
 
 #include <private/qqmljsengine_p.h>

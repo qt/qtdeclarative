@@ -37,7 +37,6 @@
 #include <private/qquickcontext2dtexture_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
-#include <QtGui/qopenglframebufferobject.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquicksvgparser_p.h>
@@ -45,16 +44,13 @@
 
 #include <private/qquickimage_p_p.h>
 
-#include <QtGui/qguiapplication.h>
 #include <qqmlinfo.h>
-#include <QtCore/qmath.h>
 #include <private/qv8engine_p.h>
 
 #include <qqmlengine.h>
 #include <private/qv4domerrors_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
-#include <QtCore/qnumeric.h>
 #include <private/qquickwindow_p.h>
 
 #include <private/qv4value_inl_p.h>
@@ -62,11 +58,15 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
 
+#include <QtCore/qmath.h>
+#include <QtCore/qnumeric.h>
+#include <QtCore/QRunnable>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qopenglframebufferobject.h>
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
-#include <QtCore/QRunnable>
-
+#include <cmath>
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
 #include <ctype.h>
 #endif
@@ -113,9 +113,7 @@ QT_BEGIN_NAMESPACE
 
 Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 
-static const double Q_PI   = 3.14159265358979323846;   // pi
-
-#define DEGREES(t) ((t) * 180.0 / Q_PI)
+#define DEGREES(t) ((t) * 180.0 / M_PI)
 
 #define CHECK_CONTEXT(r)     if (!r || !r->d()->context || !r->d()->context->bufferValid()) \
                                 V4THROW_ERROR("Not a Context2D object");
@@ -3662,25 +3660,25 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
 
     QPointF p1p0((p0.x() - p1.x()), (p0.y() - p1.y()));
     QPointF p1p2((p2.x() - p1.x()), (p2.y() - p1.y()));
-    float p1p0_length = qSqrt(p1p0.x() * p1p0.x() + p1p0.y() * p1p0.y());
-    float p1p2_length = qSqrt(p1p2.x() * p1p2.x() + p1p2.y() * p1p2.y());
+    float p1p0_length = std::sqrt(p1p0.x() * p1p0.x() + p1p0.y() * p1p0.y());
+    float p1p2_length = std::sqrt(p1p2.x() * p1p2.x() + p1p2.y() * p1p2.y());
 
     double cos_phi = (p1p0.x() * p1p2.x() + p1p0.y() * p1p2.y()) / (p1p0_length * p1p2_length);
 
     // The points p0, p1, and p2 are on the same straight line (HTML5, 4.8.11.1.8)
     // We could have used areCollinear() here, but since we're reusing
     // the variables computed above later on we keep this logic.
-    if (qFuzzyCompare(qAbs(cos_phi), 1.0)) {
+    if (qFuzzyCompare(std::abs(cos_phi), 1.0)) {
         m_path.lineTo(p1);
         return;
     }
 
-    float tangent = radius / tan(acos(cos_phi) / 2);
+    float tangent = radius / std::tan(std::acos(cos_phi) / 2);
     float factor_p1p0 = tangent / p1p0_length;
     QPointF t_p1p0((p1.x() + factor_p1p0 * p1p0.x()), (p1.y() + factor_p1p0 * p1p0.y()));
 
     QPointF orth_p1p0(p1p0.y(), -p1p0.x());
-    float orth_p1p0_length = sqrt(orth_p1p0.x() * orth_p1p0.x() + orth_p1p0.y() * orth_p1p0.y());
+    float orth_p1p0_length = std::sqrt(orth_p1p0.x() * orth_p1p0.x() + orth_p1p0.y() * orth_p1p0.y());
     float factor_ra = radius / orth_p1p0_length;
 
     // angle between orth_p1p0 and p1p2 to get the right vector orthographic to p1p0
@@ -3692,9 +3690,9 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
 
     // calculate angles for addArc
     orth_p1p0 = QPointF(-orth_p1p0.x(), -orth_p1p0.y());
-    float sa = acos(orth_p1p0.x() / orth_p1p0_length);
+    float sa = std::acos(orth_p1p0.x() / orth_p1p0_length);
     if (orth_p1p0.y() < 0.f)
-        sa = 2 * Q_PI - sa;
+        sa = 2 * M_PI - sa;
 
     // anticlockwise logic
     bool anticlockwise = false;
@@ -3702,13 +3700,13 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
     float factor_p1p2 = tangent / p1p2_length;
     QPointF t_p1p2((p1.x() + factor_p1p2 * p1p2.x()), (p1.y() + factor_p1p2 * p1p2.y()));
     QPointF orth_p1p2((t_p1p2.x() - p.x()), (t_p1p2.y() - p.y()));
-    float orth_p1p2_length = sqrtf(orth_p1p2.x() * orth_p1p2.x() + orth_p1p2.y() * orth_p1p2.y());
-    float ea = acos(orth_p1p2.x() / orth_p1p2_length);
+    float orth_p1p2_length = std::sqrt(orth_p1p2.x() * orth_p1p2.x() + orth_p1p2.y() * orth_p1p2.y());
+    float ea = std::acos(orth_p1p2.x() / orth_p1p2_length);
     if (orth_p1p2.y() < 0)
-        ea = 2 * Q_PI - ea;
-    if ((sa > ea) && ((sa - ea) < Q_PI))
+        ea = 2 * M_PI - ea;
+    if ((sa > ea) && ((sa - ea) < M_PI))
         anticlockwise = true;
-    if ((sa < ea) && ((ea - sa) > Q_PI))
+    if ((sa < ea) && ((ea - sa) > M_PI))
         anticlockwise = true;
 
     arc(p.x(), p.y(), radius, sa, ea, anticlockwise);

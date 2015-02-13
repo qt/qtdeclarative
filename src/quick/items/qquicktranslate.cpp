@@ -34,8 +34,6 @@
 #include "qquicktranslate_p.h"
 #include "qquickitem_p.h"
 
-#include <QtCore/qmath.h>
-
 QT_BEGIN_NAMESPACE
 
 class QQuickTranslatePrivate : public QQuickTransformPrivate

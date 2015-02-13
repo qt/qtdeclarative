@@ -40,15 +40,15 @@
 #include "qquicktextnode_p.h"
 #include "qquicktextnodeengine_p.h"
 #include "qquicktextutil_p.h"
-#include <QtQuick/qsgsimplerectnode.h>
 
-#include <QtQml/qqmlinfo.h>
+#include <QtCore/qmath.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtexttable.h>
-#include <QtCore/qmath.h>
+#include <QtQml/qqmlinfo.h>
+#include <QtQuick/qsgsimplerectnode.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlproperty_p.h>

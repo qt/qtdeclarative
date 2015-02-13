@@ -39,8 +39,6 @@
 #include "qv4runtime_p.h"
 #include "qv4objectiterator_p.h"
 
-#include <QtCore/qnumeric.h>
-#include <QtCore/qmath.h>
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
 

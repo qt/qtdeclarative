@@ -37,12 +37,12 @@
 
 #include <private/qqmlproperty_p.h>
 #include <private/qquickpath_p.h>
-
-#include <QtQml/qqmlinfo.h>
-#include <QtCore/qmath.h>
-#include "private/qsequentialanimationgroupjob_p.h"
 #include "private/qparallelanimationgroupjob_p.h"
+#include "private/qsequentialanimationgroupjob_p.h"
+
+#include <QtCore/qmath.h>
 #include <QtGui/qtransform.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -319,7 +319,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
                     }
 
                     if (scale != 0)
-                        rotation = atan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
+                        rotation = qAtan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
                     else {
                         qmlInfo(this) << QQuickParentAnimation::tr("Unable to preserve appearance under scale of 0");
                         ok = false;

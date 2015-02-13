@@ -95,7 +95,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
             }
 
             if (scale != 0)
-                rotation = atan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
+                rotation = qAtan2(transform.m12()/scale, transform.m11()/scale) * 180/M_PI;
             else {
                 qmlInfo(q) << QQuickParentChange::tr("Unable to preserve appearance under scale of 0");
                 ok = false;

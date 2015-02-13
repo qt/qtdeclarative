@@ -338,7 +338,7 @@ static QV4::ReturnedValue particleData_set_ ## NAME (QV4::CallContext *ctx)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
     double d = ctx->argc() ? ctx->args()[0].toNumber() : 0; \
-    r->d()->datum->color. VAR = qMin(255, qMax(0, (int)floor(d * 255.0)));\
+    r->d()->datum->color. VAR = qMin(255, qMax(0, (int)::floor(d * 255.0)));\
     return QV4::Encode::undefined(); \
 }
 

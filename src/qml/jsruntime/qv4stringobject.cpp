@@ -38,15 +38,10 @@
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
 #include "qv4scopedvalue_p.h"
-#include <QtCore/qnumeric.h>
-#include <QtCore/qmath.h>
+
 #include <QtCore/QDateTime>
-#include <QtCore/QStringList>
 #include <QtCore/QDebug>
-#include <cmath>
-#include <qmath.h>
-#include <qnumeric.h>
-#include <cassert>
+#include <QtCore/QStringList>
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -54,6 +49,8 @@
 #include <private/qqmljsast_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
+
+#include <cassert>
 
 #ifndef Q_OS_WIN
 #  include <time.h>

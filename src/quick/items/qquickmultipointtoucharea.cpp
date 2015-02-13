@@ -38,7 +38,6 @@
 #include <private/qguiapplication_p.h>
 #include <QEvent>
 #include <QMouseEvent>
-#include <math.h>
 #include <QDebug>
 #include <qpa/qplatformnativeinterface.h>
 

@@ -592,7 +592,7 @@ void QQuickAnimatedSprite::prepareNextFrame()
             const int max = lastLoop ? frameCountInRow - 1 : frameCountInRow;
             frame = qBound(qreal(0.0), frame, qreal(max));
             double intpart;
-            progress = modf(frame,&intpart);
+            progress = std::modf(frame,&intpart);
             frameAt = (int)intpart;
             const int rowIndex = m_spriteEngine->spriteY()/frameHeight();
             const int newFrame = rowIndex * nColumns + frameAt;

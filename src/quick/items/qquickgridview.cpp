@@ -41,8 +41,9 @@
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
-#include <math.h>
 #include "qplatformdefs.h"
+
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -349,7 +350,7 @@ qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
         pos += highlightStart;
         pos += rowSize()/2;
         snapPos = static_cast<FxGridItemSG*>(visibleItems.first())->rowPos() - visibleIndex / columns * rowSize();
-        snapPos = pos - fmodf(pos - snapPos, qreal(rowSize()));
+        snapPos = pos - std::fmod(pos - snapPos, qreal(rowSize()));
         snapPos -= highlightStart;
         qreal maxExtent;
         qreal minExtent;

@@ -424,7 +424,7 @@ void QQuickSpriteSequence::prepareNextFrame()
     if (frameDuration > 0) {
         qreal frame = (time - animT)/(frameDuration / 1000.0);
         frame = qBound(qreal(0.0), frame, frameCount - qreal(1.0));//Stop at count-1 frames until we have between anim interpolation
-        progress = modf(frame,&frameAt);
+        progress = std::modf(frame,&frameAt);
     } else {
         m_curFrame++;
         if (m_curFrame >= frameCount){

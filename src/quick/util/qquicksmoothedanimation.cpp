@@ -37,6 +37,7 @@
 #include "qquickanimation_p_p.h"
 #include "private/qcontinuinganimationgroupjob_p.h"
 
+#include <qmath.h>
 #include <qqmlproperty.h>
 #include <private/qqmlproperty_p.h>
 
@@ -44,7 +45,6 @@
 
 #include <QtCore/qdebug.h>
 
-#include <math.h>
 
 #define DELAY_STOP_TIMER_INTERVAL 32
 
@@ -157,7 +157,7 @@ bool QSmoothedAnimation::recalc()
         return false;
     }
 
-    finalDuration = ceil(tf * 1000.0);
+    finalDuration = qCeil(tf * 1000.0);
 
     if (maximumEasingTime == 0) {
         a = 0;
@@ -191,7 +191,7 @@ bool QSmoothedAnimation::recalc()
         qreal c2 = 0.5 * vi * tf - s;
         qreal c3 = -0.25 * vi * vi;
 
-        qreal a1 = (-c2 + sqrt(c2 * c2 - 4 * c1 * c3)) / (2. * c1);
+        qreal a1 = (-c2 + qSqrt(c2 * c2 - 4 * c1 * c3)) / (2. * c1);
 
         qreal tp1 = 0.5 * tf - 0.5 * vi / a1;
         qreal vp1 = a1 * tp1 + vi;

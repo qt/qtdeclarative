@@ -39,8 +39,8 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
+#include <QtCore/qmath.h>
 #include <QtGui/qpainter.h>
-#include <qmath.h>
 #include <QtCore/QRunnable>
 
 QT_BEGIN_NAMESPACE

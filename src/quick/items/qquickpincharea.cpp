@@ -34,6 +34,7 @@
 #include "qquickpincharea_p_p.h"
 #include "qquickwindow.h"
 
+#include <QtCore/qmath.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -43,7 +44,6 @@
 #include <QVariant>
 
 #include <float.h>
-#include <math.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -455,7 +455,7 @@ void QQuickPinchArea::updatePinch()
         QPointF p2 = touchPoint2.scenePos();
         qreal dx = p1.x() - p2.x();
         qreal dy = p1.y() - p2.y();
-        qreal dist = sqrt(dx*dx + dy*dy);
+        qreal dist = qSqrt(dx*dx + dy*dy);
         QPointF sceneCenter = (p1 + p2)/2;
         qreal angle = QLineF(p1, p2).angle();
         if (d->touchPoints.count() == 1) {
