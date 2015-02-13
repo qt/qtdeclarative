@@ -11,7 +11,7 @@
 //       with the distribution.
 //     * Neither the name of Google Inc. nor the names of its
 //       contributors may be used to endorse or promote products derived
-//       derived from this software without specific prior written permission.
+//       from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -298,7 +298,7 @@ BenchmarkSuite.prototype.RunStep = function(runner) {
 //       with the distribution.
 //     * Neither the name of Google Inc. nor the names of its
 //       contributors may be used to endorse or promote products derived
-//       derived from this software without specific prior written permission.
+//       from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -9005,7 +9005,7 @@ var BgL_runzd2benchmarkzd2 = RunBenchmark;
 //       with the distribution.
 //     * Neither the name of Google Inc. nor the names of its
 //       contributors may be used to endorse or promote products derived
-//       derived from this software without specific prior written permission.
+//       from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -10769,7 +10769,7 @@ function RegExpBenchmark() {
 //       with the distribution.
 //     * Neither the name of Google Inc. nor the names of its
 //       contributors may be used to endorse or promote products derived
-//       derived from this software without specific prior written permission.
+//       from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -11550,7 +11550,7 @@ function FluidField(canvas) {
 //       with the distribution.
 //     * Neither the name of Google Inc. nor the names of its
 //       contributors may be used to endorse or promote products derived
-//       derived from this software without specific prior written permission.
+//       from this software without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
