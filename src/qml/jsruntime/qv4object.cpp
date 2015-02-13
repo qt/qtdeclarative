@@ -531,7 +531,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
             while (it->arrayNode != o->sparseEnd()) {
                 int k = it->arrayNode->key();
                 uint pidx = it->arrayNode->value;
-                Heap::SparseArrayData *sa = static_cast<Heap::SparseArrayData *>(o->d()->arrayData);
+                Heap::SparseArrayData *sa = o->d()->arrayData.as<Heap::SparseArrayData>();
                 Property *p = reinterpret_cast<Property *>(sa->arrayData + pidx);
                 it->arrayNode = it->arrayNode->nextNode();
                 PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
@@ -548,7 +548,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
         }
         // dense arrays
         while (it->arrayIndex < o->d()->arrayData->len) {
-            Heap::SimpleArrayData *sa = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
+            Heap::SimpleArrayData *sa = o->d()->arrayData.as<Heap::SimpleArrayData>();
             Value &val = sa->data(it->arrayIndex);
             PropertyAttributes a = o->arrayData()->attributes(it->arrayIndex);
             ++it->arrayIndex;

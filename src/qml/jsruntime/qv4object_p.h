@@ -56,8 +56,8 @@ struct Object : Base {
 
     InternalClass *internalClass;
     Pointer<Object> prototype;
-    MemberData *memberData;
-    ArrayData *arrayData;
+    Pointer<MemberData> memberData;
+    Pointer<ArrayData> arrayData;
 };
 
 }

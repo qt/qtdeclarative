@@ -619,7 +619,7 @@ ReturnedValue ArrayPrototype::method_indexOf(CallContext *ctx)
         return Encode(-1);
     } else {
         Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple || instance->arrayType() == Heap::ArrayData::Complex);
-        Heap::SimpleArrayData *sa = static_cast<Heap::SimpleArrayData *>(instance->d()->arrayData);
+        Heap::SimpleArrayData *sa = instance->d()->arrayData.as<Heap::SimpleArrayData>();
         if (len > sa->len)
             len = sa->len;
         uint idx = fromIndex;

@@ -168,7 +168,7 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
 
     Object *o = object.objectValue();
     if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
+        Heap::SimpleArrayData *s = o->d()->arrayData.as<Heap::SimpleArrayData>();
         if (idx < s->len)
             if (!s->data(idx).isEmpty())
                 return s->data(idx).asReturnedValue();
@@ -200,7 +200,7 @@ void Lookup::indexedSetterFallback(Lookup *l, const Value &object, const Value &
     uint idx = index.asArrayIndex();
     if (idx < UINT_MAX) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-            Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
+            Heap::SimpleArrayData *s = o->d()->arrayData.as<Heap::SimpleArrayData>();
             if (idx < s->len) {
                 s->data(idx) = value;
                 return;
@@ -224,7 +224,7 @@ void Lookup::indexedSetterObjectInt(Lookup *l, const Value &object, const Value 
 
     Object *o = object.objectValue();
     if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
-        Heap::SimpleArrayData *s = static_cast<Heap::SimpleArrayData *>(o->d()->arrayData);
+        Heap::SimpleArrayData *s = o->d()->arrayData.as<Heap::SimpleArrayData>();
         if (idx < s->len) {
             s->data(idx) = v;
             return;
