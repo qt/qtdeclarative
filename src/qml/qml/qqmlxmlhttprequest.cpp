@@ -1622,7 +1622,7 @@ struct QQmlXMLHttpRequestWrapper : Object {
 struct QQmlXMLHttpRequestCtor : FunctionObject {
     QQmlXMLHttpRequestCtor(ExecutionEngine *engine);
 
-    Object *proto;
+    Pointer<Object> proto;
 };
 
 }

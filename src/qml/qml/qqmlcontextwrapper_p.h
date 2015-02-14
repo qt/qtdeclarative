@@ -81,7 +81,7 @@ struct QmlContextWrapper : Object {
 
 struct QQmlIdObjectsArray : Object {
     QQmlIdObjectsArray(QV4::ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper);
-    QmlContextWrapper *contextWrapper;
+    Pointer<QmlContextWrapper> contextWrapper;
 };
 
 }

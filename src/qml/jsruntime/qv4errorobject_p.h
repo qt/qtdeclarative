@@ -62,7 +62,7 @@ struct ErrorObject : Object {
 
     ErrorType errorType;
     StackTrace stackTrace;
-    String *stack;
+    Pointer<String> stack;
 };
 
 struct EvalErrorObject : ErrorObject {

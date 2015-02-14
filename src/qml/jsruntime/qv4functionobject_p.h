@@ -65,7 +65,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     bool needsActivation() const { return function ? function->needsActivation() : false; }
 
-    ExecutionContext *scope;
+    Pointer<ExecutionContext> scope;
     Function *function;
 };
 
@@ -102,9 +102,9 @@ struct ScriptFunction : SimpleScriptFunction {
 
 struct BoundFunction : FunctionObject {
     BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
-    FunctionObject *target;
+    Pointer<FunctionObject> target;
     Value boundThis;
-    MemberData *boundArgs;
+    Pointer<MemberData> boundArgs;
 };
 
 }

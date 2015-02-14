@@ -48,7 +48,7 @@ struct DataViewCtor : FunctionObject {
 
 struct DataView : Object {
     DataView(ExecutionEngine *e);
-    ArrayBuffer *buffer;
+    Pointer<ArrayBuffer> buffer;
     uint byteLength;
     uint byteOffset;
 };

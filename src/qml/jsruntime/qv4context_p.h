@@ -85,8 +85,8 @@ struct ExecutionContext : Base {
     CallData *callData;
 
     ExecutionEngine *engine;
-    ExecutionContext *parent;
-    ExecutionContext *outer;
+    Pointer<ExecutionContext> parent;
+    Pointer<ExecutionContext> outer;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
 
@@ -105,14 +105,14 @@ struct CallContext : ExecutionContext {
     }
     CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::FunctionObject *function);
 
-    FunctionObject *function;
+    Pointer<FunctionObject> function;
     Value *locals;
-    Object *activation;
+    Pointer<Object> activation;
 };
 
 struct GlobalContext : ExecutionContext {
     GlobalContext(ExecutionEngine *engine);
-    Object *global;
+    Pointer<Object> global;
 };
 
 struct CatchContext : ExecutionContext {
@@ -123,7 +123,7 @@ struct CatchContext : ExecutionContext {
 
 struct WithContext : ExecutionContext {
     WithContext(ExecutionEngine *engine, QV4::Object *with);
-    Object *withObject;
+    Pointer<Object> withObject;
 };
 
 

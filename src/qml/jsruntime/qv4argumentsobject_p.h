@@ -59,9 +59,9 @@ struct ArgumentsObject : Object {
         CallerPropertyIndex = 3
     };
     ArgumentsObject(QV4::CallContext *context);
-    CallContext *context;
+    Pointer<CallContext> context;
     bool fullyCreated;
-    MemberData *mappedArguments;
+    Pointer<MemberData> mappedArguments;
 };
 
 }

@@ -69,7 +69,7 @@ struct ConsoleObject : Object {
 
 struct QQmlBindingFunction : FunctionObject {
     QQmlBindingFunction(const QV4::FunctionObject *originalFunction);
-    FunctionObject *originalFunction;
+    Pointer<FunctionObject> originalFunction;
     // Set when the binding is created later
     QQmlSourceLocation bindingLocation;
 };

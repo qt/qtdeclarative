@@ -231,7 +231,7 @@ Heap::RegExpCtor::RegExpCtor(QV4::ExecutionContext *scope)
 void Heap::RegExpCtor::clearLastMatch()
 {
     lastMatch = Primitive::nullValue();
-    lastInput = internalClass->engine->id_empty;
+    lastInput = internalClass->engine->id_empty->d();
     lastMatchStart = 0;
     lastMatchEnd = 0;
 }
@@ -300,7 +300,7 @@ void RegExpCtor::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     RegExpCtor::Data *This = static_cast<RegExpCtor::Data *>(that);
     This->lastMatch.mark(e);
-    This->lastInput.mark(e);
+    This->lastInput->mark(e);
     FunctionObject::markObjects(that, e);
 }
 
@@ -388,7 +388,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
 
     RegExpCtor::Data *dd = regExpCtor->d();
     dd->lastMatch = array;
-    dd->lastInput = arg->stringValue();
+    dd->lastInput = arg->stringValue()->d();
     dd->lastMatchStart = matchOffsets[0];
     dd->lastMatchEnd = matchOffsets[1];
 
@@ -455,7 +455,7 @@ ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
 
 ReturnedValue RegExpPrototype::method_get_input(CallContext *ctx)
 {
-    return static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastInput().asReturnedValue();
+    return static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastInput()->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_leftContext(CallContext *ctx)

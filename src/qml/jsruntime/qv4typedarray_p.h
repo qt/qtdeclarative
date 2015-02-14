@@ -72,7 +72,7 @@ struct TypedArray : Object {
     TypedArray(ExecutionEngine *e, Type t);
 
     const TypedArrayOperations *type;
-    ArrayBuffer *buffer;
+    Pointer<ArrayBuffer> buffer;
     uint byteLength;
     uint byteOffset;
     Type arrayType;

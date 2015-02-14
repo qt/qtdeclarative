@@ -108,16 +108,15 @@ struct Pointer {
     Pointer() {}
     Pointer(T *t) : ptr(t) {}
 
-    T *operator->() const { return static_cast<T *>(ptr); }
-    operator T *() const { return static_cast<T *>(ptr); }
+    T *operator->() const { return ptr; }
+    operator T *() const { return ptr; }
 
     Pointer &operator =(T *t) { ptr = t; return *this; }
 
     template <typename Type>
     Type *cast() { return static_cast<Type *>(ptr); }
 
-    // Use Base, not T here, to ensure T inherits from ptr
-    Base *ptr;
+    T *ptr;
 };
 
 }

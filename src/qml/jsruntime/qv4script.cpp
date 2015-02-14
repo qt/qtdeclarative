@@ -154,7 +154,7 @@ void QmlBindingWrapper::markObjects(Heap::Base *m, ExecutionEngine *e)
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
 {
     QV4::Scope scope(ctx);
-    QV4::Scoped<CallContext> signalEmittingContext(scope, static_cast<Heap::CallContext *>(ctx->d()->parent));
+    QV4::Scoped<CallContext> signalEmittingContext(scope, ctx->d()->parent.cast<Heap::CallContext>());
     Q_ASSERT(signalEmittingContext && signalEmittingContext->d()->type >= QV4::Heap::ExecutionContext::Type_SimpleCallContext);
     return signalEmittingContext->argument(parameterIndex);
 }

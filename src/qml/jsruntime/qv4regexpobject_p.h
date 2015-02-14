@@ -61,14 +61,14 @@ struct RegExpObject : Object {
     RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global);
     RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re);
 
-    RegExp *value;
+    Pointer<RegExp> value;
     bool global;
 };
 
 struct RegExpCtor : FunctionObject {
     RegExpCtor(QV4::ExecutionContext *scope);
     Value lastMatch;
-    StringValue lastInput;
+    Pointer<String> lastInput;
     int lastMatchStart;
     int lastMatchEnd;
     void clearLastMatch();
@@ -117,7 +117,7 @@ struct RegExpCtor: FunctionObject
     V4_OBJECT2(RegExpCtor, FunctionObject)
 
     Value lastMatch() { return d()->lastMatch; }
-    StringValue lastInput() { return d()->lastInput; }
+    Heap::String *lastInput() { return d()->lastInput; }
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
