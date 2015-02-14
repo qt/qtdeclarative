@@ -83,6 +83,7 @@ HEADERS += \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \
+    $$PWD/qv4typedvalue_p.h \
     $$PWD/qv4util_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4sequenceobject_p.h \
@@ -100,7 +101,7 @@ HEADERS += \
 
 HEADERS += \
     $$PWD/qv4runtime_p.h \
-    $$PWD/qv4value_inl_p.h \
+    $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
     $$PWD/qv4value_p.h
 

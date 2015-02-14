@@ -33,7 +33,7 @@
 
 #include "qqmlirbuilder_p.h"
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>

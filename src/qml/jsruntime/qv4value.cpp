@@ -304,8 +304,6 @@ Heap::Object *Value::toObject(ExecutionEngine *e) const
     return RuntimeHelpers::convertToObject(e, *this);
 }
 
-#endif // V4_BOOTSTRAP
-
 uint Value::asArrayLength(bool *ok) const
 {
     *ok = true;
@@ -337,3 +335,4 @@ uint Value::asArrayLength(bool *ok) const
     }
     return idx;
 }
+#endif // V4_BOOTSTRAP

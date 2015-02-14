@@ -37,13 +37,14 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4string_p.h>
 #include <iostream>
 
 #include "qv4alloca_p.h"

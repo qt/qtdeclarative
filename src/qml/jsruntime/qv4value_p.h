@@ -334,7 +334,9 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
 
     inline uint asArrayIndex() const;
+#ifndef V4_BOOTSTRAP
     uint asArrayLength(bool *ok) const;
+#endif
 
     ReturnedValue asReturnedValue() const { return val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
@@ -388,6 +390,45 @@ inline bool Value::isPrimitive() const
 {
     return !isObject();
 }
+
+inline double Value::toNumber() const
+{
+    if (isInteger())
+        return int_32;
+    if (isDouble())
+        return doubleValue();
+    return toNumberImpl();
+}
+
+
+#ifndef V4_BOOTSTRAP
+inline uint Value::asArrayIndex() const
+{
+#if QT_POINTER_SIZE == 8
+    if (!isNumber())
+        return UINT_MAX;
+    if (isInteger())
+        return int_32 >= 0 ? (uint)int_32 : UINT_MAX;
+#else
+    if (isInteger() && int_32 >= 0)
+        return (uint)int_32;
+    if (!isDouble())
+        return UINT_MAX;
+#endif
+    double d = doubleValue();
+    uint idx = (uint)d;
+    if (idx != d)
+        return UINT_MAX;
+    return idx;
+}
+#endif
+
+inline
+ReturnedValue Heap::Base::asReturnedValue() const
+{
+    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
+}
+
 
 
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
@@ -522,6 +563,27 @@ private:
 
 template<typename T>
 ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
+
+inline int Value::toInt32() const
+{
+    if (isInteger())
+        return int_32;
+    double d = isNumber() ? doubleValue() : toNumberImpl();
+
+    const double D32 = 4294967296.0;
+    const double D31 = D32 / 2.0;
+
+    if ((d >= -D31 && d < D31))
+        return static_cast<int>(d);
+
+    return Primitive::toInt32(d);
+}
+
+inline unsigned int Value::toUInt32() const
+{
+    return (unsigned int)toInt32();
+}
+
 
 }
 

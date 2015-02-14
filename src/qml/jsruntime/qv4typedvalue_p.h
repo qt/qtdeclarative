@@ -30,89 +30,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4VALUE_INL_H
-#define QV4VALUE_INL_H
-
-#include <cmath> // this HAS to come
+#ifndef QV4TYPEDVALUE_H
+#define QV4TYPEDVALUE_H
 
 #include "qv4value_p.h"
-#include <private/qv4heap_p.h>
-#include "qv4string_p.h"
-#include "qv4managed_p.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-inline double Value::toNumber() const
-{
-    if (isInteger())
-        return int_32;
-    if (isDouble())
-        return doubleValue();
-    return toNumberImpl();
-}
-
-inline int Value::toInt32() const
-{
-    if (isInteger())
-        return int_32;
-    double d = isNumber() ? doubleValue() : toNumberImpl();
-
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
-
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Primitive::toInt32(d);
-}
-
-inline unsigned int Value::toUInt32() const
-{
-    return (unsigned int)toInt32();
-}
-
-
-
-
-inline
-ReturnedValue Heap::Base::asReturnedValue() const
-{
-    return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
-}
-
-
-#ifndef V4_BOOTSTRAP
-inline uint Value::asArrayIndex() const
-{
-#if QT_POINTER_SIZE == 8
-    if (!isNumber())
-        return UINT_MAX;
-    if (isInteger())
-        return int_32 >= 0 ? (uint)int_32 : UINT_MAX;
-#else
-    if (isInteger() && int_32 >= 0)
-        return (uint)int_32;
-    if (!isDouble())
-        return UINT_MAX;
-#endif
-    double d = doubleValue();
-    uint idx = (uint)d;
-    if (idx != d)
-        return UINT_MAX;
-    return idx;
-}
-
-
-
-template<>
-inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
-{
-    return v.toString(e)->asReturnedValue();
-}
-
-#endif
 
 template <typename T>
 struct TypedValue : public Value

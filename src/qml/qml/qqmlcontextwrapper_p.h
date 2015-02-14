@@ -48,7 +48,7 @@
 #include <QtCore/qglobal.h>
 #include <private/qtqmlglobal_p.h>
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
 #include <private/qqmlcontext_p.h>
 #include <private/qv4functionobject_p.h>

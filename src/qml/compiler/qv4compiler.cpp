@@ -35,7 +35,7 @@
 #include <qv4compileddata_p.h>
 #include <qv4isel_p.h>
 #include <private/qv4string_p.h>
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 
 QV4::Compiler::StringTableGenerator::StringTableGenerator()
 {

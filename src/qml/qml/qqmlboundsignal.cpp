@@ -47,7 +47,7 @@
 #include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qdebug.h>

@@ -33,6 +33,7 @@
 #include "qv4arraybuffer_p.h"
 #include "qv4typedarray_p.h"
 #include "qv4dataview_p.h"
+#include "qv4string_p.h"
 
 using namespace QV4;
 

@@ -37,7 +37,7 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsengine_p.h>

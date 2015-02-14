@@ -38,7 +38,7 @@
 #include "qv4arraydata_p.h"
 #include "qv4engine_p.h"
 #include "qv4scopedvalue_p.h"
-#include "qv4value_inl_p.h"
+#include "qv4value_p.h"
 
 QT_BEGIN_NAMESPACE
 

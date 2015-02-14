@@ -36,7 +36,7 @@
 #include "qv4jsir_p.h"
 #include "qv4isel_p.h"
 #include "qv4isel_util_p.h"
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlpropertycache_p.h>
 #endif

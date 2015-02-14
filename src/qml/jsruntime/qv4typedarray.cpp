@@ -32,6 +32,7 @@
 ****************************************************************************/
 #include "qv4typedarray_p.h"
 #include "qv4arraybuffer_p.h"
+#include "qv4string_p.h"
 
 #include <cmath>
 

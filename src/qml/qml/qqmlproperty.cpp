@@ -55,6 +55,7 @@
 #include <private/qmetaobject_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <QtCore/qdebug.h>
+#include <cmath>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
@@ -1255,7 +1256,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
         // Enum values come through the script engine as doubles
         if (value.userType() == QVariant::Double) {
             double integral;
-            double fractional = modf(value.toDouble(), &integral);
+            double fractional = std::modf(value.toDouble(), &integral);
             if (qFuzzyIsNull(fractional))
                 v.convert(QVariant::Int);
         }

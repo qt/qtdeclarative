@@ -40,6 +40,7 @@
 #include "qv4script_p.h"
 #include "qv4objectiterator_p.h"
 #include "qv4identifier_p.h"
+#include "qv4string_p.h"
 #include <iostream>
 
 #include <algorithm>

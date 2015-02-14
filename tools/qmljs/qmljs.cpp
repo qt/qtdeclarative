@@ -44,6 +44,7 @@
 #include "private/qv4mm_p.h"
 #include "private/qv4context_p.h"
 #include "private/qv4script_p.h"
+#include "private/qv4string_p.h"
 
 #ifdef V4_ENABLE_JIT
 #  include "private/qv4isel_masm_p.h"

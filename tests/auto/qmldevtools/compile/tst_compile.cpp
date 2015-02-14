@@ -37,7 +37,7 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlirbuilder_p.h>
-#include <private/qv4value_inl_p.h>
+#include <private/qv4typedvalue_p.h>
 #include <private/qv4codegen_p.h>
 
 int main()

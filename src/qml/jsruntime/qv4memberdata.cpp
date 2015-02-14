@@ -33,7 +33,7 @@
 
 #include "qv4memberdata_p.h"
 #include <private/qv4mm_p.h>
-#include "qv4value_inl_p.h"
+#include "qv4value_p.h"
 
 using namespace QV4;
 

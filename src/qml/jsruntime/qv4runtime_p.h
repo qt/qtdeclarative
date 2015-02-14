@@ -34,7 +34,7 @@
 #define QMLJS_RUNTIME_H
 
 #include "qv4global_p.h"
-#include "qv4value_inl_p.h"
+#include "qv4value_p.h"
 #include "qv4context_p.h"
 #include "qv4engine_p.h"
 #include "qv4math_p.h"

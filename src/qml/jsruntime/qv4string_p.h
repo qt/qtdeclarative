@@ -189,6 +189,15 @@ inline const String *Value::as() const {
     return isManaged() && m && m->vtable->isString ? static_cast<const String *>(this) : 0;
 }
 
+#ifndef V4_BOOTSTRAP
+template<>
+inline ReturnedValue value_convert<String>(ExecutionEngine *e, const Value &v)
+{
+    return v.toString(e)->asReturnedValue();
+}
+#endif
+
+
 }
 
 QT_END_NAMESPACE

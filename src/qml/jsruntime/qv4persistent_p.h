@@ -34,6 +34,7 @@
 #define QV4PERSISTENT_H
 
 #include "qv4value_p.h"
+#include "qv4managed_p.h"
 
 QT_BEGIN_NAMESPACE
 

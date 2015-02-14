@@ -33,7 +33,7 @@
 
 #include "qv4compileddata_p.h"
 #include "qv4jsir_p.h"
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qv4engine_p.h>
 #include <private/qv4function_p.h>

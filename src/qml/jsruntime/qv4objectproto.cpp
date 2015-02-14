@@ -38,6 +38,7 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4runtime_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4string_p.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>

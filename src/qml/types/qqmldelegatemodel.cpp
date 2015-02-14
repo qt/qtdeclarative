@@ -44,7 +44,7 @@
 #include <private/qqmlincubator_p.h>
 #include <private/qqmlcompiler_p.h>
 
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <qv4objectiterator_p.h>
 

@@ -35,7 +35,7 @@
 #include <QtCore/QDebug>
 #include "qv4regalloc_p.h"
 #include "qv4alloca_p.h"
-#include <private/qv4value_inl_p.h>
+#include <private/qv4value_p.h>
 
 #include <algorithm>
 #if defined(Q_CC_MINGW)

@@ -32,7 +32,7 @@
 ****************************************************************************/
 
 #include "qv4string_p.h"
-#include "qv4value_inl_p.h"
+#include "qv4value_p.h"
 #ifndef V4_BOOTSTRAP
 #include "qv4identifiertable_p.h"
 #include "qv4runtime_p.h"

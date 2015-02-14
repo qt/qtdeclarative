@@ -33,6 +33,7 @@
 #include <qv4argumentsobject_p.h>
 #include <qv4alloca_p.h>
 #include <qv4scopedvalue_p.h>
+#include "qv4string_p.h"
 
 using namespace QV4;
 
