@@ -1253,7 +1253,7 @@ public:
     Q_INVOKABLE void addReference(QObject *other)
     {
         QQmlData *ddata = QQmlData::get(this);
-        assert(ddata);
+        Q_ASSERT(ddata);
         QV4::ExecutionEngine *v4 = ddata->jsWrapper.engine();
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
