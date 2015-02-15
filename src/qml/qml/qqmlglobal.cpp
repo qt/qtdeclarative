@@ -317,6 +317,7 @@ QVariant QQmlColorProvider::colorFromString(const QString &, bool *ok) { if (ok)
 unsigned QQmlColorProvider::rgbaFromString(const QString &, bool *ok) { if (ok) *ok = false; return 0; }
 QVariant QQmlColorProvider::fromRgbF(double, double, double, double) { return QVariant(); }
 QVariant QQmlColorProvider::fromHslF(double, double, double, double) { return QVariant(); }
+QVariant QQmlColorProvider::fromHsvF(double, double, double, double) { return QVariant(); }
 QVariant QQmlColorProvider::lighter(const QVariant &, qreal) { return QVariant(); }
 QVariant QQmlColorProvider::darker(const QVariant &, qreal) { return QVariant(); }
 QVariant QQmlColorProvider::tint(const QVariant &, const QVariant &) { return QVariant(); }

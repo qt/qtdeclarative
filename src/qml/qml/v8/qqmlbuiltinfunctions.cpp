@@ -101,6 +101,7 @@ Heap::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     o->defineDefaultProperty(QStringLiteral("isQtObject"), QV4::QtObject::method_isQtObject);
     o->defineDefaultProperty(QStringLiteral("rgba"), QV4::QtObject::method_rgba);
     o->defineDefaultProperty(QStringLiteral("hsla"), QV4::QtObject::method_hsla);
+    o->defineDefaultProperty(QStringLiteral("hsva"), QV4::QtObject::method_hsva);
     o->defineDefaultProperty(QStringLiteral("colorEqual"), QV4::QtObject::method_colorEqual);
     o->defineDefaultProperty(QStringLiteral("rect"), QV4::QtObject::method_rect);
     o->defineDefaultProperty(QStringLiteral("point"), QV4::QtObject::method_point);
@@ -212,6 +213,33 @@ ReturnedValue QtObject::method_hsla(QV4::CallContext *ctx)
     if (a > 1.0) a=1.0;
 
     return ctx->engine()->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
+}
+
+/*!
+\qmlmethod color Qt::hsva(real hue, real saturation, real value, real alpha)
+
+Returns a color with the specified \c hue, \c saturation, \c value and \c alpha components.
+All components should be in the range 0-1 inclusive.
+
+\since 5.5
+*/
+ReturnedValue QtObject::method_hsva(QV4::CallContext *ctx)
+{
+    int argCount = ctx->argc();
+    if (argCount < 3 || argCount > 4)
+        V4THROW_ERROR("Qt.hsva(): Invalid arguments");
+
+    double h = ctx->args()[0].toNumber();
+    double s = ctx->args()[1].toNumber();
+    double v = ctx->args()[2].toNumber();
+    double a = (argCount == 4) ? ctx->args()[3].toNumber() : 1;
+
+    h = qBound(0.0, h, 1.0);
+    s = qBound(0.0, s, 1.0);
+    v = qBound(0.0, v, 1.0);
+    a = qBound(0.0, a, 1.0);
+
+    return ctx->engine()->fromVariant(QQml_colorProvider()->fromHsvF(h, s, v, a));
 }
 
 /*!

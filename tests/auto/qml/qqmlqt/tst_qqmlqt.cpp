@@ -61,6 +61,7 @@ private slots:
     void enums();
     void rgba();
     void hsla();
+    void hsva();
     void colorEqual();
     void rect();
     void point();
@@ -151,6 +152,28 @@ void tst_qqmlqt::hsla()
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromHslF(1, 1, 1, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor::fromHslF(0, 0, 0, 0));
+
+    delete object;
+}
+
+void tst_qqmlqt::hsva()
+{
+    QQmlComponent component(&engine, testFileUrl("hsva.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.hsva(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.hsva(): Invalid arguments";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHsvF(1, 0, 0, 0.8));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHsvF(1, 0.5, 0.3, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromHsvF(1, 1, 1, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor::fromHsvF(0, 0, 0, 0));
 
     delete object;
 }

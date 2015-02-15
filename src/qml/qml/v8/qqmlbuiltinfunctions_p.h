@@ -83,6 +83,7 @@ struct QtObject : Object
     static ReturnedValue method_isQtObject(CallContext *ctx);
     static ReturnedValue method_rgba(CallContext *ctx);
     static ReturnedValue method_hsla(CallContext *ctx);
+    static ReturnedValue method_hsva(CallContext *ctx);
     static ReturnedValue method_colorEqual(CallContext *ctx);
     static ReturnedValue method_font(CallContext *ctx);
     static ReturnedValue method_rect(CallContext *ctx);

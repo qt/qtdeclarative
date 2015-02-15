@@ -98,6 +98,11 @@ public:
         return QVariant(QColor::fromHslF(h, s, l, a));
     }
 
+    QVariant fromHsvF(double h, double s, double v, double a)
+    {
+        return QVariant(QColor::fromHsvF(h, s, v, a));
+    }
+
     QVariant lighter(const QVariant &var, qreal factor)
     {
         QColor color = var.value<QColor>();
