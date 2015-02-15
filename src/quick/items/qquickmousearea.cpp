@@ -1275,6 +1275,8 @@ void QQuickMouseArea::setCursorShape(Qt::CursorShape shape)
     started. If set to \c false, the target will be moved straight to the current mouse position.
     By default, this property is \c true. This property was added in Qt Quick 2.4
 
+    See the \l Drag attached property and \l DropArea if you want to make a drop.
+
     \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
 
 */
