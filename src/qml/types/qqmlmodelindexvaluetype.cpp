@@ -44,7 +44,7 @@ QString QQmlModelIndexValueType::propertiesString(const QModelIndex &idx)
         return QLatin1String("()");
     return QString(QLatin1String("(%1,%2,0x%3,%4(0x%5))"))
             .arg(idx.row()).arg(idx.column()).arg(idx.internalId(), 0, 16)
-            .arg(idx.model()->metaObject()->className()).arg(quintptr(idx.model()), 0, 16);
+            .arg(QLatin1String(idx.model()->metaObject()->className())).arg(quintptr(idx.model()), 0, 16);
 }
 
 /*!
