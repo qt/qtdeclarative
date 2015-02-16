@@ -35,6 +35,7 @@
 #define QQMLDEBUG_H
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
