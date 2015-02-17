@@ -57,6 +57,7 @@
 #  else
 #    include "qplatformdefs.h"
 #  endif
+#  include <unistd.h> // for _POSIX_THREAD_SAFE_FUNCTIONS
 #endif
 
 using namespace QV4;
