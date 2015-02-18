@@ -7,5 +7,8 @@
         <file>TextField.qml</file>
         <file>images/back.png</file>
         <file>images/next.png</file>
+        <file>images/checkmark.png</file>
+        <file>Slider.qml</file>
+        <file>images/slider_handle.png</file>
     </qresource>
 </RCC>

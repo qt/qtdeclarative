@@ -44,6 +44,7 @@ Item {
     property real init: min+(max-min)/2
     property string name: "Slider"
     property color color: "#0066cc"
+    property real minLabelWidth: 44
 
     Component.onCompleted: setValue(init)
     function setValue(v) {
@@ -57,7 +58,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: 16
         height: childrenRect.height
-        width: Math.max(44, childrenRect.width)
+        width: Math.max(minLabelWidth, childrenRect.width)
         anchors.verticalCenter: parent.verticalCenter
         Text {
             text: slider.name + ":"
