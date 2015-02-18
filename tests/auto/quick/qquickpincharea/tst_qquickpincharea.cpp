@@ -54,6 +54,7 @@ private slots:
     void scale();
     void pan();
     void retouch();
+    void cancel();
     void transformedPinchArea_data();
     void transformedPinchArea();
 
@@ -418,6 +419,69 @@ void tst_QQuickPinchArea::retouch()
         QVERIFY(!root->property("pinchActive").toBool());
         QCOMPARE(startedSpy.count(), 2);
         QCOMPARE(finishedSpy.count(), 1);
+    }
+}
+
+void tst_QQuickPinchArea::cancel()
+{
+    QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
+    window->setSource(testFileUrl("pinchproperties.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject() != 0);
+    qApp->processEvents();
+
+    QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
+    QQuickPinch *pinch = pinchArea->pinch();
+    QVERIFY(pinchArea != 0);
+    QVERIFY(pinch != 0);
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
+    QVERIFY(root != 0);
+
+    // target
+    QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+
+    QPoint p1(80, 80);
+    QPoint p2(100, 100);
+    {
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, device);
+        pinchSequence.press(0, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+        // In order for the stationary point to remember its previous position,
+        // we have to reuse the same pinchSequence object.  Otherwise if we let it
+        // be destroyed and then start a new sequence, point 0 will default to being
+        // stationary at 0, 0, and PinchArea will filter out that touchpoint because
+        // it is outside its bounds.
+        pinchSequence.stationary(0).press(1, p2, window).commit();
+        QQuickTouchUtils::flush(window);
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,window).move(1, p2,window).commit();
+        QQuickTouchUtils::flush(window);
+
+        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QVERIFY(root->property("pinchActive").toBool());
+
+        p1 -= QPoint(10,10);
+        p2 += QPoint(10,10);
+        pinchSequence.move(0, p1,window).move(1, p2,window).commit();
+        QQuickTouchUtils::flush(window);
+
+        QCOMPARE(root->property("scale").toReal(), 1.5);
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(blackRect->scale(), 1.5);
+
+        QTouchEvent cancelEvent(QEvent::TouchCancel);
+        QCoreApplication::sendEvent(window, &cancelEvent);
+        QQuickTouchUtils::flush(window);
+
+        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(blackRect->scale(), 1.0);
+        QVERIFY(!root->property("pinchActive").toBool());
     }
 }
 
