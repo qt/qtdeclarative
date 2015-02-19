@@ -6924,7 +6924,7 @@ void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 }
 
 /*!
-    Returns whether mouse events of this item's children should be filtered
+    Returns whether mouse and touch events of this item's children should be filtered
     through this item.
 
     \sa setFiltersChildMouseEvents(), childMouseEventFilter()
@@ -6936,7 +6936,7 @@ bool QQuickItem::filtersChildMouseEvents() const
 }
 
 /*!
-    Sets whether mouse events of this item's children should be filtered
+    Sets whether mouse and touch events of this item's children should be filtered
     through this item.
 
     If \a filter is true, childMouseEventFilter() will be called when

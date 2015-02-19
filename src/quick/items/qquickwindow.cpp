@@ -2151,7 +2151,7 @@ bool QQuickWindowPrivate::deliverTouchPoints(QQuickItem *item, QTouchEvent *even
     return (acceptedNewPoints->count() == newPoints.count() && updatedPoints->isEmpty());
 }
 
-// touchEventForItemBounds has no means to generate a touch event that contains
+// touchEventForItem has no means to generate a touch event that contains
 // only the points that are relevant for this item.  Thus the need for
 // matchingPoints to already be that set of interesting points.
 // They are all pre-transformed, too.
@@ -2213,7 +2213,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     return touchEventAccepted;
 }
 
-QTouchEvent *QQuickWindowPrivate::touchEventForItemBounds(QQuickItem *target, const QTouchEvent &originalEvent)
+QTouchEvent *QQuickWindowPrivate::touchEventForItem(QQuickItem *target, const QTouchEvent &originalEvent, bool alwaysCheckBounds)
 {
     const QList<QTouchEvent::TouchPoint> &touchPoints = originalEvent.touchPoints();
     QList<QTouchEvent::TouchPoint> pointsInBounds;
@@ -2221,7 +2221,10 @@ QTouchEvent *QQuickWindowPrivate::touchEventForItemBounds(QQuickItem *target, co
     if (originalEvent.touchPointStates() != Qt::TouchPointStationary) {
         for (int i = 0; i < touchPoints.count(); ++i) {
             const QTouchEvent::TouchPoint &tp = touchPoints.at(i);
-            if (tp.state() == Qt::TouchPointPressed) {
+            // Touch presses are relevant to the target item only if they occur inside its bounds.
+            // Touch updates and releases are relevant if they occur inside, or if we want to
+            // finish the sequence because the press occurred inside.
+            if (tp.state() == Qt::TouchPointPressed || alwaysCheckBounds) {
                 QPointF p = target->mapFromScene(tp.scenePos());
                 if (target->contains(p))
                     pointsInBounds.append(tp);
@@ -2450,7 +2453,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
     if (targetPrivate->filtersChildMouseEvents && !hasFiltered->contains(target)) {
         hasFiltered->insert(target);
-        QScopedPointer<QTouchEvent> targetEvent(touchEventForItemBounds(target, *event));
+        QScopedPointer<QTouchEvent> targetEvent(touchEventForItem(target, *event));
         if (!targetEvent->touchPoints().isEmpty()) {
             if (target->childMouseEventFilter(item, targetEvent.data())) {
                 qCDebug(DBG_TOUCH) << " - first chance intercepted on childMouseEventFilter by " << target;
@@ -2547,6 +2550,15 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
         qreal velocity = axis == Qt::XAxis ? velocityVec.x() : velocityVec.y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
+    return overThreshold;
+}
+
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold)
+{
+    QStyleHints *styleHints = qApp->styleHints();
+    bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
+    qreal velocity = axis == Qt::XAxis ? tp->velocity().x() : tp->velocity().y();
+    overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     return overThreshold;
 }
 
