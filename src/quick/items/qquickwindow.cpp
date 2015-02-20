@@ -3154,11 +3154,11 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \fn void QQuickWindow::closing()
+    \fn void QQuickWindow::closing(QQuickCloseEvent *close)
     \since 5.1
 
-    This signal is emitted when the window receives a QCloseEvent from the
-    windowing system.
+    This signal is emitted when the window receives the event \a close from
+    the windowing system.
 */
 
 /*!

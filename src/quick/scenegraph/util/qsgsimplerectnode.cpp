@@ -41,6 +41,7 @@ QT_BEGIN_NAMESPACE
 
   \brief The QSGSimpleRectNode class is a convenience class for drawing
   solid filled rectangles using scenegraph.
+  \inmodule QtQuick
 
  */
 
