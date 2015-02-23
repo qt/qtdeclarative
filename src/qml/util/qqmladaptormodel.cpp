@@ -527,7 +527,7 @@ public:
 
         const QByteArray propertyType = QByteArrayLiteral("QVariant");
         const QHash<int, QByteArray> names = model.aim()->roleNames();
-        for (QHash<int, QByteArray>::const_iterator it = names.begin(); it != names.end(); ++it) {
+        for (QHash<int, QByteArray>::const_iterator it = names.begin(), cend = names.end(); it != cend; ++it) {
             const int propertyId = propertyRoles.count();
             propertyRoles.append(it.key());
             roleNames.insert(it.value(), it.key());

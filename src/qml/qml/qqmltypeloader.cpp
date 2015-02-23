@@ -1884,11 +1884,11 @@ and qmldir information.
 */
 void QQmlTypeLoader::clearCache()
 {
-    for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter)
+    for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)
         (*iter)->release();
-    for (ScriptCache::Iterator iter = m_scriptCache.begin(); iter != m_scriptCache.end(); ++iter)
+    for (ScriptCache::Iterator iter = m_scriptCache.begin(), end = m_scriptCache.end(); iter != end; ++iter)
         (*iter)->release();
-    for (QmldirCache::Iterator iter = m_qmldirCache.begin(); iter != m_qmldirCache.end(); ++iter)
+    for (QmldirCache::Iterator iter = m_qmldirCache.begin(), end = m_qmldirCache.end(); iter != end; ++iter)
         (*iter)->release();
     qDeleteAll(m_importDirCache);
     qDeleteAll(m_importQmlDirCache);
@@ -1904,7 +1904,7 @@ void QQmlTypeLoader::trimCache()
 {
     while (true) {
         QList<TypeCache::Iterator> unneededTypes;
-        for (TypeCache::Iterator iter = m_typeCache.begin(); iter != m_typeCache.end(); ++iter)  {
+        for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
             QQmlTypeData *typeData = iter.value();
             if (typeData->m_compiledData && typeData->m_compiledData->count() == 1) {
                 // There are no live objects of this type

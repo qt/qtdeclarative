@@ -2275,21 +2275,23 @@ void QQmlDelegateModelGroupPrivate::emitModelUpdated(bool reset)
     changeSet.clear();
 }
 
+typedef QQmlDelegateModelGroupEmitterList::iterator GroupEmitterListIt;
+
 void QQmlDelegateModelGroupPrivate::createdPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->createdPackage(index, package);
 }
 
 void QQmlDelegateModelGroupPrivate::initPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->initPackage(index, package);
 }
 
 void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->destroyingPackage(package);
 }
 

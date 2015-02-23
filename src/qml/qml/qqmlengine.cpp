@@ -595,6 +595,9 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
+    typedef QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator TypePropertyCacheIt;
+    typedef QHash<int, QQmlCompiledData *>::Iterator CompositeTypesIt;
+
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
 
@@ -612,9 +615,9 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (incubationController) incubationController->d = 0;
     incubationController = 0;
 
-    for(QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
+    for (TypePropertyCacheIt iter = typePropertyCache.begin(), end = typePropertyCache.end(); iter != end; ++iter)
         (*iter)->release();
-    for (QHash<int, QQmlCompiledData *>::Iterator iter = m_compositeTypes.begin(); iter != m_compositeTypes.end(); ++iter)
+    for (CompositeTypesIt iter = m_compositeTypes.begin(), end = m_compositeTypes.end(); iter != end; ++iter)
         iter.value()->isRegisteredWithEngine = false;
     delete profiler;
 }

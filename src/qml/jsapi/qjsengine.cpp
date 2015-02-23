@@ -562,7 +562,9 @@ QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 
 QJSEnginePrivate::~QJSEnginePrivate()
 {
-    for (QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator iter = propertyCache.begin(); iter != propertyCache.end(); ++iter)
+    typedef QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator PropertyCacheIt;
+
+    for (PropertyCacheIt iter = propertyCache.begin(), end = propertyCache.end(); iter != end; ++iter)
         (*iter)->release();
 }
 
