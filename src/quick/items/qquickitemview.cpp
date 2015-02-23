@@ -2415,20 +2415,22 @@ void QQuickItemViewPrivate::updateTrackedItem()
 void QQuickItemViewPrivate::updateUnrequestedIndexes()
 {
     Q_Q(QQuickItemView);
-    for (QHash<QQuickItem*,int>::iterator it = unrequestedItems.begin(); it != unrequestedItems.end(); ++it)
+    for (QHash<QQuickItem*,int>::iterator it = unrequestedItems.begin(), end = unrequestedItems.end(); it != end; ++it)
         *it = model->indexOf(it.key(), q);
 }
 
 void QQuickItemViewPrivate::updateUnrequestedPositions()
 {
-    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.begin(); it != unrequestedItems.end(); ++it)
+    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.begin(), cend = unrequestedItems.end(); it != cend; ++it)
         repositionPackageItemAt(it.key(), it.value());
 }
 
 void QQuickItemViewPrivate::updateVisibleIndex()
 {
+    typedef QList<FxViewItem*>::const_iterator FxViewItemListConstIt;
+
     visibleIndex = 0;
-    for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end(); ++it) {
+    for (FxViewItemListConstIt it = visibleItems.constBegin(), cend = visibleItems.constEnd(); it != cend; ++it) {
         if ((*it)->index != -1) {
             visibleIndex = (*it)->index;
             break;

@@ -2675,8 +2675,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
     Q_Q(QQuickWindow);
     cleanupNodes();
     cleanupNodesOnShutdown(contentItem);
-    QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
-    for (; it != parentlessItems.end(); ++it)
+    for (QSet<QQuickItem *>::const_iterator it = parentlessItems.begin(), cend = parentlessItems.end(); it != cend; ++it)
         cleanupNodesOnShutdown(*it);
     animationController->windowNodesDestroyed();
     q->cleanupSceneGraph();

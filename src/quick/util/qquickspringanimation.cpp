@@ -86,6 +86,7 @@ public:
     bool haveModulus : 1;
     bool skipUpdate : 1;
     typedef QHash<QQmlProperty, QSpringAnimation*> ActiveAnimationHash;
+    typedef ActiveAnimationHash::Iterator ActiveAnimationHashIt;
 
     void clearTemplate() { animationTemplate = 0; }
 
@@ -161,14 +162,12 @@ QSpringAnimation::~QSpringAnimation()
 {
     if (animationTemplate) {
         if (target.object()) {
-            QSpringAnimation::ActiveAnimationHash::iterator it =
-                    animationTemplate->activeAnimations.find(target);
+            ActiveAnimationHashIt it = animationTemplate->activeAnimations.find(target);
             if (it != animationTemplate->activeAnimations.end() && it.value() == this)
                 animationTemplate->activeAnimations.erase(it);
         } else {
             //target is no longer valid, need to search linearly
-            QSpringAnimation::ActiveAnimationHash::iterator it;
-            for (it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
+            for (ActiveAnimationHashIt it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
                 if (it.value() == this) {
                     animationTemplate->activeAnimations.erase(it);
                     break;
@@ -329,8 +328,7 @@ void QQuickSpringAnimationPrivate::updateMode()
         mode = QSpringAnimation::Spring;
     else {
         mode = QSpringAnimation::Velocity;
-        QSpringAnimation::ActiveAnimationHash::iterator it;
-        for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
+        for (QSpringAnimation::ActiveAnimationHashIt it = activeAnimations.begin(), end = activeAnimations.end(); it != end; ++it) {
             QSpringAnimation *animation = *it;
             animation->startTime = animation->lastTime;
             qreal dist = qAbs(animation->currentValue - animation->to);
@@ -378,10 +376,8 @@ QQuickSpringAnimation::QQuickSpringAnimation(QObject *parent)
 QQuickSpringAnimation::~QQuickSpringAnimation()
 {
     Q_D(QQuickSpringAnimation);
-    QSpringAnimation::ActiveAnimationHash::iterator it;
-    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+    for (QSpringAnimation::ActiveAnimationHashIt it = d->activeAnimations.begin(), end = d->activeAnimations.end(); it != end; ++it)
         it.value()->clearTemplate();
-    }
 }
 
 /*!

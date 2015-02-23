@@ -162,7 +162,9 @@ QQuickItemViewTransitioner::QQuickItemViewTransitioner()
 
 QQuickItemViewTransitioner::~QQuickItemViewTransitioner()
 {
-    for (QSet<QQuickItemViewTransitionJob *>::iterator it = runningJobs.begin(); it != runningJobs.end(); ++it)
+    typedef QSet<QQuickItemViewTransitionJob *>::iterator JobIt;
+
+    for (JobIt it = runningJobs.begin(), end = runningJobs.end(); it != end; ++it)
         (*it)->m_transitioner = 0;
 }
 
