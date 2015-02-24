@@ -7,3 +7,6 @@ SOURCES += \
 
 TESTDATA += \
     $$PWD/data/*
+
+OTHER_FILES += \
+    $$PWD/data/*
