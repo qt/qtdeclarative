@@ -47,6 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
+DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSIZE_GLYPHCACHE_TEXTURES)
 
 #if !defined(QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING)
 #  define QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
@@ -489,6 +490,17 @@ bool QSGDefaultDistanceFieldGlyphCache::useTextureUploadWorkaround() const
         set = true;
     }
     return useWorkaround;
+}
+
+bool QSGDefaultDistanceFieldGlyphCache::createFullSizeTextures() const
+{
+    static bool set = false;
+    static bool fullSize = false;
+    if (!set) {
+        fullSize = qsgPreferFullSizeGlyphCacheTextures() && glyphCount() > QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
+        set = true;
+    }
+    return fullSize;
 }
 
 int QSGDefaultDistanceFieldGlyphCache::maxTextureSize() const

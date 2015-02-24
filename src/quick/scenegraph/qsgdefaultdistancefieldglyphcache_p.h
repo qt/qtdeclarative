@@ -62,6 +62,7 @@ public:
 
     bool useTextureResizeWorkaround() const;
     bool useTextureUploadWorkaround() const;
+    bool createFullSizeTextures() const;
     int maxTextureSize() const;
 
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }
@@ -75,7 +76,7 @@ private:
         QDistanceField image;
         int padding;
 
-        TextureInfo() : texture(0), padding(-1)
+        TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect), padding(-1)
         { }
     };
 
@@ -84,8 +85,12 @@ private:
 
     TextureInfo *textureInfo(int index)
     {
-        for (int i = m_textures.count(); i <= index; ++i)
-            m_textures.append(TextureInfo());
+        for (int i = m_textures.count(); i <= index; ++i) {
+            if (createFullSizeTextures())
+                m_textures.append(QRect(0, 0, maxTextureSize(), maxTextureSize()));
+            else
+                m_textures.append(TextureInfo());
+        }
 
         return &m_textures[index];
     }
