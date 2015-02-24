@@ -1358,6 +1358,11 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     for (int i = 0, c = cache.count();  i < c; ++i) {
         QQmlDelegateModelItem *item = cache.at(i);
+        // layout change triggered by removal of a previous item might have
+        // already invalidated this item in d->m_cache and deleted it
+        if (!d->m_cache.contains(item))
+            continue;
+
         if (item->modelIndex() >= index + count)
             item->setModelIndex(item->modelIndex() - count);
         else  if (item->modelIndex() >= index)

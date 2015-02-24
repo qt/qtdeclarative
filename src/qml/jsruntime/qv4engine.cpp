@@ -128,7 +128,8 @@ quintptr getStackLimit()
     void* stackBottom = 0;
     pthread_attr_t attr;
 #if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
-    if (pthread_attr_get_np(pthread_self(), &attr) == 0) {
+    // on FreeBSD pthread_attr_init() must be called otherwise getting the attrs crashes
+    if (pthread_attr_init(&attr) == 0 && pthread_attr_get_np(pthread_self(), &attr) == 0) {
 #else
     if (pthread_getattr_np(pthread_self(), &attr) == 0) {
 #endif

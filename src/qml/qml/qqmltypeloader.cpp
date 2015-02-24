@@ -885,15 +885,18 @@ Thus QQmlDataBlob::done() will always eventually be called, even if the blob has
 
 void QQmlTypeLoader::invalidate()
 {
-    for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
-        (*iter)->release();
-    m_networkReplies.clear();
-
     if (m_thread) {
         shutdownThread();
         delete m_thread;
         m_thread = 0;
     }
+
+    // Need to delete the network replies after
+    // the loader thread is shutdown as it could be
+    // getting new replies while we clear them
+    for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
+        (*iter)->release();
+    m_networkReplies.clear();
 }
 
 void QQmlTypeLoader::lock()

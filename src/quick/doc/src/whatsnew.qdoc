@@ -193,7 +193,7 @@ relative to its start.
 \endlist
 
 
-\section2 Text
+\section2 Text Rendering and Input
 
 \list
 \li Changes common to \l Text, TextEdit and TextInput:
@@ -312,8 +312,8 @@ the window loses focus.
 \li VisualDataModel:
     \list
     \li Now has features to filter the items to be displayed in a view. This is supported by the new
-        \l {VisualDataModel::}{groups}, \l {VisualDataModel::}{filterOnGroup}, \l {VisualDataModel::}{items}
-        and \l {VisualDataModel::}{persistedItems} properties.
+        \l {DelegateModel::}{groups}, \l {DelegateModel::}{filterOnGroup}, \l {DelegateModel::}{items}
+        and \l {DelegateModel::}{persistedItems} properties.
     \endlist
 \li Changes common to both ListView and GridView:
     \list

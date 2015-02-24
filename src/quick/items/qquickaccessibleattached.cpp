@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
     The \l role is set to \c Button to indicate the type of control.
-    \l Accessible.name is the most important information and bound to the text on the button.
+    \l {Accessible::}{name} is the most important information and bound to the text on the button.
     The name is a short and consise description of the control and should reflect the visual label.
     In this case it is not clear what the button does with the name only, so \l description contains
     an explanation.
@@ -123,7 +123,7 @@ QT_BEGIN_NAMESPACE
         \li All interactive elements
         \li \l focusable and \l focused
         \li All elements that the user can interact with should have focusable set to \c true and
-            set \l focus to \c true when they have the focus. This is important even for applications
+            set \c focus to \c true when they have the focus. This is important even for applications
             that run on touch-only devices since screen readers often implement a virtual focus that
             can be moved from item to item.
     \row

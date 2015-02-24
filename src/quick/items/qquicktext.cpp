@@ -961,7 +961,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             // If the horizontal alignment is not left and the width was not valid we need to relayout
             // now that we know the maximum line width.
-            if (!implicitWidthValid && unwrappedLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
+            if (!q->widthValid() && !implicitWidthValid && unwrappedLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
                 widthExceeded = false;
                 heightExceeded = false;
                 continue;
@@ -2755,7 +2755,7 @@ void QQuickText::invalidateFontCaches()
 {
     Q_D(QQuickText);
 
-    if (d->richText && d->extra->doc != 0) {
+    if (d->richText && d->extra.isAllocated() && d->extra->doc != 0) {
         QTextBlock block;
         for (block = d->extra->doc->firstBlock(); block.isValid(); block = block.next()) {
             if (block.layout() != 0 && block.layout()->engine() != 0)

@@ -249,20 +249,22 @@ void QQuickWindow::focusInEvent(QFocusEvent *ev)
 
 void QQuickWindowPrivate::polishItems()
 {
-    int maxPolishCycles = 100000;
-
-    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
-        QSet<QQuickItem *> itms = itemsToPolish;
-        itemsToPolish.clear();
-
-        for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
-            QQuickItem *item = *it;
-            QQuickItemPrivate::get(item)->polishScheduled = false;
-            item->updatePolish();
-        }
+    // An item can trigger polish on another item, or itself for that matter,
+    // during its updatePolish() call. Because of this, we cannot simply
+    // iterate through the set, we must continue pulling items out until it
+    // is empty.
+    // In the case where polish is called from updatePolish() either directly
+    // or indirectly, we use a recursionSafeguard to print a warning to
+    // the user.
+    int recursionSafeguard = INT_MAX;
+    while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
+        QQuickItem *item = *itemsToPolish.begin();
+        itemsToPolish.remove(item);
+        QQuickItemPrivate::get(item)->polishScheduled = false;
+        item->updatePolish();
     }
 
-    if (maxPolishCycles == 0)
+    if (recursionSafeguard == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
     updateFocusItemTransform();
@@ -3143,7 +3145,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     (e.g. the user clicked the title bar close button). The CloseEvent contains
     an accepted property which can be set to false to abort closing the window.
 
-    \sa Window.closing()
+    \sa QQuickWindow::closing()
 */
 
 /*!
@@ -3167,7 +3169,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the user tries to close the window.
 
-    This signal includes a \a close parameter. The \a close \l accepted
+    This signal includes a \a close parameter. The \c {close.accepted}
     property is true by default so that the window is allowed to close; but you
     can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
@@ -4038,7 +4040,7 @@ void QQuickWindow::resetOpenGLState()
     This is equivalent to calling showFullScreen(), showMaximized(), or showNormal(),
     depending on the platform's default behavior for the window type and flags.
 
-    \sa showFullScreen(), showMaximized(), showNormal(), hide(), flags()
+    \sa showFullScreen(), showMaximized(), showNormal(), hide(), QQuickItem::flags()
 */
 
 /*!
@@ -4084,14 +4086,14 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
-    \enum QQuickWindow::RenderJobSchedule
+    \enum QQuickWindow::RenderStage
     \since 5.4
 
-    \value ScheduleBeforeSynchronizing Before synchronization.
-    \value ScheduleAfterSynchronizing After synchronization.
-    \value ScheduleBeforeRendering Before rendering.
-    \value ScheduleAfterRendering After rendering.
-    \value ScheduleAfterSwap After the frame is swapped.
+    \value BeforeSynchronizingStage Before synchronization.
+    \value AfterSynchronizingStage After synchronization.
+    \value BeforeRenderingStage Before rendering.
+    \value AfterRenderingStage After rendering.
+    \value AfterSwapStage After the frame is swapped.
 
     \sa {Scene Graph and Rendering}
  */

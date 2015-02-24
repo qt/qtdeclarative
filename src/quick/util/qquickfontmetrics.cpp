@@ -277,7 +277,7 @@ qreal QQuickFontMetrics::lineWidth() const
     \l {QQuickTextMetrics::advanceWidth}{advanceWidth} property of
     \l {QQuickTextMetrics::advanceWidth}{TextMetrics}.
 
-    \sa {QFontMetricsF::width()}, height()
+    \sa {QFontMetricsF::width()}, {QFontMetricsF::height()}
 */
 qreal QQuickFontMetrics::advanceWidth(const QString &text) const
 {

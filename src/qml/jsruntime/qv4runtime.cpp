@@ -1005,7 +1005,7 @@ ReturnedValue Runtime::callElement(ExecutionEngine *engine, const Value &index, 
 ReturnedValue Runtime::callValue(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
     if (!func.isObject())
-        return engine->throwTypeError();
+        return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
 
     return func.objectValue()->call(callData);
 }

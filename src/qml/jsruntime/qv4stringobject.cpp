@@ -38,7 +38,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
 #include "qv4scopedvalue_p.h"
-
+#include "qv4alloca_p.h"
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>

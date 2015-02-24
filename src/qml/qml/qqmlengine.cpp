@@ -368,7 +368,7 @@ The following functions are also on the Qt object.
 
 /*!
     \qmlproperty object Qt::platform
-    \since 4.8
+    \since 5.1
 
     The \c platform object provides info about the underlying platform.
 
@@ -392,6 +392,8 @@ The following functions are also on the Qt object.
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "wince" - Windows CE
+        \li \c "winrt" - Windows RT
+        \li \c "winphone" - Windows Phone
     \endlist
     \endtable
 */
