@@ -2292,7 +2292,14 @@ void QQuickTextEdit::updateWholeDocument()
 
 void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
 {
+    Q_D(QQuickTextEdit);
     markDirtyNodesForRange(block.position(), block.position() + block.length(), 0);
+
+    polish();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+        update();
+    }
 }
 
 void QQuickTextEdit::updateCursor()
