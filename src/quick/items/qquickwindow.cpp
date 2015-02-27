@@ -1397,7 +1397,7 @@ bool QQuickWindow::event(QEvent *e)
         break;
     }
     case QEvent::NativeGesture:
-        d->deliverGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
+        d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
     default:
         break;
@@ -1772,7 +1772,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 }
 #endif // QT_NO_WHEELEVENT
 
-bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
+bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
@@ -1784,7 +1784,7 @@ bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEv
         QQuickItem *child = children.at(ii);
         if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
-        if (deliverGestureEvent(child, event))
+        if (deliverNativeGestureEvent(child, event))
             return true;
     }
 

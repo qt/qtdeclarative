@@ -141,7 +141,7 @@ public:
 #ifndef QT_NO_WHEELEVENT
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
-    bool deliverGestureEvent(QQuickItem *, QNativeGestureEvent *);
+    bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
                             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *, QSet<QQuickItem*> *filtered);
     void deliverTouchEvent(QTouchEvent *);
