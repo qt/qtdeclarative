@@ -1756,6 +1756,22 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     return false;
 }
 
+/*! \reimp */
+void QQuickWindow::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickWindow);
+    qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta() << event->phase();
+
+    //if the actual wheel event was accepted, accept the compatibility wheel event and return early
+    if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
+        return;
+
+    event->ignore();
+    d->deliverWheelEvent(d->contentItem, event);
+    d->lastWheelEventAccepted = event->isAccepted();
+}
+#endif // QT_NO_WHEELEVENT
+
 bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -1787,23 +1803,6 @@ bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEv
 
     return false;
 }
-
-/*! \reimp */
-void QQuickWindow::wheelEvent(QWheelEvent *event)
-{
-    Q_D(QQuickWindow);
-    qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta() << event->phase();
-
-    //if the actual wheel event was accepted, accept the compatibility wheel event and return early
-    if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
-        return;
-
-    event->ignore();
-    d->deliverWheelEvent(d->contentItem, event);
-    d->lastWheelEventAccepted = event->isAccepted();
-}
-#endif // QT_NO_WHEELEVENT
-
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
