@@ -63,6 +63,8 @@ public Q_SLOTS:
                     int modifiers, int delay);
     bool mouseDoubleClick(QObject *item, qreal x, qreal y, int button,
                           int modifiers, int delay);
+    bool mouseDoubleClickSequence(QObject *item, qreal x, qreal y, int button,
+                          int modifiers, int delay);
     bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons);
 
 #ifndef QT_NO_WHEELEVENT
