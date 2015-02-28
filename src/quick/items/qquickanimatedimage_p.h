@@ -84,6 +84,7 @@ private Q_SLOTS:
     void movieUpdate();
     void movieRequestFinished();
     void playingStatusChanged();
+    void onCacheChanged();
 
 protected:
     void load() Q_DECL_OVERRIDE;

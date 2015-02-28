@@ -104,7 +104,13 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
     about its state, such as the current frame and total number of frames.
     The result is an animated image with a simple progress indicator underneath it.
 
-    \b Note: Unlike images, animated images are not cached or shared internally.
+    \b Note: When animated images are cached, every frame of the animation will be cached.
+
+    Set cache to false if you are playing a long or large animation and you
+    want to conserve memory.
+
+    If the image data comes from a sequential device (e.g. a socket),
+    AnimatedImage can only loop if cache is set to true.
 
     \clearfloat
     \snippet qml/animatedimage.qml document
@@ -126,6 +132,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
 QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
     : QQuickImage(*(new QQuickAnimatedImagePrivate), parent)
 {
+    QObject::connect(this, &QQuickImageBase::cacheChanged, this, &QQuickAnimatedImage::onCacheChanged);
 }
 
 QQuickAnimatedImage::~QQuickAnimatedImage()
@@ -372,7 +379,8 @@ void QQuickAnimatedImage::movieRequestFinished()
             this, SLOT(playingStatusChanged()));
     connect(d->_movie, SIGNAL(frameChanged(int)),
             this, SLOT(movieUpdate()));
-    d->_movie->setCacheMode(QMovie::CacheAll);
+    if (d->cache)
+        d->_movie->setCacheMode(QMovie::CacheAll);
 
     d->status = Ready;
     emit statusChanged(d->status);
@@ -406,6 +414,11 @@ void QQuickAnimatedImage::movieUpdate()
 {
     Q_D(QQuickAnimatedImage);
 
+    if (!d->cache) {
+        qDeleteAll(d->frameMap);
+        d->frameMap.clear();
+    }
+
     if (d->_movie) {
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
         emit frameChanged();
@@ -423,6 +436,22 @@ void QQuickAnimatedImage::playingStatusChanged()
     if ((d->_movie->state() == QMovie::Paused) != d->paused) {
         d->paused = (d->_movie->state() == QMovie::Paused);
         emit pausedChanged();
+    }
+}
+
+void QQuickAnimatedImage::onCacheChanged()
+{
+    Q_D(QQuickAnimatedImage);
+    if (!cache()) {
+        qDeleteAll(d->frameMap);
+        d->frameMap.clear();
+        if (d->_movie) {
+            d->_movie->setCacheMode(QMovie::CacheNone);
+        }
+    } else {
+        if (d->_movie) {
+            d->_movie->setCacheMode(QMovie::CacheAll);
+        }
     }
 }
 
