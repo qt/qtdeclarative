@@ -169,6 +169,8 @@ private slots:
     void implicitSizeBinding_data();
     void implicitSizeBinding();
 
+    void signal_editingfinished();
+
     void preeditCursorRectangle();
     void inputMethodComposing();
     void cursorRectangleSize_data();
@@ -3315,6 +3317,53 @@ void tst_qquicktextedit::implicitSizeBinding()
     textObject->resetHeight();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
+}
+
+void tst_qquicktextedit::signal_editingfinished()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("signal_editingfinished.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickTextEdit *input1 = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window->rootObject()->property("input1")));
+    QVERIFY(input1);
+    QQuickTextEdit *input2 = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window->rootObject()->property("input2")));
+    QVERIFY(input2);
+
+    QSignalSpy editingFinished1Spy(input1, SIGNAL(editingFinished()));
+
+    input1->setFocus(true);
+    QTRY_VERIFY(input1->hasActiveFocus());
+    QTRY_VERIFY(!input2->hasActiveFocus());
+
+    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QTRY_COMPARE(editingFinished1Spy.count(), 1);
+
+    QTRY_VERIFY(!input1->hasActiveFocus());
+    QTRY_VERIFY(input2->hasActiveFocus());
+
+    QSignalSpy editingFinished2Spy(input2, SIGNAL(editingFinished()));
+
+    input2->setFocus(true);
+    QTRY_VERIFY(!input1->hasActiveFocus());
+    QTRY_VERIFY(input2->hasActiveFocus());
+
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QTRY_COMPARE(editingFinished2Spy.count(), 1);
+
+    QTRY_VERIFY(input1->hasActiveFocus());
+    QTRY_VERIFY(!input2->hasActiveFocus());
 }
 
 void tst_qquicktextedit::clipRect()

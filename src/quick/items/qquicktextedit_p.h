@@ -283,6 +283,7 @@ Q_SIGNALS:
     void baseUrlChanged();
     void inputMethodHintsChanged();
     void renderTypeChanged();
+    Q_REVISION(6) void editingFinished();
 
 public Q_SLOTS:
     void selectAll();

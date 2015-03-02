@@ -267,6 +267,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickOpenGLInfo>(uri, 2, 4,"OpenGLInfo", QQuickOpenGLInfo::tr("OpenGLInfo is only available via attached properties"));
 
     qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");
+
+    qmlRegisterType<QQuickTextEdit, 6>(uri, 2, 6, "TextEdit");
 }
 
 static void initResources()

@@ -2403,10 +2403,13 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
             qGuiApp->inputMethod()->show();
         q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                 q, SLOT(q_updateAlignment()));
+#endif
     } else {
+#ifndef QT_NO_IM
         q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
+        emit q->editingFinished();
     }
 }
 
@@ -2572,6 +2575,15 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     The corresponding handler is \c onLinkHovered.
 
     \sa hoveredLink, linkAt()
+*/
+
+/*!
+    \qmlsignal QtQuick::TextEdit::editingFinished()
+    \since 5.6
+
+    This signal is emitted when the text edit loses focus.
+
+    The corresponding handler is \c onEditingFinished.
 */
 
 /*!
