@@ -185,21 +185,7 @@ public:
 
     const std::vector<Use> &uses(const Temp &t) const
     {
-        return _uses[t.index];
-    }
-
-    bool useMustHaveReg(const Temp &t, int position) {
-        foreach (const Use &use, uses(t))
-            if (use.pos == position)
-                return use.mustHaveRegister();
-        return false;
-    }
-
-    bool isUsedAt(const Temp &t, int position) {
-        foreach (const Use &use, uses(t))
-            if (use.pos == position)
-                return true;
-        return false;
+        return _uses.at(t.index);
     }
 
     bool canHaveRegister(const Temp &t) const {
@@ -699,9 +685,13 @@ protected: // IRDecoder
     virtual void visitPhi(IR::Phi *s)
     {
         addDef(s->targetTemp, true);
-        foreach (Expr *e, s->d->incoming) {
+        for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
+            Expr *e = s->d->incoming.at(i);
             if (Temp *t = e->asTemp()) {
-                addUses(t, Use::CouldHaveRegister);
+                // The actual use of an incoming value in a phi node is right before the terminator
+                // of the other side of the incoming edge.
+                const int usePos = _lifeTimeIntervals->positionForStatement(_currentBB->in.at(i)->terminator()) - 1;
+                addUses(t, Use::CouldHaveRegister, usePos);
                 addHint(s->targetTemp, t);
                 addHint(t, s->targetTemp);
             }
@@ -747,6 +737,11 @@ private:
     void addUses(Expr *e, Use::RegisterFlag flag)
     {
         const int usePos = usePosition(_currentStmt);
+        addUses(e, flag, usePos);
+    }
+
+    void addUses(Expr *e, Use::RegisterFlag flag, int usePos)
+    {
         Q_ASSERT(usePos > 0);
         if (!e)
             return;
