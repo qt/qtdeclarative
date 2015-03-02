@@ -41,19 +41,23 @@ AbstractProgressBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            indicator ? indicator.implicitWidth : 0) + padding.left + padding.right
+                            indicator ? indicator.implicitWidth : 0) + leftPadding + rightPadding
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             indicator ? indicator.implicitHeight : 0) + padding.top + padding.bottom
+                             indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
 
     Accessible.role: Accessible.ProgressBar
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     indicator: Item {
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
+
         scale: control.effectiveLayoutDirection === Qt.RightToLeft ? -1 : 1
 
         Repeater {
@@ -89,9 +93,9 @@ AbstractProgressBar {
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 6
-        x: padding.left
+        x: control.leftPadding
         y: (parent.height - height) / 2
-        width: parent.width - padding.left - padding.bottom
+        width: parent.width - control.leftPadding - control.rightPadding
         height: 6
 
         radius: style.roundness

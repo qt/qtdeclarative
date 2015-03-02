@@ -41,14 +41,17 @@ AbstractScrollBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            handle.implicitWidth + padding.left + padding.right)
+                            handle.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             handle.implicitHeight + padding.top + padding.bottom)
+                             handle.implicitHeight + topPadding + bottomPadding)
 
     Accessible.pressed: pressed
     Accessible.role: Accessible.ScrollBar
 
-    padding { top: 2; left: 2; right: 2; bottom: 2 }
+    topPadding: 2
+    leftPadding: 2
+    rightPadding: 2
+    bottomPadding: 2
 
     handle: Rectangle {
         id: handle
@@ -62,10 +65,10 @@ AbstractScrollBar {
         opacity: 0.0
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-        x: padding.left + (horizontal ? control.position * control.width : 0)
-        y: padding.top + (horizontal ? 0 : control.position * control.height)
-        width: horizontal ? control.size * control.width - padding.left - padding.right : implicitWidth
-        height: horizontal ? implicitHeight : control.size * control.height - padding.top - padding.bottom
+        x: control.leftPadding + (horizontal ? control.position * control.width : 0)
+        y: control.topPadding + (horizontal ? 0 : control.position * control.height)
+        width: horizontal ? control.size * control.width - control.leftPadding - control.rightPadding : implicitWidth
+        height: horizontal ? implicitHeight : control.size * control.height - control.topPadding - control.bottomPadding
 
         states: State {
             name: "active"

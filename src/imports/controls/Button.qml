@@ -41,21 +41,24 @@ AbstractButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + padding.left + padding.right : 0)
+                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + padding.top + padding.bottom : 0)
+                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
 
     Accessible.name: text
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     label: Text {
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
         color: control.style.selectedTextColor

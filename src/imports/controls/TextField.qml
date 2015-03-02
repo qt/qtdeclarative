@@ -42,10 +42,10 @@ AbstractTextField {
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             Math.max(input ? input.implicitWidth : 0,
-                                     placeholder ? placeholder.implicitWidth : 0) + padding.left + padding.right)
+                                     placeholder ? placeholder.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(input ? input.implicitHeight : 0,
-                                      placeholder ? placeholder.implicitHeight : 0) + padding.top + padding.bottom)
+                                      placeholder ? placeholder.implicitHeight : 0) + topPadding + bottomPadding)
 
     Accessible.name: text
     Accessible.role: Accessible.EditableText
@@ -54,13 +54,16 @@ AbstractTextField {
     Accessible.passwordEdit: !!input && (input.echoMode == TextInput.Password ||
                                          input.echoMode === TextInput.PasswordEchoOnEdit)
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     input: TextInput {
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         color: style.textColor
         selectionColor: style.selectionColor
@@ -70,10 +73,10 @@ AbstractTextField {
     }
 
     placeholder: Text {
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         color: control.style.textColor
         opacity: control.style.disabledOpacity

@@ -54,18 +54,19 @@ AbstractDayOfWeekRow {
     contentWidth: row.implicitWidth
     contentHeight: row.implicitHeight
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + padding.left + padding.right)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + padding.top + padding.bottom)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    padding { top: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    bottomPadding: style.padding
 
     contentItem: Row {
         id: row
 
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         Repeater {
             model: control.source

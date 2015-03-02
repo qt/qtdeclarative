@@ -43,21 +43,24 @@ AbstractFrame {
     default property alias data: content.data
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentWidth + padding.left + padding.right)
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentHeight + padding.top + padding.bottom)
+                             contentHeight + topPadding + bottomPadding)
 
     contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
     contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     contentItem: Item {
         id: content
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
     }
 
     background: Rectangle {

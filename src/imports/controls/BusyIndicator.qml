@@ -40,12 +40,15 @@ import QtQuick.Controls 2.0
 AbstractBusyIndicator {
     id: control
 
-    implicitWidth: indicator.implicitWidth + padding.left + padding.right
-    implicitHeight: indicator.implicitHeight + padding.top + padding.bottom
+    implicitWidth: indicator.implicitWidth + leftPadding + rightPadding
+    implicitHeight: indicator.implicitHeight + topPadding + bottomPadding
 
     Accessible.role: Accessible.Indicator
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     indicator: Item {
         id: delegate

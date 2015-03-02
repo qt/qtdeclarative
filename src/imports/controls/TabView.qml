@@ -49,10 +49,10 @@ AbstractTabView {
     contentWidth: listView.implicitWidth
     contentHeight: listView.contentHeight
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + padding.left + padding.right)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + padding.top + padding.bottom)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    padding.top: tabBar && tabBar.parent === control ? tabBar.height : 0
+    topPadding: tabBar && tabBar.parent === control ? tabBar.height : 0
 
     tabBar: TabBar { }
 
@@ -68,10 +68,10 @@ AbstractTabView {
         Binding { target: control; property: "currentIndex"; value: listView.currentIndex }
         Binding { target: listView; property: "currentIndex"; value: control.currentIndex }
 
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         orientation: Qt.Horizontal
         snapMode: ListView.SnapOneItem

@@ -42,15 +42,18 @@ AbstractSlider {
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             Math.max(track ? track.implicitWidth : 0,
-                                     handle ? handle.implicitWidth : 0) + padding.left + padding.right)
+                                     handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(track ? track.implicitHeight : 0,
-                                      handle ? handle.implicitHeight : 0) + padding.top + padding.bottom)
+                                      handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     Accessible.pressed: pressed
     Accessible.role: Accessible.Slider
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     handle: Rectangle {
         implicitWidth: 20
@@ -81,10 +84,10 @@ AbstractSlider {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         implicitWidth: horizontal ? 120 : 6
         implicitHeight: horizontal ? 6 : 120
-        x: horizontal ? padding.left : (control.width - width) / 2
-        y: horizontal ? (control.height - height) / 2 : padding.top
-        width: horizontal ? parent.width - padding.left - padding.right : implicitWidth
-        height: horizontal ? implicitHeight : parent.height - padding.top - padding.bottom
+        x: horizontal ? control.leftPadding : (control.width - width) / 2
+        y: horizontal ? (control.height - height) / 2 : control.topPadding
+        width: horizontal ? parent.width - control.leftPadding - control.rightPadding : implicitWidth
+        height: horizontal ? implicitHeight : parent.height - control.topPadding - control.bottomPadding
 
         radius: style.roundness
         border.color: style.frameColor

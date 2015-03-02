@@ -43,10 +43,10 @@ AbstractToggleButton {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             (label ? label.implicitWidth : 0) +
                             (indicator ? indicator.implicitWidth : 0) +
-                            (label && indicator ? style.spacing : 0) + padding.left + padding.right)
+                            (label && indicator ? style.spacing : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
-                                      indicator ? indicator.implicitHeight : 0) + padding.top + padding.bottom)
+                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
 
     Accessible.name: text
     Accessible.checkable: true
@@ -54,14 +54,17 @@ AbstractToggleButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding { top: style.padding; left: style.padding; right: style.padding; bottom: style.padding }
+    topPadding: style.padding
+    leftPadding: style.padding
+    rightPadding: style.padding
+    bottomPadding: style.padding
 
     indicator: Rectangle {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
 
         implicitWidth: 36
         implicitHeight: 20
-        x: text ? (mirror ? parent.width - width - padding.right : padding.left) : (parent.width - width) / 2
+        x: text ? (mirror ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
         y: (parent.height - height) / 2
 
         radius: style.roundness
@@ -94,10 +97,10 @@ AbstractToggleButton {
     label: Text {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
 
-        x: mirror ? padding.left : (indicator.x + indicator.width + control.style.spacing)
-        y: padding.top
-        width: parent.width - indicator.width - control.style.spacing - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.style.spacing)
+        y: control.topPadding
+        width: parent.width - indicator.width - control.style.spacing - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
         color: control.style.textColor

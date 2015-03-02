@@ -54,18 +54,19 @@ AbstractWeekNumberColumn {
     contentWidth: column.implicitWidth
     contentHeight: column.implicitHeight
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + padding.left + padding.right)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + padding.top + padding.bottom)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    padding { left: style.padding; right: style.padding }
+    leftPadding: style.padding
+    rightPadding: style.padding
 
     contentItem: Column {
         id: column
 
-        x: padding.left
-        y: padding.top
-        width: parent.width - padding.left - padding.right
-        height: parent.height - padding.top - padding.bottom
+        x: control.leftPadding
+        y: control.topPadding
+        width: parent.width - control.leftPadding - control.rightPadding
+        height: parent.height - control.topPadding - control.bottomPadding
 
         Repeater {
             model: control.source
