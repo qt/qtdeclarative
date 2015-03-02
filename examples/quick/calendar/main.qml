@@ -94,7 +94,7 @@ ApplicationWindow {
                 month: model.month
                 year: model.year
 
-                padding.top: title.height
+                topPadding: title.height
                 Column {
                     id: title
                     x: delegate.contentItem.x
@@ -113,7 +113,7 @@ ApplicationWindow {
                     }
                 }
 
-                padding.left: weekNumbers.width
+                leftPadding: weekNumbers.width
                 WeekNumberColumn {
                     id: weekNumbers
                     month: model.month
