@@ -102,6 +102,33 @@ public:
         static void inOrder(const QVarLengthArray<BinaryTreeNode, 16> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
     };
 
+    struct BinaryTreeNodeKey
+    {
+        BinaryTreeNodeKey(QFontEngine *fe,
+                          QQuickDefaultClipNode *cn,
+                          QRgb col,
+                          int selState)
+            : fontEngine(fe)
+            , clipNode(cn)
+            , color(col)
+            , selectionState(selState)
+        {
+        }
+
+        bool operator==(const BinaryTreeNodeKey &otherKey) const
+        {
+            return fontEngine == otherKey.fontEngine
+                    && clipNode == otherKey.clipNode
+                    && color == otherKey.color
+                    && selectionState == otherKey.selectionState;
+        }
+
+        QFontEngine *fontEngine;
+        QQuickDefaultClipNode *clipNode;
+        QRgb color;
+        int selectionState;
+    };
+
     QQuickTextNodeEngine() : m_hasSelection(false), m_hasContents(false) {}
 
     bool hasContents() const { return m_hasContents; }
@@ -141,6 +168,8 @@ public:
                             int start, int end,
                             int selectionStart, int selectionEnd);
 
+    void mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
+                             QList<BinaryTreeNode *> *imageNodes);
     void addToSceneGraph(QQuickTextNode *parent,
                          QQuickText::TextStyle style = QQuickText::Normal,
                          const QColor &styleColor = QColor());

@@ -670,6 +670,76 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     }
 }
 
+uint qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key)
+{
+    // Just use the default hash for pairs
+    return qHash(qMakePair(key.fontEngine, qMakePair(key.clipNode,
+                                                     qMakePair(key.color, key.selectionState))));
+}
+
+void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
+                                               QList<BinaryTreeNode *> *imageNodes)
+{
+    QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *> map;
+
+    for (int i = 0; i < m_processedNodes.size(); ++i) {
+        BinaryTreeNode *node = m_processedNodes.data() + i;
+
+        if (node->image.isNull()) {
+            QRawFont rawFont = node->glyphRun.rawFont();
+            QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
+            QFontEngine *fontEngine = rawFontD->fontEngine;
+
+            BinaryTreeNodeKey key(fontEngine,
+                                  node->clipNode,
+                                  node->color.rgba(),
+                                  int(node->selectionState));
+            map.insertMulti(key, node);
+        } else {
+            imageNodes->append(node);
+        }
+    }
+
+    QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *>::const_iterator it = map.constBegin();
+    while (it != map.constEnd()) {
+        BinaryTreeNode *primaryNode = it.value();
+        regularNodes->append(primaryNode);
+
+        int count = 0;
+        QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *>::const_iterator jt;
+        for (jt = it; jt != map.constEnd() && jt.key() == it.key(); ++jt)
+            count += jt.value()->glyphRun.glyphIndexes().size();
+
+        if (count != primaryNode->glyphRun.glyphIndexes().size()) {
+            QGlyphRun &glyphRun = primaryNode->glyphRun;
+            QVector<quint32> glyphIndexes = glyphRun.glyphIndexes();
+            glyphIndexes.reserve(count);
+
+            QVector<QPointF> glyphPositions = glyphRun.positions();
+            glyphPositions.reserve(count);
+
+            for (jt = it + 1; jt != map.constEnd() && jt.key() == it.key(); ++jt) {
+                BinaryTreeNode *otherNode = jt.value();
+                glyphIndexes += otherNode->glyphRun.glyphIndexes();
+                primaryNode->ranges += otherNode->ranges;
+
+                QVector<QPointF> otherPositions = otherNode->glyphRun.positions();
+                for (int j = 0; j < otherPositions.size(); ++j)
+                    glyphPositions += otherPositions.at(j) + (otherNode->position - primaryNode->position);
+            }
+            it = jt;
+
+            Q_ASSERT(glyphPositions.size() == count);
+            Q_ASSERT(glyphIndexes.size() == count);
+
+            glyphRun.setGlyphIndexes(glyphIndexes);
+            glyphRun.setPositions(glyphPositions);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                                             QQuickText::TextStyle style,
                                             const QColor &styleColor)
@@ -677,54 +747,9 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     if (m_currentLine.isValid())
         processCurrentLine();
 
-    // Then, go through all the nodes for all lines and combine all QGlyphRuns with a common
-    // font, selection state and clip node.
-    typedef QPair<QFontEngine *, QPair<QQuickDefaultClipNode *, QPair<QRgb, int> > > KeyType;
-    QHash<KeyType, BinaryTreeNode *> map;
     QList<BinaryTreeNode *> nodes;
     QList<BinaryTreeNode *> imageNodes;
-    for (int i = 0; i < m_processedNodes.size(); ++i) {
-        BinaryTreeNode *node = m_processedNodes.data() + i;
-
-        if (node->image.isNull()) {
-            QGlyphRun glyphRun = node->glyphRun;
-            QRawFont rawFont = glyphRun.rawFont();
-            QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
-
-            QFontEngine *fontEngine = rawFontD->fontEngine;
-
-            KeyType key(qMakePair(fontEngine,
-                                  qMakePair(node->clipNode,
-                                            qMakePair(node->color.rgba(), int(node->selectionState)))));
-
-            BinaryTreeNode *otherNode = map.value(key, 0);
-            if (otherNode != 0) {
-                QGlyphRun &otherGlyphRun = otherNode->glyphRun;
-
-                QVector<quint32> otherGlyphIndexes = otherGlyphRun.glyphIndexes();
-                QVector<QPointF> otherGlyphPositions = otherGlyphRun.positions();
-
-                otherGlyphIndexes += glyphRun.glyphIndexes();
-
-                QVector<QPointF> glyphPositions = glyphRun.positions();
-                otherGlyphPositions.reserve(otherGlyphPositions.size() + glyphPositions.size());
-                for (int j = 0; j < glyphPositions.size(); ++j) {
-                    otherGlyphPositions += glyphPositions.at(j) + (node->position - otherNode->position);
-                }
-
-                otherGlyphRun.setGlyphIndexes(otherGlyphIndexes);
-                otherGlyphRun.setPositions(otherGlyphPositions);
-
-                otherNode->ranges += node->ranges;
-
-            } else {
-                map.insert(key, node);
-                nodes.append(node);
-            }
-        } else {
-            imageNodes.append(node);
-        }
-    }
+    mergeProcessedNodes(&nodes, &imageNodes);
 
     for (int i = 0; i < m_backgrounds.size(); ++i) {
         const QRectF &rect = m_backgrounds.at(i).first;
