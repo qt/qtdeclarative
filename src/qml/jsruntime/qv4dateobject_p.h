@@ -49,16 +49,16 @@ struct DateObject : Object {
     DateObject(InternalClass *ic, QV4::Object *prototype)
         : Object(ic, prototype)
     {
-        value = Encode(qSNaN());
+        date = qSNaN();
     }
 
     DateObject(QV4::ExecutionEngine *engine, const Value &date)
         : Object(engine->emptyClass, engine->datePrototype.objectValue())
     {
-        value = date;
+        this->date = date.toNumber();
     }
     DateObject(QV4::ExecutionEngine *engine, const QDateTime &date);
-    Value value;
+    double date;
 };
 
 
@@ -73,9 +73,8 @@ struct DateObject: Object {
     Q_MANAGED_TYPE(DateObject)
 
 
-    Value date() const { return d()->value; }
-    Value &date() { return d()->value; }
-    void setDate(const Value &date) { d()->value = date; }
+    double date() const { return d()->date; }
+    void setDate(double date) { d()->date = date; }
 
     QDateTime toQDateTime() const;
 };
