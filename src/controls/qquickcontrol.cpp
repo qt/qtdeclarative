@@ -52,7 +52,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    style(Q_NULLPTR), attributes(QQuickControl::Attr_Count), background(Q_NULLPTR), padding(Q_NULLPTR)
+    style(Q_NULLPTR), attributes(QQuickControl::Attr_Count), background(Q_NULLPTR),
+    topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0)
 {
 }
 
@@ -105,20 +106,71 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 }
 
 /*!
-    \qmlpropertygroup QtQuickControls2::Control::padding
-    \qmlproperty real QtQuickControls2::Control::padding.top
-    \qmlproperty real QtQuickControls2::Control::padding.left
-    \qmlproperty real QtQuickControls2::Control::padding.right
-    \qmlproperty real QtQuickControls2::Control::padding.bottom
+    \qmlproperty real QtQuickControls2::Control::topPadding
+    \qmlproperty real QtQuickControls2::Control::leftPadding
+    \qmlproperty real QtQuickControls2::Control::rightPadding
+    \qmlproperty real QtQuickControls2::Control::bottomPadding
 
-    This property holds the padding.
+    These properties hold the padding.
 */
-QQuickPadding *QQuickControl::padding() const
+qreal QQuickControl::topPadding() const
 {
     Q_D(const QQuickControl);
-    if (!d->padding)
-        d->padding = new QQuickPadding(const_cast<QQuickControl *>(this));
-    return d->padding;
+    return d->topPadding;
+}
+
+void QQuickControl::setTopPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    if (!qFuzzyCompare(d->topPadding, padding)) {
+        d->topPadding = padding;
+        emit topPaddingChanged();
+    }
+}
+
+qreal QQuickControl::leftPadding() const
+{
+    Q_D(const QQuickControl);
+    return d->leftPadding;
+}
+
+void QQuickControl::setLeftPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    if (!qFuzzyCompare(d->leftPadding, padding)) {
+        d->leftPadding = padding;
+        emit leftPaddingChanged();
+    }
+}
+
+qreal QQuickControl::rightPadding() const
+{
+    Q_D(const QQuickControl);
+    return d->rightPadding;
+}
+
+void QQuickControl::setRightPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    if (!qFuzzyCompare(d->rightPadding, padding)) {
+        d->rightPadding = padding;
+        emit rightPaddingChanged();
+    }
+}
+
+qreal QQuickControl::bottomPadding() const
+{
+    Q_D(const QQuickControl);
+    return d->bottomPadding;
+}
+
+void QQuickControl::setBottomPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    if (!qFuzzyCompare(d->bottomPadding, padding)) {
+        d->bottomPadding = padding;
+        emit bottomPaddingChanged();
+    }
 }
 
 /*!

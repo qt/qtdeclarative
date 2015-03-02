@@ -31,7 +31,6 @@ HEADERS += \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickexclusivegroup_p.h \
-    $$PWD/qquickpadding_p.h \
     $$PWD/qquickstyle_p.h
 
 SOURCES += \

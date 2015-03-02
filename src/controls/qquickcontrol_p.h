@@ -54,20 +54,32 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickStyle;
-class QQuickPadding;
 class QQuickControlPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPadding *padding READ padding CONSTANT FINAL)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding NOTIFY topPaddingChanged FINAL)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding NOTIFY leftPaddingChanged FINAL)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding NOTIFY rightPaddingChanged FINAL)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle RESET resetStyle NOTIFY styleChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
 
-    QQuickPadding *padding() const;
+    qreal topPadding() const;
+    void setTopPadding(qreal padding);
+
+    qreal leftPadding() const;
+    void setLeftPadding(qreal padding);
+
+    qreal rightPadding() const;
+    void setRightPadding(qreal padding);
+
+    qreal bottomPadding() const;
+    void setBottomPadding(qreal padding);
 
     QQuickStyle *style() const;
     void setStyle(QQuickStyle *style);
@@ -87,6 +99,10 @@ public:
 Q_SIGNALS:
     void styleChanged();
     void backgroundChanged();
+    void topPaddingChanged();
+    void leftPaddingChanged();
+    void rightPaddingChanged();
+    void bottomPaddingChanged();
 
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);

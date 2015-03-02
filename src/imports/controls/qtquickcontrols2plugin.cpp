@@ -61,7 +61,6 @@
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
 #include <QtQuickControls/private/qquickexclusivegroup_p.h>
-#include <QtQuickControls/private/qquickpadding_p.h>
 #include <QtQuickControls/private/qquickstyle_p.h>
 
 void initResources()
@@ -112,7 +111,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");
-    qmlRegisterType<QQuickPadding>(uri, 2, 0, "Padding");
     qmlRegisterType<QQuickStyle>(uri, 2, 0, "Style");
 }
 

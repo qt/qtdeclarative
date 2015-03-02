@@ -50,7 +50,6 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickControls/private/qquickstyle_p.h>
-#include <QtQuickControls/private/qquickpadding_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,7 +67,10 @@ public:
     QQuickStyle *style;
     QBitArray attributes;
     QQuickItem *background;
-    mutable QQuickPadding *padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
 };
 
 QT_END_NAMESPACE
