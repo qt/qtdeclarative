@@ -1604,7 +1604,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
     if (freeUntilPos_reg == 0) {
         // no register available without spilling
         if (DebugRegAlloc)
-            qDebug() << "*** no register available for %" << current.temp().index;
+            qDebug("*** no register available for %u", current.temp().index);
         return;
     } else if (current.end() < freeUntilPos_reg) {
         // register available for the whole interval
@@ -1715,7 +1715,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
     Q_ASSERT(nextUse);
     Q_ASSERT(!nextUse->isFixedInterval());
 
-    split(*nextUse, position);
+    split(*nextUse, position, /*skipOptionalRegisterUses =*/ true);
 
     // We might have chosen a register that is used by a range that has a hole in its life time.
     // If that's the case, check if the current interval completely fits in the hole. Or rephrased:
@@ -1765,6 +1765,9 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
 }
 
 /// Find the first use after the start position for the given temp.
+///
+/// This is only called when all registers are in use, and when one of them has to be spilled to the
+/// stack. So, uses where a register is optional can be ignored.
 int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
 {
     typedef std::vector<Use>::const_iterator ConstIt;
@@ -1772,9 +1775,11 @@ int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
     const std::vector<Use> &usePositions = _info->uses(t);
     const ConstIt cend = usePositions.end();
     for (ConstIt it = usePositions.begin(); it != cend; ++it) {
-        const int usePos = it->pos;
-        if (usePos >= startPosition)
-            return usePos;
+        if (it->mustHaveRegister()) {
+            const int usePos = it->pos;
+            if (usePos >= startPosition)
+                return usePos;
+        }
     }
 
     return -1;
