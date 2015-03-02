@@ -34,40 +34,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.6
 import QtQuick.Controls 2.0
 
 AbstractTextField {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            Math.max(input ? input.implicitWidth : 0,
-                                     placeholder ? placeholder.implicitWidth : 0) + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(input ? input.implicitHeight : 0,
-                                      placeholder ? placeholder.implicitHeight : 0) + topPadding + bottomPadding)
-
     Accessible.name: text
     Accessible.role: Accessible.EditableText
-    Accessible.readOnly: !input || input.readOnly
+    Accessible.readOnly: readOnly
     Accessible.description: placeholder ? placeholder.text : ""
-    Accessible.passwordEdit: !!input && (input.echoMode == TextInput.Password ||
-                                         input.echoMode === TextInput.PasswordEchoOnEdit)
+    Accessible.passwordEdit: echoMode === TextInput.Password || echoMode === TextInput.PasswordEchoOnEdit
 
     padding: style.padding
 
-    input: TextInput {
-        x: control.leftPadding
-        y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
-
-        color: style.textColor
-        selectionColor: style.selectionColor
-        selectedTextColor: style.selectedTextColor
-        verticalAlignment: TextInput.AlignVCenter
-        Keys.forwardTo: control
-    }
+    color: style.textColor
+    selectionColor: style.selectionColor
+    selectedTextColor: style.selectedTextColor
+    verticalAlignment: TextInput.AlignVCenter
 
     placeholder: Text {
         x: control.leftPadding
@@ -77,7 +61,7 @@ AbstractTextField {
 
         color: control.style.textColor
         opacity: control.style.disabledOpacity
-        visible: input ? !input.displayText : !control.text
+        visible: !control.displayText
     }
 
     background: Rectangle {

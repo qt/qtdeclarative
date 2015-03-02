@@ -35,77 +35,107 @@
 ****************************************************************************/
 
 #include "qquickabstracttextfield_p.h"
-#include "qquickcontrol_p_p.h"
+#include "qquickabstractapplicationwindow_p.h"
+#include "qquickstyle_p_p.h"
+#include "qquickstyle_p.h"
 
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquicktextinput_p.h>
+#include <QtQuick/private/qquickclipnode_p.h>
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAbstractTextFieldPrivate : public QQuickControlPrivate
+class QQuickAbstractTextFieldPrivate
 {
     Q_DECLARE_PUBLIC(QQuickAbstractTextField)
 
 public:
-    QQuickAbstractTextFieldPrivate() : input(Q_NULLPTR), placeholder(Q_NULLPTR) { }
+    QQuickAbstractTextFieldPrivate() : hasStyle(false), style(Q_NULLPTR),
+        background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
 
-    void updateText();
+    void resolveStyle(QQuickStyle *other = 0); // TODO
 
-    QString text;
-    QQuickTextInput *input;
+    bool hasStyle;
+    QQuickStyle *style;
+    QQuickItem *background;
     QQuickText *placeholder;
+    QQuickAbstractTextField *q_ptr;
 };
 
-
-void QQuickAbstractTextFieldPrivate::updateText()
+void QQuickAbstractTextFieldPrivate::resolveStyle(QQuickStyle *res)
 {
     Q_Q(QQuickAbstractTextField);
-    q->setText(input->text());
-}
-
-QQuickAbstractTextField::QQuickAbstractTextField(QQuickItem *parent) :
-    QQuickControl(*(new QQuickAbstractTextFieldPrivate), parent)
-{
-    setFlag(ItemIsFocusScope);
-    setActiveFocusOnTab(true);
-}
-
-QString QQuickAbstractTextField::text() const
-{
-    Q_D(const QQuickAbstractTextField);
-    return d->text;
-}
-
-void QQuickAbstractTextField::setText(const QString &text)
-{
-    Q_D(QQuickAbstractTextField);
-    if (d->text != text) {
-        d->text = text;
-        if (d->input)
-            d->input->setText(text);
-        emit textChanged();
+    res = QQuickStylePrivate::resolve(q, res);
+    if (style != res) {
+        style = res;
+        emit q->styleChanged();
     }
 }
 
-QQuickTextInput *QQuickAbstractTextField::input() const
-{
-    Q_D(const QQuickAbstractTextField);
-    return d->input;
-}
-
-void QQuickAbstractTextField::setInput(QQuickTextInput *input)
+QQuickAbstractTextField::QQuickAbstractTextField(QQuickItem *parent) :
+    QQuickTextInput(parent), d_ptr(new QQuickAbstractTextFieldPrivate)
 {
     Q_D(QQuickAbstractTextField);
-    if (d->input != input) {
-        delete d->input;
-        d->input = input;
-        if (input) {
-            if (!input->parentItem())
-                input->setParentItem(this);
-            input->setText(d->text);
-            QObjectPrivate::connect(input, &QQuickTextInput::textChanged, d, &QQuickAbstractTextFieldPrivate::updateText);
+    d->q_ptr = this;
+}
+
+QQuickAbstractTextField::~QQuickAbstractTextField()
+{
+}
+
+QQuickStyle *QQuickAbstractTextField::style() const
+{
+    Q_D(const QQuickAbstractTextField);
+    if (!d->style)
+        const_cast<QQuickAbstractTextField *>(this)->d_func()->resolveStyle();
+    return d->style;
+}
+
+void QQuickAbstractTextField::setStyle(QQuickStyle *style)
+{
+    Q_D(QQuickAbstractTextField);
+    if (d->style != style) {
+        d->hasStyle = true;
+        d->resolveStyle(style);
+
+        QEvent change(QEvent::StyleChange);
+        foreach (QObject *object, findChildren<QObject *>()) {
+            if (qobject_cast<QQuickStylable *>(object))
+                QCoreApplication::sendEvent(object, &change);
         }
-        emit inputChanged();
+    }
+}
+
+bool QQuickAbstractTextField::hasStyle() const
+{
+    Q_D(const QQuickAbstractTextField);
+    return d->hasStyle;
+}
+
+void QQuickAbstractTextField::resetStyle()
+{
+    setStyle(Q_NULLPTR);
+}
+
+QQuickItem *QQuickAbstractTextField::background() const
+{
+    Q_D(const QQuickAbstractTextField);
+    return d->background;
+}
+
+void QQuickAbstractTextField::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickAbstractTextField);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+        }
+        emit backgroundChanged();
     }
 }
 
@@ -125,6 +155,51 @@ void QQuickAbstractTextField::setPlaceholder(QQuickText *placeholder)
             placeholder->setParentItem(this);
         emit placeholderChanged();
     }
+}
+
+bool QQuickAbstractTextField::event(QEvent *event)
+{
+    Q_D(QQuickAbstractTextField);
+    if (event->type() == QEvent::StyleChange)
+        d->resolveStyle();
+    return QQuickTextInput::event(event);
+}
+
+void QQuickAbstractTextField::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    Q_D(QQuickAbstractTextField);
+    QQuickTextInput::itemChange(change, data);
+    if (change == ItemSceneChange || change == ItemParentHasChanged)
+        d->resolveStyle();
+}
+
+void QQuickAbstractTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickAbstractTextField);
+    QQuickTextInput::geometryChanged(newGeometry, oldGeometry);
+    if (d->background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
+        if (!p->widthValid || qFuzzyCompare(d->background->width(), oldGeometry.width()))
+            d->background->setWidth(newGeometry.width());
+        if (!p->heightValid || qFuzzyCompare(d->background->height(), oldGeometry.height()))
+            d->background->setHeight(newGeometry.height());
+    }
+}
+
+QSGNode *QQuickAbstractTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+{
+    QQuickDefaultClipNode *clipNode = static_cast<QQuickDefaultClipNode *>(oldNode);
+    if (!clipNode)
+        clipNode = new QQuickDefaultClipNode(QRectF());
+
+    clipNode->setRect(clipRect().adjusted(leftPadding(), topPadding(), -rightPadding(), -bottomPadding()));
+    clipNode->update();
+
+    QSGNode *textNode = QQuickTextInput::updatePaintNode(clipNode->firstChild(), data);
+    if (!textNode->parent())
+        clipNode->appendChildNode(textNode);
+
+    return clipNode;
 }
 
 QT_END_NAMESPACE
