@@ -184,7 +184,8 @@ QImage QQuickTextureFactory::image() const
     {
         ...
 
-        QQmlEngine engine;
+        QQuickView view;
+        QQmlEngine *engine = view.engine();
         engine->addImageProvider(QLatin1String("colors"), new ColorPixmapProvider);
 
         ...

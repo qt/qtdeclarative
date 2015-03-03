@@ -47,6 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlUseGlyphCacheWorkaround, QML_USE_GLYPHCACHE_WORKAROUND)
+DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSIZE_GLYPHCACHE_TEXTURES)
 
 #if !defined(QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING)
 #  define QSG_DEFAULT_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
@@ -145,7 +146,10 @@ void QSGDefaultDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyph
 
 void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
-    QHash<TextureInfo *, QVector<glyph_t> > glyphTextures;
+    typedef QHash<TextureInfo *, QVector<glyph_t> > GlyphTextureHash;
+    typedef GlyphTextureHash::const_iterator GlyphTextureHashConstIt;
+
+    GlyphTextureHash glyphTextures;
 
     GLint alignment = 4; // default value
     m_funcs->glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
@@ -202,8 +206,7 @@ void QSGDefaultDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> 
     // restore to previous alignment
     m_funcs->glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
 
-    QHash<TextureInfo *, QVector<glyph_t> >::const_iterator i;
-    for (i = glyphTextures.constBegin(); i != glyphTextures.constEnd(); ++i) {
+    for (GlyphTextureHashConstIt i = glyphTextures.constBegin(), cend = glyphTextures.constEnd(); i != cend; ++i) {
         Texture t;
         t.textureId = i.key()->texture;
         t.size = i.key()->size;
@@ -489,6 +492,11 @@ bool QSGDefaultDistanceFieldGlyphCache::useTextureUploadWorkaround() const
         set = true;
     }
     return useWorkaround;
+}
+
+bool QSGDefaultDistanceFieldGlyphCache::createFullSizeTextures() const
+{
+    return qsgPreferFullSizeGlyphCacheTextures() && glyphCount() > QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
 }
 
 int QSGDefaultDistanceFieldGlyphCache::maxTextureSize() const

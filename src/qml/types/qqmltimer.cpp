@@ -329,7 +329,11 @@ bool QQmlTimer::event(QEvent *e)
         ticked();
         return true;
     } else if (e->type() == QEvent_Triggered) {
-        emit triggered();
+        if (d->running && d->pause.isStopped()) {
+            d->running = false;
+            emit triggered();
+            emit runningChanged();
+        }
         return true;
     }
     return QObject::event(e);
@@ -340,10 +344,8 @@ void QQmlTimerPrivate::animationFinished(QAbstractAnimationJob *)
     Q_Q(QQmlTimer);
     if (repeating || !running)
         return;
-    running = false;
     firstTick = false;
     QCoreApplication::postEvent(q, new QEvent(QEvent_Triggered));
-    emit q->runningChanged();
 }
 
 QT_END_NAMESPACE

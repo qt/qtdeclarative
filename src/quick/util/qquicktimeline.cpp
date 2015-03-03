@@ -659,7 +659,7 @@ void QQuickTimeLine::complete()
 */
 void QQuickTimeLine::clear()
 {
-    for (QQuickTimeLinePrivate::Ops::ConstIterator iter = d->ops.begin(); iter != d->ops.end(); ++iter)
+    for (QQuickTimeLinePrivate::Ops::const_iterator iter = d->ops.begin(), cend  = d->ops.end(); iter != cend; ++iter)
         iter.key()->_t = 0;
     d->ops.clear();
     d->length = 0;
@@ -735,9 +735,9 @@ int QQuickTimeLinePrivate::advance(int t)
         pauseTime = -1;
         // Minimal advance time
         int advanceTime = t;
-        for (Ops::Iterator iter = ops.begin(); iter != ops.end(); ++iter) {
-            TimeLine &tl = *iter;
-            Op &op = tl.ops.first();
+        for (Ops::const_iterator iter = ops.constBegin(), cend = ops.constEnd(); iter != cend; ++iter) {
+            const TimeLine &tl = *iter;
+            const Op &op = tl.ops.first();
             int length = op.length - tl.consumedOpLength;
 
             if (length < advanceTime) {

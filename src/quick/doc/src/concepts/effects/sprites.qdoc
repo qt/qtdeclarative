@@ -144,14 +144,12 @@ to some graphics memory limitations. Because it requires all the sprites for a s
 texture, attempting to load many different animations can run into texture memory limits on embedded devices. In
 these situations, a warning will be output to the console containing the maximum texture size.
 
-There are several software tools to help turn images into sprite sheets, here are some examples:
-Photoshop plugin:
-http://www.personal.psu.edu/zez1/blogs/my_blog/2011/05/scripts-4-photoshop-file-sequence-to-layers-to-sprite-sheet.html
-Gimp plugin:
-http://registry.gimp.org/node/20943
-Cmd-line tool:
-http://www.imagemagick.org/script/montage.php
-
+There are several tools to help turn a set of images into sprite sheets, here are some examples:
+\list
+ \li Photoshop plugin: \l http://www.johnwordsworth.com/projects/photoshop-sprite-sheet-generator-script
+ \li Gimp plugin: \l http://registry.gimp.org/node/20943
+ \li Cmd-line tool: \l http://www.imagemagick.org/script/montage.php
+\endlist
 
 \section2 QML Types Using the Sprite Engine
 

@@ -1358,6 +1358,11 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     for (int i = 0, c = cache.count();  i < c; ++i) {
         QQmlDelegateModelItem *item = cache.at(i);
+        // layout change triggered by removal of a previous item might have
+        // already invalidated this item in d->m_cache and deleted it
+        if (!d->m_cache.contains(item))
+            continue;
+
         if (item->modelIndex() >= index + count)
             item->setModelIndex(item->modelIndex() - count);
         else  if (item->modelIndex() >= index)
@@ -2270,21 +2275,23 @@ void QQmlDelegateModelGroupPrivate::emitModelUpdated(bool reset)
     changeSet.clear();
 }
 
+typedef QQmlDelegateModelGroupEmitterList::iterator GroupEmitterListIt;
+
 void QQmlDelegateModelGroupPrivate::createdPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->createdPackage(index, package);
 }
 
 void QQmlDelegateModelGroupPrivate::initPackage(int index, QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->initPackage(index, package);
 }
 
 void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 {
-    for (QQmlDelegateModelGroupEmitterList::iterator it = emitters.begin(); it != emitters.end(); ++it)
+    for (GroupEmitterListIt it = emitters.begin(), end = emitters.end(); it != end; ++it)
         it->destroyingPackage(package);
 }
 

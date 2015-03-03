@@ -144,7 +144,9 @@ Rectangle {
 
 An \l {Attached Properties and Attached Signal Handlers}{attached signal handler} is a signal handler that receives a signal from an \e {attaching type} rather than the object within which the handler is declared.
 
-For example, \c \l {Component::isCompleted}{Component.isCompleted} is an attached signal handler. This handler is often used to execute some JavaScript code when its creation process has been completed, as in the example below:
+For example, \l{Component::completed}{Component.onCompleted} is an attached
+signal handler. This handler is often used to execute some JavaScript code when
+its creation process has been completed, as in the example below:
 
 \qml
 import QtQuick 2.0

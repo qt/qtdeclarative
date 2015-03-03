@@ -57,9 +57,9 @@ DesignerSupport::DesignerSupport()
 
 DesignerSupport::~DesignerSupport()
 {
-    QHash<QQuickItem*, QSGLayer*>::iterator iterator;
+    typedef QHash<QQuickItem*, QSGLayer*>::iterator ItemTextureHashIt;
 
-    for (iterator = m_itemTextureHash.begin(); iterator != m_itemTextureHash.end(); ++iterator) {
+    for (ItemTextureHashIt iterator = m_itemTextureHash.begin(), end = m_itemTextureHash.end(); iterator != end; ++iterator) {
         QSGLayer *texture = iterator.value();
         QQuickItem *item = iterator.key();
         QQuickItemPrivate::get(item)->derefFromEffectItem(true);

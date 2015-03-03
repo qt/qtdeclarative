@@ -90,19 +90,24 @@ void NodesTest::initTestCase()
 
     surface = new QOffscreenSurface;
     surface->create();
+    QVERIFY(surface->isValid());
 
     context = new QOpenGLContext();
-    context->create();
-    context->makeCurrent(surface);
+    QVERIFY(context->create());
+    QVERIFY(context->makeCurrent(surface));
 
     renderContext = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
+    QVERIFY(renderContext);
     renderContext->initialize(context);
+    QVERIFY(renderContext->isValid());
 }
 
 void NodesTest::cleanupTestCase()
 {
-    renderContext->invalidate();
-    context->doneCurrent();
+    if (renderContext)
+        renderContext->invalidate();
+    if (context)
+        context->doneCurrent();
     delete context;
     delete surface;
 }
@@ -141,9 +146,11 @@ public:
 int DummyRenderer::globalRendereringOrder;
 
 NodesTest::NodesTest()
+    : surface(Q_NULLPTR)
+    , context(Q_NULLPTR)
+    , renderContext(Q_NULLPTR)
 {
 }
-
 
 void NodesTest::propegate()
 {

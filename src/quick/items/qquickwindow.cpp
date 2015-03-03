@@ -249,20 +249,22 @@ void QQuickWindow::focusInEvent(QFocusEvent *ev)
 
 void QQuickWindowPrivate::polishItems()
 {
-    int maxPolishCycles = 100000;
-
-    while (!itemsToPolish.isEmpty() && --maxPolishCycles > 0) {
-        QSet<QQuickItem *> itms = itemsToPolish;
-        itemsToPolish.clear();
-
-        for (QSet<QQuickItem *>::iterator it = itms.begin(); it != itms.end(); ++it) {
-            QQuickItem *item = *it;
-            QQuickItemPrivate::get(item)->polishScheduled = false;
-            item->updatePolish();
-        }
+    // An item can trigger polish on another item, or itself for that matter,
+    // during its updatePolish() call. Because of this, we cannot simply
+    // iterate through the set, we must continue pulling items out until it
+    // is empty.
+    // In the case where polish is called from updatePolish() either directly
+    // or indirectly, we use a recursionSafeguard to print a warning to
+    // the user.
+    int recursionSafeguard = INT_MAX;
+    while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
+        QQuickItem *item = *itemsToPolish.begin();
+        itemsToPolish.remove(item);
+        QQuickItemPrivate::get(item)->polishScheduled = false;
+        item->updatePolish();
     }
 
-    if (maxPolishCycles == 0)
+    if (recursionSafeguard == 0)
         qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
     updateFocusItemTransform();
@@ -1395,7 +1397,7 @@ bool QQuickWindow::event(QEvent *e)
         break;
     }
     case QEvent::NativeGesture:
-        d->deliverGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
+        d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
     default:
         break;
@@ -1754,7 +1756,23 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
     return false;
 }
 
-bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
+/*! \reimp */
+void QQuickWindow::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickWindow);
+    qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta() << event->phase();
+
+    //if the actual wheel event was accepted, accept the compatibility wheel event and return early
+    if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
+        return;
+
+    event->ignore();
+    d->deliverWheelEvent(d->contentItem, event);
+    d->lastWheelEventAccepted = event->isAccepted();
+}
+#endif // QT_NO_WHEELEVENT
+
+bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
@@ -1766,7 +1784,7 @@ bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEv
         QQuickItem *child = children.at(ii);
         if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
             continue;
-        if (deliverGestureEvent(child, event))
+        if (deliverNativeGestureEvent(child, event))
             return true;
     }
 
@@ -1785,23 +1803,6 @@ bool QQuickWindowPrivate::deliverGestureEvent(QQuickItem *item, QNativeGestureEv
 
     return false;
 }
-
-/*! \reimp */
-void QQuickWindow::wheelEvent(QWheelEvent *event)
-{
-    Q_D(QQuickWindow);
-    qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta() << event->phase();
-
-    //if the actual wheel event was accepted, accept the compatibility wheel event and return early
-    if (d->lastWheelEventAccepted && event->angleDelta().isNull() && event->phase() == Qt::ScrollUpdate)
-        return;
-
-    event->ignore();
-    d->deliverWheelEvent(d->contentItem, event);
-    d->lastWheelEventAccepted = event->isAccepted();
-}
-#endif // QT_NO_WHEELEVENT
-
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
@@ -2673,8 +2674,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
     Q_Q(QQuickWindow);
     cleanupNodes();
     cleanupNodesOnShutdown(contentItem);
-    QSet<QQuickItem *>::const_iterator it = parentlessItems.begin();
-    for (; it != parentlessItems.end(); ++it)
+    for (QSet<QQuickItem *>::const_iterator it = parentlessItems.begin(), cend = parentlessItems.end(); it != cend; ++it)
         cleanupNodesOnShutdown(*it);
     animationController->windowNodesDestroyed();
     q->cleanupSceneGraph();
@@ -3143,7 +3143,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     (e.g. the user clicked the title bar close button). The CloseEvent contains
     an accepted property which can be set to false to abort closing the window.
 
-    \sa Window.closing()
+    \sa QQuickWindow::closing()
 */
 
 /*!
@@ -3154,11 +3154,11 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
-    \fn void QQuickWindow::closing()
+    \fn void QQuickWindow::closing(QQuickCloseEvent *close)
     \since 5.1
 
-    This signal is emitted when the window receives a QCloseEvent from the
-    windowing system.
+    This signal is emitted when the window receives the event \a close from
+    the windowing system.
 */
 
 /*!
@@ -3167,7 +3167,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     This signal is emitted when the user tries to close the window.
 
-    This signal includes a \a close parameter. The \a close \l accepted
+    This signal includes a \a close parameter. The \c {close.accepted}
     property is true by default so that the window is allowed to close; but you
     can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
@@ -4038,7 +4038,7 @@ void QQuickWindow::resetOpenGLState()
     This is equivalent to calling showFullScreen(), showMaximized(), or showNormal(),
     depending on the platform's default behavior for the window type and flags.
 
-    \sa showFullScreen(), showMaximized(), showNormal(), hide(), flags()
+    \sa showFullScreen(), showMaximized(), showNormal(), hide(), QQuickItem::flags()
 */
 
 /*!
@@ -4084,14 +4084,14 @@ void QQuickWindow::resetOpenGLState()
 */
 
 /*!
-    \enum QQuickWindow::RenderJobSchedule
+    \enum QQuickWindow::RenderStage
     \since 5.4
 
-    \value ScheduleBeforeSynchronizing Before synchronization.
-    \value ScheduleAfterSynchronizing After synchronization.
-    \value ScheduleBeforeRendering Before rendering.
-    \value ScheduleAfterRendering After rendering.
-    \value ScheduleAfterSwap After the frame is swapped.
+    \value BeforeSynchronizingStage Before synchronization.
+    \value AfterSynchronizingStage After synchronization.
+    \value BeforeRenderingStage Before rendering.
+    \value AfterRenderingStage After rendering.
+    \value AfterSwapStage After the frame is swapped.
 
     \sa {Scene Graph and Rendering}
  */

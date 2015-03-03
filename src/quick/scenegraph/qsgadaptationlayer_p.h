@@ -323,6 +323,7 @@ protected:
         Texture *texture;
         TexCoord texCoord;
         QRectF boundingRect;
+        QPainterPath path;
         quint32 ref;
 
         GlyphData() : texture(0), ref(0) { }

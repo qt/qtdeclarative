@@ -1002,7 +1002,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     ScopedObject o(scope, engine->newObject());
     ScopedString s(scope);
     ScopedValue v(scope);
-    for (QJsonObject::const_iterator it = object.begin(); it != object.end(); ++it) {
+    for (QJsonObject::const_iterator it = object.begin(), cend = object.end(); it != cend; ++it) {
         v = fromJsonValue(engine, it.value());
         o->put((s = engine->newString(it.key())), v);
     }

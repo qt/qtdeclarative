@@ -91,7 +91,7 @@ Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, size_t length)
         e->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
-    data->size = length;
+    data->size = int(length);
     memset(data->data(), 0, length + 1);
 }
 

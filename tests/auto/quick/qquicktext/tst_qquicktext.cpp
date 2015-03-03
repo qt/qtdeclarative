@@ -148,6 +148,8 @@ private slots:
 
     void hover();
 
+    void growFromZeroWidth();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -3879,6 +3881,23 @@ void tst_qquicktext::hover()
     QTest::mouseMove(window, center + delta);
 
     QVERIFY(mouseArea->property("wasHovered").toBool());
+}
+
+void tst_qquicktext::growFromZeroWidth()
+{
+    QQmlComponent component(&engine, testFile("growFromZeroWidth.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QCOMPARE(text->lineCount(), 3);
+
+    text->setWidth(80);
+
+    // the new width should force our contents to wrap
+    QVERIFY(text->lineCount() > 3);
 }
 
 QTEST_MAIN(tst_qquicktext)

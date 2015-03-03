@@ -471,6 +471,8 @@ QQmlDebugServer::QQmlDebugServer()
 
 void QQmlDebugServer::receiveMessage(const QByteArray &message)
 {
+    typedef QHash<QString, QQmlDebugService*>::const_iterator DebugServiceConstIt;
+
     // to be executed in debugger thread
     Q_ASSERT(QThread::currentThread() == thread());
 
@@ -516,8 +518,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             QMutexLocker helloLock(&d->helloMutex);
             d->gotHello = true;
 
-            QHash<QString, QQmlDebugService*>::ConstIterator iter = d->plugins.constBegin();
-            for (; iter != d->plugins.constEnd(); ++iter) {
+            for (DebugServiceConstIt iter = d->plugins.constBegin(), cend = d->plugins.constEnd(); iter != cend; ++iter) {
                 QQmlDebugService::State newState = QQmlDebugService::Unavailable;
                 if (d->clientPlugins.contains(iter.key()))
                     newState = QQmlDebugService::Enabled;
@@ -534,8 +535,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             QStringList oldClientPlugins = d->clientPlugins;
             in >> d->clientPlugins;
 
-            QHash<QString, QQmlDebugService*>::ConstIterator iter = d->plugins.constBegin();
-            for (; iter != d->plugins.constEnd(); ++iter) {
+            for (DebugServiceConstIt iter = d->plugins.constBegin(), cend = d->plugins.constEnd(); iter != cend; ++iter) {
                 const QString pluginName = iter.key();
                 QQmlDebugService::State newState = QQmlDebugService::Unavailable;
                 if (d->clientPlugins.contains(pluginName))

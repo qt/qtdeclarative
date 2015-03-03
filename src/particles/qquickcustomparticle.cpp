@@ -303,6 +303,8 @@ QQuickShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickShaderEffec
 
 QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
 {
+    typedef QHash<int, QQuickShaderEffectNode*>::const_iterator NodeHashConstIt;
+
     if (!QOpenGLContext::currentContext())
         return 0;
 
@@ -368,10 +370,11 @@ QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
         }
     }
 
-    QHash<int, QQuickShaderEffectNode*>::const_iterator it = m_nodes.begin();
+    NodeHashConstIt it = m_nodes.begin();
     rootNode = it.value();
     rootNode->setFlag(QSGNode::OwnsMaterial, true);
-    for (++it; it != m_nodes.end(); ++it)
+    const NodeHashConstIt cend = m_nodes.end();
+    for (++it; it != cend; ++it)
         rootNode->appendChildNode(it.value());
 
     return rootNode;

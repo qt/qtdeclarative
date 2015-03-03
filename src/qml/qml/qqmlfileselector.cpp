@@ -88,9 +88,9 @@ Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
  */
 
 /*!
-  Creates a new QQmlFileSelector, which includes its own QFileSelector.
-  \a engine is the QQmlEngine you wish to apply file selectors too. It will
-  also take ownership of the QQmlFileSelector.
+  Creates a new QQmlFileSelector with parent object \a parent, which includes
+  its own QFileSelector. \a engine is the QQmlEngine you wish to apply file
+  selectors to. It will also take ownership of the QQmlFileSelector.
 */
 
 QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)

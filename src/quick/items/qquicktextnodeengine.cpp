@@ -408,7 +408,7 @@ void QQuickTextNodeEngine::addImage(const QRectF &rect, const QImage &image, qre
     QRectF searchRect = rect;
     if (layoutPosition == QTextFrameFormat::InFlow) {
         if (m_currentLineTree.isEmpty()) {
-            searchRect.moveTopLeft(m_position + m_currentLine.position());
+            searchRect.moveTopLeft(m_position + m_currentLine.position() + QPointF(0,1));
         } else {
             const BinaryTreeNode *lastNode = m_currentLineTree.data() + m_currentLineTree.size() - 1;
             if (lastNode->glyphRun.isRightToLeft()) {

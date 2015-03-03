@@ -1053,7 +1053,7 @@ void QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
 QStringList QQmlPropertyCache::propertyNames() const
 {
     QStringList keys;
-    for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter)
+    for (StringCache::ConstIterator iter = stringCache.begin(), cend = stringCache.end(); iter != cend; ++iter)
         keys.append(iter.key());
     return keys;
 }
@@ -1374,7 +1374,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
     QList<QPair<QString, QQmlPropertyData *> > properties;
     QList<QPair<QString, QQmlPropertyData *> > methods;
 
-    for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter)
+    for (StringCache::ConstIterator iter = stringCache.begin(), cend = stringCache.end(); iter != cend; ++iter)
         Insert::in(this, properties, methods, iter, iter.value().second);
 
     Q_ASSERT(properties.count() == propertyIndexCache.count());

@@ -62,7 +62,9 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCach
     m_doubleGlyphResolution = qt_fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
 
     m_referenceFont = font;
-    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution));
+    // we set the same pixel size as used by the distance field internally.
+    // this allows us to call pathForGlyph once and reuse the result.
+    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
 
     m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
@@ -78,8 +80,12 @@ QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::glyphData(gly
     if (data == m_glyphsData.end()) {
         GlyphData gd;
         gd.texture = &s_emptyTexture;
-        QPainterPath path = m_referenceFont.pathForGlyph(glyph);
-        gd.boundingRect = path.boundingRect();
+        gd.path = m_referenceFont.pathForGlyph(glyph);
+        // need bounding rect in base font size scale
+        qreal scaleFactor = qreal(1) / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
+        QTransform scaleDown;
+        scaleDown.scale(scaleFactor, scaleFactor);
+        gd.boundingRect = scaleDown.mapRect(gd.path.boundingRect());
         data = m_glyphsData.insert(glyph, gd);
     }
     return data.value();
@@ -160,9 +166,11 @@ void QSGDistanceFieldGlyphCache::update()
 
     QList<QDistanceField> distanceFields;
     for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
-        distanceFields.append(QDistanceField(m_referenceFont,
+        GlyphData &gd = glyphData(m_pendingGlyphs.at(i));
+        distanceFields.append(QDistanceField(gd.path,
                                              m_pendingGlyphs.at(i),
                                              m_doubleGlyphResolution));
+        gd.path = QPainterPath(); // no longer needed, so release memory used by the painter path
     }
 
     qint64 renderTime = 0;

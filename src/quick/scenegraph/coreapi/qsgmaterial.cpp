@@ -385,6 +385,7 @@ void QSGMaterialShader::compile()
     \class QSGMaterialShader::RenderState
     \brief The QSGMaterialShader::RenderState encapsulates the current rendering state
     during a call to QSGMaterialShader::updateState().
+    \inmodule QtQuick
 
     The render state contains a number of accessors that the shader needs to respect
     in order to conform to the current state of the scene graph.

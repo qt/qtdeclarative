@@ -53,6 +53,10 @@ QT_BEGIN_NAMESPACE
 #define GL_FRAMEBUFFER_SRGB 0x8DB9
 #endif
 
+#ifndef GL_FRAMEBUFFER_SRGB_CAPABLE
+#define GL_FRAMEBUFFER_SRGB_CAPABLE 0x8DBA
+#endif
+
 static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
 {
     float o = c.w() * globalOpacity;
@@ -199,7 +203,11 @@ void QSG24BitTextMaskShader::initialize()
     if (QOpenGLContext::currentContext()->hasExtension(QByteArrayLiteral("GL_ARB_framebuffer_sRGB"))
             && m_glyphFormat == QFontEngine::Format_A32
             && qAbs(fontSmoothingGamma() - 2.2) < 0.25) {
-        m_useSRGB = true;
+        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+        GLint srgbCapable = 0;
+        funcs->glGetIntegerv(GL_FRAMEBUFFER_SRGB_CAPABLE, &srgbCapable);
+        if (srgbCapable)
+            m_useSRGB = true;
     }
 }
 

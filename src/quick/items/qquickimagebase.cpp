@@ -210,7 +210,8 @@ void QQuickImageBase::load()
 
         QUrl loadUrl = d->url;
         if (d->url.scheme() == QStringLiteral("image")
-            || d->url.toString().endsWith(".svg") || d->url.toString().endsWith(".svgz")) {
+            || d->url.toString().endsWith(QLatin1String(".svg"))
+            || d->url.toString().endsWith(QLatin1String(".svgz"))) {
             // QQuickImageProvider and SVG can generate a high resolution image when
             // sourceSize is set. If sourceSize is not set then the provider default size
             // will be used, as usual.
@@ -322,7 +323,7 @@ static QString image2xPath(const QString &path)
 {
     const int dotIndex = path.lastIndexOf(QLatin1Char('.'));
     if (dotIndex == -1)
-        return path;
+        return path + QLatin1String("@2x");
     if (path.contains(QLatin1String("@2x.")))
         return path;
 

@@ -58,6 +58,8 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qwaitcondition.h>
 
+#include <limits>
+
 QT_BEGIN_NAMESPACE
 
 class QUrl;

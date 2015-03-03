@@ -34,6 +34,7 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QDebug>
 #include "qv4regalloc_p.h"
+#include "qv4alloca_p.h"
 #include <private/qv4value_inl_p.h>
 
 #include <algorithm>
@@ -184,21 +185,7 @@ public:
 
     const std::vector<Use> &uses(const Temp &t) const
     {
-        return _uses[t.index];
-    }
-
-    bool useMustHaveReg(const Temp &t, int position) {
-        foreach (const Use &use, uses(t))
-            if (use.pos == position)
-                return use.mustHaveRegister();
-        return false;
-    }
-
-    bool isUsedAt(const Temp &t, int position) {
-        foreach (const Use &use, uses(t))
-            if (use.pos == position)
-                return true;
-        return false;
+        return _uses.at(t.index);
     }
 
     bool canHaveRegister(const Temp &t) const {
@@ -698,9 +685,13 @@ protected: // IRDecoder
     virtual void visitPhi(IR::Phi *s)
     {
         addDef(s->targetTemp, true);
-        foreach (Expr *e, s->d->incoming) {
+        for (int i = 0, ei = s->d->incoming.size(); i < ei; ++i) {
+            Expr *e = s->d->incoming.at(i);
             if (Temp *t = e->asTemp()) {
-                addUses(t, Use::CouldHaveRegister);
+                // The actual use of an incoming value in a phi node is right before the terminator
+                // of the other side of the incoming edge.
+                const int usePos = _lifeTimeIntervals->positionForStatement(_currentBB->in.at(i)->terminator()) - 1;
+                addUses(t, Use::CouldHaveRegister, usePos);
                 addHint(s->targetTemp, t);
                 addHint(t, s->targetTemp);
             }
@@ -746,6 +737,11 @@ private:
     void addUses(Expr *e, Use::RegisterFlag flag)
     {
         const int usePos = usePosition(_currentStmt);
+        addUses(e, flag, usePos);
+    }
+
+    void addUses(Expr *e, Use::RegisterFlag flag, int usePos)
+    {
         Q_ASSERT(usePos > 0);
         if (!e)
             return;
@@ -1608,7 +1604,7 @@ void RegisterAllocator::tryAllocateFreeReg(LifeTimeInterval &current)
     if (freeUntilPos_reg == 0) {
         // no register available without spilling
         if (DebugRegAlloc)
-            qDebug() << "*** no register available for %" << current.temp().index;
+            qDebug("*** no register available for %u", current.temp().index);
         return;
     } else if (current.end() < freeUntilPos_reg) {
         // register available for the whole interval
@@ -1719,7 +1715,7 @@ void RegisterAllocator::allocateBlockedReg(LifeTimeInterval &current)
     Q_ASSERT(nextUse);
     Q_ASSERT(!nextUse->isFixedInterval());
 
-    split(*nextUse, position);
+    split(*nextUse, position, /*skipOptionalRegisterUses =*/ true);
 
     // We might have chosen a register that is used by a range that has a hole in its life time.
     // If that's the case, check if the current interval completely fits in the hole. Or rephrased:
@@ -1769,6 +1765,9 @@ int RegisterAllocator::nextIntersection(const LifeTimeInterval &current,
 }
 
 /// Find the first use after the start position for the given temp.
+///
+/// This is only called when all registers are in use, and when one of them has to be spilled to the
+/// stack. So, uses where a register is optional can be ignored.
 int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
 {
     typedef std::vector<Use>::const_iterator ConstIt;
@@ -1776,9 +1775,11 @@ int RegisterAllocator::nextUse(const Temp &t, int startPosition) const
     const std::vector<Use> &usePositions = _info->uses(t);
     const ConstIt cend = usePositions.end();
     for (ConstIt it = usePositions.begin(); it != cend; ++it) {
-        const int usePos = it->pos;
-        if (usePos >= startPosition)
-            return usePos;
+        if (it->mustHaveRegister()) {
+            const int usePos = it->pos;
+            if (usePos >= startPosition)
+                return usePos;
+        }
     }
 
     return -1;

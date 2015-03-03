@@ -378,11 +378,11 @@ QQuickSmoothedAnimationPrivate::QQuickSmoothedAnimationPrivate()
 
 QQuickSmoothedAnimationPrivate::~QQuickSmoothedAnimationPrivate()
 {
+    typedef QHash<QQmlProperty, QSmoothedAnimation* >::iterator ActiveAnimationsHashIt;
+
     delete anim;
-    QHash<QQmlProperty, QSmoothedAnimation* >::iterator it;
-    for (it = activeAnimations.begin(); it != activeAnimations.end(); ++it) {
+    for (ActiveAnimationsHashIt it = activeAnimations.begin(), end = activeAnimations.end(); it != end; ++it)
         it.value()->clearTemplate();
-    }
 }
 
 void QQuickSmoothedAnimationPrivate::updateRunningAnimations()
