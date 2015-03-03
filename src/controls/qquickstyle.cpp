@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquickstyle_p.h"
+#include "qquickstyle_p_p.h"
+#include "qquickstylable_p.h"
+
 #include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
@@ -106,6 +109,37 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real QtQuickControls2::Style::disabledOpacity
 */
+
+QQuickStyle *QQuickStylePrivate::resolve(QQuickItem *item, QQuickStyle *res)
+{
+    QQuickStylable *stylable = qobject_cast<QQuickStylable *>(item);
+    Q_ASSERT(stylable);
+
+    if (!res && stylable->hasStyle())
+        return stylable->style();
+
+    // lookup parent style
+    if (!res) {
+        QQuickItem *parent = item->parentItem();
+        while (!res && parent) {
+            QQuickStylable *stylable = qobject_cast<QQuickStylable *>(parent);
+            if (stylable && stylable->hasStyle())
+                res = stylable->style();
+            parent = parent->parentItem();
+        }
+    }
+
+    // fallback to window or global style
+    if (!res) {
+        QQuickStylable *window = qobject_cast<QQuickStylable *>(item->window());
+        if (window)
+            res = window->style();
+        if (!res)
+            res = QQuickStyle::instance(qmlEngine(item));
+    }
+
+    return res;
+}
 
 static QColor readColorValue(const QJsonValue &value, const QColor &defaultValue)
 {

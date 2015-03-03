@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKABSTRACTAPPLICATIONWINDOW_P_H
-#define QQUICKABSTRACTAPPLICATIONWINDOW_P_H
+#ifndef QQUICKSTYLABLE_P_H
+#define QQUICKSTYLABLE_P_H
 
 //
 //  W A R N I N G
@@ -48,62 +48,26 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickwindowmodule_p.h>
+#include <QtCore/qobject.h>
 #include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
-#include <QtQuickControls/private/qquickstylable_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyle;
-class QQuickAbstractApplicationWindowPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickAbstractApplicationWindow : public QQuickWindowQmlImpl, public QQuickStylable
+class Q_QUICKCONTROLS_EXPORT QQuickStylable
 {
-    Q_OBJECT
-    Q_INTERFACES(QQuickStylable)
-    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
-    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle NOTIFY styleChanged FINAL)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
-
 public:
-    explicit QQuickAbstractApplicationWindow(QWindow *parent = Q_NULLPTR);
-    ~QQuickAbstractApplicationWindow();
+    virtual ~QQuickStylable() { }
 
-    QQuickItem *header() const;
-    void setHeader(QQuickItem *header);
-
-    QQuickItem *footer() const;
-    void setFooter(QQuickItem *footer);
-
-    QQuickStyle *style() const Q_DECL_OVERRIDE;
-    void setStyle(QQuickStyle *style) Q_DECL_OVERRIDE;
-    bool hasStyle() const Q_DECL_OVERRIDE;
-    void resetStyle() Q_DECL_OVERRIDE;
-
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
-Q_SIGNALS:
-    void headerChanged();
-    void footerChanged();
-    void styleChanged();
-    void contentWidthChanged();
-    void contentHeightChanged();
-
-protected:
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickAbstractApplicationWindow)
-    Q_DECLARE_PRIVATE(QQuickAbstractApplicationWindow)
-    QScopedPointer<QQuickAbstractApplicationWindowPrivate> d_ptr;
+    virtual QQuickStyle *style() const = 0;
+    virtual void setStyle(QQuickStyle *style) = 0;
+    virtual bool hasStyle() const = 0;
+    virtual void resetStyle() = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKABSTRACTAPPLICATIONWINDOW_P_H
+Q_DECLARE_INTERFACE(QQuickStylable, "io.qt.QQuickStylable")
+
+#endif // QQUICKSTYLABLE_P_H

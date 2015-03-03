@@ -50,15 +50,17 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuickControls/private/qquickstylable_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyle;
 class QQuickControlPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
+class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem, public QQuickStylable
 {
     Q_OBJECT
+    Q_INTERFACES(QQuickStylable)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding NOTIFY topPaddingChanged FINAL)
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding NOTIFY rightPaddingChanged FINAL)
@@ -81,20 +83,13 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
 
-    QQuickStyle *style() const;
-    void setStyle(QQuickStyle *style);
-    void resetStyle();
+    QQuickStyle *style() const Q_DECL_OVERRIDE;
+    void setStyle(QQuickStyle *style) Q_DECL_OVERRIDE;
+    bool hasStyle() const Q_DECL_OVERRIDE;
+    void resetStyle() Q_DECL_OVERRIDE;
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
-
-    enum Attribute {
-        Attr_HasStyle = 1,
-        Attr_Count
-    };
-
-    bool testAttribute(Attribute attribute) const;
-    void setAttribute(Attribute attribute, bool on = true);
 
 Q_SIGNALS:
     void styleChanged();

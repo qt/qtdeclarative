@@ -37,6 +37,7 @@
 #include "qquickabstractapplicationwindow_p.h"
 #include "qquickstyle_p.h"
 
+#include <QtCore/qcoreapplication.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
@@ -59,7 +60,7 @@ class QQuickAbstractApplicationWindowPrivate : public QQuickItemChangeListener
 
 public:
     QQuickAbstractApplicationWindowPrivate() : contentWidth(0), contentHeight(0),
-        header(Q_NULLPTR), footer(Q_NULLPTR), style(Q_NULLPTR) { }
+        header(Q_NULLPTR), footer(Q_NULLPTR), hasStyle(false), style(Q_NULLPTR) { }
 
     void relayout();
 
@@ -70,6 +71,7 @@ public:
     qreal contentHeight;
     QQuickItem *header;
     QQuickItem *footer;
+    bool hasStyle;
     mutable QQuickStyle *style;
     QQuickAbstractApplicationWindow *q_ptr;
 };
@@ -191,8 +193,26 @@ void QQuickAbstractApplicationWindow::setStyle(QQuickStyle *style)
     Q_D(QQuickAbstractApplicationWindow);
     if (d->style != style) {
         d->style = style;
+        d->hasStyle = style;
         emit styleChanged();
+
+        QEvent change(QEvent::StyleChange);
+        foreach (QQuickItem *item, contentItem()->findChildren<QQuickItem *>()) {
+            if (qobject_cast<QQuickStylable *>(item))
+                QCoreApplication::sendEvent(item, &change);
+        }
     }
+}
+
+bool QQuickAbstractApplicationWindow::hasStyle() const
+{
+    Q_D(const QQuickAbstractApplicationWindow);
+    return d->hasStyle;
+}
+
+void QQuickAbstractApplicationWindow::resetStyle()
+{
+    setStyle(Q_NULLPTR);
 }
 
 /*!

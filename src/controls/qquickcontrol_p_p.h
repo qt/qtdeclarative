@@ -64,8 +64,8 @@ public:
 
     void resolveStyle(QQuickStyle *other = 0);
 
+    bool hasStyle;
     QQuickStyle *style;
-    QBitArray attributes;
     QQuickItem *background;
     qreal topPadding;
     qreal leftPadding;

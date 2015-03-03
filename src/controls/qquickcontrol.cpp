@@ -36,7 +36,8 @@
 
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
-#include "qquickabstractapplicationwindow_p.h"
+#include "qquickstyle_p_p.h"
+
 #include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
@@ -52,7 +53,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    style(Q_NULLPTR), attributes(QQuickControl::Attr_Count), background(Q_NULLPTR),
+    hasStyle(false), style(Q_NULLPTR), background(Q_NULLPTR),
     topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0)
 {
 }
@@ -66,29 +67,7 @@ void QQuickControlPrivate::mirrorChange()
 void QQuickControlPrivate::resolveStyle(QQuickStyle *res)
 {
     Q_Q(QQuickControl);
-    if (!res && q->testAttribute(QQuickControl::Attr_HasStyle))
-        return;
-
-    // lookup parent style
-    if (!res) {
-        QQuickItem *item = q->parentItem();
-        while (!res && item) {
-            QQuickControl *control = qobject_cast<QQuickControl *>(item);
-            if (control && control->testAttribute(QQuickControl::Attr_HasStyle))
-                res = control->style();
-            item = item->parentItem();
-        }
-    }
-
-    // fallback to window or global style
-    if (!res) {
-        QQuickAbstractApplicationWindow *aw = qobject_cast<QQuickAbstractApplicationWindow *>(window);
-        if (aw)
-            res = aw->style();
-        if (!res)
-            res = QQuickStyle::instance(qmlEngine(q));
-    }
-
+    res = QQuickStylePrivate::resolve(q, res);
     if (style != res) {
         style = res;
         emit q->styleChanged();
@@ -190,13 +169,21 @@ void QQuickControl::setStyle(QQuickStyle *style)
 {
     Q_D(QQuickControl);
     if (d->style != style) {
-        setAttribute(Attr_HasStyle, style);
+        d->hasStyle = style;
         d->resolveStyle(style);
 
         QEvent change(QEvent::StyleChange);
-        foreach (QQuickControl *control, findChildren<QQuickControl *>())
-            QCoreApplication::sendEvent(control, &change);
+        foreach (QQuickItem *item, findChildren<QQuickItem *>()) {
+            if (qobject_cast<QQuickStylable *>(item))
+                QCoreApplication::sendEvent(item, &change);
+        }
     }
+}
+
+bool QQuickControl::hasStyle() const
+{
+    Q_D(const QQuickControl);
+    return d->hasStyle;
 }
 
 void QQuickControl::resetStyle()
@@ -228,18 +215,6 @@ void QQuickControl::setBackground(QQuickItem *background)
         }
         emit backgroundChanged();
     }
-}
-
-bool QQuickControl::testAttribute(Attribute attribute) const
-{
-    Q_D(const QQuickControl);
-    return d->attributes.testBit(attribute);
-}
-
-void QQuickControl::setAttribute(Attribute attribute, bool on)
-{
-    Q_D(QQuickControl);
-    d->attributes.setBit(attribute, on);
 }
 
 bool QQuickControl::event(QEvent *event)
