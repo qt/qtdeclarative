@@ -204,9 +204,15 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
         str = QString::fromLatin1("NaN");
     else if (qIsInf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
-    else if (v < 1.e21)
-        str = QString::number(v, 'f', int (fdigits));
-    else
+    else if (v < 1.e21) {
+        char buf[100];
+        double_conversion::StringBuilder builder(buf, sizeof(buf));
+        double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToFixed(v, fdigits, &builder);
+        str = QString::fromLatin1(builder.Finalize());
+        // At some point, the 3rd party double-conversion code should be moved to qtcore.
+        // When that's done, we can use:
+//        str = QString::number(v, 'f', int (fdigits));
+    } else
         return RuntimeHelpers::stringFromNumber(ctx->engine(), v)->asReturnedValue();
     return scope.engine->newString(str)->asReturnedValue();
 }
