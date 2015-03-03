@@ -48,41 +48,53 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuickControls/private/qquickstylable_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickText;
-class QQuickTextEdit;
 class QQuickAbstractTextAreaPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickAbstractTextArea : public QQuickControl
+class Q_QUICKCONTROLS_EXPORT QQuickAbstractTextArea : public QQuickTextEdit, public QQuickStylable
 {
     Q_OBJECT
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(QQuickTextEdit *edit READ edit WRITE setEdit NOTIFY editChanged FINAL)
+    Q_INTERFACES(QQuickStylable)
+    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle RESET resetStyle NOTIFY styleChanged FINAL)
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
 
 public:
     explicit QQuickAbstractTextArea(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickAbstractTextArea();
 
-    QString text() const;
-    void setText(const QString &text);
+    QQuickStyle *style() const;
+    void setStyle(QQuickStyle *style);
+    bool hasStyle() const;
+    void resetStyle();
 
-    QQuickTextEdit *edit() const;
-    void setEdit(QQuickTextEdit *edit);
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
 
     QQuickText *placeholder() const;
     void setPlaceholder(QQuickText *placeholder);
 
 Q_SIGNALS:
-    void textChanged();
-    void editChanged();
+    void styleChanged();
+    void backgroundChanged();
     void placeholderChanged();
+
+protected:
+    bool event(QEvent *event) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange, const ItemChangeData &data) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickAbstractTextArea)
     Q_DECLARE_PRIVATE(QQuickAbstractTextArea)
+    QScopedPointer<QQuickAbstractTextAreaPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE

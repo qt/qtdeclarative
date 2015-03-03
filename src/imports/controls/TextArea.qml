@@ -40,30 +40,15 @@ import QtQuick.Controls 2.0
 AbstractTextArea {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            Math.max(edit ? edit.implicitWidth : 0,
-                                     placeholder ? placeholder.implicitWidth : 0) + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(edit ? edit.implicitHeight : 0,
-                                      placeholder ? placeholder.implicitHeight : 0) + topPadding + bottomPadding)
-
     Accessible.name: text
     Accessible.multiLine: true
     Accessible.role: Accessible.EditableText
-    Accessible.readOnly: !edit || edit.readOnly
+    Accessible.readOnly: readOnly
     Accessible.description: placeholder ? placeholder.text : ""
 
-    edit: TextEdit {
-        x: control.leftPadding
-        y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
-
-        color: style.textColor
-        selectionColor: style.selectionColor
-        selectedTextColor: style.selectedTextColor
-        Keys.forwardTo: control
-    }
+    color: style.textColor
+    selectionColor: style.selectionColor
+    selectedTextColor: style.selectedTextColor
 
     placeholder: Text {
         x: control.leftPadding
@@ -73,6 +58,6 @@ AbstractTextArea {
 
         color: control.style.textColor
         opacity: control.style.disabledOpacity
-        visible: edit ? !edit.length : !control.text
+        visible: !control.length
     }
 }

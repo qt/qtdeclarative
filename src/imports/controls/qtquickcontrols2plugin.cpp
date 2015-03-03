@@ -114,6 +114,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickStyle>(uri, 2, 0, "Style");
 
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 2, 0);
+    qmlRegisterRevision<QQuickTextEdit, 6>(uri, 2, 0);
 }
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
