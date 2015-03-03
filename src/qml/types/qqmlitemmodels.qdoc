@@ -60,6 +60,17 @@
     should not store any QModelIndex. You can, however, store QPersistentModelIndexes
     in a safe way.
 
+    \section1 QModelIndexList
+
+    \l QModelIndexList is exposed in QML as a JavaScript array. Conversions are
+    automatically made from and to C++. In fact, any JavaScript array can be
+    converted back to QModelIndexList, with non-QModelIndex objects replaced by
+    invalid QModelIndexes.
+
+    \note QModelIndex to QPersistentModelIndex conversion happens when accessing
+    the array elements because any QModelIndexList property retains reference
+    semantics when exposed this way.
+
     \section1 \l QItemSelectionRange
 
     \list
@@ -87,10 +98,10 @@
     \li QItemSelectionRange \b{intersected}(QItemSelectionRange other)
     \endlist
 
-    \section1 \l QModelIndexList and \l QItemSelection
+    \section1 QItemSelection
 
-    Both \l QModelIndexList and \l QItemSelection expose the following properties
-    and functions as part of their \l QList API:
+    \l QItemSelection exposes the following properties and functions as part of
+    its \l QList API:
 
     \list
     \li \b length : int

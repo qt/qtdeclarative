@@ -175,19 +175,6 @@ QString q_listToString(const QList<T> &list, const QLatin1String &typeName)
     Q_INVOKABLE void removeAt(int i) { v.removeAt(i); } \
     int length() const { return v.length(); }
 
-struct QQmlModelIndexListValueType
-{
-    QModelIndexList v;
-
-    Q_GADGET
-
-public:
-    Q_INVOKABLE QString toString()
-    { return q_listToString<QQmlModelIndexValueType>(v, QLatin1String("")); }
-
-    QLISTVALUETYPE_QML_API(QModelIndex)
-};
-
 struct QQmlItemSelectionValueType
 {
     QItemSelection v;
