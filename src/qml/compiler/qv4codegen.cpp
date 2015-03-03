@@ -1965,7 +1965,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_env->compilationMode == FunctionCode || _env->compilationMode == QmlBinding) {
         unsigned t = 0;
-        for (Environment::MemberMap::iterator it = _env->members.begin(); it != _env->members.end(); ++it) {
+        for (Environment::MemberMap::iterator it = _env->members.begin(), end = _env->members.end(); it != end; ++it) {
             const QString &local = it.key();
             function->LOCAL(local);
             (*it).index = t;
@@ -1984,7 +1984,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
 
         IR::ExprList *args = 0;
-        for (Environment::MemberMap::const_iterator it = _env->members.constBegin(); it != _env->members.constEnd(); ++it) {
+        for (Environment::MemberMap::const_iterator it = _env->members.constBegin(), cend = _env->members.constEnd(); it != cend; ++it) {
             const QString &local = it.key();
             IR::ExprList *next = function->New<IR::ExprList>();
             next->expr = entryBlock->NAME(local, 0, 0);

@@ -143,8 +143,7 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
     for (int i = 0; i < types.count(); ++i)
         delete types.at(i);
 
-    TypeModules::const_iterator i = uriToModule.constBegin();
-    for (; i != uriToModule.constEnd(); ++i)
+    for (TypeModules::const_iterator i = uriToModule.constBegin(), cend = uriToModule.constEnd(); i != cend; ++i)
         delete *i;
 }
 
@@ -1096,8 +1095,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
     for (int i = 0; i < data->types.count(); ++i)
         delete data->types.at(i);
 
-    QQmlMetaTypeData::TypeModules::const_iterator i = data->uriToModule.constBegin();
-    for (; i != data->uriToModule.constEnd(); ++i)
+    for (QQmlMetaTypeData::TypeModules::const_iterator i = data->uriToModule.constBegin(), cend = data->uriToModule.constEnd(); i != cend; ++i)
         delete *i;
 
     data->types.clear();

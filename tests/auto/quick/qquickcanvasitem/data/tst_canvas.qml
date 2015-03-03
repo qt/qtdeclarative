@@ -1,5 +1,10 @@
 import QtQuick 2.0
 
+Item {
+    id: container
+    width: 200
+    height: 200
+
 CanvasTestCase {
    id:testCase
    name: "canvas"
@@ -595,5 +600,82 @@ CanvasTestCase {
 
         canvas.destroy();
     }
-}
 
+    function test_getContextOnDestruction_data() {
+        // We want to test all possible combinations deemed valid by the testcase,
+        // but we can't test FramebufferObject due to difficulties ignoring the "available" warning.
+        var allData = testData("2d");
+        var ourData = [];
+
+        for (var i = 0; i < allData.length; ++i) {
+            if (allData[i].properties.renderTarget !== Canvas.FramebufferObject) {
+                var row = allData[i].properties;
+                row.tag = allData[i].tag;
+                ourData.push(row);
+            }
+        }
+
+        return ourData;
+    }
+
+    function test_getContextOnDestruction(data) {
+        try {
+            var canvasWindow = Qt.createQmlObject("
+                import QtQuick 2.4\n
+                import QtQuick.Window 2.2\n
+                Window {\n
+                    function test() {\n
+                        loader.active = true\n
+                        loader.active = false\n
+                    }\n
+                    Loader {\n
+                        id: loader\n
+                        active: false\n
+                        sourceComponent: Canvas {\n
+                            renderStrategy: " + renderStrategyToString(data.renderStrategy) + "\n
+                            Component.onDestruction: getContext(\"2d\")
+                        }\n
+                    }\n
+                }\n",
+                testCase);
+            verify(canvasWindow);
+            canvasWindow.test();
+            // Shouldn't crash when destruction is done.
+            wait(0);
+        } catch (exception) {
+            fail(exception.message);
+        }
+    }
+
+    property Component implicitlySizedComponent: Item {
+        implicitWidth: 32
+        implicitHeight: implicitWidth
+        anchors.centerIn: parent
+
+        property alias canvas: canvas
+
+        Canvas {
+            id: canvas
+            width: Math.max(1, Math.min(parent.width, parent.height))
+            height: width
+
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.reset();
+                ctx.beginPath();
+                ctx.fillRect(0, 0, width, height);
+            }
+        }
+    }
+
+    function test_implicitlySizedParent() {
+        var implicitlySizedItem = implicitlySizedComponent.createObject(container);
+        verify(implicitlySizedItem);
+
+        var xCenter = implicitlySizedItem.width / 2;
+        var yCenter = implicitlySizedItem.height / 2;
+        waitForRendering(implicitlySizedItem);
+        comparePixel(implicitlySizedItem.canvas.context, xCenter, yCenter, 0, 0, 0, 255);
+    }
+}
+}

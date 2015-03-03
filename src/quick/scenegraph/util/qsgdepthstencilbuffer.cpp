@@ -151,7 +151,7 @@ void QSGDefaultDepthStencilBuffer::free()
 
 QSGDepthStencilBufferManager::~QSGDepthStencilBufferManager()
 {
-    for (Hash::const_iterator it = m_buffers.constBegin(); it != m_buffers.constEnd(); ++it) {
+    for (Hash::const_iterator it = m_buffers.constBegin(), cend = m_buffers.constEnd(); it != cend; ++it) {
         QSGDepthStencilBuffer *buffer = it.value().data();
         buffer->free();
         buffer->m_manager = 0;

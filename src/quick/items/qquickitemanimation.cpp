@@ -581,11 +581,11 @@ QQuickPathAnimation::QQuickPathAnimation(QObject *parent)
 
 QQuickPathAnimation::~QQuickPathAnimation()
 {
+    typedef QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator ActiveAnimationsIt;
+
     Q_D(QQuickPathAnimation);
-    QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it;
-    for (it = d->activeAnimations.begin(); it != d->activeAnimations.end(); ++it) {
+    for (ActiveAnimationsIt it = d->activeAnimations.begin(), end = d->activeAnimations.end(); it != end; ++it)
         it.value()->clearTemplate();
-    }
 }
 
 /*!

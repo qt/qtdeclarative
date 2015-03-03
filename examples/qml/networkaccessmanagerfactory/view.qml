@@ -41,7 +41,7 @@
 import QtQuick 2.0
 
 Image {
-    width: 100
+    width: 200
     height: 100
-    source: "http://qt.io/Documents/Qt_master_logo_CMYK_noback.gif"
+    source: "http://doc.qt.io/qt-5/images/logo.png"
 }

@@ -44,7 +44,7 @@ static size_t s_pageMask;
 
 inline size_t systemPageSize()
 {
-    return getpagesize();
+    return ::sysconf(_SC_PAGESIZE);
 }
 
 #elif OS(WINDOWS)

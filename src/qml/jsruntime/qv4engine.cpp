@@ -128,7 +128,8 @@ quintptr getStackLimit()
     void* stackBottom = 0;
     pthread_attr_t attr;
 #if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
-    if (pthread_attr_get_np(pthread_self(), &attr) == 0) {
+    // on FreeBSD pthread_attr_init() must be called otherwise getting the attrs crashes
+    if (pthread_attr_init(&attr) == 0 && pthread_attr_get_np(pthread_self(), &attr) == 0) {
 #else
     if (pthread_getattr_np(pthread_self(), &attr) == 0) {
 #endif
@@ -1334,7 +1335,7 @@ static QV4::ReturnedValue objectFromVariantMap(QV4::ExecutionEngine *e, const QV
     QV4::ScopedObject o(scope, e->newObject());
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);
-    for (QVariantMap::ConstIterator iter = map.begin(); iter != map.end(); ++iter) {
+    for (QVariantMap::const_iterator iter = map.begin(), cend = map.end(); iter != cend; ++iter) {
         s = e->newString(iter.key());
         uint idx = s->asArrayIndex();
         if (idx > 16 && (!o->arrayData() || idx > o->arrayData()->length() * 2))
@@ -1500,10 +1501,9 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
 {
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, v4->newObject());
-    QVariantMap::const_iterator it;
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);
-    for (it = vmap.constBegin(); it != vmap.constEnd(); ++it) {
+    for (QVariantMap::const_iterator it = vmap.constBegin(), cend = vmap.constEnd(); it != cend; ++it) {
         s = v4->newIdentifier(it.key());
         v = variantToJS(v4, it.value());
         uint idx = s->asArrayIndex();

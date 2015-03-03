@@ -38,6 +38,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QSGTextureProvider
     \brief The QSGTextureProvider class encapsulates texture based entities in QML.
+    \inmodule QtQuick
 
     The QSGTextureProvider lives primarily in the scene graph rendering thread.
 

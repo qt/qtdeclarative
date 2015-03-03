@@ -3844,6 +3844,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
     }
 
     qout << "}\n";
+    buf.close();
     qDebug("%s", buf.data().constData());
 }
 
@@ -4301,6 +4302,7 @@ public:
             }
             qout << endl;
         }
+        buf.close();
         qDebug("%s", buf.data().constData());
     }
 
@@ -4315,7 +4317,7 @@ private:
 
             foreach (Stmt *s, successor->statements()) {
                 if (Phi *phi = s->asPhi()) {
-                    if (Temp *t = phi->d->incoming[bbIndex]->asTemp())
+                    if (Temp *t = phi->d->incoming.at(bbIndex)->asTemp())
                         live.insert(*t);
                 } else {
                     break;
@@ -4886,6 +4888,8 @@ void LifeTimeInterval::addRange(int from, int to) {
 LifeTimeInterval LifeTimeInterval::split(int atPosition, int newStart)
 {
     Q_ASSERT(atPosition < newStart || newStart == InvalidPosition);
+    Q_ASSERT(atPosition <= _end);
+    Q_ASSERT(newStart <= _end || newStart == InvalidPosition);
 
     if (_ranges.isEmpty() || atPosition < _ranges.first().start)
         return LifeTimeInterval();
@@ -5204,6 +5208,7 @@ void Optimizer::convertOutOfSSA() {
                 os << (void *) function;
             os << " on basic-block L" << bb->index() << ":" << endl;
             moves.dump();
+            buf.close();
             qDebug("%s", buf.data().constData());
         }
 
@@ -5317,6 +5322,7 @@ void MoveMapping::add(Expr *from, Temp *to) {
                 printer.print(to);
                 os << " <- ";
                 printer.print(from);
+                buf.close();
                 qDebug("%s", buf.data().constData());
             }
             return;

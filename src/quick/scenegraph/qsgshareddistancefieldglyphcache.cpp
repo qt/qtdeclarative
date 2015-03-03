@@ -251,6 +251,8 @@ QSGSharedDistanceFieldGlyphCache::~QSGSharedDistanceFieldGlyphCache()
 
 void QSGSharedDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 {
+    typedef QSet<glyph_t>::const_iterator GlyphSetConstIt;
+
     QMutexLocker locker(&m_pendingGlyphsMutex);
 
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
@@ -264,8 +266,7 @@ void QSGSharedDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
     QVector<quint32> glyphsVector;
     glyphsVector.reserve(glyphs.size());
 
-    QSet<glyph_t>::const_iterator it;
-    for (it = glyphs.constBegin(); it != glyphs.constEnd(); ++it) {
+    for (GlyphSetConstIt it = glyphs.constBegin(), cend = glyphs.constEnd(); it != cend; ++it) {
         Q_ASSERT(!m_bufferForGlyph.contains(*it));
         glyphsVector.append(*it);
     }
@@ -335,6 +336,8 @@ void QSGSharedDistanceFieldGlyphCache::referenceGlyphs(const QSet<glyph_t> &glyp
 
 void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs)
 {
+    typedef QSet<glyph_t>::const_iterator GlyphSetConstIt;
+
 #if defined(QSGSHAREDDISTANCEFIELDGLYPHCACHE_DEBUG)
     qDebug("QSGSharedDistanceFieldGlyphCache::releaseGlyphs() called for %s (%d glyphs)",
            m_cacheId.constData(), glyphs.size());
@@ -345,8 +348,7 @@ void QSGSharedDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs
     QVector<quint32> glyphsVector;
     glyphsVector.reserve(glyphs.size());
 
-    QSet<glyph_t>::const_iterator glyphsIt;
-    for (glyphsIt = glyphs.constBegin(); glyphsIt != glyphs.constEnd(); ++glyphsIt) {
+    for (GlyphSetConstIt glyphsIt = glyphs.constBegin(), cend = glyphs.constEnd(); glyphsIt != cend; ++glyphsIt) {
         QHash<glyph_t, void *>::iterator bufferIt = m_bufferForGlyph.find(*glyphsIt);
         if (bufferIt != m_bufferForGlyph.end()) {
             void *buffer = bufferIt.value();

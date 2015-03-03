@@ -111,7 +111,7 @@ namespace QTest {
 
 namespace QtQuickTest
 {
-    enum MouseAction { MousePress, MouseRelease, MouseClick, MouseDoubleClick, MouseMove };
+    enum MouseAction { MousePress, MouseRelease, MouseClick, MouseDoubleClick, MouseMove, MouseDoubleClickSequence };
 
     static void mouseEvent(MouseAction action, QWindow *window,
                            QObject *item, Qt::MouseButton button,
@@ -127,6 +127,15 @@ namespace QtQuickTest
 
         if (action == MouseClick) {
             mouseEvent(MousePress, window, item, button, stateKey, _pos);
+            mouseEvent(MouseRelease, window, item, button, stateKey, _pos);
+            return;
+        }
+
+        if (action == MouseDoubleClickSequence) {
+            mouseEvent(MousePress, window, item, button, stateKey, _pos);
+            mouseEvent(MouseRelease, window, item, button, stateKey, _pos);
+            mouseEvent(MousePress, window, item, button, stateKey, _pos);
+            mouseEvent(MouseDoubleClick, window, item, button, stateKey, _pos);
             mouseEvent(MouseRelease, window, item, button, stateKey, _pos);
             return;
         }
@@ -162,7 +171,7 @@ namespace QtQuickTest
         QSpontaneKeyEvent::setSpontaneous(&me);
         if (!qApp->notify(window, &me)) {
             static const char *mouseActionNames[] =
-                { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove" };
+                { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove", "MouseDoubleClickSequence" };
             QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
             QWARN(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toLatin1().data());
         }
@@ -263,6 +272,20 @@ bool QuickTestEvent::mouseDoubleClick
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseDoubleClick, view, item,
+                            Qt::MouseButton(button),
+                            Qt::KeyboardModifiers(modifiers),
+                            QPointF(x, y), delay);
+    return true;
+}
+
+bool QuickTestEvent::mouseDoubleClickSequence
+    (QObject *item, qreal x, qreal y, int button,
+     int modifiers, int delay)
+{
+    QWindow *view = eventWindow();
+    if (!view)
+        return false;
+    QtQuickTest::mouseEvent(QtQuickTest::MouseDoubleClickSequence, view, item,
                             Qt::MouseButton(button),
                             Qt::KeyboardModifiers(modifiers),
                             QPointF(x, y), delay);

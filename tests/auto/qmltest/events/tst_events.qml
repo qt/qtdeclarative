@@ -53,10 +53,28 @@ Rectangle {
 
     property bool mouseHasBeenClicked: false
 
+    signal doubleClickSignalHelper(string eventType)
+
+    SignalSpy {
+        id: doubleClickSpy
+        target: top
+        signalName: "doubleClickSignalHelper"
+    }
+
     MouseArea {
         anchors.fill: parent
         onClicked: {
             mouseHasBeenClicked = true
+            doubleClickSignalHelper("clicked")
+        }
+        onPressed: {
+            doubleClickSignalHelper("pressed")
+        }
+        onReleased: {
+            doubleClickSignalHelper("released")
+        }
+        onDoubleClicked: {
+            doubleClickSignalHelper("doubleClick")
         }
     }
 
@@ -74,6 +92,23 @@ Rectangle {
         function test_mouse_click() {
             mouseClick(top, 25, 30)
             tryCompare(top, "mouseHasBeenClicked", true, 10000)
+        }
+
+        function test_mouse_doubleclick() {
+            doubleClickSpy.clear()
+            mouseDoubleClickSequence(top, 25, 30)
+            compare(doubleClickSpy.count, 6)
+            compare(doubleClickSpy.signalArguments[0][0], "pressed")
+            compare(doubleClickSpy.signalArguments[1][0], "released")
+            compare(doubleClickSpy.signalArguments[2][0], "clicked")
+            compare(doubleClickSpy.signalArguments[3][0], "pressed")
+            compare(doubleClickSpy.signalArguments[4][0], "doubleClick")
+            compare(doubleClickSpy.signalArguments[5][0], "released")
+
+            doubleClickSpy.clear()
+            mouseDoubleClick(top, 25, 30)
+            compare(doubleClickSpy.count, 1)
+            compare(doubleClickSpy.signalArguments[0][0], "doubleClick")
         }
     }
 }

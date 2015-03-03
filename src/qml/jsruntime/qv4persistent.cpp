@@ -50,7 +50,7 @@ struct Header {
     int freeList;
 };
 
-static const int kEntriesPerPage = (WTF::pageSize() - sizeof(Header)) / sizeof(Value);
+static const int kEntriesPerPage = int((WTF::pageSize() - sizeof(Header)) / sizeof(Value));
 
 struct Page {
     Header header;

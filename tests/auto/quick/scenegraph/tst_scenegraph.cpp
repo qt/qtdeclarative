@@ -222,7 +222,7 @@ void tst_SceneGraph::manyWindows()
     QOpenGLContext sharedGLContext;
     ShareContextResetter cleanup; // To avoid dangling pointer in case of test-failure.
     if (shared) {
-        sharedGLContext.create();
+        QVERIFY(sharedGLContext.create());
         QOpenGLContextPrivate::setGlobalShareContext(&sharedGLContext);
     }
 
@@ -459,7 +459,7 @@ void tst_SceneGraph::hideWithOtherContext()
     window.resize(100, 100);
     window.create();
     QOpenGLContext context;
-    context.create();
+    QVERIFY(context.create());
     bool renderingOnMainThread = false;
 
     {

@@ -306,10 +306,10 @@
     \printuntil }
     \printuntil }
 
-    We use the \l qsTr() command to mark the button labels translatable.
+    We use the \l[QML]{Qt::}{qsTr()} command to mark the button labels translatable.
 
-    We use the \l lupdate tool to generate the translation source files and
-    the \l lrelease tool to convert the translated strings to the QM files used
+    We use the \c lupdate() tool to generate the translation source files and
+    the \c lrelease() tool to convert the translated strings to the QM files used
     by the application at runtime. These files are stored in the \c i18n
     directory.
 

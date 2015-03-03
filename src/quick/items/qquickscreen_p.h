@@ -106,6 +106,7 @@ private:
     QQuickWindow* m_window;
     QQuickItem* m_attachee;
     Qt::ScreenOrientations m_updateMask;
+    bool m_updateMaskSet;
 };
 
 class Q_AUTOTEST_EXPORT QQuickScreen : public QObject
