@@ -59,6 +59,7 @@
 
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4arraybuffer_p.h>
 
 using namespace QV4;
 
@@ -1022,6 +1023,9 @@ public:
     QString responseBody();
     const QByteArray & rawResponseBody() const;
     bool receivedXml() const;
+
+    const QString & responseType() const;
+    void setResponseType(const QString &);
 private slots:
     void readyRead();
     void error(QNetworkReply::NetworkError);
@@ -1070,12 +1074,15 @@ private:
 
     QNetworkAccessManager *m_nam;
     QNetworkAccessManager *networkAccessManager() { return m_nam; }
+
+    QString m_responseType;
 };
 
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(ExecutionEngine *engine, QNetworkAccessManager *manager)
     : v4(engine)
     , m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
     , m_redirectCount(0), m_gotXml(false), m_textCodec(0), m_network(0), m_nam(manager)
+    , m_responseType()
 {
 }
 
@@ -1461,6 +1468,16 @@ bool QQmlXMLHttpRequest::receivedXml() const
     return m_gotXml;
 }
 
+const QString & QQmlXMLHttpRequest::responseType() const
+{
+    return m_responseType;
+}
+
+void QQmlXMLHttpRequest::setResponseType(const QString &responseType)
+{
+    m_responseType = responseType;
+}
+
 
 #ifndef QT_NO_TEXTCODEC
 QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
@@ -1640,6 +1657,9 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static ReturnedValue method_get_statusText(CallContext *ctx);
     static ReturnedValue method_get_responseText(CallContext *ctx);
     static ReturnedValue method_get_responseXML(CallContext *ctx);
+    static ReturnedValue method_get_response(CallContext *ctx);
+    static ReturnedValue method_get_responseType(CallContext *ctx);
+    static ReturnedValue method_set_responseType(CallContext *ctx);
 };
 
 }
@@ -1686,6 +1706,10 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, 0);
     p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, 0);
     p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
+    p->defineAccessorProperty(QStringLiteral("response"),method_get_response, 0);
+
+    // Read-write properties
+    p->defineAccessorProperty(QStringLiteral("responseType"), method_get_responseType, method_set_responseType);
 
     // State values
     p->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
@@ -1943,6 +1967,58 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(CallContext *ctx)
     } else {
         return Document::load(scope.engine, r->rawResponseBody());
     }
+}
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_response(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->thisObject().as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+
+    if (r->readyState() != QQmlXMLHttpRequest::Loading &&
+            r->readyState() != QQmlXMLHttpRequest::Done)
+        return QV4::Encode(scope.engine->newString(QString()));
+
+    const QString& responseType = r->responseType();
+    if (responseType.compare(QLatin1String("text"), Qt::CaseInsensitive) == 0) {
+        return QV4::Encode(scope.engine->newString(r->responseBody()));
+    } else if (responseType.compare(QLatin1String("arraybuffer"), Qt::CaseInsensitive) == 0) {
+        return QV4::Encode(scope.engine->newArrayBuffer(r->rawResponseBody()));
+    } else {
+        return QV4::Encode(scope.engine->newString(QString()));
+    }
+
+    return Encode::undefined();
+}
+
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseType(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->thisObject().as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+    return QV4::Encode(scope.engine->newString(r->responseType()));
+}
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_set_responseType(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, ctx->thisObject().as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+
+    if (ctx->argc() < 1)
+        V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
+
+    // Argument 0 - response type
+    r->setResponseType(ctx->args()[0].toQStringNoThrow());
+
+    return Encode::undefined();
 }
 
 void qt_rem_qmlxmlhttprequest(ExecutionEngine * /* engine */, void *d)

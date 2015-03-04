@@ -582,6 +582,16 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic, Object *pr
     return object->d();
 }
 
+Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
+{
+    Scope scope(this);
+    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array.size()));
+    if (!hasException) {
+        memcpy(object->d()->data->data(), array.data(), array.size());
+    }
+    return object->d();
+}
+
 
 Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
 {

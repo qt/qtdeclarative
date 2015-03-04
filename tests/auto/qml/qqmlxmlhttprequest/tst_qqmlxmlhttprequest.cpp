@@ -87,6 +87,7 @@ private slots:
     void getAllResponseHeaders_unsent();
     void getAllResponseHeaders_sent();
     void getAllResponseHeaders_args();
+    void getBinaryData();
     void status();
     void status_data();
     void statusText();
@@ -814,6 +815,24 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders_args()
     QVERIFY(!object.isNull());
 
     QTRY_VERIFY(object->property("exceptionThrown").toBool() == true);
+}
+
+void tst_qqmlxmlhttprequest::getBinaryData()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("receive_binary_data.expect"),
+                        testFileUrl("receive_binary_data.reply"),
+                        testFileUrl("qml_logo.png")));
+
+    QQmlComponent component(&engine, testFileUrl("receiveBinaryData.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", "http://127.0.0.1:14445/gml_logo.png");
+    component.completeCreate();
+
+    QFileInfo fileInfo("data/qml_logo.png");
+    QTRY_VERIFY(object->property("readSize").toInt() == fileInfo.size());
 }
 
 void tst_qqmlxmlhttprequest::status()

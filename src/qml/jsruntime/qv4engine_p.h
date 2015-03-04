@@ -268,6 +268,8 @@ public:
     Heap::ArrayObject *newArrayObject(const QStringList &list);
     Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
+    Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
+
     Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);
 
