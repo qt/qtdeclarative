@@ -136,7 +136,7 @@ Rectangle {
                     "and a language runtime. "+
                     "A collection of C++ APIs is used to integrate these high level features with classic Qt applications."});
                     textmodel.append({ "name": "Links",
-                    "value": "This is a link - <a href=\"http://qt-project.org/doc\">Qt Docs</a>"});
+                    "value": "This is a link - <a href=\"http://doc.qt.io/\">Qt Docs</a>"});
                 }
             }
             ControlView {
