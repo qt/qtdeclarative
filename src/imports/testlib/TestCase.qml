@@ -1271,6 +1271,9 @@ Item {
             qtest_results.finishTestData()
             qtest_runInternal("cleanup")
             qtest_results.finishTestDataCleanup()
+            // wait(0) will call processEvents() so objects marked for deletion
+            // in the test function will be deleted.
+            wait(0)
         }
     }
 
@@ -1302,6 +1305,9 @@ Item {
                 // Run the cleanup function.
                 qtest_runInternal("cleanup")
                 qtest_results.finishTestDataCleanup()
+                // wait(0) will call processEvents() so objects marked for deletion
+                // in the test function will be deleted.
+                wait(0)
             } while (!qtest_results.measurementAccepted())
             qtest_results.endDataRun()
         } while (qtest_results.needsMoreMeasurements())
@@ -1418,9 +1424,6 @@ Item {
             } else {
                 qtest_runFunction(prop, null, isBenchmark)
             }
-            // wait(0) will call processEvents() so objects marked for deletion
-            // in the test function will be deleted.
-            wait(0)
             qtest_results.finishTestFunction()
             qtest_results.skipped = false
         }
