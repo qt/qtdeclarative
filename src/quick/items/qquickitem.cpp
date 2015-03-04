@@ -4752,7 +4752,7 @@ void QQuickItem::itemChange(ItemChange change, const ItemChangeData &value)
 void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 {
     if (hasActiveFocus())
-        qApp->inputMethod()->update(queries);
+        QGuiApplication::inputMethod()->update(queries);
 }
 #endif // QT_NO_IM
 

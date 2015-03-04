@@ -2401,10 +2401,10 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
 #ifndef QT_NO_IM
         if (focusOnPress && !q->isReadOnly())
             qGuiApp->inputMethod()->show();
-        q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->connect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                 q, SLOT(q_updateAlignment()));
     } else {
-        q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
     }

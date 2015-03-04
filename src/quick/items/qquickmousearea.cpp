@@ -676,7 +676,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
 #endif
         setHovered(true);
         d->startScene = event->windowPos();
-        d->pressAndHoldTimer.start(qApp->styleHints()->mousePressAndHoldInterval(), this);
+        d->pressAndHoldTimer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true));
     }

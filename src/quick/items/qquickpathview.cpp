@@ -1636,8 +1636,9 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
             // then we'll assume that this gesture targets the PathView. This ensures PathView gesture grabbing
             // is in sync with other items.
             QPointF pathDelta = pathPoint - startPoint;
-            if (qAbs(pathDelta.x()) > qApp->styleHints()->startDragDistance() * 0.8
-                    || qAbs(pathDelta.y()) > qApp->styleHints()->startDragDistance() * 0.8) {
+            const int startDragDistance = QGuiApplication::styleHints()->startDragDistance();
+            if (qAbs(pathDelta.x()) > startDragDistance * 0.8
+                    || qAbs(pathDelta.y()) > startDragDistance * 0.8) {
                 stealMouse = true;
                 q->setKeepMouseGrab(true);
             }

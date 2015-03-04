@@ -75,7 +75,7 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
     //Timer to display selected item's name
     m_nameDisplayTimer.setSingleShot(true);
-    m_nameDisplayTimer.setInterval(qApp->styleHints()->mouseDoubleClickInterval());
+    m_nameDisplayTimer.setInterval(QGuiApplication::styleHints()->mouseDoubleClickInterval());
     connect(&m_nameDisplayTimer, SIGNAL(timeout()), SLOT(showSelectedItemName()));
     enable(true);
 }
@@ -256,7 +256,7 @@ void InspectTool::touchEvent(QTouchEvent *event)
                 !m_didPressAndHold && m_tapEvent) {
             m_tapEvent = false;
             bool doubleTap = event->timestamp() - m_touchTimestamp
-                    < static_cast<ulong>(qApp->styleHints()->mouseDoubleClickInterval());
+                    < static_cast<ulong>(QGuiApplication::styleHints()->mouseDoubleClickInterval());
             if (doubleTap) {
                 m_nameDisplayTimer.stop();
                 selectNextItem();
@@ -368,7 +368,7 @@ void InspectTool::moveItem(bool valid)
     if (!m_dragStarted
             && valid
             && ((m_dragStartPosition - m_mousePosition).manhattanLength()
-                > qApp->styleHints()->startDragDistance())) {
+                > QGuiApplication::styleHints()->startDragDistance())) {
         m_pressAndHoldTimer.stop();
         m_dragStarted = true;
     }

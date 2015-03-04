@@ -126,7 +126,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     QQuickItemPrivate::registerAccessorProperties();
 
 #ifdef QT_NO_MOVIE
-    qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", qApp->translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
+    qmlRegisterTypeNotAvailable(uri,major,minor,"AnimatedImage", QCoreApplication::translate("QQuickAnimatedImage","Qt was built without support for QMovie"));
 #else
     qmlRegisterType<QQuickAnimatedImage>(uri,major,minor,"AnimatedImage");
 #endif
