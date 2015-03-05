@@ -87,6 +87,14 @@ public:
     struct ExtraData {
         ExtraData();
 
+        qreal topPadding;
+        qreal leftPadding;
+        qreal rightPadding;
+        qreal bottomPadding;
+        bool explicitTopPadding;
+        bool explicitLeftPadding;
+        bool explicitRightPadding;
+        bool explicitBottomPadding;
         qreal lineHeight;
         QQuickTextDocumentWithImageResources *doc;
         QString activeLink;
@@ -111,6 +119,7 @@ public:
     QTextLayout *elideLayout;
     QQuickTextLine *textLine;
 
+    qreal padding;
     qreal lineWidth;
 
     QRgb color;
@@ -158,6 +167,14 @@ public:
 
     qreal getImplicitWidth() const Q_DECL_OVERRIDE;
     qreal getImplicitHeight() const Q_DECL_OVERRIDE;
+
+    qreal availableWidth() const;
+    qreal availableHeight() const;
+
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
 
     void ensureDoc();
 

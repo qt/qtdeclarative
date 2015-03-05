@@ -150,6 +150,8 @@ private slots:
 
     void growFromZeroWidth();
 
+    void padding();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -3562,19 +3564,19 @@ Q_DECLARE_METATYPE(ExpectedBaseline)
 static qreal expectedBaselineTop(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
-    return fm.ascent();
+    return fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineBottom(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
-    return item->height() - item->contentHeight() + fm.ascent();
+    return item->height() - item->contentHeight() - item->bottomPadding() + fm.ascent();
 }
 
 static qreal expectedBaselineCenter(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
-    return ((item->height() - item->contentHeight()) / 2) + fm.ascent();
+    return ((item->height() - item->contentHeight() - item->topPadding() - item->bottomPadding()) / 2) + fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineBold(QQuickText *item)
@@ -3582,7 +3584,7 @@ static qreal expectedBaselineBold(QQuickText *item)
     QFont font = item->font();
     font.setBold(true);
     QFontMetricsF fm(font);
-    return fm.ascent();
+    return fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineImage(QQuickText *item)
@@ -3592,13 +3594,13 @@ static qreal expectedBaselineImage(QQuickText *item)
     // or image height - line height and the baseline is line position + ascent.  Because
     // QTextLine's height is rounded up this can give slightly different results to image height
     // - descent.
-    return 181 - qCeil(fm.height()) + fm.ascent();
+    return 181 - qCeil(fm.height()) + fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineCustom(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
-    return 16 + fm.ascent();
+    return 16 + fm.ascent() + item->topPadding();
 }
 
 static qreal expectedBaselineScaled(QQuickText *item)
@@ -3617,11 +3619,11 @@ static qreal expectedBaselineScaled(QQuickText *item)
 
         if (width < item->width()) {
             QFontMetricsF fm(layout.font());
-            return fm.ascent();
+            return fm.ascent() + item->topPadding();
         }
         font.setPointSize(font.pointSize() - 1);
     } while (font.pointSize() > 0);
-    return 0;
+    return item->topPadding();
 }
 
 static qreal expectedBaselineFixedBottom(QQuickText *item)
@@ -3630,7 +3632,7 @@ static qreal expectedBaselineFixedBottom(QQuickText *item)
     qreal dy = item->text().contains(QLatin1Char('\n'))
             ? 160
             : 180;
-    return dy + fm.ascent();
+    return dy + fm.ascent() - item->bottomPadding();
 }
 
 static qreal expectedBaselineProportionalBottom(QQuickText *item)
@@ -3639,7 +3641,7 @@ static qreal expectedBaselineProportionalBottom(QQuickText *item)
     qreal dy = item->text().contains(QLatin1Char('\n'))
             ? 200 - (qCeil(fm.height()) * 3)
             : 200 - (qCeil(fm.height()) * 1.5);
-    return dy + fm.ascent();
+    return dy + fm.ascent() - item->bottomPadding();
 }
 
 void tst_qquicktext::baselineOffset_data()
@@ -3746,6 +3748,102 @@ void tst_qquicktext::baselineOffset_data()
             << QByteArray("height: 200; lineHeightMode: Text.ProportionalHeight; lineHeight: 1.5; verticalAlignment: Text.AlignBottom")
             << &expectedBaselineProportionalBottom
             << &expectedBaselineProportionalBottom;
+
+    QTest::newRow("top align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+    QTest::newRow("bottom align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+    QTest::newRow("center align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; verticalAlignment: Text.AlignVCenter")
+            << &expectedBaselineCenter
+            << &expectedBaselineCenter;
+
+    QTest::newRow("bold width padding")
+            << "<b>hello world</b>"
+            << "<b>hello<br/>world</b>"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20")
+            << &expectedBaselineTop
+            << &expectedBaselineBold;
+
+    QTest::newRow("richText with padding")
+            << "<b>hello world</b>"
+            << "<b>hello<br/>world</b>"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; textFormat: Text.RichText")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("elided with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("width: 20; height: 8; topPadding: 10; bottomPadding: 20; elide: Text.ElideRight")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("elided bottom align with padding")
+            << "hello world"
+            << "hello\nworld!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            << QByteArray("width: 200; height: 200; topPadding: 10; bottomPadding: 20; elide: Text.ElideRight; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineBottom
+            << &expectedBaselineBottom;
+
+    QTest::newRow("image with padding")
+            << "hello <img src=\"images/heart200.png\" /> world"
+            << "hello <img src=\"images/heart200.png\" /><br/>world"
+            << QByteArray("height: 200\n; topPadding: 10; bottomPadding: 20; baseUrl: \"") + testFileUrl("reference").toEncoded() + QByteArray("\"")
+            << &expectedBaselineImage
+            << &expectedBaselineTop;
+
+    QTest::newRow("customLine with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; onLineLaidOut: line.y += 16")
+            << &expectedBaselineCustom
+            << &expectedBaselineCustom;
+
+    QTest::newRow("scaled font with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("width: 200; topPadding: 10; bottomPadding: 20; minimumPointSize: 1; font.pointSize: 64; fontSizeMode: Text.HorizontalFit")
+            << &expectedBaselineScaled
+            << &expectedBaselineTop;
+
+    QTest::newRow("fixed line height top align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; lineHeightMode: Text.FixedHeight; lineHeight: 20; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("fixed line height bottom align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; lineHeightMode: Text.FixedHeight; lineHeight: 20; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineFixedBottom
+            << &expectedBaselineFixedBottom;
+
+    QTest::newRow("proportional line height top align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; lineHeightMode: Text.ProportionalHeight; lineHeight: 1.5; verticalAlignment: Text.AlignTop")
+            << &expectedBaselineTop
+            << &expectedBaselineTop;
+
+    QTest::newRow("proportional line height bottom align with padding")
+            << "hello world"
+            << "hello\nworld"
+            << QByteArray("height: 200; topPadding: 10; bottomPadding: 20; lineHeightMode: Text.ProportionalHeight; lineHeight: 1.5; verticalAlignment: Text.AlignBottom")
+            << &expectedBaselineProportionalBottom
+            << &expectedBaselineProportionalBottom;
 }
 
 void tst_qquicktext::baselineOffset()
@@ -3758,7 +3856,7 @@ void tst_qquicktext::baselineOffset()
 
     QQmlComponent component(&engine);
     component.setData(
-            "import QtQuick 2.0\n"
+            "import QtQuick 2.6\n"
             "Text {\n"
                 + bindings + "\n"
             "}", QUrl());
@@ -3898,6 +3996,84 @@ void tst_qquicktext::growFromZeroWidth()
 
     // the new width should force our contents to wrap
     QVERIFY(text->lineCount() > 3);
+}
+
+void tst_qquicktext::padding()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("padding.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickText *obj = qobject_cast<QQuickText*>(root);
+    QVERIFY(obj != 0);
+
+    qreal cw = obj->contentWidth();
+    qreal ch = obj->contentHeight();
+
+    QVERIFY(cw > 0);
+    QVERIFY(ch > 0);
+
+    QCOMPARE(obj->topPadding(), 20.0);
+    QCOMPARE(obj->leftPadding(), 30.0);
+    QCOMPARE(obj->rightPadding(), 40.0);
+    QCOMPARE(obj->bottomPadding(), 50.0);
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setTopPadding(2.25);
+    QCOMPARE(obj->topPadding(), 2.25);
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setLeftPadding(3.75);
+    QCOMPARE(obj->leftPadding(), 3.75);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+
+    obj->setRightPadding(4.4);
+    QCOMPARE(obj->rightPadding(), 4.4);
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+
+    obj->setBottomPadding(1.11);
+    QCOMPARE(obj->bottomPadding(), 1.11);
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setText("Qt");
+    QVERIFY(obj->contentWidth() < cw);
+    QCOMPARE(obj->contentHeight(), ch);
+    cw = obj->contentWidth();
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->setFont(QFont("Courier", 96));
+    QVERIFY(obj->contentWidth() > cw);
+    QVERIFY(obj->contentHeight() > ch);
+    cw = obj->contentWidth();
+    ch = obj->contentHeight();
+
+    QCOMPARE(obj->implicitWidth(), cw + obj->leftPadding() + obj->rightPadding());
+    QCOMPARE(obj->implicitHeight(), ch + obj->topPadding() + obj->bottomPadding());
+
+    obj->resetTopPadding();
+    QCOMPARE(obj->topPadding(), 10.0);
+    obj->resetLeftPadding();
+    QCOMPARE(obj->leftPadding(), 10.0);
+    obj->resetRightPadding();
+    QCOMPARE(obj->rightPadding(), 10.0);
+    obj->resetBottomPadding();
+    QCOMPARE(obj->bottomPadding(), 10.0);
+
+    obj->resetPadding();
+    QCOMPARE(obj->padding(), 0.0);
+    QCOMPARE(obj->topPadding(), 0.0);
+    QCOMPARE(obj->leftPadding(), 0.0);
+    QCOMPARE(obj->rightPadding(), 0.0);
+    QCOMPARE(obj->bottomPadding(), 0.0);
+
+    delete root;
 }
 
 QTEST_MAIN(tst_qquicktext)

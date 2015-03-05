@@ -84,6 +84,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION 2)
 
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+
 public:
     QQuickText(QQuickItem *parent=0);
     ~QQuickText();
@@ -204,6 +210,26 @@ public:
 
     Q_REVISION(3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
 
+    qreal padding() const;
+    void setPadding(qreal padding);
+    void resetPadding();
+
+    qreal topPadding() const;
+    void setTopPadding(qreal padding);
+    void resetTopPadding();
+
+    qreal leftPadding() const;
+    void setLeftPadding(qreal padding);
+    void resetLeftPadding();
+
+    qreal rightPadding() const;
+    void setRightPadding(qreal padding);
+    void resetRightPadding();
+
+    qreal bottomPadding() const;
+    void setBottomPadding(qreal padding);
+    void resetBottomPadding();
+
 Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
@@ -231,6 +257,11 @@ Q_SIGNALS:
     void lineLaidOut(QQuickTextLine *line);
     void baseUrlChanged();
     void renderTypeChanged();
+    Q_REVISION(6) void paddingChanged();
+    Q_REVISION(6) void topPaddingChanged();
+    Q_REVISION(6) void leftPaddingChanged();
+    Q_REVISION(6) void rightPaddingChanged();
+    Q_REVISION(6) void bottomPaddingChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
