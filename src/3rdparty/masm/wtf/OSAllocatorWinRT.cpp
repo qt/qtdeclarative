@@ -33,9 +33,17 @@
 
 namespace WTF {
 
+inline size_t getPageSize()
+{
+    SYSTEM_INFO info;
+    GetNativeSystemInfo(&info);
+    return info.dwPageSize;
+}
+
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage, bool, bool)
 {
-    void* result = _aligned_malloc(bytes, 16);
+    static const size_t pageSize = getPageSize();
+    void* result = _aligned_malloc(bytes, pageSize);
     if (!result)
         CRASH();
     memset(result, 0, bytes);
