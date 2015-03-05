@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 
     //Handle main arguments
     QStringList argList = app->arguments();
-    for (int i = 0; i < argList.count(); i++) {
+    for (int i = 1; i < argList.count(); i++) {
         const QString &arg = argList[i];
         if (arg == QLatin1String("-quiet"))
             quietMode = true;
