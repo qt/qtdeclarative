@@ -58,6 +58,30 @@ struct QQmlValueTypeFactoryImpl
     QMutex mutex;
 };
 
+
+namespace {
+// This should be removed once the QPersistentModelIndex as built-in type is merged in qtbase
+#if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
+#error Please, someone remove this. QPersistentModelIndex should be a built-in meta-type by now.
+#else
+template <typename T, bool builtin = QMetaTypeId2<T>::IsBuiltIn>
+struct QPMIConvertersRegistrer {
+    void registerConverters()
+    {
+    }
+};
+
+template <typename T> struct QPMIConvertersRegistrer<T, false> {
+    void registerConverters()
+    {
+        qRegisterMetaType<QPersistentModelIndex>();
+        QMetaType::registerConverter<QModelIndex, QPersistentModelIndex>(&QQmlModelIndexValueType::toPersistentModelIndex);
+        QMetaType::registerConverter<QPersistentModelIndex, QModelIndex>(&QQmlPersistentModelIndexValueType::toModelIndex);
+    }
+};
+#endif
+}
+
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
@@ -65,11 +89,11 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 
     // See types wrapped in qqmlmodelindexvaluetype_p.h
     qRegisterMetaType<QModelIndexList>();
-    qRegisterMetaType<QPersistentModelIndex>();
     qRegisterMetaType<QItemSelectionRange>();
     qRegisterMetaType<QItemSelection>();
-    QMetaType::registerConverter<QModelIndex, QPersistentModelIndex>(&QQmlModelIndexValueType::toPersistentModelIndex);
-    QMetaType::registerConverter<QPersistentModelIndex, QModelIndex>(&QQmlPersistentModelIndexValueType::toModelIndex);
+
+    QPMIConvertersRegistrer<QPersistentModelIndex> conv;
+    conv.registerConverters();
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
