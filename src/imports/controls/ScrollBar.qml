@@ -48,10 +48,7 @@ AbstractScrollBar {
     Accessible.pressed: pressed
     Accessible.role: Accessible.ScrollBar
 
-    topPadding: 2
-    leftPadding: 2
-    rightPadding: 2
-    bottomPadding: 2
+    padding: 2
 
     handle: Rectangle {
         id: handle

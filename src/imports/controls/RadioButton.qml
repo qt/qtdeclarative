@@ -53,10 +53,7 @@ AbstractRadioButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.RadioButton
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     indicator: Rectangle {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft

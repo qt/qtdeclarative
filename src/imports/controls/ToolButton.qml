@@ -49,10 +49,7 @@ AbstractButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     label: Text {
         x: control.leftPadding

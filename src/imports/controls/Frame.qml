@@ -50,10 +50,7 @@ AbstractFrame {
     contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
     contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     contentItem: Item {
         id: content

@@ -61,10 +61,7 @@ AbstractPageIndicator {
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     contentItem: Row {
         id: row

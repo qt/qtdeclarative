@@ -50,10 +50,7 @@ AbstractSlider {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Slider
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     handle: Rectangle {
         implicitWidth: 20

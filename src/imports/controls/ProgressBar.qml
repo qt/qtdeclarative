@@ -47,10 +47,7 @@ AbstractProgressBar {
 
     Accessible.role: Accessible.ProgressBar
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     indicator: Item {
         x: control.leftPadding

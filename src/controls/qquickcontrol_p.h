@@ -61,43 +61,53 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem, public QQuickSty
 {
     Q_OBJECT
     Q_INTERFACES(QQuickStylable)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding NOTIFY topPaddingChanged FINAL)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding NOTIFY leftPaddingChanged FINAL)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding NOTIFY rightPaddingChanged FINAL)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding NOTIFY bottomPaddingChanged FINAL)
-    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle RESET resetStyle NOTIFY styleChanged FINAL)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle RESET resetStyle NOTIFY styleChanged FINAL)
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
 
+    qreal padding() const;
+    void setPadding(qreal padding);
+    void resetPadding();
+
     qreal topPadding() const;
     void setTopPadding(qreal padding);
+    void resetTopPadding();
 
     qreal leftPadding() const;
     void setLeftPadding(qreal padding);
+    void resetLeftPadding();
 
     qreal rightPadding() const;
     void setRightPadding(qreal padding);
+    void resetRightPadding();
 
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
+    void resetBottomPadding();
+
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
 
     QQuickStyle *style() const Q_DECL_OVERRIDE;
     void setStyle(QQuickStyle *style) Q_DECL_OVERRIDE;
     bool hasStyle() const Q_DECL_OVERRIDE;
     void resetStyle() Q_DECL_OVERRIDE;
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
-
 Q_SIGNALS:
-    void styleChanged();
-    void backgroundChanged();
+    void paddingChanged();
     void topPaddingChanged();
     void leftPaddingChanged();
     void rightPaddingChanged();
     void bottomPaddingChanged();
+    void backgroundChanged();
+    void styleChanged();
 
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);

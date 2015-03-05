@@ -62,15 +62,25 @@ public:
 
     void mirrorChange() Q_DECL_OVERRIDE;
 
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
+
     void resolveStyle(QQuickStyle *other = 0);
 
     bool hasStyle;
-    QQuickStyle *style;
-    QQuickItem *background;
+    bool hasTopPadding;
+    bool hasLeftPadding;
+    bool hasRightPadding;
+    bool hasBottomPadding;
+    qreal padding;
     qreal topPadding;
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
+    QQuickItem *background;
+    QQuickStyle *style;
 };
 
 QT_END_NAMESPACE

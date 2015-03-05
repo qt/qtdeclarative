@@ -53,8 +53,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasStyle(false), style(Q_NULLPTR), background(Q_NULLPTR),
-    topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0)
+    hasStyle(false), hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0),
+    background(Q_NULLPTR), style(Q_NULLPTR)
 {
 }
 
@@ -62,6 +63,46 @@ void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
     q->mirrorChange();
+}
+
+void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    qreal oldPadding = q->topPadding();
+    topPadding = value;
+    hasTopPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+        emit q->topPaddingChanged();
+}
+
+void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    qreal oldPadding = q->leftPadding();
+    leftPadding = value;
+    hasLeftPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+        emit q->leftPaddingChanged();
+}
+
+void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    qreal oldPadding = q->rightPadding();
+    rightPadding = value;
+    hasRightPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+        emit q->rightPaddingChanged();
+}
+
+void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    qreal oldPadding = q->bottomPadding();
+    bottomPadding = value;
+    hasBottomPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+        emit q->bottomPaddingChanged();
 }
 
 void QQuickControlPrivate::resolveStyle(QQuickStyle *res)
@@ -85,6 +126,7 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 }
 
 /*!
+    \qmlproperty real QtQuickControls2::Control::padding
     \qmlproperty real QtQuickControls2::Control::topPadding
     \qmlproperty real QtQuickControls2::Control::leftPadding
     \qmlproperty real QtQuickControls2::Control::rightPadding
@@ -92,63 +134,137 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 
     These properties hold the padding.
 */
+qreal QQuickControl::padding() const
+{
+    Q_D(const QQuickControl);
+    return d->padding;
+}
+
+void QQuickControl::setPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    if (qFuzzyCompare(d->padding, padding))
+        return;
+    d->padding = padding;
+    emit paddingChanged();
+    if (!d->hasTopPadding)
+        emit topPaddingChanged();
+    if (!d->hasLeftPadding)
+        emit leftPaddingChanged();
+    if (!d->hasRightPadding)
+        emit rightPaddingChanged();
+    if (!d->hasBottomPadding)
+        emit bottomPaddingChanged();
+}
+
+void QQuickControl::resetPadding()
+{
+    setPadding(0);
+}
+
 qreal QQuickControl::topPadding() const
 {
     Q_D(const QQuickControl);
-    return d->topPadding;
+    if (d->hasTopPadding)
+        return d->topPadding;
+    return d->padding;
 }
 
 void QQuickControl::setTopPadding(qreal padding)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->topPadding, padding)) {
-        d->topPadding = padding;
-        emit topPaddingChanged();
-    }
+    d->setTopPadding(padding);
+}
+
+void QQuickControl::resetTopPadding()
+{
+    Q_D(QQuickControl);
+    d->setTopPadding(0, true);
 }
 
 qreal QQuickControl::leftPadding() const
 {
     Q_D(const QQuickControl);
-    return d->leftPadding;
+    if (d->hasLeftPadding)
+        return d->leftPadding;
+    return d->padding;
 }
 
 void QQuickControl::setLeftPadding(qreal padding)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->leftPadding, padding)) {
-        d->leftPadding = padding;
-        emit leftPaddingChanged();
-    }
+    d->setLeftPadding(padding);
+}
+
+void QQuickControl::resetLeftPadding()
+{
+    Q_D(QQuickControl);
+    d->setLeftPadding(0, true);
 }
 
 qreal QQuickControl::rightPadding() const
 {
     Q_D(const QQuickControl);
-    return d->rightPadding;
+    if (d->hasRightPadding)
+        return d->rightPadding;
+    return d->padding;
 }
 
 void QQuickControl::setRightPadding(qreal padding)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->rightPadding, padding)) {
-        d->rightPadding = padding;
-        emit rightPaddingChanged();
-    }
+    d->setRightPadding(padding);
+}
+
+void QQuickControl::resetRightPadding()
+{
+    Q_D(QQuickControl);
+    d->setRightPadding(0, true);
 }
 
 qreal QQuickControl::bottomPadding() const
 {
     Q_D(const QQuickControl);
-    return d->bottomPadding;
+    if (d->hasBottomPadding)
+        return d->bottomPadding;
+    return d->padding;
 }
 
 void QQuickControl::setBottomPadding(qreal padding)
 {
     Q_D(QQuickControl);
-    if (!qFuzzyCompare(d->bottomPadding, padding)) {
-        d->bottomPadding = padding;
-        emit bottomPaddingChanged();
+    d->setBottomPadding(padding);
+}
+
+void QQuickControl::resetBottomPadding()
+{
+    Q_D(QQuickControl);
+    d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlproperty Item QtQuickControls2::Control::background
+
+    This property holds the background item.
+*/
+QQuickItem *QQuickControl::background() const
+{
+    Q_D(const QQuickControl);
+    return d->background;
+}
+
+void QQuickControl::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickControl);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+        }
+        emit backgroundChanged();
     }
 }
 
@@ -189,32 +305,6 @@ bool QQuickControl::hasStyle() const
 void QQuickControl::resetStyle()
 {
     setStyle(Q_NULLPTR);
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::Control::background
-
-    This property holds the background item.
-*/
-QQuickItem *QQuickControl::background() const
-{
-    Q_D(const QQuickControl);
-    return d->background;
-}
-
-void QQuickControl::setBackground(QQuickItem *background)
-{
-    Q_D(QQuickControl);
-    if (d->background != background) {
-        delete d->background;
-        d->background = background;
-        if (background) {
-            background->setParentItem(this);
-            if (qFuzzyIsNull(background->z()))
-                background->setZ(-1);
-        }
-        emit backgroundChanged();
-    }
 }
 
 bool QQuickControl::event(QEvent *event)

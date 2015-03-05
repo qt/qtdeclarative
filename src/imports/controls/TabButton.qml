@@ -50,10 +50,7 @@ AbstractTabButton {
     Accessible.selected: checked
     Accessible.role: Accessible.PageTab
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     label: Text {
         x: control.leftPadding

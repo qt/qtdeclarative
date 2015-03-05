@@ -54,10 +54,7 @@ AbstractTextField {
     Accessible.passwordEdit: !!input && (input.echoMode == TextInput.Password ||
                                          input.echoMode === TextInput.PasswordEchoOnEdit)
 
-    topPadding: style.padding
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
+    padding: style.padding
 
     input: TextInput {
         x: control.leftPadding

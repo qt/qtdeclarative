@@ -50,10 +50,8 @@ AbstractGroupBox {
     contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
     contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
 
+    padding: style.padding
     topPadding: style.padding + (label && title ? label.implicitHeight + style.spacing : 0)
-    leftPadding: style.padding
-    rightPadding: style.padding
-    bottomPadding: style.padding
 
     contentItem: Item {
         id: content
