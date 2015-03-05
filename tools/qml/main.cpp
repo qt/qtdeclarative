@@ -64,8 +64,8 @@
 #include <cstdlib>
 
 #define VERSION_MAJ 1
-#define VERSION_MIN 0
-#define VERSION_STR "1.0"
+#define VERSION_MIN 1
+#define VERSION_STR "1.1"
 
 #define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
 
@@ -251,11 +251,10 @@ void printVersion()
 
 void printUsage()
 {
-    printf("Usage: qml [options] [files]\n");
+    printf("Usage: qml [options] [files] [-- args]\n");
     printf("\n");
-    printf("Any argument ending in .qml will be treated as a QML file to be loaded.\n");
+    printf("Any unknown argument before '--' will be treated as a QML file to be loaded.\n");
     printf("Any number of QML files can be loaded. They will share the same engine.\n");
-    printf("Any argument which is not a recognized option and which does not end in .qml will be ignored.\n");
     printf("'gui' application type is only available if the QtGui module is available.\n");
     printf("'widget' application type is only available if the QtWidgets module is available.\n");
     printf("\n");
@@ -440,9 +439,7 @@ int main(int argc, char *argv[])
             dummyDir = argList[i+1];
             i++;
         } else {
-            //If it ends in .qml, treat it as a file. Else ignore it
-            if (arg.endsWith(".qml"))
-                files << arg;
+            files << arg;
         }
     }
 
