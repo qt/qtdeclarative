@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.6
 import QtQuick.Controls 2.0
 import QtQuick.Calendar 2.0
 import io.qt.examples.calendar 1.0
