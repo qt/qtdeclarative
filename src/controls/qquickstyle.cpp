@@ -44,6 +44,8 @@
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qdebug.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
