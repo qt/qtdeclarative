@@ -42,9 +42,8 @@ The Qt Quick module provides both a \l{Qt Quick QML Types}{QML API} which suppli
 QML types for creating user interfaces with the QML language, and a
 \l{Qt Quick C++ Classes}{C++ API} for extending QML applications with C++ code.
 
-\note From Qt 5.1, a set of Qt Quick based UI controls is available to
-create user interfaces. Please see \l{Qt Quick Controls}
-for more information.
+\note A set of Qt Quick-based UI controls is also available to create user
+interfaces. See \l{Qt Quick Controls} for more information.
 
 For those new to QML and Qt Quick, please see
 \l{QML Applications}
@@ -108,7 +107,6 @@ Additional Qt Quick information:
     interacting with system dialogs
     \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
     \endlist
-\li \l{Qt Quick Release Notes} - list of changes and additions in the Qt Quick
 \li \l{Qt Quick Examples and Tutorials}
 \endlist
 
