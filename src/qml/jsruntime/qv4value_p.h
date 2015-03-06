@@ -417,6 +417,9 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
     static inline Primitive fromDouble(double d);
     static inline Primitive fromUInt32(uint i);
 
+    using Value::toInt32;
+    using Value::toUInt32;
+
     static double toInteger(double fromNumber);
     static int toInt32(double value);
     static unsigned int toUInt32(double value);
