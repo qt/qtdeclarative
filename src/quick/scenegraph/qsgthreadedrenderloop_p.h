@@ -49,6 +49,7 @@ class QSGThreadedRenderLoop : public QSGRenderLoop
     Q_OBJECT
 public:
     QSGThreadedRenderLoop();
+    ~QSGThreadedRenderLoop();
 
     void show(QQuickWindow *) {}
     void hide(QQuickWindow *);

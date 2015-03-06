@@ -694,6 +694,11 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     m_animation_driver->install();
 }
 
+QSGThreadedRenderLoop::~QSGThreadedRenderLoop()
+{
+    delete sg;
+}
+
 QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) const
 {
     return sg->createRenderContext();
