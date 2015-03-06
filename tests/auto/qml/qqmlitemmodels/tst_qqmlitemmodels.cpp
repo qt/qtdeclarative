@@ -184,14 +184,18 @@ void tst_qqmlitemmodels::itemSelection()
     TestModel model(10, 10);
 
     object->setModel(&model);
-    QCOMPARE(object->property("count").toInt(), 8);
+    QCOMPARE(object->property("count").toInt(), 5);
     QCOMPARE(object->property("contains").toBool(), true);
 
-    QVariant milVariant = object->property("itemSelection");
-    QCOMPARE(milVariant.userType(), qMetaTypeId<QItemSelection>());
+    const char *propNames[] = { "itemSelectionRead", "itemSelectionBinding", 0 };
+    for (const char **name = propNames; *name; name++) {
+        QVariant isVariant = object->property(*name);
+        QCOMPARE(isVariant.userType(), qMetaTypeId<QItemSelection>());
 
-    const QItemSelection &mil = milVariant.value<QItemSelection>();
-    QCOMPARE(mil.count(), 5);
+        const QItemSelection &sel = isVariant.value<QItemSelection>();
+        QCOMPARE(sel.count(), object->itemSelection().count());
+        QCOMPARE(sel, object->itemSelection());
+    }
 }
 
 void tst_qqmlitemmodels::modelIndexList()

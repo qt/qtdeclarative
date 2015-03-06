@@ -65,7 +65,6 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 
     // See types wrapped in qqmlmodelindexvaluetype_p.h
     qRegisterMetaType<QItemSelectionRange>();
-    qRegisterMetaType<QItemSelection>();
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
@@ -113,8 +112,6 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
     default:
         if (t == qMetaTypeId<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
-        if (t == qMetaTypeId<QItemSelection>())
-            return &QQmlItemSelectionValueType::staticMetaObject;
 
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;

@@ -75,7 +75,8 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl()) \
-    F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex())
+    F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex()) \
+    F(QItemSelectionRange, QItemSelectionRange, QItemSelection, QItemSelectionRange())
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
@@ -96,6 +97,13 @@ static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, co
 {
     const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(QMetaType::QModelIndex);
     return QV4::QQmlValueTypeWrapper::create(engine, QVariant(element), vtmo, QMetaType::QModelIndex);
+}
+
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QItemSelectionRange &element)
+{
+    int metaTypeId = qMetaTypeId<QItemSelectionRange>();
+    const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(metaTypeId);
+    return QV4::QQmlValueTypeWrapper::create(engine, QVariant::fromValue(element), vtmo, metaTypeId);
 }
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, qreal element)
@@ -126,6 +134,11 @@ static QString convertElementToString(const QUrl &element)
 static QString convertElementToString(const QModelIndex &element)
 {
     return reinterpret_cast<const QQmlModelIndexValueType *>(&element)->toString();
+}
+
+static QString convertElementToString(const QItemSelectionRange &element)
+{
+    return reinterpret_cast<const QQmlItemSelectionRangeValueType *>(&element)->toString();
 }
 
 static QString convertElementToString(qreal element)
@@ -166,6 +179,14 @@ template <> QModelIndex convertValueToElement(const Value &value)
     if (v)
         return v->toVariant().toModelIndex();
     return QModelIndex();
+}
+
+template <> QItemSelectionRange convertValueToElement(const Value &value)
+{
+    const QQmlValueTypeWrapper *v = value_cast<QQmlValueTypeWrapper>(value);
+    if (v)
+        return v->toVariant().value<QItemSelectionRange>();
+    return QItemSelectionRange();
 }
 
 template <> qreal convertValueToElement(const Value &value)
@@ -567,6 +588,9 @@ DEFINE_OBJECT_VTABLE(QQmlUrlList);
 typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlQModelIndexList);
+typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlQItemSelectionRangeList);
 typedef QQmlSequence<QList<bool> > QQmlBoolList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlBoolList);

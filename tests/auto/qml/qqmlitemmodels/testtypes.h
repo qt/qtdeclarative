@@ -46,6 +46,7 @@ class ItemModelsTest : public QObject
     Q_PROPERTY(QModelIndex modelIndex READ modelIndex WRITE setModelIndex NOTIFY changed)
     Q_PROPERTY(QPersistentModelIndex persistentModelIndex READ persistentModelIndex WRITE setPersistentModelIndex NOTIFY changed)
     Q_PROPERTY(QModelIndexList modelIndexList READ modelIndexList WRITE setModelIndexList NOTIFY changed)
+    Q_PROPERTY(QItemSelection itemSelection READ itemSelection WRITE setItemSelection NOTIFY changed)
 
 public:
     ItemModelsTest(QObject *parent = 0)
@@ -82,6 +83,11 @@ public:
             for (int i = 0; i < m_model->rowCount(); i++)
                 list << m_model->index(i, 0);
         return list;
+    }
+
+    QItemSelection itemSelection() const
+    {
+        return m_itemSelection;
     }
 
     void emitChanged()
@@ -161,6 +167,15 @@ public slots:
         emit changed();
     }
 
+    void setItemSelection(QItemSelection arg)
+    {
+        if (m_itemSelection == arg)
+            return;
+
+        m_itemSelection = arg;
+        emit changed();
+    }
+
 signals:
     void changed();
 
@@ -174,6 +189,7 @@ private:
     QPersistentModelIndex m_persistentModelIndex;
     QAbstractItemModel *m_model;
     QModelIndexList m_modelIndexList;
+    QItemSelection m_itemSelection;
 };
 
 #endif // TESTTYPES_H
