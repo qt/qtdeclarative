@@ -124,7 +124,6 @@ void tst_qqmlitemmodels::persistentModelIndex()
     }
 
     const QVariant &pmiVariant = object->property("pmi");
-    QCOMPARE(pmiVariant.type(), QVariant::UserType);
     QCOMPARE(pmiVariant.userType(), qMetaTypeId<QPersistentModelIndex>());
     QCOMPARE(pmiVariant.value<QPersistentModelIndex>(), QPersistentModelIndex(model.index(0, 0)));
 }
@@ -136,7 +135,6 @@ void tst_qqmlitemmodels::itemSelectionRange()
 
     for (int i = 0; i < 2; i++) {
         const QVariant &isrVariant = object->property("itemSelectionRange");
-        QCOMPARE(isrVariant.type(), QVariant::UserType);
         QCOMPARE(isrVariant.userType(), qMetaTypeId<QItemSelectionRange>());
         const QItemSelectionRange &isr = isrVariant.value<QItemSelectionRange>();
         if (i > 0) {
@@ -167,7 +165,6 @@ void tst_qqmlitemmodels::itemSelectionRange()
     QVERIFY(object->property("contains2").toBool());
     QVERIFY(!object->property("intersects").toBool());
     const QVariant &isrVariant = object->property("intersected");
-    QCOMPARE(isrVariant.type(), QVariant::UserType);
     QCOMPARE(isrVariant.userType(), qMetaTypeId<QItemSelectionRange>());
 }
 
@@ -191,7 +188,6 @@ void tst_qqmlitemmodels::itemSelection()
     QCOMPARE(object->property("contains").toBool(), true);
 
     QVariant milVariant = object->property("itemSelection");
-    QCOMPARE(milVariant.type(), QVariant::UserType);
     QCOMPARE(milVariant.userType(), qMetaTypeId<QItemSelection>());
 
     const QItemSelection &mil = milVariant.value<QItemSelection>();
@@ -207,7 +203,6 @@ void tst_qqmlitemmodels::modelIndexList()
     QCOMPARE(object->property("count").toInt(), 5);
 
     QVariant milVariant = object->property("modelIndexList");
-    QCOMPARE(milVariant.type(), QVariant::UserType);
     QCOMPARE(milVariant.userType(), qMetaTypeId<QModelIndexList>());
 
     const QModelIndexList &mil = milVariant.value<QModelIndexList>();

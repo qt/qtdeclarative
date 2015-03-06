@@ -85,10 +85,10 @@ void QQuickWindowPrivate::updateFocusItemTransform()
     Q_Q(QQuickWindow);
 #ifndef QT_NO_IM
     QQuickItem *focus = q->activeFocusItem();
-    if (focus && qApp->focusObject() == focus) {
+    if (focus && QGuiApplication::focusObject() == focus) {
         QQuickItemPrivate *focusPrivate = QQuickItemPrivate::get(focus);
-        qApp->inputMethod()->setInputItemTransform(focusPrivate->itemToWindowTransform());
-        qApp->inputMethod()->setInputItemRectangle(QRectF(0, 0, focusPrivate->width, focusPrivate->height));
+        QGuiApplication::inputMethod()->setInputItemTransform(focusPrivate->itemToWindowTransform());
+        QGuiApplication::inputMethod()->setInputItemRectangle(QRectF(0, 0, focusPrivate->width, focusPrivate->height));
     }
 #endif
 }
@@ -519,7 +519,7 @@ bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
         doubleClicked = false;
     } else {
         ulong timeBetweenPresses = newPressEventTimestamp - touchMousePressTimestamp;
-        ulong doubleClickInterval = static_cast<ulong>(qApp->styleHints()->
+        ulong doubleClickInterval = static_cast<ulong>(QGuiApplication::styleHints()->
                 mouseDoubleClickInterval());
         doubleClicked = timeBetweenPresses < doubleClickInterval;
         if (doubleClicked) {
@@ -750,7 +750,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            qApp->inputMethod()->commit();
+            QGuiApplication::inputMethod()->commit();
 #endif
 
             activeFocusItem = 0;
@@ -847,7 +847,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         newActiveFocusItem = scope;
 
 #ifndef QT_NO_IM
-        qApp->inputMethod()->commit();
+        QGuiApplication::inputMethod()->commit();
 #endif
 
         activeFocusItem = 0;
@@ -1348,7 +1348,7 @@ bool QQuickWindow::event(QEvent *e)
         QTouchEvent *touch = static_cast<QTouchEvent*>(e);
         d->translateTouchEvent(touch);
         d->deliverTouchEvent(touch);
-        if (Q_LIKELY(qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+        if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
             // we consume all touch events ourselves to avoid duplicate
             // mouse delivery by QtGui mouse synthesis
             e->accept();
@@ -1441,7 +1441,7 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
         // toplevel non-popup window (the application current "key window") will
         // receive them. (QWidgetWindow does something similar for widgets, by keeping
         // a list of popup windows, and forwarding the key event to the top-most popup.)
-        QWindow *focusWindow = qApp->focusWindow();
+        QWindow *focusWindow = QGuiApplication::focusWindow();
         if (focusWindow && focusWindow != q
             && (focusWindow->flags() & Qt::Popup) == Qt::Popup)
             QGuiApplication::sendEvent(focusWindow, e);
@@ -2440,7 +2440,7 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
 
 bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold)
 {
-    QStyleHints *styleHints = qApp->styleHints();
+    QStyleHints *styleHints = QGuiApplication::styleHints();
     int caps = QGuiApplicationPrivate::mouseEventCaps(event);
     bool dragVelocityLimitAvailable = (caps & QTouchDevice::Velocity)
         && styleHints->startDragVelocity();

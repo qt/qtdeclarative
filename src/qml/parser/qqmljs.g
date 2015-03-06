@@ -3055,9 +3055,9 @@ PropertyAssignmentListOpt: PropertyAssignmentList ;
             QString msg;
             int token = token_buffer[0].token;
             if (token < 0 || token >= TERMINAL_COUNT)
-                msg = qApp->translate("QQmlParser", "Syntax error");
+                msg = QCoreApplication::translate("QQmlParser", "Syntax error");
             else
-                msg = qApp->translate("QQmlParser", "Unexpected token `%1'").arg(QLatin1String(spell[token]));
+                msg = QCoreApplication::translate("QQmlParser", "Unexpected token `%1'").arg(QLatin1String(spell[token]));
             diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
 
             action = errorState;
@@ -3085,7 +3085,7 @@ PropertyAssignmentListOpt: PropertyAssignmentList ;
         for (int *tk = tokens; *tk != EOF_SYMBOL; ++tk) {
             int a = t_action(errorState, *tk);
             if (a > 0 && t_action(a, yytoken)) {
-                const QString msg = qApp->translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[*tk]));
+                const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[*tk]));
                 diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
 
                 yytoken = *tk;
@@ -3109,7 +3109,7 @@ PropertyAssignmentListOpt: PropertyAssignmentList ;
 
             int a = t_action(errorState, tk);
             if (a > 0 && t_action(a, yytoken)) {
-                const QString msg = qApp->translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[tk]));
+                const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[tk]));
                 diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
 
                 yytoken = tk;
@@ -3122,7 +3122,7 @@ PropertyAssignmentListOpt: PropertyAssignmentList ;
             }
         }
 
-        const QString msg = qApp->translate("QQmlParser", "Syntax error");
+        const QString msg = QCoreApplication::translate("QQmlParser", "Syntax error");
         diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
     }
 

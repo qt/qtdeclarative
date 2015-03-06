@@ -494,7 +494,7 @@ void QQuickPinchArea::updatePinch()
         }
     }
     if (d->pinchActivated && !d->pinchRejected) {
-        const int dragThreshold = qApp->styleHints()->startDragDistance();
+        const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
         QPointF p1 = touchPoint1.scenePos();
         QPointF p2 = touchPoint2.scenePos();
         qreal dx = p1.x() - p2.x();

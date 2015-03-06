@@ -102,8 +102,8 @@ public:
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
-        , m_passwordCharacter(qApp->styleHints()->passwordMaskCharacter())
-        , m_passwordMaskDelay(qApp->styleHints()->passwordMaskDelay())
+        , m_passwordCharacter(QGuiApplication::styleHints()->passwordMaskCharacter())
+        , m_passwordMaskDelay(QGuiApplication::styleHints()->passwordMaskDelay())
         , focusOnPress(true)
         , cursorVisible(false)
         , cursorPending(false)
@@ -276,11 +276,11 @@ public:
         return t->d_func();
     }
     bool hasPendingTripleClick() const {
-        return !tripleClickTimer.hasExpired(qApp->styleHints()->mouseDoubleClickInterval());
+        return !tripleClickTimer.hasExpired(QGuiApplication::styleHints()->mouseDoubleClickInterval());
     }
 
     void setNativeCursorEnabled(bool enabled) {
-        setCursorBlinkPeriod(enabled && cursorVisible ? qApp->styleHints()->cursorFlashTime() : 0); }
+        setCursorBlinkPeriod(enabled && cursorVisible ? QGuiApplication::styleHints()->cursorFlashTime() : 0); }
 
     int nextMaskBlank(int pos)
     {

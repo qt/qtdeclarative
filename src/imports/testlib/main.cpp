@@ -66,7 +66,7 @@ public:
     {
         return QTest::printAvailableFunctions;
     }
-    int dragThreshold() const { return qApp->styleHints()->startDragDistance(); }
+    int dragThreshold() const { return QGuiApplication::styleHints()->startDragDistance(); }
 
 Q_SIGNALS:
     void printAvailableFunctionsChanged();

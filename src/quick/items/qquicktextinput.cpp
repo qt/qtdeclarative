@@ -543,7 +543,7 @@ Qt::LayoutDirection QQuickTextInputPrivate::layoutDirection() const
         direction = textDirection();
 #ifndef QT_NO_IM
         if (direction == Qt::LayoutDirectionAuto)
-            direction = qApp->inputMethod()->inputDirection();
+            direction = QGuiApplication::inputMethod()->inputDirection();
 #endif
     }
     return (direction == Qt::LayoutDirectionAuto) ? Qt::LeftToRight : direction;
@@ -556,7 +556,7 @@ bool QQuickTextInputPrivate::determineHorizontalAlignment()
         Qt::LayoutDirection direction = textDirection();
 #ifndef QT_NO_IM
         if (direction == Qt::LayoutDirectionAuto)
-            direction = qApp->inputMethod()->inputDirection();
+            direction = QGuiApplication::inputMethod()->inputDirection();
 #endif
         return setHAlign(direction == Qt::RightToLeft ? QQuickTextInput::AlignRight : QQuickTextInput::AlignLeft);
     }
@@ -727,7 +727,7 @@ void QQuickTextInput::setCursorVisible(bool on)
     if (on && isComponentComplete())
         QQuickTextUtil::createCursor(d);
     if (!d->cursorItem) {
-        d->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
+        d->setCursorBlinkPeriod(on ? QGuiApplication::styleHints()->cursorFlashTime() : 0);
         d->updateType = QQuickTextInputPrivate::UpdatePaintNode;
         polish();
         update();
@@ -1569,7 +1569,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
         d->selectPressed = true;
         QPointF distanceVector = d->pressPos - d->tripleClickStartPoint;
         if (d->hasPendingTripleClick()
-            && distanceVector.manhattanLength() < qApp->styleHints()->startDragDistance()) {
+            && distanceVector.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
             event->setAccepted(true);
             selectAll();
             return;
@@ -1598,7 +1598,7 @@ void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
     Q_D(QQuickTextInput);
 
     if (d->selectPressed) {
-        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > qApp->styleHints()->startDragDistance())
+        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
             setKeepMouseGrab(true);
 
 #ifndef QT_NO_IM
@@ -1650,7 +1650,7 @@ bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
         int mousePos = tmp_cursor - m_cursor;
         if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().length()) {
             if (event->type() == QEvent::MouseButtonRelease) {
-                qApp->inputMethod()->invokeAction(QInputMethod::Click, mousePos);
+                QGuiApplication::inputMethod()->invokeAction(QInputMethod::Click, mousePos);
             }
             return true;
         }
@@ -2598,7 +2598,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
 #ifndef QT_NO_IM
         if (focusOnPress && !m_readOnly)
             qGuiApp->inputMethod()->show();
-        q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->connect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
     } else {
@@ -2616,7 +2616,7 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
             emit q->editingFinished();
 
 #ifndef QT_NO_IM
-        q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                       q, SLOT(q_updateAlignment()));
 #endif
     }
@@ -3009,7 +3009,7 @@ void QQuickTextInputPrivate::commitPreedit()
     if (!hasImState)
         return;
 
-    qApp->inputMethod()->commit();
+    QGuiApplication::inputMethod()->commit();
 
     if (!hasImState)
         return;
@@ -3025,7 +3025,7 @@ void QQuickTextInputPrivate::cancelPreedit()
     if (!hasImState)
         return;
 
-    qApp->inputMethod()->reset();
+    QGuiApplication::inputMethod()->reset();
 
     QInputMethodEvent ev;
     QCoreApplication::sendEvent(q, &ev);

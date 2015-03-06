@@ -555,7 +555,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         //see if we should be grabbing the gesture
         if (!_stealMouse /* !ignoring gesture*/) {
             bool offerGrab = false;
-            const int dragThreshold = qApp->styleHints()->startDragDistance();
+            const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
             foreach (const QTouchEvent::TouchPoint &p, touchPoints) {
                 if (p.state() == Qt::TouchPointReleased)
                     continue;

@@ -2292,7 +2292,14 @@ void QQuickTextEdit::updateWholeDocument()
 
 void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
 {
+    Q_D(QQuickTextEdit);
     markDirtyNodesForRange(block.position(), block.position() + block.length(), 0);
+
+    polish();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+        update();
+    }
 }
 
 void QQuickTextEdit::updateCursor()
@@ -2401,12 +2408,12 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
 #ifndef QT_NO_IM
         if (focusOnPress && !q->isReadOnly())
             qGuiApp->inputMethod()->show();
-        q->connect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->connect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                 q, SLOT(q_updateAlignment()));
 #endif
     } else {
 #ifndef QT_NO_IM
-        q->disconnect(qApp->inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
+        q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
         emit q->editingFinished();
