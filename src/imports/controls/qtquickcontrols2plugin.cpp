@@ -43,6 +43,7 @@
 #include <QtQuickControls/private/qquickabstractcheckbox_p.h>
 #include <QtQuickControls/private/qquickabstractframe_p.h>
 #include <QtQuickControls/private/qquickabstractgroupbox_p.h>
+#include <QtQuickControls/private/qquickabstractlabel_p.h>
 #include <QtQuickControls/private/qquickabstractpageindicator_p.h>
 #include <QtQuickControls/private/qquickabstractprogressbar_p.h>
 #include <QtQuickControls/private/qquickabstractradiobutton_p.h>
@@ -88,6 +89,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickAbstractCheckBox>(uri, 2, 0, "AbstractCheckBox");
     qmlRegisterType<QQuickAbstractFrame>(uri, 2, 0, "AbstractFrame");
     qmlRegisterType<QQuickAbstractGroupBox>(uri, 2, 0, "AbstractGroupBox");
+    qmlRegisterType<QQuickAbstractLabel>(uri, 2, 0, "AbstractLabel");
     qmlRegisterType<QQuickAbstractPageIndicator>(uri, 2, 0, "AbstractPageIndicator");
     qmlRegisterType<QQuickAbstractProgressBar>(uri, 2, 0, "AbstractProgressBar");
     qmlRegisterType<QQuickAbstractRadioButton>(uri, 2, 0, "AbstractRadioButton");
@@ -113,6 +115,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");
 
+    qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextEdit, 6>(uri, 2, 0);
 }

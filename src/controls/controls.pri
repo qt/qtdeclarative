@@ -12,6 +12,7 @@ HEADERS += \
     $$PWD/qquickabstractcontainer_p_p.h \
     $$PWD/qquickabstractframe_p.h \
     $$PWD/qquickabstractgroupbox_p.h \
+    $$PWD/qquickabstractlabel_p.h \
     $$PWD/qquickabstractpageindicator_p.h \
     $$PWD/qquickabstractprogressbar_p.h \
     $$PWD/qquickabstractradiobutton_p.h \
@@ -41,6 +42,7 @@ SOURCES += \
     $$PWD/qquickabstractcontainer.cpp \
     $$PWD/qquickabstractframe.cpp \
     $$PWD/qquickabstractgroupbox.cpp \
+    $$PWD/qquickabstractlabel.cpp \
     $$PWD/qquickabstractpageindicator.cpp \
     $$PWD/qquickabstractprogressbar.cpp \
     $$PWD/qquickabstractradiobutton.cpp \

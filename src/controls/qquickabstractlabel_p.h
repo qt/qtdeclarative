@@ -34,14 +34,51 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
+#ifndef QQUICKABSTRACTLABEL_P_H
+#define QQUICKABSTRACTLABEL_P_H
 
-AbstractLabel {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    Accessible.name: text
-    Accessible.role: Accessible.StaticText
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
 
-    color: Style.textColor
-}
+QT_BEGIN_NAMESPACE
+
+class QQuickAbstractLabelPrivate;
+
+class Q_QUICKCONTROLS_EXPORT QQuickAbstractLabel : public QQuickText
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+
+public:
+    explicit QQuickAbstractLabel(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickAbstractLabel();
+
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
+
+Q_SIGNALS:
+    void backgroundChanged();
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+
+private:
+    Q_DISABLE_COPY(QQuickAbstractLabel)
+    Q_DECLARE_PRIVATE(QQuickAbstractLabel)
+    QScopedPointer<QQuickAbstractLabelPrivate> d_ptr;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKABSTRACTLABEL_P_H

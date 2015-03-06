@@ -34,14 +34,72 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
+#include "qquickabstractlabel_p.h"
 
-AbstractLabel {
-    id: control
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickclipnode_p.h>
 
-    Accessible.name: text
-    Accessible.role: Accessible.StaticText
+QT_BEGIN_NAMESPACE
 
-    color: Style.textColor
+class QQuickAbstractLabelPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickAbstractLabel)
+
+public:
+    QQuickAbstractLabelPrivate() : background(Q_NULLPTR) { }
+
+    QQuickItem *background;
+    QQuickAbstractLabel *q_ptr;
+};
+
+QQuickAbstractLabel::QQuickAbstractLabel(QQuickItem *parent) :
+    QQuickText(parent), d_ptr(new QQuickAbstractLabelPrivate)
+{
+    Q_D(QQuickAbstractLabel);
+    d->q_ptr = this;
 }
+
+QQuickAbstractLabel::~QQuickAbstractLabel()
+{
+}
+
+QQuickItem *QQuickAbstractLabel::background() const
+{
+    Q_D(const QQuickAbstractLabel);
+    return d->background;
+}
+
+void QQuickAbstractLabel::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickAbstractLabel);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+        }
+        emit backgroundChanged();
+    }
+}
+
+void QQuickAbstractLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickAbstractLabel);
+    QQuickText::geometryChanged(newGeometry, oldGeometry);
+    if (d->background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
+        if (!p->widthValid) {
+            d->background->setWidth(newGeometry.width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid) {
+            d->background->setHeight(newGeometry.height());
+            p->heightValid = false;
+        }
+    }
+}
+
+QT_END_NAMESPACE
