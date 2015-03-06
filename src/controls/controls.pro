@@ -12,11 +12,5 @@ QMAKE_DOCS = $$PWD/doc/qtquickcontrols2.qdocconf
 HEADERS += \
     $$PWD/qtquickcontrolsglobal_p.h
 
-OTHER_FILES += \
-    $$PWD/style.json
-
-RESOURCES += \
-    $$PWD/controls.qrc
-
 include(controls.pri)
 load(qt_module)

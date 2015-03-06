@@ -98,7 +98,7 @@ AbstractTabBar {
                 height: 4
                 width: parent.width
                 y: parent.height - height
-                color: style.accentColor
+                color: control.Style.accentColor
             }
         }
     }
@@ -107,14 +107,14 @@ AbstractTabBar {
         implicitWidth: 26
         implicitHeight: 26
         width: listView.width
-        border.color: style.backgroundColor
+        border.color: control.Style.backgroundColor
         border.width: 8
-        color: listView.count > 1 ? style.frameColor : style.backgroundColor
+        color: listView.count > 1 ? control.Style.frameColor : control.Style.backgroundColor
         Rectangle {
             y: parent.height - height
             width: parent.width
             height: 1
-            color: style.frameColor
+            color: control.Style.frameColor
         }
     }
 }

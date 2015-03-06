@@ -49,7 +49,6 @@
 //
 
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuickControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,9 +66,6 @@ public:
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
 
-    void resolveStyle(QQuickStyle *other = 0);
-
-    bool hasStyle;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
@@ -80,7 +76,6 @@ public:
     qreal rightPadding;
     qreal bottomPadding;
     QQuickItem *background;
-    QQuickStyle *style;
 };
 
 QT_END_NAMESPACE

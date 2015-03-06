@@ -99,7 +99,7 @@ ApplicationWindow {
                     id: title
                     x: delegate.contentItem.x
                     width: delegate.contentItem.width
-                    spacing: window.style.spacing
+                    spacing: Style.spacing
                     Text {
                         width: parent.width
                         height: implicitHeight * 2
@@ -129,7 +129,7 @@ ApplicationWindow {
                     width: delegate.contentItem.width / 7
                     height: delegate.contentItem.height / 6
                     opacity: model.month === delegate.month ? 1 : 0
-                    color: model.today ? window.style.accentColor : window.style.textColor
+                    color: model.today ? Style.accentColor : Style.textColor
                     Rectangle {
                         z: -1
                         anchors.centerIn: parent
@@ -137,8 +137,8 @@ ApplicationWindow {
                         height: width
                         radius: width / 2
                         opacity: 0.5
-                        color: pressed ? window.style.pressColor : "transparent"
-                        border.color: eventModel.eventsForDate(model.date).length > 0 ? window.style.accentColor : "transparent"
+                        color: pressed ? Style.pressColor : "transparent"
+                        border.color: eventModel.eventsForDate(model.date).length > 0 ? Style.accentColor : "transparent"
                     }
                 }
             }
@@ -146,7 +146,7 @@ ApplicationWindow {
                 z: -1
                 parent: calendar
                 anchors.fill: parent
-                border.color: window.style.frameColor
+                border.color: Style.frameColor
             }
         }
 
@@ -185,7 +185,7 @@ ApplicationWindow {
         Rectangle {
             width: (parent.width > parent.height ? (parent.width - parent.spacing) * 0.4 : parent.width)
             height: (parent.height > parent.width ? (parent.height - parent.spacing) * 0.4 : parent.height)
-            border.color: window.style.frameColor
+            border.color: Style.frameColor
 
             ListView {
                 id: eventsListView

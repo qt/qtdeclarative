@@ -1,4 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/qtquickcontrols">
+    <file>style.json</file>
+</qresource>
 <qresource>
     <file>images/spinner_small.png</file>
     <file>images/spinner_medium.png</file>

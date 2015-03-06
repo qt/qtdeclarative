@@ -52,7 +52,7 @@ ApplicationWindow {
         ToolButton {
             label: Text {
                 text: "\u25C0"
-                color: enabled ? window.style.accentColor : window.style.frameColor
+                color: enabled ? Style.accentColor : Style.frameColor
                 anchors.centerIn: parent
             }
             enabled: stackview.depth > 1
@@ -70,18 +70,15 @@ ApplicationWindow {
         id: pageComponent
         Control {
             id: page
-            style: Style {
-                padding: 6
-                roundness: roundedToggle.checked ? 3 : 0
-                accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
-                backgroundColor: darkButton.checked ? "#444" : "#fff"
-                frameColor: darkButton.checked ? "#666" : "#ccc"
-                textColor: darkButton.checked ? "#eee" : "#111"
-                pressColor: darkButton.checked ? "#33ffffff" : "#33333333"
-                baseColor: darkButton.checked ? "#444" : "#eee"
-            }
+            Style.roundness: roundedToggle.checked ? 3 : 0
+            Style.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
+            Style.backgroundColor: darkButton.checked ? "#444" : "#fff"
+            Style.frameColor: darkButton.checked ? "#666" : "#ccc"
+            Style.textColor: darkButton.checked ? "#eee" : "#111"
+            Style.pressColor: darkButton.checked ? "#33ffffff" : "#33333333"
+            Style.baseColor: darkButton.checked ? "#444" : "#eee"
             background: Rectangle {
-                color: style.backgroundColor
+                color: Style.backgroundColor
             }
             Flickable {
                 anchors.fill: parent
@@ -97,7 +94,7 @@ ApplicationWindow {
 
                     Label {
                         text: "Code less. Create more."
-                        color: page.style.accentColor
+                        color: Style.accentColor
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -110,7 +107,7 @@ ApplicationWindow {
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: page.style.frameColor
+                        color: Style.frameColor
                     }
 
                     Column {
@@ -118,20 +115,19 @@ ApplicationWindow {
                         width: parent.width
                         Label {
                             text: "Accent color"
-                            color: page.style.textColor
+                            color: Style.textColor
                         }
                         Slider {
                             id: colorSlider
                             width: parent.width
                             value: 0.275
-                            //background: Rectangle { border.color: "red" }
                         }
                     }
 
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: page.style.frameColor
+                        color: Style.frameColor
                     }
 
                     ExclusiveGroup {
@@ -148,7 +144,6 @@ ApplicationWindow {
                             checked: true
                             layoutDirection: Qt.RightToLeft
                             Exclusive.group: styleGroup
-                            //background: Rectangle { border.color: "red" }
                         }
                         RadioButton {
                             id: darkButton
@@ -156,14 +151,13 @@ ApplicationWindow {
                             width: parent.width
                             layoutDirection: Qt.RightToLeft
                             Exclusive.group: styleGroup
-                            //background: Rectangle { border.color: "red" }
                         }
                     }
 
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: page.style.frameColor
+                        color: Style.frameColor
                     }
 
                     ToggleButton {
@@ -172,13 +166,12 @@ ApplicationWindow {
                         text: "Rounded corners"
                         layoutDirection: Qt.RightToLeft
                         checked: true
-                        //background: Rectangle { border.color: "red" }
                     }
 
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: page.style.frameColor
+                        color: Style.frameColor
                     }
 
                     Button {

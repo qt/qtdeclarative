@@ -44,7 +44,7 @@ AbstractWeekNumberColumn {
     property Component delegate: Text {
         text: model.weekNumber
         font.bold: true
-        color: control.style.textColor
+        color: control.Style.textColor
         width: column.width ? column.width : implicitWidth
         height: column.height ? column.height / 6 : implicitHeight
         horizontalAlignment: Text.AlignHCenter
@@ -57,8 +57,8 @@ AbstractWeekNumberColumn {
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    leftPadding: style.padding
-    rightPadding: style.padding
+    leftPadding: Style.padding
+    rightPadding: Style.padding
 
     contentItem: Column {
         id: column

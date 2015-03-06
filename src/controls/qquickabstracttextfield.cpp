@@ -35,14 +35,10 @@
 ****************************************************************************/
 
 #include "qquickabstracttextfield_p.h"
-#include "qquickabstractapplicationwindow_p.h"
-#include "qquickstyle_p_p.h"
-#include "qquickstyle_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
-#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,27 +47,12 @@ class QQuickAbstractTextFieldPrivate
     Q_DECLARE_PUBLIC(QQuickAbstractTextField)
 
 public:
-    QQuickAbstractTextFieldPrivate() : hasStyle(false), style(Q_NULLPTR),
-        background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
+    QQuickAbstractTextFieldPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
 
-    void resolveStyle(QQuickStyle *other = 0); // TODO
-
-    bool hasStyle;
-    QQuickStyle *style;
     QQuickItem *background;
     QQuickText *placeholder;
     QQuickAbstractTextField *q_ptr;
 };
-
-void QQuickAbstractTextFieldPrivate::resolveStyle(QQuickStyle *res)
-{
-    Q_Q(QQuickAbstractTextField);
-    res = QQuickStylePrivate::resolve(q, res);
-    if (style != res) {
-        style = res;
-        emit q->styleChanged();
-    }
-}
 
 QQuickAbstractTextField::QQuickAbstractTextField(QQuickItem *parent) :
     QQuickTextInput(parent), d_ptr(new QQuickAbstractTextFieldPrivate)
@@ -82,40 +63,6 @@ QQuickAbstractTextField::QQuickAbstractTextField(QQuickItem *parent) :
 
 QQuickAbstractTextField::~QQuickAbstractTextField()
 {
-}
-
-QQuickStyle *QQuickAbstractTextField::style() const
-{
-    Q_D(const QQuickAbstractTextField);
-    if (!d->style)
-        const_cast<QQuickAbstractTextField *>(this)->d_func()->resolveStyle();
-    return d->style;
-}
-
-void QQuickAbstractTextField::setStyle(QQuickStyle *style)
-{
-    Q_D(QQuickAbstractTextField);
-    if (d->style != style) {
-        d->hasStyle = true;
-        d->resolveStyle(style);
-
-        QEvent change(QEvent::StyleChange);
-        foreach (QObject *object, findChildren<QObject *>()) {
-            if (qobject_cast<QQuickStylable *>(object))
-                QCoreApplication::sendEvent(object, &change);
-        }
-    }
-}
-
-bool QQuickAbstractTextField::hasStyle() const
-{
-    Q_D(const QQuickAbstractTextField);
-    return d->hasStyle;
-}
-
-void QQuickAbstractTextField::resetStyle()
-{
-    setStyle(Q_NULLPTR);
 }
 
 QQuickItem *QQuickAbstractTextField::background() const
@@ -155,22 +102,6 @@ void QQuickAbstractTextField::setPlaceholder(QQuickText *placeholder)
             placeholder->setParentItem(this);
         emit placeholderChanged();
     }
-}
-
-bool QQuickAbstractTextField::event(QEvent *event)
-{
-    Q_D(QQuickAbstractTextField);
-    if (event->type() == QEvent::StyleChange)
-        d->resolveStyle();
-    return QQuickTextInput::event(event);
-}
-
-void QQuickAbstractTextField::itemChange(ItemChange change, const ItemChangeData &data)
-{
-    Q_D(QQuickAbstractTextField);
-    QQuickTextInput::itemChange(change, data);
-    if (change == ItemSceneChange || change == ItemParentHasChanged)
-        d->resolveStyle();
 }
 
 void QQuickAbstractTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

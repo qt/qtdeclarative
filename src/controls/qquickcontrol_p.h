@@ -50,24 +50,20 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
-#include <QtQuickControls/private/qquickstylable_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickStyle;
 class QQuickControlPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem, public QQuickStylable
+class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
-    Q_INTERFACES(QQuickStylable)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL)
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle RESET resetStyle NOTIFY styleChanged FINAL)
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
@@ -95,11 +91,6 @@ public:
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
-    QQuickStyle *style() const Q_DECL_OVERRIDE;
-    void setStyle(QQuickStyle *style) Q_DECL_OVERRIDE;
-    bool hasStyle() const Q_DECL_OVERRIDE;
-    void resetStyle() Q_DECL_OVERRIDE;
-
 Q_SIGNALS:
     void paddingChanged();
     void topPaddingChanged();
@@ -107,13 +98,10 @@ Q_SIGNALS:
     void rightPaddingChanged();
     void bottomPaddingChanged();
     void backgroundChanged();
-    void styleChanged();
 
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
-    bool event(QEvent *event) Q_DECL_OVERRIDE;
-    void itemChange(ItemChange, const ItemChangeData &data) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
     bool isMirrored() const;

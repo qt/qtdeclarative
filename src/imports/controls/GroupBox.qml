@@ -50,8 +50,8 @@ AbstractGroupBox {
     contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
     contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
 
-    padding: style.padding
-    topPadding: style.padding + (label && title ? label.implicitHeight + style.spacing : 0)
+    padding: Style.padding
+    topPadding: Style.padding + (label && title ? label.implicitHeight + Style.spacing : 0)
 
     contentItem: Item {
         id: content
@@ -66,20 +66,20 @@ AbstractGroupBox {
         width: parent.width - control.leftPadding - control.rightPadding
 
         text: control.title
-        color: control.style.textColor
+        color: control.Style.textColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
     frame: Rectangle {
-        y: control.topPadding - style.padding
+        y: control.topPadding - control.Style.padding
         width: parent.width
-        height: parent.height - control.topPadding + style.padding
+        height: parent.height - control.topPadding + control.Style.padding
 
         color: "transparent"
-        radius: style.roundness
-        border.color: style.frameColor
+        radius: control.Style.roundness
+        border.color: control.Style.frameColor
     }
 }

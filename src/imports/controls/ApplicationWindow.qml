@@ -41,7 +41,7 @@ import QtQuick.Controls 2.0
 AbstractApplicationWindow {
     id: window
 
-    color: style.backgroundColor
+    color: Style.backgroundColor
     flags: Qt.Window | Qt.WindowFullscreenButtonHint
 
     contentWidth: contentItem.children.length === 1 ? contentItem.children[0].implicitWidth : 0

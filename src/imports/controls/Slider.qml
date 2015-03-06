@@ -50,15 +50,15 @@ AbstractSlider {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Slider
 
-    padding: style.padding
+    padding: Style.padding
 
     handle: Rectangle {
         implicitWidth: 20
         implicitHeight: 20
         radius: width / 2
         border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? style.focusColor : style.frameColor
-        color: style.backgroundColor
+        border.color: control.activeFocus ? control.Style.focusColor : control.Style.frameColor
+        color: control.Style.backgroundColor
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         x: horizontal ? control.visualPosition * (control.width - width) : (control.width - width) / 2
@@ -71,9 +71,9 @@ AbstractSlider {
             height: 12
             radius: width / 2
 
-            color: Qt.tint(Qt.tint(style.accentColor,
-                                   control.activeFocus ? style.focusColor : "transparent"),
-                                   control.pressed ? style.pressColor : "transparent")
+            color: Qt.tint(Qt.tint(control.Style.accentColor,
+                                   control.activeFocus ? control.Style.focusColor : "transparent"),
+                                   control.pressed ? control.Style.pressColor : "transparent")
         }
     }
 
@@ -86,9 +86,9 @@ AbstractSlider {
         width: horizontal ? parent.width - control.leftPadding - control.rightPadding : implicitWidth
         height: horizontal ? implicitHeight : parent.height - control.topPadding - control.bottomPadding
 
-        radius: style.roundness
-        border.color: style.frameColor
-        color: style.backgroundColor
+        radius: control.Style.roundness
+        border.color: control.Style.frameColor
+        color: control.Style.backgroundColor
         scale: control.effectiveLayoutDirection === Qt.RightToLeft ? -1 : 1
 
         Rectangle {
@@ -97,8 +97,8 @@ AbstractSlider {
             width: control.position * parent.width - 4
             height: 2
 
-            color: style.accentColor
-            radius: style.roundness
+            color: control.Style.accentColor
+            radius: control.Style.roundness
         }
     }
 }

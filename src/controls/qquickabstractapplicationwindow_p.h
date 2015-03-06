@@ -50,20 +50,16 @@
 
 #include <QtQuick/private/qquickwindowmodule_p.h>
 #include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
-#include <QtQuickControls/private/qquickstylable_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickStyle;
 class QQuickAbstractApplicationWindowPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickAbstractApplicationWindow : public QQuickWindowQmlImpl, public QQuickStylable
+class Q_QUICKCONTROLS_EXPORT QQuickAbstractApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
-    Q_INTERFACES(QQuickStylable)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickStyle *style READ style WRITE setStyle NOTIFY styleChanged FINAL)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
 
@@ -77,11 +73,6 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
-    QQuickStyle *style() const Q_DECL_OVERRIDE;
-    void setStyle(QQuickStyle *style) Q_DECL_OVERRIDE;
-    bool hasStyle() const Q_DECL_OVERRIDE;
-    void resetStyle() Q_DECL_OVERRIDE;
-
     qreal contentWidth() const;
     void setContentWidth(qreal width);
 
@@ -91,7 +82,6 @@ public:
 Q_SIGNALS:
     void headerChanged();
     void footerChanged();
-    void styleChanged();
     void contentWidthChanged();
     void contentHeightChanged();
 

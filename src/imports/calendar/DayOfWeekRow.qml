@@ -44,7 +44,7 @@ AbstractDayOfWeekRow {
     property Component delegate: Text {
         text: model.shortName
         font.bold: true
-        color: control.style.textColor
+        color: control.Style.textColor
         width: row.width ? row.width / 7 : implicitWidth
         height: row.height ? row.height : implicitHeight
         horizontalAlignment: Text.AlignHCenter
@@ -57,8 +57,8 @@ AbstractDayOfWeekRow {
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    topPadding: style.padding
-    bottomPadding: style.padding
+    topPadding: Style.padding
+    bottomPadding: Style.padding
 
     contentItem: Row {
         id: row

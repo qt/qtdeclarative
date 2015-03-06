@@ -36,9 +36,6 @@
 
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
-#include "qquickstyle_p_p.h"
-
-#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,9 +50,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasStyle(false), hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0),
-    background(Q_NULLPTR), style(Q_NULLPTR)
+    background(Q_NULLPTR)
 {
 }
 
@@ -103,16 +100,6 @@ void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
     hasBottomPadding = !reset;
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
         emit q->bottomPaddingChanged();
-}
-
-void QQuickControlPrivate::resolveStyle(QQuickStyle *res)
-{
-    Q_Q(QQuickControl);
-    res = QQuickStylePrivate::resolve(q, res);
-    if (style != res) {
-        style = res;
-        emit q->styleChanged();
-    }
 }
 
 QQuickControl::QQuickControl(QQuickItem *parent) :
@@ -266,61 +253,6 @@ void QQuickControl::setBackground(QQuickItem *background)
         }
         emit backgroundChanged();
     }
-}
-
-/*!
-    \qmlproperty Style QtQuickControls2::Control::style
-
-    This property holds the style.
-*/
-QQuickStyle *QQuickControl::style() const
-{
-    Q_D(const QQuickControl);
-    if (!d->style)
-        const_cast<QQuickControl *>(this)->d_func()->resolveStyle();
-    return d->style;
-}
-
-void QQuickControl::setStyle(QQuickStyle *style)
-{
-    Q_D(QQuickControl);
-    if (d->style != style) {
-        d->hasStyle = style;
-        d->resolveStyle(style);
-
-        QEvent change(QEvent::StyleChange);
-        foreach (QQuickItem *item, findChildren<QQuickItem *>()) {
-            if (qobject_cast<QQuickStylable *>(item))
-                QCoreApplication::sendEvent(item, &change);
-        }
-    }
-}
-
-bool QQuickControl::hasStyle() const
-{
-    Q_D(const QQuickControl);
-    return d->hasStyle;
-}
-
-void QQuickControl::resetStyle()
-{
-    setStyle(Q_NULLPTR);
-}
-
-bool QQuickControl::event(QEvent *event)
-{
-    Q_D(QQuickControl);
-    if (event->type() == QEvent::StyleChange)
-        d->resolveStyle();
-    return QQuickItem::event(event);
-}
-
-void QQuickControl::itemChange(ItemChange change, const ItemChangeData &data)
-{
-    Q_D(QQuickControl);
-    QQuickItem::itemChange(change, data);
-    if (change == ItemSceneChange || change == ItemParentHasChanged)
-        d->resolveStyle();
 }
 
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

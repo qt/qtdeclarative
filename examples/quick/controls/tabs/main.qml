@@ -55,7 +55,7 @@ ApplicationWindow {
 
         spacing: 1
         anchors.fill: parent
-        background: Rectangle { color: style.frameColor }
+        background: Rectangle { color: Style.frameColor }
 
         Rectangle {
             Tab.title: "Home"
@@ -72,7 +72,7 @@ ApplicationWindow {
 
             Label {
                 text: "Things just got better"
-                color: window.style.accentColor
+                color: Style.accentColor
                 anchors.margins: 40
                 anchors.top: logo.bottom
                 anchors.left: parent.left
@@ -110,46 +110,46 @@ ApplicationWindow {
                     Column {
                         id: feedItem
                         width: parent.width
-                        spacing: window.style.spacing
+                        spacing: Style.spacing
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: window.style.frameColor
+                            color: Style.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: window.style.spacing }
+                        Item { width: 1; height: Style.spacing }
                         Label {
                             text: model.title
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
                             elide: Text.ElideRight
-                            color: window.style.accentColor
+                            color: Style.accentColor
                             font.pointSize: 20
                             lineHeight: 0.75
                         }
                         Label {
                             text: model.description
                             textFormat: Qt.RichText
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
-                            spacing: window.style.spacing
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
+                            spacing: Style.spacing
                             Label {
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                color: window.style.focusColor
+                                color: Style.focusColor
                                 font.pointSize: 8
                             }
                             Label {
                                 text: model.pubDate
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: window.style.disabledOpacity
+                                opacity: Style.disabledOpacity
                                 font.pointSize: 8
                             }
                             Item { Layout.fillWidth: true }
@@ -161,7 +161,7 @@ ApplicationWindow {
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: window.style.frameColor
+                            color: Style.frameColor
                         }
                     }
                 }
@@ -200,47 +200,47 @@ ApplicationWindow {
                     Column {
                         id: commentItem
                         width: parent.width
-                        spacing: window.style.spacing
+                        spacing: Style.spacing
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: window.style.frameColor
+                            color: Style.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: window.style.spacing }
+                        Item { width: 1; height: Style.spacing }
                         Label {
                             text: model.title
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
                             elide: Text.ElideRight
-                            color: window.style.accentColor
+                            color: Style.accentColor
                             font.pointSize: 14
                             lineHeight: 0.75
                         }
-                        Item { width: 1; height: window.style.spacing }
+                        Item { width: 1; height: Style.spacing }
                         Label {
                             text: model.description
                             textFormat: Qt.RichText
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: window.style.padding
-                            width: parent.width - 2 * window.style.padding
-                            spacing: window.style.spacing
+                            x: Style.padding
+                            width: parent.width - 2 * Style.padding
+                            spacing: Style.spacing
                             Label {
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                color: window.style.focusColor
+                                color: Style.focusColor
                                 font.pointSize: 8
                             }
                             Label {
                                 text: model.pubDate
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: window.style.disabledOpacity
+                                opacity: Style.disabledOpacity
                                 font.pointSize: 8
                             }
                             Item { Layout.fillWidth: true }
@@ -252,7 +252,7 @@ ApplicationWindow {
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: window.style.frameColor
+                            color: Style.frameColor
                         }
                     }
                 }

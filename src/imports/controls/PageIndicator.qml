@@ -47,7 +47,7 @@ AbstractPageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: style.shadowColor // TODO
+        color: control.Style.shadowColor // TODO
 
         opacity: index === currentIndex ? 0.75 : 0.25
         Behavior on opacity { OpacityAnimator { duration: 100 } }
@@ -61,7 +61,7 @@ AbstractPageIndicator {
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    padding: style.padding
+    padding: Style.padding
 
     contentItem: Row {
         id: row
@@ -71,7 +71,7 @@ AbstractPageIndicator {
         width: parent.width - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
-        spacing: style.spacing
+        spacing: control.Style.spacing
 
         Repeater {
             model: control.count

@@ -57,7 +57,7 @@ AbstractScrollBar {
         implicitHeight: 6
 
         radius: width / 2
-        color: control.pressed ? style.shadowColor : style.frameColor
+        color: control.pressed ? control.Style.shadowColor : control.Style.frameColor
         visible: control.size < 1.0
         opacity: 0.0
 
@@ -70,7 +70,7 @@ AbstractScrollBar {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: handle; opacity: 1.0 - style.disabledOpacity }
+            PropertyChanges { target: handle; opacity: 1.0 - control.Style.disabledOpacity }
         }
 
         transitions: Transition {

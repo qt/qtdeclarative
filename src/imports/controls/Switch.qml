@@ -43,7 +43,7 @@ AbstractSwitch {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             (label ? label.implicitWidth : 0) +
                             (indicator ? indicator.implicitWidth : 0) +
-                            (label && indicator ? style.spacing : 0) + leftPadding + rightPadding)
+                            (label && indicator ? Style.spacing : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
@@ -54,7 +54,7 @@ AbstractSwitch {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button // TODO: Switch?
 
-    padding: style.padding
+    padding: Style.padding
 
     indicator: Rectangle {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
@@ -66,20 +66,20 @@ AbstractSwitch {
 
         radius: 10
         border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? style.focusColor : style.frameColor
-        opacity: enabled ? 1.0 : style.disabledOpacity
-        color: style.backgroundColor
+        border.color: control.activeFocus ? control.Style.focusColor : control.Style.frameColor
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        color: control.Style.backgroundColor
 
         Rectangle {
             width: 12
             height: 12
             radius: 6
 
-            color: Qt.tint(Qt.tint(control.checked ? style.accentColor : style.baseColor,
-                                   control.checked && control.activeFocus ? style.focusColor : "transparent"),
-                                   control.pressed ? style.pressColor : "transparent")
+            color: Qt.tint(Qt.tint(control.checked ? control.Style.accentColor : control.Style.baseColor,
+                                   control.checked && control.activeFocus ? control.Style.focusColor : "transparent"),
+                                   control.pressed ? control.Style.pressColor : "transparent")
             border.width: control.checked || control.pressed ? 0 : 1
-            border.color: style.frameColor
+            border.color: control.Style.frameColor
 
             x: Math.max(4, Math.min(parent.width - width - 4,
                                     control.visualPosition * parent.width - (width / 2)))
@@ -95,16 +95,16 @@ AbstractSwitch {
     label: Text {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
 
-        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.style.spacing)
+        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.Style.spacing)
         y: control.topPadding
-        width: parent.width - indicator.width - control.style.spacing - control.leftPadding - control.rightPadding
+        width: parent.width - indicator.width - control.Style.spacing - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.style.textColor
+        color: control.Style.textColor
         elide: Text.ElideRight
         visible: control.text
-        opacity: enabled ? 1.0 : control.style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

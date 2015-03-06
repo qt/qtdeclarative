@@ -43,11 +43,11 @@ AbstractSpinBox {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                              (upButton ? upButton.implicitWidth : 0) +
                            (downButton ? downButton.implicitWidth : 0) +
-                                (input ? input.implicitWidth : 0) + style.padding * 2)
+                                (input ? input.implicitWidth : 0) + Style.padding * 2)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                               (upButton ? upButton.implicitHeight : 0),
                             (downButton ? downButton.implicitHeight : 0),
-                                 (input ? input.implicitHeight : 0) + style.padding * 2)
+                                 (input ? input.implicitHeight : 0) + Style.padding * 2)
 
     Accessible.role: Accessible.SpinBox
 
@@ -56,9 +56,9 @@ AbstractSpinBox {
         width: parent.width - upButton.width - downButton.width
         height: parent.height
 
-        color: style.textColor
-        selectionColor: style.selectionColor
-        selectedTextColor: style.selectedTextColor
+        color: control.Style.textColor
+        selectionColor: control.Style.selectionColor
+        selectedTextColor: control.Style.selectedTextColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
         Keys.forwardTo: control
@@ -71,30 +71,30 @@ AbstractSpinBox {
         height: parent.height
         x: parent.width - width
 
-        opacity: enabled ? 1.0 : style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
         clip: true
         Rectangle {
             x: -radius
             width: parent.width + radius
             height: parent.height
-            radius: style.roundness
-            color: Qt.tint(Qt.tint(style.accentColor,
-                                   control.activeFocus ? style.focusColor : "transparent"),
-                                   pressed === AbstractSpinBox.UpButton ? style.pressColor : "transparent")
+            radius: control.Style.roundness
+            color: Qt.tint(Qt.tint(control.Style.accentColor,
+                                   control.activeFocus ? control.Style.focusColor : "transparent"),
+                                   pressed === AbstractSpinBox.UpButton ? control.Style.pressColor : "transparent")
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.style.selectedTextColor
+            color: control.Style.selectedTextColor
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: parent.height / 3
-            color: control.style.selectedTextColor
+            color: control.Style.selectedTextColor
         }
     }
 
@@ -102,31 +102,31 @@ AbstractSpinBox {
         implicitWidth: 26
         height: parent.height
 
-        opacity: enabled ? 1.0 : style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
         clip: true
         Rectangle {
             width: parent.width + radius
             height: parent.height
-            radius: style.roundness
-            color: Qt.tint(Qt.tint(style.accentColor,
-                                   control.activeFocus ? style.focusColor : "transparent"),
-                                   pressed === AbstractSpinBox.DownButton ? style.pressColor : "transparent")
+            radius: control.Style.roundness
+            color: Qt.tint(Qt.tint(control.Style.accentColor,
+                                   control.activeFocus ? control.Style.focusColor : "transparent"),
+                                   pressed === AbstractSpinBox.DownButton ? control.Style.pressColor : "transparent")
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.style.selectedTextColor
+            color: control.Style.selectedTextColor
         }
     }
 
     background: Rectangle {
         implicitWidth: 120
-        radius: style.roundness
+        radius: control.Style.roundness
         border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? style.focusColor : style.frameColor
-        opacity: enabled ? 1.0 : style.disabledOpacity
+        border.color: control.activeFocus ? control.Style.focusColor : control.Style.frameColor
+        opacity: enabled ? 1.0 : control.Style.disabledOpacity
         color: input.acceptableInput ? "white" : "lightpink"
     }
 }

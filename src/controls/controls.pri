@@ -30,10 +30,7 @@ HEADERS += \
     $$PWD/qquickabstracttoolbar_p.h \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
-    $$PWD/qquickexclusivegroup_p.h \
-    $$PWD/qquickstylable_p.h \
-    $$PWD/qquickstyle_p_p.h \
-    $$PWD/qquickstyle_p.h
+    $$PWD/qquickexclusivegroup_p.h
 
 SOURCES += \
     $$PWD/qquickabstractapplicationwindow.cpp \
@@ -61,5 +58,4 @@ SOURCES += \
     $$PWD/qquickabstracttogglebutton.cpp \
     $$PWD/qquickabstracttoolbar.cpp \
     $$PWD/qquickcontrol.cpp \
-    $$PWD/qquickexclusivegroup.cpp \
-    $$PWD/qquickstyle.cpp
+    $$PWD/qquickexclusivegroup.cpp
