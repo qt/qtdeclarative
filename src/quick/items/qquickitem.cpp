@@ -2527,13 +2527,12 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
     }
 
-    QQuickWindow *oldParentWindow = oldParentItem ? QQuickItemPrivate::get(oldParentItem)->window : 0;
     QQuickWindow *parentWindow = parentItem ? QQuickItemPrivate::get(parentItem)->window : 0;
-    if (oldParentWindow == parentWindow) {
+    if (d->window == parentWindow) {
         // Avoid freeing and reallocating resources if the window stays the same.
         d->parentItem = parentItem;
     } else {
-        if (oldParentWindow)
+        if (d->window)
             d->derefWindow();
         d->parentItem = parentItem;
         if (parentWindow)
