@@ -448,8 +448,8 @@ void QQuickTextControlPrivate::setBlinkingCursorEnabled(bool enable)
 {
     Q_Q(QQuickTextControl);
 
-    if (enable && qApp->styleHints()->cursorFlashTime() > 0)
-        cursorBlinkTimer.start(qApp->styleHints()->cursorFlashTime() / 2, q);
+    if (enable && QGuiApplication::styleHints()->cursorFlashTime() > 0)
+        cursorBlinkTimer.start(QGuiApplication::styleHints()->cursorFlashTime() / 2, q);
     else
         cursorBlinkTimer.stop();
 
@@ -1031,7 +1031,7 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 #endif
 
     if (tripleClickTimer.isActive()
-        && ((pos - tripleClickPoint).toPoint().manhattanLength() < qApp->styleHints()->startDragDistance())) {
+        && ((pos - tripleClickPoint).toPoint().manhattanLength() < QGuiApplication::styleHints()->startDragDistance())) {
 
         cursor.movePosition(QTextCursor::StartOfBlock);
         cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
@@ -1231,7 +1231,7 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
         selectedWordOnDoubleClick = cursor;
 
         tripleClickPoint = pos;
-        tripleClickTimer.start(qApp->styleHints()->mouseDoubleClickInterval(), q);
+        tripleClickTimer.start(QGuiApplication::styleHints()->mouseDoubleClickInterval(), q);
         if (doEmit) {
             selectionChanged();
 #ifndef QT_NO_CLIPBOARD
@@ -1258,7 +1258,7 @@ bool QQuickTextControlPrivate::sendMouseEventToInputContext(QMouseEvent *e, cons
 
         if (cursorPos >= 0 && cursorPos <= layout->preeditAreaText().length()) {
             if (e->type() == QEvent::MouseButtonRelease) {
-                qApp->inputMethod()->invokeAction(QInputMethod::Click, cursorPos);
+                QGuiApplication::inputMethod()->invokeAction(QInputMethod::Click, cursorPos);
             }
 
             return true;
@@ -1676,7 +1676,7 @@ void QQuickTextControlPrivate::commitPreedit()
     if (!hasImState)
         return;
 
-    qApp->inputMethod()->commit();
+    QGuiApplication::inputMethod()->commit();
 
     if (!hasImState)
         return;
@@ -1692,7 +1692,7 @@ void QQuickTextControlPrivate::cancelPreedit()
     if (!hasImState)
         return;
 
-    qApp->inputMethod()->reset();
+    QGuiApplication::inputMethod()->reset();
 
     QInputMethodEvent event;
     QCoreApplication::sendEvent(q->parent(), &event);

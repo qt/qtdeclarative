@@ -31,7 +31,7 @@
     \image qml-draganddrop-example.png
     \ingroup qtquickexamples
 
-    \e{Drag and Drop} is a collection of small QML examples relating to drag
+    \e{Drag and Drop} is a collection of small QML examples relating to the drag
     and drop functionality. For more information, visit the \l{Drag and Drop}
     page.
 
@@ -48,16 +48,16 @@
     \snippet draganddrop/tiles/DragTile.qml 0
     \snippet draganddrop/tiles/DragTile.qml 1
 
-    And a DropTile component which the dragged tiles can be dropped onto:
+    And a DropTile component on which the dragged tiles can be dropped:
 
     \snippet draganddrop/tiles/DropTile.qml 0
 
-    The keys property of the DropArea will only allow an item with a matching
-    key in its Drag.keys property to be dropped on it.
+    The keys property of the DropArea will only allow an item to be dropped on it if it
+    has a matching key in its Drag.keys property.
 
-    \section1 GridView
+    \section1 GridView Example
 
-    \e GridView adds drag and drop to a \l GridView, allowing you to reorder the
+    The \e {GridView Example} adds drag and drop to a \l GridView, allowing you to reorder the
     list. It also uses a \l DelegateModel to move a delegate item to the
     position of another item it is dragged over.
 

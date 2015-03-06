@@ -160,7 +160,7 @@ class QQuickGrabGestureEvent : public QObject
     Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints)
     Q_PROPERTY(qreal dragThreshold READ dragThreshold)
 public:
-    QQuickGrabGestureEvent() : _grab(false), _dragThreshold(qApp->styleHints()->startDragDistance()) {}
+    QQuickGrabGestureEvent() : _grab(false), _dragThreshold(QGuiApplication::styleHints()->startDragDistance()) {}
 
     Q_INVOKABLE void grab() { _grab = true; }
     bool wantsGrab() const { return _grab; }
