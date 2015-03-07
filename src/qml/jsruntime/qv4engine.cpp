@@ -1447,7 +1447,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         QV4::Scope scope(this);
         if (type == qMetaTypeId<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
-            QDLRP *p = QDLRP::get((QQmlListReference*)ptr);
+            QDLRP *p = QDLRP::get((QQmlListReference*)const_cast<void *>(ptr));
             if (p->object) {
                 return QV4::QmlListWrapper::create(scope.engine, p->property, p->propertyType);
             } else {
@@ -1459,7 +1459,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
-            const QList<QObject *> &list = *(QList<QObject *>*)ptr;
+            const QList<QObject *> &list = *(const QList<QObject *>*)ptr;
             QV4::ScopedArrayObject a(scope, newArrayObject());
             a->arrayReserve(list.count());
             QV4::ScopedValue v(scope);

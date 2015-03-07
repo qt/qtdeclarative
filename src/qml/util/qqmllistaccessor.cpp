@@ -96,7 +96,7 @@ int QQmlListAccessor::count() const
     case VariantList:
         return qvariant_cast<QVariantList>(d).count();
     case ListProperty:
-        return ((QQmlListReference *)d.constData())->count();
+        return ((const QQmlListReference *)d.constData())->count();
     case Instance:
         return 1;
     case Integer:
@@ -116,7 +116,7 @@ QVariant QQmlListAccessor::at(int idx) const
     case VariantList:
         return qvariant_cast<QVariantList>(d).at(idx);
     case ListProperty:
-        return QVariant::fromValue(((QQmlListReference *)d.constData())->at(idx));
+        return QVariant::fromValue(((const QQmlListReference *)d.constData())->at(idx));
     case Instance:
         return d;
     case Integer:

@@ -271,7 +271,7 @@ QQmlPropertyCache::~QQmlPropertyCache()
     stringCache.clear();
     if (_parent) _parent->release();
 
-    if (_ownMetaObject) free((void *)_metaObject);
+    if (_ownMetaObject) free(const_cast<QMetaObject *>(_metaObject));
     _metaObject = 0;
     _parent = 0;
     engine = 0;

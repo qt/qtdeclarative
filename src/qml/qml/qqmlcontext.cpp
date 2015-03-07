@@ -783,7 +783,7 @@ QString QQmlContextData::findObjectId(const QObject *obj) const
     if (publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(publicContext);
         for (int ii = 0; ii < p->propertyValues.count(); ++ii)
-            if (p->propertyValues.at(ii) == QVariant::fromValue((QObject *)obj))
+            if (p->propertyValues.at(ii) == QVariant::fromValue(const_cast<QObject *>(obj)))
                 return properties.findId(ii);
     }
 

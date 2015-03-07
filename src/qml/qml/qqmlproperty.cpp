@@ -1304,12 +1304,12 @@ bool QQmlPropertyPrivate::write(QObject *object,
         QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, argv);
     } else if (variantType == propertyType) {
 
-        void *a[] = { (void *)value.constData(), 0, &status, &flags };
+        void *a[] = { const_cast<void *>(value.constData()), 0, &status, &flags };
         QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
 
     } else if (qMetaTypeId<QVariant>() == propertyType) {
 
-        void *a[] = { (void *)&value, 0, &status, &flags };
+        void *a[] = { const_cast<QVariant *>(&value), 0, &status, &flags };
         QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
 
     } else if (property.isQObject()) {
@@ -1319,7 +1319,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
         if (valMo.isNull())
             return false;
 
-        QObject *o = *(QObject **)value.constData();
+        QObject *o = *(QObject *const *)value.constData();
         QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyType);
 
         if (o) valMo = o;
@@ -1465,7 +1465,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
         }
 
         if (ok) {
-            void *a[] = { (void *)v.constData(), 0, &status, &flags};
+            void *a[] = { const_cast<void *>(v.constData()), 0, &status, &flags};
             QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
         } else {
             return false;
@@ -1603,7 +1603,7 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
         const char *propertyType = 0;
 
         if (value.userType() == QMetaType::QObjectStar) {
-            if (QObject *o = *(QObject **)value.constData()) {
+            if (QObject *o = *(QObject *const *)value.constData()) {
                 valueType = o->metaObject()->className();
 
                 QQmlMetaObject propertyMetaObject = rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);

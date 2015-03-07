@@ -116,21 +116,21 @@ static inline void reserve(QByteArray &data, int extra)
 
 static inline quint32 popUint32(const char *&data)
 {
-    quint32 rv = *((quint32 *)data);
+    quint32 rv = *((const quint32 *)data);
     data += sizeof(quint32);
     return rv;
 }
 
 static inline double popDouble(const char *&data)
 {
-    double rv = *((double *)data);
+    double rv = *((const double *)data);
     data += sizeof(double);
     return rv;
 }
 
 static inline void *popPtr(const char *&data)
 {
-    void *rv = *((void **)data);
+    void *rv = *((void *const *)data);
     data += sizeof(void *);
     return rv;
 }
@@ -297,7 +297,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerString:
     {
         quint32 size = headersize(header);
-        QString qstr((QChar *)data, size);
+        QString qstr((const QChar *)data, size);
         data += ALIGN(size * sizeof(quint16));
         return QV4::Encode(engine->newString(qstr));
     }
@@ -342,7 +342,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     {
         quint32 flags = headersize(header);
         quint32 length = popUint32(data);
-        QString pattern = QString((QChar *)data, length - 1);
+        QString pattern = QString((const QChar *)data, length - 1);
         data += ALIGN(length * sizeof(quint16));
         return Encode(engine->newRegExpObject(pattern, flags));
     }

@@ -2228,7 +2228,7 @@ QObject *QQmlEnginePrivate::toQObject(const QVariant &v, bool *ok) const
     int t = v.userType();
     if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
         if (ok) *ok = true;
-        return *(QObject **)(v.constData());
+        return *(QObject *const *)(v.constData());
     } else {
         return QQmlMetaType::toQObject(v, ok);
     }

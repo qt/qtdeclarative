@@ -202,7 +202,7 @@ QQmlValueType::~QQmlValueType()
     QObjectPrivate *op = QObjectPrivate::get(this);
     Q_ASSERT(op->metaObject == this);
     op->metaObject = 0;
-    ::free((void*)_metaObject);
+    ::free(const_cast<QMetaObject *>(_metaObject));
     metaType.destroy(gadgetPtr);
 }
 

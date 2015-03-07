@@ -1508,7 +1508,7 @@ QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
 
     if (ok) *ok = true;
 
-    return *(QObject **)v.constData();
+    return *(QObject *const *)v.constData();
 }
 
 bool QQmlMetaType::isQObject(int userType)

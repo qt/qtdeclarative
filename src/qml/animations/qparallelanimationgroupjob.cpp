@@ -233,7 +233,7 @@ void QParallelAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimatio
 
 void QParallelAnimationGroupJob::debugAnimation(QDebug d) const
 {
-    d << "ParallelAnimationGroupJob(" << hex << (void *) this << dec << ")";
+    d << "ParallelAnimationGroupJob(" << hex << (const void *) this << dec << ")";
 
     debugChildren(d);
 }

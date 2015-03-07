@@ -115,7 +115,7 @@ void QContinuingAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
 
 void QContinuingAnimationGroupJob::debugAnimation(QDebug d) const
 {
-    d << "ContinuingAnimationGroupJob(" << hex << (void *) this << dec << ")";
+    d << "ContinuingAnimationGroupJob(" << hex << (const void *) this << dec << ")";
 
     debugChildren(d);
 }

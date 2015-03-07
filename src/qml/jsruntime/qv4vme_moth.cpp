@@ -593,7 +593,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
-        exceptionHandler = instr.offset ? ((uchar *)&instr.offset) + instr.offset : 0;
+        exceptionHandler = instr.offset ? ((const uchar *)&instr.offset) + instr.offset : 0;
     MOTH_END_INSTR(SetExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
@@ -727,21 +727,21 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(ConstructGlobalLookup)
 
     MOTH_BEGIN_INSTR(Jump)
-        code = ((uchar *)&instr.offset) + instr.offset;
+        code = ((const uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(JumpEq)
         bool cond = VALUEPTR(instr.condition)->toBoolean();
         TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
         if (cond)
-            code = ((uchar *)&instr.offset) + instr.offset;
+            code = ((const uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpEq)
 
     MOTH_BEGIN_INSTR(JumpNe)
         bool cond = VALUEPTR(instr.condition)->toBoolean();
         TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
         if (!cond)
-            code = ((uchar *)&instr.offset) + instr.offset;
+            code = ((const uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpNe)
 
     MOTH_BEGIN_INSTR(UNot)

@@ -772,7 +772,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             int listIndex = data[id].asInt();
                             const List *list = &listProperties.at(listIndex);
                             *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
-                                QQmlListProperty<QObject>(object, (void *)list,
+                                QQmlListProperty<QObject>(object, const_cast<List *>(list),
                                                                   list_append, list_count, list_at,
                                                                   list_clear);
                         }
@@ -1090,7 +1090,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
     } else {
         bool needActivate = false;
         if (value.userType() == QMetaType::QObjectStar) {
-            QObject *o = *(QObject **)value.data();
+            QObject *o = *(QObject *const *)value.data();
             needActivate = (data[id].dataType() != QMetaType::QObjectStar || data[id].asQObject() != o);
             data[id].setValue(o, this, id);
         } else {
