@@ -341,7 +341,7 @@ bool QQuickShaderEffectMaterialKey::operator != (const QQuickShaderEffectMateria
 
 uint qHash(const QQuickShaderEffectMaterialKey &key)
 {
-    uint hash = qHash((void *)key.className);
+    uint hash = qHash((const void *)key.className);
     typedef QQuickShaderEffectMaterialKey Key;
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
         hash = hash * 31337 + qHash(key.sourceCode[shaderType]);

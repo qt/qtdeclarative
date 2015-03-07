@@ -85,7 +85,12 @@ public:
         for (int i=0; i<PageSize; ++i) blocks[i] = i;
     }
 
-    Type *at(uint index) const
+    const Type *at(uint index) const
+    {
+        return (Type *) &data[index * sizeof(Type)];
+    }
+
+    Type *at(uint index)
     {
         return (Type *) &data[index * sizeof(Type)];
     }

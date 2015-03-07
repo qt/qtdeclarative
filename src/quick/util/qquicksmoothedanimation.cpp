@@ -307,7 +307,7 @@ void QSmoothedAnimation::init()
 
 void QSmoothedAnimation::debugAnimation(QDebug d) const
 {
-    d << "SmoothedAnimationJob(" << hex << (void *) this << dec << ")" << "duration:" << userDuration
+    d << "SmoothedAnimationJob(" << hex << (const void *) this << dec << ")" << "duration:" << userDuration
       << "velocity:" << velocity << "target:" << target.object() << "property:" << target.name()
       << "to:" << to << "current velocity:" << trackVelocity;
 }

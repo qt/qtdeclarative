@@ -315,11 +315,11 @@ QSGContext::QSGContext(QObject *parent) :
 
     // Adds compatibility with Qt 5.3 and earlier's QSG_RENDER_TIMING
     if (qEnvironmentVariableIsSet("QSG_RENDER_TIMING")) {
-        ((QLoggingCategory &) QSG_LOG_TIME_GLYPH()).setEnabled(QtDebugMsg, true);
-        ((QLoggingCategory &) QSG_LOG_TIME_TEXTURE()).setEnabled(QtDebugMsg, true);
-        ((QLoggingCategory &) QSG_LOG_TIME_RENDERER()).setEnabled(QtDebugMsg, true);
-        ((QLoggingCategory &) QSG_LOG_TIME_RENDERLOOP()).setEnabled(QtDebugMsg, true);
-        ((QLoggingCategory &) QSG_LOG_TIME_COMPILATION()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_TIME_GLYPH()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_TIME_TEXTURE()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_TIME_RENDERER()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_TIME_RENDERLOOP()).setEnabled(QtDebugMsg, true);
+        const_cast<QLoggingCategory &>(QSG_LOG_TIME_COMPILATION()).setEnabled(QtDebugMsg, true);
     }
 }
 

@@ -1693,8 +1693,8 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     if (((const QMatrix4x4_Accessor &) localx).flagBits == 1) {
         for (int i=0; i<vCount; ++i) {
             Pt *p = (Pt *) vdata;
-            p->x += ((QMatrix4x4_Accessor &) localx).m[3][0];
-            p->y += ((QMatrix4x4_Accessor &) localx).m[3][1];
+            p->x += ((const QMatrix4x4_Accessor &) localx).m[3][0];
+            p->y += ((const QMatrix4x4_Accessor &) localx).m[3][1];
             vdata += vSize;
         }
     } else if (((const QMatrix4x4_Accessor &) localx).flagBits > 1) {
@@ -1935,11 +1935,11 @@ void Renderer::uploadBatch(Batch *b)
                         if (attr.isVertexCoordinate)
                             dump << "* ";
                         for (int t=0; t<attr.tupleSize; ++t)
-                            dump << *(float *)(vd + offset + t * sizeof(float)) << " ";
+                            dump << *(const float *)(vd + offset + t * sizeof(float)) << " ";
                     } else if (attr.type == GL_UNSIGNED_BYTE) {
                         dump << "ubyte ";
                         for (int t=0; t<attr.tupleSize; ++t)
-                            dump << *(unsigned char *)(vd + offset + t * sizeof(unsigned char)) << " ";
+                            dump << *(const unsigned char *)(vd + offset + t * sizeof(unsigned char)) << " ";
                     }
                     dump << ") ";
                     offset += attr.tupleSize * size_of_type(attr.type);
