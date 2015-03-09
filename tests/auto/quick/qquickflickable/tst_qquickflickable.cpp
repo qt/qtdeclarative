@@ -1493,6 +1493,40 @@ void tst_qquickflickable::nestedStopAtBounds()
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 
     QTRY_VERIFY(!outer->isMoving());
+
+    axis = 200;
+    inner->setContentX(0);
+    inner->setContentY(0);
+    inner->setContentWidth(inner->width());
+    inner->setContentHeight(inner->height());
+
+    // Drag inner with equal size and contentSize
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? -threshold * 2 : threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? -threshold : threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(inner->isDragging(), false);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
+
+    axis = 200;
+    inner->setContentX(0);
+    inner->setContentY(0);
+    inner->setContentWidth(inner->width() - 100);
+    inner->setContentHeight(inner->height() - 100);
+
+    // Drag inner with size greater than contentSize
+    QTest::mousePress(&view, Qt::LeftButton, 0, position);
+    QTest::qWait(10);
+    axis += invert ? -threshold * 2 : threshold * 2;
+    QTest::mouseMove(&view, position);
+    axis += invert ? -threshold : threshold;
+    QTest::mouseMove(&view, position);
+    QCOMPARE(outer->isDragging(), true);
+    QCOMPARE(inner->isDragging(), false);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 }
 
 void tst_qquickflickable::stopAtBounds_data()

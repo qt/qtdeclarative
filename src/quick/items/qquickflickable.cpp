@@ -1041,7 +1041,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                 }
                 if (fuzzyLessThanOrEqualTo(minY, newY)) {
                     newY = minY;
-                    rejectY = vData.pressPos == minY && vData.move.value() == minY && dy > 0;
+                    rejectY |= vData.pressPos == minY && vData.move.value() == minY && dy > 0;
                 }
             } else {
                 qreal vel = velocity.y() / QML_FLICK_OVERSHOOTFRICTION;
@@ -1101,7 +1101,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                 }
                 if (fuzzyLessThanOrEqualTo(minX, newX)) {
                     newX = minX;
-                    rejectX = hData.pressPos == minX && hData.move.value() == minX && dx > 0;
+                    rejectX |= hData.pressPos == minX && hData.move.value() == minX && dx > 0;
                 }
             } else {
                 qreal vel = velocity.x() / QML_FLICK_OVERSHOOTFRICTION;
@@ -1527,13 +1527,13 @@ qreal QQuickFlickable::minXExtent() const
 qreal QQuickFlickable::maxXExtent() const
 {
     Q_D(const QQuickFlickable);
-    return width() - vWidth() - d->hData.endMargin;
+    return qMin<qreal>(0, width() - vWidth() - d->hData.endMargin);
 }
 /* returns -ve */
 qreal QQuickFlickable::maxYExtent() const
 {
     Q_D(const QQuickFlickable);
-    return height() - vHeight() - d->vData.endMargin;
+    return qMin<qreal>(0, height() - vHeight() - d->vData.endMargin);
 }
 
 void QQuickFlickable::componentComplete()
