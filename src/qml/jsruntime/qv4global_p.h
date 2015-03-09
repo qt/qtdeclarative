@@ -34,10 +34,19 @@
 #ifndef QV4GLOBAL_H
 #define QV4GLOBAL_H
 
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+#define V4_BOOTSTRAP
+#endif
+
 #include <QtCore/qglobal.h>
 #include <QString>
+
+#ifdef V4_BOOTSTRAP
+#include <private/qtqmldevtoolsglobal_p.h>
+#else
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
+#endif
 
 #if defined(Q_CC_MSVC)
 #include <float.h>
@@ -58,10 +67,6 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
 #define qOffsetOf(s, m) ((size_t)((((char *)&(((s *)64)->m)) - 64)))
-
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-#define V4_BOOTSTRAP
-#endif
 
 // Decide whether to enable or disable the JIT
 

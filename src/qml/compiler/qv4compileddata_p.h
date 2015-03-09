@@ -42,7 +42,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4executableallocator_p.h>
 #include <private/qqmlrefcount_p.h>
-#include <private/qqmlnullablevalue_p_p.h>
+#include <private/qqmlnullablevalue_p.h>
 
 QT_BEGIN_NAMESPACE
 

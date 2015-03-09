@@ -104,7 +104,6 @@ HEADERS += \
     $$PWD/qqmlextensioninterface.h \
     $$PWD/qqmlimport_p.h \
     $$PWD/qqmlextensionplugin.h \
-    $$PWD/qqmlnullablevalue_p_p.h \
     $$PWD/qqmlscriptstring_p.h \
     $$PWD/qqmllocale_p.h \
     $$PWD/qqmlcomponentattached_p.h \

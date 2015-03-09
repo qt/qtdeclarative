@@ -49,7 +49,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
 #include <private/qqmljsengine_p.h>
-#include <private/qtqmlglobal_p.h>
+#include <private/qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
