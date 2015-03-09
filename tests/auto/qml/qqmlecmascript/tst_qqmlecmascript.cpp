@@ -325,6 +325,7 @@ private slots:
     void qtbug_39520();
     void readUnregisteredQObjectProperty();
     void writeUnregisteredQObjectProperty();
+    void switchExpression();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7841,6 +7842,29 @@ void tst_qqmlecmascript::writeUnregisteredQObjectProperty()
 
     QMetaObject::invokeMethod(root, "writeProperty");
     QCOMPARE(root->property("container").value<ObjectContainer*>()->mSetterCalled, true);
+}
+
+void tst_qqmlecmascript::switchExpression()
+{
+    // verify that we evaluate the expression inside switch() exactly once
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "var num = 0\n"
+            "var x = 0\n"
+            "function f() { ++num; return (Math.random() > 0.5) ? 0 : 1; }\n"
+            "for (var i = 0; i < 1000; ++i) {\n"
+            "   switch (f()) {\n"
+            "   case 0:\n"
+            "   case 1:\n"
+            "       break;\n"
+            "   default:\n"
+            "       ++x;\n"
+            "   }\n"
+            "}\n"
+            "(x == 0 && num == 1000) ? true : false\n"
+                        ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toBool(), true);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

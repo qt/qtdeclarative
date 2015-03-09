@@ -2448,7 +2448,8 @@ bool Codegen::visit(SwitchStatement *ast)
     IR::BasicBlock *switchend = _function->newBasicBlock(exceptionHandler());
 
     if (ast->block) {
-        Result lhs = expression(ast->expression);
+        int lhs = _block->newTemp();
+        move(_block->TEMP(lhs), *expression(ast->expression));
         IR::BasicBlock *switchcond = _function->newBasicBlock(exceptionHandler());
         _block->JUMP(switchcond);
         IR::BasicBlock *previousBlock = 0;
@@ -2510,7 +2511,7 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            setLocation(cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse), clause->caseToken);
+            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
             _block = iffalse;
         }
 
@@ -2519,7 +2520,7 @@ bool Codegen::visit(SwitchStatement *ast)
             Result rhs = expression(clause->expression);
             IR::BasicBlock *iftrue = blockMap[clause];
             IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            setLocation(cjump(binop(IR::OpStrictEqual, *lhs, *rhs), iftrue, iffalse), clause->caseToken);
+            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
             _block = iffalse;
         }
 
