@@ -72,6 +72,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch");
+Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target");
 Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse");
 Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus");
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty");
@@ -552,6 +553,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             // handler spins the event loop all subsequent moves and releases get lost.
             touchMouseId = p.id();
             itemForTouchPointId[touchMouseId] = item;
+            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << item;
             QScopedPointer<QMouseEvent> mousePress(touchToMouseEvent(QEvent::MouseButtonPress, p, event, item, false));
 
             // Send a single press and see if that's accepted
@@ -563,8 +565,10 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
             event->setAccepted(mousePress->isAccepted());
             if (!mousePress->isAccepted()) {
                 touchMouseId = -1;
-                if (itemForTouchPointId.value(p.id()) == item)
+                if (itemForTouchPointId.value(p.id()) == item) {
+                    qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "disassociated";
                     itemForTouchPointId.remove(p.id());
+                }
 
                 if (mouseGrabberItem == item)
                     item->ungrabMouse();
@@ -599,6 +603,7 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                     QCoreApplication::sendEvent(item, me.data());
                     event->setAccepted(me->isAccepted());
                     if (me->isAccepted()) {
+                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << p.id() << "->" << mouseGrabberItem;
                         itemForTouchPointId[p.id()] = mouseGrabberItem; // N.B. the mouseGrabberItem may be different after returning from sendEvent()
                         return true;
                     }
@@ -650,8 +655,10 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
     if (touchMouseId != -1) {
         // update the touch item for mouse touch id to the new grabber
         itemForTouchPointId.remove(touchMouseId);
-        if (grabber)
+        if (grabber) {
+            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << touchMouseId << "->" << mouseGrabberItem;
             itemForTouchPointId[touchMouseId] = grabber;
+        }
     }
 
     if (oldGrabber) {
@@ -1972,6 +1979,7 @@ void QQuickWindowPrivate::reallyDeliverTouchEvent(QTouchEvent *event)
     if (event->touchPointStates() & Qt::TouchPointReleased) {
         for (int i=0; i<touchPoints.count(); i++) {
             if (touchPoints[i].state() == Qt::TouchPointReleased) {
+                qCDebug(DBG_TOUCH_TARGET) << "TP" << touchPoints[i].id() << "released";
                 itemForTouchPointId.remove(touchPoints[i].id());
                 if (touchPoints[i].id() == touchMouseId)
                     touchMouseId = -1;
@@ -2079,7 +2087,7 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     touchEvent.data()->setTarget(item);
     bool touchEventAccepted = false;
 
-    qCDebug(DBG_TOUCH) << " - considering delivering " << touchEvent << " to " << item;
+    qCDebug(DBG_TOUCH) << " - considering delivering " << touchEvent.data() << " to " << item;
 
     // First check whether the parent wants to be a filter,
     // and if the parent accepts the event we are done.
@@ -2093,11 +2101,13 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
     }
 
     // Since it can change in sendEvent, update itemForTouchPointId now
-    foreach (int id, matchingNewPoints)
+    foreach (int id, matchingNewPoints) {
+        qCDebug(DBG_TOUCH_TARGET) << "TP" << id << "->" << item;
         itemForTouchPointId[id] = item;
+    }
 
     // Deliver the touch event to the given item
-    qCDebug(DBG_TOUCH) << " - actually delivering " << touchEvent << " to " << item;
+    qCDebug(DBG_TOUCH) << " - actually delivering " << touchEvent.data() << " to " << item;
     QCoreApplication::sendEvent(item, touchEvent.data());
     touchEventAccepted = touchEvent->isAccepted();
 
@@ -2120,8 +2130,10 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QTouchEv
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
         foreach (int id, matchingNewPoints)
-            if (itemForTouchPointId[id] == item)
+            if (itemForTouchPointId[id] == item) {
+                qCDebug(DBG_TOUCH_TARGET) << "TP" << id << "disassociated";
                 itemForTouchPointId.remove(id);
+            }
     }
 
     return touchEventAccepted;
@@ -2410,6 +2422,7 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
                     if (target->childMouseEventFilter(item, mouseEvent.data())) {
                         qCDebug(DBG_TOUCH) << " - second chance intercepted on childMouseEventFilter by " << target;
                         if (t != QEvent::MouseButtonRelease) {
+                            qCDebug(DBG_TOUCH_TARGET) << "TP" << tp.id() << "->" << target;
                             itemForTouchPointId[tp.id()] = target;
                             touchMouseId = tp.id();
                             target->grabMouse();
