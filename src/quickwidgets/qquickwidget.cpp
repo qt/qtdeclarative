@@ -210,12 +210,13 @@ void QQuickWidgetPrivate::render(bool needsSync)
     }
 
     renderControl->render();
-    context->functions()->glFlush();
 
     if (resolvedFbo) {
         QRect rect(QPoint(0, 0), fbo->size());
         QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
     }
+
+    context->functions()->glFlush();
 }
 
 void QQuickWidgetPrivate::renderSceneGraph()
