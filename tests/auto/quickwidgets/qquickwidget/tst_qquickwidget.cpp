@@ -242,10 +242,6 @@ void tst_qquickwidget::engine()
 
 void tst_qquickwidget::readback()
 {
-#ifdef Q_OS_MAC
-    QSKIP("Skipping due to issues on OS X: QTBUG-39919");
-#endif
-
     QWidget window;
 
     QScopedPointer<QQuickWidget> view(new QQuickWidget);
