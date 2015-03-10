@@ -1010,6 +1010,9 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     bool rejectY = false;
     bool rejectX = false;
 
+    bool keepY = q->yflick();
+    bool keepX = q->xflick();
+
     bool stealY = false;
     bool stealX = false;
     if (eventType == QEvent::MouseMove) {
@@ -1082,6 +1085,11 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
             }
             if (!rejectY && overThreshold)
                 stealY = true;
+
+            if ((newY >= minY && vData.pressPos == minY && vData.move.value() == minY && dy > 0)
+                        || (newY <= maxY && vData.pressPos == maxY && vData.move.value() == maxY && dy < 0)) {
+                keepY = false;
+            }
         }
         vData.previousDragDelta = dy;
     }
@@ -1144,13 +1152,19 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
 
             if (!rejectX && overThreshold)
                 stealX = true;
+
+            if ((newX >= minX && vData.pressPos == minX && vData.move.value() == minX && dx > 0)
+                        || (newX <= maxX && vData.pressPos == maxX && vData.move.value() == maxX && dx < 0)) {
+                keepX = false;
+            }
         }
         hData.previousDragDelta = dx;
     }
 
     stealMouse = stealX || stealY;
     if (stealMouse) {
-        q->setKeepMouseGrab(true);
+        if ((stealX && keepX) || (stealY && keepY))
+            q->setKeepMouseGrab(true);
         clearDelayedPress();
     }
 
