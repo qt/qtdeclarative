@@ -40,7 +40,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickImagePrivate;
-class Q_AUTOTEST_EXPORT QQuickImage : public QQuickImageBase
+class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
 {
     Q_OBJECT
     Q_ENUMS(FillMode)
