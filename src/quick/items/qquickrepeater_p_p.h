@@ -63,17 +63,15 @@ public:
     ~QQuickRepeaterPrivate();
 
 private:
-    void createItems();
+    void requestItems();
 
     QPointer<QQmlInstanceModel> model;
     QVariant dataSource;
     QPointer<QObject> dataSourceAsObject;
     bool ownModel : 1;
-    bool inRequest : 1;
     bool dataSourceIsObject : 1;
     bool delegateValidated : 1;
     int itemCount;
-    int createFrom;
 
     QVector<QPointer<QQuickItem> > deletables;
 };
