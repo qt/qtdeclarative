@@ -110,7 +110,7 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty real QtQuickControls2::Style::disabledOpacity
 */
 
-Q_GLOBAL_STATIC_WITH_ARGS(QQuickStyleData, globalStyleData, QStringLiteral(":/qtquickcontrols/style.json"))
+Q_GLOBAL_STATIC_WITH_ARGS(QQuickStyleData, globalStyleData, (QString::fromLatin1(":/qtquickcontrols/style.json")))
 
 static QQuickStyle *styleInstance(QQmlEngine *engine)
 {

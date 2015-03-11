@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include "qquickstyle_p.h"
 
 #include <QtQuickControls/private/qquickabstractapplicationwindow_p.h>
 #include <QtQuickControls/private/qquickabstractbusyindicator_p.h>
@@ -61,7 +62,6 @@
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
 #include <QtQuickControls/private/qquickexclusivegroup_p.h>
-#include <QtQuickControls/private/qquickstyle_p.h>
 
 void initResources()
 {
