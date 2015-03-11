@@ -51,6 +51,7 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QStringList>
+#include <QScopedPointer>
 #include <QDebug>
 #include <QStandardPaths>
 #include <QTranslator>
@@ -172,12 +173,19 @@ class LoadWatcher : public QObject
 public:
     LoadWatcher(QQmlApplicationEngine *e, int expected)
         : QObject(e)
+        , earlyExit(false)
         , expect(expected)
         , haveOne(false)
     {
         connect(e, SIGNAL(objectCreated(QObject*,QUrl)),
             this, SLOT(checkFinished(QObject*)));
+        // QQmlApplicationEngine also connects quit() to QCoreApplication::quit
+        // but if called before exec() then QCoreApplication::quit does nothing
+        connect(e, SIGNAL(quit()),
+            this, SLOT(quit()));
     }
+
+    bool earlyExit;
 
 private:
     int expect;
@@ -200,6 +208,11 @@ public Q_SLOTS:
             printf("qml: Did not load any objects, exiting.\n");
             exit(2);//Different return code from qFatal
         }
+    }
+
+    void quit() {
+        //Will be checked before calling exec()
+        earlyExit = true;
     }
 };
 
@@ -483,7 +496,7 @@ int main(int argc, char *argv[])
     loadConf(confFile, !verboseMode);
 
     //Load files
-    LoadWatcher lw(&e, files.count());
+    QScopedPointer<LoadWatcher> lw(new LoadWatcher(&e, files.count()));
 
     // Load dummy data before loading QML-files
     if (!dummyDir.isEmpty() && QFileInfo (dummyDir).isDir())
@@ -514,6 +527,9 @@ int main(int argc, char *argv[])
                 e.load(path);
         }
     }
+
+    if (lw->earlyExit)
+        return 0;
 
     return app->exec();
 }
