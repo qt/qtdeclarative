@@ -55,17 +55,9 @@ private slots:
     void cleanup();
     void qmlscene();
     void qmlsceneBlock();
-    void qmlsceneInvalidPorts();
-    void qmlsceneBlockInvalidPorts();
-    void qmlsceneMixedPorts();
-    void qmlsceneBlockMixedPorts();
 
     void custom();
     void customBlock();
-    void customInvalidPorts();
-    void customBlockInvalidPorts();
-    void customMixedPorts();
-    void customBlockMixedPorts();
 
 private:
     QQmlDebugProcess *process;
@@ -161,30 +153,6 @@ void tst_QQmlDebuggingEnabler::qmlsceneBlock()
     QVERIFY(init(true, true, 5555, 5565));
 }
 
-void tst_QQmlDebuggingEnabler::qmlsceneInvalidPorts()
-{
-    QVERIFY(!init(false, true, 10, 20));
-    QVERIFY(process->output().contains(
-                QLatin1String("QML Debugger: Unable to listen to ports 10 - 20.")));
-}
-
-void tst_QQmlDebuggingEnabler::qmlsceneBlockInvalidPorts()
-{
-    QVERIFY(!init(true, true, 10, 20));
-    QVERIFY(process->output().contains(
-                QLatin1String("QML Debugger: Unable to listen to ports 10 - 20.")));
-}
-
-void tst_QQmlDebuggingEnabler::qmlsceneMixedPorts()
-{
-    QVERIFY(init(false, true, 1020, 1030));
-}
-
-void tst_QQmlDebuggingEnabler::qmlsceneBlockMixedPorts()
-{
-    QVERIFY(init(true, true, 1020, 1030));
-}
-
 void tst_QQmlDebuggingEnabler::custom()
 {
     QVERIFY(init(false, false, 5555, 5565));
@@ -193,42 +161,6 @@ void tst_QQmlDebuggingEnabler::custom()
 void tst_QQmlDebuggingEnabler::customBlock()
 {
     QVERIFY(init(true, false, 5555, 5565));
-}
-
-void tst_QQmlDebuggingEnabler::customInvalidPorts()
-{
-    QVERIFY(!init(false, false, 10, 20));
-    for (int i = 10; i < 20; ++i) {
-        QVERIFY(process->output().contains(
-                QString(QLatin1String("QML Debugger: Unable to listen to port %1.")).arg(i)));
-    }
-}
-
-void tst_QQmlDebuggingEnabler::customBlockInvalidPorts()
-{
-    QVERIFY(!init(true, false, 10, 20));
-    for (int i = 10; i < 20; ++i) {
-        QVERIFY(process->output().contains(
-                QString(QLatin1String("QML Debugger: Unable to listen to port %1.")).arg(i)));
-    }
-}
-
-void tst_QQmlDebuggingEnabler::customMixedPorts()
-{
-    QVERIFY(init(false, false, 1020, 1030));
-    for (int i = 1020; i < 1024; ++i) {
-        QVERIFY(process->output().contains(
-                QString(QLatin1String("QML Debugger: Unable to listen to port %1.")).arg(i)));
-    }
-}
-
-void tst_QQmlDebuggingEnabler::customBlockMixedPorts()
-{
-    QVERIFY(init(true, false, 1020, 1030));
-    for (int i = 1020; i < 1024; ++i) {
-        QVERIFY(process->output().contains(
-                QString(QLatin1String("QML Debugger: Unable to listen to port %1.")).arg(i)));
-    }
 }
 
 namespace QQmlDebuggingEnablerTest {
