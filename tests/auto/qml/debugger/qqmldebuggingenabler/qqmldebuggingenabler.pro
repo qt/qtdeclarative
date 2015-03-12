@@ -10,4 +10,4 @@ include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
 OTHER_FILES += data/test.qml
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0 QT_QML_DEBUG_NO_WARNING
