@@ -230,7 +230,6 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         d->context->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
         delete m_gl;
         m_gl = 0;
     } else if (m_gl && current) {
