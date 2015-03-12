@@ -58,30 +58,6 @@ struct QQmlValueTypeFactoryImpl
     QMutex mutex;
 };
 
-
-namespace {
-// This should be removed once the QPersistentModelIndex as built-in type is merged in qtbase
-#if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
-#error Please, someone remove this. QPersistentModelIndex should be a built-in meta-type by now.
-#else
-template <typename T, bool builtin = QMetaTypeId2<T>::IsBuiltIn>
-struct QPMIConvertersRegistrer {
-    void registerConverters()
-    {
-    }
-};
-
-template <typename T> struct QPMIConvertersRegistrer<T, false> {
-    void registerConverters()
-    {
-        qRegisterMetaType<QPersistentModelIndex>();
-        QMetaType::registerConverter<QModelIndex, QPersistentModelIndex>(&QQmlModelIndexValueType::toPersistentModelIndex);
-        QMetaType::registerConverter<QPersistentModelIndex, QModelIndex>(&QQmlPersistentModelIndexValueType::toModelIndex);
-    }
-};
-#endif
-}
-
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
@@ -91,9 +67,6 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
     qRegisterMetaType<QModelIndexList>();
     qRegisterMetaType<QItemSelectionRange>();
     qRegisterMetaType<QItemSelection>();
-
-    QPMIConvertersRegistrer<QPersistentModelIndex> conv;
-    conv.registerConverters();
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
@@ -136,15 +109,15 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
         return &QQmlEasingValueType::staticMetaObject;
     case QVariant::ModelIndex:
         return &QQmlModelIndexValueType::staticMetaObject;
+    case QVariant::PersistentModelIndex:
+        return &QQmlPersistentModelIndexValueType::staticMetaObject;
     default:
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;
         break;
     }
 
-    if (t == qMetaTypeId<QPersistentModelIndex>())
-        return &QQmlPersistentModelIndexValueType::staticMetaObject;
-    else if (t == qMetaTypeId<QModelIndexList>())
+    if (t == qMetaTypeId<QModelIndexList>())
         return &QQmlModelIndexListValueType::staticMetaObject;
     else if (t == qMetaTypeId<QItemSelectionRange>())
         return &QQmlItemSelectionRangeValueType::staticMetaObject;
