@@ -39,7 +39,6 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qv4value_inl_p.h>
 #include <private/qv4codegen_p.h>
-#include <private/qqmldirparser_p.h>
 
 int main()
 {

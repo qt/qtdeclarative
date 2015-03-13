@@ -294,17 +294,6 @@ bool QQmlDirParser::hasError() const
     return false;
 }
 
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
-{
-    QList<QQmlJS::DiagnosticMessage> errors = _errors;
-    for (int i = 0; i < errors.size(); ++i) {
-        QQmlJS::DiagnosticMessage &msg = errors[i];
-        msg.message.replace(QLatin1String("$$URI$$"), uri);
-    }
-    return errors;
-}
-#else
 void QQmlDirParser::setError(const QQmlError &e)
 {
     _errors.clear();
@@ -328,7 +317,6 @@ QList<QQmlError> QQmlDirParser::errors(const QString &uri) const
     }
     return errors;
 }
-#endif
 
 QString QQmlDirParser::typeNamespace() const
 {
