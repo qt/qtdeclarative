@@ -214,15 +214,19 @@ void QQuickScrollIndicatorAttachedPrivate::itemGeometryChanged(QQuickItem *item,
     Q_ASSERT(item == flickable);
     if (horizontal) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(horizontal);
-        if (!p->widthValid || qFuzzyCompare(horizontal->width(), oldGeometry.width()))
+        if (!p->widthValid) {
             horizontal->setWidth(newGeometry.width());
+            p->widthValid = false;
+        }
         if (qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), oldGeometry.height() - horizontal->height()))
             horizontal->setY(newGeometry.height() - horizontal->height());
     }
     if (vertical) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(vertical);
-        if (!p->heightValid || qFuzzyCompare(vertical->height(), oldGeometry.height()))
+        if (!p->heightValid) {
             vertical->setHeight(newGeometry.height());
+            p->heightValid = false;
+        }
         if (!p->isMirrored() && (qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), oldGeometry.width() - vertical->width())))
             vertical->setX(newGeometry.width() - vertical->width());
     }

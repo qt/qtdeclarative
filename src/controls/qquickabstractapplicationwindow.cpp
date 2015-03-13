@@ -217,13 +217,17 @@ void QQuickAbstractApplicationWindow::resizeEvent(QResizeEvent *event)
     Q_D(QQuickAbstractApplicationWindow);
     if (d->header) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->header);
-        if (!p->widthValid || qFuzzyCompare(d->header->width(), event->oldSize().width()))
+        if (!p->widthValid) {
             d->header->setWidth(width());
+            p->widthValid = false;
+        }
     }
     if (d->footer) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->footer);
-        if (!p->widthValid || qFuzzyCompare(d->footer->width(), event->oldSize().width()))
+        if (!p->widthValid) {
             d->footer->setWidth(width());
+            p->widthValid = false;
+        }
     }
     d->relayout();
 }

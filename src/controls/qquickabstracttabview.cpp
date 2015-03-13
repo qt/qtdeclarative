@@ -131,8 +131,13 @@ void QQuickAbstractTabView::geometryChanged(const QRectF &newGeometry, const QRe
 {
     Q_D(QQuickAbstractTabView);
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
-    if (d->bar && (!d->bar->widthValid() || qFuzzyCompare(d->bar->width(), oldGeometry.width())))
-        d->bar->setWidth(newGeometry.width());
+    if (d->bar) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(d->bar);
+        if (!p->widthValid) {
+            d->bar->setWidth(newGeometry.width());
+            p->widthValid = false;
+        }
+    }
 }
 
 /*!

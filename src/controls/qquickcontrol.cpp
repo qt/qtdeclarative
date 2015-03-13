@@ -261,10 +261,14 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     if (d->background) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
-        if (!p->widthValid || qFuzzyCompare(d->background->width(), oldGeometry.width()))
+        if (!p->widthValid) {
             d->background->setWidth(newGeometry.width());
-        if (!p->heightValid || qFuzzyCompare(d->background->height(), oldGeometry.height()))
+            p->widthValid = false;
+        }
+        if (!p->heightValid) {
             d->background->setHeight(newGeometry.height());
+            p->heightValid = false;
+        }
     }
 }
 
