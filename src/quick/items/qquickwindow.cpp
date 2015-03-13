@@ -1868,19 +1868,23 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
                 Qt::TouchPointStates states;
                 for (int i = 0; i < event->touchPoints().count(); ++i) {
                     const QTouchEvent::TouchPoint &tp = tpts.at(i);
-                    const QTouchEvent::TouchPoint &tp2 = delayedTouch->touchPoints().at(i);
-                    if (tp.id() != tp2.id()) {
+                    const QTouchEvent::TouchPoint &tpDelayed = delayedTouch->touchPoints().at(i);
+                    if (tp.id() != tpDelayed.id()) {
                         mismatch = true;
                         break;
                     }
 
-                    if (tp2.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
+                    if (tpDelayed.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
                         tpts[i].setState(Qt::TouchPointMoved);
+                    tpts[i].setLastPos(tpDelayed.lastPos());
+                    tpts[i].setLastScenePos(tpDelayed.lastScenePos());
+                    tpts[i].setLastScreenPos(tpDelayed.lastScreenPos());
+                    tpts[i].setLastNormalizedPos(tpDelayed.lastNormalizedPos());
 
                     states |= tpts.at(i).state();
                 }
 
-                // same touch event? then merge if so
+                // matching touch event? then merge the new event into the old one
                 if (!mismatch) {
                     delayedTouch->setTouchPoints(tpts);
                     delayedTouch->setTimestamp(event->timestamp());
@@ -1888,8 +1892,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
                 }
             }
 
-            // otherwise; we need to deliver the delayed event first, and
-            // then delay this one..
+            // merging wasn't possible, so deliver the delayed event first, and then delay this one
             reallyDeliverTouchEvent(delayedTouch);
             delete delayedTouch;
             delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
