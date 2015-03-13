@@ -1426,7 +1426,7 @@ void Runtime::convertThisToObject(ExecutionEngine *engine)
     if (t->isObject())
         return;
     if (t->isNullOrUndefined()) {
-        *t = engine->globalObject()->asReturnedValue();
+        *t = engine->globalObject->asReturnedValue();
     } else {
         *t = t->toObject(engine)->asReturnedValue();
     }

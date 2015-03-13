@@ -400,7 +400,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(CallContext *ctx)
         db.transaction();
 
         ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject();
+        callData->thisObject = scope.engine->globalObject;
         callData->args[0] = w;
 
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
@@ -449,7 +449,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(CallContext *ctx, bool re
     db.transaction();
     if (callback) {
         ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject();
+        callData->thisObject = scope.engine->globalObject;
         callData->args[0] = w;
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
         callback->call(callData);
@@ -723,7 +723,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     if (created && dbcreationCallback) {
         Scope scope(ctx);
         ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject();
+        callData->thisObject = scope.engine->globalObject;
         callData->args[0] = db;
         dbcreationCallback->call(callData);
     }

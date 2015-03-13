@@ -85,10 +85,7 @@ struct Scope {
 #ifndef QT_NO_DEBUG
         size += nValues;
 #endif
-        Value *ptr = engine->jsStackTop;
-        engine->jsStackTop = ptr + nValues;
-        memset(ptr, 0, nValues*sizeof(Value));
-        return ptr;
+        return engine->jsAlloca(nValues);
     }
 
     bool hasException() const {

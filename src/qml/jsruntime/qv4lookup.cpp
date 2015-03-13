@@ -580,7 +580,7 @@ ReturnedValue Lookup::arrayLengthGetter(Lookup *l, ExecutionEngine *engine, cons
 
 ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
+    Object *o = engine->globalObject;
     PropertyAttributes attrs;
     ReturnedValue v = l->lookup(o, &attrs);
     if (v != Primitive::emptyValue().asReturnedValue()) {
@@ -609,7 +609,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass())
         return o->memberData()->data[l->index].asReturnedValue();
 
@@ -619,7 +619,7 @@ ReturnedValue Lookup::globalGetter0(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass() &&
         l->classList[1] == o->prototype()->internalClass)
         return o->prototype()->memberData->data[l->index].asReturnedValue();
@@ -630,7 +630,7 @@ ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionEngine *engine)
 {
-    Heap::Object *o = engine->globalObject()->d();
+    Heap::Object *o = engine->globalObject->d();
     if (l->classList[0] == o->internalClass) {
         o = o->prototype;
         if (l->classList[1] == o->internalClass) {
@@ -646,7 +646,7 @@ ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass()) {
         Scope scope(o->engine());
         ScopedFunctionObject getter(scope, o->propertyAt(l->index)->getter());
@@ -663,7 +663,7 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject();
+    Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass() &&
         l->classList[1] == o->prototype()->internalClass) {
         Scope scope(o->engine());
@@ -681,7 +681,7 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 
 ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
 {
-    Heap::Object *o = engine->globalObject()->d();
+    Heap::Object *o = engine->globalObject->d();
     if (l->classList[0] == o->internalClass) {
         o = o->prototype;
         if (l->classList[1] == o->internalClass) {

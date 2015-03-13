@@ -470,7 +470,7 @@ void Debugger::collectThrownValue(Collector *collector)
         void run()
         {
             Scope scope(engine);
-            ScopedValue v(scope, engine->exceptionValue);
+            ScopedValue v(scope, *engine->exceptionValue);
             collector->collect(QStringLiteral("exception"), v);
         }
     };

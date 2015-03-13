@@ -184,6 +184,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 
 ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     : current(0)
+    , hasException(false)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
@@ -201,9 +202,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_qmlExtensions(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
-
-    exceptionValue = Encode::undefined();
-    hasException = false;
 
     if (!factory) {
 
@@ -228,6 +226,9 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsStackBase = (Value *)jsStack->base();
     jsStackTop = jsStackBase;
 
+    exceptionValue = jsAlloca(1);
+    globalObject = static_cast<Object *>(jsAlloca(1));
+
 #ifdef V4_USE_VALGRIND
     VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
 #endif
@@ -237,8 +238,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     cStackLimit = getStackLimit();
     if (!recheckCStackLimits())
         qFatal("Fatal: Not enough stack space available for QML. Please increase the process stack size to more than %d KBytes.", MinimumStackSize);
-
-    Scope scope(this);
 
     identifierTable = new IdentifierTable(this);
 
@@ -293,8 +292,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
-    m_globalObject = newObject();
-    Q_ASSERT(globalObject()->d()->vtable);
+    *static_cast<Value *>(globalObject) = newObject();
+    Q_ASSERT(globalObject->d()->vtable);
     initRootContext();
 
     stringPrototype = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype.as<Object>());
@@ -332,6 +331,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     variantPrototype = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype.as<Object>());
     Q_ASSERT(variantPrototype.as<Object>()->prototype() == objectPrototype.as<Object>()->d());
 
+    Scope scope(this);
     sequencePrototype = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype.as<Object>()));
 
     ScopedContext global(scope, rootContext());
@@ -390,53 +390,53 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    rootContext()->global = globalObject()->d();
-    rootContext()->callData->thisObject = globalObject();
-    Q_ASSERT(globalObject()->d()->vtable);
+    rootContext()->global = globalObject->d();
+    rootContext()->callData->thisObject = globalObject;
+    Q_ASSERT(globalObject->d()->vtable);
 
-    globalObject()->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("String"), stringCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Number"), numberCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Boolean"), booleanCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Array"), arrayCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Function"), functionCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Date"), dateCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("RegExp"), regExpCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("Error"), errorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("EvalError"), evalErrorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("RangeError"), rangeErrorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("ReferenceError"), referenceErrorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Number"), numberCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Boolean"), booleanCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Array"), arrayCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Function"), functionCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Date"), dateCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("RegExp"), regExpCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Error"), errorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("EvalError"), evalErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("RangeError"), rangeErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("ReferenceError"), referenceErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
 
-    globalObject()->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
-    globalObject()->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
     ScopedString str(scope);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        globalObject()->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
+        globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
-    globalObject()->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(this)));
-    globalObject()->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(this)));
 
-    globalObject()->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
-    globalObject()->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
-    globalObject()->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
+    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
+    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
+    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
     evalFunction = memoryManager->alloc<EvalFunction>(global);
-    globalObject()->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
+    globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
 
-    globalObject()->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
-    globalObject()->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("decodeURIComponent"), GlobalFunctions::method_decodeURIComponent, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("encodeURI"), GlobalFunctions::method_encodeURI, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
-    globalObject()->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
+    globalObject->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("isNaN"), GlobalFunctions::method_isNaN, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("isFinite"), GlobalFunctions::method_isFinite, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("decodeURI"), GlobalFunctions::method_decodeURI, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("decodeURIComponent"), GlobalFunctions::method_decodeURIComponent, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("encodeURI"), GlobalFunctions::method_encodeURI, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("encodeURIComponent"), GlobalFunctions::method_encodeURIComponent, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
+    globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     ScopedString name(scope, newString(QStringLiteral("thrower")));
     thrower = BuiltinFunction::create(global, name, ::throwTypeError);
@@ -491,7 +491,7 @@ void ExecutionEngine::initRootContext()
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = QV4::Value::_Integer_Type;
     r->d()->callData->argc = 0;
-    r->d()->callData->thisObject = globalObject();
+    r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
 
     m_rootContext = r->d();
@@ -876,8 +876,6 @@ void ExecutionEngine::markObjects()
 {
     identifierTable->mark(this);
 
-    globalObject()->mark(this);
-
     for (int i = 0; i < nArgumentsAccessors; ++i) {
         const Property &pd = argumentsAccessors[i];
         if (Heap::FunctionObject *getter = pd.getter())
@@ -976,8 +974,6 @@ void ExecutionEngine::markObjects()
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         typedArrayPrototype[i].mark(this);
 
-    exceptionValue.mark(this);
-
     thrower->mark(this);
 
     if (m_qmlExtensions)
@@ -1007,7 +1003,7 @@ ReturnedValue ExecutionEngine::throwError(const Value &value)
         return Encode::undefined();
 
     hasException = true;
-    exceptionValue = value;
+    *exceptionValue = value;
     QV4::Scope scope(this);
     QV4::Scoped<ErrorObject> error(scope, value);
     if (!!error)
@@ -1028,8 +1024,8 @@ ReturnedValue ExecutionEngine::catchException(StackTrace *trace)
         *trace = exceptionStackTrace;
     exceptionStackTrace.clear();
     hasException = false;
-    ReturnedValue res = exceptionValue.asReturnedValue();
-    exceptionValue = Primitive::emptyValue();
+    ReturnedValue res = exceptionValue->asReturnedValue();
+    *exceptionValue = Primitive::emptyValue();
     return res;
 }
 

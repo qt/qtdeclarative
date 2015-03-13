@@ -485,7 +485,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(CallContext *ctx)
     if (!o) {
         if (!ctx->thisObject().isUndefined())
             return Encode::undefined();
-        o = ctx->d()->engine->globalObject();
+        o = ctx->d()->engine->globalObject;
     }
 
     ScopedProperty pd(scope);
@@ -513,7 +513,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(CallContext *ctx)
     if (!o) {
         if (!ctx->thisObject().isUndefined())
             return Encode::undefined();
-        o = ctx->d()->engine->globalObject();
+        o = ctx->d()->engine->globalObject;
     }
 
     ScopedProperty pd(scope);

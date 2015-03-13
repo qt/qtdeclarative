@@ -271,7 +271,7 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
     if (val)
         obj = val;
     if (!obj)
-        obj = scope.engine->globalObject();
+        obj = scope.engine->globalObject;
 #ifndef QT_NO_TRANSLATION
     obj->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
     obj->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
@@ -414,7 +414,7 @@ QJSValue QJSEngine::globalObject() const
 {
     Q_D(const QJSEngine);
     QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->globalObject());
+    QV4::ScopedValue v(scope, d->m_v4Engine->globalObject);
     return QJSValue(d->m_v4Engine, v->asReturnedValue());
 }
 

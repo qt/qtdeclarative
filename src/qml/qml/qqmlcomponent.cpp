@@ -1244,7 +1244,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
         QV4::ScopedValue f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlglobal));
         Q_ASSERT(f->as<QV4::FunctionObject>());
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4->globalObject();
+        callData->thisObject = v4->globalObject;
         callData->args[0] = object;
         callData->args[1] = valuemap;
         f->as<QV4::FunctionObject>()->call(callData);
@@ -1397,7 +1397,7 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
         QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4engine,
                                                                  QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4engine->globalObject();
+        callData->thisObject = v4engine->globalObject;
         callData->args[0] = object;
         callData->args[1] = valuemap;
         f->call(callData);
@@ -1494,7 +1494,7 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
 
         QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.as<Object>()));
         QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4->globalObject();
+        callData->thisObject = v4->globalObject;
         callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);
         callData->args[1] = d()->valuemap;
         f->call(callData);

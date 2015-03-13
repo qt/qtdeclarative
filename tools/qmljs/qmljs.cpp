@@ -188,11 +188,10 @@ int main(int argc, char *argv[])
         QV4::Scope scope(&vm);
         QV4::ScopedContext ctx(scope, vm.rootContext());
 
-        QV4::ScopedObject globalObject(scope, vm.globalObject());
         QV4::ScopedObject print(scope, vm.memoryManager->alloc<builtins::Print>(ctx));
-        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
+        vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("print"))).getPointer(), print);
         QV4::ScopedObject gc(scope, vm.memoryManager->alloc<builtins::GC>(ctx));
-        globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
+        vm.globalObject->put(QV4::ScopedString(scope, vm.newIdentifier(QStringLiteral("gc"))).getPointer(), gc);
 
         foreach (const QString &fn, args) {
             QFile file(fn);

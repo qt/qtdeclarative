@@ -108,14 +108,19 @@ public:
         --jsStackTop;
         return jsStackTop->heapObject();
     }
+    Value *jsAlloca(int nValues) {
+        Value *ptr = jsStackTop;
+        jsStackTop = ptr + nValues;
+        memset(ptr, 0, nValues*sizeof(Value));
+        return ptr;
+    }
 
     IdentifierTable *identifierTable;
 
     QV4::Debugging::Debugger *debugger;
     QV4::Profiling::Profiler *profiler;
 
-    Value m_globalObject;
-    Object *globalObject() { return reinterpret_cast<Object *>(&m_globalObject); }
+    Object *globalObject;
 
     Function *globalCode;
 
@@ -312,7 +317,7 @@ public:
     bool recheckCStackLimits();
 
     // Exception handling
-    Value exceptionValue;
+    Value *exceptionValue;
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwError(const Value &value);
