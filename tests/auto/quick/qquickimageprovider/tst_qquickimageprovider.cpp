@@ -37,6 +37,7 @@
 #include <private/qquickimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
+#include <QThreadPool>
 
 Q_DECLARE_METATYPE(QQuickImageProvider*);
 
@@ -67,6 +68,8 @@ private slots:
     void imageProviderId();
 
     void threadTest();
+
+    void asyncTextureTest();
 
 private:
     QString newImageFileName() const;
@@ -452,6 +455,101 @@ void tst_qquickimageprovider::threadTest()
     provider->ok = true;
     provider->cond.wakeAll();
     QTest::qWait(250);
+    foreach (QQuickImage *img, images) {
+        QTRY_VERIFY(img->status() == QQuickImage::Ready);
+    }
+}
+
+class TestImageResponse : public QQuickImageResponse, public QRunnable
+{
+    public:
+        TestImageResponse(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize)
+         : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize), m_texture(0)
+        {
+            setAutoDelete(false);
+        }
+
+        QQuickTextureFactory *textureFactory() const
+        {
+            return m_texture;
+        }
+
+        void run()
+        {
+            m_lock->lock();
+            if (!(*m_ok)) {
+                m_condition->wait(m_lock);
+            }
+            m_lock->unlock();
+            QImage image(50, 50, QImage::Format_RGB32);
+            image.fill(QColor(m_id).rgb());
+            if (m_requestedSize.isValid())
+                image = image.scaled(m_requestedSize);
+            m_texture = QQuickTextureFactory::textureFactoryForImage(image);
+            emit finished();
+        }
+
+        QMutex *m_lock;
+        QWaitCondition *m_condition;
+        bool *m_ok;
+        QString m_id;
+        QSize m_requestedSize;
+        QQuickTextureFactory *m_texture;
+};
+
+class TestAsyncProvider : public QQuickAsyncImageProvider
+{
+    public:
+        TestAsyncProvider() : ok(false)
+        {
+            pool.setMaxThreadCount(4);
+        }
+
+        ~TestAsyncProvider() {}
+
+        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+        {
+            TestImageResponse *response = new TestImageResponse(&lock, &condition, &ok, id, requestedSize);
+            pool.start(response);
+            return response;
+        }
+
+        QThreadPool pool;
+        QMutex lock;
+        QWaitCondition condition;
+        bool ok;
+};
+
+
+void tst_qquickimageprovider::asyncTextureTest()
+{
+    QQmlEngine engine;
+
+    TestAsyncProvider *provider = new TestAsyncProvider;
+
+    engine.addImageProvider("test_async", provider);
+    QVERIFY(engine.imageProvider("test_async") != 0);
+
+    QString componentStr = "import QtQuick 2.0\nItem { \n"
+            "Image { source: \"image://test_async/blue\"; }\n"
+            "Image { source: \"image://test_async/red\"; }\n"
+            "Image { source: \"image://test_async/green\";  }\n"
+            "Image { source: \"image://test_async/yellow\";  }\n"
+            " }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QObject *obj = component.create();
+    //MUST not deadlock
+    QVERIFY(obj != 0);
+    QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
+    QCOMPARE(images.count(), 4);
+
+    QTRY_VERIFY(provider->pool.activeThreadCount() == 4);
+    foreach (QQuickImage *img, images) {
+        QTRY_VERIFY(img->status() == QQuickImage::Loading);
+    }
+    provider->ok = true;
+    provider->condition.wakeAll();
     foreach (QQuickImage *img, images) {
         QTRY_VERIFY(img->status() == QQuickImage::Ready);
     }

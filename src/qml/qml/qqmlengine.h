@@ -52,7 +52,9 @@ public:
         Image,
         Pixmap,
         Texture,
-        Invalid
+        Invalid,
+        ImageResponse
+        // ### Qt6: reorder these, and give Invalid a fixed large value
     };
 
     enum Flag {

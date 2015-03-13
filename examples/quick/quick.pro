@@ -20,6 +20,7 @@ SUBDIRS =   quick-accessibility \
             tutorials \
             customitems \
             imageprovider \
+            imageresponseprovider \
             window \
             particles \
             demos \

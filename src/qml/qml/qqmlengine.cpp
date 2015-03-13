@@ -247,6 +247,10 @@ void QQmlEnginePrivate::activateDesignerMode()
         The QQuickImageProvider::requestPixmap() method will be called for all image requests.
     \value Texture The Image Provider provides QSGTextureProvider based images.
         The QQuickImageProvider::requestTexture() method will be called for all image requests.
+    \value ImageResponse The Image provider provides QQuickTextureFactory based images.
+        Should only be used in QQuickAsyncImageProvider or its subclasses.
+        The QQuickAsyncImageProvider::requestImageResponse() method will be called for all image requests.
+        Since Qt 5.6
     \omitvalue Invalid
 */
 

@@ -33,6 +33,9 @@
 
 #include "qquickimageprovider.h"
 
+#include "qquickpixmapcache_p.h"
+#include <QtQuick/private/qsgcontext_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickImageProviderPrivate
@@ -95,6 +98,23 @@ QImage QQuickTextureFactory::image() const
     return QImage();
 }
 
+/*!
+    Returns a QQuickTextureFactory holding given the image.
+
+    \since 5.6
+ */
+
+QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage &image)
+{
+    if (image.isNull())
+        return 0;
+    QQuickTextureFactory *texture = QSGContext::createTextureFactoryFromImage(image);
+    if (texture)
+        return texture;
+    return new QQuickDefaultTextureFactory(image);
+}
+
+
 
 /*!
     \fn QSGTexture *QQuickTextureFactory::createTexture(QQuickWindow *window) const
@@ -114,6 +134,67 @@ QImage QQuickTextureFactory::image() const
 
     Returns the size of the texture. This function will be called from arbitrary threads
     and should not rely on an OpenGL context bound.
+ */
+
+
+/*!
+    \class QQuickImageResponse
+    \since 5.6
+    \brief The QQuickImageResponse class provides an interface for asynchronous image loading in QQuickAsyncImageProvider.
+    \inmodule QtQuick
+
+    The purpose of an image response is to provide a way for image provider jobs to be executed
+    in an asynchronous way.
+
+    Responses are deleted via \l deleteLater once the finished() signal has been emitted.
+    If you are using QRunnable as base for your QQuickImageResponse
+    ensure automatic deletion is disabled.
+
+    \sa QQuickImageProvider
+*/
+
+/*!
+    Constructs the image response
+*/
+QQuickImageResponse::QQuickImageResponse()
+{
+}
+
+/*!
+    Destructs the image response
+*/
+QQuickImageResponse::~QQuickImageResponse()
+{
+}
+
+/*!
+    Returns the error string for the job execution. An empty string means no error.
+*/
+QString QQuickImageResponse::errorString() const
+{
+    return QString();
+}
+
+/*!
+    This method is used to communicate that the response is no longer required by the engine.
+
+    It may be reimplemented to cancel a request in the provider side, however, it is not mandatory.
+*/
+void QQuickImageResponse::cancel()
+{
+}
+
+/*!
+    \fn void QQuickImageResponse::finished()
+
+    Signals that the job execution has finished (be it successfully, because an error happened or because it was cancelled).
+ */
+
+/*!
+    \fn QQuickTextureFactory *QQuickImageResponse::textureFactory() const
+
+    Returns the texture factory the job. You can use QQuickTextureFactory::textureFactoryForImage
+    if your provider works with QImage
  */
 
 
@@ -213,7 +294,7 @@ QImage QQuickTextureFactory::image() const
 
     To force asynchronous image loading, even for image sources that do not
     have the \c asynchronous property set to \c true, you may pass the
-    \c QQuickImageProvider::ForceAsynchronousImageLoading flag to the image
+    \c QQmlImageProviderBase::ForceAsynchronousImageLoading flag to the image
     provider constructor. This ensures that all image requests for the
     provider are handled in a separate thread.
 
@@ -222,6 +303,12 @@ QImage QQuickTextureFactory::image() const
     pixmaps can only be created in the main thread (i.e. ThreadedPixmaps is not supported)
     if \l {Image::}{asynchronous} is set to \c true, the value is ignored
     and the image is loaded synchronously.
+
+    Asynchronous image loading for providers of type other than ImageResponse are
+    executed on a single thread per engine basis. That means that a slow image provider
+    will block the loading of any other request. To avoid that we suggest using QQuickAsyncImageProvider
+    and implement threading on the provider side via a \c QThreadPool or similar.
+    See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 
 
     \section2 Image caching
@@ -364,6 +451,41 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
         qWarning("ImageProvider supports Texture type but has not implemented requestTexture()");
     return 0;
 }
+
+/*!
+    \class QQuickAsyncImageProvider
+    \since 5.6
+    \inmodule QtQuick
+    \brief The QQuickAsyncImageProvider class provides an interface for for asynchronous control of QML image requests.
+
+    \sa QQuickImageProvider
+*/
+QQuickAsyncImageProvider::QQuickAsyncImageProvider()
+ : QQuickImageProvider(ImageResponse, ForceAsynchronousImageLoading)
+ , d(0) // just as a placeholder in case we need it for the future
+{
+}
+
+QQuickAsyncImageProvider::~QQuickAsyncImageProvider()
+{
+}
+
+/*!
+   \fn QQuickImageResponse *QQuickAsyncImageProvider::requestImageResponse(const QString &id, const QSize &requestedSize)
+
+    Implement this method to return the job that will provide the texture with \a id.
+
+    The \a id is the requested image source, with the "image:" scheme and
+    provider identifier removed. For example, if the image \l{Image::}{source}
+    was "image://myprovider/icons/home", the given \a id would be "icons/home".
+
+    The \a requestedSize corresponds to the \l {Image::sourceSize} requested by
+    an Image item. If \a requestedSize is a valid size, the image
+    returned should be of that size.
+
+    \note this method may be called by multiple threads, so ensure the
+    implementation of this method is reentrant.
+*/
 
 QT_END_NAMESPACE
 
