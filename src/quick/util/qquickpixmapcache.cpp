@@ -522,10 +522,12 @@ void QQuickPixmapReader::processJobs()
             for (int i = 0; i < cancelled.count(); ++i) {
                 QQuickPixmapReply *job = cancelled.at(i);
                 QNetworkReply *reply = replies.key(job, 0);
-                if (reply && reply->isRunning()) {
-                    // cancel any jobs already started
+                if (reply) {
                     replies.remove(reply);
-                    reply->close();
+                    if (reply->isRunning()) {
+                        // cancel any jobs already started
+                        reply->close();
+                    }
                 }
                 PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
                 // deleteLater, since not owned by this thread
