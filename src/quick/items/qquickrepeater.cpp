@@ -44,7 +44,11 @@
 QT_BEGIN_NAMESPACE
 
 QQuickRepeaterPrivate::QQuickRepeaterPrivate()
-    : model(0), ownModel(false), inRequest(false), dataSourceIsObject(false), delegateValidated(false), itemCount(0), createFrom(-1)
+    : model(0)
+    , ownModel(false)
+    , dataSourceIsObject(false)
+    , delegateValidated(false)
+    , itemCount(0)
 {
 }
 
@@ -378,57 +382,51 @@ void QQuickRepeater::regenerate()
 
     d->itemCount = count();
     d->deletables.resize(d->itemCount);
-    d->createFrom = 0;
-    d->createItems();
+    d->requestItems();
 }
 
-void QQuickRepeaterPrivate::createItems()
+void QQuickRepeaterPrivate::requestItems()
 {
-    Q_Q(QQuickRepeater);
-    if (createFrom == -1)
-        return;
-    inRequest = true;
-    for (int ii = createFrom; ii < itemCount; ++ii) {
-        if (!deletables.at(ii)) {
-            QObject *object = model->object(ii, false);
-            QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
-            if (!item) {
-                if (object) {
-                    model->release(object);
-                    if (!delegateValidated) {
-                        delegateValidated = true;
-                        QObject* delegate = q->delegate();
-                        qmlInfo(delegate ? delegate : q) << QQuickRepeater::tr("Delegate must be of Item type");
-                    }
-                }
-                createFrom = ii;
-                break;
-            }
-            deletables[ii] = item;
-            item->setParentItem(q->parentItem());
-            if (ii > 0 && deletables.at(ii-1)) {
-                item->stackAfter(deletables.at(ii-1));
-            } else {
-                QQuickItem *after = q;
-                for (int si = ii+1; si < itemCount; ++si) {
-                    if (deletables.at(si)) {
-                        after = deletables.at(si);
-                        break;
-                    }
-                }
-                item->stackBefore(after);
-            }
-            emit q->itemAdded(ii, item);
-        }
+    for (int i = 0; i < itemCount; i++) {
+        QObject *object = model->object(i, false);
+        if (object)
+            model->release(object);
     }
-    inRequest = false;
 }
 
-void QQuickRepeater::createdItem(int, QObject *)
+void QQuickRepeater::createdItem(int index, QObject *)
 {
     Q_D(QQuickRepeater);
-    if (!d->inRequest)
-        d->createItems();
+    if (!d->deletables.at(index)) {
+        QObject *object = d->model->object(index, false);
+        QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+        if (!item) {
+            if (object) {
+                d->model->release(object);
+                if (!d->delegateValidated) {
+                    d->delegateValidated = true;
+                    QObject* delegate = this->delegate();
+                    qmlInfo(delegate ? delegate : this) << QQuickRepeater::tr("Delegate must be of Item type");
+                }
+            }
+            return;
+        }
+        d->deletables[index] = item;
+        item->setParentItem(parentItem());
+        if (index > 0 && d->deletables.at(index-1)) {
+            item->stackAfter(d->deletables.at(index-1));
+        } else {
+            QQuickItem *after = this;
+            for (int si = index+1; si < d->itemCount; ++si) {
+                if (d->deletables.at(si)) {
+                    after = d->deletables.at(si);
+                    break;
+                }
+            }
+            item->stackBefore(after);
+        }
+        emit itemAdded(index, item);
+    }
 }
 
 void QQuickRepeater::initItem(int, QObject *object)
@@ -476,7 +474,6 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         difference -= remove.count;
     }
 
-    d->createFrom = -1;
     foreach (const QQmlChangeSet::Change &insert, changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.count());
         if (insert.isMove()) {
@@ -491,13 +488,12 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             int modelIndex = index + i;
             ++d->itemCount;
             d->deletables.insert(modelIndex, 0);
-            if (d->createFrom == -1)
-                d->createFrom = modelIndex;
+            QObject *object = d->model->object(modelIndex, false);
+            if (object)
+                d->model->release(object);
         }
         difference += insert.count;
     }
-
-    d->createItems();
 
     if (difference != 0)
         emit countChanged();
