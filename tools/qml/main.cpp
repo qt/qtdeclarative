@@ -387,8 +387,8 @@ int main(int argc, char *argv[])
     app->setOrganizationName("QtProject");
     app->setOrganizationDomain("qt-project.org");
 
-    qmlRegisterType<Config>("QmlRuntime.Config", VERSION_MAJ, VERSION_MIN, "Configuration");
-    qmlRegisterType<PartialScene>("QmlRuntime.Config", VERSION_MAJ, VERSION_MIN, "PartialScene");
+    qmlRegisterType<Config>("QmlRuntime.Config", 1, 0, "Configuration");
+    qmlRegisterType<PartialScene>("QmlRuntime.Config", 1, 0, "PartialScene");
     QQmlApplicationEngine e;
     QStringList files;
     QString confFile;
