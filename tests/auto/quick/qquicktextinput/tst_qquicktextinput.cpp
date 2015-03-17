@@ -45,6 +45,7 @@
 #include <QInputMethod>
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextinput_p_p.h>
+#include <private/qquickvalidator_p.h>
 #include <QDebug>
 #include <QDir>
 #include <math.h>

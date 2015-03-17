@@ -29,7 +29,8 @@ SOURCES += \
     $$PWD/qquickprofiler.cpp \
     $$PWD/qquickfontmetrics.cpp \
     $$PWD/qquicktextmetrics.cpp \
-    $$PWD/qquickshortcut.cpp
+    $$PWD/qquickshortcut.cpp \
+    $$PWD/qquickvalidator.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\
@@ -66,4 +67,5 @@ HEADERS += \
     $$PWD/qquickprofiler_p.h \
     $$PWD/qquickfontmetrics_p.h \
     $$PWD/qquicktextmetrics_p.h \
-    $$PWD/qquickshortcut_p.h
+    $$PWD/qquickshortcut_p.h \
+    $$PWD/qquickvalidator_p.h

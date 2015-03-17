@@ -158,11 +158,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
     qmlRegisterUncreatableType<QQuickBasePositioner>(uri,major,minor,"Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
-#ifndef QT_NO_VALIDATOR
-    qmlRegisterType<QQuickIntValidator>(uri,major,minor,"IntValidator");
-    qmlRegisterType<QQuickDoubleValidator>(uri,major,minor,"DoubleValidator");
-    qmlRegisterType<QRegExpValidator>(uri,major,minor,"RegExpValidator");
-#endif
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
     qmlRegisterType<QQuickRepeater>(uri,major,minor,"Repeater");
     qmlRegisterType<QQuickRow>(uri,major,minor,"Row");
@@ -190,9 +185,6 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickCurve>();
     qmlRegisterType<QQuickScaleGrid>();
     qmlRegisterType<QQuickTextLine>();
-#ifndef QT_NO_VALIDATOR
-    qmlRegisterType<QValidator>();
-#endif
     qmlRegisterType<QQuickPen>();
     qmlRegisterType<QQuickFlickableVisibleArea>();
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
