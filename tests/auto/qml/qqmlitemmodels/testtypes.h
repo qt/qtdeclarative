@@ -47,6 +47,10 @@ class ItemModelsTest : public QObject
     Q_PROPERTY(QPersistentModelIndex persistentModelIndex READ persistentModelIndex WRITE setPersistentModelIndex NOTIFY changed)
 
 public:
+    ItemModelsTest()
+        : m_model(0)
+    {}
+
     QModelIndex modelIndex() const
     {
         return m_modelIndex;
