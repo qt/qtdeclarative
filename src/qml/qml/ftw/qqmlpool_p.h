@@ -45,7 +45,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
+#include <private/qv4global_p.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
 

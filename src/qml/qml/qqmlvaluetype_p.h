@@ -48,7 +48,7 @@
 #include "qqml.h"
 #include "qqmlproperty.h"
 #include "qqmlproperty_p.h"
-#include "qqmlnullablevalue_p_p.h"
+#include <private/qqmlnullablevalue_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>

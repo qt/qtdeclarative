@@ -33,7 +33,7 @@
 
 #include "qqmlbind_p.h"
 
-#include <private/qqmlnullablevalue_p_p.h>
+#include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
 

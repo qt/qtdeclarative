@@ -1403,6 +1403,9 @@ bool QQuickWindow::event(QEvent *e)
         break;
     }
 
+    if (e->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
+        update();
+
     return QWindow::event(e);
 }
 

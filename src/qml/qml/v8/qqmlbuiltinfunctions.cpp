@@ -1483,7 +1483,7 @@ QV4::ReturnedValue ConsoleObject::method_time(CallContext *ctx)
 QV4::ReturnedValue ConsoleObject::method_timeEnd(CallContext *ctx)
 {
     if (ctx->argc() != 1)
-        V4THROW_ERROR("console.time(): Invalid arguments");
+        V4THROW_ERROR("console.timeEnd(): Invalid arguments");
 
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
 

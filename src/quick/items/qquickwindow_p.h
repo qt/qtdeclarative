@@ -101,6 +101,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate : public QWindowPrivate
 public:
     Q_DECLARE_PUBLIC(QQuickWindow)
 
+    enum CustomEvents {
+        FullUpdateRequest = QEvent::User + 1
+    };
+
     static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
 
     QQuickWindowPrivate();

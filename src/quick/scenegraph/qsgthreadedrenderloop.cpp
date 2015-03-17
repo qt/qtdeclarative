@@ -490,6 +490,14 @@ void QSGRenderThread::sync(bool inExpose)
     bool current = false;
     if (windowSize.width() > 0 && windowSize.height() > 0)
         current = gl->makeCurrent(window);
+    // Check for context loss.
+    if (!current && !gl->isValid()) {
+        QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
+        sgrc->invalidate();
+        current = gl->create() && gl->makeCurrent(window);
+        if (current)
+            sgrc->initialize(gl);
+    }
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != 0;
@@ -571,6 +579,12 @@ void QSGRenderThread::syncAndRender()
     bool current = false;
     if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0)
         current = gl->makeCurrent(window);
+    // Check for context loss.
+    if (!current && !gl->isValid()) {
+        // Cannot do anything here because gui is not locked. Request a new
+        // sync+render round on the gui thread and let the sync handle it.
+        QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
+    }
     if (current) {
         d->renderSceneGraph(windowSize);
         if (profileFrames)
@@ -692,6 +706,11 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     connect(m_animation_driver, SIGNAL(stopped()), this, SLOT(animationStopped()));
 
     m_animation_driver->install();
+}
+
+QSGThreadedRenderLoop::~QSGThreadedRenderLoop()
+{
+    delete sg;
 }
 
 QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) const

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,42 +31,39 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
-import QtTest 1.1
+#ifndef QTQMLGLOBAL_P_H
+#define QTQMLGLOBAL_P_H
 
-TestCase {
-    id: testCase
-    width: 100
-    height: 100
-    name: "SelfTests_Destroy"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    function test_a_QTBUG_30523() {
-        compare(testCase.children.length, 0)
-        var tmp = Qt.createQmlObject('import QtQuick 2.1; Rectangle {width: 20; height: 20;}', testCase, '')
-        compare(testCase.children.length, 1)
-        tmp.destroy()
-    }
+#include <QtCore/qglobal.h>
 
-    function test_b_QTBUG_30523() {
-        // The object created in test above should be deleted
-        compare(testCase.children.length, 0)
-    }
+QT_BEGIN_NAMESPACE
 
-    function test_c_QTBUG_42185_data() {
-   // Adding dummy data objects for the purpose of calling multiple times the test function
-   // and checking that the created object (tmp) is destroyed as expected between each data run.
-        return [{tag: "test 0"}, {tag: "test 1"}, {tag: "test 2"},];
-    }
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QML_LIB)
+#    define Q_QML_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_QML_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_QML_EXPORT
+#endif
 
-    function test_c_QTBUG_42185() {
-        compare(testCase.children.length, 0)
-        var tmp = Qt.createQmlObject('import QtQuick 2.1; Rectangle {width: 20; height: 20;}', testCase, '')
-        compare(testCase.children.length, 1)
-        tmp.destroy()
-    }
+#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+#    define Q_QML_PRIVATE_EXPORT
+#else
+#    define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
+#endif
 
-    function test_d_QTBUG_42185() {
-        // The object created in test above should be deleted
-        compare(testCase.children.length, 0)
-    }
-}
+QT_END_NAMESPACE
+#endif // QTQMLGLOBAL_P_H

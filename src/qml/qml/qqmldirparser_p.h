@@ -49,7 +49,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
 #include <private/qqmljsengine_p.h>
-#include <private/qtqmlglobal_p.h>
+#include <private/qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,12 +66,8 @@ public:
     bool parse(const QString &source);
 
     bool hasError() const;
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-    QList<QQmlJS::DiagnosticMessage> errors(const QString &uri) const;
-#else
     void setError(const QQmlError &);
     QList<QQmlError> errors(const QString &uri) const;
-#endif
 
     QString typeNamespace() const;
     void setTypeNamespace(const QString &s);

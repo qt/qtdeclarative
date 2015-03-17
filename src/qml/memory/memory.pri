@@ -6,7 +6,9 @@ SOURCES += \
     $$PWD/qv4mm.cpp \
 
 HEADERS += \
-    $$PWD/qv4heap_p.h \
-    $$PWD/qv4mm_p.h \
+    $$PWD/qv4mm_p.h
 
 }
+
+HEADERS += \
+    $$PWD/qv4heap_p.h

@@ -35,6 +35,7 @@
 #include "qquickpathview_p_p.h"
 #include "qquickwindow.h"
 #include "qquickflickablebehavior_p.h" //Contains flicking behavior defines
+#include "qquicktext_p.h"
 
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
@@ -51,6 +52,8 @@
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
 
 const qreal MinimumFlickVelocity = 75.0;
 
@@ -194,6 +197,7 @@ void QQuickPathViewPrivate::releaseItem(QQuickItem *item)
 {
     if (!item || !model)
         return;
+    qCDebug(lcItemViewDelegateLifecycle) << "release" << item;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     QQmlInstanceModel::ReleaseFlags flags = model->release(item);
@@ -824,9 +828,11 @@ void QQuickPathViewPrivate::setOffset(qreal o)
     Q_Q(QQuickPathView);
     if (offset != o) {
         if (isValid() && q->isComponentComplete()) {
+            qreal oldOffset = offset;
             offset = qmlMod(o, qreal(modelCount));
             if (offset < 0)
                 offset += qreal(modelCount);
+            qCDebug(lcItemViewDelegateLifecycle) << o << "was" << oldOffset << "now" << offset;
             q->refill();
         } else {
             offset = o;
@@ -1891,10 +1897,18 @@ void QQuickPathView::refill()
 
     // first move existing items and remove items off path
     int idx = d->firstIndex;
+    qCDebug(lcItemViewDelegateLifecycle) << "firstIndex" << idx << "currentIndex" << d->currentIndex << "offset" << d->offset;
     QList<QQuickItem*>::iterator it = d->items.begin();
     while (it != d->items.end()) {
         qreal pos = d->positionOfIndex(idx);
         QQuickItem *item = *it;
+        if (lcItemViewDelegateLifecycle().isDebugEnabled()) {
+            QQuickText *text = qmlobject_cast<QQuickText*>(item);
+            if (text)
+                qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ": QQuickText" << text->objectName() << text->text().left(40);
+            else
+                qCDebug(lcItemViewDelegateLifecycle) << "idx" << idx << "@" << pos << ":" << item;
+        }
         if (pos < 1.0) {
             d->updateItem(item, pos);
             if (idx == d->currentIndex) {
@@ -1907,7 +1921,7 @@ void QQuickPathView::refill()
             if (QQuickPathViewAttached *att = d->attached(item))
                 att->setOnPath(pos < 1.0);
             if (!d->isInBound(pos, d->mappedRange - d->mappedCache, 1.0 + d->mappedCache)) {
-//                qDebug() << "release";
+                qCDebug(lcItemViewDelegateLifecycle) << "release" << idx << "@" << pos << ", !isInBound: lower" << (d->mappedRange - d->mappedCache) << "upper" << (1.0 + d->mappedCache);
                 d->releaseItem(item);
                 if (it == d->items.begin()) {
                     if (++d->firstIndex >= d->modelCount) {
@@ -1942,7 +1956,7 @@ void QQuickPathView::refill()
             }
             qreal pos = d->positionOfIndex(idx);
             while ((d->isInBound(pos, startPos, 1.0 + d->mappedCache) || !d->items.count()) && d->items.count() < count+d->cacheSize) {
-//                qDebug() << "append" << idx;
+                qCDebug(lcItemViewDelegateLifecycle)  << "append" << idx << "@" << pos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
                 QQuickItem *item = d->getItem(idx, idx+1, pos >= 1.0);
                 if (!item) {
                     waiting = true;
@@ -1967,7 +1981,7 @@ void QQuickPathView::refill()
                 idx = d->modelCount - 1;
             pos = d->positionOfIndex(idx);
             while (!waiting && d->isInBound(pos, d->mappedRange - d->mappedCache, startPos) && d->items.count() < count+d->cacheSize) {
-//                 qDebug() << "prepend" << idx;
+                qCDebug(lcItemViewDelegateLifecycle)  << "prepend" << idx << "@" << pos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
                 QQuickItem *item = d->getItem(idx, idx+1, pos >= 1.0);
                 if (!item) {
                     waiting = true;

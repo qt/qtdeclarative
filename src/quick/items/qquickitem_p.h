@@ -58,7 +58,7 @@
 
 #include <private/qpodvector_p.h>
 #include <QtQuick/private/qquickstate_p.h>
-#include <private/qqmlnullablevalue_p_p.h>
+#include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlnotifier_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qlazilyallocated_p.h>

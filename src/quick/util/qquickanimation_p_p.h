@@ -47,7 +47,7 @@
 
 #include "qquickanimation_p.h"
 
-#include <private/qqmlnullablevalue_p_p.h>
+#include <private/qqmlnullablevalue_p.h>
 
 #include <qqml.h>
 #include <qqmlcontext.h>

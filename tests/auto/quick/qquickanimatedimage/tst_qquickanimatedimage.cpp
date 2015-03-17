@@ -70,6 +70,7 @@ private slots:
     void qtbug_16520();
     void progressAndStatusChanges();
     void playingAndPausedChanges();
+    void noCaching();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -528,6 +529,39 @@ void tst_qquickanimatedimage::playingAndPausedChanges()
 
     delete obj;
 }
+
+void tst_qquickanimatedimage::noCaching()
+{
+    QQuickView window, window_nocache;
+    window.setSource(testFileUrl("colors.qml"));
+    window_nocache.setSource(testFileUrl("colors_nocache.qml"));
+    window.show();
+    window_nocache.show();
+    QTest::qWaitForWindowExposed(&window);
+    QTest::qWaitForWindowExposed(&window_nocache);
+
+    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
+    QVERIFY(anim);
+
+    QQuickAnimatedImage *anim_nocache = qobject_cast<QQuickAnimatedImage *>(window_nocache.rootObject());
+    QVERIFY(anim_nocache);
+
+    QCOMPARE(anim->frameCount(), anim_nocache->frameCount());
+
+    // colors.gif only has 3 frames so this should be fast
+    for (int loops = 0; loops <= 2; ++loops) {
+        for (int frame = 0; frame < anim->frameCount(); ++frame) {
+            anim->setCurrentFrame(frame);
+            anim_nocache->setCurrentFrame(frame);
+
+            QImage image_cache = window.grabWindow();
+            QImage image_nocache = window_nocache.grabWindow();
+
+            QCOMPARE(image_cache, image_nocache);
+        }
+    }
+}
+
 QTEST_MAIN(tst_qquickanimatedimage)
 
 #include "tst_qquickanimatedimage.moc"

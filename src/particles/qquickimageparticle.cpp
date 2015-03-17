@@ -148,8 +148,8 @@ public:
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
         program()->setUniformValue(m_entry_id, (float) d->entry);
-        program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, UNIFORM_ARRAY_SIZE, 1);
-        program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValueArray(m_sizetable_id, (const float*) d->sizeTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (const float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_entry_id;
@@ -295,8 +295,8 @@ public:
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
         program()->setUniformValue(m_entry_id, (float) d->entry);
-        program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, 64, 1);
-        program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValueArray(m_sizetable_id, (const float*) d->sizeTable, 64, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (const float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_timestamp_id;
@@ -1281,7 +1281,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 
 #ifdef Q_OS_LINUX
     // Nouveau drivers can potentially freeze a machine entirely when taking the point-sprite path.
-    if (perfLevel < Deformable && strstr((char *) glGetString(GL_VENDOR), "nouveau"))
+    if (perfLevel < Deformable && strstr((const char *) glGetString(GL_VENDOR), "nouveau"))
         perfLevel = Deformable;
 #endif
 

@@ -527,6 +527,8 @@ Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObjec
 
 }
 
+namespace QV4 {
+
 typedef QQmlSequence<QStringList> QQmlQStringList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlQStringList);
@@ -545,6 +547,8 @@ DEFINE_OBJECT_VTABLE(QQmlBoolList);
 typedef QQmlSequence<QList<qreal> > QQmlRealList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlRealList);
+
+}
 
 #define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
 void SequencePrototype::init()

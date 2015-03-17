@@ -47,7 +47,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qatomic.h>
-#include <private/qtqmlglobal_p.h>
+#include <private/qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
