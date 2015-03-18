@@ -16,4 +16,5 @@
     "qtbase" => "dev",
     "qtxmlpatterns" => "dev",
     "qtdeclarative" => "dev",
+    "qtquickcontrols" => "dev",
 );
