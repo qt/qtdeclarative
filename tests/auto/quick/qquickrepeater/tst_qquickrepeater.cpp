@@ -75,6 +75,7 @@ private slots:
     void invalidContextCrash();
     void jsArrayChange();
     void clearRemovalOrder();
+    void destroyCount();
 };
 
 class TestObject : public QObject
@@ -292,6 +293,18 @@ void tst_QQuickRepeater::dataModel_adding()
     QCOMPARE(addedSpy.at(0).at(0).toInt(), 2);
     QCOMPARE(addedSpy.at(0).at(1).value<QQuickItem*>(), container->childItems().at(2));
     addedSpy.clear();
+
+    //insert in middle multiple
+    int childItemsSize = container->childItems().size();
+    QList<QPair<QString, QString> > multiData;
+    multiData << qMakePair(QStringLiteral("five"), QStringLiteral("5")) << qMakePair(QStringLiteral("six"), QStringLiteral("6")) << qMakePair(QStringLiteral("seven"), QStringLiteral("7"));
+    testModel.insertItems(1, multiData);
+    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(addedSpy.count(), 3);
+    QCOMPARE(container->childItems().size(), childItemsSize + 3);
+    QCOMPARE(repeater->itemAt(2), container->childItems().at(2));
+    addedSpy.clear();
+    countSpy.clear();
 
     delete testObject;
     addedSpy.clear();
@@ -676,7 +689,8 @@ void tst_QQuickRepeater::asynchronous()
     }
 
     // items will be created one at a time
-    for (int i = 0; i < 10; ++i) {
+    // the order is incubator/model specific
+    for (int i = 9; i >= 0; --i) {
         QString name("delegate");
         name += QString::number(i);
         QVERIFY(findItem<QQuickItem>(container, name) == 0);
@@ -843,6 +857,41 @@ void tst_QQuickRepeater::clearRemovalOrder()
     QCOMPARE(removedSpy.at(2).at(0).toInt(), 0);
 
     delete rootObject;
+}
+
+void tst_QQuickRepeater::destroyCount()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("destroycount.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
+    QVERIFY(repeater);
+
+    repeater->setProperty("model", qVariantFromValue<int>(3));
+    QCOMPARE(repeater->property("componentCount").toInt(), 3);
+    repeater->setProperty("model", qVariantFromValue<int>(0));
+    QCOMPARE(repeater->property("componentCount").toInt(), 0);
+    repeater->setProperty("model", qVariantFromValue<int>(4));
+    QCOMPARE(repeater->property("componentCount").toInt(), 4);
+
+    QStringListModel model;
+    repeater->setProperty("model", qVariantFromValue<QStringListModel *>(&model));
+    QCOMPARE(repeater->property("componentCount").toInt(), 0);
+    QStringList list;
+    list << "1" << "2" << "3" << "4";
+    model.setStringList(list);
+    QCOMPARE(repeater->property("componentCount").toInt(), 4);
+    model.insertRows(2,1);
+    QModelIndex index = model.index(2);
+    model.setData(index, qVariantFromValue<QString>(QStringLiteral("foobar")));
+    QCOMPARE(repeater->property("componentCount").toInt(), 5);
+
+    model.removeRows(2,1);
+    QCOMPARE(model.rowCount(), 4);
+    QCOMPARE(repeater->property("componentCount").toInt(), 4);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)
