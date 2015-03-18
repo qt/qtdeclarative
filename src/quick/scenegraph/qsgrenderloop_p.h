@@ -45,6 +45,7 @@ class QQuickWindow;
 class QSGContext;
 class QSGRenderContext;
 class QAnimationDriver;
+class QRunnable;
 
 class Q_QUICK_PRIVATE_EXPORT QSGRenderLoop : public QObject
 {
@@ -72,6 +73,7 @@ public:
     virtual QSGRenderContext *createRenderContext(QSGContext *) const = 0;
 
     virtual void releaseResources(QQuickWindow *window) = 0;
+    virtual void postJob(QQuickWindow *window, QRunnable *job);
 
     void addWindow(QQuickWindow *win) { m_windows.insert(win); }
     void removeWindow(QQuickWindow *win) { m_windows.remove(win); }

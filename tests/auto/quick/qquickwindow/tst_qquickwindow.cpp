@@ -2008,43 +2008,107 @@ public:
     static int deleted;
 };
 
+class GlRenderJob : public QRunnable
+{
+public:
+    GlRenderJob(GLubyte *buf) : readPixel(buf), mutex(0), condition(0) {}
+    ~GlRenderJob() {}
+    void run() {
+        QOpenGLContext::currentContext()->functions()->glClearColor(1.0f, 0, 0, 1.0f);
+        QOpenGLContext::currentContext()->functions()->glClear(GL_COLOR_BUFFER_BIT);
+        QOpenGLContext::currentContext()->functions()->glReadPixels(0, 0, 1, 1, GL_RGBA,
+                                                                    GL_UNSIGNED_BYTE,
+                                                                    (void *)readPixel);
+        if (mutex) {
+            mutex->lock();
+            condition->wakeOne();
+            mutex->unlock();
+        }
+    }
+    GLubyte *readPixel;
+    QMutex *mutex;
+    QWaitCondition *condition;
+};
+
 int RenderJob::deleted = 0;
 
 void tst_qquickwindow::testRenderJob()
 {
     QList<QQuickWindow::RenderStage> completedJobs;
 
-    QQuickWindow window;
-
     QQuickWindow::RenderStage stages[] = {
         QQuickWindow::BeforeSynchronizingStage,
         QQuickWindow::AfterSynchronizingStage,
         QQuickWindow::BeforeRenderingStage,
         QQuickWindow::AfterRenderingStage,
-        QQuickWindow::AfterSwapStage
+        QQuickWindow::AfterSwapStage,
+        QQuickWindow::NoStage
     };
-    // Schedule the jobs
-    for (int i=0; i<5; ++i)
-        window.scheduleRenderJob(new RenderJob(stages[i], &completedJobs), stages[i]);
-    window.show();
 
-    QTRY_COMPARE(completedJobs.size(), 5);
+    const int numJobs = 6;
 
-    for (int i=0; i<5; ++i) {
-        QCOMPARE(completedJobs.at(i), stages[i]);
+    {
+        QQuickWindow window;
+        RenderJob::deleted = 0;
+
+        // Schedule the jobs
+        for (int i = 0; i < numJobs; ++i)
+            window.scheduleRenderJob(new RenderJob(stages[i], &completedJobs), stages[i]);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+        // All jobs should be deleted
+        QTRY_COMPARE(RenderJob::deleted, numJobs);
+
+        // The NoStage job is not completed, if it is issued when there is no context,
+        // but the rest will be queued and completed once relevant render stage is hit.
+        QCOMPARE(completedJobs.size(), numJobs - 1);
+
+        // Verify jobs were completed in correct order
+        for (int i = 0; i < numJobs - 1; ++i)
+            QCOMPARE(completedJobs.at(i), stages[i]);
+
+
+        // Check that NoStage job gets executed if it is scheduled when window is exposed
+        completedJobs.clear();
+        RenderJob::deleted = 0;
+        window.scheduleRenderJob(new RenderJob(QQuickWindow::NoStage, &completedJobs),
+                                 QQuickWindow::NoStage);
+        QTRY_COMPARE(RenderJob::deleted, 1);
+        QCOMPARE(completedJobs.size(), 1);
+
+        // Do a synchronized GL job.
+        GLubyte readPixel[4] = {0, 0, 0, 0};
+        GlRenderJob *glJob = new GlRenderJob(readPixel);
+        if (window.openglContext()->thread() != QThread::currentThread()) {
+            QMutex mutex;
+            QWaitCondition condition;
+            glJob->mutex = &mutex;
+            glJob->condition = &condition;
+            mutex.lock();
+            window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
+            condition.wait(&mutex);
+            mutex.unlock();
+        } else {
+            window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
+        }
+        QCOMPARE(int(readPixel[0]), 255);
+        QCOMPARE(int(readPixel[1]), 0);
+        QCOMPARE(int(readPixel[2]), 0);
+        QCOMPARE(int(readPixel[3]), 255);
     }
 
-    // Verify that jobs are deleted when window has not been rendered at all...
+    // Verify that jobs are deleted when window is not rendered at all
     completedJobs.clear();
     RenderJob::deleted = 0;
     {
         QQuickWindow window2;
-        for (int i=0; i<5; ++i) {
+        for (int i = 0; i < numJobs; ++i) {
             window2.scheduleRenderJob(new RenderJob(stages[i], &completedJobs), stages[i]);
         }
     }
+    QTRY_COMPARE(RenderJob::deleted, numJobs);
     QCOMPARE(completedJobs.size(), 0);
-    QCOMPARE(RenderJob::deleted, 5);
 }
 
 class EventCounter : public QQuickRectangle

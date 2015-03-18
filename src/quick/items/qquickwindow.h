@@ -77,7 +77,8 @@ public:
         AfterSynchronizingStage,
         BeforeRenderingStage,
         AfterRenderingStage,
-        AfterSwapStage
+        AfterSwapStage,
+        NoStage
     };
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)

@@ -71,6 +71,7 @@ public:
     void releaseResources(QQuickWindow *window);
 
     bool event(QEvent *);
+    void postJob(QQuickWindow *window, QRunnable *job);
 
     bool interleaveIncubation() const;
 

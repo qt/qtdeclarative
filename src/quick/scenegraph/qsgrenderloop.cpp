@@ -99,6 +99,22 @@ void QSGRenderLoop::cleanup()
     s_instance = 0;
 }
 
+/*!
+ * Non-threaded render loops immediately run the job if there is a context.
+ */
+void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
+{
+    Q_ASSERT(window);
+    Q_ASSERT(job);
+
+    if (window->openglContext()) {
+        window->openglContext()->makeCurrent(window);
+        job->run();
+    }
+
+    delete job;
+}
+
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
     Q_OBJECT

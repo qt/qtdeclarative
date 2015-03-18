@@ -145,6 +145,9 @@ const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 4);
 // called.
 const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 5);
 
+// Passed by the window when there is a render job to run
+const QEvent::Type WM_PostJob           = QEvent::Type(QEvent::User + 6);
+
 template <typename T> T *windowFor(const QList<T> &list, QQuickWindow *window)
 {
     for (int i=0; i<list.size(); ++i) {
@@ -198,6 +201,14 @@ public:
     QImage *image;
 };
 
+class WMJobEvent : public WMWindowEvent
+{
+public:
+    WMJobEvent(QQuickWindow *c, QRunnable *postedJob)
+        : WMWindowEvent(c, WM_PostJob), job(postedJob) {}
+    ~WMJobEvent() { delete job; }
+    QRunnable *job;
+};
 
 class QSGRenderThreadEventQueue : public QQueue<QEvent *>
 {
@@ -412,6 +423,20 @@ bool QSGRenderThread::event(QEvent *e)
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- waking gui to handle result";
         waitCondition.wakeOne();
         mutex.unlock();
+        return true;
+    }
+
+    case WM_PostJob: {
+        qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "WM_PostJob";
+        WMJobEvent *ce = static_cast<WMJobEvent *>(e);
+        Q_ASSERT(ce->window == window);
+        if (window) {
+            gl->makeCurrent(window);
+            ce->job->run();
+            delete ce->job;
+            ce->job = 0;
+            qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- job done";
+        }
         return true;
     }
 
@@ -1232,6 +1257,18 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
     return result;
 }
 
+/*!
+ * Posts a new job event to the render thread.
+ * Returns true if posting succeeded.
+ */
+void QSGThreadedRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
+{
+    Window *w = windowFor(m_windows, window);
+    if (w && w->thread && w->thread->window)
+        w->thread->postEvent(new WMJobEvent(window, job));
+    else
+        delete job;
+}
 
 #include "qsgthreadedrenderloop.moc"
 

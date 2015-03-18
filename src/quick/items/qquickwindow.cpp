@@ -4111,6 +4111,7 @@ void QQuickWindow::resetOpenGLState()
     \value BeforeRenderingStage Before rendering.
     \value AfterRenderingStage After rendering.
     \value AfterSwapStage After the frame is swapped.
+    \value NoStage As soon as possible. This value was added in Qt 5.6.
 
     \sa {Scene Graph and Rendering}
  */
@@ -4136,8 +4137,17 @@ void QQuickWindow::resetOpenGLState()
     If the rendering is happening on a different thread, then the job
     will happen on the rendering thread.
 
-    \note This function does not trigger rendering; the job
-    will be stored run until rendering is triggered elsewhere.
+    If \a stage is \l NoStage, \a job will be run at the earliest opportunity
+    whenever the render thread is not busy rendering a frame. If there is no
+    OpenGL context available or the window is not exposed at the time the job is
+    either posted or handled, it is deleted without executing the run() method.
+    If a non-threaded renderer is in use, the run() method of the job is executed
+    synchronously.
+    The OpenGL context is changed to the renderer context before executing a
+    \l NoStage job.
+
+    \note This function does not trigger rendering; the jobs targeting any other
+    stage than NoStage will be stored run until rendering is triggered elsewhere.
     To force the job to run earlier, call QQuickWindow::update();
 
     \sa beforeRendering(), afterRendering(), beforeSynchronizing(),
@@ -4149,16 +4159,22 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     Q_D(QQuickWindow);
 
     d->renderJobMutex.lock();
-    if (stage == BeforeSynchronizingStage)
+    if (stage == BeforeSynchronizingStage) {
         d->beforeSynchronizingJobs << job;
-    else if (stage == AfterSynchronizingStage)
+    } else if (stage == AfterSynchronizingStage) {
         d->afterSynchronizingJobs << job;
-    else if (stage == BeforeRenderingStage)
+    } else if (stage == BeforeRenderingStage) {
         d->beforeRenderingJobs << job;
-    else if (stage == AfterRenderingStage)
+    } else if (stage == AfterRenderingStage) {
         d->afterRenderingJobs << job;
-    else if (stage == AfterSwapStage)
+    } else if (stage == AfterSwapStage) {
         d->afterSwapJobs << job;
+    } else if (stage == NoStage) {
+        if (isExposed())
+            d->windowManager->postJob(this, job);
+        else
+            delete job;
+    }
     d->renderJobMutex.unlock();
 }
 
