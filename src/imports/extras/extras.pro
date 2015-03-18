@@ -9,8 +9,7 @@ OTHER_FILES += \
     qmldir
 
 QML_FILES = \
-    Drawer.qml \
-    SplitView.qml
+    Drawer.qml
 
 SOURCES += \
     $$PWD/qtquickextras2plugin.cpp

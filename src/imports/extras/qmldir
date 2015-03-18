@@ -2,4 +2,3 @@ module QtQuick.Extras
 plugin qtquickextras2plugin
 classname QtQuickExtras2Plugin
 Drawer 2.0 Drawer.qml
-SplitView 2.0 SplitView.qml
