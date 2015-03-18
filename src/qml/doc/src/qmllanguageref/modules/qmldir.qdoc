@@ -76,11 +76,12 @@ module ExampleModule
         \li Object Type Declaration
         \li
             \code
-<TypeName> <InitialVersion> <File>
+[singleton] <TypeName> <InitialVersion> <File>
             \endcode
         \li Declares a \l{qtqml-typesystem-objecttypes.html}{QML object type}
             to be made available by the module.
                 \list
+                \li \c [singleton] Optional. Used to declare a singleton type.
                 \li \c <TypeName> is the type being made available
                 \li \c <InitialVersion> is the module version for which the type is to be made available
                 \li \c <File> is the (relative) file name of the QML file that defines the type
@@ -89,10 +90,33 @@ module ExampleModule
             Zero or more object type declarations may exist in the \c qmldir
             file, however each object type must have a unique type name within
             any particular version of the module.
+            \note To declare a \c singleton type, the QML file defining the
+            type must include the \c {pragma Singleton} statement.
 
             Example:
             \code
-MyCustomType 1.0 MyCustomType.qml
+//Style.qml with custom singleton type definition
+pragma Singleton
+import QtQuick 2.0
+
+QtObject {
+    property int textSize: 20
+    property color textColor: "green"
+}
+
+// qmldir declaring the singleton type
+module CustomStyles
+singleton Style 1.0 Style.qml
+
+// singleton type in use
+import QtQuick 2.0
+import CustomStyles 1.0
+
+Text {
+    font.pixelSize: Style.textSize
+    color: Style.textColor
+    text: "Hello World"
+}
             \endcode
 
     \row
@@ -244,8 +268,8 @@ depends MyOtherModule 1.0
     \row
     \li designersupported
     \li
-        \code
-          designersupported
+         \code
+designersupported
          \endcode
 
      \li Set this property if the plugin is supported by Qt Quick Designer.
