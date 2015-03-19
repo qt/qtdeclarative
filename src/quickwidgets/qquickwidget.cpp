@@ -216,7 +216,7 @@ void QQuickWidgetPrivate::render(bool needsSync)
         QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
     }
 
-    context->functions()->glFlush();
+    static_cast<QOpenGLExtensions *>(context->functions())->flushShared();
 }
 
 void QQuickWidgetPrivate::renderSceneGraph()
