@@ -50,6 +50,7 @@ QQuickRepeaterPrivate::QQuickRepeaterPrivate()
     , delegateValidated(false)
     , itemCount(0)
 {
+    setTransparentForPositioner(true);
 }
 
 QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
