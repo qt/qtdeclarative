@@ -104,16 +104,7 @@ public:
 
     struct BinaryTreeNodeKey
     {
-        BinaryTreeNodeKey(QFontEngine *fe,
-                          QQuickDefaultClipNode *cn,
-                          QRgb col,
-                          int selState)
-            : fontEngine(fe)
-            , clipNode(cn)
-            , color(col)
-            , selectionState(selState)
-        {
-        }
+        BinaryTreeNodeKey(BinaryTreeNode *node);
 
         bool operator==(const BinaryTreeNodeKey &otherKey) const
         {
