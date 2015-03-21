@@ -210,7 +210,6 @@ InstructionSelection::~InstructionSelection()
 void InstructionSelection::run(int functionIndex)
 {
     IR::Function *function = irModule->functions[functionIndex];
-    QVector<Lookup> lookups;
     qSwap(_function, function);
 
     IR::Optimizer opt(_function);
