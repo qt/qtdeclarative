@@ -157,6 +157,11 @@ QQuickState::~QQuickState()
     Q_D(QQuickState);
     if (d->group)
         d->group->removeState(this);
+
+    foreach (const QQuickSimpleAction &action, d->revertList) {
+        if (action.binding())
+            action.binding()->destroy();
+    }
 }
 
 /*!

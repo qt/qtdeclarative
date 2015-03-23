@@ -141,6 +141,7 @@ private slots:
     void avoidFastForward();
     void revertListBug();
     void QTBUG_38492();
+    void revertListMemoryLeak();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1632,6 +1633,30 @@ void tst_qquickstates::QTBUG_38492()
     QCOMPARE(item->property("text").toString(), QString("Test"));
 
     delete item;
+}
+
+void tst_qquickstates::revertListMemoryLeak()
+{
+    QWeakPointer<QQmlAbstractBinding> weakPtr;
+    {
+        QQmlEngine engine;
+
+        QQmlComponent c(&engine, testFileUrl("revertListMemoryLeak.qml"));
+        QQuickItem *item = qobject_cast<QQuickItem *>(c.create());
+        QVERIFY(item);
+        QQuickState *state = item->findChild<QQuickState*>("testState");
+        QVERIFY(state);
+
+        item->setState("testState");
+
+        QQmlAbstractBinding *binding = state->bindingInRevertList(item, "height");
+        QVERIFY(binding);
+        weakPtr = QQmlAbstractBinding::getPointer(binding);
+        QVERIFY(!weakPtr.toStrongRef().isNull());
+
+        delete item;
+    }
+    QVERIFY(weakPtr.toStrongRef().isNull());
 }
 
 QTEST_MAIN(tst_qquickstates)
