@@ -617,8 +617,14 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     for (TypePropertyCacheIt iter = typePropertyCache.begin(), end = typePropertyCache.end(); iter != end; ++iter)
         (*iter)->release();
-    for (CompositeTypesIt iter = m_compositeTypes.begin(), end = m_compositeTypes.end(); iter != end; ++iter)
+    for (CompositeTypesIt iter = m_compositeTypes.begin(), end = m_compositeTypes.end(); iter != end; ++iter) {
         iter.value()->isRegisteredWithEngine = false;
+
+        // since unregisterInternalCompositeType() will not be called in this
+        // case, we have to clean up the type registration manually
+        QMetaType::unregisterType(iter.value()->metaTypeId);
+        QMetaType::unregisterType(iter.value()->listMetaTypeId);
+    }
     delete profiler;
 }
 
@@ -2311,6 +2317,9 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QQmlCompiledData *data)
     Locker locker(this);
     m_qmlLists.remove(lst_type);
     m_compositeTypes.remove(ptr_type);
+
+    QMetaType::unregisterType(ptr_type);
+    QMetaType::unregisterType(lst_type);
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const
