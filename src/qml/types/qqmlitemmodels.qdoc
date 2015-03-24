@@ -60,6 +60,17 @@
     should not store any QModelIndex. You can, however, store QPersistentModelIndexes
     in a safe way.
 
+    \section1 QModelIndexList
+
+    \l QModelIndexList is exposed in QML as a JavaScript array. Conversions are
+    automatically made from and to C++. In fact, any JavaScript array can be
+    converted back to QModelIndexList, with non-QModelIndex objects replaced by
+    invalid QModelIndexes.
+
+    \note QModelIndex to QPersistentModelIndex conversion happens when accessing
+    the array elements because any QModelIndexList property retains reference
+    semantics when exposed this way.
+
     \section1 \l QItemSelectionRange
 
     \list
@@ -87,29 +98,13 @@
     \li QItemSelectionRange \b{intersected}(QItemSelectionRange other)
     \endlist
 
-    \section1 \l QModelIndexList and \l QItemSelection
+    \section1 QItemSelection
 
-    Both \l QModelIndexList and \l QItemSelection expose the following properties
-    and functions as part of their \l QList API:
+    Similarly to QModelIndexList, \l QItemSelection is exposed in QML as a JavaScript
+    array of QItemSelectionRanges. Conversions are automatically made from and to C++.
+    In fact, any JavaScript array can be converted back to QItemSelection, with
+    non-QItemSelectionRange objects replaced by empty QItemSelectionRanges.
 
-    \list
-    \li \b length : int
-    \li object \b{at}(int i)
-    \li void \b{append}(object o)
-    \li void \b{prepend}(o)
-    \li void \b{insert}(int i, object o)
-    \li void \b{removeFirst}()
-    \li void \b{removeLast}()
-    \li void \b{removeAt}(int i)
-    \endlist
-
-    In addition, \l QItemSelection also exposes the following functions:
-
-    \list
-    \li void \b{select}(QModelIndex topLeft, QModelIndex bottomRight)
-    \li bool \b{contains}(QModelIndex index)
-    \li void \b{merge}(QItemSelection other, QItemSelectionModel::SelectionFlags command)
-    \endlist
 
     \sa ItemSelectionModel
 */

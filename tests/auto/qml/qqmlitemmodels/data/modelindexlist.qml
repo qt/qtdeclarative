@@ -1,21 +1,30 @@
 import Test 1.0
 
 ItemModelsTest {
-    property var modelIndexList
     property int count
+    property var modelIndexListCopy
+    property var modelIndexListRead
+    property var modelIndexListBinding: modelIndexList
+    property bool varPropIsArray
+    property bool varIsArray
+    property bool propIsArray
 
     onModelChanged: {
-        modelIndexList = createModelIndexList()
-        modelIndexList.prepend(model.index(0, 0))
-        modelIndexList.append(model.index(1, 1))
+        var jsModelIndexList = []
         for (var i = 0; i < 3; i++)
-            modelIndexList.insert(i, model.index(2 + i, 2 + i))
+            jsModelIndexList.push(model.index(2 + i, 2 + i))
+        jsModelIndexList.push("Hi Bronsky!")
+        modelIndex = jsModelIndexList[0]
 
         count = modelIndexList.length
-        modelIndex = modelIndexList.at(0)
+        propIsArray = modelIndexList instanceof Array
+        modelIndexList = jsModelIndexList
+        modelIndexListRead = modelIndexList
 
-        modelIndexList.removeAt(3)
-        modelIndexList.removeFirst()
-        modelIndexList.removeLast()
+        modelIndexListCopy = someModelIndexList()
+        varPropIsArray = modelIndexListCopy instanceof Array
+
+        jsModelIndexList = someModelIndexList()
+        varIsArray = jsModelIndexList instanceof Array
     }
 }

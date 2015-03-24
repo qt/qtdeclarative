@@ -1427,17 +1427,30 @@ void tst_qquickflickable::nestedStopAtBounds_data()
 {
     QTest::addColumn<bool>("transpose");
     QTest::addColumn<bool>("invert");
+    QTest::addColumn<int>("boundsBehavior");
+    QTest::addColumn<qreal>("margin");
 
-    QTest::newRow("left") << false << false;
-    QTest::newRow("right") << false << true;
-    QTest::newRow("top") << true << false;
-    QTest::newRow("bottom") << true << true;
+    QTest::newRow("left,stop") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(0);
+    QTest::newRow("right,stop") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(0);
+    QTest::newRow("top,stop") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(0);
+    QTest::newRow("bottom,stop") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(0);
+    QTest::newRow("left,over") << false << false << int(QQuickFlickable::DragOverBounds) << qreal(0);
+    QTest::newRow("right,over") << false << true << int(QQuickFlickable::DragOverBounds) << qreal(0);
+    QTest::newRow("top,over") << true << false << int(QQuickFlickable::DragOverBounds) << qreal(0);
+    QTest::newRow("bottom,over") << true << true << int(QQuickFlickable::DragOverBounds) << qreal(0);
+
+    QTest::newRow("left,stop,margin") << false << false << int(QQuickFlickable::StopAtBounds) << qreal(20);
+    QTest::newRow("right,stop,margin") << false << true << int(QQuickFlickable::StopAtBounds) << qreal(20);
+    QTest::newRow("top,stop,margin") << true << false << int(QQuickFlickable::StopAtBounds) << qreal(20);
+    QTest::newRow("bottom,stop,margin") << true << true << int(QQuickFlickable::StopAtBounds) << qreal(20);
 }
 
 void tst_qquickflickable::nestedStopAtBounds()
 {
     QFETCH(bool, transpose);
     QFETCH(bool, invert);
+    QFETCH(int, boundsBehavior);
+    QFETCH(qreal, margin);
 
     QQuickView view;
     view.setSource(testFileUrl("nestedStopAtBounds.qml"));
@@ -1455,8 +1468,20 @@ void tst_qquickflickable::nestedStopAtBounds()
     QQuickFlickable *inner = outer->findChild<QQuickFlickable*>("innerFlickable");
     QVERIFY(inner);
     inner->setFlickableDirection(transpose ? QQuickFlickable::VerticalFlick : QQuickFlickable::HorizontalFlick);
-    inner->setContentX(invert ? 0 : 100);
-    inner->setContentY(invert ? 0 : 100);
+    inner->setBoundsBehavior(QQuickFlickable::BoundsBehavior(boundsBehavior));
+
+    invert ? inner->setRightMargin(margin) : inner->setLeftMargin(margin);
+    invert ? inner->setBottomMargin(margin) : inner->setTopMargin(margin);
+
+    inner->setContentX(invert ? -margin : 100 - margin);
+    inner->setContentY(invert ? -margin : 100 - margin);
+    inner->setContentWidth(400 - margin);
+    inner->setContentHeight(400 - margin);
+
+    QCOMPARE(inner->isAtXBeginning(), invert);
+    QCOMPARE(inner->isAtXEnd(), !invert);
+    QCOMPARE(inner->isAtYBeginning(), invert);
+    QCOMPARE(inner->isAtYEnd(), !invert);
 
     const int threshold = qApp->styleHints()->startDragDistance();
 
@@ -1495,10 +1520,10 @@ void tst_qquickflickable::nestedStopAtBounds()
     QTRY_VERIFY(!outer->isMoving());
 
     axis = 200;
-    inner->setContentX(0);
-    inner->setContentY(0);
-    inner->setContentWidth(inner->width());
-    inner->setContentHeight(inner->height());
+    inner->setContentX(-margin);
+    inner->setContentY(-margin);
+    inner->setContentWidth(inner->width() - margin);
+    inner->setContentHeight(inner->height() - margin);
 
     // Drag inner with equal size and contentSize
     QTest::mousePress(&view, Qt::LeftButton, 0, position);
@@ -1512,8 +1537,8 @@ void tst_qquickflickable::nestedStopAtBounds()
     QTest::mouseRelease(&view, Qt::LeftButton, 0, position);
 
     axis = 200;
-    inner->setContentX(0);
-    inner->setContentY(0);
+    inner->setContentX(-margin);
+    inner->setContentY(-margin);
     inner->setContentWidth(inner->width() - 100);
     inner->setContentHeight(inner->height() - 100);
 

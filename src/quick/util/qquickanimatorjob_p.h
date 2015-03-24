@@ -200,8 +200,8 @@ public:
 
 protected:
     QQuickTransformAnimatorJob();
-    void initialize(QQuickAnimatorController *controller);
-    void nodeWasDestroyed();
+    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
     void targetWasDeleted() Q_DECL_OVERRIDE;
 
     Helper *m_helper;

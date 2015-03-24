@@ -150,63 +150,6 @@ public:
     inline bool isEmpty() const { return v.isEmpty(); }
 };
 
-template<typename V, typename T>
-QString q_listToString(const QList<T> &list, const QLatin1String &typeName)
-{
-    QString result = typeName;
-    result.append(QLatin1Char('('));
-    for (typename QList<T>::size_type i = 0; i < list.count(); ++i) {
-        if (i)
-            result.append(QLatin1String(", "));
-        result.append(reinterpret_cast<const V *>(&list.at(i))->toString());
-    }
-    return result.append(QLatin1Char(')'));
-}
-
-// Invokable QList<T> API forwarding for value types
-#define QLISTVALUETYPE_QML_API(T) \
-    Q_PROPERTY(int length READ length FINAL) \
-    Q_INVOKABLE T at(int i) { return v.at(i); } \
-    Q_INVOKABLE void append(const T &o) { v.append(o); } \
-    Q_INVOKABLE void prepend(const T &o) { v.prepend(o); } \
-    Q_INVOKABLE void insert(int i, const T &o) { v.insert(i, o); } \
-    Q_INVOKABLE void removeFirst() { v.removeFirst(); } \
-    Q_INVOKABLE void removeLast() { v.removeLast(); } \
-    Q_INVOKABLE void removeAt(int i) { v.removeAt(i); } \
-    int length() const { return v.length(); }
-
-struct QQmlModelIndexListValueType
-{
-    QModelIndexList v;
-
-    Q_GADGET
-
-public:
-    Q_INVOKABLE QString toString()
-    { return q_listToString<QQmlModelIndexValueType>(v, QLatin1String("")); }
-
-    QLISTVALUETYPE_QML_API(QModelIndex)
-};
-
-struct QQmlItemSelectionValueType
-{
-    QItemSelection v;
-
-    Q_GADGET
-
-public:
-    Q_INVOKABLE QString toString()
-    { return q_listToString<QQmlItemSelectionRangeValueType>(v, QLatin1String("QItemSelection")); }
-    Q_INVOKABLE void select(const QModelIndex &topLeft, const QModelIndex &bottomRight)
-    { v.select(topLeft, bottomRight); }
-    Q_INVOKABLE bool contains(const QModelIndex &index) const
-    { return v.contains(index); }
-    Q_INVOKABLE void merge(const QItemSelection &other, int command)
-    { v.merge(other, QItemSelectionModel::SelectionFlags(command)); }
-
-    QLISTVALUETYPE_QML_API(QItemSelectionRange)
-};
-
 #undef QLISTVALUETYPE_INVOKABLE_API
 
 QT_END_NAMESPACE

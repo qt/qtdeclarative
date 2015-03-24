@@ -78,7 +78,6 @@ class QQmlExpression;
 class QQmlContext;
 class QQmlType;
 class QUrl;
-class QScriptContext;
 class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
 class QQmlIncubationController;

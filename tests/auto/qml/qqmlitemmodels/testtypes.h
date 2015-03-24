@@ -45,11 +45,15 @@ class ItemModelsTest : public QObject
     Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QModelIndex modelIndex READ modelIndex WRITE setModelIndex NOTIFY changed)
     Q_PROPERTY(QPersistentModelIndex persistentModelIndex READ persistentModelIndex WRITE setPersistentModelIndex NOTIFY changed)
+    Q_PROPERTY(QModelIndexList modelIndexList READ modelIndexList WRITE setModelIndexList NOTIFY changed)
+    Q_PROPERTY(QItemSelection itemSelection READ itemSelection WRITE setItemSelection NOTIFY changed)
 
 public:
-    ItemModelsTest()
-        : m_model(0)
-    {}
+    ItemModelsTest(QObject *parent = 0)
+        : QObject(parent)
+        , m_model(0)
+    {
+    }
 
     QModelIndex modelIndex() const
     {
@@ -59,6 +63,31 @@ public:
     QPersistentModelIndex persistentModelIndex() const
     {
         return m_persistentModelIndex;
+    }
+
+    QModelIndexList modelIndexList()
+    {
+        static bool firstTime = true;
+        if (firstTime && m_model && m_modelIndexList.isEmpty()) {
+            firstTime = false;
+            for (int i = 0; i < m_model->rowCount(); i++)
+                m_modelIndexList << m_model->index(i, 0);
+        }
+        return m_modelIndexList;
+    }
+
+    Q_INVOKABLE QModelIndexList someModelIndexList() const
+    {
+        QModelIndexList list;
+        if (m_model)
+            for (int i = 0; i < m_model->rowCount(); i++)
+                list << m_model->index(i, 0);
+        return list;
+    }
+
+    QItemSelection itemSelection() const
+    {
+        return m_itemSelection;
     }
 
     void emitChanged()
@@ -84,11 +113,6 @@ public:
     Q_INVOKABLE QModelIndex invalidModelIndex() const
     {
         return QModelIndex();
-    }
-
-    Q_INVOKABLE QModelIndexList createModelIndexList() const
-    {
-        return QModelIndexList();
     }
 
     Q_INVOKABLE QItemSelectionRange createItemSelectionRange(const QModelIndex &tl, const QModelIndex &br) const
@@ -134,6 +158,24 @@ public slots:
         emit modelChanged(arg);
     }
 
+    void setModelIndexList(QModelIndexList arg)
+    {
+        if (m_modelIndexList == arg)
+            return;
+
+        m_modelIndexList = arg;
+        emit changed();
+    }
+
+    void setItemSelection(QItemSelection arg)
+    {
+        if (m_itemSelection == arg)
+            return;
+
+        m_itemSelection = arg;
+        emit changed();
+    }
+
 signals:
     void changed();
 
@@ -146,6 +188,8 @@ private:
     QModelIndex m_modelIndex;
     QPersistentModelIndex m_persistentModelIndex;
     QAbstractItemModel *m_model;
+    QModelIndexList m_modelIndexList;
+    QItemSelection m_itemSelection;
 };
 
 #endif // TESTTYPES_H

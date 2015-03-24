@@ -50,6 +50,14 @@
 
 QT_BEGIN_NAMESPACE
 
+QQuickTextNodeEngine::BinaryTreeNodeKey::BinaryTreeNodeKey(BinaryTreeNode *node)
+    : fontEngine(QRawFontPrivate::get(node->glyphRun.rawFont())->fontEngine)
+    , clipNode(node->clipNode)
+    , color(node->color.rgba())
+    , selectionState(node->selectionState)
+{
+}
+
 QQuickTextNodeEngine::BinaryTreeNode::BinaryTreeNode(const QGlyphRun &g,
                                                      SelectionState selState,
                                                      const QRectF &brect,
@@ -680,35 +688,34 @@ uint qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key)
 void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
                                                QList<BinaryTreeNode *> *imageNodes)
 {
-    QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *> map;
+    QHash<BinaryTreeNodeKey, QList<BinaryTreeNode *> > map;
 
     for (int i = 0; i < m_processedNodes.size(); ++i) {
         BinaryTreeNode *node = m_processedNodes.data() + i;
 
         if (node->image.isNull()) {
-            QRawFont rawFont = node->glyphRun.rawFont();
-            QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
-            QFontEngine *fontEngine = rawFontD->fontEngine;
+            BinaryTreeNodeKey key(node);
 
-            BinaryTreeNodeKey key(fontEngine,
-                                  node->clipNode,
-                                  node->color.rgba(),
-                                  int(node->selectionState));
-            map.insertMulti(key, node);
+            QList<BinaryTreeNode *> &nodes = map[key];
+            if (nodes.isEmpty())
+                regularNodes->append(node);
+
+            nodes.append(node);
         } else {
             imageNodes->append(node);
         }
     }
 
-    QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *>::const_iterator it = map.constBegin();
-    while (it != map.constEnd()) {
-        BinaryTreeNode *primaryNode = it.value();
-        regularNodes->append(primaryNode);
+    for (int i = 0; i < regularNodes->size(); ++i) {
+        BinaryTreeNode *primaryNode = regularNodes->at(i);
+        BinaryTreeNodeKey key(primaryNode);
+
+        const QList<BinaryTreeNode *> &nodes = map.value(key);
+        Q_ASSERT(nodes.first() == primaryNode);
 
         int count = 0;
-        QMultiHash<BinaryTreeNodeKey, BinaryTreeNode *>::const_iterator jt;
-        for (jt = it; jt != map.constEnd() && jt.key() == it.key(); ++jt)
-            count += jt.value()->glyphRun.glyphIndexes().size();
+        for (int j = 0; j < nodes.size(); ++j)
+            count += nodes.at(j)->glyphRun.glyphIndexes().size();
 
         if (count != primaryNode->glyphRun.glyphIndexes().size()) {
             QGlyphRun &glyphRun = primaryNode->glyphRun;
@@ -718,24 +725,21 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
             QVector<QPointF> glyphPositions = glyphRun.positions();
             glyphPositions.reserve(count);
 
-            for (jt = it + 1; jt != map.constEnd() && jt.key() == it.key(); ++jt) {
-                BinaryTreeNode *otherNode = jt.value();
+            for (int j = 1; j < nodes.size(); ++j) {
+                BinaryTreeNode *otherNode = nodes.at(j);
                 glyphIndexes += otherNode->glyphRun.glyphIndexes();
                 primaryNode->ranges += otherNode->ranges;
 
                 QVector<QPointF> otherPositions = otherNode->glyphRun.positions();
-                for (int j = 0; j < otherPositions.size(); ++j)
-                    glyphPositions += otherPositions.at(j) + (otherNode->position - primaryNode->position);
+                for (int k = 0; k < otherPositions.size(); ++k)
+                    glyphPositions += otherPositions.at(k) + (otherNode->position - primaryNode->position);
             }
-            it = jt;
 
             Q_ASSERT(glyphPositions.size() == count);
             Q_ASSERT(glyphIndexes.size() == count);
 
             glyphRun.setGlyphIndexes(glyphIndexes);
             glyphRun.setPositions(glyphPositions);
-        } else {
-            ++it;
         }
     }
 }

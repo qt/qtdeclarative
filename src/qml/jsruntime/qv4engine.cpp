@@ -1390,11 +1390,11 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::UShort:
                 return QV4::Encode((int)*reinterpret_cast<const unsigned short*>(ptr));
             case QMetaType::Char:
-                return QV4::Encode((int)*reinterpret_cast<const char*>(ptr));
+                return newString(QChar::fromLatin1(*reinterpret_cast<const char *>(ptr)))->asReturnedValue();
             case QMetaType::UChar:
-                return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(ptr));
+                return newString(QChar::fromLatin1(*reinterpret_cast<const unsigned char *>(ptr)))->asReturnedValue();
             case QMetaType::QChar:
-                return QV4::Encode((int)(*reinterpret_cast<const QChar*>(ptr)).unicode());
+                return newString(*reinterpret_cast<const QChar *>(ptr))->asReturnedValue();
             case QMetaType::QDateTime:
                 return QV4::Encode(newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:

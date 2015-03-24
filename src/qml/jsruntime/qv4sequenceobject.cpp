@@ -41,6 +41,9 @@
 #include <private/qv4scopedvalue_p.h>
 #include "qv4runtime_p.h"
 #include "qv4objectiterator_p.h"
+#include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qqmlmodelindexvaluetype_p.h>
+#include <QtCore/qabstractitemmodel.h>
 
 #include <algorithm>
 
@@ -71,7 +74,9 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(bool, Bool, QList<bool>, false) \
     F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
-    F(QUrl, Url, QList<QUrl>, QUrl())
+    F(QUrl, Url, QList<QUrl>, QUrl()) \
+    F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex()) \
+    F(QItemSelectionRange, QItemSelectionRange, QItemSelection, QItemSelectionRange())
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
@@ -86,6 +91,19 @@ static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, int elem
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QUrl &element)
 {
     return engine->newString(element.toString())->asReturnedValue();
+}
+
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QModelIndex &element)
+{
+    const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(QMetaType::QModelIndex);
+    return QV4::QQmlValueTypeWrapper::create(engine, QVariant(element), vtmo, QMetaType::QModelIndex);
+}
+
+static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QItemSelectionRange &element)
+{
+    int metaTypeId = qMetaTypeId<QItemSelectionRange>();
+    const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(metaTypeId);
+    return QV4::QQmlValueTypeWrapper::create(engine, QVariant::fromValue(element), vtmo, metaTypeId);
 }
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *, qreal element)
@@ -111,6 +129,16 @@ static QString convertElementToString(int element)
 static QString convertElementToString(const QUrl &element)
 {
     return element.toString();
+}
+
+static QString convertElementToString(const QModelIndex &element)
+{
+    return reinterpret_cast<const QQmlModelIndexValueType *>(&element)->toString();
+}
+
+static QString convertElementToString(const QItemSelectionRange &element)
+{
+    return reinterpret_cast<const QQmlItemSelectionRangeValueType *>(&element)->toString();
 }
 
 static QString convertElementToString(qreal element)
@@ -143,6 +171,22 @@ template <> int convertValueToElement(const Value &value)
 template <> QUrl convertValueToElement(const Value &value)
 {
     return QUrl(value.toQString());
+}
+
+template <> QModelIndex convertValueToElement(const Value &value)
+{
+    const QQmlValueTypeWrapper *v = value.as<QQmlValueTypeWrapper>();
+    if (v)
+        return v->toVariant().toModelIndex();
+    return QModelIndex();
+}
+
+template <> QItemSelectionRange convertValueToElement(const Value &value)
+{
+    const QQmlValueTypeWrapper *v = value.as<QQmlValueTypeWrapper>();
+    if (v)
+        return v->toVariant().value<QItemSelectionRange>();
+    return QItemSelectionRange();
 }
 
 template <> qreal convertValueToElement(const Value &value)
@@ -541,6 +585,12 @@ DEFINE_OBJECT_VTABLE(QQmlIntList);
 typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlUrlList);
+typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlQModelIndexList);
+typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;
+template<>
+DEFINE_OBJECT_VTABLE(QQmlQItemSelectionRangeList);
 typedef QQmlSequence<QList<bool> > QQmlBoolList;
 template<>
 DEFINE_OBJECT_VTABLE(QQmlBoolList);

@@ -64,9 +64,7 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
         valueTypes[ii] = 0;
 
     // See types wrapped in qqmlmodelindexvaluetype_p.h
-    qRegisterMetaType<QModelIndexList>();
     qRegisterMetaType<QItemSelectionRange>();
-    qRegisterMetaType<QItemSelection>();
 }
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
@@ -112,17 +110,13 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
     case QVariant::PersistentModelIndex:
         return &QQmlPersistentModelIndexValueType::staticMetaObject;
     default:
+        if (t == qMetaTypeId<QItemSelectionRange>())
+            return &QQmlItemSelectionRangeValueType::staticMetaObject;
+
         if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
             return mo;
         break;
     }
-
-    if (t == qMetaTypeId<QModelIndexList>())
-        return &QQmlModelIndexListValueType::staticMetaObject;
-    else if (t == qMetaTypeId<QItemSelectionRange>())
-        return &QQmlItemSelectionRangeValueType::staticMetaObject;
-    else if (t == qMetaTypeId<QItemSelection>())
-        return &QQmlItemSelectionValueType::staticMetaObject;
 
     QMetaType metaType(t);
     if (metaType.flags() & QMetaType::IsGadget)

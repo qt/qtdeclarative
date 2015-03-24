@@ -5,8 +5,8 @@ QT = core
 QT_PRIVATE = testlib-private quick qml-private  gui core-private
 
 # Testlib is only a private dependency, which results in our users not
-# inheriting CONFIG+=console transitively. Make it explicit.
-MODULE_CONFIG = console
+# inheriting testlibs's MODULE_CONFIG transitively. Make it explicit.
+MODULE_CONFIG += $${QT.testlib.CONFIG}
 
 qtHaveModule(widgets) {
     QT += widgets

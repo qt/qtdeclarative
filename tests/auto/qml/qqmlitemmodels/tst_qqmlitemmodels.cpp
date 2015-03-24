@@ -184,31 +184,53 @@ void tst_qqmlitemmodels::itemSelection()
     TestModel model(10, 10);
 
     object->setModel(&model);
-    QCOMPARE(object->property("count").toInt(), 8);
+    QCOMPARE(object->property("count").toInt(), 5);
     QCOMPARE(object->property("contains").toBool(), true);
 
-    QVariant milVariant = object->property("itemSelection");
-    QCOMPARE(milVariant.userType(), qMetaTypeId<QItemSelection>());
+    const char *propNames[] = { "itemSelectionRead", "itemSelectionBinding", 0 };
+    for (const char **name = propNames; *name; name++) {
+        QVariant isVariant = object->property(*name);
+        QCOMPARE(isVariant.userType(), qMetaTypeId<QItemSelection>());
 
-    const QItemSelection &mil = milVariant.value<QItemSelection>();
-    QCOMPARE(mil.count(), 5);
+        const QItemSelection &sel = isVariant.value<QItemSelection>();
+        QCOMPARE(sel.count(), object->itemSelection().count());
+        QCOMPARE(sel, object->itemSelection());
+    }
 }
 
 void tst_qqmlitemmodels::modelIndexList()
 {
     INIT_TEST_OBJECT("modelindexlist.qml", object);
     TestModel model(10, 10);
+    model.fetchMore(QModelIndex());
 
     object->setModel(&model);
-    QCOMPARE(object->property("count").toInt(), 5);
+    QVERIFY(object->property("propIsArray").toBool());
+    QVERIFY(object->property("varPropIsArray").toBool());
+    QVERIFY(object->property("varIsArray").toBool());
 
-    QVariant milVariant = object->property("modelIndexList");
-    QCOMPARE(milVariant.userType(), qMetaTypeId<QModelIndexList>());
+    QCOMPARE(object->property("count").toInt(), 10);
+    const QModelIndexList &mil = object->modelIndexList();
+    QCOMPARE(mil.count(), 4);
+    for (int i = 0; i < 3; i++)
+        QCOMPARE(mil.at(i), model.index(2 + i, 2 + i));
+    QCOMPARE(mil.at(3), QModelIndex()); // The string inserted at the end should result in an invalid index
+    QCOMPARE(mil.at(0), object->modelIndex());
 
-    const QModelIndexList &mil = milVariant.value<QModelIndexList>();
-    QCOMPARE(mil.count(), 2);
-    QCOMPARE(mil.at(0), model.index(3, 3));
-    QCOMPARE(mil.at(1), model.index(4, 4));
+    QVariant cppMILVariant = object->property("modelIndexListCopy");
+    QCOMPARE(cppMILVariant.userType(), qMetaTypeId<QModelIndexList>());
+    QModelIndexList someMIL = object->someModelIndexList();
+    QCOMPARE(cppMILVariant.value<QModelIndexList>(), someMIL);
+
+    const char *propNames[] = { "modelIndexListRead", "modelIndexListBinding", 0 };
+    for (const char **name = propNames; *name; name++) {
+        QVariant milVariant = object->property(*name);
+        QCOMPARE(milVariant.userType(), qMetaTypeId<QModelIndexList>());
+
+        const QModelIndexList &milProp = milVariant.value<QModelIndexList>();
+        QCOMPARE(milProp.count(), mil.count());
+        QCOMPARE(milProp, mil);
+    }
 }
 
 #undef INIT_TEST_OBJECT
