@@ -394,8 +394,8 @@ void Atlas::bind(QSGTexture::Filtering filtering)
         t->releaseImage();
 
         qCDebug(QSG_LOG_TIME_TEXTURE).nospace() << "atlastexture uploaded in: " << qsg_renderer_timer.elapsed()
-                                           << "ms (" << m_pending_uploads.at(i)->image().width() << "x"
-                                           << m_pending_uploads.at(i)->image().height() << ")";
+                                           << "ms (" << t->textureSize().width() << "x"
+                                           << t->textureSize().height() << ")";
 
         // Skip mipmap; unused
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare);
