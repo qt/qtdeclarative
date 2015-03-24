@@ -343,6 +343,8 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
         if (QTest::printAvailableFunctions)
             continue;
+        while (view->status() == QQuickView::Loading)
+            QTest::qWait(10);
         if (view->status() == QQuickView::Error) {
             handleCompileErrors(fi, view);
             continue;
@@ -361,14 +363,22 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                 view->resize(200, 200);
             }
             view->show();
+            if (!QTest::qWaitForWindowExposed(view)) {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
+            }
             view->requestActivate();
-
-            while (view->status() == QQuickView::Loading)
-                QTest::qWait(10);
-
-            QTest::qWaitForWindowActive(view);
-            if (view->isExposed())
+            if (!QTest::qWaitForWindowActive(view)) {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+            }
+            if (view->isExposed()) {
                 QTestRootObject::instance()->setWindowShown(true);
+            } else {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window was never exposed! "
+                    << "If the test case was expecting windowShown, it will hang.";
+            }
             if (!QTestRootObject::instance()->hasQuit && QTestRootObject::instance()->hasTestCase())
                 eventLoop.exec();
             // view->hide(); Causes a crash in Qt 3D due to deletion of the GL context, see QTBUG-27696
