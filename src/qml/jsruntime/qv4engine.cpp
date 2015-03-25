@@ -585,10 +585,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic, Object *pr
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
     Scope scope(this);
-    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array.size()));
-    if (!hasException) {
-        memcpy(object->d()->data->data(), array.data(), array.size());
-    }
+    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array));
     return object->d();
 }
 
