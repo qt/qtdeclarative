@@ -152,7 +152,7 @@ void FunctionObject::init(String *n, bool createProto)
 
     ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype.as<Object>()));
+        ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
         proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
         proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
         memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
@@ -574,7 +574,7 @@ Heap::Object *SimpleScriptFunction::protoForConstructor()
     ScopedObject p(scope, protoProperty());
     if (p)
         return p->d();
-    return scope.engine->objectPrototype.as<Object>()->d();
+    return scope.engine->objectPrototype()->d();
 }
 
 

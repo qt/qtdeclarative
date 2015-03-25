@@ -47,11 +47,7 @@ namespace QV4 {
 namespace Heap {
 
 struct Object : Base {
-    Object(ExecutionEngine *engine)
-        : internalClass(engine->emptyClass),
-          prototype(static_cast<Object *>(engine->objectPrototype.m))
-    {
-    }
+    inline Object(ExecutionEngine *engine);
     Object(InternalClass *internal, QV4::Object *prototype);
 
     const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData->data + index); }
@@ -333,6 +329,12 @@ private:
 };
 
 namespace Heap {
+
+inline Object::Object(ExecutionEngine *engine)
+    : internalClass(engine->emptyClass),
+      prototype(static_cast<Object *>(engine->objectPrototype()->m))
+{
+}
 
 struct BooleanObject : Object {
     BooleanObject(InternalClass *ic, QV4::Object *prototype)

@@ -146,7 +146,7 @@ struct RegExpPrototype: RegExpObject
 };
 
 inline Heap::RegExpPrototype::RegExpPrototype(ExecutionEngine *e)
-    : RegExpObject(e->emptyClass, e->objectPrototype.objectValue())
+    : RegExpObject(e->emptyClass, e->objectPrototype())
 {
 }
 

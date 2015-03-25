@@ -852,7 +852,7 @@ QString Stringify::JA(ArrayObject *a)
 
 
 Heap::JsonObject::JsonObject(ExecutionEngine *e)
-    : Heap::Object(e->emptyClass, e->objectPrototype.objectValue())
+    : Heap::Object(e->emptyClass, e->objectPrototype())
 {
     Scope scope(e);
     ScopedObject o(scope, this);

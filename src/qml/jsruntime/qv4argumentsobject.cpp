@@ -41,7 +41,7 @@ DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass,
-                   context->d()->engine->objectPrototype.objectValue())
+                   context->d()->engine->objectPrototype())
     , context(context->d())
     , fullyCreated(false)
 {

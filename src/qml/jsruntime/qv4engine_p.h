@@ -128,6 +128,12 @@ public:
     QQmlEngine *qmlEngine() const;
     QV8Engine *v8Engine;
 
+    enum JSObjects {
+        ObjectProto,
+        NJSObjects
+    };
+    Value *jsObjects;
+
     Value objectCtor;
     Value stringCtor;
     Value numberCtor;
@@ -148,7 +154,7 @@ public:
     enum { NTypedArrayTypes = 9 }; // avoid header dependency
     Value typedArrayCtors[NTypedArrayTypes];
 
-    Value objectPrototype;
+    Object *objectPrototype() { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
     Value arrayPrototype;
     Value stringPrototype;
     Value numberPrototype;

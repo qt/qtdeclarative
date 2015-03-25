@@ -1200,7 +1200,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
 {
     Scope scope(engine);
     QV4::InternalClass *klass = engine->currentContext()->compilationUnit->runtimeClasses[classId];
-    ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype.as<Object>()));
+    ScopedObject o(scope, engine->newObject(klass, engine->objectPrototype()));
 
     {
         bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;
