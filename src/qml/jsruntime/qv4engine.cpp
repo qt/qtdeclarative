@@ -229,6 +229,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     exceptionValue = jsAlloca(1);
     globalObject = static_cast<Object *>(jsAlloca(1));
     jsObjects = jsAlloca(NJSObjects);
+    typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));
+    typedArrayCtors = static_cast<FunctionObject *>(jsAlloca(NTypedArrayTypes));
 
 #ifdef V4_USE_VALGRIND
     VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
@@ -336,37 +338,37 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype()));
 
     ScopedContext global(scope, rootContext());
-    objectCtor = memoryManager->alloc<ObjectCtor>(global);
-    stringCtor = memoryManager->alloc<StringCtor>(global);
-    numberCtor = memoryManager->alloc<NumberCtor>(global);
-    booleanCtor = memoryManager->alloc<BooleanCtor>(global);
-    arrayCtor = memoryManager->alloc<ArrayCtor>(global);
-    functionCtor = memoryManager->alloc<FunctionCtor>(global);
-    dateCtor = memoryManager->alloc<DateCtor>(global);
-    regExpCtor = memoryManager->alloc<RegExpCtor>(global);
-    errorCtor = memoryManager->alloc<ErrorCtor>(global);
-    evalErrorCtor = memoryManager->alloc<EvalErrorCtor>(global);
-    rangeErrorCtor = memoryManager->alloc<RangeErrorCtor>(global);
-    referenceErrorCtor = memoryManager->alloc<ReferenceErrorCtor>(global);
-    syntaxErrorCtor = memoryManager->alloc<SyntaxErrorCtor>(global);
-    typeErrorCtor = memoryManager->alloc<TypeErrorCtor>(global);
-    uRIErrorCtor = memoryManager->alloc<URIErrorCtor>(global);
+    jsObjects[Object_Ctor] = memoryManager->alloc<ObjectCtor>(global);
+    jsObjects[String_Ctor] = memoryManager->alloc<StringCtor>(global);
+    jsObjects[Number_Ctor] = memoryManager->alloc<NumberCtor>(global);
+    jsObjects[Boolean_Ctor] = memoryManager->alloc<BooleanCtor>(global);
+    jsObjects[Array_Ctor] = memoryManager->alloc<ArrayCtor>(global);
+    jsObjects[Function_Ctor] = memoryManager->alloc<FunctionCtor>(global);
+    jsObjects[Date_Ctor] = memoryManager->alloc<DateCtor>(global);
+    jsObjects[RegExp_Ctor] = memoryManager->alloc<RegExpCtor>(global);
+    jsObjects[Error_Ctor] = memoryManager->alloc<ErrorCtor>(global);
+    jsObjects[EvalError_Ctor] = memoryManager->alloc<EvalErrorCtor>(global);
+    jsObjects[RangeError_Ctor] = memoryManager->alloc<RangeErrorCtor>(global);
+    jsObjects[ReferenceError_Ctor] = memoryManager->alloc<ReferenceErrorCtor>(global);
+    jsObjects[SyntaxError_Ctor] = memoryManager->alloc<SyntaxErrorCtor>(global);
+    jsObjects[TypeError_Ctor] = memoryManager->alloc<TypeErrorCtor>(global);
+    jsObjects[URIError_Ctor] = memoryManager->alloc<URIErrorCtor>(global);
 
-    static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor.as<Object>());
-    static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor.as<Object>());
-    static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor.as<Object>());
-    static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor.as<Object>());
-    static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor.as<Object>());
-    static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor.as<Object>());
-    static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor.as<Object>());
-    static_cast<RegExpPrototype *>(regExpPrototype())->init(this, regExpCtor.as<Object>());
-    static_cast<ErrorPrototype *>(errorPrototype())->init(this, errorCtor.as<Object>());
-    static_cast<EvalErrorPrototype *>(evalErrorPrototype())->init(this, evalErrorCtor.as<Object>());
-    static_cast<RangeErrorPrototype *>(rangeErrorPrototype())->init(this, rangeErrorCtor.as<Object>());
-    static_cast<ReferenceErrorPrototype *>(referenceErrorPrototype())->init(this, referenceErrorCtor.as<Object>());
-    static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype())->init(this, syntaxErrorCtor.as<Object>());
-    static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor.as<Object>());
-    static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor.as<Object>());
+    static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
+    static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
+    static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor());
+    static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor());
+    static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor());
+    static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor());
+    static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor());
+    static_cast<RegExpPrototype *>(regExpPrototype())->init(this, regExpCtor());
+    static_cast<ErrorPrototype *>(errorPrototype())->init(this, errorCtor());
+    static_cast<EvalErrorPrototype *>(evalErrorPrototype())->init(this, evalErrorCtor());
+    static_cast<RangeErrorPrototype *>(rangeErrorPrototype())->init(this, rangeErrorCtor());
+    static_cast<ReferenceErrorPrototype *>(referenceErrorPrototype())->init(this, referenceErrorCtor());
+    static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype())->init(this, syntaxErrorCtor());
+    static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor());
+    static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
 
     static_cast<VariantPrototype *>(variantPrototype())->init();
     sequencePrototype()->cast<SequencePrototype>()->init();
@@ -374,17 +376,17 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // typed arrays
 
-    arrayBufferCtor = memoryManager->alloc<ArrayBufferCtor>(global);
-    arrayBufferPrototype = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype());
-    static_cast<ArrayBufferPrototype *>(arrayBufferPrototype.as<Object>())->init(this, arrayBufferCtor.as<Object>());
+    jsObjects[ArrayBuffer_Ctor] = memoryManager->alloc<ArrayBufferCtor>(global);
+    jsObjects[ArrayBufferProto] = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype());
+    static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
 
-    dataViewCtor = memoryManager->alloc<DataViewCtor>(global);
-    dataViewPrototype = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype());
-    static_cast<DataViewPrototype *>(dataViewPrototype.as<Object>())->init(this, dataViewCtor.as<Object>());
+    jsObjects[DataView_Ctor] = memoryManager->alloc<DataViewCtor>(global);
+    jsObjects[DataViewProto] = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype());
+    static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        typedArrayCtors[i] = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
-        typedArrayPrototype[i] = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
 
@@ -395,24 +397,24 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     rootContext()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable);
 
-    globalObject->defineDefaultProperty(QStringLiteral("Object"), objectCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("String"), stringCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Number"), numberCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Boolean"), booleanCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Array"), arrayCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Function"), functionCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Date"), dateCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("RegExp"), regExpCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("Error"), errorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("EvalError"), evalErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("RangeError"), rangeErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("ReferenceError"), referenceErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), syntaxErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("TypeError"), typeErrorCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("URIError"), uRIErrorCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("String"), *stringCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Number"), *numberCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Boolean"), *booleanCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Array"), *arrayCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Function"), *functionCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Date"), *dateCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("RegExp"), *regExpCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Error"), *errorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("EvalError"), *evalErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("RangeError"), *rangeErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("ReferenceError"), *referenceErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), *syntaxErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("TypeError"), *typeErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
 
-    globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), arrayBufferCtor);
-    globalObject->defineDefaultProperty(QStringLiteral("DataView"), dataViewCtor);
+    globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
     ScopedString str(scope);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
@@ -932,30 +934,8 @@ void ExecutionEngine::markObjects()
     id_buffer->mark(this);
     id_lastIndex->mark(this);
 
-    objectCtor.mark(this);
-    stringCtor.mark(this);
-    numberCtor.mark(this);
-    booleanCtor.mark(this);
-    arrayCtor.mark(this);
-    functionCtor.mark(this);
-    dateCtor.mark(this);
-    regExpCtor.mark(this);
-    errorCtor.mark(this);
-    evalErrorCtor.mark(this);
-    rangeErrorCtor.mark(this);
-    referenceErrorCtor.mark(this);
-    syntaxErrorCtor.mark(this);
-    typeErrorCtor.mark(this);
-    uRIErrorCtor.mark(this);
-    arrayBufferCtor.mark(this);
-    dataViewCtor.mark(this);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         typedArrayCtors[i].mark(this);
-
-    arrayBufferPrototype.mark(this);
-    dataViewPrototype.mark(this);
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        typedArrayPrototype[i].mark(this);
 
     thrower->mark(this);
 

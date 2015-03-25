@@ -146,29 +146,49 @@ public:
         URIErrorProto,
         VariantProto,
         SequenceProto,
+        ArrayBufferProto,
+        DataViewProto,
+
+        Object_Ctor,
+        String_Ctor,
+        Number_Ctor,
+        Boolean_Ctor,
+        Array_Ctor,
+        Function_Ctor,
+        Date_Ctor,
+        RegExp_Ctor,
+        Error_Ctor,
+        EvalError_Ctor,
+        RangeError_Ctor,
+        ReferenceError_Ctor,
+        SyntaxError_Ctor,
+        TypeError_Ctor,
+        URIError_Ctor,
+        ArrayBuffer_Ctor,
+        DataView_Ctor,
         NJSObjects
     };
     Value *jsObjects;
+    enum { NTypedArrayTypes = 9 }; // == TypedArray::NValues, avoid header dependency
 
-    Value objectCtor;
-    Value stringCtor;
-    Value numberCtor;
-    Value booleanCtor;
-    Value arrayCtor;
-    Value functionCtor;
-    Value dateCtor;
-    Value regExpCtor;
-    Value errorCtor;
-    Value evalErrorCtor;
-    Value rangeErrorCtor;
-    Value referenceErrorCtor;
-    Value syntaxErrorCtor;
-    Value typeErrorCtor;
-    Value uRIErrorCtor;
-    Value arrayBufferCtor;
-    Value dataViewCtor;
-    enum { NTypedArrayTypes = 9 }; // avoid header dependency
-    Value typedArrayCtors[NTypedArrayTypes];
+    FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
+    FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
+    FunctionObject *numberCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Number_Ctor); }
+    FunctionObject *booleanCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Boolean_Ctor); }
+    FunctionObject *arrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Array_Ctor); }
+    FunctionObject *functionCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Function_Ctor); }
+    FunctionObject *dateCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Date_Ctor); }
+    FunctionObject *regExpCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + RegExp_Ctor); }
+    FunctionObject *errorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Error_Ctor); }
+    FunctionObject *evalErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + EvalError_Ctor); }
+    FunctionObject *rangeErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + RangeError_Ctor); }
+    FunctionObject *referenceErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ReferenceError_Ctor); }
+    FunctionObject *syntaxErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + SyntaxError_Ctor); }
+    FunctionObject *typeErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + TypeError_Ctor); }
+    FunctionObject *uRIErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + URIError_Ctor); }
+    FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
+    FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
+    FunctionObject *typedArrayCtors;
 
     Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
     Object *arrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayProto); }
@@ -188,9 +208,9 @@ public:
     Object *variantPrototype() const { return reinterpret_cast<Object *>(jsObjects + VariantProto); }
     Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
 
-    Value arrayBufferPrototype;
-    Value dataViewPrototype;
-    Value typedArrayPrototype[NTypedArrayTypes]; // TypedArray::NValues, avoid including the header here
+    Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
+    Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
+    Object *typedArrayPrototype;
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;

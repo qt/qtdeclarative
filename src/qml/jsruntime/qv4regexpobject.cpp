@@ -363,7 +363,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     uint* matchOffsets = (uint*)alloca(r->value()->captureCount() * 2 * sizeof(uint));
     const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
 
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor());
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
@@ -425,7 +425,7 @@ ReturnedValue RegExpPrototype::method_compile(CallContext *ctx)
     ScopedCallData callData(scope, ctx->argc());
     memcpy(callData->args, ctx->args(), ctx->argc()*sizeof(Value));
 
-    Scoped<RegExpObject> re(scope, ctx->d()->engine->regExpCtor.as<FunctionObject>()->construct(callData));
+    Scoped<RegExpObject> re(scope, ctx->d()->engine->regExpCtor()->as<FunctionObject>()->construct(callData));
 
     r->d()->value = re->value();
     r->d()->global = re->global();
@@ -436,7 +436,7 @@ template <int index>
 ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
     if (result->isUndefined())
         return ctx->d()->engine->newString()->asReturnedValue();
@@ -446,7 +446,7 @@ ReturnedValue RegExpPrototype::method_get_lastMatch_n(CallContext *ctx)
 ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
 {
     Scope scope(ctx);
-    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastMatch());
+    ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor())->lastMatch());
     ScopedValue result(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
     if (result->isUndefined())
         return ctx->d()->engine->newString()->asReturnedValue();
@@ -455,13 +455,13 @@ ReturnedValue RegExpPrototype::method_get_lastParen(CallContext *ctx)
 
 ReturnedValue RegExpPrototype::method_get_input(CallContext *ctx)
 {
-    return static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor.objectValue())->lastInput()->asReturnedValue();
+    return static_cast<RegExpCtor*>(ctx->d()->engine->regExpCtor())->lastInput()->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_leftContext(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor());
     QString lastInput = regExpCtor->lastInput()->toQString();
     return ctx->d()->engine->newString(lastInput.left(regExpCtor->lastMatchStart()))->asReturnedValue();
 }
@@ -469,7 +469,7 @@ ReturnedValue RegExpPrototype::method_get_leftContext(CallContext *ctx)
 ReturnedValue RegExpPrototype::method_get_rightContext(CallContext *ctx)
 {
     Scope scope(ctx);
-    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor);
+    Scoped<RegExpCtor> regExpCtor(scope, ctx->d()->engine->regExpCtor());
     QString lastInput = regExpCtor->lastInput()->toQString();
     return ctx->d()->engine->newString(lastInput.mid(regExpCtor->lastMatchEnd()))->asReturnedValue();
 }

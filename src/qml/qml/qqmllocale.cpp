@@ -68,10 +68,10 @@ void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
     engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
     engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
     engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleTimeString"), method_fromLocaleTimeString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleDateString"), method_fromLocaleDateString);
-    engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("timeZoneUpdated"), method_timeZoneUpdated);
+    engine->dateCtor()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
+    engine->dateCtor()->defineDefaultProperty(QStringLiteral("fromLocaleTimeString"), method_fromLocaleTimeString);
+    engine->dateCtor()->defineDefaultProperty(QStringLiteral("fromLocaleDateString"), method_fromLocaleDateString);
+    engine->dateCtor()->defineDefaultProperty(QStringLiteral("timeZoneUpdated"), method_timeZoneUpdated);
 }
 
 QV4::ReturnedValue QQmlDateExtension::method_toLocaleString(QV4::CallContext *ctx)
@@ -349,7 +349,7 @@ void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
     engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
     engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
-    engine->numberCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
+    engine->numberCtor()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
 }
 
 QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(QV4::CallContext *ctx)
