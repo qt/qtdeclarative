@@ -44,7 +44,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(VariantObject);
 
 Heap::VariantObject::VariantObject(QV4::ExecutionEngine *engine, const QVariant &value)
-    : Heap::Object(engine->emptyClass, engine->variantPrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->variantPrototype())
 {
     data = value;
     if (isScarce())

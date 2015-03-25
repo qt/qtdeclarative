@@ -629,7 +629,7 @@ static double getLocalTZA()
 DEFINE_OBJECT_VTABLE(DateObject);
 
 Heap::DateObject::DateObject(QV4::ExecutionEngine *engine, const QDateTime &date)
-    : Heap::Object(engine->emptyClass, engine->datePrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->datePrototype())
 {
     this->date = date.isValid() ? date.toMSecsSinceEpoch() : qSNaN();
 }

@@ -65,9 +65,9 @@ static bool isLocaleObject(const QV4::Value &val)
 
 void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->datePrototype.as<Object>()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
-    engine->datePrototype.as<Object>()->defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
-    engine->datePrototype.as<Object>()->defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
+    engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
+    engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
     engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
     engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleTimeString"), method_fromLocaleTimeString);
     engine->dateCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleDateString"), method_fromLocaleDateString);
@@ -347,8 +347,8 @@ QV4::ReturnedValue QQmlDateExtension::method_timeZoneUpdated(QV4::CallContext *c
 
 void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->numberPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
-    engine->numberPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
+    engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
     engine->numberCtor.objectValue()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
 }
 
@@ -815,7 +815,7 @@ QV4::ReturnedValue QQmlLocale::wrap(ExecutionEngine *v4, const QLocale &locale)
 
 void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 {
-    engine->stringPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
+    engine->stringPrototype()->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
 }
 
 QV4::ReturnedValue QQmlLocale::method_localeCompare(QV4::CallContext *ctx)

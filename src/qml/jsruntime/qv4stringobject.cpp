@@ -80,7 +80,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
 }
 
 Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
-    : Heap::Object(engine->emptyClass, engine->stringPrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->stringPrototype())
 {
     value = val;
     Q_ASSERT(value.isString());
@@ -379,7 +379,7 @@ ReturnedValue StringPrototype::method_match(CallContext *context)
 
     // ### use the standard builtin function, not the one that might be redefined in the proto
     ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
-    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype.as<Object>()->get(execString));
+    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype()->get(execString));
 
     ScopedCallData callData(scope, 1);
     callData->thisObject = rx;

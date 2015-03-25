@@ -75,7 +75,7 @@ Heap::RegExpObject::RegExpObject(InternalClass *ic, QV4::Object *prototype)
 }
 
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->regExpPrototype())
     , value(value->d())
     , global(global)
 {
@@ -88,7 +88,7 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *valu
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
 Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->regExpPrototype())
 {
     value = 0;
     global = false;
@@ -372,7 +372,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     }
 
     // fill in result data
-    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype.as<Object>()));
+    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype()));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);

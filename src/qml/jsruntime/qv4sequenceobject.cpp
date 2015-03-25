@@ -544,7 +544,7 @@ public:
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->sequencePrototype())
     , container(container)
     , propertyIndex(-1)
     , isReference(false)
@@ -557,7 +557,7 @@ Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const 
 
 template <typename Container>
 Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype.objectValue())
+    : Heap::Object(engine->emptyClass, engine->sequencePrototype())
     , object(object)
     , propertyIndex(propertyIndex)
     , isReference(true)

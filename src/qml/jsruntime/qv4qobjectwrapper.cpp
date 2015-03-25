@@ -241,8 +241,8 @@ Heap::QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 {
-    engine->functionPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("connect"), method_connect);
-    engine->functionPrototype.as<Object>()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
+    engine->functionPrototype()->defineDefaultProperty(QStringLiteral("connect"), method_connect);
+    engine->functionPrototype()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const
@@ -347,8 +347,8 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
             QV4::ScopedString connect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, ctx->d()->engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.as<Object>()->get(connect)));
-            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype.as<Object>()->get(disconnect)));
+            handler->put(connect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype()->get(connect)));
+            handler->put(disconnect, QV4::ScopedValue(scope, ctx->d()->engine->functionPrototype()->get(disconnect)));
 
             return handler.asReturnedValue();
         } else {

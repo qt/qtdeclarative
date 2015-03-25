@@ -1138,7 +1138,7 @@ void Object::initSparseArray()
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
 Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Heap::Object(engine->arrayClass, engine->arrayPrototype.objectValue())
+    : Heap::Object(engine->arrayClass, engine->arrayPrototype())
 {
     init();
     Scope scope(engine);

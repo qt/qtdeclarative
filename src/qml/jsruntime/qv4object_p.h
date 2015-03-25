@@ -344,7 +344,7 @@ struct BooleanObject : Object {
     }
 
     BooleanObject(ExecutionEngine *engine, bool b)
-        : Object(engine->emptyClass, engine->booleanPrototype.objectValue()),
+        : Object(engine->emptyClass, engine->booleanPrototype()),
           b(b)
     {
     }
@@ -359,7 +359,7 @@ struct NumberObject : Object {
     }
 
     NumberObject(ExecutionEngine *engine, double val)
-        : Object(engine->emptyClass, engine->numberPrototype.objectValue()),
+        : Object(engine->emptyClass, engine->numberPrototype()),
           value(val)
     {
     }
@@ -372,7 +372,7 @@ struct ArrayObject : Object {
     };
 
     ArrayObject(ExecutionEngine *engine)
-        : Heap::Object(engine->arrayClass, engine->arrayPrototype.objectValue())
+        : Heap::Object(engine->arrayClass, engine->arrayPrototype())
     { init(); }
     ArrayObject(ExecutionEngine *engine, const QStringList &list);
     ArrayObject(InternalClass *ic, QV4::Object *prototype)

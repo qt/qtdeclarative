@@ -130,6 +130,22 @@ public:
 
     enum JSObjects {
         ObjectProto,
+        ArrayProto,
+        StringProto,
+        NumberProto,
+        BooleanProto,
+        DateProto,
+        FunctionProto,
+        RegExpProto,
+        ErrorProto,
+        EvalErrorProto,
+        RangeErrorProto,
+        ReferenceErrorProto,
+        SyntaxErrorProto,
+        TypeErrorProto,
+        URIErrorProto,
+        VariantProto,
+        SequenceProto,
         NJSObjects
     };
     Value *jsObjects;
@@ -154,23 +170,23 @@ public:
     enum { NTypedArrayTypes = 9 }; // avoid header dependency
     Value typedArrayCtors[NTypedArrayTypes];
 
-    Object *objectPrototype() { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
-    Value arrayPrototype;
-    Value stringPrototype;
-    Value numberPrototype;
-    Value booleanPrototype;
-    Value datePrototype;
-    Value functionPrototype;
-    Value regExpPrototype;
-    Value errorPrototype;
-    Value evalErrorPrototype;
-    Value rangeErrorPrototype;
-    Value referenceErrorPrototype;
-    Value syntaxErrorPrototype;
-    Value typeErrorPrototype;
-    Value uRIErrorPrototype;
-    Value variantPrototype;
-    Value sequencePrototype;
+    Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
+    Object *arrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayProto); }
+    Object *stringPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringProto); }
+    Object *numberPrototype() const { return reinterpret_cast<Object *>(jsObjects + NumberProto); }
+    Object *booleanPrototype() const { return reinterpret_cast<Object *>(jsObjects + BooleanProto); }
+    Object *datePrototype() const { return reinterpret_cast<Object *>(jsObjects + DateProto); }
+    Object *functionPrototype() const { return reinterpret_cast<Object *>(jsObjects + FunctionProto); }
+    Object *regExpPrototype() const { return reinterpret_cast<Object *>(jsObjects + RegExpProto); }
+    Object *errorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ErrorProto); }
+    Object *evalErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + EvalErrorProto); }
+    Object *rangeErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + RangeErrorProto); }
+    Object *referenceErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ReferenceErrorProto); }
+    Object *syntaxErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + SyntaxErrorProto); }
+    Object *typeErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + TypeErrorProto); }
+    Object *uRIErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + URIErrorProto); }
+    Object *variantPrototype() const { return reinterpret_cast<Object *>(jsObjects + VariantProto); }
+    Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
 
     Value arrayBufferPrototype;
     Value dataViewPrototype;
