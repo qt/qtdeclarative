@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \fn QQmlInfo qmlInfo(const QObject *object)
+    \fn QQmlInfo QtQml::qmlInfo(const QObject *object)
     \relates QQmlEngine
 
     Prints warning messages that include the file and line number for the

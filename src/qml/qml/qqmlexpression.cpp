@@ -364,7 +364,7 @@ int QQmlExpression::columnNumber() const
 }
 
 /*!
-    Set the location of this expression to \a line of \a url. This information
+    Set the location of this expression to \a line and \a column of \a url. This information
     is used by the script engine.
 */
 void QQmlExpression::setSourceLocation(const QString &url, int line, int column)
