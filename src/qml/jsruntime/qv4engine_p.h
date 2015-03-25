@@ -166,6 +166,9 @@ public:
         URIError_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
+
+        Eval_Function,
+        ThrowerObject,
         NJSObjects
     };
     Value *jsObjects;
@@ -226,8 +229,8 @@ public:
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
 
-    Heap::EvalFunction *evalFunction;
-    Heap::FunctionObject *thrower;
+    EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
+    FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
     Property *argumentsAccessors;
     int nArgumentsAccessors;

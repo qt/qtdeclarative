@@ -427,8 +427,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    evalFunction = memoryManager->alloc<EvalFunction>(global);
-    globalObject->defineDefaultProperty(QStringLiteral("eval"), (o = evalFunction));
+    jsObjects[Eval_Function] = memoryManager->alloc<EvalFunction>(global);
+    globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
     globalObject->defineDefaultProperty(QStringLiteral("parseFloat"), GlobalFunctions::method_parseFloat, 1);
@@ -442,7 +442,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     ScopedString name(scope, newString(QStringLiteral("thrower")));
-    thrower = BuiltinFunction::create(global, name, ::throwTypeError);
+    jsObjects[ThrowerObject] = BuiltinFunction::create(global, name, ::throwTypeError);
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -936,8 +936,6 @@ void ExecutionEngine::markObjects()
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         typedArrayCtors[i].mark(this);
-
-    thrower->mark(this);
 
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects(this);

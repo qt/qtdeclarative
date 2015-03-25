@@ -489,8 +489,8 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);
-        pd->value = s.engine->thrower;
-        pd->set = s.engine->thrower;
+        pd->value = s.engine->thrower();
+        pd->set = s.engine->thrower();
         f->insertMember(scope->d()->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
         f->insertMember(scope->d()->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
@@ -658,8 +658,8 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
     f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(len));
 
     ScopedProperty pd(s);
-    pd->value = s.engine->thrower;
-    pd->set = s.engine->thrower;
+    pd->value = s.engine->thrower();
+    pd->set = s.engine->thrower();
     f->insertMember(s.engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     f->insertMember(s.engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }

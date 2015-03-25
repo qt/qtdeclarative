@@ -56,10 +56,10 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     if (context->d()->strictMode) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
         Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller));
-        args->propertyAt(CalleePropertyIndex)->value = v4->thrower;
-        args->propertyAt(CalleePropertyIndex)->set = v4->thrower;
-        args->propertyAt(CallerPropertyIndex)->value = v4->thrower;
-        args->propertyAt(CallerPropertyIndex)->set = v4->thrower;
+        args->propertyAt(CalleePropertyIndex)->value = v4->thrower();
+        args->propertyAt(CalleePropertyIndex)->set = v4->thrower();
+        args->propertyAt(CallerPropertyIndex)->value = v4->thrower();
+        args->propertyAt(CallerPropertyIndex)->set = v4->thrower();
 
         args->arrayReserve(context->argc());
         args->arrayPut(0, context->args(), context->argc());
