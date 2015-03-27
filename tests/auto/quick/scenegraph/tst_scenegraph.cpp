@@ -103,6 +103,9 @@ private slots:
     void render();
 
     void hideWithOtherContext();
+
+private:
+    bool m_brokenMipmapSupport;
 };
 
 template <typename T> class ScopedList : public QList<T> {
@@ -138,11 +141,15 @@ void tst_SceneGraph::initTestCase()
     qDebug() << "Max Texture Size:  " << textureSize;
     qDebug() << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
     qDebug() << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
-    qDebug() << "GL_VERSION:        " << (const char *) funcs->glGetString(GL_VERSION);
+    QByteArray version = (const char *) funcs->glGetString(GL_VERSION);
+    qDebug() << "GL_VERSION:        " << version.constData();
     QSet<QByteArray> exts = context.extensions();
     QByteArray all;
     foreach (const QByteArray &e, exts) all += ' ' + e;
     qDebug() << "GL_EXTENSIONS:    " << all.constData();
+
+    m_brokenMipmapSupport = version.contains("Mesa 10.1") || version.contains("Mesa 9.");
+    qDebug() << "Broken Mipmap:    " << m_brokenMipmapSupport;
 
     context.doneCurrent();
 }
@@ -408,13 +415,9 @@ void tst_SceneGraph::render_data()
           << "data/render_StackingOrder.qml"
           << "data/render_ImageFiltering.qml"
           << "data/render_bug37422.qml"
-          << "data/render_OpacityThroughBatchRoot.qml"
-#if defined(Q_OS_OSX) || defined(Q_OS_WIN)
-          // We've had some problems with this particular test in the CI, so
-          // we'll leave it out for now..
-          << "data/render_Mipmap.qml"
-#endif
-        ;
+          << "data/render_OpacityThroughBatchRoot.qml";
+    if (!m_brokenMipmapSupport)
+          files << "data/render_Mipmap.qml";
 
     QRegExp sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
