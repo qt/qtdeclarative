@@ -129,7 +129,7 @@ ApplicationWindow {
                         }
                         Label {
                             text: model.description
-                            textFormat: Qt.RichText
+                            textFormat: Text.StyledText
                             x: Style.padding
                             width: parent.width - 2 * Style.padding
                             wrapMode: Text.WordWrap
@@ -220,7 +220,7 @@ ApplicationWindow {
                         Item { width: 1; height: Style.spacing }
                         Label {
                             text: model.description
-                            textFormat: Qt.RichText
+                            textFormat: Text.StyledText
                             x: Style.padding
                             width: parent.width - 2 * Style.padding
                             wrapMode: Text.WordWrap

@@ -44,4 +44,5 @@ AbstractLabel {
     Accessible.role: Accessible.StaticText
 
     color: Style.textColor
+    linkColor: Style.focusColor // TODO
 }
