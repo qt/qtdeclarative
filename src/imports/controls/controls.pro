@@ -22,10 +22,7 @@ QML_FILES = \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \
-    StackView.js \
     StackView.qml \
-    StackViewDelegate.qml \
-    StackViewTransition.qml \
     Switch.qml \
     TabBar.qml \
     TabButton.qml \

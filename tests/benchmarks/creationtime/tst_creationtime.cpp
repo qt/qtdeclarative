@@ -105,6 +105,7 @@ void tst_CreationTime::testControls_data()
     QTest::newRow("ScrollIndicator") << QByteArray("ScrollIndicator");
 #endif
     QTest::newRow("Slider") << QByteArray("Slider");
+    QTest::newRow("StackView") << QByteArray("StackView");
     QTest::newRow("Switch") << QByteArray("Switch");
 #ifndef QT_QUICK_CONTROLS_V1
     QTest::newRow("TabBar") << QByteArray("TabBar");

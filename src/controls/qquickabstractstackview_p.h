@@ -53,31 +53,64 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlV4Function;
+class QQuickTransition;
+class QQuickStackElement;
+class QQuickStackAttached;
 class QQuickAbstractStackViewPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickAbstractStackView : public QQuickAbstractContainer
 {
     Q_OBJECT
-    Q_PROPERTY(bool busy READ busy WRITE setBusy NOTIFY busyChanged FINAL) // TODO: hide setBusy
-    Q_PROPERTY(int depth READ depth WRITE setDepth NOTIFY depthChanged FINAL) // TODO: hide setDepth
-    Q_PROPERTY(QQuickItem *currentItem READ currentItem WRITE setCurrentItem NOTIFY currentItemChanged FINAL) // TODO: hide setCurrentItem
+    Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)
+    Q_PROPERTY(int depth READ depth NOTIFY depthChanged FINAL)
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QVariant initialItem READ initialItem WRITE setInitialItem FINAL)
+    Q_PROPERTY(QQuickTransition *popEnter READ popEnter WRITE setPopEnter NOTIFY popEnterChanged FINAL)
+    Q_PROPERTY(QQuickTransition *popExit READ popExit WRITE setPopExit NOTIFY popExitChanged FINAL)
+    Q_PROPERTY(QQuickTransition *pushEnter READ pushEnter WRITE setPushEnter NOTIFY pushEnterChanged FINAL)
+    Q_PROPERTY(QQuickTransition *pushExit READ pushExit WRITE setPushExit NOTIFY pushExitChanged FINAL)
 
 public:
     explicit QQuickAbstractStackView(QQuickItem *parent = Q_NULLPTR);
     ~QQuickAbstractStackView();
 
+    static QQuickStackAttached *qmlAttachedProperties(QObject *object);
+
     bool busy() const;
-    void setBusy(bool busy); // TODO: hide
-
     int depth() const;
-    void setDepth(int depth); // TODO: hide
-
     QQuickItem *currentItem() const;
-    void setCurrentItem(QQuickItem *item); // TODO: hide
+
+    enum Status {
+        Inactive = 0,
+        Deactivating = 1,
+        Activating = 2,
+        Active = 3
+    };
+    Q_ENUM(Status)
 
     QVariant initialItem() const;
     void setInitialItem(const QVariant &item);
+
+    QQuickTransition *popEnter() const;
+    void setPopEnter(QQuickTransition *enter);
+
+    QQuickTransition *popExit() const;
+    void setPopExit(QQuickTransition *exit);
+
+    QQuickTransition *pushEnter() const;
+    void setPushEnter(QQuickTransition *enter);
+
+    QQuickTransition *pushExit() const;
+    void setPushExit(QQuickTransition *exit);
+
+    enum LoadBehavior {
+        DontLoad,
+        ForceLoad
+    };
+    Q_ENUM(LoadBehavior)
+
+    Q_INVOKABLE QQuickItem *get(int index, LoadBehavior behavior = DontLoad);
+    Q_INVOKABLE QQuickItem *find(const QJSValue &callback, LoadBehavior behavior = DontLoad);
 
     enum Operation {
         Transition,
@@ -85,19 +118,25 @@ public:
     };
     Q_ENUM(Operation)
 
-    Q_INVOKABLE QQuickItem *qpush(QQmlV4Function *args);
-    Q_INVOKABLE QQuickItem *qpop(QQmlV4Function *args);
+    Q_INVOKABLE void push(QQmlV4Function *args);
+    Q_INVOKABLE void pop(QQmlV4Function *args);
+    Q_INVOKABLE void replace(QQmlV4Function *args);
 
 public Q_SLOTS:
-    void qclear();
+    void clear();
 
 Q_SIGNALS:
     void busyChanged();
     void depthChanged();
     void currentItemChanged();
+    void popEnterChanged();
+    void popExitChanged();
+    void pushEnterChanged();
+    void pushExitChanged();
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickAbstractStackView)
@@ -109,25 +148,17 @@ class QQuickStackAttachedPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickStackAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(Status status READ status WRITE setStatus NOTIFY statusChanged)
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(QQuickAbstractStackView::Status status READ status NOTIFY statusChanged FINAL)
 
 public:
-    explicit QQuickStackAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickStackAttached(QQuickItem *parent = Q_NULLPTR);
 
-    static QQuickStackAttached *qmlAttachedProperties(QObject *object);
-
-    enum Status {
-        Inactive = 0,
-        Deactivating = 1,
-        Activating = 2,
-        Active = 3
-    };
-    Q_ENUM(Status)
-
-    Status status() const;
-    void setStatus(Status status);
+    int index() const;
+    QQuickAbstractStackView::Status status() const;
 
 Q_SIGNALS:
+    void indexChanged();
     void statusChanged();
 
 private:
@@ -137,6 +168,7 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickStackAttached, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(QQuickAbstractStackView, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QQuickAbstractStackView)
 
 #endif // QQUICKABSTRACTSTACKVIEW_P_H

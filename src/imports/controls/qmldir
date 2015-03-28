@@ -15,8 +15,6 @@ ScrollBar 2.0 ScrollBar.qml
 ScrollIndicator 2.0 ScrollIndicator.qml
 Slider 2.0 Slider.qml
 StackView 2.0 StackView.qml
-StackViewDelegate 2.0 StackViewDelegate.qml
-StackViewTransition 2.0 StackViewTransition.qml
 Switch 2.0 Switch.qml
 TabBar 2.0 TabBar.qml
 TabButton 2.0 TabButton.qml

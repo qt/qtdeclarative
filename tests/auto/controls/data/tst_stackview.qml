@@ -50,7 +50,7 @@ TestCase {
     when: windowShown
     name: "StackView"
 
-    Item { id: item  }
+    Item { id: item }
     TextField { id: textField }
     Component { id: component; Item { } }
 
@@ -62,11 +62,14 @@ TestCase {
     function test_defaults() {
         var control = stackView.createObject(testCase)
         verify(control)
-        verify(control.delegate)
+        verify(control.pushEnter)
+        verify(control.pushExit)
+        verify(control.popEnter)
+        verify(control.popExit)
         compare(control.depth, 0)
         compare(control.busy, false)
         compare(control.currentItem, null)
-        compare(control.initialItem, null)
+        compare(control.initialItem, undefined)
         control.destroy()
     }
 
@@ -85,7 +88,7 @@ TestCase {
         compare(control.currentItem, item)
         control.push(component)
         verify(control.currentItem !== item)
-        control.pop({immediate: true})
+        control.pop(AbstractStackView.Immediate)
         compare(control.currentItem, item)
         control.destroy()
     }
@@ -108,23 +111,44 @@ TestCase {
         var control = stackView.createObject(testCase)
 
         var item1 = component.createObject(control)
-        compare(item1.Stack.status, Stack.Inactive)
+        compare(item1.AbstractStackView.status, AbstractStackView.Inactive)
         control.push(item1)
-        compare(item1.Stack.status, Stack.Active)
+        compare(item1.AbstractStackView.status, AbstractStackView.Active)
 
         var item2 = component.createObject(control)
-        compare(item2.Stack.status, Stack.Inactive)
+        compare(item2.AbstractStackView.status, AbstractStackView.Inactive)
         control.push(item2)
-        compare(item2.Stack.status, Stack.Activating)
-        compare(item1.Stack.status, Stack.Deactivating)
-        tryCompare(item2.Stack, "status", Stack.Active)
-        tryCompare(item1.Stack, "status", Stack.Inactive)
+        compare(item2.AbstractStackView.status, AbstractStackView.Activating)
+        compare(item1.AbstractStackView.status, AbstractStackView.Deactivating)
+        tryCompare(item2.AbstractStackView, "status", AbstractStackView.Active)
+        tryCompare(item1.AbstractStackView, "status", AbstractStackView.Inactive)
 
         control.pop()
-        compare(item2.Stack.status, Stack.Deactivating)
-        compare(item1.Stack.status, Stack.Activating)
-        tryCompare(item2.Stack, "status", Stack.Inactive)
-        tryCompare(item1.Stack, "status", Stack.Active)
+        compare(item2.AbstractStackView.status, AbstractStackView.Deactivating)
+        compare(item1.AbstractStackView.status, AbstractStackView.Activating)
+        tryCompare(item2.AbstractStackView, "status", AbstractStackView.Inactive)
+        tryCompare(item1.AbstractStackView, "status", AbstractStackView.Active)
+
+        control.destroy()
+    }
+
+    function test_index() {
+        var control = stackView.createObject(testCase)
+
+        var item1 = component.createObject(control)
+        compare(item1.AbstractStackView.index, -1)
+        control.push(item1, AbstractStackView.Immediate)
+        compare(item1.AbstractStackView.index, 0)
+
+        var item2 = component.createObject(control)
+        compare(item2.AbstractStackView.index, -1)
+        control.push(item2, AbstractStackView.Immediate)
+        compare(item2.AbstractStackView.index, 1)
+        compare(item1.AbstractStackView.index, 0)
+
+        control.pop(AbstractStackView.Immediate)
+        compare(item2.AbstractStackView.index, -1)
+        compare(item1.AbstractStackView.index, 0)
 
         control.destroy()
     }
@@ -132,17 +156,17 @@ TestCase {
     function test_depth() {
         var control = stackView.createObject(testCase)
         compare(control.depth, 0)
-        control.push(item)
+        control.push(item, AbstractStackView.Immediate)
         compare(control.depth, 1)
-        control.push(item)
+        control.push(item, AbstractStackView.Immediate)
         compare(control.depth, 2)
-        control.pop()
+        control.pop(AbstractStackView.Immediate)
         compare(control.depth, 1)
-        control.push(component)
+        control.push(component, AbstractStackView.Immediate)
         compare(control.depth, 2)
-        control.pop()
+        control.pop(AbstractStackView.Immediate)
         compare(control.depth, 1)
-        control.pop() // ignored
+        control.pop(AbstractStackView.Immediate) // ignored
         compare(control.depth, 1)
         control.clear()
         compare(control.depth, 0)
@@ -165,12 +189,12 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        control.push({item: textField, immediate: true})
+        control.push(textField, AbstractStackView.Immediate)
         compare(control.currentItem, textField)
         textField.forceActiveFocus()
         verify(textField.activeFocus)
 
-        control.pop({immediate: true})
+        control.pop(AbstractStackView.Immediate)
         compare(control.currentItem, item)
         verify(control.activeFocus)
         verify(!textField.activeFocus)
@@ -185,9 +209,9 @@ TestCase {
         var item2 = component.createObject(control, {objectName: "2"})
         var item3 = component.createObject(control, {objectName: "3"})
 
-        control.push(item1, {immediate: true})
-        control.push(item2, {immediate: true})
-        control.push(item3, {immediate: true})
+        control.push(item1, AbstractStackView.Immediate)
+        control.push(item2, AbstractStackView.Immediate)
+        control.push(item3, AbstractStackView.Immediate)
 
         compare(control.find(function(item, index) { return index === 0 }), item1)
         compare(control.find(function(item) { return item.objectName === "1" }), item1)
@@ -207,81 +231,155 @@ TestCase {
     function test_get() {
         var control = stackView.createObject(testCase)
 
-        control.push([item, component, component])
+        control.push([item, component, component], AbstractStackView.Immediate)
 
-        verify(!control.get(0, true)) // dontLoad=true
-        compare(control.get(0, false), item) // dontLoad=false
+        verify(control.get(0, AbstractStackView.DontLoad))
+        compare(control.get(0, AbstractStackView.ForceLoad), item)
 
-        verify(!control.get(1, true)) // dontLoad=true
-        verify(control.get(1, false)) // dontLoad=false
+        verify(!control.get(1, AbstractStackView.DontLoad))
 
-        verify(control.get(2, true)) // dontLoad=true
-        verify(control.get(2, false)) // dontLoad=false
+        verify(control.get(2, AbstractStackView.DontLoad))
+        verify(control.get(2, AbstractStackView.ForceLoad))
 
         control.destroy()
     }
 
-    function test_pushpop() {
+    function test_push() {
         var control = stackView.createObject(testCase)
 
+        // missing arguments ### TODO: TestCase.ignoreWarning()
+        compare(control.push(), null)
+
+        // nothing to push ### TODO: TestCase.ignoreWarning()
+        compare(control.push(AbstractStackView.Immediate), null)
+
+        // push(item)
         var item1 = component.createObject(control, {objectName:"1"})
-        compare(control.push(item1), item1)
+        compare(control.push(item1, AbstractStackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
 
+        // push([item])
         var item2 = component.createObject(control, {objectName:"2"})
-        compare(control.push({item: item2}), item2)
+        compare(control.push([item2], AbstractStackView.Immediate), item2)
         compare(control.depth, 2)
         compare(control.currentItem, item2)
 
-        var item3 = component.createObject(control, {objectName:"3"})
-        compare(control.push(item3, {}, true), item3)
+        // push(item, {properties})
+        var item3 = component.createObject(control)
+        compare(control.push(item3, {objectName:"3"}, AbstractStackView.Immediate), item3)
+        compare(item3.objectName, "3")
         compare(control.depth, 3)
         compare(control.currentItem, item3)
 
-        var item4 = component.createObject(control, {objectName:"4"})
-        compare(control.push(item4, {}, true, true), item4)
-        compare(control.depth, 3)
+        // push([item, {properties}])
+        var item4 = component.createObject(control)
+        compare(control.push([item4, {objectName:"4"}], AbstractStackView.Immediate), item4)
+        compare(item4.objectName, "4")
+        compare(control.depth, 4)
         compare(control.currentItem, item4)
 
-        var item5 = component.createObject(control, {objectName:"5"})
-        compare(control.push({item:item5, immediate:true, replace:true}), item5)
-        compare(control.depth, 3)
+        // push(component, {properties})
+        var item5 = control.push(component, {objectName:"5"}, AbstractStackView.Immediate)
+        compare(item5.objectName, "5")
+        compare(control.depth, 5)
         compare(control.currentItem, item5)
 
-        var item6 = control.push(component, {objectName:"6"})
-        compare(control.depth, 4)
+        // push([component, {properties}])
+        var item6 = control.push([component, {objectName:"6"}], AbstractStackView.Immediate)
+        compare(item6.objectName, "6")
+        compare(control.depth, 6)
         compare(control.currentItem, item6)
 
-        var item7 = control.push({item:component, properties:{objectName:"7"}})
-        compare(control.depth, 5)
-        compare(control.currentItem, item7)
+        control.destroy()
+    }
 
-        var item8 = component.createObject(control, {objectName:"8"})
-        var item9 = component.createObject(control, {objectName:"9"})
-        compare(control.push([component, {item:component, properties:{objectName:"?"}}, {item:item8}, item9]), item9)
-        compare(control.depth, 9)
-        compare(control.currentItem, item9)
+    function test_pop() {
+        var control = stackView.createObject(testCase)
 
-        compare(control.pop(), item9)
-        compare(control.depth, 8)
-        compare(control.currentItem, item8)
+        var items = []
+        for (var i = 0; i < 7; ++i)
+            items.push(component.createObject(control, {objectName:i}))
 
-        compare(control.pop(), item8)
-        compare(control.depth, 7)
+        control.push(items, AbstractStackView.Immediate)
 
-        verify(control.pop({immediate:true}))
-        verify(control.pop({immediate:false}))
-        compare(control.depth, 5)
-        compare(control.currentItem, item7)
+        // too many arguments ### TODO: TestCase.ignoreWarning()
+        compare(control.pop(1, 2, 3), null)
 
-        compare(control.pop(item5), item7)
+        // pop the top most item
+        compare(control.pop(AbstractStackView.Immediate), items[6])
+        compare(control.depth, 6)
+        compare(control.currentItem, items[5])
+
+        // pop down to (but not including) the Nth item
+        compare(control.pop(items[3], AbstractStackView.Immediate), items[5])
+        compare(control.depth, 4)
+        compare(control.currentItem, items[3])
+
+        // pop the top most item
+        compare(control.pop(undefined, AbstractStackView.Immediate), items[3])
         compare(control.depth, 3)
-        compare(control.currentItem, item5)
+        compare(control.currentItem, items[2])
 
-        control.pop(null)
+        // don't pop non-existent item
+        compare(control.pop(testCase, AbstractStackView.Immediate), null)
+        compare(control.depth, 3)
+        compare(control.currentItem, items[2])
+
+        // pop all items down to (but not including) the 1st item
+        control.pop(null, AbstractStackView.Immediate)
+        compare(control.depth, 1)
+        compare(control.currentItem, items[0])
+
+        control.destroy()
+    }
+
+    function test_replace() {
+        var control = stackView.createObject(testCase)
+
+        // missing arguments ### TODO: TestCase.ignoreWarning()
+        compare(control.replace(), null)
+
+        // nothing to push ### TODO: TestCase.ignoreWarning()
+        compare(control.replace(AbstractStackView.Immediate), null)
+
+        // replace(item)
+        var item1 = component.createObject(control, {objectName:"1"})
+        compare(control.replace(item1, AbstractStackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
+
+        // replace([item])
+        var item2 = component.createObject(control, {objectName:"2"})
+        compare(control.replace([item2], AbstractStackView.Immediate), item2)
+        compare(control.depth, 1)
+        compare(control.currentItem, item2)
+
+        // replace(item, {properties})
+        var item3 = component.createObject(control)
+        compare(control.replace(item3, {objectName:"3"}, AbstractStackView.Immediate), item3)
+        compare(item3.objectName, "3")
+        compare(control.depth, 1)
+        compare(control.currentItem, item3)
+
+        // replace([item, {properties}])
+        var item4 = component.createObject(control)
+        compare(control.replace([item4, {objectName:"4"}], AbstractStackView.Immediate), item4)
+        compare(item4.objectName, "4")
+        compare(control.depth, 1)
+        compare(control.currentItem, item4)
+
+        // replace(component, {properties})
+        var item5 = control.replace(component, {objectName:"5"}, AbstractStackView.Immediate)
+        compare(item5.objectName, "5")
+        compare(control.depth, 1)
+        compare(control.currentItem, item5)
+
+        // replace([component, {properties}])
+        var item6 = control.replace([component, {objectName:"6"}], AbstractStackView.Immediate)
+        compare(item6.objectName, "6")
+        compare(control.depth, 1)
+        compare(control.currentItem, item6)
 
         control.destroy()
     }
