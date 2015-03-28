@@ -141,7 +141,7 @@ QList<QQuickStackElement *> QQuickAbstractStackViewPrivate::createElements(const
             QV4::ScopedValue v(scope, a->getIndexed(i));
             elements += createElements(v);
         }
-    } else if (QV4::QObjectWrapper *o =value->as<QV4::QObjectWrapper>()) {
+    } else if (const QV4::QObjectWrapper *o =value->as<QV4::QObjectWrapper>()) {
         qDebug() << "### QOBJECT:" << o->object();
         elements += QQuickStackElement::fromObject(o->object());
     } else {
