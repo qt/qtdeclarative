@@ -259,7 +259,7 @@ public:
     }
 
     template<SceneGraphFrameType FrameType, bool Record>
-    static void reportSceneGraphFrame(quint64 payload = -1)
+    static void reportSceneGraphFrame(quint64 payload = ~0)
     {
         qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType>();
         int &offset = s_instance->m_sceneGraphData.offset<FrameType>();
@@ -275,7 +275,7 @@ public:
     }
 
     template<SceneGraphFrameType FrameType, bool Record, SceneGraphFrameType SwitchTo>
-    static void reportSceneGraphFrame(quint64 payload = -1)
+    static void reportSceneGraphFrame(quint64 payload = ~0)
     {
         reportSceneGraphFrame<FrameType, Record>(payload);
         s_instance->m_sceneGraphData.offset<SwitchTo>() = 0;

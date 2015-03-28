@@ -84,7 +84,7 @@ void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Val
         return;
     }
     if (d >= 255) {
-        data[index] = (unsigned char)(255);
+        data[index] = (char)(255);
         return;
     }
     double f = std::floor(d);
