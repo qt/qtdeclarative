@@ -623,6 +623,22 @@ void QQuickWidgetPrivate::updateSize()
     }
 }
 
+/*!
+  \internal
+
+  Update the position of the offscreen window, so it matches the position of the QQuickWidget.
+ */
+void QQuickWidgetPrivate::updatePosition()
+{
+    Q_Q(QQuickWidget);
+    if (offscreenWindow == 0)
+        return;
+
+    const QPoint &pos = q->mapToGlobal(QPoint(0, 0));
+    if (offscreenWindow->position() != pos)
+        offscreenWindow->setPosition(pos);
+}
+
 QSize QQuickWidgetPrivate::rootObjectSize() const
 {
     QSize rootObjectSize(0,0);
@@ -747,7 +763,11 @@ void QQuickWidget::createFramebufferObject()
         d->fbo = new QOpenGLFramebufferObject(fboSize, format);
     }
 
-    d->offscreenWindow->setGeometry(0, 0, width(), height());
+    // Even though this is just an offscreen window we should set the position on it, as it might be
+    // useful for an item to know the actual position of the scene.
+    // Note: The position will be update when we get a move event (see: updatePosition()).
+    const QPoint &globalPos = mapToGlobal(QPoint(0, 0));
+    d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
     d->offscreenWindow->setRenderTarget(d->fbo);
 
     if (samples > 0)
@@ -1098,6 +1118,10 @@ bool QQuickWidget::event(QEvent *e)
             createFramebufferObject();
             d->render(true);
         }
+        break;
+
+    case QEvent::Move:
+        d->updatePosition();
         break;
 
     default:

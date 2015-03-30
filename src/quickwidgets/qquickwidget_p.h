@@ -73,6 +73,7 @@ public:
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
     void initResize();
     void updateSize();
+    void updatePosition();
     void updateFrambufferObjectSize();
     void setRootObject(QObject *);
     void render(bool needsSync);
