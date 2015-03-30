@@ -50,7 +50,6 @@
 #include <QtQuickControls/private/qquickabstractscrollbar_p.h>
 #include <QtQuickControls/private/qquickabstractscrollindicator_p.h>
 #include <QtQuickControls/private/qquickabstractslider_p.h>
-#include <QtQuickControls/private/qquickabstractspinbox_p.h>
 #include <QtQuickControls/private/qquickabstractstackview_p.h>
 #include <QtQuickControls/private/qquickabstractswitch_p.h>
 #include <QtQuickControls/private/qquickabstracttabbar_p.h>
@@ -96,7 +95,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickAbstractScrollBar>(uri, 2, 0, "AbstractScrollBar");
     qmlRegisterType<QQuickAbstractScrollIndicator>(uri, 2, 0, "AbstractScrollIndicator");
     qmlRegisterType<QQuickAbstractSlider>(uri, 2, 0, "AbstractSlider");
-    qmlRegisterType<QQuickAbstractSpinBox>(uri, 2, 0, "AbstractSpinBox");
     qmlRegisterType<QQuickAbstractStackView>(uri, 2, 0, "AbstractStackView");
     qmlRegisterType<QQuickAbstractSwitch>(uri, 2, 0, "AbstractSwitch");
     qmlRegisterType<QQuickAbstractTabBar>(uri, 2, 0, "AbstractTabBar");

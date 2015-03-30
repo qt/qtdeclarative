@@ -19,7 +19,6 @@ HEADERS += \
     $$PWD/qquickabstractscrollbar_p.h \
     $$PWD/qquickabstractscrollindicator_p.h \
     $$PWD/qquickabstractslider_p.h \
-    $$PWD/qquickabstractspinbox_p.h \
     $$PWD/qquickabstractstackview_p.h \
     $$PWD/qquickabstractswitch_p.h \
     $$PWD/qquickabstracttabbar_p.h \
@@ -49,7 +48,6 @@ SOURCES += \
     $$PWD/qquickabstractscrollbar.cpp \
     $$PWD/qquickabstractscrollindicator.cpp \
     $$PWD/qquickabstractslider.cpp \
-    $$PWD/qquickabstractspinbox.cpp \
     $$PWD/qquickabstractstackview.cpp \
     $$PWD/qquickabstractswitch.cpp \
     $$PWD/qquickabstracttabbar.cpp \

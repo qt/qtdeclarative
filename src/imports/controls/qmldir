@@ -14,7 +14,6 @@ RadioButton 2.0 RadioButton.qml
 ScrollBar 2.0 ScrollBar.qml
 ScrollIndicator 2.0 ScrollIndicator.qml
 Slider 2.0 Slider.qml
-SpinBox 2.0 SpinBox.qml
 StackView 2.0 StackView.qml
 StackViewDelegate 2.0 StackViewDelegate.qml
 StackViewTransition 2.0 StackViewTransition.qml

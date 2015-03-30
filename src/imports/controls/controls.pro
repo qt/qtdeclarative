@@ -22,7 +22,6 @@ QML_FILES = \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \
-    SpinBox.qml \
     StackView.js \
     StackView.qml \
     StackViewDelegate.qml \
