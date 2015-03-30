@@ -277,7 +277,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 
     \section1 Tips for Porting Existing HTML5 Canvas Applications
 
-    Although the Canvas item is provides a HTML5 like API, HTML5 canvas
+    Although the Canvas item provides an HTML5-like API, HTML5 canvas
     applications need to be modified to run in the Canvas item:
     \list
     \li Replace all DOM API calls with QML property bindings or Canvas item methods.
