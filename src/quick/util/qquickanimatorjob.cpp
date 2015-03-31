@@ -42,6 +42,7 @@
 #include <private/qanimationgroupjob_p.h>
 
 #include <qcoreapplication.h>
+#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -133,6 +134,13 @@ void QQuickAnimatorProxyJob::updateState(QAbstractAnimationJob::State newState, 
     }
 }
 
+void QQuickAnimatorProxyJob::debugAnimation(QDebug d) const
+{
+    d << "QuickAnimatorProxyJob("<< hex << (void *) this << dec
+      << "state:" << state() << "duration:" << duration()
+      << "proxying: (" << job() << ')';
+}
+
 void QQuickAnimatorProxyJob::windowChanged(QQuickWindow *window)
 {
     setWindow(window);
@@ -213,6 +221,13 @@ QQuickAnimatorJob::QQuickAnimatorJob()
     , m_hasBeenRunning(false)
 {
     m_isRenderThreadJob = true;
+}
+
+void QQuickAnimatorJob::debugAnimation(QDebug d) const
+{
+    d << "QuickAnimatorJob(" << hex << (void *) this << dec
+      << ") state:" << state() << "duration:" << duration()
+      << "target:" << m_target << "value:" << m_value;
 }
 
 qreal QQuickAnimatorJob::value() const
