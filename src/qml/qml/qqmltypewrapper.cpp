@@ -51,6 +51,9 @@ DEFINE_OBJECT_VTABLE(QmlTypeWrapper);
 Heap::QmlTypeWrapper::QmlTypeWrapper(ExecutionEngine *engine)
     : Heap::Object(engine)
     , mode(IncludeEnums)
+    , type(Q_NULLPTR)
+    , typeNamespace(Q_NULLPTR)
+    , importNamespace(Q_NULLPTR)
 {
 }
 

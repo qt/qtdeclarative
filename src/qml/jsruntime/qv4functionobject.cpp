@@ -65,6 +65,7 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -74,6 +75,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedString name(s, function->name());
@@ -84,6 +86,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -94,6 +97,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
     , scope(scope)
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
@@ -104,6 +108,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.asObject())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope);
     ScopedFunctionObject f(s, this);
@@ -114,6 +119,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.asObject())
     , scope(scope)
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
@@ -124,6 +130,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
 Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
     , scope(ic->engine->rootContext())
+    , function(Q_NULLPTR)
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);

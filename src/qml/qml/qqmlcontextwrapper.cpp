@@ -60,6 +60,7 @@ Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlCon
     , isNullWrapper(false)
     , context(context)
     , scopeObject(scopeObject)
+    , idObjectsWrapper(Q_NULLPTR)
 {
 }
 
