@@ -50,6 +50,7 @@ public:
 
     void setT(qreal t) { m_t = t; }
     void setViewportSize(const QSize &size) { m_viewportSize = size; }
+    void setWindow(QQuickWindow *window) { m_window = window; }
 
 public slots:
     void paint();
@@ -58,6 +59,7 @@ private:
     QSize m_viewportSize;
     qreal m_t;
     QOpenGLShaderProgram *m_program;
+    QQuickWindow *m_window;
 };
 //! [1]
 

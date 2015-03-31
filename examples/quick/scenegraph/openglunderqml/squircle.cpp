@@ -97,6 +97,7 @@ void Squircle::sync()
     }
     m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
     m_renderer->setT(m_t);
+    m_renderer->setWindow(window());
 }
 //! [9]
 
@@ -156,5 +157,9 @@ void SquircleRenderer::paint()
 
     m_program->disableAttributeArray(0);
     m_program->release();
+
+    // Not strictly needed for this example, but generally useful for when
+    // mixing with raw OpenGL.
+    m_window->resetOpenGLState();
 }
 //! [5]
