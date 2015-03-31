@@ -149,7 +149,6 @@ protected:
 
     int m_duration;
 
-    uint m_feedback : 1;
     uint m_isTransform : 1;
     uint m_isUniform : 1;
     uint m_hasBeenRunning : 1;

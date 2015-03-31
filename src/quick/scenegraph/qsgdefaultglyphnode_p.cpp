@@ -103,8 +103,11 @@ char const *const *QSGTextMaskShader::attributeNames() const
 }
 
 QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
-    : QSGMaterialShader(*new QSGMaterialShaderPrivate),
-      m_glyphFormat(glyphFormat)
+    : QSGMaterialShader(*new QSGMaterialShaderPrivate)
+    , m_matrix_id(-1)
+    , m_color_id(-1)
+    , m_textureScale_id(-1)
+    , m_glyphFormat(glyphFormat)
 {
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/scenegraph/shaders/textmask.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/textmask.frag"));
