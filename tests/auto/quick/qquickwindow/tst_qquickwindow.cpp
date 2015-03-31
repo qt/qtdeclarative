@@ -1716,14 +1716,6 @@ void tst_qquickwindow::testWindowVisibilityOrder()
     QTest::qWaitForWindowExposed(window5);
     QVERIFY(window4->isVisible());
     QVERIFY(window5->isVisible());
-    window4->hide();
-    window5->hide();
-
-    window3->hide();
-    QTRY_COMPARE(window2 == QGuiApplication::focusWindow(), true);
-
-    window2->hide();
-    QTRY_COMPARE(window1 == QGuiApplication::focusWindow(), true);
 }
 
 void tst_qquickwindow::blockClosing()
