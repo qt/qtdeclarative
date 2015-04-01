@@ -49,7 +49,6 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qinputmethod.h>
-#include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -66,6 +65,7 @@
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
+#include <private/qdebug_p.h>
 
 #ifndef QT_NO_CURSOR
 # include <QtGui/qcursor.h>
@@ -7315,18 +7315,27 @@ bool QQuickItem::event(QEvent *ev)
 }
 
 #ifndef QT_NO_DEBUG_STREAM
+// FIXME: Qt 6: Make this QDebug operator<<(QDebug debug, const QQuickItem *item)
 QDebug operator<<(QDebug debug, QQuickItem *item)
 {
+    QDebugStateSaver saver(debug);
+    debug.nospace();
     if (!item) {
         debug << "QQuickItem(0)";
         return debug;
     }
 
-    debug << item->metaObject()->className() << "(this =" << ((void*)item)
-          << ", name=" << item->objectName()
-          << ", parent =" << ((void*)item->parentItem())
-          << ", geometry =" << QRectF(item->position(), QSizeF(item->width(), item->height()))
-          << ", z =" << item->z() << ')';
+    const QRectF rect(item->position(), QSizeF(item->width(), item->height()));
+
+    debug << item->metaObject()->className() << '(' << static_cast<void *>(item);
+    if (!item->objectName().isEmpty())
+        debug << ", name=" << item->objectName();
+    debug << ", parent=" << static_cast<void *>(item->parentItem())
+          << ", geometry=";
+    QtDebugUtils::formatQRect(debug, rect);
+    if (const qreal z = item->z())
+        debug << ", z=" << z;
+    debug << ')';
     return debug;
 }
 #endif
