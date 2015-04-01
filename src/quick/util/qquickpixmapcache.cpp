@@ -518,7 +518,7 @@ void QQuickPixmapReader::processJobs()
     QMutexLocker locker(&mutex);
 
     while (true) {
-        if (cancelled.isEmpty() && (jobs.isEmpty() || replies.count() >= IMAGEREQUEST_MAX_REQUEST_COUNT))
+        if (cancelled.isEmpty() && jobs.isEmpty())
             return; // Nothing else to do
 
         // Clean cancelled jobs
@@ -540,17 +540,36 @@ void QQuickPixmapReader::processJobs()
             cancelled.clear();
         }
 
-        if (!jobs.isEmpty() && replies.count() < IMAGEREQUEST_MAX_REQUEST_COUNT) {
-            QQuickPixmapReply *runningJob = jobs.takeLast();
-            runningJob->loading = true;
+        if (!jobs.isEmpty()) {
+            // Find a job we can use
+            bool usableJob = false;
+            for (int i = jobs.count() - 1; !usableJob && i >= 0; i--) {
+                QQuickPixmapReply *runningJob = jobs[i];
+                const QUrl url = runningJob->url;
 
-            QUrl url = runningJob->url;
-            PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
+                if (url.scheme() == QLatin1String("image")) {
+                    usableJob = true;
+                } else {
+                    const QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
+                    usableJob = !localFile.isEmpty() || replies.count() < IMAGEREQUEST_MAX_REQUEST_COUNT;
+                }
 
-            QSize requestSize = runningJob->requestSize;
-            locker.unlock();
-            processJob(runningJob, url, requestSize);
-            locker.relock();
+                if (usableJob) {
+                    jobs.removeAt(i);
+
+                    runningJob->loading = true;
+
+                    PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
+
+                    QSize requestSize = runningJob->requestSize;
+                    locker.unlock();
+                    processJob(runningJob, url, requestSize);
+                    locker.relock();
+                }
+            }
+
+            if (!usableJob)
+                return;
         }
     }
 }
