@@ -37,6 +37,7 @@
 #include <qjsonarray.h>
 #include <qjsonobject.h>
 #include <qjsonvalue.h>
+#include <qjsondocument.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,33 @@ private:
     static QJsonObject toJsonObject(Object *o, V4ObjectSet &visitedObjects);
     static QJsonArray toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects);
 
+};
+
+class JsonParser
+{
+public:
+    JsonParser(ExecutionEngine *engine, const QChar *json, int length);
+
+    ReturnedValue parse(QJsonParseError *error);
+
+private:
+    inline bool eatSpace();
+    inline QChar nextToken();
+
+    ReturnedValue parseObject();
+    ReturnedValue parseArray();
+    bool parseMember(Object *o);
+    bool parseString(QString *string);
+    bool parseValue(Value *val);
+    bool parseNumber(Value *val);
+
+    ExecutionEngine *engine;
+    const QChar *head;
+    const QChar *json;
+    const QChar *end;
+
+    int nestingLevel;
+    QJsonParseError::ParseError lastError;
 };
 
 }

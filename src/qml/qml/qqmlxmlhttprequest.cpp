@@ -60,6 +60,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4arraybuffer_p.h>
+#include <private/qv4jsonobject_p.h>
 
 using namespace QV4;
 
@@ -1026,6 +1027,8 @@ public:
 
     const QString & responseType() const;
     void setResponseType(const QString &);
+
+    QV4::ReturnedValue jsonResponseBody(QV4::ExecutionEngine*);
 private slots:
     void readyRead();
     void error(QNetworkReply::NetworkError);
@@ -1076,6 +1079,7 @@ private:
     QNetworkAccessManager *networkAccessManager() { return m_nam; }
 
     QString m_responseType;
+    QV4::PersistentValue m_parsedJson;
 };
 
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(ExecutionEngine *engine, QNetworkAccessManager *manager)
@@ -1083,6 +1087,7 @@ QQmlXMLHttpRequest::QQmlXMLHttpRequest(ExecutionEngine *engine, QNetworkAccessMa
     , m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
     , m_redirectCount(0), m_gotXml(false), m_textCodec(0), m_network(0), m_nam(manager)
     , m_responseType()
+    , m_parsedJson()
 {
 }
 
@@ -1476,6 +1481,24 @@ const QString & QQmlXMLHttpRequest::responseType() const
 void QQmlXMLHttpRequest::setResponseType(const QString &responseType)
 {
     m_responseType = responseType;
+}
+
+QV4::ReturnedValue QQmlXMLHttpRequest::jsonResponseBody(QV4::ExecutionEngine* engine)
+{
+    if (m_parsedJson.isEmpty()) {
+        Scope scope(engine);
+
+        QJsonParseError error;
+        const QString& jtext = responseBody();
+        JsonParser parser(scope.engine, jtext.constData(), jtext.length());
+        ScopedValue jsonObject(scope, parser.parse(&error));
+        if (error.error != QJsonParseError::NoError)
+            return engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
+
+        m_parsedJson.set(scope.engine, jsonObject);
+    }
+
+    return m_parsedJson.value();
 }
 
 
@@ -1986,6 +2009,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_response(CallContext *ctx)
         return QV4::Encode(scope.engine->newString(r->responseBody()));
     } else if (responseType.compare(QLatin1String("arraybuffer"), Qt::CaseInsensitive) == 0) {
         return QV4::Encode(scope.engine->newArrayBuffer(r->rawResponseBody()));
+    } else if (responseType.compare(QLatin1String("json"), Qt::CaseInsensitive) == 0) {
+        return r->jsonResponseBody(scope.engine);
     } else {
         return QV4::Encode(scope.engine->newString(QString()));
     }

@@ -39,7 +39,6 @@
 #include <qv4scopedvalue_p.h>
 #include <qv4runtime_p.h>
 
-#include <qjsondocument.h>
 #include <qstack.h>
 #include <qstringlist.h>
 
@@ -61,33 +60,6 @@ static int indent = 0;
 
 
 DEFINE_OBJECT_VTABLE(JsonObject);
-
-class JsonParser
-{
-public:
-    JsonParser(ExecutionEngine *engine, const QChar *json, int length);
-
-    ReturnedValue parse(QJsonParseError *error);
-
-private:
-    inline bool eatSpace();
-    inline QChar nextToken();
-
-    ReturnedValue parseObject();
-    ReturnedValue parseArray();
-    bool parseMember(Object *o);
-    bool parseString(QString *string);
-    bool parseValue(Value *val);
-    bool parseNumber(Value *val);
-
-    ExecutionEngine *engine;
-    const QChar *head;
-    const QChar *json;
-    const QChar *end;
-
-    int nestingLevel;
-    QJsonParseError::ParseError lastError;
-};
 
 static const int nestingLimit = 1024;
 
