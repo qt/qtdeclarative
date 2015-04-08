@@ -22,5 +22,3 @@ OTHER_FILES += data/test.qml data/test.js \
     data/breakpointRelocation.qml \
     data/createComponent.qml
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-
-mac:CONFIG+=insignificant_test # QTBUG-28263
