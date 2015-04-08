@@ -169,6 +169,9 @@ private slots:
 
     void objectChildTransform();
 
+    void contains_data();
+    void contains();
+
 private:
 
     enum PaintOrderOp {
@@ -1926,6 +1929,48 @@ void tst_qquickitem::objectChildTransform()
     root->setProperty("source", QString());
     // Shouldn't crash.
 }
+
+void tst_qquickitem::contains_data()
+{
+    QTest::addColumn<int>("x");
+    QTest::addColumn<int>("y");
+    QTest::addColumn<bool>("contains");
+
+    QTest::newRow("(0, 0) = false") << 0 << 0 << false;
+    QTest::newRow("(50, 0) = false") << 50 << 0 << false;
+    QTest::newRow("(0, 50) = false") << 0 << 50 << false;
+    QTest::newRow("(50, 50) = true") << 50 << 50 << true;
+    QTest::newRow("(100, 100) = true") << 100 << 100 << true;
+    QTest::newRow("(150, 150) = false") << 150 << 150 << false;
+}
+
+void tst_qquickitem::contains()
+{
+    // Tests that contains works, but also checks that mapToItem/mapFromItem
+    // return the correct type (point or rect, not a JS object with those properties),
+    // as this is a common combination of calls.
+
+    QFETCH(int, x);
+    QFETCH(int, y);
+    QFETCH(bool, contains);
+
+    QQuickView view;
+    view.setSource(testFileUrl("contains.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+
+    QVariant result = false;
+    QVERIFY(QMetaObject::invokeMethod(root, "childContainsViaMapToItem",
+        Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, qreal(x)), Q_ARG(QVariant, qreal(y))));
+    QCOMPARE(result.toBool(), contains);
+
+    result = false;
+    QVERIFY(QMetaObject::invokeMethod(root, "childContainsViaMapFromItem",
+        Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, qreal(x)), Q_ARG(QVariant, qreal(y))));
+    QCOMPARE(result.toBool(), contains);
+}
+
 
 QTEST_MAIN(tst_qquickitem)
 
