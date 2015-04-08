@@ -53,7 +53,7 @@ ApplicationWindow {
         id: content
         anchors.fill: parent
         anchors.margins: -1
-        border.color: Style.frameColor
+        border.color: Theme.frameColor
 
         Image {
             width: window.width / 2
@@ -98,13 +98,13 @@ ApplicationWindow {
             model: VisualItemModel {
                 Label {
                     text: "Settings"
-                    x: Style.padding
-                    width: parent.width - Style.padding * 2
+                    x: Theme.padding
+                    width: parent.width - Theme.padding * 2
                     lineHeight: 2.0
-                    color: Style.accentColor
+                    color: Theme.accentColor
                     verticalAlignment: Text.AlignVCenter
                 }
-                Rectangle { width: parent.width; height: 1; color: Style.frameColor }
+                Rectangle { width: parent.width; height: 1; color: Theme.frameColor }
                 Switch {
                     id: dim
                     text: "Dim"
@@ -113,7 +113,7 @@ ApplicationWindow {
                     layoutDirection: Qt.RightToLeft
                     enabled: effect.current != uncover
                 }
-                Rectangle { width: parent.width; height: 1; color: Style.frameColor }
+                Rectangle { width: parent.width; height: 1; color: Theme.frameColor }
                 RadioButton {
                     id: overlay
                     text: "Overlay"
@@ -136,14 +136,14 @@ ApplicationWindow {
                     Exclusive.group: effect
                     layoutDirection: Qt.RightToLeft
                 }
-                Rectangle { width: parent.width; height: 1; color: Style.frameColor }
+                Rectangle { width: parent.width; height: 1; color: Theme.frameColor }
             }
             Rectangle {
                 z: -1
                 anchors.fill: parent
                 anchors.topMargin: -1
                 anchors.bottomMargin: -1
-                border.color: Style.frameColor
+                border.color: Theme.frameColor
             }
 
             transform: Translate {

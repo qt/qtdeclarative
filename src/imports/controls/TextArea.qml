@@ -46,9 +46,9 @@ AbstractTextArea {
     Accessible.readOnly: readOnly
     Accessible.description: placeholder ? placeholder.text : ""
 
-    color: Style.textColor
-    selectionColor: Style.selectionColor
-    selectedTextColor: Style.selectedTextColor
+    color: Theme.textColor
+    selectionColor: Theme.selectionColor
+    selectedTextColor: Theme.selectedTextColor
 
     placeholder: Text {
         x: control.leftPadding
@@ -56,8 +56,8 @@ AbstractTextArea {
         width: parent.width - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
-        color: control.Style.textColor
-        opacity: control.Style.disabledOpacity
+        color: control.Theme.textColor
+        opacity: control.Theme.disabledOpacity
         visible: !control.length
     }
 }

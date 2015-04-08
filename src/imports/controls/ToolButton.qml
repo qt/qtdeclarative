@@ -49,7 +49,7 @@ AbstractButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding: Style.padding
+    padding: Theme.padding
 
     label: Text {
         x: control.leftPadding
@@ -58,9 +58,9 @@ AbstractButton {
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.Style.textColor
+        color: control.Theme.textColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -69,8 +69,8 @@ AbstractButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        opacity: control.Style.disabledOpacity
-        color: control.Style.frameColor
+        opacity: control.Theme.disabledOpacity
+        color: control.Theme.frameColor
         visible: control.pressed
     }
 }

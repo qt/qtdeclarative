@@ -47,7 +47,7 @@ AbstractProgressBar {
 
     Accessible.role: Accessible.ProgressBar
 
-    padding: Style.padding
+    padding: Theme.padding
 
     indicator: Item {
         x: control.leftPadding
@@ -68,8 +68,8 @@ AbstractProgressBar {
                 width: offset * (parent.width - x) - 2
                 height: 2
 
-                color: control.Style.accentColor
-                radius: control.Style.roundness
+                color: control.Theme.accentColor
+                radius: control.Theme.roundness
 
                 SequentialAnimation on offset {
                     loops: Animation.Infinite
@@ -95,8 +95,8 @@ AbstractProgressBar {
         width: parent.width - control.leftPadding - control.rightPadding
         height: 6
 
-        radius: control.Style.roundness
-        border.color: control.Style.frameColor
+        radius: control.Theme.roundness
+        border.color: control.Theme.frameColor
         color: "transparent"
     }
 }

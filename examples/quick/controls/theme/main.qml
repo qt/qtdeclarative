@@ -46,13 +46,13 @@ ApplicationWindow {
     width: 360
     height: 520
     visible: true
-    title: "Qt Quick Controls - Styles Example"
+    title: "Qt Quick Controls - Theme Example"
 
     header: ToolBar {
         ToolButton {
             label: Text {
                 text: "\u25C0"
-                color: enabled ? Style.accentColor : Style.frameColor
+                color: enabled ? Theme.accentColor : Theme.frameColor
                 anchors.centerIn: parent
             }
             enabled: stackview.depth > 1
@@ -70,15 +70,15 @@ ApplicationWindow {
         id: pageComponent
         Control {
             id: page
-            Style.roundness: roundedToggle.checked ? 3 : 0
-            Style.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
-            Style.backgroundColor: darkButton.checked ? "#444" : "#fff"
-            Style.frameColor: darkButton.checked ? "#666" : "#ccc"
-            Style.textColor: darkButton.checked ? "#eee" : "#111"
-            Style.pressColor: darkButton.checked ? "#33ffffff" : "#33333333"
-            Style.baseColor: darkButton.checked ? "#444" : "#eee"
+            Theme.roundness: roundedToggle.checked ? 3 : 0
+            Theme.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
+            Theme.backgroundColor: darkButton.checked ? "#444" : "#fff"
+            Theme.frameColor: darkButton.checked ? "#666" : "#ccc"
+            Theme.textColor: darkButton.checked ? "#eee" : "#111"
+            Theme.pressColor: darkButton.checked ? "#33ffffff" : "#33333333"
+            Theme.baseColor: darkButton.checked ? "#444" : "#eee"
             background: Rectangle {
-                color: Style.backgroundColor
+                color: Theme.backgroundColor
             }
             Flickable {
                 anchors.fill: parent
@@ -94,7 +94,7 @@ ApplicationWindow {
 
                     Label {
                         text: "Code less. Create more."
-                        color: Style.accentColor
+                        color: Theme.accentColor
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -107,7 +107,7 @@ ApplicationWindow {
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: Style.frameColor
+                        color: Theme.frameColor
                     }
 
                     Column {
@@ -115,7 +115,7 @@ ApplicationWindow {
                         width: parent.width
                         Label {
                             text: "Accent color"
-                            color: Style.textColor
+                            color: Theme.textColor
                         }
                         Slider {
                             id: colorSlider
@@ -127,11 +127,11 @@ ApplicationWindow {
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: Style.frameColor
+                        color: Theme.frameColor
                     }
 
                     ExclusiveGroup {
-                        id: styleGroup
+                        id: themeGroup
                     }
 
                     Column {
@@ -143,21 +143,21 @@ ApplicationWindow {
                             width: parent.width
                             checked: true
                             layoutDirection: Qt.RightToLeft
-                            Exclusive.group: styleGroup
+                            Exclusive.group: themeGroup
                         }
                         RadioButton {
                             id: darkButton
                             text: "Dark"
                             width: parent.width
                             layoutDirection: Qt.RightToLeft
-                            Exclusive.group: styleGroup
+                            Exclusive.group: themeGroup
                         }
                     }
 
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: Style.frameColor
+                        color: Theme.frameColor
                     }
 
                     ToggleButton {
@@ -171,7 +171,7 @@ ApplicationWindow {
                     Rectangle {
                         width: parent.width
                         height: 1
-                        color: Style.frameColor
+                        color: Theme.frameColor
                     }
 
                     Button {

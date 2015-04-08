@@ -49,7 +49,7 @@ AbstractButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding: Style.padding
+    padding: Theme.padding
 
     label: Text {
         x: control.leftPadding
@@ -58,9 +58,9 @@ AbstractButton {
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.Style.selectedTextColor
+        color: control.Theme.selectedTextColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -69,10 +69,10 @@ AbstractButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        radius: control.Style.roundness
-        opacity: control.enabled ? 1.0 : control.Style.disabledOpacity
-        color: Qt.tint(Qt.tint(control.Style.accentColor,
-                               control.activeFocus ? control.Style.focusColor : "transparent"),
-                               control.pressed ? control.Style.pressColor : "transparent")
+        radius: control.Theme.roundness
+        opacity: control.enabled ? 1.0 : control.Theme.disabledOpacity
+        color: Qt.tint(Qt.tint(control.Theme.accentColor,
+                               control.activeFocus ? control.Theme.focusColor : "transparent"),
+                               control.pressed ? control.Theme.pressColor : "transparent")
     }
 }

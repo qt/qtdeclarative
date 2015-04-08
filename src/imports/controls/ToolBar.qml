@@ -62,6 +62,6 @@ AbstractToolBar {
 
     background: Rectangle {
         implicitHeight: 26
-        color: control.Style.baseColor
+        color: control.Theme.baseColor
     }
 }

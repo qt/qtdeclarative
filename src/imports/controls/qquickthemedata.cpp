@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickstyledata_p.h"
+#include "qquickthemedata_p.h"
 
 #include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
@@ -44,7 +44,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickStyleData::QQuickStyleData(const QString &filePath) : d(new Data)
+QQuickThemeData::QQuickThemeData(const QString &filePath) : d(new Data)
 {
     if (!filePath.isEmpty())
         load(filePath);
@@ -62,39 +62,39 @@ static double readNumberValue(const QJsonValue &value, double defaultValue)
     return value.toDouble(defaultValue);
 }
 
-bool QQuickStyleData::load(const QString &filePath)
+bool QQuickThemeData::load(const QString &filePath)
 {
     QJsonDocument doc;
 
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         qDebug() << file.error();
-        qWarning() << "QQuickStyle: failed to open ':/qtquickcontrols/style.json': " << qPrintable(file.errorString());
+        qWarning() << "QQuickTheme: failed to open ':/qtquickcontrols/theme.json': " << qPrintable(file.errorString());
         return false;
     } else {
         QJsonParseError error;
         doc = QJsonDocument::fromJson(file.readAll(), &error);
         if (error.error != QJsonParseError::NoError) {
-            qWarning() << "QQuickStyle: failed to parse ':/qtquickcontrols/style.json': " << qPrintable(error.errorString());
+            qWarning() << "QQuickTheme: failed to parse ':/qtquickcontrols/theme.json': " << qPrintable(error.errorString());
             return false;
         }
     }
 
-    QJsonObject style = doc.object();
-    d->accentColor = readColorValue(style.value(QStringLiteral("accentColor")), QColor("#7bc258"));
-    d->backgroundColor = readColorValue(style.value(QStringLiteral("backgroundColor")), QColor("#ffffff"));
-    d->baseColor = readColorValue(style.value(QStringLiteral("baseColor")), QColor("#eeeeee"));
-    d->focusColor = readColorValue(style.value(QStringLiteral("focusColor")), QColor("#45a7d7"));
-    d->frameColor = readColorValue(style.value(QStringLiteral("frameColor")), QColor("#bdbebf"));
-    d->pressColor = readColorValue(style.value(QStringLiteral("pressColor")), QColor("#33333333"));
-    d->selectedTextColor = readColorValue(style.value(QStringLiteral("selectedTextColor")), QColor("#ffffff"));
-    d->selectionColor = readColorValue(style.value(QStringLiteral("selectionColor")), QColor("#45a7d7"));
-    d->shadowColor = readColorValue(style.value(QStringLiteral("shadowColor")), QColor("#28282a"));
-    d->textColor = readColorValue(style.value(QStringLiteral("textColor")), QColor("#26282a"));
-    d->padding = readNumberValue(style.value(QStringLiteral("padding")), 6);
-    d->roundness = readNumberValue(style.value(QStringLiteral("roundness")), 3);
-    d->spacing = readNumberValue(style.value(QStringLiteral("spacing")), 6);
-    d->disabledOpacity = readNumberValue(style.value(QStringLiteral("disabledOpacity")), 0.3);
+    QJsonObject theme = doc.object();
+    d->accentColor = readColorValue(theme.value(QStringLiteral("accentColor")), QColor("#7bc258"));
+    d->backgroundColor = readColorValue(theme.value(QStringLiteral("backgroundColor")), QColor("#ffffff"));
+    d->baseColor = readColorValue(theme.value(QStringLiteral("baseColor")), QColor("#eeeeee"));
+    d->focusColor = readColorValue(theme.value(QStringLiteral("focusColor")), QColor("#45a7d7"));
+    d->frameColor = readColorValue(theme.value(QStringLiteral("frameColor")), QColor("#bdbebf"));
+    d->pressColor = readColorValue(theme.value(QStringLiteral("pressColor")), QColor("#33333333"));
+    d->selectedTextColor = readColorValue(theme.value(QStringLiteral("selectedTextColor")), QColor("#ffffff"));
+    d->selectionColor = readColorValue(theme.value(QStringLiteral("selectionColor")), QColor("#45a7d7"));
+    d->shadowColor = readColorValue(theme.value(QStringLiteral("shadowColor")), QColor("#28282a"));
+    d->textColor = readColorValue(theme.value(QStringLiteral("textColor")), QColor("#26282a"));
+    d->padding = readNumberValue(theme.value(QStringLiteral("padding")), 6);
+    d->roundness = readNumberValue(theme.value(QStringLiteral("roundness")), 3);
+    d->spacing = readNumberValue(theme.value(QStringLiteral("spacing")), 6);
+    d->disabledOpacity = readNumberValue(theme.value(QStringLiteral("disabledOpacity")), 0.3);
     return true;
 }
 

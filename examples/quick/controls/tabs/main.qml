@@ -55,7 +55,7 @@ ApplicationWindow {
 
         spacing: 1
         anchors.fill: parent
-        background: Rectangle { color: Style.frameColor }
+        background: Rectangle { color: Theme.frameColor }
 
         Rectangle {
             Tab.title: "Home"
@@ -72,7 +72,7 @@ ApplicationWindow {
 
             Label {
                 text: "Things just got better"
-                color: Style.accentColor
+                color: Theme.accentColor
                 anchors.margins: 40
                 anchors.top: logo.bottom
                 anchors.left: parent.left
@@ -110,46 +110,46 @@ ApplicationWindow {
                     Column {
                         id: feedItem
                         width: parent.width
-                        spacing: Style.spacing
+                        spacing: Theme.spacing
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: Style.frameColor
+                            color: Theme.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: Style.spacing }
+                        Item { width: 1; height: Theme.spacing }
                         Label {
                             text: model.title
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
                             elide: Text.ElideRight
-                            color: Style.accentColor
+                            color: Theme.accentColor
                             font.pointSize: 20
                             lineHeight: 0.75
                         }
                         Label {
                             text: model.description
                             textFormat: Text.StyledText
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
-                            spacing: Style.spacing
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
+                            spacing: Theme.spacing
                             Label {
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                color: Style.focusColor
+                                color: Theme.focusColor
                                 font.pointSize: 8
                             }
                             Label {
                                 text: model.pubDate
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: Style.disabledOpacity
+                                opacity: Theme.disabledOpacity
                                 font.pointSize: 8
                             }
                             Item { Layout.fillWidth: true }
@@ -161,7 +161,7 @@ ApplicationWindow {
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: Style.frameColor
+                            color: Theme.frameColor
                         }
                     }
                 }
@@ -200,47 +200,47 @@ ApplicationWindow {
                     Column {
                         id: commentItem
                         width: parent.width
-                        spacing: Style.spacing
+                        spacing: Theme.spacing
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: Style.frameColor
+                            color: Theme.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: Style.spacing }
+                        Item { width: 1; height: Theme.spacing }
                         Label {
                             text: model.title
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
                             elide: Text.ElideRight
-                            color: Style.accentColor
+                            color: Theme.accentColor
                             font.pointSize: 14
                             lineHeight: 0.75
                         }
-                        Item { width: 1; height: Style.spacing }
+                        Item { width: 1; height: Theme.spacing }
                         Label {
                             text: model.description
                             textFormat: Text.StyledText
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: Style.padding
-                            width: parent.width - 2 * Style.padding
-                            spacing: Style.spacing
+                            x: Theme.padding
+                            width: parent.width - 2 * Theme.padding
+                            spacing: Theme.spacing
                             Label {
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                color: Style.focusColor
+                                color: Theme.focusColor
                                 font.pointSize: 8
                             }
                             Label {
                                 text: model.pubDate
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: Style.disabledOpacity
+                                opacity: Theme.disabledOpacity
                                 font.pointSize: 8
                             }
                             Item { Layout.fillWidth: true }
@@ -252,7 +252,7 @@ ApplicationWindow {
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: Style.frameColor
+                            color: Theme.frameColor
                         }
                     }
                 }

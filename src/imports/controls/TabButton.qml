@@ -50,7 +50,7 @@ AbstractTabButton {
     Accessible.selected: checked
     Accessible.role: Accessible.PageTab
 
-    padding: Style.padding
+    padding: Theme.padding
 
     label: Text {
         x: control.leftPadding
@@ -61,8 +61,8 @@ AbstractTabButton {
         text: control.text
         font.pointSize: 10
         elide: Text.ElideRight
-        color: control.pressed ? control.Style.accentColor : control.Style.textColor
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        color: control.pressed ? control.Theme.accentColor : control.Theme.textColor
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -70,6 +70,6 @@ AbstractTabButton {
     background: Rectangle {
         height: parent.height - 1
         implicitHeight: 26
-        color: Style.backgroundColor
+        color: Theme.backgroundColor
     }
 }

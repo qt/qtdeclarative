@@ -43,7 +43,7 @@ AbstractCheckBox {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             (label ? label.implicitWidth : 0) +
                             (indicator ? indicator.implicitWidth : 0) +
-                            (label && indicator ? Style.spacing : 0) + leftPadding + rightPadding)
+                            (label && indicator ? Theme.spacing : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
@@ -53,7 +53,7 @@ AbstractCheckBox {
     Accessible.pressed: pressed
     Accessible.role: Accessible.CheckBox
 
-    padding: Style.padding
+    padding: Theme.padding
 
     indicator: Rectangle {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
@@ -63,38 +63,38 @@ AbstractCheckBox {
         x: text ? (mirror ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
         y: (parent.height - height) / 2
 
-        radius: control.Style.roundness
+        radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Style.focusColor : control.Style.frameColor
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
-        color: control.Style.backgroundColor
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
+        color: control.Theme.backgroundColor
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 12
             height: 12
-            color: Qt.tint(Qt.tint(control.checked ? control.Style.accentColor : control.Style.baseColor,
-                                   control.checked && control.activeFocus ? control.Style.focusColor : "transparent"),
-                                   control.pressed ? control.Style.pressColor : "transparent")
+            color: Qt.tint(Qt.tint(control.checked ? control.Theme.accentColor : control.Theme.baseColor,
+                                   control.checked && control.activeFocus ? control.Theme.focusColor : "transparent"),
+                                   control.pressed ? control.Theme.pressColor : "transparent")
             border.width: control.checked || control.pressed ? 0 : 1
-            border.color: control.Style.frameColor
+            border.color: control.Theme.frameColor
         }
     }
 
     label: Text {
         readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
 
-        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.Style.spacing)
+        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
-        width: parent.width - indicator.width - control.Style.spacing - control.leftPadding - control.rightPadding
+        width: parent.width - indicator.width - control.Theme.spacing - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.Style.textColor
+        color: control.Theme.textColor
         elide: Text.ElideRight
         visible: control.text
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

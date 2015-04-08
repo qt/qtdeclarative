@@ -55,7 +55,7 @@ AbstractScrollIndicator {
         implicitWidth: 2
         implicitHeight: 2
 
-        color: control.Style.frameColor
+        color: control.Theme.frameColor
         visible: control.size < 1.0
         opacity: 0.0
 
@@ -68,7 +68,7 @@ AbstractScrollIndicator {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: indicator; opacity: 1.0 - control.Style.disabledOpacity }
+            PropertyChanges { target: indicator; opacity: 1.0 - control.Theme.disabledOpacity }
         }
 
         transitions: [

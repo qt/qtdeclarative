@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = styles
+TARGET = theme
 QT += quick
 
 SOURCES += \
@@ -9,4 +9,4 @@ OTHER_FILES += \
     main.qml
 
 RESOURCES += \
-    styles.qrc
+    theme.qrc

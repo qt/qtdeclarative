@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEDATA_P_H
-#define QQUICKSTYLEDATA_P_H
+#ifndef QQUICKTHEMEDATA_P_H
+#define QQUICKTHEMEDATA_P_H
 
 //
 //  W A R N I N G
@@ -54,10 +54,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickStyleData
+class QQuickThemeData
 {
 public:
-    QQuickStyleData(const QString &filePath = QString());
+    QQuickThemeData(const QString &filePath = QString());
 
     bool load(const QString &filePath);
 
@@ -125,4 +125,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSTYLEDATA_P_H
+#endif // QQUICKTHEMEDATA_P_H

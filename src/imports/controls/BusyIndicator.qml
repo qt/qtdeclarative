@@ -45,7 +45,7 @@ AbstractBusyIndicator {
 
     Accessible.role: Accessible.Indicator
 
-    padding: Style.padding
+    padding: Theme.padding
 
     indicator: Item {
         id: delegate

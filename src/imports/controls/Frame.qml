@@ -50,7 +50,7 @@ AbstractFrame {
     contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
     contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
 
-    padding: Style.padding
+    padding: Theme.padding
 
     contentItem: Item {
         id: content
@@ -62,7 +62,7 @@ AbstractFrame {
 
     background: Rectangle {
         color: "transparent"
-        radius: control.Style.roundness
-        border.color: control.Style.frameColor
+        radius: control.Theme.roundness
+        border.color: control.Theme.frameColor
     }
 }

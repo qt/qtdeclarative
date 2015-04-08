@@ -45,8 +45,8 @@ AbstractDrawer {
     height: parent.height // TODO: Window.height
 
     background: Rectangle {
-        color: control.Style.shadowColor
-        opacity: position * control.Style.disabledOpacity
+        color: control.Theme.shadowColor
+        opacity: position * control.Theme.disabledOpacity
     }
 
     // TODO: make this a proper transition

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLE_P_H
-#define QQUICKSTYLE_P_H
+#ifndef QQUICKTHEME_P_H
+#define QQUICKTHEME_P_H
 
 //
 //  W A R N I N G
@@ -54,10 +54,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickStyleData;
-class QQuickStylePrivate;
+class QQuickThemeData;
+class QQuickThemePrivate;
 
-class QQuickStyle : public QObject
+class QQuickTheme : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor RESET resetAccentColor NOTIFY accentColorChanged FINAL)
@@ -76,13 +76,13 @@ class QQuickStyle : public QObject
     Q_PROPERTY(qreal disabledOpacity READ disabledOpacity WRITE setDisabledOpacity RESET resetDisabledOpacity NOTIFY disabledOpacityChanged FINAL)
 
 public:
-    explicit QQuickStyle(const QQuickStyleData &data, QObject *parent = Q_NULLPTR);
-    ~QQuickStyle();
+    explicit QQuickTheme(const QQuickThemeData &data, QObject *parent = Q_NULLPTR);
+    ~QQuickTheme();
 
-    static QQuickStyle *qmlAttachedProperties(QObject *object);
+    static QQuickTheme *qmlAttachedProperties(QObject *object);
 
-    QQuickStyle *parentStyle() const;
-    void setParentStyle(QQuickStyle *style);
+    QQuickTheme *parentTheme() const;
+    void setParentTheme(QQuickTheme *theme);
 
     QColor accentColor() const;
     void setAccentColor(const QColor &color);
@@ -157,12 +157,12 @@ Q_SIGNALS:
     void disabledOpacityChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickStyle)
-    Q_DECLARE_PRIVATE(QQuickStyle)
+    Q_DISABLE_COPY(QQuickTheme)
+    Q_DECLARE_PRIVATE(QQuickTheme)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickStyle, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(QQuickTheme, QML_HAS_ATTACHED_PROPERTIES)
 
-#endif // QQUICKSTYLE_P_H
+#endif // QQUICKTHEME_P_H

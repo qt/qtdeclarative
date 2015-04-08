@@ -37,19 +37,19 @@ QML_FILES = \
     ToolButton.qml
 
 HEADERS += \
-    $$PWD/qquickstyle_p.h \
-    $$PWD/qquickstyledata_p.h
+    $$PWD/qquicktheme_p.h \
+    $$PWD/qquickthemedata_p.h
 
 SOURCES += \
-    $$PWD/qquickstyle.cpp \
-    $$PWD/qquickstyledata.cpp \
+    $$PWD/qquicktheme.cpp \
+    $$PWD/qquickthemedata.cpp \
     $$PWD/qtquickcontrols2plugin.cpp
 
 RESOURCES += \
     $$PWD/qtquickcontrols2plugin.qrc
 
 OTHER_FILES += \
-    $$PWD/style.json
+    $$PWD/theme.json
 
 CONFIG += no_cxx_module
 load(qml_plugin)

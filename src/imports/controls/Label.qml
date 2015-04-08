@@ -43,6 +43,6 @@ AbstractLabel {
     Accessible.name: text
     Accessible.role: Accessible.StaticText
 
-    color: Style.textColor
-    linkColor: Style.focusColor // TODO
+    color: Theme.textColor
+    linkColor: Theme.focusColor // TODO
 }

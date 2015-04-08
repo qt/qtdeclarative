@@ -46,11 +46,11 @@ AbstractTextField {
     Accessible.description: placeholder ? placeholder.text : ""
     Accessible.passwordEdit: echoMode === TextInput.Password || echoMode === TextInput.PasswordEchoOnEdit
 
-    padding: Style.padding
+    padding: Theme.padding
 
-    color: Style.textColor
-    selectionColor: Style.selectionColor
-    selectedTextColor: Style.selectedTextColor
+    color: Theme.textColor
+    selectionColor: Theme.selectionColor
+    selectedTextColor: Theme.selectedTextColor
     verticalAlignment: TextInput.AlignVCenter
 
     placeholder: Text {
@@ -59,16 +59,16 @@ AbstractTextField {
         width: parent.width - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
-        color: control.Style.textColor
-        opacity: control.Style.disabledOpacity
+        color: control.Theme.textColor
+        opacity: control.Theme.disabledOpacity
         visible: !control.displayText
     }
 
     background: Rectangle {
         implicitWidth: 120 // TODO
-        radius: control.Style.roundness
+        radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Style.focusColor : control.Style.frameColor
-        opacity: enabled ? 1.0 : control.Style.disabledOpacity
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
     }
 }

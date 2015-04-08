@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include "qquickstyle_p.h"
+#include "qquicktheme_p.h"
 
 #include <QtQuickControls/private/qquickabstractapplicationwindow_p.h>
 #include <QtQuickControls/private/qquickabstractbusyindicator_p.h>
@@ -107,7 +107,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     qmlRegisterUncreatableType<QQuickExclusiveAttached>(uri, 2, 0, "Exclusive", "Exclusive is an attached property");
     qmlRegisterUncreatableType<QQuickStackAttached>(uri, 2, 0, "Stack", "Stack is an attached property");
-    qmlRegisterUncreatableType<QQuickStyle>(uri, 2, 0, "Style", "Style is an attached property");
+    qmlRegisterUncreatableType<QQuickTheme>(uri, 2, 0, "Theme", "Theme is an attached property");
     qmlRegisterUncreatableType<QQuickTabAttached>(uri, 2, 0, "Tab", "Tab is an attached property");
 
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");

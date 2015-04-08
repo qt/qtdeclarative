@@ -45,9 +45,9 @@ AbstractCalendarView {
         width: grid.width ? grid.width / 7 : implicitWidth
         height: grid.height ? grid.height / 6 : implicitHeight
         opacity: model.month === control.month ? 1 : 0
-        color: model.today ? control.Style.accentColor : control.Style.textColor
+        color: model.today ? control.Theme.accentColor : control.Theme.textColor
         text: model.day
-        padding: control.Style.padding
+        padding: control.Theme.padding
     }
 
     contentWidth: grid.implicitWidth
