@@ -132,31 +132,30 @@ void tst_qquickapplication::state()
     QQuickWindow window;
     item->setParentItem(window.contentItem());
 
-    // initial state should be ApplicationInactive
-    QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
-    QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);
-
     // If the platform plugin has the ApplicationState capability, state changes originate from it
     // as a result of a system event. We therefore have to simulate these events here.
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
 
+        // Flush pending events, in case the platform have already queued real application state events
+        QWindowSystemInterface::flushWindowSystemEvents();
+
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
-        QTest::waitForEvents();
+        QWindowSystemInterface::flushWindowSystemEvents();
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
-        QTest::waitForEvents();
+        QWindowSystemInterface::flushWindowSystemEvents();
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);
 
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationSuspended);
-        QTest::waitForEvents();
+        QWindowSystemInterface::flushWindowSystemEvents();
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationSuspended);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationSuspended);
 
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationHidden);
-        QTest::waitForEvents();
+        QWindowSystemInterface::flushWindowSystemEvents();
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationHidden);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationHidden);
 
