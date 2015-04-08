@@ -126,9 +126,8 @@ void QQuickAnimatorProxyJob::updateState(QAbstractAnimationJob::State newState, 
             m_controller->startJob(this, m_job);
     } else if (newState == Stopped) {
         syncBackCurrentValues();
-        if (m_internalState == State_Starting)
-            m_internalState = State_Stopped;
-        else if (m_controller) {
+        m_internalState = State_Stopped;
+        if (m_controller) {
             m_controller->stopJob(this, m_job);
         }
     }
