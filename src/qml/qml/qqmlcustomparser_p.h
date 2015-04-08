@@ -100,7 +100,7 @@ protected:
 
 private:
     QList<QQmlError> exceptions;
-    QQmlCustomParserCompilerBackend *compiler;
+    const QQmlCustomParserCompilerBackend *compiler;
     Flags m_flags;
     QBiPointer<const QQmlImports, QQmlTypeNameCache> imports;
     friend class QQmlPropertyValidator;

@@ -402,7 +402,7 @@ QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
 {
 }
 
-void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, const QString &description)
+void QQmlCompilePass::recordError(const QV4::CompiledData::Location &location, const QString &description) const
 {
     QQmlError error;
     error.setLine(location.line);
@@ -1714,7 +1714,7 @@ bool QQmlPropertyValidator::validate()
 {
     if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
         return false;
-    compiler->setDeferredBindingsPerObject(deferredBindingsPerObject);
+    compiler->setDeferredBindingsPerObject(_deferredBindingsPerObject);
     return true;
 }
 
@@ -1752,7 +1752,7 @@ struct BindingFinder
     }
 };
 
-bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty)
+bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
     if (obj->idIndex != 0)
@@ -2007,12 +2007,12 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
     }
 
     if (!deferredBindings.isEmpty())
-        deferredBindingsPerObject.insert(objectIndex, deferredBindings);
+        _deferredBindingsPerObject.insert(objectIndex, deferredBindings);
 
     return true;
 }
 
-bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
         recordError(binding->valueLocation, tr("Cannot assign primitives to lists"));
@@ -2288,7 +2288,7 @@ bool QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCa
     Returns true if from can be assigned to a (QObject) property of type
     to.
 */
-bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo)
+bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo) const
 {
     QQmlPropertyCache *toMo = enginePrivate->rawPropertyCacheForType(to);
 
@@ -2300,7 +2300,7 @@ bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo)
     return false;
 }
 
-bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding)
+bool QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
 {
     if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Object);
