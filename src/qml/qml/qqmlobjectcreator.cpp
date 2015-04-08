@@ -656,8 +656,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
     QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
-    QString id = stringAt(_compiledObject->idIndex);
-    if (!id.isEmpty()) {
+    if (_compiledObject->idIndex) {
         QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
         if (idProperty && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
             QV4::CompiledData::Binding idBinding;
