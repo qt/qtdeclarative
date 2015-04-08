@@ -654,7 +654,6 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
-    QQmlPropertyData *property = 0;
     QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
     QString id = stringAt(_compiledObject->idIndex);
@@ -688,17 +687,17 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-                    property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
+                    QQmlPropertyData *property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
                     if (property)
                         bindingSkipList |= (1 << property->coreIndex);
                 }
-                property = 0;
 
                 proxy->removeBindings(bindingSkipList);
             }
         }
     }
 
+    QQmlPropertyData *property = 0;
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
 
