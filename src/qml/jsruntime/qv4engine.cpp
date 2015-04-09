@@ -308,6 +308,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     functionPrototype = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype.asObject());
     functionClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
+    simpleScriptFunctionClass = functionClass->addMember(id_name, Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Name);
+    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length, Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Length);
     protoClass = emptyClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 

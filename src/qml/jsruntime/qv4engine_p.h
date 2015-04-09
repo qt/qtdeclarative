@@ -169,6 +169,7 @@ public:
     InternalClass *arrayClass;
 
     InternalClass *functionClass;
+    InternalClass *simpleScriptFunctionClass;
     InternalClass *protoClass;
 
     InternalClass *regExpExecArrayClass;

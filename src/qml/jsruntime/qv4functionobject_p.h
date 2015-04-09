@@ -89,6 +89,10 @@ struct IndexedBuiltinFunction : FunctionObject {
 };
 
 struct SimpleScriptFunction : FunctionObject {
+    enum {
+        Index_Name = FunctionObject::Index_Prototype + 1,
+        Index_Length
+    };
     SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto);
 };
 

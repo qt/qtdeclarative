@@ -459,21 +459,27 @@ ReturnedValue ScriptFunction::call(Managed *that, CallData *callData)
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::FunctionObject(scope, function, createProto)
+    : Heap::FunctionObject(function->compilationUnit->engine->simpleScriptFunctionClass, function->compilationUnit->engine->functionPrototype.asObject())
 {
+    this->scope = scope->d();
+
     this->function = function;
     function->compilationUnit->addref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 
-    // global function
-    if (!scope)
-        return;
-
     Scope s(scope);
     ScopedFunctionObject f(s, this);
 
-    f->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(f->formalParameterCount()));
+    if (createProto) {
+        ScopedString name(s, function->name());
+        f->init(name, createProto);
+        f->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(f->formalParameterCount()));
+    } else {
+        f->ensureMemberIndex(s.engine, Index_Length);
+        memberData->data[Index_Name] = function->name();
+        memberData->data[Index_Length] = Primitive::fromInt32(f->formalParameterCount());
+    }
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);
