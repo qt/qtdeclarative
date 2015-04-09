@@ -392,6 +392,11 @@ void QQmlTypeCompiler::setDeferredBindingsPerObject(const QHash<int, QBitArray> 
     compiledData->deferredBindingsPerObject = deferredBindingsPerObject;
 }
 
+void QQmlTypeCompiler::setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData)
+{
+    compiledData->compilationUnit->bindingPropertyDataPerObject = propertyData;
+}
+
 QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scriptIndex) const
 {
     return object->bindingAsString(document, scriptIndex);
@@ -1712,9 +1717,11 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlTypeCompiler *typeCompiler)
 
 bool QQmlPropertyValidator::validate()
 {
+    _bindingPropertyDataPerObject.resize(qmlUnit->nObjects);
     if (!validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0))
         return false;
     compiler->setDeferredBindingsPerObject(_deferredBindingsPerObject);
+    compiler->setBindingPropertyDataPerObject(_bindingPropertyDataPerObject);
     return true;
 }
 
@@ -1818,6 +1825,8 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         defaultProperty = propertyCache->defaultProperty();
     }
 
+    QV4::CompiledData::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
+
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
         QString name = stringAt(binding->propertyNameIndex);
@@ -1835,22 +1844,6 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
                 customParserBindings.setBit(i);
                 continue;
             }
-        }
-
-        // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
-        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
-            continue;
-
-        if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
-            QQmlType *type = 0;
-            QQmlImportNamespace *typeNamespace = 0;
-            compiler->imports()->resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
-            if (typeNamespace)
-                recordError(binding->location, tr("Invalid use of namespace"));
-            else
-                recordError(binding->location, tr("Invalid attached object assignment"));
-            return false;
         }
 
         bool bindingToDefaultProperty = false;
@@ -1882,9 +1875,23 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
            bindingToDefaultProperty = true;
         }
 
+        if (pd)
+            collectedBindingPropertyData[i] = pd;
+
+        if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
+            QQmlType *type = 0;
+            QQmlImportNamespace *typeNamespace = 0;
+            compiler->imports()->resolveType(stringAt(binding->propertyNameIndex), &type, 0, 0, &typeNamespace);
+            if (typeNamespace)
+                recordError(binding->location, tr("Invalid use of namespace"));
+            else
+                recordError(binding->location, tr("Invalid attached object assignment"));
+            return false;
+        }
+
         bool seenSubObjectWithId = false;
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object && !customParser) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object && (!customParser || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)) {
             qSwap(_seenObjectWithId, seenSubObjectWithId);
             const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType));
             qSwap(_seenObjectWithId, seenSubObjectWithId);
@@ -1901,6 +1908,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
             deferredBindings.setBit(i);
         }
+
+        // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
+            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+            continue;
 
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
@@ -2008,6 +2020,8 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
     if (!deferredBindings.isEmpty())
         _deferredBindingsPerObject.insert(objectIndex, deferredBindings);
+
+    _bindingPropertyDataPerObject[objectIndex] = collectedBindingPropertyData;
 
     return true;
 }

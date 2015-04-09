@@ -93,6 +93,7 @@ public:
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
     void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
+    void setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData);
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
 
@@ -295,6 +296,7 @@ private:
     // collected state variables, essentially write-only
     mutable QHash<int, QBitArray> _deferredBindingsPerObject;
     mutable bool _seenObjectWithId;
+    mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
 };
 
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.

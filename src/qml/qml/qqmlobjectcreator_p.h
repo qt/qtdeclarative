@@ -94,12 +94,12 @@ private:
     QObject *createInstance(int index, QObject *parent = 0, bool isContextObject = false);
 
     bool populateInstance(int index, QObject *instance,
-                          QObject *bindingTarget, QQmlPropertyData *valueTypeProperty,
+                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty,
                           const QBitArray &bindingsToSkip = QBitArray());
 
     void setupBindings(const QBitArray &bindingsToSkip);
-    bool setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
-    void setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
+    bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
+    void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
     QString stringAt(int idx) const { return qmlUnit->stringAt(idx); }
@@ -136,7 +136,8 @@ private:
     QObject *_scopeObject;
     QObject *_bindingTarget;
 
-    QQmlPropertyData *_valueTypeProperty; // belongs to _qobjectForBindings's property cache
+    const QQmlPropertyData *_valueTypeProperty; // belongs to _qobjectForBindings's property cache
+    int _compiledObjectIndex;
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;

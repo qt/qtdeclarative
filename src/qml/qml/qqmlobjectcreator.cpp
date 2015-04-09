@@ -124,6 +124,7 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
     _scopeObject = 0;
     _valueTypeProperty = 0;
     _compiledObject = 0;
+    _compiledObjectIndex = -1;
     _ddata = 0;
     _propertyCache = 0;
     _vmeMetaObject = 0;
@@ -233,9 +234,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     QQmlData *declarativeData = QQmlData::get(instance);
     context = declarativeData->deferredData->context;
     sharedState->rootContext = context;
-    const int objectIndex = declarativeData->deferredData->deferredIdx;
 
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
     QObject *bindingTarget = instance;
 
     QQmlRefPointer<QQmlPropertyCache> cache = declarativeData->propertyCache;
@@ -256,12 +255,18 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
 
     qSwap(_propertyCache, cache);
     qSwap(_qobject, instance);
+
+    int objectIndex = declarativeData->deferredData->deferredIdx;
+    qSwap(_compiledObjectIndex, objectIndex);
+
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
+
     qSwap(_ddata, declarativeData);
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    QBitArray bindingSkipList = compiledData->deferredBindingsPerObject.value(objectIndex);
+    QBitArray bindingSkipList = compiledData->deferredBindingsPerObject.value(_compiledObjectIndex);
     for (int i = 0; i < bindingSkipList.count(); ++i)
         bindingSkipList.setBit(i, !bindingSkipList.testBit(i));
 
@@ -271,6 +276,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
+    qSwap(_compiledObjectIndex, objectIndex);
     qSwap(_qobject, instance);
     qSwap(_propertyCache, cache);
 
@@ -282,7 +288,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     return errors.isEmpty();
 }
 
-void QQmlObjectCreator::setPropertyValue(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     QQmlPropertyPrivate::WriteFlags propertyWriteFlags = QQmlPropertyPrivate::BypassInterceptor |
                                                                QQmlPropertyPrivate::RemoveBindingOnAliasWrite;
@@ -636,8 +642,6 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
-    QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
-
     if (_compiledObject->idIndex) {
         QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
         if (idProperty && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
@@ -666,6 +670,8 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             if (qmlTypeForObject(_bindingTarget)) {
                 quint32 bindingSkipList = 0;
 
+                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultProperty != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
+
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
                     QQmlPropertyData *property = binding->propertyNameIndex != 0 ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context) : defaultProperty;
@@ -678,37 +684,20 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
         }
     }
 
-    QQmlPropertyData *property = 0;
+    const QV4::CompiledData::BindingPropertyData &propertyData = compiledData->compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
+
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-
-        QString name = stringAt(binding->propertyNameIndex);
-        if (name.isEmpty())
-            property = 0;
-
-        if (!property
-            || (i > 0 && ((binding - 1)->propertyNameIndex != binding->propertyNameIndex
-                          || (binding - 1)->flags != binding->flags))
-           ) {
-            if (!name.isEmpty()) {
-                if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-                    || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
-                    property = QmlIR::PropertyResolver(_propertyCache).signal(name, /*notInRevision*/0, _qobject, context);
-                else
-                    property = _propertyCache->property(name, _qobject, context);
-            } else
-                property = defaultProperty;
-
-            if (property && property->isQList()) {
-                void *argv[1] = { (void*)&_currentList };
-                QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
-            } else if (_currentList.object)
-                _currentList = QQmlListProperty<void>();
-
-        }
-
         if (static_cast<int>(i) < bindingsToSkip.size() && bindingsToSkip.testBit(i))
             continue;
+
+        const QQmlPropertyData *property = propertyData.at(i);
+
+        if (property && property->isQList()) {
+            void *argv[1] = { (void*)&_currentList };
+            QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
+        } else if (_currentList.object)
+            _currentList = QQmlListProperty<void>();
 
         if (!setPropertyBinding(property, binding))
             return;
@@ -717,7 +706,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     qSwap(_currentList, savedList);
 }
 
-bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
@@ -765,7 +754,7 @@ bool QQmlObjectCreator::setPropertyBinding(QQmlPropertyData *property, const QV4
 
             QObject *groupObject = 0;
             QQmlValueType *valueType = 0;
-            QQmlPropertyData *valueTypeProperty = 0;
+            const QQmlPropertyData *valueTypeProperty = 0;
             QObject *bindingTarget = _bindingTarget;
 
             if (QQmlValueTypeFactory::isValueType(property->propType)) {
@@ -1263,14 +1252,14 @@ void QQmlObjectCreator::clear()
     phase = Done;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, QQmlPropertyData *valueTypeProperty, const QBitArray &bindingsToSkip)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty, const QBitArray &bindingsToSkip)
 {
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
-
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
     qSwap(_qobject, instance);
     qSwap(_valueTypeProperty, valueTypeProperty);
+    qSwap(_compiledObjectIndex, index);
+    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
     qSwap(_ddata, declarativeData);
     qSwap(_bindingTarget, bindingTarget);
@@ -1278,10 +1267,10 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObjectProtector(valueScope);
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(index);
+    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(_compiledObjectIndex);
 
     QQmlVMEMetaObject *vmeMetaObject = 0;
-    const QByteArray data = vmeMetaObjectData.value(index);
+    const QByteArray data = vmeMetaObjectData.value(_compiledObjectIndex);
     if (!data.isEmpty()) {
         Q_ASSERT(!cache.isNull());
         // install on _object
@@ -1295,14 +1284,14 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
     }
 
-    registerObjectWithContextById(index, _qobject);
+    registerObjectWithContextById(_compiledObjectIndex, _qobject);
 
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
     QBitArray bindingSkipList = bindingsToSkip;
     {
-        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.find(index);
+        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.find(_compiledObjectIndex);
         if (deferredBindings != compiledData->deferredBindingsPerObject.constEnd()) {
             if (bindingSkipList.isEmpty())
                 bindingSkipList.resize(deferredBindings->count());
@@ -1311,7 +1300,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
                 if (deferredBindings->testBit(i))
                     bindingSkipList.setBit(i);
             QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
-            deferData->deferredIdx = index;
+            deferData->deferredIdx = _compiledObjectIndex;
             deferData->compiledData = compiledData;
             deferData->compiledData->addref();
             deferData->context = context;
@@ -1327,6 +1316,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_bindingTarget, bindingTarget);
     qSwap(_ddata, declarativeData);
     qSwap(_compiledObject, obj);
+    qSwap(_compiledObjectIndex, index);
     qSwap(_valueTypeProperty, valueTypeProperty);
     qSwap(_qobject, instance);
     qSwap(_propertyCache, cache);
