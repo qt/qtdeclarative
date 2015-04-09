@@ -50,7 +50,7 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
     qt_qobjects->removeAll(object);
 }
 
-class tst_Objects : public QObject
+class tst_ObjectCount : public QObject
 {
     Q_OBJECT
 
@@ -65,7 +65,7 @@ private:
     QQmlEngine engine;
 };
 
-void tst_Objects::init()
+void tst_ObjectCount::init()
 {
     qtHookData[QHooks::AddQObject] = reinterpret_cast<quintptr>(&qt_addQObject);
     qtHookData[QHooks::RemoveQObject] = reinterpret_cast<quintptr>(&qt_removeQObject);
@@ -76,13 +76,13 @@ void tst_Objects::init()
     delete component.create();
 }
 
-void tst_Objects::cleanup()
+void tst_ObjectCount::cleanup()
 {
     qtHookData[QHooks::AddQObject] = 0;
     qtHookData[QHooks::RemoveQObject] = 0;
 }
 
-void tst_Objects::testCount()
+void tst_ObjectCount::testCount()
 {
     QFETCH(QByteArray, v1);
     QFETCH(QByteArray, v2);
@@ -124,7 +124,7 @@ void tst_Objects::testCount()
     }
 }
 
-void tst_Objects::testCount_data()
+void tst_ObjectCount::testCount_data()
 {
     QTest::addColumn<QByteArray>("v1");
     QTest::addColumn<QByteArray>("v2");
@@ -226,6 +226,6 @@ void tst_Objects::testCount_data()
             << QByteArray("import QtQuick.Controls 2.0; ToolButton { }");
 }
 
-QTEST_MAIN(tst_Objects)
+QTEST_MAIN(tst_ObjectCount)
 
-#include "tst_objects.moc"
+#include "tst_objectcount.moc"

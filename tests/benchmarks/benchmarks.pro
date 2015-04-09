@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    creation \
-    objects
+    creationtime \
+    objectcount

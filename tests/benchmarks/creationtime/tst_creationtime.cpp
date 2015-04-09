@@ -39,7 +39,7 @@
 
 //#define QT_QUICK_CONTROLS_V1
 
-class tst_Creation : public QObject
+class tst_CreationTime : public QObject
 {
     Q_OBJECT
 
@@ -56,12 +56,12 @@ private:
     QQmlEngine engine;
 };
 
-void tst_Creation::initTestCase()
+void tst_CreationTime::initTestCase()
 {
     engine.clearComponentCache();
 }
 
-void tst_Creation::testControls()
+void tst_CreationTime::testControls()
 {
     QFETCH(QByteArray, control);
 
@@ -83,7 +83,7 @@ void tst_Creation::testControls()
     engine.clearComponentCache();
 }
 
-void tst_Creation::testControls_data()
+void tst_CreationTime::testControls_data()
 {
     QTest::addColumn<QByteArray>("control");
 
@@ -117,7 +117,7 @@ void tst_Creation::testControls_data()
     QTest::newRow("ToolButton") << QByteArray("ToolButton");
 }
 
-void tst_Creation::testCalendar()
+void tst_CreationTime::testCalendar()
 {
     QFETCH(QByteArray, control);
 
@@ -139,7 +139,7 @@ void tst_Creation::testCalendar()
     engine.clearComponentCache();
 }
 
-void tst_Creation::testCalendar_data()
+void tst_CreationTime::testCalendar_data()
 {
     QTest::addColumn<QByteArray>("control");
 
@@ -153,6 +153,6 @@ void tst_Creation::testCalendar_data()
 #endif
 }
 
-QTEST_MAIN(tst_Creation)
+QTEST_MAIN(tst_CreationTime)
 
-#include "tst_creation.moc"
+#include "tst_creationtime.moc"

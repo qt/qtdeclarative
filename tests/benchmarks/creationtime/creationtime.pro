@@ -1,9 +1,9 @@
 TEMPLATE = app
-TARGET = tst_objects
+TARGET = tst_creationtime
 
-QT += quick testlib core-private
+QT += qml testlib
 CONFIG += testcase
 osx:CONFIG -= app_bundle
 
 SOURCES += \
-    tst_objects.cpp
+    tst_creationtime.cpp
