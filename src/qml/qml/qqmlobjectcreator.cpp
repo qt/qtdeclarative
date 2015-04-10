@@ -206,7 +206,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     }
     context->setIdPropertyData(mapping);
 
-    if (subComponentIndex == -1) {
+    if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
         context->importedScripts.set(v4, scripts);
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
