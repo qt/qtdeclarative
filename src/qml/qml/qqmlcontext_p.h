@@ -144,15 +144,7 @@ public:
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
 
-    struct ObjectIdMapping {
-        ObjectIdMapping() : id(-1) {}
-        ObjectIdMapping(const QString &name, int id)
-            : name(name), id(id) {}
-        QString name;
-        int id;
-    };
-
-    mutable QVector<ObjectIdMapping> idObjectNames;
+    mutable QHash<int, int> objectIndexToId;
     mutable QV4::IdentifierHash<int> propertyNameCache;
     QV4::IdentifierHash<int> &propertyNames() const;
 
@@ -202,7 +194,7 @@ public:
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(const QVector<ObjectIdMapping> &);
+    void setIdPropertyData(const QHash<int, int> &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;

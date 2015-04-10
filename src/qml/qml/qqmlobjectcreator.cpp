@@ -192,17 +192,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compiledData->totalObjectCount);
 
-    QVector<QQmlContextData::ObjectIdMapping> mapping(objectIndexToId.count());
-    for (QHash<int, int>::ConstIterator it = objectIndexToId.constBegin(), end = objectIndexToId.constEnd();
-         it != end; ++it) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(it.key());
-
-        QQmlContextData::ObjectIdMapping m;
-        m.id = it.value();
-        m.name = stringAt(obj->idIndex);
-        mapping[m.id] = m;
-    }
-    context->setIdPropertyData(mapping);
+    context->setIdPropertyData(objectIndexToId);
 
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
