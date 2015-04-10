@@ -210,6 +210,18 @@ bool FunctionObject::isBoundFunction() const
     return d()->vtable == BoundFunction::staticVTable();
 }
 
+QQmlSourceLocation FunctionObject::sourceLocation() const
+{
+    if (isBinding()) {
+        Q_ASSERT(as<const QV4::QQmlBindingFunction>());
+        return static_cast<QV4::Heap::QQmlBindingFunction *>(d())->bindingLocation;
+    }
+    QV4::Function *function = d()->function;
+    Q_ASSERT(function);
+
+    return QQmlSourceLocation(function->sourceFile(), function->compiledFunction->location.line, function->compiledFunction->location.column);
+}
+
 DEFINE_OBJECT_VTABLE(FunctionCtor);
 
 Heap::FunctionCtor::FunctionCtor(QV4::ExecutionContext *scope)

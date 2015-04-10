@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlSourceLocation;
+
 class QQmlDelayedError
 {
 public:
@@ -72,7 +74,7 @@ public:
     inline const QQmlError &error() const { return m_error; }
     inline void clearError() { m_error = QQmlError(); }
 
-    void setErrorLocation(const QUrl &url, quint16 line, quint16 column);
+    void setErrorLocation(const QQmlSourceLocation &sourceLocation);
     void setErrorDescription(const QString &description);
     void setErrorObject(QObject *object);
 

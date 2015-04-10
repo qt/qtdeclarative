@@ -112,11 +112,11 @@ Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
 class QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
-    void startBinding(const QString &fileName, int line, int column)
+    void startBinding(const QQmlSourceLocation &location)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), 1 << Binding,
-                                       fileName, line, column));
+                                       location.sourceFile, qmlSourceCoordinate(location.line), qmlSourceCoordinate(location.column)));
     }
 
     // Have toByteArrays() construct another RangeData event from the same QString later.
@@ -201,11 +201,11 @@ struct QQmlProfilerHelper : public QQmlProfilerDefinitions {
 };
 
 struct QQmlBindingProfiler : public QQmlProfilerHelper {
-    QQmlBindingProfiler(QQmlProfiler *profiler, const QString &url, int line, int column) :
+    QQmlBindingProfiler(QQmlProfiler *profiler, const QV4::FunctionObject *function) :
         QQmlProfilerHelper(profiler)
     {
         Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileBinding, profiler,
-                      startBinding(url, line, column));
+                      startBinding(function->sourceLocation()));
     }
 
     ~QQmlBindingProfiler()

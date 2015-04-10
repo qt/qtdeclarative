@@ -40,6 +40,8 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QQmlSourceLocation;
+
 namespace QV4 {
 
 namespace Heap {
@@ -139,6 +141,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
     bool isBoundFunction() const;
+
+    QQmlSourceLocation sourceLocation() const;
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

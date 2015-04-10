@@ -40,6 +40,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4errorobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,11 +60,11 @@ bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
     return true;
 }
 
-void QQmlDelayedError::setErrorLocation(const QUrl &url, quint16 line, quint16 column)
+void QQmlDelayedError::setErrorLocation(const QQmlSourceLocation &sourceLocation)
 {
-    m_error.setUrl(url);
-    m_error.setLine(line);
-    m_error.setColumn(column);
+    m_error.setUrl(QUrl(sourceLocation.sourceFile));
+    m_error.setLine(sourceLocation.line);
+    m_error.setColumn(sourceLocation.column);
 }
 
 void QQmlDelayedError::setErrorDescription(const QString &description)
