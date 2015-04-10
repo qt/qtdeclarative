@@ -81,6 +81,8 @@ Q_SIGNALS:
 protected:
     QQuickAbstractContainer(QQuickAbstractContainerPrivate &dd, QQuickItem *parent);
 
+    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
+
 private:
     Q_DISABLE_COPY(QQuickAbstractContainer)
     Q_DECLARE_PRIVATE(QQuickAbstractContainer)

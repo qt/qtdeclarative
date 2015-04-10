@@ -118,6 +118,7 @@ void QQuickAbstractContainer::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickAbstractContainer);
     if (d->contentItem != item) {
+        contentItemChange(d->contentItem, item);
         delete d->contentItem;
         d->contentItem = item;
         if (item) {
@@ -126,6 +127,12 @@ void QQuickAbstractContainer::setContentItem(QQuickItem *item)
         }
         emit contentItemChanged();
     }
+}
+
+void QQuickAbstractContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_UNUSED(newItem);
+    Q_UNUSED(oldItem);
 }
 
 QT_END_NAMESPACE
