@@ -686,6 +686,8 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
     const QV4::CompiledData::BindingPropertyData &propertyData = compiledData->compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
 
+    int currentListPropertyIndex = -1;
+
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
         if (static_cast<int>(i) < bindingsToSkip.size() && bindingsToSkip.testBit(i))
@@ -694,10 +696,15 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
         const QQmlPropertyData *property = propertyData.at(i);
 
         if (property && property->isQList()) {
-            void *argv[1] = { (void*)&_currentList };
-            QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
-        } else if (_currentList.object)
+            if (property->coreIndex != currentListPropertyIndex) {
+                void *argv[1] = { (void*)&_currentList };
+                QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex, argv);
+                currentListPropertyIndex = property->coreIndex;
+            }
+        } else if (_currentList.object) {
             _currentList = QQmlListProperty<void>();
+            currentListPropertyIndex = -1;
+        }
 
         if (!setPropertyBinding(property, binding))
             return;
