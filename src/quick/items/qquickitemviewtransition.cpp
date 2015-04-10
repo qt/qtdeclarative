@@ -34,6 +34,7 @@
 #include "qquickitemviewtransition_p.h"
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

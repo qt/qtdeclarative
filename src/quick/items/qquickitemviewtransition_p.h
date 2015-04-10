@@ -34,11 +34,15 @@
 #ifndef QQUICKITEMVIEWTRANSITION_P_P_H
 #define QQUICKITEMVIEWTRANSITION_P_P_H
 
-#include <private/qquicktransitionmanager_p_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qpoint.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
+class QQuickTransition;
 class QQuickItemViewTransitionableItem;
 class QQuickItemViewTransitionJob;
 
