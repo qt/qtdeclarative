@@ -34,31 +34,43 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+import QtQuick 2.6
+import QtQuick.Controls 2.0
+import QtQuick.Extras 2.0
 
-#include <QtQuickExtras/private/qquickdrawer_p.h>
-#include <QtQuickExtras/private/qquickswipeview_p.h>
-#include <QtQuickExtras/private/qquicktumbler_p.h>
+AbstractTumbler {
+    id: control
+    width: 60
+    height: 200
 
-QT_BEGIN_NAMESPACE
+    delegate: Text {
+        id: label
+        text: modelData
+        color: "#666666"
+        opacity: 0.4 + Math.max(0, 1 - Math.abs(AbstractTumbler.displacement)) * 0.6
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
 
-class QtQuickExtras2Plugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    contentItem: PathView {
+        id: pathView
+        model: control.model
+        delegate: control.delegate
+        clip: true
+        pathItemCount: control.visibleItemCount + 1
+        preferredHighlightBegin: 0.5
+        preferredHighlightEnd: 0.5
+        dragMargin: width / 2
 
-public:
-    void registerTypes(const char *uri);
-};
+        path: Path {
+            startX: pathView.width / 2
+            startY: -pathView.delegateHeight / 2
+            PathLine {
+                x: pathView.width / 2
+                y: pathView.pathItemCount * pathView.delegateHeight - pathView.delegateHeight / 2
+            }
+        }
 
-void QtQuickExtras2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "AbstractDrawer");
-    qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "AbstractSwipeView");
-    qmlRegisterType<QQuickTumbler>(uri, 2, 0, "AbstractTumbler");
-    qmlRegisterType<QQuickTumblerAttached>();
+        property real delegateHeight: (control.height - control.topPadding - control.bottomPadding) / control.visibleItemCount
+    }
 }
-
-QT_END_NAMESPACE
-
-#include "qtquickextras2plugin.moc"

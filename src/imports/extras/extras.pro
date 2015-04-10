@@ -10,10 +10,13 @@ OTHER_FILES += \
 
 QML_FILES = \
     Drawer.qml \
-    SwipeView.qml
+    SwipeView.qml \
+    Tumbler.qml
 
 SOURCES += \
     $$PWD/qtquickextras2plugin.cpp
 
 CONFIG += no_cxx_module
 load(qml_plugin)
+
+DISTFILES +=
