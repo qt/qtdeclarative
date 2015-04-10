@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,60 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef QQUICKSWITCH_P_H
+#define QQUICKSWITCH_P_H
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickControls/private/qquickcheckable_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickSwitchPrivate;
+
+class Q_QUICKCONTROLS_EXPORT QQuickSwitch : public QQuickCheckable
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
 
 public:
-    void registerTypes(const char *uri);
-};
+    explicit QQuickSwitch(QQuickItem *parent = Q_NULLPTR);
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
-}
+    qreal position() const;
+    void setPosition(qreal position);
+
+    qreal visualPosition() const;
+
+Q_SIGNALS:
+    void positionChanged();
+    void visualPositionChanged();
+
+protected:
+    void mirrorChange() Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
+
+    bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseUngrabEvent(QQuickItem *child);
+
+    virtual qreal positionAt(const QPoint &point) const;
+
+private:
+    Q_DISABLE_COPY(QQuickSwitch)
+    Q_DECLARE_PRIVATE(QQuickSwitch)
+};
 
 QT_END_NAMESPACE
 
-#include "qtquickcalendar2plugin.moc"
+#endif // QQUICKSWITCH_P_H

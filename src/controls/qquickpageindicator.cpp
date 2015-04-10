@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,74 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include "qquickpageindicator_p.h"
+#include "qquickcontainer_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+/*!
+    \qmltype PageIndicator
+    \inherits Control
+    \instantiates QQuickPageIndicator
+    \inqmlmodule QtQuick.Controls
+    \ingroup indicators
+    \brief A page indicator.
 
+    TODO
+*/
+
+class QQuickPageIndicatorPrivate : public QQuickContainerPrivate
+{
 public:
-    void registerTypes(const char *uri);
+    QQuickPageIndicatorPrivate() : count(0), currentIndex(0) { }
+
+    int count;
+    int currentIndex;
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
+    QQuickContainer(*(new QQuickPageIndicatorPrivate), parent)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
+}
+
+/*!
+    \qmlproperty int QtQuickControls2::PageIndicator::count
+
+    TODO
+*/
+int QQuickPageIndicator::count() const
+{
+    Q_D(const QQuickPageIndicator);
+    return d->count;
+}
+
+void QQuickPageIndicator::setCount(int count)
+{
+    Q_D(QQuickPageIndicator);
+    if (d->count != count) {
+        d->count = count;
+        emit countChanged();
+    }
+}
+
+/*!
+    \qmlproperty int QtQuickControls2::PageIndicator::currentIndex
+
+    TODO
+*/
+int QQuickPageIndicator::currentIndex() const
+{
+    Q_D(const QQuickPageIndicator);
+    return d->currentIndex;
+}
+
+void QQuickPageIndicator::setCurrentIndex(int index)
+{
+    Q_D(QQuickPageIndicator);
+    if (d->currentIndex != index) {
+        d->currentIndex = index;
+        emit currentIndexChanged();
+    }
 }
 
 QT_END_NAMESPACE
-
-#include "qtquickcalendar2plugin.moc"

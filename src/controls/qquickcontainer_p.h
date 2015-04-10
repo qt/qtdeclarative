@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,60 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef QQUICKCONTAINER_P_H
+#define QQUICKCONTAINER_P_H
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickContainerPrivate;
+
+class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
 public:
-    void registerTypes(const char *uri);
-};
+    explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
-}
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
+
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
+
+    QQuickItem *contentItem() const;
+    void setContentItem(QQuickItem *item);
+
+Q_SIGNALS:
+    void contentWidthChanged();
+    void contentHeightChanged();
+    void contentItemChanged();
+
+protected:
+    QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
+
+    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
+
+private:
+    Q_DISABLE_COPY(QQuickContainer)
+    Q_DECLARE_PRIVATE(QQuickContainer)
+};
 
 QT_END_NAMESPACE
 
-#include "qtquickcalendar2plugin.moc"
+#endif // QQUICKCONTAINER_P_H

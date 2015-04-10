@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,67 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef QQUICKBUTTON_P_H
+#define QQUICKBUTTON_P_H
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickButtonPrivate;
+
+class Q_QUICKCONTROLS_EXPORT QQuickButton : public QQuickControl
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
+    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
 public:
-    void registerTypes(const char *uri);
-};
+    explicit QQuickButton(QQuickItem *parent = Q_NULLPTR);
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
-}
+    QString text() const;
+    void setText(const QString &text);
+
+    bool isPressed() const;
+    void setPressed(bool pressed);
+
+    QQuickItem *label() const;
+    void setLabel(QQuickItem *label);
+
+Q_SIGNALS:
+    void clicked();
+    void textChanged();
+    void pressedChanged();
+    void labelChanged();
+
+protected:
+    QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
+
+    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+
+private:
+    Q_DISABLE_COPY(QQuickButton)
+    Q_DECLARE_PRIVATE(QQuickButton)
+};
 
 QT_END_NAMESPACE
 
-#include "qtquickcalendar2plugin.moc"
+#endif // QQUICKBUTTON_P_H

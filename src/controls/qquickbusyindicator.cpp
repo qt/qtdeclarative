@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,77 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include "qquickbusyindicator_p.h"
+#include "qquickcontrol_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+/*!
+    \qmltype BusyIndicator
+    \inherits Control
+    \instantiates QQuickBusyIndicator
+    \inqmlmodule QtQuick.Controls
+    \ingroup indicators
+    \brief A busy indicator.
 
+    TODO
+*/
+
+class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
+{
 public:
-    void registerTypes(const char *uri);
+    QQuickBusyIndicatorPrivate() : running(false), indicator(Q_NULLPTR) { }
+
+    bool running;
+    QQuickItem *indicator;
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
+    QQuickControl(*(new QQuickBusyIndicatorPrivate), parent)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
+}
+
+/*!
+    \qmlproperty bool QtQuickControls2::BusyIndicator::running
+
+    TODO
+*/
+bool QQuickBusyIndicator::isRunning() const
+{
+    Q_D(const QQuickBusyIndicator);
+    return d->running;
+}
+
+void QQuickBusyIndicator::setRunning(bool running)
+{
+    Q_D(QQuickBusyIndicator);
+    if (d->running != running) {
+        d->running = running;
+        emit runningChanged();
+    }
+}
+
+/*!
+    \qmlproperty Item QtQuickControls2::BusyIndicator::indicator
+
+    TODO
+*/
+QQuickItem *QQuickBusyIndicator::indicator() const
+{
+    Q_D(const QQuickBusyIndicator);
+    return d->indicator;
+}
+
+void QQuickBusyIndicator::setIndicator(QQuickItem *indicator)
+{
+    Q_D(QQuickBusyIndicator);
+    if (d->indicator != indicator) {
+        delete d->indicator;
+        d->indicator = indicator;
+        if (indicator && !indicator->parentItem())
+            indicator->setParentItem(this);
+        emit indicatorChanged();
+    }
 }
 
 QT_END_NAMESPACE
-
-#include "qtquickcalendar2plugin.moc"

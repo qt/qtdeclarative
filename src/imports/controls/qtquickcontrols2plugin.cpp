@@ -37,28 +37,28 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include "qquicktheme_p.h"
 
-#include <QtQuickControls/private/qquickabstractapplicationwindow_p.h>
-#include <QtQuickControls/private/qquickabstractbusyindicator_p.h>
-#include <QtQuickControls/private/qquickabstractbutton_p.h>
-#include <QtQuickControls/private/qquickabstractcheckbox_p.h>
-#include <QtQuickControls/private/qquickabstractframe_p.h>
-#include <QtQuickControls/private/qquickabstractgroupbox_p.h>
-#include <QtQuickControls/private/qquickabstractlabel_p.h>
-#include <QtQuickControls/private/qquickabstractpageindicator_p.h>
-#include <QtQuickControls/private/qquickabstractprogressbar_p.h>
-#include <QtQuickControls/private/qquickabstractradiobutton_p.h>
-#include <QtQuickControls/private/qquickabstractscrollbar_p.h>
-#include <QtQuickControls/private/qquickabstractscrollindicator_p.h>
-#include <QtQuickControls/private/qquickabstractslider_p.h>
-#include <QtQuickControls/private/qquickabstractstackview_p.h>
-#include <QtQuickControls/private/qquickabstractswitch_p.h>
-#include <QtQuickControls/private/qquickabstracttabbar_p.h>
-#include <QtQuickControls/private/qquickabstracttabbutton_p.h>
-#include <QtQuickControls/private/qquickabstracttabview_p.h>
-#include <QtQuickControls/private/qquickabstracttextarea_p.h>
-#include <QtQuickControls/private/qquickabstracttextfield_p.h>
-#include <QtQuickControls/private/qquickabstracttogglebutton_p.h>
-#include <QtQuickControls/private/qquickabstracttoolbar_p.h>
+#include <QtQuickControls/private/qquickapplicationwindow_p.h>
+#include <QtQuickControls/private/qquickbusyindicator_p.h>
+#include <QtQuickControls/private/qquickbutton_p.h>
+#include <QtQuickControls/private/qquickcheckbox_p.h>
+#include <QtQuickControls/private/qquickframe_p.h>
+#include <QtQuickControls/private/qquickgroupbox_p.h>
+#include <QtQuickControls/private/qquicklabel_p.h>
+#include <QtQuickControls/private/qquickpageindicator_p.h>
+#include <QtQuickControls/private/qquickprogressbar_p.h>
+#include <QtQuickControls/private/qquickradiobutton_p.h>
+#include <QtQuickControls/private/qquickscrollbar_p.h>
+#include <QtQuickControls/private/qquickscrollindicator_p.h>
+#include <QtQuickControls/private/qquickslider_p.h>
+#include <QtQuickControls/private/qquickstackview_p.h>
+#include <QtQuickControls/private/qquickswitch_p.h>
+#include <QtQuickControls/private/qquicktabbar_p.h>
+#include <QtQuickControls/private/qquicktabbutton_p.h>
+#include <QtQuickControls/private/qquicktabview_p.h>
+#include <QtQuickControls/private/qquicktextarea_p.h>
+#include <QtQuickControls/private/qquicktextfield_p.h>
+#include <QtQuickControls/private/qquicktogglebutton_p.h>
+#include <QtQuickControls/private/qquicktoolbar_p.h>
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
 #include <QtQuickControls/private/qquickexclusivegroup_p.h>
@@ -82,28 +82,28 @@ public:
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickAbstractApplicationWindow>(uri, 2, 0, "AbstractApplicationWindow");
-    qmlRegisterType<QQuickAbstractBusyIndicator>(uri, 2, 0, "AbstractBusyIndicator");
-    qmlRegisterType<QQuickAbstractButton>(uri, 2, 0, "AbstractButton");
-    qmlRegisterType<QQuickAbstractCheckBox>(uri, 2, 0, "AbstractCheckBox");
-    qmlRegisterType<QQuickAbstractFrame>(uri, 2, 0, "AbstractFrame");
-    qmlRegisterType<QQuickAbstractGroupBox>(uri, 2, 0, "AbstractGroupBox");
-    qmlRegisterType<QQuickAbstractLabel>(uri, 2, 0, "AbstractLabel");
-    qmlRegisterType<QQuickAbstractPageIndicator>(uri, 2, 0, "AbstractPageIndicator");
-    qmlRegisterType<QQuickAbstractProgressBar>(uri, 2, 0, "AbstractProgressBar");
-    qmlRegisterType<QQuickAbstractRadioButton>(uri, 2, 0, "AbstractRadioButton");
-    qmlRegisterType<QQuickAbstractScrollBar>(uri, 2, 0, "AbstractScrollBar");
-    qmlRegisterType<QQuickAbstractScrollIndicator>(uri, 2, 0, "AbstractScrollIndicator");
-    qmlRegisterType<QQuickAbstractSlider>(uri, 2, 0, "AbstractSlider");
-    qmlRegisterType<QQuickAbstractStackView>(uri, 2, 0, "AbstractStackView");
-    qmlRegisterType<QQuickAbstractSwitch>(uri, 2, 0, "AbstractSwitch");
-    qmlRegisterType<QQuickAbstractTabBar>(uri, 2, 0, "AbstractTabBar");
-    qmlRegisterType<QQuickAbstractTabButton>(uri, 2, 0, "AbstractTabButton");
-    qmlRegisterType<QQuickAbstractTabView>(uri, 2, 0, "AbstractTabView");
-    qmlRegisterType<QQuickAbstractTextArea>(uri, 2, 0, "AbstractTextArea");
-    qmlRegisterType<QQuickAbstractTextField>(uri, 2, 0, "AbstractTextField");
-    qmlRegisterType<QQuickAbstractToggleButton>(uri, 2, 0, "AbstractToggleButton");
-    qmlRegisterType<QQuickAbstractToolBar>(uri, 2, 0, "AbstractToolBar");
+    qmlRegisterType<QQuickApplicationWindow>(uri, 2, 0, "AbstractApplicationWindow");
+    qmlRegisterType<QQuickBusyIndicator>(uri, 2, 0, "AbstractBusyIndicator");
+    qmlRegisterType<QQuickButton>(uri, 2, 0, "AbstractButton");
+    qmlRegisterType<QQuickCheckBox>(uri, 2, 0, "AbstractCheckBox");
+    qmlRegisterType<QQuickFrame>(uri, 2, 0, "AbstractFrame");
+    qmlRegisterType<QQuickGroupBox>(uri, 2, 0, "AbstractGroupBox");
+    qmlRegisterType<QQuickLabel>(uri, 2, 0, "AbstractLabel");
+    qmlRegisterType<QQuickPageIndicator>(uri, 2, 0, "AbstractPageIndicator");
+    qmlRegisterType<QQuickProgressBar>(uri, 2, 0, "AbstractProgressBar");
+    qmlRegisterType<QQuickRadioButton>(uri, 2, 0, "AbstractRadioButton");
+    qmlRegisterType<QQuickScrollBar>(uri, 2, 0, "AbstractScrollBar");
+    qmlRegisterType<QQuickScrollIndicator>(uri, 2, 0, "AbstractScrollIndicator");
+    qmlRegisterType<QQuickSlider>(uri, 2, 0, "AbstractSlider");
+    qmlRegisterType<QQuickStackView>(uri, 2, 0, "AbstractStackView");
+    qmlRegisterType<QQuickSwitch>(uri, 2, 0, "AbstractSwitch");
+    qmlRegisterType<QQuickTabBar>(uri, 2, 0, "AbstractTabBar");
+    qmlRegisterType<QQuickTabButton>(uri, 2, 0, "AbstractTabButton");
+    qmlRegisterType<QQuickTabView>(uri, 2, 0, "AbstractTabView");
+    qmlRegisterType<QQuickTextArea>(uri, 2, 0, "AbstractTextArea");
+    qmlRegisterType<QQuickTextField>(uri, 2, 0, "AbstractTextField");
+    qmlRegisterType<QQuickToggleButton>(uri, 2, 0, "AbstractToggleButton");
+    qmlRegisterType<QQuickToolBar>(uri, 2, 0, "AbstractToolBar");
 
     qmlRegisterUncreatableType<QQuickExclusiveAttached>(uri, 2, 0, "Exclusive", "Exclusive is an attached property");
     qmlRegisterUncreatableType<QQuickStackAttached>(uri, 2, 0, "Stack", "Stack is an attached property");

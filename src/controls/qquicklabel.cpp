@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,72 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#include "qquicklabel_p.h"
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquickclipnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickLabelPrivate
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_DECLARE_PUBLIC(QQuickLabel)
 
 public:
-    void registerTypes(const char *uri);
+    QQuickLabelPrivate() : background(Q_NULLPTR) { }
+
+    QQuickItem *background;
+    QQuickLabel *q_ptr;
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+QQuickLabel::QQuickLabel(QQuickItem *parent) :
+    QQuickText(parent), d_ptr(new QQuickLabelPrivate)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
+    Q_D(QQuickLabel);
+    d->q_ptr = this;
+}
+
+QQuickLabel::~QQuickLabel()
+{
+}
+
+QQuickItem *QQuickLabel::background() const
+{
+    Q_D(const QQuickLabel);
+    return d->background;
+}
+
+void QQuickLabel::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickLabel);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+        }
+        emit backgroundChanged();
+    }
+}
+
+void QQuickLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickLabel);
+    QQuickText::geometryChanged(newGeometry, oldGeometry);
+    if (d->background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
+        if (!p->widthValid) {
+            d->background->setWidth(newGeometry.width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid) {
+            d->background->setHeight(newGeometry.height());
+            p->heightValid = false;
+        }
+    }
 }
 
 QT_END_NAMESPACE
-
-#include "qtquickcalendar2plugin.moc"

@@ -34,38 +34,54 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#include "qquickdayofweekrow_p.h"
+#include "qquickdayofweekmodel_p.h"
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include <QtQuickControls/private/qquickcontainer_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickDayOfWeekRowPrivate : public QQuickContainerPrivate
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
-
 public:
-    void registerTypes(const char *uri);
+    QVariant source;
+    QQuickDayOfWeekModel *model;
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
+    QQuickContainer(*(new QQuickDayOfWeekRowPrivate), parent)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
+    Q_D(QQuickDayOfWeekRow);
+    d->model = new QQuickDayOfWeekModel(this);
+    d->source = QVariant::fromValue(d->model);
+    connect(d->model, &QQuickDayOfWeekModel::localeChanged, this, &QQuickDayOfWeekRow::localeChanged);
+}
+
+QLocale QQuickDayOfWeekRow::locale() const
+{
+    Q_D(const QQuickDayOfWeekRow);
+    return d->model->locale();
+}
+
+void QQuickDayOfWeekRow::setLocale(const QLocale &locale)
+{
+    Q_D(QQuickDayOfWeekRow);
+    d->model->setLocale(locale);
+}
+
+QVariant QQuickDayOfWeekRow::source() const
+{
+    Q_D(const QQuickDayOfWeekRow);
+    return d->source;
+}
+
+void QQuickDayOfWeekRow::setSource(const QVariant &source)
+{
+    Q_D(QQuickDayOfWeekRow);
+    if (d->source != source) {
+        d->source = source;
+        emit sourceChanged();
+    }
 }
 
 QT_END_NAMESPACE
-
-#include "qtquickcalendar2plugin.moc"

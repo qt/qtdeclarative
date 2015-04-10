@@ -36,7 +36,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <QtQuickExtras/private/qquickabstractdrawer_p.h>
+#include <QtQuickExtras/private/qquickdrawer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +51,7 @@ public:
 
 void QtQuickExtras2Plugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickAbstractDrawer>(uri, 2, 0, "AbstractDrawer");
+    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "AbstractDrawer");
 }
 
 QT_END_NAMESPACE

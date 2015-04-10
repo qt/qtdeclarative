@@ -34,38 +34,51 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef QQUICKDAYOFWEEKROW_P_H
+#define QQUICKDAYOFWEEKROW_P_H
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
+#include <QtQuickControls/private/qquickcontainer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QQuickDayOfWeekRowPrivate;
+
+class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickContainer
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
 
 public:
-    void registerTypes(const char *uri);
-};
+    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
-}
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+
+    QVariant source() const;
+    void setSource(const QVariant &source);
+
+Q_SIGNALS:
+    void localeChanged();
+    void sourceChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickDayOfWeekRow)
+    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+};
 
 QT_END_NAMESPACE
 
-#include "qtquickcalendar2plugin.moc"
+#endif // QQUICKDAYOFWEEKROW_P_H

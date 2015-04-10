@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,38 +34,55 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include "qquicktabbar_p.h"
+#include "qquickcontainer_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+/*!
+    \qmltype TabBar
+    \inherits Container
+    \instantiates QQuickTabBar
+    \inqmlmodule QtQuick.Controls
+    \ingroup tabs
+    \brief A tab bar control.
 
+    TODO
+*/
+
+class QQuickTabBarPrivate : public QQuickContainerPrivate
+{
 public:
-    void registerTypes(const char *uri);
+    QQuickTabBarPrivate() : currentIndex(0) { }
+
+    int currentIndex;
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
+    QQuickContainer(*(new QQuickTabBarPrivate), parent)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
+    setFlag(ItemIsFocusScope);
+    setActiveFocusOnTab(true);
+}
+
+/*!
+    \qmlproperty int QtQuickControls2::TabBar::currentIndex
+
+    TODO
+*/
+int QQuickTabBar::currentIndex() const
+{
+    Q_D(const QQuickTabBar);
+    return d->currentIndex;
+}
+
+void QQuickTabBar::setCurrentIndex(int index)
+{
+    Q_D(QQuickTabBar);
+    if (d->currentIndex != index) {
+        d->currentIndex = index;
+        emit currentIndexChanged(index);
+    }
 }
 
 QT_END_NAMESPACE
-
-#include "qtquickcalendar2plugin.moc"

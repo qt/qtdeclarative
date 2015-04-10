@@ -1,7 +1,7 @@
 INCLUDEPATH += $$PWD
 
 HEADERS += \
-    $$PWD/qquickabstractdrawer_p.h
+    $$PWD/qquickdrawer_p.h
 
 SOURCES += \
-    $$PWD/qquickabstractdrawer.cpp
+    $$PWD/qquickdrawer.cpp
