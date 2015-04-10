@@ -162,9 +162,11 @@ public:
     // Any script blocks that exist on this context
     QV4::PersistentValue importedScripts; // This is a JS Array
 
-    // Context base url
-    QUrl url;
-    QString urlString;
+    QUrl baseUrl;
+    QString baseUrlString;
+
+    QUrl url() const;
+    QString urlString() const;
 
     // List of imports that apply to this context
     QQmlTypeNameCache *imports;

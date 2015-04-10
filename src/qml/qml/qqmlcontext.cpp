@@ -426,14 +426,14 @@ QUrl QQmlContextData::resolvedUrl(const QUrl &src)
     if (src.isRelative() && !src.isEmpty()) {
         if (ctxt) {
             while(ctxt) {
-                if(ctxt->url.isValid())
+                if (ctxt->url().isValid())
                     break;
                 else
                     ctxt = ctxt->parent;
             }
 
             if (ctxt)
-                resolved = ctxt->url.resolved(src);
+                resolved = ctxt->url().resolved(src);
             else if (engine)
                 resolved = engine->baseUrl().resolved(src);
         }
@@ -462,8 +462,8 @@ void QQmlContext::setBaseUrl(const QUrl &baseUrl)
 {
     Q_D(QQmlContext);
 
-    d->data->url = baseUrl;
-    d->data->urlString = baseUrl.toString();
+    d->data->baseUrl = baseUrl;
+    d->data->baseUrlString = baseUrl.toString();
 }
 
 /*!
@@ -474,11 +474,11 @@ QUrl QQmlContext::baseUrl() const
 {
     Q_D(const QQmlContext);
     const QQmlContextData* data = d->data;
-    while (data && data->url.isEmpty())
+    while (data && data->url().isEmpty())
         data = data->parent;
 
     if (data)
-        return data->url;
+        return data->url();
     else
         return QUrl();
 }
@@ -814,6 +814,20 @@ QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
         idObjectNames.clear();
     }
     return propertyNameCache;
+}
+
+QUrl QQmlContextData::url() const
+{
+    if (typeCompilationUnit)
+        return typeCompilationUnit->url();
+    return baseUrl;
+}
+
+QString QQmlContextData::urlString() const
+{
+    if (typeCompilationUnit)
+        return typeCompilationUnit->fileName();
+    return baseUrlString;
 }
 
 QT_END_NAMESPACE

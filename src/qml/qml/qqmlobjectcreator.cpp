@@ -175,8 +175,6 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     context = new QQmlContextData;
     context->isInternal = true;
-    context->url = compiledData->url();
-    context->urlString = compiledData->fileName();
     context->imports = compiledData->importCache;
     context->imports->addref();
     context->typeCompilationUnit = compiledData->compilationUnit;
@@ -1050,7 +1048,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compiledData, index, parent);
         Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(QStringLiteral("<component>"),
-                context->url, obj->location.line, obj->location.column));
+                context->url(), obj->location.line, obj->location.column));
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
@@ -1061,7 +1059,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         QQmlType *type = typeRef->type;
         if (type) {
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(type->qmlTypeName(),
-                    context->url, obj->location.line, obj->location.column));
+                    context->url(), obj->location.line, obj->location.column));
             instance = type->create();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1084,7 +1082,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         } else {
             Q_ASSERT(typeRef->component);
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(typeRef->component->fileName(),
-                    context->url, obj->location.line, obj->location.column));
+                    context->url(), obj->location.line, obj->location.column));
             if (typeRef->component->compilationUnit->data->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));

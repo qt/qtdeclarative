@@ -143,9 +143,9 @@ void QQuickWindowQmlImpl::setWindowVisibility()
         error.setObject(this);
 
         const QQmlContextData* urlContext = data->context;
-        while (urlContext && urlContext->url.isEmpty())
+        while (urlContext && urlContext->url().isEmpty())
             urlContext = urlContext->parent;
-        error.setUrl(urlContext ? urlContext->url : QUrl());
+        error.setUrl(urlContext ? urlContext->url() : QUrl());
 
         QString objectId = data->context->findObjectId(this);
         if (!objectId.isEmpty())

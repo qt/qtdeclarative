@@ -1722,7 +1722,7 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QString context;
     if (QQmlContextData *ctxt = v8engine->callingContext()) {
-        QString path = ctxt->url.toString();
+        QString path = ctxt->urlString();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         int lastDot = path.lastIndexOf(QLatin1Char('.'));
         int length = lastDot - (lastSlash + 1);

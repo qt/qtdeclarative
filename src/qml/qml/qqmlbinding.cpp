@@ -93,8 +93,8 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
     QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-    if (engine && ctxtdata && !ctxtdata->url.isEmpty() && ctxtdata->typeCompilationUnit) {
-        url = ctxtdata->url.toString();
+    if (engine && ctxtdata && !ctxtdata->urlString().isEmpty() && ctxtdata->typeCompilationUnit) {
+        url = ctxtdata->urlString();
         if (scriptPrivate->bindingId != QQmlBinding::Invalid)
             runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
     }

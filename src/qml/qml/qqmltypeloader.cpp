@@ -2478,8 +2478,8 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         ctxt->isPragmaLibraryContext = true;
     else
         ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
-    ctxt->url = url;
-    ctxt->urlString = urlString;
+    ctxt->baseUrl = url;
+    ctxt->baseUrlString = urlString;
 
     // For backward compatibility, if there are no imports, we need to use the
     // imports from the parent context.  See QTBUG-17518.

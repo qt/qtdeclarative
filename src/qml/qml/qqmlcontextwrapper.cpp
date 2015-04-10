@@ -82,7 +82,8 @@ ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
     Scope scope(v4);
 
     QQmlContextData *context = new QQmlContextData;
-    context->url = url;
+    context->baseUrl = url;
+    context->baseUrlString = url.toString();
     context->isInternal = true;
     context->isJSContext = true;
 

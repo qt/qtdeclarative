@@ -149,8 +149,8 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     if (scriptPrivate->context) {
         QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine && ctxtdata && !ctxtdata->url.isEmpty() && ctxtdata->typeCompilationUnit) {
-            d->url = ctxtdata->url.toString();
+        if (engine && ctxtdata && !ctxtdata->urlString().isEmpty() && ctxtdata->typeCompilationUnit) {
+            d->url = ctxtdata->urlString();
             d->line = scriptPrivate->lineNumber;
             d->column = scriptPrivate->columnNumber;
 
