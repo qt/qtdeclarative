@@ -38,6 +38,7 @@
 #include <QtCore/qdebug.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlmodelindexvaluetype_p.h>
+#include <private/qmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -182,8 +183,9 @@ void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor,
 }
 
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
-    : typeId(typeId)
-    , gadgetPtr(QMetaType::create(typeId))
+    : gadgetPtr(QMetaType::create(typeId))
+    , typeId(typeId)
+    , metaType(typeId)
 {
     QObjectPrivate *op = QObjectPrivate::get(this);
     Q_ASSERT(!op->metaObject);
@@ -201,7 +203,7 @@ QQmlValueType::~QQmlValueType()
     Q_ASSERT(op->metaObject == this);
     op->metaObject = 0;
     ::free((void*)_metaObject);
-    QMetaType::destroy(typeId, gadgetPtr);
+    metaType.destroy(gadgetPtr);
 }
 
 void QQmlValueType::read(QObject *obj, int idx)
@@ -227,8 +229,8 @@ QVariant QQmlValueType::value()
 void QQmlValueType::setValue(const QVariant &value)
 {
     Q_ASSERT(typeId == value.userType());
-    QMetaType::destruct(typeId, gadgetPtr);
-    QMetaType::construct(typeId, gadgetPtr, value.constData());
+    metaType.destruct(gadgetPtr);
+    metaType.construct(gadgetPtr, value.constData());
 }
 
 QAbstractDynamicMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)

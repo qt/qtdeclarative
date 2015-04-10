@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
+class QQmlValueType;
 
 namespace QV4 {
 
@@ -62,13 +63,12 @@ namespace Heap {
 struct QQmlValueTypeWrapper : Object {
     QQmlValueTypeWrapper(ExecutionEngine *engine);
     ~QQmlValueTypeWrapper();
-    mutable QQmlRefPointer<QQmlPropertyCache> propertyCache;
+    QQmlRefPointer<QQmlPropertyCache> propertyCache;
     mutable void *gadgetPtr;
-    mutable int metaType;
+    QQmlValueType *valueType;
 
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
-    void *gadget() const { return gadgetPtr; }
 };
 
 }
@@ -84,8 +84,9 @@ public:
     static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, int typeId);
 
     QVariant toVariant() const;
-    void toGadget(void *data) const;
+    bool toGadget(void *data) const;
     bool isEqual(const QVariant& value);
+    int typeId() const;
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);

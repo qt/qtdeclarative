@@ -1738,9 +1738,8 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::Value &value, int type, void *da
 
     {
         QV4::Scoped<QV4::QQmlValueTypeWrapper> vtw(scope, value);
-        if (vtw && vtw->d()->metaType == type) {
-            vtw->toGadget(data);
-            return true;
+        if (vtw && vtw->typeId() == type) {
+            return vtw->toGadget(data);
         }
     }
 

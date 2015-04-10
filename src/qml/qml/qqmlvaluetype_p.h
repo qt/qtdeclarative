@@ -75,8 +75,11 @@ public:
 
 private:
     const QMetaObject *_metaObject;
-    int typeId;
     void *gadgetPtr;
+
+public:
+    int typeId;
+    QMetaType metaType;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
