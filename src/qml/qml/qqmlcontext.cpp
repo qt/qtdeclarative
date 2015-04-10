@@ -305,12 +305,10 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         }
     }
 
-    if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
-
-    int idx = data->propertyNames.value(name);
+    QV4::IdentifierHash<int> &properties = data->propertyNames();
+    int idx = properties.value(name);
     if (idx == -1) {
-        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
+        properties.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(value);
 
         data->refreshExpressions();
@@ -343,12 +341,11 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
         return;
     }
 
-    if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
-    int idx = data->propertyNames.value(name);
+    QV4::IdentifierHash<int> &properties = data->propertyNames();
+    int idx = properties.value(name);
 
     if (idx == -1) {
-        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
+        properties.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(QVariant::fromValue(value));
 
         data->refreshExpressions();
@@ -370,8 +367,9 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 
     QQmlContextData *data = d->data;
 
-    if (data->propertyNames.count())
-        idx = data->propertyNames.value(name);
+    const QV4::IdentifierHash<int> &properties = data->propertyNames();
+    if (properties.count())
+        idx = properties.value(name);
 
     if (idx == -1) {
         if (data->contextObject) {
@@ -764,31 +762,29 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
 
 void QQmlContextData::setIdPropertyData(const QVector<ObjectIdMapping> &data)
 {
-    Q_ASSERT(propertyNames.isEmpty());
-    propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
-    for (QVector<ObjectIdMapping>::ConstIterator it = data.begin(), end = data.end();
-         it != end; ++it)
-        propertyNames.add(it->name, it->id);
-
+    Q_ASSERT(idObjectNames.isEmpty());
+    idObjectNames = data;
+    Q_ASSERT(propertyNameCache.isEmpty());
     idValueCount = data.count();
     idValues = new ContextGuard[idValueCount];
 }
 
 QString QQmlContextData::findObjectId(const QObject *obj) const
 {
-    if (propertyNames.isEmpty())
+    const QV4::IdentifierHash<int> &properties = propertyNames();
+    if (propertyNameCache.isEmpty())
         return QString();
 
     for (int ii = 0; ii < idValueCount; ii++) {
         if (idValues[ii] == obj)
-            return propertyNames.findId(ii);
+            return properties.findId(ii);
     }
 
     if (publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(publicContext);
         for (int ii = 0; ii < p->propertyValues.count(); ++ii)
             if (p->propertyValues.at(ii) == QVariant::fromValue((QObject *)obj))
-                return propertyNames.findId(ii);
+                return properties.findId(ii);
     }
 
     if (linkedContext)
@@ -806,6 +802,18 @@ QQmlContext *QQmlContextData::asQQmlContext()
 QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
 {
     return QQmlContextPrivate::get(asQQmlContext());
+}
+
+QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
+{
+    if (propertyNameCache.isEmpty()) {
+        propertyNameCache = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
+        for (QVector<ObjectIdMapping>::ConstIterator it = idObjectNames.begin(), end = idObjectNames.end();
+             it != end; ++it)
+            propertyNameCache.add(it->name, it->id);
+        idObjectNames.clear();
+    }
+    return propertyNameCache;
 }
 
 QT_END_NAMESPACE

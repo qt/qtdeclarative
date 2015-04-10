@@ -199,8 +199,9 @@ ReturnedValue QmlContextWrapper::get(Managed *m, String *name, bool *hasProperty
 
     while (context) {
         // Search context properties
-        if (context->propertyNames.count()) {
-            int propertyIdx = context->propertyNames.value(name);
+        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        if (properties.count()) {
+            int propertyIdx = properties.value(name);
 
             if (propertyIdx != -1) {
 
@@ -308,8 +309,9 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     QObject *scopeObject = wrapper->getScopeObject();
 
     while (context) {
+        const QV4::IdentifierHash<int> &properties = context->propertyNames();
         // Search context properties
-        if (context->propertyNames.count() && -1 != context->propertyNames.value(name))
+        if (properties.count() && properties.value(name) != -1)
             return;
 
         // Search scope object
