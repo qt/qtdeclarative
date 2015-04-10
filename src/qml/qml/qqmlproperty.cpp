@@ -53,6 +53,7 @@
 
 #include <QStringList>
 #include <private/qmetaobject_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include <QtCore/qdebug.h>
 
 Q_DECLARE_METATYPE(QList<int>)
@@ -1519,6 +1520,11 @@ bool QQmlPropertyPrivate::writeBinding(QObject *object,
                 QUICK_STORE(QString, result.toQStringNoThrow())
             break;
         default:
+            if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
+                if (vtw->d()->valueType->typeId == core.propType) {
+                    return vtw->write(object, core.coreIndex);
+                }
+            }
             break;
         }
     }

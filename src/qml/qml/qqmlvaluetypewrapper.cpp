@@ -264,6 +264,31 @@ int QQmlValueTypeWrapper::typeId() const
     return d()->valueType->typeId;
 }
 
+bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
+{
+    bool destructGadgetOnExit = false;
+    if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>()) {
+        if (!d()->gadgetPtr) {
+            d()->gadgetPtr = alloca(d()->valueType->metaType.sizeOf());
+            d()->valueType->metaType.construct(d()->gadgetPtr, 0);
+            destructGadgetOnExit = true;
+        }
+        if (!ref->readReferenceValue())
+            return false;
+    }
+
+    int flags = 0;
+    int status = -1;
+    void *a[] = { d()->gadgetPtr, 0, &status, &flags };
+    QMetaObject::metacall(target, QMetaObject::WriteProperty, propertyIndex, a);
+
+    if (destructGadgetOnExit) {
+        d()->valueType->metaType.destruct(d()->gadgetPtr);
+        d()->gadgetPtr = 0;
+    }
+    return true;
+}
+
 ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
 {
     Object *o = ctx->thisObject().asObject();

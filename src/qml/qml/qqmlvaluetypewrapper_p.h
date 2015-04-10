@@ -87,6 +87,7 @@ public:
     bool toGadget(void *data) const;
     bool isEqual(const QVariant& value);
     int typeId() const;
+    bool write(QObject *target, int propertyIndex) const;
 
     static ReturnedValue get(Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
