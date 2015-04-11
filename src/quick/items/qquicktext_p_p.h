@@ -179,7 +179,7 @@ public:
 };
 
 class QQuickPixmap;
-class QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
+class Q_AUTOTEST_EXPORT QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
 {
     Q_OBJECT
     Q_INTERFACES(QTextObjectInterface)

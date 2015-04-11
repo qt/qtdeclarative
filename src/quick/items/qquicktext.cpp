@@ -120,14 +120,15 @@ QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
 
 QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
 {
-    QQmlContext *context = qmlContext(parent());
-
-    if (type == QTextDocument::ImageResource) {
-        QQuickPixmap *p = loadPixmap(context, name);
-        return p->image();
+    QVariant resource = QTextDocument::loadResource(type, name);
+    if (resource.isNull() && type == QTextDocument::ImageResource) {
+        QQmlContext *context = qmlContext(parent());
+        QUrl url = baseUrl().resolved(name);
+        QQuickPixmap *p = loadPixmap(context, url);
+        resource = p->image();
     }
 
-    return QTextDocument::loadResource(type, name);
+    return resource;
 }
 
 void QQuickTextDocumentWithImageResources::requestFinished()
@@ -152,30 +153,28 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
 
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
-            QQmlContext *context = qmlContext(parent());
-            QUrl url = baseUrl().resolved(QUrl(imageFormat.name()));
-
-            QQuickPixmap *p = loadPixmap(context, url);
-            if (!p->isReady()) {
+            QVariant res = resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
+            QImage image = res.value<QImage>();
+            if (image.isNull()) {
                 if (!hasWidth)
                     size.setWidth(16);
                 if (!hasHeight)
                     size.setHeight(16);
                 return size;
             }
-            QSize implicitSize = p->implicitSize();
+            QSize imgSize = image.size();
 
             if (!hasWidth) {
                 if (!hasHeight)
-                    size.setWidth(implicitSize.width());
+                    size.setWidth(imgSize.width());
                 else
-                    size.setWidth(qRound(height * (implicitSize.width() / (qreal) implicitSize.height())));
+                    size.setWidth(qRound(height * (imgSize.width() / (qreal) imgSize.height())));
             }
             if (!hasHeight) {
                 if (!hasWidth)
-                    size.setHeight(implicitSize.height());
+                    size.setHeight(imgSize.height());
                 else
-                    size.setHeight(qRound(width * (implicitSize.height() / (qreal) implicitSize.width())));
+                    size.setHeight(qRound(width * (imgSize.height() / (qreal) imgSize.width())));
             }
         }
         return size;
@@ -190,11 +189,8 @@ void QQuickTextDocumentWithImageResources::drawObject(
 
 QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format)
 {
-    QQmlContext *context = qmlContext(parent());
-    QUrl url = baseUrl().resolved(QUrl(format.name()));
-
-    QQuickPixmap *p = loadPixmap(context, url);
-    return p->image();
+    QVariant res = resource(QTextDocument::ImageResource, QUrl(format.name()));
+    return res.value<QImage>();
 }
 
 void QQuickTextDocumentWithImageResources::reset()
