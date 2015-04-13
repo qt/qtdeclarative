@@ -57,24 +57,8 @@ class QQmlObjectCreator;
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 {
 public:
-    enum DestroyMode {
-
-        // The binding should disconnect itself upon destroy
-        DisconnectBinding,
-
-        // The binding doesn't need to disconnect itself, but it can if it wants to.
-        //
-        // This is used in QQmlData::destroyed() - at the point at which the bindings are
-        // destroyed, the notifiers are already disconnected, so no need to disconnect each
-        // binding again.
-        //
-        // Bindings can use this flag to speed up destruction, especially for v4 bindings
-        // disconnecting a single binding might be slow.
-        KeepBindingConnected
-    };
-
     struct VTable {
-        void (*destroy)(QQmlAbstractBinding *, DestroyMode destroyMode);
+        void (*destroy)(QQmlAbstractBinding *);
         QString (*expression)(const QQmlAbstractBinding *);
         int (*propertyIndex)(const QQmlAbstractBinding *);
         QObject *(*object)(const QQmlAbstractBinding *);
@@ -88,12 +72,8 @@ public:
     enum BindingType { Binding = 0, ValueTypeProxy = 1 };
     inline BindingType bindingType() const;
 
-    // Destroy the binding.  Use this instead of calling delete.
-    // Bindings are free to implement their own memory management, so the delete operator is
-    // not necessarily safe.  The default implementation clears the binding, removes it from
-    // the object and calls delete.
-    void destroy(DestroyMode destroyMode = DisconnectBinding)
-    { vtable()->destroy(this, destroyMode); }
+    void destroy()
+    { vtable()->destroy(this); }
 
     QString expression() const { return vtable()->expression(this); }
 
@@ -120,7 +100,7 @@ public:
 
     // Default implementation for some VTable functions
     template<typename T>
-    static void default_destroy(QQmlAbstractBinding *, DestroyMode);
+    static void default_destroy(QQmlAbstractBinding *);
     static QString default_expression(const QQmlAbstractBinding *);
     static void default_retargetBinding(QQmlAbstractBinding *, QObject *, int);
 
@@ -203,12 +183,8 @@ QQmlAbstractBinding::BindingType QQmlAbstractBinding::bindingType() const
 }
 
 template<typename T>
-void QQmlAbstractBinding::default_destroy(QQmlAbstractBinding *This, DestroyMode mode)
+void QQmlAbstractBinding::default_destroy(QQmlAbstractBinding *This)
 {
-    // Assume the binding disconnects itself in the destructor, which for example QQmlBinding
-    // does in the destructor of its base class, QQmlJavaScriptExpression
-    Q_UNUSED(mode);
-
     This->removeFromObject();
     This->clear();
     delete static_cast<T *>(This);
