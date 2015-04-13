@@ -477,7 +477,7 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
             bindingFunction->initBindingLocation();
 
             newBinding = new QQmlBinding(value, object, callingQmlContext);
-            newBinding->setTarget(object, *property, callingQmlContext);
+            newBinding->setTarget(object, *property);
         }
     }
 

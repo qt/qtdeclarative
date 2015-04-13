@@ -831,7 +831,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             sharedState->allCreatedBindings.push(qmlBinding);
             qmlBinding->m_mePtr = &sharedState->allCreatedBindings.top();
 
-            qmlBinding->setTarget(_bindingTarget, targetCorePropertyData, context);
+            qmlBinding->setTarget(_bindingTarget, targetCorePropertyData);
 
             if (targetCorePropertyData.isAlias()) {
                 QQmlAbstractBinding *old =

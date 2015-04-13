@@ -63,7 +63,10 @@ QQmlAbstractBinding::VTable QQmlBinding_vtable = {
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
-: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
+    : QQmlJavaScriptExpression(),
+      QQmlAbstractBinding(Binding),
+      m_updating(false),
+      m_enabled(false)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
@@ -74,7 +77,10 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
-: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
+    : QQmlJavaScriptExpression(),
+      QQmlAbstractBinding(Binding),
+      m_updating(false),
+      m_enabled(false)
 {
     if (ctxt && !ctxt->isValid())
         return;
@@ -108,7 +114,10 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
-: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
+    : QQmlJavaScriptExpression(),
+      QQmlAbstractBinding(Binding),
+      m_updating(false),
+      m_enabled(false)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -121,7 +130,10 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
-: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
+    : QQmlJavaScriptExpression(),
+      QQmlAbstractBinding(Binding),
+      m_updating(false),
+      m_enabled(false)
 {
     Q_UNUSED(columnNumber);
     setNotifyOnValueChanged(true);
@@ -133,7 +145,10 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
 }
 
 QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
-: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
+    : QQmlJavaScriptExpression(),
+      QQmlAbstractBinding(Binding),
+      m_updating(false),
+      m_enabled(false)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -323,20 +338,18 @@ void QQmlBinding::retargetBinding(QObject *t, int i)
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)
 {
-    setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core,
-              QQmlPropertyPrivate::get(prop)->context);
+    setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core);
 }
 
-void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, QQmlContextData *ctxt)
+void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 {
     m_coreObject = object;
     m_core = core;
-    m_ctxt = ctxt;
 }
 
 QQmlProperty QQmlBinding::property() const
 {
-    return QQmlPropertyPrivate::restore(object(), m_core, *m_ctxt);
+    return QQmlPropertyPrivate::restore(object(), m_core, 0);
 }
 
 QT_END_NAMESPACE

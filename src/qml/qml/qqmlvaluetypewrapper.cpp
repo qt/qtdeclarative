@@ -434,7 +434,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
         bindingFunction->initBindingLocation();
 
         newBinding = new QQmlBinding(value, reference->d()->object, context);
-        newBinding->setTarget(reference->d()->object, cacheData, context);
+        newBinding->setTarget(reference->d()->object, cacheData);
     }
 
     if (reference) {

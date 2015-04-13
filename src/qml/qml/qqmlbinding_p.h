@@ -74,7 +74,7 @@ public:
     QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *);
 
     void setTarget(const QQmlProperty &);
-    void setTarget(QObject *, const QQmlPropertyData &, QQmlContextData *);
+    void setTarget(QObject *, const QQmlPropertyData &);
     QQmlProperty property() const;
 
     void setNotifyOnValueChanged(bool);
@@ -126,30 +126,28 @@ private:
 
     QPointerValuePair<QObject, Retarget> m_coreObject;
     QQmlPropertyData m_core;
-    // We store some flag bits in the following flag pointers.
-    //    m_ctxt:flag1 - updatingFlag
-    //    m_ctxt:flag2 - enabledFlag
-    QFlagPointer<QQmlContextData> m_ctxt;
+    uint m_updating : 1;
+    uint m_enabled : 1;
 };
 
 bool QQmlBinding::updatingFlag() const
 {
-    return m_ctxt.flag();
+    return m_updating;
 }
 
 void QQmlBinding::setUpdatingFlag(bool v)
 {
-    m_ctxt.setFlagValue(v);
+    m_updating = v;
 }
 
 bool QQmlBinding::enabledFlag() const
 {
-    return m_ctxt.flag2();
+    return m_enabled;
 }
 
 void QQmlBinding::setEnabledFlag(bool v)
 {
-    m_ctxt.setFlag2Value(v);
+    m_enabled = v;
 }
 
 QT_END_NAMESPACE
