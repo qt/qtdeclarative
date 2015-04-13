@@ -2002,6 +2002,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         }
     }
 
+    if (obj->idIndex) {
+        bool notInRevision = false;
+        collectedBindingPropertyData << propertyResolver.property(QStringLiteral("id"), &notInRevision);
+    }
+
     if (customParser && !customBindings.isEmpty()) {
         customParser->clearErrors();
         customParser->compiler = this;

@@ -642,9 +642,12 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
 
+    const QV4::CompiledData::BindingPropertyData &propertyData = compiledData->compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
+
     if (_compiledObject->idIndex) {
-        QQmlPropertyData *idProperty = _propertyCache->property(QStringLiteral("id"), _qobject, context);
-        if (idProperty && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
+        const QQmlPropertyData *idProperty = propertyData.last();
+        Q_ASSERT(!idProperty || !idProperty->isValid() || idProperty->name(_qobject) == QStringLiteral("id"));
+        if (idProperty && idProperty->isValid() && idProperty->isWritable() && idProperty->propType == QMetaType::QString) {
             QV4::CompiledData::Binding idBinding;
             idBinding.propertyNameIndex = 0; // Not used
             idBinding.flags = 0;
@@ -683,8 +686,6 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             }
         }
     }
-
-    const QV4::CompiledData::BindingPropertyData &propertyData = compiledData->compilationUnit->bindingPropertyDataPerObject.at(_compiledObjectIndex);
 
     int currentListPropertyIndex = -1;
 
