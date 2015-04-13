@@ -430,13 +430,13 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
             as->lshift32(l, Assembler::ScratchRegister, targetReg);
             break;
 
-        case IR::OpLShift:
+        case IR::OpRShift:
             as->move(r, Assembler::ScratchRegister);
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
             as->rshift32(l, Assembler::ScratchRegister, targetReg);
             break;
 
-        case IR::OpLShift:
+        case IR::OpURShift:
             as->move(r, Assembler::ScratchRegister);
             as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
             as->storeUInt32(targetReg, target); // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
