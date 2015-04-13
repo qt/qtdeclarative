@@ -719,30 +719,35 @@ QQmlPropertyPrivate::binding(const QQmlProperty &that)
 */
 QQmlAbstractBinding *
 QQmlPropertyPrivate::setBinding(const QQmlProperty &that,
-                                        QQmlAbstractBinding *newBinding,
-                                        WriteFlags flags)
+                                QQmlAbstractBinding *newBinding,
+                                WriteFlags flags)
 {
+    if (!newBinding)
+        removeBinding(that);
+
     if (!that.d || !that.isProperty() || !that.d->object) {
-        if (newBinding)
-            newBinding->destroy();
+        newBinding->destroy();
         return 0;
     }
 
-    if (newBinding) {
-        // In the case that the new binding is provided, we must target the property it
-        // is associated with.  If we don't do this, retargetBinding() can fail.
-        QObject *object = newBinding->object();
-        int pi = newBinding->propertyIndex();
+    // In the case that the new binding is provided, we must target the property it
+    // is associated with.  If we don't do this, retargetBinding() can fail.
+    QObject *object = newBinding->object();
+    int pi = newBinding->propertyIndex();
 
-        int core;
-        int vt = QQmlPropertyData::decodeValueTypePropertyIndex(pi, &core);
+    int core;
+    int vt = QQmlPropertyData::decodeValueTypePropertyIndex(pi, &core);
 
-        return setBinding(object, core, vt, newBinding, flags);
-    } else {
-        return setBinding(that.d->object, that.d->core.coreIndex,
-                          that.d->core.getValueTypeCoreIndex(),
-                          newBinding, flags);
-    }
+    return setBinding(object, core, vt, newBinding, flags);
+}
+
+QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
+{
+    if (!that.d || !that.isProperty() || !that.d->object)
+        return 0;
+
+    return removeBinding(that.d->object, that.d->core.coreIndex,
+                         that.d->core.getValueTypeCoreIndex());
 }
 
 QQmlAbstractBinding *
@@ -875,6 +880,11 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
     }
 
     return binding;
+}
+
+QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(QObject *object, int coreIndex, int valueTypeIndex)
+{
+    return setBinding(object, coreIndex, valueTypeIndex, 0);
 }
 
 QQmlAbstractBinding *
@@ -1212,9 +1222,8 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
 {
     // Remove any existing bindings on this property
     if (!(flags & DontRemoveBinding) && object) {
-        QQmlAbstractBinding *binding = setBinding(object, core.coreIndex,
-                                                          core.getValueTypeCoreIndex(),
-                                                          0, flags);
+        QQmlAbstractBinding *binding = removeBinding(object, core.coreIndex,
+                                                          core.getValueTypeCoreIndex());
         if (binding) binding->destroy();
     }
 

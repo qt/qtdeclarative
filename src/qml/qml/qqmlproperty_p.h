@@ -108,6 +108,7 @@ public:
                                                    int valueTypeIndex /* -1 */,
                                                    QQmlAbstractBinding *,
                                                    WriteFlags flags = DontRemoveBinding);
+    static QQmlAbstractBinding *removeBinding(QObject *object, int coreIndex, int valueTypeIndex /* -1 */);
     static QQmlAbstractBinding *setBindingNoEnable(QObject *, int coreIndex,
                                                            int valueTypeIndex /* -1 */,
                                                            QQmlAbstractBinding *);
@@ -132,6 +133,7 @@ public:
     static QQmlAbstractBinding *setBinding(const QQmlProperty &that,
                                                    QQmlAbstractBinding *,
                                                    WriteFlags flags = DontRemoveBinding);
+    static QQmlAbstractBinding *removeBinding(const QQmlProperty &that);
     static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
     static QQmlBoundSignalExpressionPointer setSignalExpression(const QQmlProperty &that,
                                                                 QQmlBoundSignalExpression *);

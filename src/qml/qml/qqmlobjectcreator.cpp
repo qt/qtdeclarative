@@ -66,7 +66,7 @@ static void removeBindingOnProperty(QObject *o, int index)
 {
     int coreIndex;
     int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(o, coreIndex, valueTypeIndex, 0);
+    QQmlAbstractBinding *binding = QQmlPropertyPrivate::removeBinding(o, coreIndex, valueTypeIndex);
     if (binding) binding->destroy();
 }
 
@@ -664,7 +664,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
 
         if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
-            QQmlPropertyPrivate::setBinding(_bindingTarget, _valueTypeProperty->coreIndex, -1, 0);
+            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
             binding->destroy();
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy =

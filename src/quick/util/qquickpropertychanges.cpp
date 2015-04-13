@@ -560,7 +560,7 @@ void QQuickPropertyChanges::changeValue(const QString &name, const QVariant &val
             if (state() && state()->isStateActive()) {
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(d->property(name));
                 if (oldBinding) {
-                    QQmlPropertyPrivate::setBinding(d->property(name), 0);
+                    QQmlPropertyPrivate::removeBinding(d->property(name));
                     oldBinding->destroy();
                 }
                 d->property(name).write(value);
@@ -626,7 +626,7 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             if (state() && state()->isStateActive()) {
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(d->property(name));
                 if (oldBinding) {
-                   QQmlPropertyPrivate::setBinding(d->property(name), 0);
+                   QQmlPropertyPrivate::removeBinding(d->property(name));
                    oldBinding->destroy();
                 }
 

@@ -361,7 +361,7 @@ void QQuickState::cancel()
 void QQuickStateAction::deleteFromBinding()
 {
     if (fromBinding) {
-        QQmlPropertyPrivate::setBinding(property, 0);
+        QQmlPropertyPrivate::removeBinding(property);
         fromBinding->destroy();
         fromBinding = 0;
     }
@@ -437,7 +437,7 @@ bool QQuickState::removeEntryFromRevertList(QObject *target, const QString &name
             if (simpleAction.property().object() == target && simpleAction.property().name() == name) {
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(simpleAction.property());
                 if (oldBinding) {
-                    QQmlPropertyPrivate::setBinding(simpleAction.property(), 0);
+                    QQmlPropertyPrivate::removeBinding(simpleAction.property());
                     oldBinding->destroy();
                 }
 
@@ -475,7 +475,7 @@ void QQuickState::removeAllEntriesFromRevertList(QObject *target)
              if (simpleAction.property().object() == target) {
                  QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(simpleAction.property());
                  if (oldBinding) {
-                     QQmlPropertyPrivate::setBinding(simpleAction.property(), 0);
+                     QQmlPropertyPrivate::removeBinding(simpleAction.property());
                      oldBinding->destroy();
                  }
 
@@ -503,7 +503,7 @@ void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionL
             if (!action.toBinding.isNull()) {
                 QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(simpleAction.property());
                 if (oldBinding)
-                    QQmlPropertyPrivate::setBinding(simpleAction.property(), 0);
+                    QQmlPropertyPrivate::removeBinding(simpleAction.property());
                 QQmlPropertyPrivate::setBinding(simpleAction.property(), action.toBinding.data(), QQmlPropertyPrivate::DontRemoveBinding);
             }
 
@@ -664,7 +664,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
         if (!found) {
             QVariant cur = d->revertList.at(ii).property().read();
             QQmlAbstractBinding *delBinding =
-                QQmlPropertyPrivate::setBinding(d->revertList.at(ii).property(), 0);
+                QQmlPropertyPrivate::removeBinding(d->revertList.at(ii).property());
             if (delBinding)
                 delBinding->destroy();
 

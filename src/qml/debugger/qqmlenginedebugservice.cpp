@@ -681,7 +681,7 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
             QQmlProperty property(object, propertyName);
             QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(property);
             if (oldBinding) {
-                QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, 0);
+                QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::removeBinding(property);
                 if (oldBinding)
                     oldBinding->destroy();
             }

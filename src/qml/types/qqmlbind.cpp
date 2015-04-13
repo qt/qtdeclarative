@@ -287,8 +287,7 @@ void QQmlBind::eval()
         }
 
         //save any set binding for restoration
-        QQmlAbstractBinding *tmp;
-        tmp = QQmlPropertyPrivate::setBinding(d->prop, 0);
+        QQmlAbstractBinding *tmp = QQmlPropertyPrivate::removeBinding(d->prop);
         if (tmp && d->prevBind)
             tmp->destroy();
         else if (!d->prevBind)

@@ -875,7 +875,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     if (flags & QQmlPropertyPrivate::RemoveBindingOnAliasWrite) {
                         QQmlData *targetData = QQmlData::get(target);
                         if (targetData && targetData->hasBindingBit(d->propertyIndex())) {
-                            QQmlAbstractBinding *binding = QQmlPropertyPrivate::setBinding(target, d->propertyIndex(), d->isValueTypeAlias()?d->valueTypeIndex():-1, 0);
+                            QQmlAbstractBinding *binding = QQmlPropertyPrivate::removeBinding(target, d->propertyIndex(), d->isValueTypeAlias() ? d->valueTypeIndex() : -1);
                             if (binding) binding->destroy();
                         }
                     }
