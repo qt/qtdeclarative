@@ -80,9 +80,8 @@ public:
 
     bool expressionFunctionValid:1;
 
-    // "Inherited" from QQmlJavaScriptExpression
-    static QString expressionIdentifier(QQmlJavaScriptExpression *);
-    static void expressionChanged(QQmlJavaScriptExpression *);
+    // Inherited from QQmlJavaScriptExpression
+    virtual QString expressionIdentifier();
     virtual void expressionChanged();
 
     QString expression;

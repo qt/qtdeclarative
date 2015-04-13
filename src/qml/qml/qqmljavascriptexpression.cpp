@@ -83,8 +83,8 @@ void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 }
 
 
-QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
-    : m_vtable(v),
+QQmlJavaScriptExpression::QQmlJavaScriptExpression()
+    : m_error(0),
       m_context(0),
       m_prevExpression(0),
       m_nextExpression(0)
@@ -257,7 +257,7 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, 
         if (!errorString) {
             errorString = new QStringList;
             QString preamble = QLatin1String("QQmlExpression: Expression ") +
-                    expression->m_vtable->expressionIdentifier(expression) +
+                    expression->expressionIdentifier() +
                     QLatin1String(" depends on non-NOTIFYable properties:");
             errorString->append(preamble);
         }
@@ -292,25 +292,26 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, 
 
 void QQmlJavaScriptExpression::clearError()
 {
-    if (m_vtable.hasValue()) {
-        m_vtable.value().clearError();
-        m_vtable.value().removeError();
-    }
+    if (m_error)
+        delete m_error;
+    m_error = 0;
 }
 
 QQmlError QQmlJavaScriptExpression::error(QQmlEngine *engine) const
 {
     Q_UNUSED(engine);
 
-    if (m_vtable.hasValue())
-        return m_vtable.constValue()->error();
+    if (m_error)
+        return m_error->error();
     else
         return QQmlError();
 }
 
 QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 {
-    return &m_vtable.value();
+    if (!m_error)
+        m_error = new QQmlDelayedError;
+    return m_error;
 }
 
 QV4::ReturnedValue
@@ -392,7 +393,7 @@ void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *e, void **)
     QQmlJavaScriptExpression *expression =
         static_cast<QQmlJavaScriptExpressionGuard *>(e)->expression;
 
-    expression->m_vtable->expressionChanged(expression);
+    expression->expressionChanged();
 }
 
 QT_END_NAMESPACE

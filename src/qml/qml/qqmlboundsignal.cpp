@@ -55,11 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQmlJavaScriptExpression::VTable QQmlBoundSignalExpression_jsvtable = {
-    QQmlBoundSignalExpression::expressionIdentifier,
-    QQmlBoundSignalExpression::expressionChanged
-};
-
 QQmlBoundSignalExpression::ExtraData::ExtraData(const QString &handlerName, const QString &parameterString,
                                                 const QString &expression, const QString &fileName,
                                                 quint16 line, quint16 column)
@@ -75,7 +70,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
                                                      const QString &fileName, quint16 line, quint16 column,
                                                      const QString &handlerName,
                                                      const QString &parameterString)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+    : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target),
       m_extra(new ExtraData(handlerName, parameterString, expression, fileName, line, column))
@@ -87,7 +82,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+    : QQmlJavaScriptExpression(),
       m_index(index),
       m_function(function.as<QV4::Object>()->engine(), function),
       m_target(target),
@@ -100,7 +95,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 }
 
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
-    : QQmlJavaScriptExpression(&QQmlBoundSignalExpression_jsvtable),
+    : QQmlJavaScriptExpression(),
       m_index(index),
       m_target(target),
       m_extra(0)
@@ -137,14 +132,13 @@ QQmlBoundSignalExpression::~QQmlBoundSignalExpression()
     delete m_extra.data();
 }
 
-QString QQmlBoundSignalExpression::expressionIdentifier(QQmlJavaScriptExpression *e)
+QString QQmlBoundSignalExpression::expressionIdentifier()
 {
-    QQmlBoundSignalExpression *This = static_cast<QQmlBoundSignalExpression *>(e);
-    QQmlSourceLocation loc = This->sourceLocation();
+    QQmlSourceLocation loc = sourceLocation();
     return loc.sourceFile + QLatin1Char(':') + QString::number(loc.line);
 }
 
-void QQmlBoundSignalExpression::expressionChanged(QQmlJavaScriptExpression *)
+void QQmlBoundSignalExpression::expressionChanged()
 {
     // bound signals do not notify on change.
 }

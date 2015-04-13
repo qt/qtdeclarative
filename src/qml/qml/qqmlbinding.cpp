@@ -62,13 +62,8 @@ QQmlAbstractBinding::VTable QQmlBinding_vtable = {
 
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
-static QQmlJavaScriptExpression::VTable QQmlBinding_jsvtable = {
-    QQmlBinding::expressionIdentifier,
-    QQmlBinding::expressionChanged
-};
-
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
@@ -79,7 +74,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 }
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
 {
     if (ctxt && !ctxt->isValid())
         return;
@@ -113,7 +108,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 }
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -126,7 +121,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
 {
     Q_UNUSED(columnNumber);
     setNotifyOnValueChanged(true);
@@ -138,7 +133,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
 }
 
 QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
-: QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
+: QQmlJavaScriptExpression(), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -238,13 +233,11 @@ QVariant QQmlBinding::evaluate()
     return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
-QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
+QString QQmlBinding::expressionIdentifier()
 {
-    QQmlBinding *This = static_cast<QQmlBinding *>(e);
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(This->context()->engine);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
     QV4::Scope scope(ep->v4engine());
-    QV4::ScopedValue f(scope, This->v4function.value());
+    QV4::ScopedValue f(scope, v4function.value());
     QV4::Function *function = f->as<QV4::FunctionObject>()->function();
 
     QString url = function->sourceFile();
@@ -254,10 +247,9 @@ QString QQmlBinding::expressionIdentifier(QQmlJavaScriptExpression *e)
     return url + QLatin1Char(':') + QString::number(lineNumber) + QLatin1Char(':') + QString::number(columnNumber);
 }
 
-void QQmlBinding::expressionChanged(QQmlJavaScriptExpression *e)
+void QQmlBinding::expressionChanged()
 {
-    QQmlBinding *This = static_cast<QQmlBinding *>(e);
-    This->update();
+    update();
 }
 
 void QQmlBinding::refresh()

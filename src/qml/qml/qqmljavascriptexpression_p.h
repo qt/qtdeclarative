@@ -92,18 +92,11 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlJavaScriptExpression
 {
 public:
-    // Although this looks crazy, we implement our own "vtable" here, rather than relying on
-    // C++ virtuals, to save memory.  By doing it ourselves, we can overload the storage
-    // location that is use for the vtable to also store the rarely used delayed error.
-    // If we use C++ virtuals, we can't do this and it consts us an extra sizeof(void *) in
-    // memory for every expression.
-    struct VTable {
-        QString (*expressionIdentifier)(QQmlJavaScriptExpression *);
-        void (*expressionChanged)(QQmlJavaScriptExpression *);
-    };
-
-    QQmlJavaScriptExpression(VTable *vtable);
+    QQmlJavaScriptExpression();
     virtual ~QQmlJavaScriptExpression();
+
+    virtual QString expressionIdentifier() = 0;
+    virtual void expressionChanged() = 0;
 
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::Value &function, bool *isUndefined);
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::Value &function, QV4::CallData *callData, bool *isUndefined);
@@ -176,7 +169,7 @@ private:
         QStringList *errorString;
     };
 
-    QPointerValuePair<VTable, QQmlDelayedError> m_vtable;
+    QQmlDelayedError *m_error;
 
     // We store some flag bits in the following flag pointers.
     //    activeGuards:flag1  - notifyOnValueChanged
@@ -234,12 +227,12 @@ void QQmlJavaScriptExpression::setScopeObject(QObject *v)
 
 bool QQmlJavaScriptExpression::hasError() const
 {
-    return m_vtable.hasValue() && m_vtable.constValue()->isValid();
+    return m_error && m_error->isValid();
 }
 
 bool QQmlJavaScriptExpression::hasDelayedError() const
 {
-    return m_vtable.hasValue();
+    return m_error;
 }
 
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)

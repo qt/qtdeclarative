@@ -104,8 +104,8 @@ public:
 
     QVariant evaluate();
 
-    static QString expressionIdentifier(QQmlJavaScriptExpression *);
-    static void expressionChanged(QQmlJavaScriptExpression *);
+    virtual QString expressionIdentifier();
+    virtual void expressionChanged();
 
 protected:
     friend class QQmlAbstractBinding;

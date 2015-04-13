@@ -72,9 +72,9 @@ public:
     QQmlBoundSignalExpression(QObject *target, int index,
                               QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction);
 
-    // "inherited" from QQmlJavaScriptExpression.
-    static QString expressionIdentifier(QQmlJavaScriptExpression *);
-    static void expressionChanged(QQmlJavaScriptExpression *);
+    // inherited from QQmlJavaScriptExpression.
+    virtual QString expressionIdentifier();
+    virtual void expressionChanged();
 
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);

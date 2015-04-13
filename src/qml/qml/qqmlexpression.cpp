@@ -45,13 +45,8 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQmlJavaScriptExpression::VTable QQmlExpressionPrivate_jsvtable = {
-    QQmlExpressionPrivate::expressionIdentifier,
-    QQmlExpressionPrivate::expressionChanged
-};
-
 QQmlExpressionPrivate::QQmlExpressionPrivate()
-: QQmlJavaScriptExpression(&QQmlExpressionPrivate_jsvtable),
+: QQmlJavaScriptExpression(),
   expressionFunctionValid(true),
   line(0), column(0)
 {
@@ -432,22 +427,15 @@ QQmlError QQmlExpression::error() const
     calling QQmlExpression::evaluate()) before this signal will be emitted.
 */
 
-void QQmlExpressionPrivate::expressionChanged(QQmlJavaScriptExpression *e)
-{
-    QQmlExpressionPrivate *This = static_cast<QQmlExpressionPrivate *>(e);
-    This->expressionChanged();
-}
-
 void QQmlExpressionPrivate::expressionChanged()
 {
     Q_Q(QQmlExpression);
     emit q->valueChanged();
 }
 
-QString QQmlExpressionPrivate::expressionIdentifier(QQmlJavaScriptExpression *e)
+QString QQmlExpressionPrivate::expressionIdentifier()
 {
-    QQmlExpressionPrivate *This = static_cast<QQmlExpressionPrivate *>(e);
-    return QLatin1Char('"') + This->expression + QLatin1Char('"');
+    return QLatin1Char('"') + expression + QLatin1Char('"');
 }
 
 QT_END_NAMESPACE
