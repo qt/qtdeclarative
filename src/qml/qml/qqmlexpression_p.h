@@ -52,7 +52,6 @@
 #include <private/qflagpointer_p.h>
 #include <private/qdeletewatcher_p.h>
 #include <private/qpointervaluepair_p.h>
-#include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -60,8 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQmlExpression;
 class QString;
 class QQmlExpressionPrivate : public QObjectPrivate,
-                              public QQmlJavaScriptExpression,
-                              public QQmlAbstractExpression
+                              public QQmlJavaScriptExpression
 {
     Q_DECLARE_PUBLIC(QQmlExpression)
 public:

@@ -57,14 +57,12 @@
 
 #include <private/qpointervaluepair_p.h>
 #include <private/qqmlabstractbinding_p.h>
-#include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
 class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
-                                         public QQmlAbstractExpression,
                                          public QQmlAbstractBinding
 {
 public:
@@ -81,7 +79,7 @@ public:
 
     void setNotifyOnValueChanged(bool);
 
-    // Inherited from  QQmlAbstractExpression
+    // Inherited from  QQmlJavaScriptExpression
     virtual void refresh();
 
     // "Inherited" from  QQmlAbstractBinding

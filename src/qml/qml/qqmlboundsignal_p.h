@@ -47,7 +47,6 @@
 
 #include <QtCore/qmetaobject.h>
 
-#include <private/qqmlabstractexpression_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
 #include <private/qqmlnotifier_p.h>
@@ -58,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlAbstractExpression, public QQmlJavaScriptExpression, public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlJavaScriptExpression, public QQmlRefCount
 {
 public:
     QQmlBoundSignalExpression(QObject *target, int index,

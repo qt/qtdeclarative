@@ -69,7 +69,7 @@ class QQmlExpression;
 class QQmlEngine;
 class QQmlExpression;
 class QQmlExpressionPrivate;
-class QQmlAbstractExpression;
+class QQmlJavaScriptExpression;
 class QQmlContextData;
 
 class QQmlContextPrivate : public QObjectPrivate
@@ -171,7 +171,7 @@ public:
     QQmlContextData **prevChild;
 
     // Expressions that use this context
-    QQmlAbstractExpression *expressions;
+    QQmlJavaScriptExpression *expressions;
 
     // Doubly-linked list of objects that are owned by this context
     QQmlData *contextObjects;
@@ -212,7 +212,7 @@ public:
 
 private:
     void refreshExpressionsRecursive(bool isGlobal);
-    void refreshExpressionsRecursive(QQmlAbstractExpression *);
+    void refreshExpressionsRecursive(QQmlJavaScriptExpression *);
     ~QQmlContextData() {}
 };
 

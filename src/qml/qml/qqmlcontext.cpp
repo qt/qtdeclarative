@@ -585,9 +585,9 @@ void QQmlContextData::clearContext()
 {
     emitDestruction();
 
-    QQmlAbstractExpression *expression = expressions;
+    QQmlJavaScriptExpression *expression = expressions;
     while (expression) {
-        QQmlAbstractExpression *nextExpression = expression->m_nextExpression;
+        QQmlJavaScriptExpression *nextExpression = expression->m_nextExpression;
 
         expression->m_prevExpression = 0;
         expression->m_nextExpression = 0;
@@ -652,9 +652,9 @@ void QQmlContextData::setParent(QQmlContextData *p, bool parentTakesOwnership)
     }
 }
 
-void QQmlContextData::refreshExpressionsRecursive(QQmlAbstractExpression *expression)
+void QQmlContextData::refreshExpressionsRecursive(QQmlJavaScriptExpression *expression)
 {
-    QQmlAbstractExpression::DeleteWatcher w(expression);
+    QQmlJavaScriptExpression::DeleteWatcher w(expression);
 
     if (expression->m_nextExpression)
         refreshExpressionsRecursive(expression->m_nextExpression);

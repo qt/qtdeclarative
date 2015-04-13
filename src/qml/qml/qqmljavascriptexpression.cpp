@@ -84,12 +84,21 @@ void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 
 
 QQmlJavaScriptExpression::QQmlJavaScriptExpression(VTable *v)
-: m_vtable(v)
+    : m_vtable(v),
+      m_context(0),
+      m_prevExpression(0),
+      m_nextExpression(0)
 {
 }
 
 QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 {
+    if (m_prevExpression) {
+        *m_prevExpression = m_nextExpression;
+        if (m_nextExpression)
+            m_nextExpression->m_prevExpression = m_prevExpression;
+    }
+
     clearGuards();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
@@ -104,6 +113,31 @@ void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 void QQmlJavaScriptExpression::resetNotifyOnValueChanged()
 {
     clearGuards();
+}
+
+void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
+{
+    if (m_prevExpression) {
+        *m_prevExpression = m_nextExpression;
+        if (m_nextExpression)
+            m_nextExpression->m_prevExpression = m_prevExpression;
+        m_prevExpression = 0;
+        m_nextExpression = 0;
+    }
+
+    m_context = context;
+
+    if (context) {
+        m_nextExpression = context->expressions;
+        if (m_nextExpression)
+            m_nextExpression->m_prevExpression = &m_nextExpression;
+        m_prevExpression = &context->expressions;
+        context->expressions = this;
+    }
+}
+
+void QQmlJavaScriptExpression::refresh()
+{
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,

@@ -89,7 +89,7 @@ private:
     QQmlDelayedError **prevError;
 };
 
-class QQmlJavaScriptExpression
+class Q_QML_PRIVATE_EXPORT QQmlJavaScriptExpression
 {
 public:
     // Although this looks crazy, we implement our own "vtable" here, rather than relying on
@@ -103,6 +103,7 @@ public:
     };
 
     QQmlJavaScriptExpression(VTable *vtable);
+    virtual ~QQmlJavaScriptExpression();
 
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::Value &function, bool *isUndefined);
     QV4::ReturnedValue evaluate(QQmlContextData *, const QV4::Value &function, QV4::CallData *callData, bool *isUndefined);
@@ -114,6 +115,13 @@ public:
 
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
+
+    bool isValid() const { return context() != 0; }
+
+    QQmlContextData *context() const { return m_context; }
+    void setContext(QQmlContextData *context);
+
+    virtual void refresh();
 
     class DeleteWatcher {
     public:
@@ -143,10 +151,9 @@ public:
                                         const QString &code,
                                         const QString &filename, quint16 line,
                                         QV4::PersistentValue *qmlscope = 0);
-protected:
-    ~QQmlJavaScriptExpression();
 
 private:
+    friend class QQmlContextData;
     typedef QQmlJavaScriptExpressionGuard Guard;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 
@@ -176,6 +183,11 @@ private:
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
     QForwardFieldList<Guard, &Guard::next> activeGuards;
+
+    QQmlContextData *m_context;
+    QQmlJavaScriptExpression **m_prevExpression;
+    QQmlJavaScriptExpression  *m_nextExpression;
+
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)

@@ -71,7 +71,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
-    QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt));
+    QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
     setScopeObject(obj);
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
@@ -100,7 +100,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
     }
 
     setNotifyOnValueChanged(true);
-    QQmlAbstractExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
+    QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
     setScopeObject(obj ? obj : scriptPrivate->scope);
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
@@ -116,7 +116,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
-    QQmlAbstractExpression::setContext(ctxt);
+    QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(obj);
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
@@ -130,7 +130,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
 {
     Q_UNUSED(columnNumber);
     setNotifyOnValueChanged(true);
-    QQmlAbstractExpression::setContext(ctxt);
+    QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(obj);
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
@@ -141,7 +141,7 @@ QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContex
 : QQmlJavaScriptExpression(&QQmlBinding_jsvtable), QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
-    QQmlAbstractExpression::setContext(ctxt);
+    QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(obj);
 
     v4function.set(functionPtr.as<QV4::Object>()->engine(), functionPtr);
@@ -174,7 +174,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         QQmlBindingProfiler prof(ep->profiler, f);
         setUpdatingFlag(true);
 
-        QQmlAbstractExpression::DeleteWatcher watcher(this);
+        QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
         if (m_core.propType == qMetaTypeId<QQmlBinding *>()) {
 

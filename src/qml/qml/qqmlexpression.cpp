@@ -65,7 +65,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 {
     expression = expr;
 
-    QQmlAbstractExpression::setContext(ctxt);
+    QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(me);
     expressionFunctionValid = false;
 }
@@ -76,7 +76,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFu
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
     function.set(engine, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, me, runtimeFunction));
 
-    QQmlAbstractExpression::setContext(ctxt);
+    QQmlJavaScriptExpression::setContext(ctxt);
     setScopeObject(me);
 }
 

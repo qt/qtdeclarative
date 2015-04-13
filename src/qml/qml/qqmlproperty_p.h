@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQmlContext;
 class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
+
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
 {
 public:

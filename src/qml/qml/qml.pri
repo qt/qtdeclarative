@@ -35,7 +35,6 @@ SOURCES += \
     $$PWD/qqmlimport.cpp \
     $$PWD/qqmllist.cpp \
     $$PWD/qqmllocale.cpp \
-    $$PWD/qqmlabstractexpression.cpp \
     $$PWD/qqmljavascriptexpression.cpp \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
@@ -107,7 +106,6 @@ HEADERS += \
     $$PWD/qqmlscriptstring_p.h \
     $$PWD/qqmllocale_p.h \
     $$PWD/qqmlcomponentattached_p.h \
-    $$PWD/qqmlabstractexpression_p.h \
     $$PWD/qqmljavascriptexpression_p.h \
     $$PWD/qqmlabstractbinding_p.h \
     $$PWD/qqmlvaluetypeproxybinding_p.h \
