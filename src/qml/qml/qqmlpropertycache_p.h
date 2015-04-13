@@ -174,7 +174,6 @@ public:
         int propType;             // When !NotFullyResolved
         const char *propTypeName; // When NotFullyResolved
     };
-    int coreIndex;
     union {
         // The notify index is in the range returned by QObjectPrivate::signalIndex().
         // This is different from QMetaMethod::methodIndex().
@@ -208,6 +207,7 @@ public:
             qintptr accessorData;
         };
     };
+    int coreIndex;
 
 private:
     friend class QQmlPropertyData;
