@@ -86,10 +86,7 @@ AbstractTabBar {
             Connections { target: item; onClicked: control.currentIndex = index }
         }
 
-        property bool completed: false
-        Component.onCompleted: completed = true
-
-        highlightMoveDuration: completed ? 250 : 0
+        highlightMoveDuration: 250
         highlightResizeDuration: 0
         highlightFollowsCurrentItem: true
         highlight: Item {
