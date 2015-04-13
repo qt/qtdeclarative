@@ -1890,6 +1890,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         int currentNodeSize = 0;
         int nodeStart = firstDirtyPos;
         QPointF basePosition(d->xoff, d->yoff);
+        QMatrix4x4 basePositionMatrix;
+        basePositionMatrix.translate(basePosition.x(), basePosition.y());
+        rootNode->setMatrix(basePositionMatrix);
+
         QPointF nodeOffset;
         TextNode *firstCleanNode = (nodeIterator != d->textNodeMap.end()) ? *nodeIterator : 0;
 
@@ -1900,7 +1904,6 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             QTextFrame *textFrame = frames.takeFirst();
             frames.append(textFrame->childFrames());
             rootNode->frameDecorationsNode->m_engine->addFrameDecorations(d->document, textFrame);
-
 
             if (textFrame->lastPosition() < firstDirtyPos || (firstCleanNode && textFrame->firstPosition() >= firstCleanNode->startPos()))
                 continue;
@@ -1922,7 +1925,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 nodeOffset =  d->document->documentLayout()->frameBoundingRect(textFrame).topLeft();
                 updateNodeTransform(node, nodeOffset);
                 while (!it.atEnd())
-                    node->m_engine->addTextBlock(d->document, (it++).currentBlock(), basePosition - nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
+                    node->m_engine->addTextBlock(d->document, (it++).currentBlock(), -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
                 nodeStart = textFrame->firstPosition();
             } else {
                 // Having nodes spanning across frame boundaries will break the current bookkeeping mechanism. We need to prevent that.
@@ -1945,7 +1948,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         nodeStart = block.position();
                     }
 
-                    node->m_engine->addTextBlock(d->document, block, basePosition - nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
+                    node->m_engine->addTextBlock(d->document, block, -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
                     currentNodeSize += block.length();
 
                     if ((it.atEnd()) || (firstCleanNode && block.next().position() >= firstCleanNode->startPos())) // last node that needed replacing or last block of the frame
@@ -1989,7 +1992,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (d->cursorComponent == 0 && !isReadOnly()) {
         QSGRectangleNode* cursor = 0;
         if (d->cursorVisible && d->control->cursorOn())
-            cursor = d->sceneGraphContext()->createRectangleNode(cursorRectangle(), d->color);
+            cursor = d->sceneGraphContext()->createRectangleNode(d->control->cursorRect(), d->color);
         rootNode->resetCursorNode(cursor);
     }
 

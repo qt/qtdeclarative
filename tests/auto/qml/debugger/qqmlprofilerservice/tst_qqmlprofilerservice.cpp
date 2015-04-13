@@ -43,6 +43,9 @@
 
 struct QQmlProfilerData
 {
+    QQmlProfilerData(int messageType = 0, int detailType = 0, const QString &detailData = QString())
+        : messageType(messageType), detailType(detailType), detailData(detailData) {}
+
     qint64 time;
     int messageType;
     int detailType;
@@ -174,9 +177,29 @@ private:
     QQmlDebugConnection *m_connection;
     QQmlProfilerClient *m_client;
 
+    enum MessageListType {
+        MessageListQML,
+        MessageListJavaScript,
+        MessageListJsHeap,
+        MessageListAsynchronous,
+        MessageListPixmap
+    };
+
+    enum CheckType {
+        CheckMessageType  = 1 << 0,
+        CheckDetailType   = 1 << 1,
+        CheckLine         = 1 << 2,
+        CheckColumn       = 1 << 3,
+        CheckDataEndsWith = 1 << 4,
+
+        CheckAll = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckDataEndsWith
+    };
+
     void connect(bool block, const QString &testFile);
     void checkTraceReceived();
     void checkJsHeap();
+    bool verify(MessageListType type, int expectedPosition, const QQmlProfilerData &expected,
+                quint32 checks);
 
 private slots:
     void cleanup();
@@ -191,6 +214,8 @@ private slots:
     void signalSourceLocation();
     void javascript();
 };
+
+#define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
 
 void QQmlProfilerClient::messageReceived(const QByteArray &message)
 {
@@ -355,15 +380,15 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 void tst_QQmlProfilerService::checkTraceReceived()
 {
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
-    QVERIFY(m_client->asynchronousMessages.count());
 
     // must start with "StartTrace"
-    QCOMPARE(m_client->asynchronousMessages.first().messageType, (int)QQmlProfilerClient::Event);
-    QCOMPARE(m_client->asynchronousMessages.first().detailType, (int)QQmlProfilerClient::StartTrace);
+    QQmlProfilerData expected(QQmlProfilerClient::Event, QQmlProfilerClient::StartTrace);
+    VERIFY(MessageListAsynchronous, 0, expected, CheckMessageType | CheckDetailType);
 
     // must end with "EndTrace"
-    QCOMPARE(m_client->asynchronousMessages.last().messageType, (int)QQmlProfilerClient::Event);
-    QCOMPARE(m_client->asynchronousMessages.last().detailType, (int)QQmlProfilerClient::EndTrace);
+    expected.detailType = QQmlProfilerClient::EndTrace;
+    VERIFY(MessageListAsynchronous, m_client->asynchronousMessages.length() - 1, expected,
+           CheckMessageType | CheckDetailType);
 }
 
 void tst_QQmlProfilerService::checkJsHeap()
@@ -375,6 +400,7 @@ void tst_QQmlProfilerService::checkJsHeap()
     bool seen_large = false;
     qint64 allocated = 0;
     qint64 used = 0;
+    qint64 lastTimestamp = -1;
     foreach (const QQmlProfilerData &message, m_client->jsHeapMessages) {
         switch (message.detailType) {
         case QQmlProfilerClient::HeapPage:
@@ -392,6 +418,17 @@ void tst_QQmlProfilerService::checkJsHeap()
             break;
         }
 
+        QVERIFY(message.time >= lastTimestamp);
+        // The heap will only be consistent after all events of the same timestamp are processed.
+        if (lastTimestamp == -1) {
+            lastTimestamp = message.time;
+            continue;
+        } else if (message.time == lastTimestamp) {
+            continue;
+        }
+
+        lastTimestamp = message.time;
+
         QVERIFY2(used >= 0, QString::fromLatin1("Negative memory usage seen: %1")
                  .arg(used).toUtf8().constData());
 
@@ -406,6 +443,68 @@ void tst_QQmlProfilerService::checkJsHeap()
     QVERIFY2(seen_alloc, "No heap allocation seen");
     QVERIFY2(seen_small, "No small item seen");
     QVERIFY2(seen_large, "No large item seen");
+}
+
+bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType type,
+                                     int expectedPosition, const QQmlProfilerData &expected,
+                                     quint32 checks)
+{
+    QList<QQmlProfilerData> *target = 0;
+    switch (type) {
+        case MessageListQML:          target = &(m_client->qmlMessages); break;
+        case MessageListJavaScript:   target = &(m_client->javascriptMessages); break;
+        case MessageListJsHeap:       target = &(m_client->jsHeapMessages); break;
+        case MessageListAsynchronous: target = &(m_client->asynchronousMessages); break;
+        case MessageListPixmap:       target = &(m_client->pixmapMessages); break;
+    }
+
+    if (target->length() <= expectedPosition) {
+        qWarning() << "Not enough events. expected position:" << expectedPosition
+                   << "length:" << target->length();
+        return false;
+    }
+
+    uint position = expectedPosition;
+    qint64 timestamp = target->at(expectedPosition).time;
+    while (position > 0 && target->at(position - 1).time == timestamp)
+        --position;
+
+    QStringList warnings;
+
+    do {
+        const QQmlProfilerData &actual = target->at(position);
+        if ((checks & CheckMessageType) &&  actual.messageType != expected.messageType) {
+            warnings << QString::fromLatin1("%1: unexpected messageType. actual: %2 - expected: %3")
+                       .arg(position).arg(actual.messageType).arg(expected.messageType);
+            continue;
+        }
+        if ((checks & CheckDetailType) && actual.detailType != expected.detailType) {
+            warnings << QString::fromLatin1("%1: unexpected detailType. actual: %2 - expected: %3")
+                       .arg(position).arg(actual.detailType).arg(expected.detailType);
+            continue;
+        }
+        if ((checks & CheckLine) && actual.line != expected.line) {
+            warnings << QString::fromLatin1("%1: unexpected line. actual: %2 - expected: %3")
+                       .arg(position).arg(actual.line).arg(expected.line);
+            continue;
+        }
+        if ((checks & CheckColumn) && actual.column != expected.column) {
+            warnings << QString::fromLatin1("%1: unexpected column. actual: %2 - expected: %3")
+                       .arg(position).arg(actual.column).arg(expected.column);
+            continue;
+        }
+        if ((checks & CheckDataEndsWith) && !actual.detailData.endsWith(expected.detailData)) {
+            warnings << QString::fromLatin1("%1: unexpected detailData. actual: %2 - expected: %3")
+                       .arg(position).arg(actual.detailData).arg(expected.detailData);
+            continue;
+        }
+        return true;
+    } while (target->at(++position).time == timestamp);
+
+    foreach (const QString &message, warnings)
+        qWarning() << message.toLocal8Bit().constData();
+
+    return false;
 }
 
 void tst_QQmlProfilerService::cleanup()
@@ -512,27 +611,26 @@ void tst_QQmlProfilerService::pixmapCacheData()
 
     checkTraceReceived();
     checkJsHeap();
-    QVERIFY2(m_client->pixmapMessages.count() >= 4,
-             QString::number(m_client->pixmapMessages.count()).toUtf8().constData());
+
+    QQmlProfilerData expected(QQmlProfilerClient::PixmapCacheEvent);
 
     // image starting to load
-    QCOMPARE(m_client->pixmapMessages[0].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->pixmapMessages[0].detailType, (int)QQmlProfilerClient::PixmapLoadingStarted);
+    expected.detailType = QQmlProfilerClient::PixmapLoadingStarted;
+    VERIFY(MessageListPixmap, 0, expected, CheckMessageType | CheckDetailType);
 
     // image size
-    QCOMPARE(m_client->pixmapMessages[1].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->pixmapMessages[1].detailType, (int)QQmlProfilerClient::PixmapSizeKnown);
-    QCOMPARE(m_client->pixmapMessages[1].line, 2); // width
-    QCOMPARE(m_client->pixmapMessages[1].column, 2); // height
+    expected.detailType = QQmlProfilerClient::PixmapSizeKnown;
+    expected.line = expected.column = 2; // width and height, in fact
+    VERIFY(MessageListPixmap, 1, expected,
+           CheckMessageType | CheckDetailType | CheckLine | CheckColumn);
 
     // image loaded
-    QCOMPARE(m_client->pixmapMessages[2].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->pixmapMessages[2].detailType, (int)QQmlProfilerClient::PixmapLoadingFinished);
+    expected.detailType = QQmlProfilerClient::PixmapLoadingFinished;
+    VERIFY(MessageListPixmap, 2, expected, CheckMessageType | CheckDetailType);
 
     // cache size
-    QCOMPARE(m_client->pixmapMessages[3].messageType, (int)QQmlProfilerClient::PixmapCacheEvent);
-    QCOMPARE(m_client->pixmapMessages[3].detailType, (int)QQmlProfilerClient::PixmapCacheCountChanged);
-
+    expected.detailType = QQmlProfilerClient::PixmapCacheCountChanged;
+    VERIFY(MessageListPixmap, 3, expected, CheckMessageType | CheckDetailType);
 }
 
 void tst_QQmlProfilerService::scenegraphData()
@@ -554,19 +652,39 @@ void tst_QQmlProfilerService::scenegraphData()
     // there should be a SGPolishAndSync + SGRendererFrame + SGRenderLoopFrame sequence
     // (though we can't be sure to get the SGRenderLoopFrame in the threaded renderer)
     //
-    // since the rendering happens in a different thread, there could be other unrelated events interleaved
-    int loopcheck = 0;
+    // since the rendering happens in a different thread, there could be other unrelated events
+    // interleaved. Also, events could carry the same time stamps and be sorted in an unexpected way
+    // if the clocks are acting up.
+    qint64 contextFrameTime = -1;
+    qint64 renderFrameTime = -1;
+
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
         if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
-            if (loopcheck == 0 && msg.detailType == QQmlProfilerClient::SceneGraphContextFrame)
-                loopcheck = 1;
-            else if (loopcheck == 1 && msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame)
-                loopcheck = 2;
-            else if (loopcheck == 2 && msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame)
-               loopcheck = 3;
+            if (msg.detailType == QQmlProfilerClient::SceneGraphContextFrame) {
+                contextFrameTime = msg.time;
+                break;
+            }
         }
     }
-    QVERIFY(loopcheck >= 2);
+
+    QVERIFY(contextFrameTime != -1);
+
+    foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
+        if (msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame) {
+            QVERIFY(msg.time >= contextFrameTime);
+            renderFrameTime = msg.time;
+            break;
+        }
+    }
+
+    QVERIFY(renderFrameTime != -1);
+
+    foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
+        if (msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame) {
+            QVERIFY(msg.time >= renderFrameTime);
+            break;
+        }
+    }
 }
 
 void tst_QQmlProfilerService::profileOnExit()
@@ -605,22 +723,16 @@ void tst_QQmlProfilerService::signalSourceLocation()
     checkTraceReceived();
     checkJsHeap();
 
-    QVERIFY2(m_client->qmlMessages.count() >= 16,
-             QString::number(m_client->qmlMessages.count()).toUtf8().constData());
+    QQmlProfilerData expected(QQmlProfilerClient::RangeLocation,
+                              QQmlProfilerClient::HandlingSignal,
+                              QLatin1String("signalSourceLocation.qml"));
+    expected.line = 8;
+    expected.column = 28;
+    VERIFY(MessageListQML, 13, expected, CheckAll);
 
-    QCOMPARE(m_client->qmlMessages[13].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->qmlMessages[13].detailType, (int)QQmlProfilerClient::HandlingSignal);
-    QVERIFY2(m_client->qmlMessages[13].detailData.endsWith("signalSourceLocation.qml"),
-             m_client->qmlMessages[13].detailData.toUtf8().constData());
-    QCOMPARE(m_client->qmlMessages[13].line, 8);
-    QCOMPARE(m_client->qmlMessages[13].column, 28);
-
-    QCOMPARE(m_client->qmlMessages[15].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->qmlMessages[15].detailType, (int)QQmlProfilerClient::HandlingSignal);
-    QVERIFY2(m_client->qmlMessages[15].detailData.endsWith("signalSourceLocation.qml"),
-             m_client->qmlMessages[15].detailData.toUtf8().constData());
-    QCOMPARE(m_client->qmlMessages[15].line, 7);
-    QCOMPARE(m_client->qmlMessages[15].column, 21);
+    expected.line = 7;
+    expected.column = 21;
+    VERIFY(MessageListQML, 15, expected, CheckAll);
 }
 
 void tst_QQmlProfilerService::javascript()
@@ -636,26 +748,22 @@ void tst_QQmlProfilerService::javascript()
     checkTraceReceived();
     checkJsHeap();
 
-    QVERIFY2(m_client->javascriptMessages.count() >= 22,
-             QString::number(m_client->javascriptMessages.count()).toUtf8().constData());
+    QQmlProfilerData expected(QQmlProfilerClient::RangeStart, QQmlProfilerClient::Javascript);
+    VERIFY(MessageListJavaScript, 6, expected, CheckMessageType | CheckDetailType);
 
-    QCOMPARE(m_client->javascriptMessages[6].messageType, (int)QQmlProfilerClient::RangeStart);
-    QCOMPARE(m_client->javascriptMessages[6].detailType, (int)QQmlProfilerClient::Javascript);
+    expected.messageType = QQmlProfilerClient::RangeLocation;
+    expected.detailData = QLatin1String("javascript.qml");
+    expected.line = 4;
+    expected.column = 5;
+    VERIFY(MessageListJavaScript, 7, expected, CheckAll);
 
-    QCOMPARE(m_client->javascriptMessages[7].messageType, (int)QQmlProfilerClient::RangeLocation);
-    QCOMPARE(m_client->javascriptMessages[7].detailType, (int)QQmlProfilerClient::Javascript);
-    QVERIFY2(m_client->javascriptMessages[7].detailData.endsWith("javascript.qml"),
-             m_client->javascriptMessages[7].detailData.toUtf8().constData());
-    QCOMPARE(m_client->javascriptMessages[7].line, 4);
-    QCOMPARE(m_client->javascriptMessages[7].column, 5);
+    expected.messageType = QQmlProfilerClient::RangeData;
+    expected.detailData = QLatin1String("something");
+    VERIFY(MessageListJavaScript, 8, expected,
+           CheckMessageType | CheckDetailType | CheckDataEndsWith);
 
-    QCOMPARE(m_client->javascriptMessages[8].messageType, (int)QQmlProfilerClient::RangeData);
-    QCOMPARE(m_client->javascriptMessages[8].detailType, (int)QQmlProfilerClient::Javascript);
-    QVERIFY2(m_client->javascriptMessages[8].detailData == "something",
-             m_client->javascriptMessages[8].detailData.toUtf8().constData());
-
-    QCOMPARE(m_client->javascriptMessages[21].messageType, (int)QQmlProfilerClient::RangeEnd);
-    QCOMPARE(m_client->javascriptMessages[21].detailType, (int)QQmlProfilerClient::Javascript);
+    expected.messageType = QQmlProfilerClient::RangeEnd;
+    VERIFY(MessageListJavaScript, 21, expected, CheckMessageType | CheckDetailType);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

@@ -92,6 +92,7 @@ protected:
     int m_matrix_id;
     int m_color_id;
     int m_textureScale_id;
+    float m_devicePixelRatio;
 
     QFontEngine::GlyphFormat m_glyphFormat;
 };
@@ -124,7 +125,8 @@ void QSGTextMaskShader::initialize()
     m_matrix_id = program()->uniformLocation("matrix");
     m_color_id = program()->uniformLocation("color");
     m_textureScale_id = program()->uniformLocation("textureScale");
-    program()->setUniformValue("dpr", (float) qsg_device_pixel_ratio(QOpenGLContext::currentContext()));
+    m_devicePixelRatio = (float) qsg_device_pixel_ratio(QOpenGLContext::currentContext());
+    program()->setUniformValue("dpr", m_devicePixelRatio);
 }
 
 void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -150,6 +152,12 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
             funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
+    }
+
+    float devicePixelRatio = (float) qsg_device_pixel_ratio(QOpenGLContext::currentContext());
+    if (m_devicePixelRatio != devicePixelRatio) {
+        m_devicePixelRatio = devicePixelRatio;
+        program()->setUniformValue("dpr", m_devicePixelRatio);
     }
 
     if (state.isMatrixDirty())

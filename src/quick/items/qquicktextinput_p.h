@@ -334,6 +334,7 @@ Q_SIGNALS:
 
 private:
     void invalidateFontCaches();
+    void ensureActiveFocus();
 
 protected:
     void geometryChanged(const QRectF &newGeometry,

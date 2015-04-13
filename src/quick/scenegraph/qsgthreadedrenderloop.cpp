@@ -767,9 +767,9 @@ void QSGThreadedRenderLoop::animationStopped()
 void QSGThreadedRenderLoop::startOrStopAnimationTimer()
 {
     int exposedWindows = 0;
-    Window *theOne = 0;
+    const Window *theOne = 0;
     for (int i=0; i<m_windows.size(); ++i) {
-        Window &w = m_windows[i];
+        const Window &w = m_windows.at(i);
         if (w.window->isVisible() && w.window->isExposed()) {
             ++exposedWindows;
             theOne = &w;
@@ -781,7 +781,7 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
         m_animation_timer = 0;
         // If animations are running, make sure we keep on animating
         if (m_animation_driver->isRunning())
-            maybePostPolishRequest(theOne);
+            maybePostPolishRequest(const_cast<Window *>(theOne));
 
     } else if (m_animation_timer == 0 && exposedWindows != 1 && m_animation_driver->isRunning()) {
         m_animation_timer = startTimer(qsgrl_animation_interval());

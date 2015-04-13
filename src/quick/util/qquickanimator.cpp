@@ -293,6 +293,7 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The XAnimator type animates the x position of an Item.
 
     \l{Animator} types are different from normal Animation types. When
@@ -325,6 +326,7 @@ QQuickAnimatorJob *QQuickXAnimator::createJob() const { return new QQuickXAnimat
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The YAnimator type animates the y position of an Item.
 
     \l{Animator} types are different from normal Animation types. When
@@ -357,6 +359,7 @@ QQuickAnimatorJob *QQuickYAnimator::createJob() const { return new QQuickYAnimat
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The ScaleAnimator type animates the scale factor of an Item.
 
     \l{Animator} types are different from normal Animation types. When
@@ -389,6 +392,7 @@ QQuickAnimatorJob *QQuickScaleAnimator::createJob() const { return new QQuickSca
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The OpacityAnimator type animates the opacity of an Item.
 
     \l{Animator} types are different from normal Animation types. When
@@ -420,6 +424,7 @@ QQuickAnimatorJob *QQuickOpacityAnimator::createJob() const { return new QQuickO
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The RotationAnimator type animates the rotation of an Item.
 
     \l{Animator} types are different from normal Animation types. When
@@ -491,6 +496,7 @@ QQuickRotationAnimator::RotationDirection QQuickRotationAnimator::direction() co
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
+    \inherits Animator
     \brief The UniformAnimator type animates a uniform of a ShaderEffect.
 
     \l{Animator} types are different from normal Animation types. When

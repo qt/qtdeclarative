@@ -1667,7 +1667,10 @@ void QQuickText::setLinkColor(const QColor &color)
         return;
 
     d->linkColor = rgb;
-    update();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
+    }
     emit linkColorChanged();
 }
 

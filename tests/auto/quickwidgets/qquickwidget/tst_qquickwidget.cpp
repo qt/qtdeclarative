@@ -58,6 +58,7 @@ private slots:
     void errors();
     void engine();
     void readback();
+    void renderingSignals();
 };
 
 
@@ -257,6 +258,38 @@ void tst_qquickwidget::readback()
 
     QRgb pix = img.pixel(5, 5);
     QCOMPARE(pix, qRgb(255, 0, 0));
+}
+
+void tst_qquickwidget::renderingSignals()
+{
+    QQuickWidget widget;
+    QQuickWindow *window = widget.quickWindow();
+    QVERIFY(window);
+
+    QSignalSpy beforeRenderingSpy(window, &QQuickWindow::beforeRendering);
+    QSignalSpy beforeSyncSpy(window, &QQuickWindow::beforeSynchronizing);
+    QSignalSpy afterRenderingSpy(window, &QQuickWindow::afterRendering);
+
+    QVERIFY(beforeRenderingSpy.isValid());
+    QVERIFY(beforeSyncSpy.isValid());
+    QVERIFY(afterRenderingSpy.isValid());
+
+    QCOMPARE(beforeRenderingSpy.size(), 0);
+    QCOMPARE(beforeSyncSpy.size(), 0);
+    QCOMPARE(afterRenderingSpy.size(), 0);
+
+    widget.setSource(testFileUrl("rectangle.qml"));
+
+    QCOMPARE(beforeRenderingSpy.size(), 0);
+    QCOMPARE(beforeSyncSpy.size(), 0);
+    QCOMPARE(afterRenderingSpy.size(), 0);
+
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget, 5000));
+
+    QTRY_VERIFY(beforeRenderingSpy.size() > 0);
+    QTRY_VERIFY(beforeSyncSpy.size() > 0);
+    QTRY_VERIFY(afterRenderingSpy.size() > 0);
 }
 
 QTEST_MAIN(tst_qquickwidget)

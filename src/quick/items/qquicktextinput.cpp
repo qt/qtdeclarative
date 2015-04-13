@@ -1398,15 +1398,8 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     int cursor = d->positionAt(event->localPos());
     d->moveCursor(cursor, mark);
 
-    if (d->focusOnPress) {
-        bool hadActiveFocus = hasActiveFocus();
-        forceActiveFocus();
-#ifndef QT_NO_IM
-        // re-open input panel on press if already focused
-        if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
-            qGuiApp->inputMethod()->show();
-#endif
-    }
+    if (d->focusOnPress && !qGuiApp->styleHints()->setFocusOnTouchRelease())
+        ensureActiveFocus();
 
     event->setAccepted(true);
 }
@@ -1456,6 +1449,10 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         }
     }
 #endif
+
+    if (d->focusOnPress && qGuiApp->styleHints()->setFocusOnTouchRelease())
+        ensureActiveFocus();
+
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseReleaseEvent(event);
 }
@@ -1686,6 +1683,19 @@ void QQuickTextInput::invalidateFontCaches()
 
     if (d->m_textLayout.engine() != 0)
         d->m_textLayout.engine()->resetFontEngineCache();
+}
+
+void QQuickTextInput::ensureActiveFocus()
+{
+    Q_D(QQuickTextInput);
+
+    bool hadActiveFocus = hasActiveFocus();
+    forceActiveFocus();
+#ifndef QT_NO_IM
+    // re-open input panel on press if already focused
+    if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
+        qGuiApp->inputMethod()->show();
+#endif
 }
 
 QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)

@@ -14,4 +14,3 @@ TESTDATA = data/*
 
 QT += core-private gui-private qml-private quick-private network testlib
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-CONFIG+=insignificant_test # QTBUG-30721

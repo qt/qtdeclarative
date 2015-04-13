@@ -74,6 +74,7 @@ public:
 protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
     void windowChanged(QQuickWindow *window);
@@ -137,6 +138,7 @@ public:
 
 protected:
     QQuickAnimatorJob();
+    void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
     QQuickItem *m_target;
     QQuickAnimatorController *m_controller;

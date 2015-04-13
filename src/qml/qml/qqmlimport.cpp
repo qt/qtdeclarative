@@ -1973,9 +1973,8 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
                     QQmlError error;
                     error.setDescription(loader->errorString());
                     errors->prepend(error);
-
-                    delete loader;
                 }
+                delete loader;
                 return false;
             }
         } else {

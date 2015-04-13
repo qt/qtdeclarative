@@ -121,9 +121,9 @@ QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
 }
 
 /*!
-  Sets a different QFileSelector instance for use by the QQmlFileSelector. QQmlFileSelector does not
-  take ownership of the new QFileSelector. To reset QQmlFileSelector to use its internal
-  QFileSelector instance, call setSelector(0).
+  Sets the QFileSelector instance for use by the QQmlFileSelector to \a selector.
+  QQmlFileSelector does not take ownership of the new QFileSelector. To reset QQmlFileSelector
+  to use its internal QFileSelector instance, call setSelector(0).
 */
 
 void QQmlFileSelector::setSelector(QFileSelector *selector)

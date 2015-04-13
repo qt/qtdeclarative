@@ -48,5 +48,8 @@ void main()
 
     bool onEdge = any(notEqual(vertexOffset, vec2(0.)));
     bool outerEdge = all(equal(texCoordOffset, vec2(0.)));
-    vertexOpacity = onEdge && outerEdge ? 0. : opacity;
+    if (onEdge && outerEdge)
+        vertexOpacity = 0.;
+    else
+        vertexOpacity = opacity;
 }

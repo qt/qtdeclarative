@@ -90,6 +90,8 @@ public:
 
     void setClearColor(const QColor &color);
 
+    QQuickWindow *quickWindow() const;
+
 public Q_SLOTS:
     void setSource(const QUrl&);
     void setContent(const QUrl& url, QQmlComponent *component, QObject *item);

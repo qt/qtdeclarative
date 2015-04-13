@@ -183,7 +183,7 @@
   \a versionMinor.
 
   While the type has a name and a type, it cannot be created, and the
-  given error \a message will result if creation is attempted.
+  given error \a reason will result if creation is attempted.
 
   This is useful where the type is only intended for providing attached
   properties, enum values or an abstract base class with its extension.

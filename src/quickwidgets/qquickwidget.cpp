@@ -216,7 +216,7 @@ void QQuickWidgetPrivate::render(bool needsSync)
         QOpenGLFramebufferObject::blitFramebuffer(resolvedFbo, rect, fbo, rect);
     }
 
-    context->functions()->glFlush();
+    static_cast<QOpenGLExtensions *>(context->functions())->flushShared();
 }
 
 void QQuickWidgetPrivate::renderSceneGraph()
@@ -1224,6 +1224,25 @@ void QQuickWidget::setClearColor(const QColor &color)
 {
     Q_D(QQuickWidget);
     d->offscreenWindow->setColor(color);
+}
+
+/*!
+    \since 5.5
+
+    Returns the offscreen QQuickWindow which is used by this widget to drive
+    the Qt Quick rendering. This is useful if you want to use QQuickWindow
+    APIs that are not currently exposed by QQuickWidget, for instance
+    connecting to the QQuickWindow::beforeRendering() signal in order
+    to draw native OpenGL content below Qt Quick's own rendering.
+
+    \warning Use the return value of this function with caution. In
+    particular, do not ever attempt to show the QQuickWindow, and be
+    very careful when using other QWindow-only APIs.
+*/
+QQuickWindow *QQuickWidget::quickWindow() const
+{
+    Q_D(const QQuickWidget);
+    return d->offscreenWindow;
 }
 
 QT_END_NAMESPACE
