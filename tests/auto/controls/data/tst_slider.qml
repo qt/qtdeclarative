@@ -162,7 +162,8 @@ TestCase {
         compare(control.value, 0.0)
         compare(control.position, 0.0)
 
-        mouseMove(control, -control.width, -control.height, 0, Qt.LeftButton)
+        // mininum on the left in horizontal vs. at the bottom in vertical
+        mouseMove(control, -control.width, 2 * control.height, 0, Qt.LeftButton)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.value, 0.0)
@@ -186,19 +187,20 @@ TestCase {
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
-        mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
+        // maximum on the right in horizontal vs. at the top in vertical
+        mouseMove(control, control.width * 2, -control.height, 0, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.5)
         compare(control.position, 1.0)
 
-        mouseMove(control, control.width * 0.75, control.height * 0.75, 0, Qt.LeftButton)
+        mouseMove(control, control.width * 0.75, control.height * 0.25, 0, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.5)
         verify(control.position >= 0.75)
 
-        mouseRelease(control, control.width * 0.25, control.height * 0.25, Qt.LeftButton)
+        mouseRelease(control, control.width * 0.25, control.height * 0.75, Qt.LeftButton)
         compare(pressedSpy.count, 4)
         compare(control.pressed, false)
         compare(control.value, control.position)
