@@ -45,15 +45,14 @@ printProperty ()
 
 # printEnvVar(): prints a key-value pair from given environment variable name.
 # key is printed as "Env_<varname>".
-# If the variable is undefined, value is printed as UNDEFINED.
+# If the variable is undefined, nothing is printed.
 # Arguments: $1: varname
 
 printEnvVar ()
 {
     key=Env_$1
     val=`eval 'echo $'$1`
-    [ -z "$val" ] && val='[undefined]'
-    echo $key: $val
+    [ -n "$val" ] && echo $key: $val
 }
 
 
