@@ -101,7 +101,7 @@ qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
         const qreal offset = hh / 2;
         const qreal extent = q->height() - hh;
         if (!qFuzzyIsNull(extent))
-            return (point.y() - offset) / extent;
+            return 1.0 - (point.y() - offset) / extent;
     }
     return 0;
 }
