@@ -286,7 +286,7 @@ ReturnedValue RegExpCtor::construct(Managed *m, CallData *callData)
         }
     }
 
-    RegExp *regexp = reinterpret_cast<RegExp *>(RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
+    Scoped<RegExp> regexp(scope, RegExp::create(ctx->d()->engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid())
         return ctx->throwSyntaxError(QStringLiteral("Invalid regular expression"));
 
