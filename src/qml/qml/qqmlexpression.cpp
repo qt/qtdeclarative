@@ -252,7 +252,7 @@ QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
 
     QV4::Scope scope(v4);
     QV4::ScopedValue f(scope, function.value());
-    return evaluate(context(), f, isUndefined);
+    return evaluate(f, isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)

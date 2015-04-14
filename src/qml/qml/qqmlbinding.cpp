@@ -190,7 +190,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool isUndefined = false;
 
-            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), f, &isUndefined));
+            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(f, &isUndefined));
 
             bool needsErrorLocationData = false;
             if (!watcher.wasDeleted() && !hasError())
@@ -230,7 +230,7 @@ QVariant QQmlBinding::evaluate()
     bool isUndefined = false;
 
     QV4::ScopedValue f(scope, v4function.value());
-    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(context(), f, &isUndefined));
+    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(f, &isUndefined));
 
     ep->dereferenceScarceResources();
 

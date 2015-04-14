@@ -140,22 +140,18 @@ void QQmlJavaScriptExpression::refresh()
 {
 }
 
-QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::Value &function, bool *isUndefined)
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(const QV4::Value &function, bool *isUndefined)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(context->engine);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_context->engine);
     QV4::Scope scope(v4);
     QV4::ScopedCallData callData(scope);
 
-    return evaluate(context, function, callData, isUndefined);
+    return evaluate(function, callData, isUndefined);
 }
 
-QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
-                                   const QV4::Value &function,
-                                   QV4::CallData *callData,
-                                   bool *isUndefined)
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(const QV4::Value &function, QV4::CallData *callData, bool *isUndefined)
 {
-    Q_ASSERT(context && context->engine);
+    Q_ASSERT(m_context && m_context->engine);
 
     if (function.isUndefined()) {
         if (isUndefined)
@@ -163,17 +159,17 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QQmlContextData *context,
         return QV4::Encode::undefined();
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context->engine);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
 
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
     DeleteWatcher watcher(this);
 
     Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    GuardCapture capture(context->engine, this, &watcher);
+    GuardCapture capture(m_context->engine, this, &watcher);
 
     QQmlEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
-    ep->propertyCapture = notifyOnValueChanged()?&capture:0;
+    ep->propertyCapture = notifyOnValueChanged() ? &capture : 0;
 
 
     if (notifyOnValueChanged())

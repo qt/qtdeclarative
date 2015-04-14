@@ -272,7 +272,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             }
         }
 
-        QQmlJavaScriptExpression::evaluate(context(), f, callData, 0);
+        QQmlJavaScriptExpression::evaluate(f, callData, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
