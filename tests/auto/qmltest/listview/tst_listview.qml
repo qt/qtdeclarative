@@ -304,9 +304,13 @@ Item {
 
         function test_listInteractiveCurrentIndexEnforce() {
             mousePress(listInteractiveCurrentIndexEnforce, 10, 50);
+            wait(1); // because Flickable pays attention to velocity, we need some time between movements
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 40);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 30);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 20);
+            wait(1);
             mouseMove(listInteractiveCurrentIndexEnforce, 10, 10);
             compare(listInteractiveCurrentIndexEnforce.interactive, false);
             mouseRelease(listInteractiveCurrentIndexEnforce, 10, 10);

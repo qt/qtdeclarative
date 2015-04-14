@@ -591,10 +591,13 @@ void tst_TouchMouse::buttonOnFlickable()
     QPoint p2 = p1 + QPoint(0, -10);
     QPoint p3 = p2 + QPoint(0, -10);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1); // because Flickable pays attention to velocity, we need some time between movements
     QTest::touchEvent(window, device).move(0, p1, window);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p2, window);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p3, window);
     QQuickTouchUtils::flush(window);
 
@@ -676,10 +679,13 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     QPoint p2 = p1 + QPoint(0, -10);
     QPoint p3 = p2 + QPoint(0, -10);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p1, window);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p2, window);
     QQuickTouchUtils::flush(window);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p3, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(flickable->isMovingVertically());
@@ -871,15 +877,19 @@ void tst_TouchMouse::pinchOnFlickable()
     QQuickTouchUtils::flush(window);
     QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p, window);
     QQuickTouchUtils::flush(window);
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p, window);
     QQuickTouchUtils::flush(window);
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p, window);
     QQuickTouchUtils::flush(window);
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     QTest::touchEvent(window, device).move(0, p, window);
     QQuickTouchUtils::flush(window);
     QTest::touchEvent(window, device).release(0, p, window);
@@ -1092,13 +1102,16 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QQuickTouchUtils::flush(window);
     QCOMPARE(rect->position(), QPointF(200.0, 200.0));
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     pinchSequence.move(0, p, window).commit();
     QQuickTouchUtils::flush(window);
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     pinchSequence.move(0, p, window).commit();
     QQuickTouchUtils::flush(window);
     QGuiApplication::processEvents();
     p -= QPoint(10, 0);
+    QTest::qWait(1);
     pinchSequence.move(0, p, window).commit();
     QQuickTouchUtils::flush(window);
 

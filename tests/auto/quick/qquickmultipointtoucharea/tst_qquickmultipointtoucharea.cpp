@@ -601,18 +601,22 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1); // because Flickable pays attention to velocity, we need some time between movements
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
@@ -788,18 +792,22 @@ void tst_QQuickMultiPointTouchArea::inFlickable2()
     QCOMPARE(point11->pressed(), true);
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
     p1 += QPoint(0,15);
+    QTest::qWait(1);
     QTest::touchEvent(window.data(), device).move(0, p1);
     QQuickTouchUtils::flush(window.data());
 
