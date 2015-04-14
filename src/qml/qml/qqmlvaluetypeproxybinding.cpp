@@ -55,33 +55,11 @@ QQmlValueTypeProxyBinding::~QQmlValueTypeProxyBinding()
 
 void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
 {
-    if (e) {
-        recursiveEnable(m_bindings, flags);
-    } else {
-        recursiveDisable(m_bindings);
+    QQmlAbstractBinding *b = m_bindings;
+    while (b) {
+        b->setEnabled(e, flags);
+        b = b->nextBinding();
     }
-}
-
-void QQmlValueTypeProxyBinding::recursiveEnable(QQmlAbstractBinding *b, QQmlPropertyPrivate::WriteFlags flags)
-{
-    if (!b)
-        return;
-
-    recursiveEnable(b->nextBinding(), flags);
-
-    if (b)
-        b->setEnabled(true, flags);
-}
-
-void QQmlValueTypeProxyBinding::recursiveDisable(QQmlAbstractBinding *b)
-{
-    if (!b)
-        return;
-
-    recursiveDisable(b->nextBinding());
-
-    if (b)
-        b->setEnabled(false, 0);
 }
 
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(int propertyIndex)

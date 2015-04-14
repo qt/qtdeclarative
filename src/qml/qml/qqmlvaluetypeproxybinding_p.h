@@ -65,9 +65,6 @@ protected:
     ~QQmlValueTypeProxyBinding();
 
 private:
-    static void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
-    static void recursiveDisable(QQmlAbstractBinding *);
-
     friend class QQmlAbstractBinding;
     QObject *m_object;
     int m_index;
