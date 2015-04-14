@@ -555,16 +555,17 @@ void tst_qquickimage::noLoading()
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 2);
-    QTRY_COMPARE(progressSpy.count(), 2);
+    QTRY_VERIFY(progressSpy.count() >= 2);
     QTRY_COMPARE(statusSpy.count(), 3);
 
     // Loading remote file again - should not go through 'Loading' state.
+    progressSpy.clear();
     ctxt->setContextProperty("srcImage", testFileUrl("green.png"));
     ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 4);
-    QTRY_COMPARE(progressSpy.count(), 2);
+    QTRY_COMPARE(progressSpy.count(), 0);
     QTRY_COMPARE(statusSpy.count(), 5);
 
     delete obj;
