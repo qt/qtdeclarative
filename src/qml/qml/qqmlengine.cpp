@@ -816,10 +816,10 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
 
     // Find the binding
     QQmlAbstractBinding *b = bindings;
-    while (b && *b->m_mePtr && b->propertyIndex() != coreIndex)
+    while (b && *b->m_mePtr && b->targetPropertyIndex() != coreIndex)
         b = b->nextBinding();
 
-    if (b && b->propertyIndex() == coreIndex) {
+    if (b && b->targetPropertyIndex() == coreIndex) {
         b->clear();
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                             QQmlPropertyPrivate::DontRemoveBinding);

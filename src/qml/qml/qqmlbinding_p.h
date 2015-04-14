@@ -86,8 +86,8 @@ public:
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
     virtual void retargetBinding(QObject *, int);
     virtual QString expression() const;
-    virtual QObject *object() const;
-    virtual int propertyIndex() const;
+    virtual QObject *targetObject() const;
+    virtual int targetPropertyIndex() const;
     virtual void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
     typedef int Identifier;

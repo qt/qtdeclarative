@@ -73,11 +73,11 @@ public:
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
-    virtual int propertyIndex() const = 0;
+    virtual int targetPropertyIndex() const = 0;
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
-    virtual QObject *object() const = 0;
+    virtual QObject *targetObject() const = 0;
 
     virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
     virtual void update(QQmlPropertyPrivate::WriteFlags = QQmlPropertyPrivate::DontRemoveBinding);

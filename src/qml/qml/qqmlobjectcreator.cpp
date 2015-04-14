@@ -1187,9 +1187,9 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         if (!b)
             continue;
         b->m_mePtr = 0;
-        QQmlData *data = QQmlData::get(b->object());
+        QQmlData *data = QQmlData::get(b->targetObject());
         Q_ASSERT(data);
-        data->clearPendingBindingBit(b->propertyIndex());
+        data->clearPendingBindingBit(b->targetPropertyIndex());
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                       QQmlPropertyPrivate::DontRemoveBinding);
 

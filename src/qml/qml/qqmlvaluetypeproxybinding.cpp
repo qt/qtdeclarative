@@ -66,7 +66,7 @@ QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(int propertyIndex)
 {
     QQmlAbstractBinding *binding = m_bindings;
 
-    while (binding && binding->propertyIndex() != propertyIndex)
+    while (binding && binding->targetPropertyIndex() != propertyIndex)
         binding = binding->nextBinding();
 
     return binding;
@@ -81,7 +81,7 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
     QQmlAbstractBinding *lastBinding = 0;
 
     while (binding) {
-        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(binding->propertyIndex());
+        int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(binding->targetPropertyIndex());
         if (valueTypeIndex != -1 && (mask & (1 << valueTypeIndex))) {
             QQmlAbstractBinding *remove = binding;
             binding = remove->nextBinding();
@@ -101,12 +101,12 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
     }
 }
 
-int QQmlValueTypeProxyBinding::propertyIndex() const
+int QQmlValueTypeProxyBinding::targetPropertyIndex() const
 {
     return m_index;
 }
 
-QObject *QQmlValueTypeProxyBinding::object() const
+QObject *QQmlValueTypeProxyBinding::targetObject() const
 {
     return m_object;
 }

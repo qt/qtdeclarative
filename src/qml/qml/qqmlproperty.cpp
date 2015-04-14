@@ -732,8 +732,8 @@ QQmlPropertyPrivate::setBinding(const QQmlProperty &that,
 
     // In the case that the new binding is provided, we must target the property it
     // is associated with.  If we don't do this, retargetBinding() can fail.
-    QObject *object = newBinding->object();
-    int pi = newBinding->propertyIndex();
+    QObject *object = newBinding->targetObject();
+    int pi = newBinding->targetPropertyIndex();
 
     int core;
     int vt = QQmlPropertyData::decodeValueTypePropertyIndex(pi, &core);
@@ -776,7 +776,7 @@ QQmlPropertyPrivate::binding(QObject *object, int coreIndex, int valueTypeIndex)
         return 0;
 
     QQmlAbstractBinding *binding = data->bindings;
-    while (binding && binding->propertyIndex() != coreIndex)
+    while (binding && binding->targetPropertyIndex() != coreIndex)
         binding = binding->nextBinding();
 
     if (binding && valueTypeIndex != -1) {
@@ -852,7 +852,7 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
     if (data && data->hasBindingBit(coreIndex)) {
         binding = data->bindings;
 
-        while (binding && binding->propertyIndex() != coreIndex)
+        while (binding && binding->targetPropertyIndex() != coreIndex)
             binding = binding->nextBinding();
     }
 
@@ -869,11 +869,11 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
     }
 
     if (newBinding) {
-        if (newBinding->propertyIndex() != index || newBinding->object() != object)
+        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object)
             newBinding->retargetBinding(object, index);
 
-        Q_ASSERT(newBinding->propertyIndex() == index);
-        Q_ASSERT(newBinding->object() == object);
+        Q_ASSERT(newBinding->targetPropertyIndex() == index);
+        Q_ASSERT(newBinding->targetObject() == object);
 
         newBinding->addToObject();
         newBinding->setEnabled(true, flags);
@@ -916,7 +916,7 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
     if (data && data->hasBindingBit(coreIndex)) {
         binding = data->bindings;
 
-        while (binding && binding->propertyIndex() != coreIndex)
+        while (binding && binding->targetPropertyIndex() != coreIndex)
             binding = binding->nextBinding();
     }
 
@@ -931,11 +931,11 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
         binding->removeFromObject();
 
     if (newBinding) {
-        if (newBinding->propertyIndex() != index || newBinding->object() != object)
+        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object)
             newBinding->retargetBinding(object, index);
 
-        Q_ASSERT(newBinding->propertyIndex() == index);
-        Q_ASSERT(newBinding->object() == object);
+        Q_ASSERT(newBinding->targetPropertyIndex() == index);
+        Q_ASSERT(newBinding->targetObject() == object);
 
         newBinding->addToObject();
     }

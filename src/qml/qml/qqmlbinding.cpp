@@ -161,7 +161,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         return;
 
     // Check that the target has not been deleted
-    if (QQmlData::wasDeleted(object()))
+    if (QQmlData::wasDeleted(targetObject()))
         return;
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
@@ -277,13 +277,13 @@ QString QQmlBinding::expression() const
     return v->toQStringNoThrow();
 }
 
-QObject *QQmlBinding::object() const
+QObject *QQmlBinding::targetObject() const
 {
     if (m_coreObject.hasValue()) return m_coreObject.constValue()->target;
     else return *m_coreObject;
 }
 
-int QQmlBinding::propertyIndex() const
+int QQmlBinding::targetPropertyIndex() const
 {
     if (m_coreObject.hasValue()) return m_coreObject.constValue()->targetProperty;
     else return m_core.encodedIndex();
@@ -308,7 +308,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 
 QQmlProperty QQmlBinding::property() const
 {
-    return QQmlPropertyPrivate::restore(object(), m_core, 0);
+    return QQmlPropertyPrivate::restore(targetObject(), m_core, 0);
 }
 
 QT_END_NAMESPACE

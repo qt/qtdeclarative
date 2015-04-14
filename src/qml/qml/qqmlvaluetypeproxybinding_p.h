@@ -54,12 +54,12 @@ class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 public:
     QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
 
-    QQmlAbstractBinding *binding(int propertyIndex);
+    QQmlAbstractBinding *binding(int targetPropertyIndex);
     void removeBindings(quint32 mask);
 
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
-    virtual int propertyIndex() const;
-    virtual QObject *object() const;
+    virtual int targetPropertyIndex() const;
+    virtual QObject *targetObject() const;
 
 protected:
     ~QQmlValueTypeProxyBinding();
