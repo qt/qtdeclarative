@@ -39,6 +39,7 @@
 
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
