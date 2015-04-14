@@ -49,17 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Used in qqmlabstractbinding.cpp
-QQmlAbstractBinding::VTable QQmlBinding_vtable = {
-    QQmlAbstractBinding::default_destroy<QQmlBinding>,
-    QQmlBinding::expression,
-    QQmlBinding::propertyIndex,
-    QQmlBinding::object,
-    QQmlBinding::setEnabled,
-    QQmlBinding::update,
-    QQmlBinding::retargetBinding
-};
-
 QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
@@ -270,36 +259,6 @@ void QQmlBinding::expressionChanged()
 void QQmlBinding::refresh()
 {
     update();
-}
-
-QString QQmlBinding::expression(const QQmlAbstractBinding *This)
-{
-    return static_cast<const QQmlBinding *>(This)->expression();
-}
-
-int QQmlBinding::propertyIndex(const QQmlAbstractBinding *This)
-{
-    return static_cast<const QQmlBinding *>(This)->propertyIndex();
-}
-
-QObject *QQmlBinding::object(const QQmlAbstractBinding *This)
-{
-    return static_cast<const QQmlBinding *>(This)->object();
-}
-
-void QQmlBinding::setEnabled(QQmlAbstractBinding *This, bool e, QQmlPropertyPrivate::WriteFlags f)
-{
-    static_cast<QQmlBinding *>(This)->setEnabled(e, f);
-}
-
-void QQmlBinding::update(QQmlAbstractBinding *This , QQmlPropertyPrivate::WriteFlags f)
-{
-    static_cast<QQmlBinding *>(This)->update(f);
-}
-
-void QQmlBinding::retargetBinding(QQmlAbstractBinding *This, QObject *o, int i)
-{
-    static_cast<QQmlBinding *>(This)->retargetBinding(o, i);
 }
 
 void QQmlBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)

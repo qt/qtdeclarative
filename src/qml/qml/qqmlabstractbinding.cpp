@@ -39,14 +39,6 @@
 
 QT_BEGIN_NAMESPACE
 
-extern QQmlAbstractBinding::VTable QQmlBinding_vtable;
-extern QQmlAbstractBinding::VTable QQmlValueTypeProxyBinding_vtable;
-
-QQmlAbstractBinding::VTable *QQmlAbstractBinding::vTables[] = {
-    &QQmlBinding_vtable,
-    &QQmlValueTypeProxyBinding_vtable
-};
-
 QQmlAbstractBinding::QQmlAbstractBinding(BindingType bt)
     : m_nextBindingPtr(bt)
 {
@@ -199,14 +191,18 @@ void QQmlAbstractBinding::clear()
     }
 }
 
-void QQmlAbstractBinding::default_retargetBinding(QQmlAbstractBinding *, QObject *, int)
+void QQmlAbstractBinding::retargetBinding(QObject *, int)
 {
     qFatal("QQmlAbstractBinding::retargetBinding() called on illegal binding.");
 }
 
-QString QQmlAbstractBinding::default_expression(const QQmlAbstractBinding *)
+QString QQmlAbstractBinding::expression() const
 {
     return QLatin1String("<Unknown>");
+}
+
+void QQmlAbstractBinding::update(QQmlPropertyPrivate::WriteFlags)
+{
 }
 
 QT_END_NAMESPACE

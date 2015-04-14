@@ -54,25 +54,19 @@ class QQmlValueTypeProxyBinding : public QQmlAbstractBinding
 public:
     QQmlValueTypeProxyBinding(QObject *o, int coreIndex);
 
-    int propertyIndex() const;
-    QObject *object() const;
-
     QQmlAbstractBinding *binding(int propertyIndex);
-
     void removeBindings(quint32 mask);
 
-    // "Inherited" from QQmlAbstractBinding
-    static void setEnabled(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
-    static void update(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
-    static int propertyIndex(const QQmlAbstractBinding *);
-    static QObject *object(const QQmlAbstractBinding *);
+    virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
+    virtual int propertyIndex() const;
+    virtual QObject *object() const;
 
 protected:
     ~QQmlValueTypeProxyBinding();
 
 private:
-    void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
-    void recursiveDisable(QQmlAbstractBinding *);
+    static void recursiveEnable(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
+    static void recursiveDisable(QQmlAbstractBinding *);
 
     friend class QQmlAbstractBinding;
     QObject *m_object;

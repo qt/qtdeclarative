@@ -57,40 +57,30 @@ class QQmlObjectCreator;
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 {
 public:
-    struct VTable {
-        void (*destroy)(QQmlAbstractBinding *);
-        QString (*expression)(const QQmlAbstractBinding *);
-        int (*propertyIndex)(const QQmlAbstractBinding *);
-        QObject *(*object)(const QQmlAbstractBinding *);
-        void (*setEnabled)(QQmlAbstractBinding *, bool, QQmlPropertyPrivate::WriteFlags);
-        void (*update)(QQmlAbstractBinding *, QQmlPropertyPrivate::WriteFlags);
-        void (*retargetBinding)(QQmlAbstractBinding *, QObject *, int);
-    };
-
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
     enum BindingType { Binding = 0, ValueTypeProxy = 1 };
     inline BindingType bindingType() const;
 
-    void destroy()
-    { vtable()->destroy(this); }
+    void destroy() {
+        removeFromObject();
+        clear();
+        delete this;
+    }
 
-    QString expression() const { return vtable()->expression(this); }
+    virtual QString expression() const;
 
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
-    int propertyIndex() const { return vtable()->propertyIndex(this); }
+    virtual int propertyIndex() const = 0;
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
-    QObject *object() const { return vtable()->object(this); }
+    virtual QObject *object() const = 0;
 
-    void setEnabled(bool e) { setEnabled(e, QQmlPropertyPrivate::DontRemoveBinding); }
-    void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f) { vtable()->setEnabled(this, e, f); }
-
-    void update() { update(QQmlPropertyPrivate::DontRemoveBinding); }
-    void update(QQmlPropertyPrivate::WriteFlags f) { vtable()->update(this, f); }
+    virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
+    virtual void update(QQmlPropertyPrivate::WriteFlags = QQmlPropertyPrivate::DontRemoveBinding);
 
     void addToObject();
     void removeFromObject();
@@ -98,21 +88,16 @@ public:
     static inline Pointer getPointer(QQmlAbstractBinding *p);
     static void printBindingLoopError(QQmlProperty &prop);
 
-    // Default implementation for some VTable functions
-    template<typename T>
-    static void default_destroy(QQmlAbstractBinding *);
-    static QString default_expression(const QQmlAbstractBinding *);
-    static void default_retargetBinding(QQmlAbstractBinding *, QObject *, int);
 
 protected:
     QQmlAbstractBinding(BindingType);
-    ~QQmlAbstractBinding();
+    virtual ~QQmlAbstractBinding();
     void clear();
 
     // Called by QQmlPropertyPrivate to "move" a binding to a different property.
     // This is only used for alias properties. The default implementation qFatal()'s
     // to ensure that the method is never called for binding types that don't support it.
-    void retargetBinding(QObject *o, int i) { vtable()->retargetBinding(this, o, i); }
+    virtual void retargetBinding(QObject *, int);
 
 private:
     Pointer weakPointer();
@@ -146,9 +131,6 @@ private:
     // This saves a compiler-generated pointer to a compiler-generated vTable, and thus reduces
     // the binding object size by sizeof(void*).
     qintptr m_nextBindingPtr;
-
-    static VTable *vTables[];
-    inline const VTable *vtable() const { return vTables[bindingType()]; }
 };
 
 QQmlAbstractBinding::Pointer
@@ -180,14 +162,6 @@ void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
 QQmlAbstractBinding::BindingType QQmlAbstractBinding::bindingType() const
 {
     return (BindingType)(m_nextBindingPtr & 0x3);
-}
-
-template<typename T>
-void QQmlAbstractBinding::default_destroy(QQmlAbstractBinding *This)
-{
-    This->removeFromObject();
-    This->clear();
-    delete static_cast<T *>(This);
 }
 
 QT_END_NAMESPACE
