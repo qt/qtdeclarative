@@ -74,7 +74,10 @@ QJSValue myNumberPlusOne = myEngine.evaluate("myNumber + 1");
 //! [4]
 QJSValue result = myEngine.evaluate(...);
 if (result.isError())
-    qDebug() << "uncaught exception:" << result.toString();
+    qDebug()
+            << "Uncaught exception at line"
+            << result.property("lineNumber").toInt()
+            << ":" << result.toString();
 //! [4]
 
 

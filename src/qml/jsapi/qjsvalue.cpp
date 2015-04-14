@@ -309,6 +309,8 @@ bool QJSValue::isUndefined() const
 /*!
   Returns true if this QJSValue is an object of the Error class;
   otherwise returns false.
+
+  \sa {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
 */
 bool QJSValue::isError() const
 {
