@@ -80,7 +80,6 @@ public:
     virtual QObject *targetObject() const = 0;
 
     virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
-    virtual void update(QQmlPropertyPrivate::WriteFlags = QQmlPropertyPrivate::DontRemoveBinding);
 
     void addToObject();
     void removeFromObject();

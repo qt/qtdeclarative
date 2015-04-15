@@ -196,8 +196,4 @@ QString QQmlAbstractBinding::expression() const
     return QLatin1String("<Unknown>");
 }
 
-void QQmlAbstractBinding::update(QQmlPropertyPrivate::WriteFlags)
-{
-}
-
 QT_END_NAMESPACE

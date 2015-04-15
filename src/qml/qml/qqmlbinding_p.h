@@ -87,7 +87,7 @@ public:
     virtual QString expression() const;
     virtual QObject *targetObject() const;
     virtual int targetPropertyIndex() const;
-    virtual void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
+    void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
     typedef int Identifier;
     static Identifier Invalid;
