@@ -88,6 +88,8 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #define V4_ENABLE_JIT
 #endif
 
+#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
+#define V4_ENABLE_JIT
 #endif
 
 // Black list some platforms

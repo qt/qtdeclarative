@@ -8,6 +8,9 @@ win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 win32:!wince*:!winrt:LIBS += -lshell32
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
+# Ensure this gcc optimization is switched off for mips platforms to avoid trouble with JIT.
+gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
+
 MODULE_PLUGIN_TYPES = \
   qmltooling
 

@@ -359,6 +359,12 @@ public:
         }
     }
 
+    void mul32(Address src, RegisterID dest)
+    {
+        load32(src, dataTempRegister);
+        mul32(dataTempRegister, dest);
+    }
+
     void neg32(RegisterID srcDest)
     {
         m_assembler.subu(srcDest, MIPSRegisters::zero, srcDest);
@@ -418,6 +424,12 @@ public:
         load32(dest.m_ptr, dataTempRegister);
         m_assembler.orInsn(dataTempRegister, dataTempRegister, src);
         store32(dataTempRegister, dest.m_ptr);
+    }
+
+    void or32(Address src, RegisterID dest)
+    {
+        load32(src, dataTempRegister);
+        or32(dataTempRegister, dest);
     }
 
     void rshift32(RegisterID shiftAmount, RegisterID dest)
@@ -613,6 +625,12 @@ public:
         */
         move(imm, immTempRegister);
         m_assembler.xorInsn(dest, src, immTempRegister);
+    }
+
+    void xor32(Address src, RegisterID dest)
+    {
+        load32(src, dataTempRegister);
+        xor32(dataTempRegister, dest);
     }
 
     void sqrtDouble(FPRegisterID src, FPRegisterID dst)
@@ -2519,6 +2537,18 @@ public:
         m_assembler.cvtdw(dest, fpTempRegister);
     }
 
+    void convertUInt32ToDouble(RegisterID src, FPRegisterID dest, RegisterID scratch)
+    {
+        m_assembler.mtc1(src, fpTempRegister);
+        m_assembler.bltz(src, 2);
+        m_assembler.cvtdw(dest, fpTempRegister);
+        m_assembler.beq(MIPSRegisters::zero, MIPSRegisters::zero, 4);
+        m_assembler.lui(scratch, 0x4f80);
+        m_assembler.mtc1(scratch, fpTempRegister);
+        m_assembler.cvtds(fpTempRegister, fpTempRegister);
+        m_assembler.addd(dest, dest, fpTempRegister);
+    }
+
     void convertFloatToDouble(FPRegisterID src, FPRegisterID dst)
     {
         m_assembler.cvtds(dst, src);
@@ -2761,7 +2791,7 @@ public:
         return CodeLocationLabel();
     }
 
-    static void revertJumpReplacementToPatchableBranchPtrWithPatch(CodeLocationLabel instructionStart, Address, void* initialValue)
+    static void revertJumpReplacementToPatchableBranchPtrWithPatch(CodeLocationLabel, Address, void*)
     {
         UNREACHABLE_FOR_PLATFORM();
     }

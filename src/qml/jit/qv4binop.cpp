@@ -415,8 +415,8 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         case IR::OpAdd:    as->add32(l, r, targetReg); break;
         case IR::OpMul:    as->mul32(l, r, targetReg); break;
 
-#if CPU(ARM) || CPU(X86) || CPU(X86_64)
-            // The ARM assembler will generate an and with 0x1f for us, and Intel will do it on the CPU.
+#if CPU(ARM) || CPU(X86) || CPU(X86_64) || CPU(MIPS)
+            // The ARM assembler will generate an and with 0x1f for us, MIPS and Intel will do it on the CPU.
 
         case IR::OpLShift:  as->lshift32(l, r, targetReg); break;
         case IR::OpRShift:  as->rshift32(l, r, targetReg); break;

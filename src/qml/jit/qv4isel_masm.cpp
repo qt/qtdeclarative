@@ -1383,11 +1383,14 @@ void InstructionSelection::visitRet(IR::Ret *s)
         // this only happens if the method doesn't have a return statement and can
         // only exit through an exception
     } else if (IR::Temp *t = s->expr->asTemp()) {
-#if CPU(X86) || CPU(ARM)
+#if CPU(X86) || CPU(ARM) || CPU(MIPS)
 
 #  if CPU(X86)
         Assembler::RegisterID lowReg = JSC::X86Registers::eax;
         Assembler::RegisterID highReg = JSC::X86Registers::edx;
+#  elif CPU(MIPS)
+        Assembler::RegisterID lowReg = JSC::MIPSRegisters::v0;
+        Assembler::RegisterID highReg = JSC::MIPSRegisters::v1;
 #  else // CPU(ARM)
         Assembler::RegisterID lowReg = JSC::ARMRegisters::r0;
         Assembler::RegisterID highReg = JSC::ARMRegisters::r1;
@@ -1477,6 +1480,9 @@ void InstructionSelection::visitRet(IR::Ret *s)
 #elif CPU(ARM)
         _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
         _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
+#elif CPU(MIPS)
+        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::MIPSRegisters::v0);
+        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::MIPSRegisters::v1);
 #else
         _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
 #endif
@@ -1504,6 +1510,9 @@ void InstructionSelection::visitRet(IR::Ret *s)
 #elif CPU(ARM)
     _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
     _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
+#elif CPU(MIPS)
+    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::MIPSRegisters::v0);
+    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::MIPSRegisters::v1);
 #else
     _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
 #endif

@@ -565,6 +565,8 @@ public:
         moveIntsToDouble(JSC::ARMRegisters::r0, JSC::ARMRegisters::r1, dest, FPGpr0);
 #elif defined(Q_PROCESSOR_X86)
         moveIntsToDouble(JSC::X86Registers::eax, JSC::X86Registers::edx, dest, FPGpr0);
+#elif defined(Q_PROCESSOR_MIPS)
+        moveIntsToDouble(JSC::MIPSRegisters::v0, JSC::MIPSRegisters::v1, dest, FPGpr0);
 #else
         subPtr(TrustedImm32(sizeof(QV4::Value)), StackPointerRegister);
         Pointer tmp(StackPointerRegister, 0);
@@ -594,6 +596,14 @@ public:
         store32(JSC::ARMRegisters::r0, destination);
         destination.offset += 4;
         store32(JSC::ARMRegisters::r1, destination);
+    }
+#elif defined(Q_PROCESSOR_MIPS)
+    void storeReturnValue(const Pointer &dest)
+    {
+        Pointer destination = dest;
+        store32(JSC::MIPSRegisters::v0, destination);
+        destination.offset += 4;
+        store32(JSC::MIPSRegisters::v1, destination);
     }
 #endif
 
@@ -820,6 +830,8 @@ public:
         else
 #if OS(WINDOWS) && CPU(X86_64)
             loadArgumentOnStack<argumentNumber>(value, argumentNumber);
+#elif CPU(MIPS) // Stack space for 4 arguments needs to be allocated for MIPS platforms.
+            loadArgumentOnStack<argumentNumber>(value, argumentNumber + 4);
 #else // Sanity:
             loadArgumentOnStack<argumentNumber - RegisterArgumentCount>(value, argumentNumber);
 #endif

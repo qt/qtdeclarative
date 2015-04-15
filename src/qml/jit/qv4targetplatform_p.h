@@ -346,6 +346,71 @@ public:
     static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(JSC::ARMRegisters::lr); }
 #endif // Linux on ARM (32 bit)
 
+#if defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
+    enum { RegAllocIsSupported = 1 };
+
+    static const JSC::MacroAssembler::RegisterID StackFrameRegister = JSC::MIPSRegisters::fp;
+    static const JSC::MacroAssembler::RegisterID StackPointerRegister = JSC::MIPSRegisters::sp;
+    static const JSC::MacroAssembler::RegisterID LocalsRegister = JSC::MIPSRegisters::s0;
+    static const JSC::MacroAssembler::RegisterID EngineRegister = JSC::MIPSRegisters::s1;
+    static const JSC::MacroAssembler::RegisterID ReturnValueRegister = JSC::MIPSRegisters::v0;
+    static const JSC::MacroAssembler::RegisterID ScratchRegister = JSC::MIPSRegisters::s2;
+    static const JSC::MacroAssembler::FPRegisterID FPGpr0 = JSC::MIPSRegisters::f0;
+    static const JSC::MacroAssembler::FPRegisterID FPGpr1 = JSC::MIPSRegisters::f2;
+
+    static RegisterInformation getPlatformRegisterInfo()
+    {
+        typedef RegisterInfo RI;
+        return RegisterInformation()
+                // Note: t0, t1, t2, t3 and f16 are already used by MacroAssemblerMIPS.
+                << RI(JSC::MIPSRegisters::t4,  QStringLiteral("t4"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::t5,  QStringLiteral("t5"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::t6,  QStringLiteral("t6"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::t7,  QStringLiteral("t7"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::t8,  QStringLiteral("t8"),  RI::RegularRegister,       RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::s0,  QStringLiteral("s0"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::MIPSRegisters::s1,  QStringLiteral("s1"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::MIPSRegisters::s2,  QStringLiteral("s2"),  RI::RegularRegister,       RI::CalleeSaved, RI::Predefined)
+                << RI(JSC::MIPSRegisters::s3,  QStringLiteral("s3"),  RI::RegularRegister,       RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f4,  QStringLiteral("f4"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f6,  QStringLiteral("f6"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f8,  QStringLiteral("f8"),  RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f10, QStringLiteral("f10"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f18, QStringLiteral("f18"), RI::FloatingPointRegister, RI::CallerSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f20, QStringLiteral("f20"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f22, QStringLiteral("f22"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f24, QStringLiteral("f24"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f26, QStringLiteral("f26"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                << RI(JSC::MIPSRegisters::f28, QStringLiteral("f28"), RI::FloatingPointRegister, RI::CalleeSaved, RI::RegAlloc)
+                   ;
+    }
+
+#undef HAVE_ALU_OPS_WITH_MEM_OPERAND
+#undef VALUE_FITS_IN_REGISTER
+    static const int RegisterSize = 4;
+
+#define ARGUMENTS_IN_REGISTERS
+    static const int RegisterArgumentCount = 4;
+    static JSC::MacroAssembler::RegisterID registerForArgument(int index)
+    {
+        static JSC::MacroAssembler::RegisterID regs[RegisterArgumentCount] = {
+            JSC::MIPSRegisters::a0,
+            JSC::MIPSRegisters::a1,
+            JSC::MIPSRegisters::a2,
+            JSC::MIPSRegisters::a3
+        };
+
+        Q_ASSERT(index >= 0 && index < RegisterArgumentCount);
+        return regs[index];
+    };
+
+    static const int StackAlignment = 8;
+    static const int StackShadowSpace = 4 * RegisterSize; // Stack space for 4 argument registers.
+    static const int StackSpaceAllocatedUponFunctionEntry = 1 * RegisterSize; // Registers saved in platformEnterStandardStackFrame below.
+    static void platformEnterStandardStackFrame(JSC::MacroAssembler *as) { as->push(JSC::MIPSRegisters::ra); }
+    static void platformLeaveStandardStackFrame(JSC::MacroAssembler *as) { as->pop(JSC::MIPSRegisters::ra); }
+#endif // Linux on MIPS (32 bit)
+
 public: // utility functions
     static RegisterInformation getRegisterInfo()
     {

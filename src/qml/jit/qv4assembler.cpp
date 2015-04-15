@@ -241,15 +241,15 @@ void Assembler::enterStandardStackFrame(const RegisterInformation &regularRegist
     subPtr(TrustedImm32(frameSize), StackPointerRegister);
 
     Address slotAddr(StackFrameRegister, 0);
-    for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
-        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
-        slotAddr.offset -= RegisterSize;
-        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
-    }
     for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
         Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
         slotAddr.offset -= sizeof(double);
         JSC::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
+    }
+    for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
+        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
+        slotAddr.offset -= RegisterSize;
+        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
     }
 }
 
@@ -259,15 +259,15 @@ void Assembler::leaveStandardStackFrame(const RegisterInformation &regularRegist
     Address slotAddr(StackFrameRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
 
     // restore the callee saved registers
-    for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
-        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
-        JSC::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
-        slotAddr.offset += sizeof(double);
-    }
     for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
         Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
         loadPtr(slotAddr, regularRegistersToSave.at(i).reg<RegisterID>());
         slotAddr.offset += RegisterSize;
+    }
+    for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
+        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
+        JSC::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
+        slotAddr.offset += sizeof(double);
     }
 
     Q_ASSERT(slotAddr.offset == 0);
