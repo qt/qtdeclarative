@@ -189,7 +189,7 @@ void tst_qqmlproperty::qmlmetaproperty()
     QCOMPARE(prop.propertyTypeName(), (const char *)0);
     QVERIFY(prop.property().name() == 0);
     QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-    QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+    QQmlPropertyPrivate::setBinding(prop, binding.data());
     QVERIFY(binding == 0);
     QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
     QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -440,7 +440,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QVERIFY(prop.property().name() == 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -489,7 +489,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding != 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
@@ -543,7 +543,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QVERIFY(prop.property().name() == 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -592,7 +592,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding != 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
@@ -641,7 +641,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -690,7 +690,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -744,7 +744,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QVERIFY(prop.property().name() == 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -793,7 +793,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding != 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
@@ -847,7 +847,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QVERIFY(prop.property().name() == 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -896,7 +896,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding != 0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
@@ -945,7 +945,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
@@ -994,7 +994,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::setBinding(prop, binding.data()) == 0);
+        QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding == 0);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
         QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);

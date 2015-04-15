@@ -646,9 +646,7 @@ bool QQmlEngineDebugService::setBinding(int objectId,
                 } else if (property.isProperty()) {
                     QQmlBinding *binding = new QQmlBinding(expression.toString(), object, QQmlContextData::get(context), filename, line, column);
                     binding->setTarget(property);
-                    QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::setBinding(property, binding);
-                    if (oldBinding)
-                        oldBinding->destroy();
+                    QQmlPropertyPrivate::setBinding(binding);
                     binding->update();
                 } else {
                     ok = false;
@@ -679,12 +677,7 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
 
         if (object->property(parentProperty.toLatin1()).isValid()) {
             QQmlProperty property(object, propertyName);
-            QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(property);
-            if (oldBinding) {
-                QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::removeBinding(property);
-                if (oldBinding)
-                    oldBinding->destroy();
-            }
+            QQmlPropertyPrivate::removeBinding(property, QQmlPropertyPrivate::DestroyOldBinding);
             if (property.isResettable()) {
                 // Note: this will reset the property in any case, without regard to states
                 // Right now almost no QQuickItem has reset methods for its properties (with the

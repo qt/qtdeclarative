@@ -481,10 +481,10 @@ void QObjectWrapper::setProperty(QObject *object, ExecutionContext *ctx, QQmlPro
         }
     }
 
-    QQmlAbstractBinding *oldBinding =
-        QQmlPropertyPrivate::setBinding(object, property->coreIndex, -1, newBinding);
-    if (oldBinding)
-        oldBinding->destroy();
+    if (newBinding)
+        QQmlPropertyPrivate::setBinding(newBinding);
+    else
+        QQmlPropertyPrivate::removeBinding(object, property->encodedIndex(), QQmlPropertyPrivate::DestroyOldBinding);
 
     if (!newBinding && property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties

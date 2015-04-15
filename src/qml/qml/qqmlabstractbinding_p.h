@@ -88,6 +88,7 @@ public:
     static inline Pointer getPointer(QQmlAbstractBinding *p);
     static void printBindingLoopError(QQmlProperty &prop);
 
+    inline QQmlAbstractBinding *nextBinding() const;
 
 protected:
     QQmlAbstractBinding(BindingType);
@@ -114,7 +115,6 @@ private:
     inline void setAddedToObject(bool v);
     inline bool isAddedToObject() const;
 
-    inline QQmlAbstractBinding *nextBinding() const;
     inline void setNextBinding(QQmlAbstractBinding *);
 
     // Pointer to the next binding in the linked list of bindings.

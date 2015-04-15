@@ -277,20 +277,17 @@ void QQmlBind::eval()
         if (!d->when) {
             //restore any previous binding
             if (d->prevBind) {
-                QQmlAbstractBinding *tmp = d->prevBind;
+                QQmlAbstractBinding *b = QQmlPropertyPrivate::binding(d->prop);
+                if (b != d->prevBind)
+                    QQmlPropertyPrivate::setBinding(d->prevBind, QQmlPropertyPrivate::DestroyOldBinding);
                 d->prevBind = 0;
-                tmp = QQmlPropertyPrivate::setBinding(d->prop, tmp);
-                if (tmp) //should this ever be true?
-                    tmp->destroy();
             }
             return;
         }
 
         //save any set binding for restoration
-        QQmlAbstractBinding *tmp = QQmlPropertyPrivate::removeBinding(d->prop);
-        if (tmp && d->prevBind)
-            tmp->destroy();
-        else if (!d->prevBind)
+        QQmlAbstractBinding *tmp = QQmlPropertyPrivate::removeBinding(d->prop, (d->prevBind ? QQmlPropertyPrivate::DestroyOldBinding : QQmlPropertyPrivate::None));
+        if (tmp && !d->prevBind)
             d->prevBind = tmp;
     }
 

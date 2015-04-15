@@ -62,14 +62,6 @@ struct ActiveOCRestorer
 };
 }
 
-static void removeBindingOnProperty(QObject *o, int index)
-{
-    int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::removeBinding(o, coreIndex, valueTypeIndex);
-    if (binding) binding->destroy();
-}
-
 QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QQmlCompiledData *compiledData, QQmlContextData *creationContext, void *activeVMEDataForRootContext)
     : phase(Startup)
     , compiledData(compiledData)
@@ -664,8 +656,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
             QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
 
         if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
-            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
-            binding->destroy();
+            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy =
                 static_cast<QQmlValueTypeProxyBinding *>(binding);
@@ -800,7 +791,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
     if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
         && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
         && !_valueTypeProperty)
-        removeBindingOnProperty(_bindingTarget, property->coreIndex);
+        QQmlPropertyPrivate::removeBinding(_bindingTarget, property->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
@@ -834,12 +825,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             qmlBinding->setTarget(_bindingTarget, targetCorePropertyData);
 
             if (targetCorePropertyData.isAlias()) {
-                QQmlAbstractBinding *old =
-                    QQmlPropertyPrivate::setBindingNoEnable(_bindingTarget,
-                                                            targetCorePropertyData.coreIndex,
-                                                            targetCorePropertyData.getValueTypeCoreIndex(),
-                                                            qmlBinding);
-                if (old) { old->destroy(); }
+                QQmlPropertyPrivate::setBinding(qmlBinding, QQmlPropertyPrivate::DontEnable|QQmlPropertyPrivate::DestroyOldBinding);
             } else {
                 qmlBinding->addToObject();
 

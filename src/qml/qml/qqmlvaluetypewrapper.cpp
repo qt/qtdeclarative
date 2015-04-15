@@ -407,45 +407,42 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
     QMetaProperty property = metaObject->property(pd->coreIndex);
     Q_ASSERT(property.isValid());
 
-    QQmlBinding *newBinding = 0;
-
-    QV4::ScopedFunctionObject f(scope, value);
-    if (reference && f) {
-        if (!f->isBinding()) {
-            // assigning a JS function to a non-var-property is not allowed.
-            QString error = QStringLiteral("Cannot assign JavaScript function to value-type property");
-            ScopedString e(scope, v4->newString(error));
-            v4->throwError(e);
-            return;
-        }
-
-        QQmlContextData *context = QmlContextWrapper::callingContext(v4);
-
-        QQmlPropertyData cacheData;
-        cacheData.setFlags(QQmlPropertyData::IsWritable |
-                           QQmlPropertyData::IsValueTypeVirtual);
-        cacheData.propType = writeBackPropertyType;
-        cacheData.coreIndex = reference->d()->property;
-        cacheData.valueTypeFlags = 0;
-        cacheData.valueTypeCoreIndex = pd->coreIndex;
-        cacheData.valueTypePropType = property.userType();
-
-        QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-        bindingFunction->initBindingLocation();
-
-        newBinding = new QQmlBinding(value, reference->d()->object, context);
-        newBinding->setTarget(reference->d()->object, cacheData);
-    }
-
     if (reference) {
-        QQmlAbstractBinding *oldBinding =
-                QQmlPropertyPrivate::setBinding(reference->d()->object, reference->d()->property, pd->coreIndex, newBinding);
-        if (oldBinding)
-            oldBinding->destroy();
+        QV4::ScopedFunctionObject f(scope, value);
+        if (f) {
+            if (!f->isBinding()) {
+                // assigning a JS function to a non-var-property is not allowed.
+                QString error = QStringLiteral("Cannot assign JavaScript function to value-type property");
+                ScopedString e(scope, v4->newString(error));
+                v4->throwError(e);
+                return;
+            }
+
+            QQmlContextData *context = QmlContextWrapper::callingContext(v4);
+
+            QQmlPropertyData cacheData;
+            cacheData.setFlags(QQmlPropertyData::IsWritable |
+                               QQmlPropertyData::IsValueTypeVirtual);
+            cacheData.propType = writeBackPropertyType;
+            cacheData.coreIndex = reference->d()->property;
+            cacheData.valueTypeFlags = 0;
+            cacheData.valueTypeCoreIndex = pd->coreIndex;
+            cacheData.valueTypePropType = property.userType();
+
+            QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
+            bindingFunction->initBindingLocation();
+
+            QQmlBinding *newBinding = new QQmlBinding(value, reference->d()->object, context);
+            newBinding->setTarget(reference->d()->object, cacheData);
+            QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::DestroyOldBinding);
+            return;
+        } else {
+            QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyData::encodeValueTypePropertyIndex(reference->d()->property, pd->coreIndex),
+                                               QQmlPropertyPrivate::DestroyOldBinding);
+
+        }
     }
 
-    if (newBinding)
-        return;
 
     QVariant v = v4->toVariant(value, property.userType());
 

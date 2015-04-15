@@ -102,7 +102,7 @@ void QQuickTransitionManagerPrivate::applyBindings()
 {
     foreach(const QQuickStateAction &action, bindingsList) {
         if (!action.toBinding.isNull()) {
-            QQmlPropertyPrivate::setBinding(action.property, action.toBinding.data());
+            QQmlPropertyPrivate::setBinding(action.toBinding.data());
         } else if (action.event) {
             if (action.reverseEvent)
                 action.event->reverse();
@@ -156,7 +156,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
         for (int ii = 0; ii < applyList.size(); ++ii) {
             const QQuickStateAction &action = applyList.at(ii);
             if (!action.toBinding.isNull()) {
-                QQmlPropertyPrivate::setBinding(action.property, action.toBinding.data(), QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
+                QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
             } else if (!action.event) {
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
             } else if (action.event->isReversable()) {

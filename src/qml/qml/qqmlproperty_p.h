@@ -104,14 +104,17 @@ public:
                       QQmlContextData *, WriteFlags flags = 0);
     static void findAliasTarget(QObject *, int, QObject **, int *);
 
-    static QQmlAbstractBinding *setBinding(QObject *, int coreIndex,
-                                                   int valueTypeIndex /* -1 */,
-                                                   QQmlAbstractBinding *,
-                                                   WriteFlags flags = DontRemoveBinding);
-    static QQmlAbstractBinding *removeBinding(QObject *object, int coreIndex, int valueTypeIndex /* -1 */);
-    static QQmlAbstractBinding *setBindingNoEnable(QObject *, int coreIndex,
-                                                           int valueTypeIndex /* -1 */,
-                                                           QQmlAbstractBinding *);
+    enum BindingFlag {
+        None = 0,
+        DestroyOldBinding = 0x1,
+        DontEnable = 0x2
+    };
+    Q_DECLARE_FLAGS(BindingFlags, BindingFlag)
+
+    static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None, WriteFlags writeFlags = DontRemoveBinding);
+
+    static QQmlAbstractBinding *removeBinding(const QQmlProperty &that, BindingFlag flag = None);
+    static QQmlAbstractBinding *removeBinding(QObject *o, int index, BindingFlag flag = None);
     static QQmlAbstractBinding *binding(QObject *, int coreIndex,
                                                 int valueTypeIndex /* -1 */);
 
@@ -130,10 +133,7 @@ public:
 
     // "Public" (to QML) methods
     static QQmlAbstractBinding *binding(const QQmlProperty &that);
-    static QQmlAbstractBinding *setBinding(const QQmlProperty &that,
-                                                   QQmlAbstractBinding *,
-                                                   WriteFlags flags = DontRemoveBinding);
-    static QQmlAbstractBinding *removeBinding(const QQmlProperty &that);
+    static void setBinding(const QQmlProperty &that, QQmlAbstractBinding *);
     static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
     static QQmlBoundSignalExpressionPointer setSignalExpression(const QQmlProperty &that,
                                                                 QQmlBoundSignalExpression *);
@@ -156,6 +156,7 @@ public:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::WriteFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::BindingFlags)
 
 QT_END_NAMESPACE
 
