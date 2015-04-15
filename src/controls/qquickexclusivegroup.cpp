@@ -141,8 +141,16 @@ void QQuickExclusiveGroup::removeCheckable(QObject *object)
     TODO
 */
 
+class QQuickExclusiveAttachedPrivate : public QObjectPrivate
+{
+public:
+    QQuickExclusiveAttachedPrivate() : group(Q_NULLPTR) { }
+
+    QQuickExclusiveGroup *group;
+};
+
 QQuickExclusiveAttached::QQuickExclusiveAttached(QObject *parent) :
-    QObject(parent), m_group(Q_NULLPTR)
+    QObject(*(new QQuickExclusiveAttachedPrivate), parent)
 {
 }
 
@@ -158,17 +166,19 @@ QQuickExclusiveAttached *QQuickExclusiveAttached::qmlAttachedProperties(QObject 
 */
 QQuickExclusiveGroup *QQuickExclusiveAttached::group() const
 {
-    return m_group;
+    Q_D(const QQuickExclusiveAttached);
+    return d->group;
 }
 
 void QQuickExclusiveAttached::setGroup(QQuickExclusiveGroup *group)
 {
-    if (m_group != group) {
-        if (m_group)
-            m_group->removeCheckable(parent());
-        m_group = group;
-        if (m_group)
-            m_group->addCheckable(parent());
+    Q_D(QQuickExclusiveAttached);
+    if (d->group != group) {
+        if (d->group)
+            d->group->removeCheckable(parent());
+        d->group = group;
+        if (group)
+            group->addCheckable(parent());
         emit groupChanged();
     }
 }

@@ -55,6 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickExclusiveGroupPrivate;
+class QQuickExclusiveAttachedPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickExclusiveGroup : public QObject
 {
@@ -98,7 +99,8 @@ Q_SIGNALS:
     void groupChanged();
 
 private:
-    QQuickExclusiveGroup *m_group;
+    Q_DISABLE_COPY(QQuickExclusiveAttached)
+    Q_DECLARE_PRIVATE(QQuickExclusiveAttached)
 };
 
 QT_END_NAMESPACE
