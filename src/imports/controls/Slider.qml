@@ -78,7 +78,6 @@ AbstractSlider {
     }
 
     track: Rectangle {
-        id: track
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         implicitWidth: horizontal ? 120 : 6
         implicitHeight: horizontal ? 6 : 120
@@ -94,9 +93,9 @@ AbstractSlider {
 
         Rectangle {
             x: 2
-            y: track.horizontal ? 2 : control.visualPosition * parent.height + 2
-            width: track.horizontal ? control.position * parent.width - 4 : 2
-            height: track.horizontal ? 2 : control.position * parent.height - 4
+            y: parent.horizontal ? 2 : control.visualPosition * parent.height + 2
+            width: parent.horizontal ? control.position * parent.width - 4 : 2
+            height: parent.horizontal ? 2 : control.position * parent.height - 4
 
             color: control.Theme.accentColor
             radius: control.Theme.roundness
