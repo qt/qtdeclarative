@@ -50,6 +50,24 @@ QT_BEGIN_NAMESPACE
     TODO
 */
 
+/*!
+    \qmlsignal QtQuickControls2::Button::pressed()
+
+    TODO
+*/
+
+/*!
+    \qmlsignal QtQuickControls2::Button::released()
+
+    TODO
+*/
+
+/*!
+    \qmlsignal QtQuickControls2::Button::clicked()
+
+    TODO
+*/
+
 QQuickButtonPrivate::QQuickButtonPrivate() :
     pressed(false), label(Q_NULLPTR)
 {
@@ -100,12 +118,16 @@ bool QQuickButton::isPressed() const
     return d->pressed;
 }
 
-void QQuickButton::setPressed(bool pressed)
+void QQuickButton::setPressed(bool isPressed)
 {
     Q_D(QQuickButton);
-    if (d->pressed != pressed) {
-        d->pressed = pressed;
+    if (d->pressed != isPressed) {
+        d->pressed = isPressed;
         emit pressedChanged();
+        if (isPressed)
+            emit pressed();
+        else
+            emit released();
     }
 }
 

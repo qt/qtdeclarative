@@ -74,6 +74,8 @@ public:
     void setLabel(QQuickItem *label);
 
 Q_SIGNALS:
+    void pressed();
+    void released();
     void clicked();
     void textChanged();
     void pressedChanged();

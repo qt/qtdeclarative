@@ -51,8 +51,13 @@ TestCase {
     name: "Button"
 
     SignalSpy {
-        id: pressedSpy
+        id: pressedChangedSpy
         signalName: "pressedChanged"
+    }
+
+    SignalSpy {
+        id: releasedSpy
+        signalName: "released"
     }
 
     SignalSpy {
@@ -66,16 +71,20 @@ TestCase {
     }
 
     function init() {
-        verify(!pressedSpy.target)
+        verify(!pressedChangedSpy.target)
+        verify(!releasedSpy.target)
         verify(!clickedSpy.target)
-        compare(pressedSpy.count, 0)
+        compare(pressedChangedSpy.count, 0)
+        compare(releasedSpy.count, 0)
         compare(clickedSpy.count, 0)
     }
 
     function cleanup() {
-        pressedSpy.target = null
+        pressedChangedSpy.target = null
+        releasedSpy.target = null
         clickedSpy.target = null
-        pressedSpy.clear()
+        pressedChangedSpy.clear()
+        releasedSpy.clear()
         clickedSpy.clear()
     }
 
@@ -101,47 +110,66 @@ TestCase {
     function test_mouse() {
         var control = button.createObject(testCase)
 
-        pressedSpy.target = control
+        pressedChangedSpy.target = control
+        releasedSpy.target = control
         clickedSpy.target = control
-        verify(pressedSpy.valid)
+        verify(pressedChangedSpy.valid)
+        verify(releasedSpy.valid)
         verify(clickedSpy.valid)
 
         // check
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 1)
+        compare(pressedChangedSpy.count, 1)
+        compare(releasedSpy.count, 0)
+        compare(clickedSpy.count, 0)
         compare(control.pressed, true)
+
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(pressedChangedSpy.count, 2)
+        compare(releasedSpy.count, 1)
         compare(clickedSpy.count, 1)
-        compare(pressedSpy.count, 2)
         compare(control.pressed, false)
 
         // uncheck
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 3)
+        compare(pressedChangedSpy.count, 3)
+        compare(releasedSpy.count, 1)
+        compare(clickedSpy.count, 1)
         compare(control.pressed, true)
+
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(pressedChangedSpy.count, 4)
+        compare(releasedSpy.count, 2)
         compare(clickedSpy.count, 2)
-        compare(pressedSpy.count, 4)
         compare(control.pressed, false)
 
         // release outside
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedSpy.count, 5)
+        compare(pressedChangedSpy.count, 5)
+        compare(releasedSpy.count, 2)
+        compare(clickedSpy.count, 2)
         compare(control.pressed, true)
+
         mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
         compare(control.pressed, false)
+
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftButton)
+        compare(pressedChangedSpy.count, 6)
+        compare(releasedSpy.count, 3)
         compare(clickedSpy.count, 2)
-        compare(pressedSpy.count, 6)
         compare(control.pressed, false)
 
         // right button
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(pressedSpy.count, 6)
-        compare(control.pressed, false)
-        mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
+        compare(pressedChangedSpy.count, 6)
+        compare(releasedSpy.count, 3)
         compare(clickedSpy.count, 2)
-        compare(pressedSpy.count, 6)
+        compare(control.pressed, false)
+
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
+        compare(pressedChangedSpy.count, 6)
+        compare(releasedSpy.count, 3)
+        compare(clickedSpy.count, 2)
         compare(control.pressed, false)
 
         control.destroy()
