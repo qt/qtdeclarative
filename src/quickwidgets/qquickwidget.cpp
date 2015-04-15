@@ -755,6 +755,16 @@ void QQuickWidget::createFramebufferObject()
     format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     format.setSamples(samples);
 
+    // The default framebuffer for normal windows have sRGB support on OS X which leads to the Qt Quick text item
+    // utilizing sRGB blending. To get identical results with QQuickWidget we have to have our framebuffer backed
+    // by an sRGB texture.
+#ifdef Q_OS_OSX
+    if (context->hasExtension("GL_ARB_framebuffer_sRGB")
+            && context->hasExtension("GL_EXT_texture_sRGB")
+            && context->hasExtension("GL_EXT_texture_sRGB_decode"))
+        format.setInternalTextureFormat(GL_SRGB8_ALPHA8_EXT);
+#endif
+
     const QSize fboSize = size() * devicePixelRatio();
 
     // Could be a simple hide - show, in which case the previous fbo is just fine.
@@ -762,6 +772,17 @@ void QQuickWidget::createFramebufferObject()
         delete d->fbo;
         d->fbo = new QOpenGLFramebufferObject(fboSize, format);
     }
+
+    // When compositing in the backingstore, sampling the sRGB texture would perform an
+    // sRGB-linear conversion which is not what we want when the final framebuffer (the window's)
+    // is sRGB too. Disable the conversion.
+#ifdef Q_OS_OSX
+    if (format.internalTextureFormat() == GL_SRGB8_ALPHA8_EXT) {
+        QOpenGLFunctions *funcs = context->functions();
+        funcs->glBindTexture(GL_TEXTURE_2D, d->fbo->texture());
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT);
+    }
+#endif
 
     // Even though this is just an offscreen window we should set the position on it, as it might be
     // useful for an item to know the actual position of the scene.
