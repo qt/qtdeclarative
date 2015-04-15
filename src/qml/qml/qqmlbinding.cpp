@@ -43,6 +43,7 @@
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -296,6 +297,42 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 {
     m_coreObject = object;
     m_core = core;
+
+    while (m_core.isAlias()) {
+        int coreIndex = core.coreIndex;
+        int valueTypeIndex = core.getValueTypeCoreIndex();
+        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
+
+        int aValueTypeIndex;
+        if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
+            m_core.coreIndex = -1;
+            m_coreObject = 0;
+            return;
+        }
+        if (valueTypeIndex == -1)
+            valueTypeIndex = aValueTypeIndex;
+
+        QQmlData *data = QQmlData::get(object, false);
+        if (!data || !data->propertyCache) {
+            m_core.coreIndex = -1;
+            m_coreObject = 0;
+            return;
+        }
+        QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
+        Q_ASSERT(propertyData);
+
+        m_coreObject = object;
+        m_core = *propertyData;
+        if (valueTypeIndex != -1) {
+            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(m_core.propType);
+            Q_ASSERT(valueTypeMetaObject);
+            QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
+            m_core.setFlags(m_core.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+            m_core.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
+            m_core.valueTypePropType = vtProp.userType();
+            m_core.valueTypeCoreIndex = valueTypeIndex;
+        }
+    }
 }
 
 QQmlProperty QQmlBinding::property() const
