@@ -52,6 +52,8 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qquickprofiler_p.h>
 
+#include <private/qquickshadereffectnode_p.h>
+
 #ifdef Q_OS_WIN
 #  include <QtCore/qt_windows.h>
 #endif
@@ -292,6 +294,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     }
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+
+    QQuickShaderEffectMaterial::cleanupMaterialCache();
 
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {

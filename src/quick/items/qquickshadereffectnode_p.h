@@ -101,6 +101,8 @@ public:
     void updateTextures() const;
     void invalidateTextureProvider(QSGTextureProvider *provider);
 
+    static void cleanupMaterialCache();
+
 protected:
     friend class QQuickCustomMaterialShader;
 
@@ -115,8 +117,6 @@ protected:
 
     QQuickShaderEffectNode *m_node;
     bool m_emittedLogChanged;
-
-    static QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > materialMap;
 };
 
 

@@ -48,6 +48,8 @@
 
 #include <private/qquickprofiler_p.h>
 
+#include <private/qquickshadereffectnode_p.h>
+
 QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
@@ -231,6 +233,8 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     }
     if (Q_UNLIKELY(!current))
         qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+
+    QQuickShaderEffectMaterial::cleanupMaterialCache();
 
     d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {

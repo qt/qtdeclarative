@@ -56,6 +56,8 @@
 #include <private/qquickprofiler_p.h>
 #include <private/qqmldebugservice_p.h>
 
+#include <private/qquickshadereffectnode_p.h>
+
 /*
    Overall design:
 
@@ -448,6 +450,8 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     if (Q_UNLIKELY(!current)) {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- cleanup without an OpenGL context";
     }
+
+    QQuickShaderEffectMaterial::cleanupMaterialCache();
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {
