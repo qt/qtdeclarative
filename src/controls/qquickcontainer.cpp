@@ -118,7 +118,7 @@ void QQuickContainer::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickContainer);
     if (d->contentItem != item) {
-        contentItemChange(d->contentItem, item);
+        contentItemChange(item, d->contentItem);
         delete d->contentItem;
         d->contentItem = item;
         if (item) {
