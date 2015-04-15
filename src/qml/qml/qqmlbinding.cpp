@@ -183,7 +183,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             QQmlBinding *t = this;
             int status = -1;
             void *a[] = { &t, 0, &status, &flags };
-            QMetaObject::metacall(*m_coreObject, QMetaObject::WriteProperty, idx, a);
+            QMetaObject::metacall(m_coreObject, QMetaObject::WriteProperty, idx, a);
 
         } else {
             ep->referenceScarceResources();
@@ -194,7 +194,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
             bool needsErrorLocationData = false;
             if (!watcher.wasDeleted() && !hasError())
-                needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
+                needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(m_coreObject, m_core, context(),
                                                                     this, result, isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
@@ -279,20 +279,12 @@ QString QQmlBinding::expression() const
 
 QObject *QQmlBinding::targetObject() const
 {
-    if (m_coreObject.hasValue()) return m_coreObject.constValue()->target;
-    else return *m_coreObject;
+    return m_coreObject;
 }
 
 int QQmlBinding::targetPropertyIndex() const
 {
-    if (m_coreObject.hasValue()) return m_coreObject.constValue()->targetProperty;
-    else return m_core.encodedIndex();
-}
-
-void QQmlBinding::retargetBinding(QObject *t, int i)
-{
-    m_coreObject.value().target = t;
-    m_coreObject.value().targetProperty = i;
+    return m_core.encodedIndex();
 }
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)

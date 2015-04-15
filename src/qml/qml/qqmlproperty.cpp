@@ -869,8 +869,22 @@ QQmlPropertyPrivate::setBinding(QObject *object, int coreIndex, int valueTypeInd
     }
 
     if (newBinding) {
-        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object)
-            newBinding->retargetBinding(object, index);
+        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object) {
+            QQmlData *data = QQmlData::get(object, true);
+            if (data && data->propertyCache) {
+                QQmlPropertyData propertyData = *data->propertyCache->property(coreIndex);
+                if (valueTypeIndex != -1) {
+                    const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(propertyData.propType);
+                    Q_ASSERT(valueTypeMetaObject);
+                    QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
+                    propertyData.setFlags(propertyData.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+                    propertyData.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
+                    propertyData.valueTypePropType = vtProp.userType();
+                    propertyData.valueTypeCoreIndex = valueTypeIndex;
+                }
+                static_cast<QQmlBinding *>(newBinding)->setTarget(object, propertyData);
+            }
+        }
 
         Q_ASSERT(newBinding->targetPropertyIndex() == index);
         Q_ASSERT(newBinding->targetObject() == object);
@@ -931,8 +945,22 @@ QQmlPropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, int valu
         binding->removeFromObject();
 
     if (newBinding) {
-        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object)
-            newBinding->retargetBinding(object, index);
+        if (newBinding->targetPropertyIndex() != index || newBinding->targetObject() != object) {
+            QQmlData *data = QQmlData::get(object, true);
+            if (data && data->propertyCache) {
+                QQmlPropertyData propertyData = *data->propertyCache->property(coreIndex);
+                if (valueTypeIndex != -1) {
+                    const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(propertyData.propType);
+                    Q_ASSERT(valueTypeMetaObject);
+                    QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
+                    propertyData.setFlags(propertyData.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+                    propertyData.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
+                    propertyData.valueTypePropType = vtProp.userType();
+                    propertyData.valueTypeCoreIndex = valueTypeIndex;
+                }
+                static_cast<QQmlBinding *>(newBinding)->setTarget(object, propertyData);
+            }
+        }
 
         Q_ASSERT(newBinding->targetPropertyIndex() == index);
         Q_ASSERT(newBinding->targetObject() == object);

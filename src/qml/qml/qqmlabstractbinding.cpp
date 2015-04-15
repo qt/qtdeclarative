@@ -191,11 +191,6 @@ void QQmlAbstractBinding::clear()
     }
 }
 
-void QQmlAbstractBinding::retargetBinding(QObject *, int)
-{
-    qFatal("QQmlAbstractBinding::retargetBinding() called on illegal binding.");
-}
-
 QString QQmlAbstractBinding::expression() const
 {
     return QLatin1String("<Unknown>");

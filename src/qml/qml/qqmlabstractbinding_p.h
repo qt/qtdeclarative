@@ -94,11 +94,6 @@ protected:
     virtual ~QQmlAbstractBinding();
     void clear();
 
-    // Called by QQmlPropertyPrivate to "move" a binding to a different property.
-    // This is only used for alias properties. The default implementation qFatal()'s
-    // to ensure that the method is never called for binding types that don't support it.
-    virtual void retargetBinding(QObject *, int);
-
 private:
     Pointer weakPointer();
 

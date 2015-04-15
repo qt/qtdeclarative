@@ -84,7 +84,6 @@ public:
 
     // Inherited from QQmlAbstractBinding
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
-    virtual void retargetBinding(QObject *, int);
     virtual QString expression() const;
     virtual QObject *targetObject() const;
     virtual int targetPropertyIndex() const;
@@ -110,12 +109,7 @@ private:
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
 
-    struct Retarget {
-        QObject *target;
-        int targetProperty;
-    };
-
-    QPointerValuePair<QObject, Retarget> m_coreObject;
+    QObject *m_coreObject;
     QQmlPropertyData m_core;
     uint m_updating : 1;
     uint m_enabled : 1;
