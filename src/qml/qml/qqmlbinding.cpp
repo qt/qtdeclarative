@@ -170,56 +170,57 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     QV4::ScopedFunctionObject f(scope, m_function.value());
     Q_ASSERT(f);
 
-    if (!updatingFlag()) {
-        QQmlBindingProfiler prof(ep->profiler, f);
-        setUpdatingFlag(true);
-
-        QQmlJavaScriptExpression::DeleteWatcher watcher(this);
-
-        if (m_core.propType == qMetaTypeId<QQmlBinding *>()) {
-
-            int idx = m_core.coreIndex;
-            Q_ASSERT(idx != -1);
-
-            QQmlBinding *t = this;
-            int status = -1;
-            void *a[] = { &t, 0, &status, &flags };
-            QMetaObject::metacall(m_coreObject, QMetaObject::WriteProperty, idx, a);
-
-        } else {
-            ep->referenceScarceResources();
-
-            bool isUndefined = false;
-
-            QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
-
-            bool needsErrorLocationData = false;
-            if (!watcher.wasDeleted() && !hasError())
-                needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(m_coreObject, m_core, context(),
-                                                                    this, result, isUndefined, flags);
-
-            if (!watcher.wasDeleted()) {
-
-                if (needsErrorLocationData)
-                    delayedError()->setErrorLocation(f->sourceLocation());
-
-                if (hasError()) {
-                    if (!delayedError()->addError(ep)) ep->warning(this->error(context()->engine));
-                } else {
-                    clearError();
-                }
-
-            }
-
-            ep->dereferenceScarceResources();
-        }
-
-        if (!watcher.wasDeleted())
-            setUpdatingFlag(false);
-    } else {
+    if (updatingFlag()) {
         QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), m_core, 0);
         QQmlAbstractBinding::printBindingLoopError(p);
+        return;
     }
+
+    QQmlBindingProfiler prof(ep->profiler, f);
+    setUpdatingFlag(true);
+
+    QQmlJavaScriptExpression::DeleteWatcher watcher(this);
+
+    if (m_core.propType == qMetaTypeId<QQmlBinding *>()) {
+
+        int idx = m_core.coreIndex;
+        Q_ASSERT(idx != -1);
+
+        QQmlBinding *t = this;
+        int status = -1;
+        void *a[] = { &t, 0, &status, &flags };
+        QMetaObject::metacall(m_coreObject, QMetaObject::WriteProperty, idx, a);
+
+    } else {
+        ep->referenceScarceResources();
+
+        bool isUndefined = false;
+
+        QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+
+        bool needsErrorLocationData = false;
+        if (!watcher.wasDeleted() && !hasError())
+            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(m_coreObject, m_core, context(),
+                                                                this, result, isUndefined, flags);
+
+        if (!watcher.wasDeleted()) {
+
+            if (needsErrorLocationData)
+                delayedError()->setErrorLocation(f->sourceLocation());
+
+            if (hasError()) {
+                if (!delayedError()->addError(ep)) ep->warning(this->error(context()->engine));
+            } else {
+                clearError();
+            }
+
+        }
+
+        ep->dereferenceScarceResources();
+    }
+
+    if (!watcher.wasDeleted())
+        setUpdatingFlag(false);
 }
 
 QVariant QQmlBinding::evaluate()
