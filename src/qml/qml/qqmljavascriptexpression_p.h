@@ -98,8 +98,8 @@ public:
     virtual QString expressionIdentifier() = 0;
     virtual void expressionChanged() = 0;
 
-    QV4::ReturnedValue evaluate(const QV4::Value &function, bool *isUndefined);
-    QV4::ReturnedValue evaluate(const QV4::Value &function, QV4::CallData *callData, bool *isUndefined);
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
 
     inline bool notifyOnValueChanged() const;
 
@@ -181,6 +181,8 @@ private:
     QQmlJavaScriptExpression **m_prevExpression;
     QQmlJavaScriptExpression  *m_nextExpression;
 
+protected:
+    QV4::PersistentValue m_function;
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)

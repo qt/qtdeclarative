@@ -87,7 +87,6 @@ public:
     QString expression;
 
     QV4::PersistentValue qmlscope;
-    QV4::PersistentValue m_function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     quint16 line;

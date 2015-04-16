@@ -250,9 +250,7 @@ QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
         expressionFunctionValid = true;
     }
 
-    QV4::Scope scope(v4);
-    QV4::ScopedValue f(scope, m_function.value());
-    return evaluate(f, isUndefined);
+    return evaluate(isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)

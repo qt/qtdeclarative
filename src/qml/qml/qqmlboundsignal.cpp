@@ -84,10 +84,11 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, const QV4::Value &function)
     : QQmlJavaScriptExpression(),
       m_index(index),
-      m_function(function.as<QV4::Object>()->engine(), function),
       m_target(target),
       m_extra(0)
 {
+    m_function.set(function.as<QV4::Object>()->engine(), function);
+
     setExpressionFunctionValid(true);
     setInvalidParameterName(false);
 
@@ -248,7 +249,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, dummy, 0);
         int argCount = argsTypes ? *argsTypes : 0;
 
-        QV4::ScopedValue f(scope, m_function.value());
         QV4::ScopedCallData callData(scope, argCount);
         for (int ii = 0; ii < argCount; ++ii) {
             int type = argsTypes[ii + 1];
@@ -272,7 +272,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             }
         }
 
-        QQmlJavaScriptExpression::evaluate(f, callData, 0);
+        QQmlJavaScriptExpression::evaluate(callData, 0);
     }
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

@@ -98,8 +98,6 @@ private:
     void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
 
     int m_index;
-    QV4::PersistentValue m_function;
-
     QObject *m_target;
 
     // only needed when !expressionFunctionValid()
