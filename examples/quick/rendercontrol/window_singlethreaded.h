@@ -77,10 +77,12 @@ private slots:
     void destroyFbo();
     void render();
     void requestUpdate();
+    void handleScreenChange();
 
 private:
     void startQuick(const QString &filename);
     void updateSizes();
+    void resizeFbo();
 
     QOpenGLContext *m_context;
     QOffscreenSurface *m_offscreenSurface;
@@ -94,6 +96,7 @@ private:
     bool m_quickReady;
     QTimer m_updateTimer;
     CubeRenderer *m_cubeRenderer;
+    qreal m_dpr;
 };
 
 #endif

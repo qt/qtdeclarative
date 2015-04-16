@@ -48,6 +48,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOffscreenSurface>
+#include <QScreen>
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQuickItem>
@@ -59,7 +60,8 @@ WindowSingleThreaded::WindowSingleThreaded()
     : m_rootItem(0),
       m_fbo(0),
       m_quickInitialized(false),
-      m_quickReady(false)
+      m_quickReady(false),
+      m_dpr(0)
 {
     setSurfaceType(QSurface::OpenGLSurface);
 
@@ -108,6 +110,11 @@ WindowSingleThreaded::WindowSingleThreaded()
     connect(m_quickWindow, &QQuickWindow::sceneGraphInvalidated, this, &WindowSingleThreaded::destroyFbo);
     connect(m_renderControl, &QQuickRenderControl::renderRequested, this, &WindowSingleThreaded::requestUpdate);
     connect(m_renderControl, &QQuickRenderControl::sceneChanged, this, &WindowSingleThreaded::requestUpdate);
+
+    // Just recreating the FBO on resize is not sufficient, when moving between screens
+    // with different devicePixelRatio the QWindow size may remain the same but the FBO
+    // dimension is to change regardless.
+    connect(this, &QWindow::screenChanged, this, &WindowSingleThreaded::handleScreenChange);
 }
 
 WindowSingleThreaded::~WindowSingleThreaded()
@@ -139,7 +146,8 @@ void WindowSingleThreaded::createFbo()
 {
     // The scene graph has been initialized. It is now time to create an FBO and associate
     // it with the QQuickWindow.
-    m_fbo = new QOpenGLFramebufferObject(size() * devicePixelRatio(), QOpenGLFramebufferObject::CombinedDepthStencil);
+    m_dpr = devicePixelRatio();
+    m_fbo = new QOpenGLFramebufferObject(size() * m_dpr, QOpenGLFramebufferObject::CombinedDepthStencil);
     m_quickWindow->setRenderTarget(m_fbo);
 }
 
@@ -246,10 +254,8 @@ void WindowSingleThreaded::exposeEvent(QExposeEvent *)
     }
 }
 
-void WindowSingleThreaded::resizeEvent(QResizeEvent *)
+void WindowSingleThreaded::resizeFbo()
 {
-    // If this is a resize after the scene is up and running, recreate the fbo and the
-    // Quick item and scene.
     if (m_rootItem && m_context->makeCurrent(m_offscreenSurface)) {
         delete m_fbo;
         createFbo();
@@ -257,6 +263,20 @@ void WindowSingleThreaded::resizeEvent(QResizeEvent *)
         updateSizes();
         render();
     }
+}
+
+void WindowSingleThreaded::resizeEvent(QResizeEvent *)
+{
+    // If this is a resize after the scene is up and running, recreate the fbo and the
+    // Quick item and scene.
+    if (m_fbo && m_fbo->size() != size() * devicePixelRatio())
+        resizeFbo();
+}
+
+void WindowSingleThreaded::handleScreenChange()
+{
+    if (m_dpr != devicePixelRatio())
+        resizeFbo();
 }
 
 void WindowSingleThreaded::mousePressEvent(QMouseEvent *e)
