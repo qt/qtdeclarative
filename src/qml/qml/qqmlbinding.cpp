@@ -54,9 +54,7 @@ QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding),
-      m_updating(false),
-      m_enabled(false)
+      QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
@@ -68,9 +66,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding),
-      m_updating(false),
-      m_enabled(false)
+      QQmlAbstractBinding(Binding)
 {
     if (ctxt && !ctxt->isValid())
         return;
@@ -105,9 +101,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding),
-      m_updating(false),
-      m_enabled(false)
+      QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -121,9 +115,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding),
-      m_updating(false),
-      m_enabled(false)
+      QQmlAbstractBinding(Binding)
 {
     Q_UNUSED(columnNumber);
     setNotifyOnValueChanged(true);
@@ -136,9 +128,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
 
 QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding),
-      m_updating(false),
-      m_enabled(false)
+      QQmlAbstractBinding(Binding)
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -189,7 +179,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         QQmlBinding *t = this;
         int status = -1;
         void *a[] = { &t, 0, &status, &flags };
-        QMetaObject::metacall(m_coreObject, QMetaObject::WriteProperty, idx, a);
+        QMetaObject::metacall(*m_coreObject, QMetaObject::WriteProperty, idx, a);
 
     } else {
         ep->referenceScarceResources();
@@ -200,7 +190,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         bool needsErrorLocationData = false;
         if (!watcher.wasDeleted() && !hasError())
-            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(m_coreObject, m_core, context(),
+            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
                                                                 this, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
@@ -280,7 +270,7 @@ QString QQmlBinding::expression() const
 
 QObject *QQmlBinding::targetObject() const
 {
-    return m_coreObject;
+    return *m_coreObject;
 }
 
 int QQmlBinding::targetPropertyIndex() const
