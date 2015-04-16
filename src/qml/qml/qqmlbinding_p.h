@@ -75,7 +75,6 @@ public:
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &);
-    QQmlProperty property() const;
 
     void setNotifyOnValueChanged(bool);
 

@@ -1053,19 +1053,19 @@ void QQuickAnchorChanges::execute(Reason reason)
 
     //set any anchors that have been specified
     if (d->leftBinding)
-        QQmlPropertyPrivate::setBinding(d->leftBinding->property(), d->leftBinding);
+        QQmlPropertyPrivate::setBinding(d->leftBinding);
     if (d->rightBinding)
-        QQmlPropertyPrivate::setBinding(d->rightBinding->property(), d->rightBinding);
+        QQmlPropertyPrivate::setBinding(d->rightBinding);
     if (d->hCenterBinding)
-        QQmlPropertyPrivate::setBinding(d->hCenterBinding->property(), d->hCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->hCenterBinding);
     if (d->topBinding)
-        QQmlPropertyPrivate::setBinding(d->topBinding->property(), d->topBinding);
+        QQmlPropertyPrivate::setBinding(d->topBinding);
     if (d->bottomBinding)
-        QQmlPropertyPrivate::setBinding(d->bottomBinding->property(), d->bottomBinding);
+        QQmlPropertyPrivate::setBinding(d->bottomBinding);
     if (d->vCenterBinding)
-        QQmlPropertyPrivate::setBinding(d->vCenterBinding->property(), d->vCenterBinding);
+        QQmlPropertyPrivate::setBinding(d->vCenterBinding);
     if (d->baselineBinding)
-        QQmlPropertyPrivate::setBinding(d->baselineBinding->property(), d->baselineBinding);
+        QQmlPropertyPrivate::setBinding(d->baselineBinding);
 }
 
 bool QQuickAnchorChanges::isReversable()
@@ -1083,49 +1083,49 @@ void QQuickAnchorChanges::reverse(Reason reason)
     //reset any anchors set by the state
     if (d->leftBinding) {
         targetPrivate->anchors()->resetLeft();
-        QQmlPropertyPrivate::removeBinding(d->leftBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->leftBinding);
         if (reason == ActualChange) {
             d->leftBinding->destroy(); d->leftBinding = 0;
         }
     }
     if (d->rightBinding) {
         targetPrivate->anchors()->resetRight();
-        QQmlPropertyPrivate::removeBinding(d->rightBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->rightBinding);
         if (reason == ActualChange) {
             d->rightBinding->destroy(); d->rightBinding = 0;
         }
     }
     if (d->hCenterBinding) {
         targetPrivate->anchors()->resetHorizontalCenter();
-        QQmlPropertyPrivate::removeBinding(d->hCenterBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->hCenterBinding);
         if (reason == ActualChange) {
             d->hCenterBinding->destroy(); d->hCenterBinding = 0;
         }
     }
     if (d->topBinding) {
         targetPrivate->anchors()->resetTop();
-        QQmlPropertyPrivate::removeBinding(d->topBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->topBinding);
         if (reason == ActualChange) {
             d->topBinding->destroy(); d->topBinding = 0;
         }
     }
     if (d->bottomBinding) {
         targetPrivate->anchors()->resetBottom();
-        QQmlPropertyPrivate::removeBinding(d->bottomBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->bottomBinding);
         if (reason == ActualChange) {
             d->bottomBinding->destroy(); d->bottomBinding = 0;
         }
     }
     if (d->vCenterBinding) {
         targetPrivate->anchors()->resetVerticalCenter();
-        QQmlPropertyPrivate::removeBinding(d->vCenterBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->vCenterBinding);
         if (reason == ActualChange) {
             d->vCenterBinding->destroy(); d->vCenterBinding = 0;
         }
     }
     if (d->baselineBinding) {
         targetPrivate->anchors()->resetBaseline();
-        QQmlPropertyPrivate::removeBinding(d->baselineBinding->property());
+        QQmlPropertyPrivate::removeBinding(d->baselineBinding);
         if (reason == ActualChange) {
             d->baselineBinding->destroy(); d->baselineBinding = 0;
         }

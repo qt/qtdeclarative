@@ -217,7 +217,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         if (!watcher.wasDeleted())
             setUpdatingFlag(false);
     } else {
-        QQmlProperty p = property();
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), m_core, 0);
         QQmlAbstractBinding::printBindingLoopError(p);
     }
 }
@@ -332,11 +332,6 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
             m_core.valueTypeCoreIndex = valueTypeIndex;
         }
     }
-}
-
-QQmlProperty QQmlBinding::property() const
-{
-    return QQmlPropertyPrivate::restore(targetObject(), m_core, 0);
 }
 
 QT_END_NAMESPACE

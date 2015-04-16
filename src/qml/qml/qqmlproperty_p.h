@@ -114,7 +114,8 @@ public:
     static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None, WriteFlags writeFlags = DontRemoveBinding);
 
     static QQmlAbstractBinding *removeBinding(const QQmlProperty &that, BindingFlag flag = None);
-    static QQmlAbstractBinding *removeBinding(QObject *o, int index, BindingFlag flag = None);
+    static QQmlAbstractBinding *removeBinding(QObject *o, int index, QQmlPropertyPrivate::BindingFlag flags = None);
+    static QQmlAbstractBinding *removeBinding(QQmlAbstractBinding *b, BindingFlag flag = None);
     static QQmlAbstractBinding *binding(QObject *, int coreIndex,
                                                 int valueTypeIndex /* -1 */);
 

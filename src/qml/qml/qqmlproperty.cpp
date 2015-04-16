@@ -768,6 +768,11 @@ static QQmlAbstractBinding *removeOldBinding(QObject *object, int index, QQmlPro
     return oldBinding;
 }
 
+QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(QQmlAbstractBinding *b, QQmlPropertyPrivate::BindingFlag flags)
+{
+    return removeBinding(b->targetObject(), b->targetPropertyIndex(), flags);
+}
+
 QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(QObject *o, int index, QQmlPropertyPrivate::BindingFlag flags)
 {
     Q_ASSERT(o);
