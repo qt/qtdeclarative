@@ -613,12 +613,19 @@ Item {
         \li blue(x, y) Returns the blue channel value of the pixel at \a x, \a y position
         \li alpha(x, y) Returns the alpha channel value of the pixel at \a x, \a y position
         \li pixel(x, y) Returns the color value of the pixel at \a x, \a y position
+        \li equals(image) Returns \c true if this image is identical to \a image -
+            see \l QImage::operator== (since 5.6)
+
         For example:
 
         \code
         var image = grabImage(rect);
         compare(image.red(10, 10), 255);
         compare(image.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
+
+        rect.width += 10;
+        var newImage = grabImage(rect);
+        verify(!newImage.equals(image));
         \endcode
 
         \endlist

@@ -108,6 +108,14 @@ public Q_SLOTS:
         pixel += x;
         return QColor::fromRgba(*pixel);
     }
+
+    bool equals(QuickTestImageObject *other) const
+    {
+        if (!other)
+            return m_image.isNull();
+
+        return m_image == other->m_image;
+    }
 private:
     QImage m_image;
 };
