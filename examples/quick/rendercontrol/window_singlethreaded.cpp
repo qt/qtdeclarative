@@ -255,6 +255,7 @@ void WindowSingleThreaded::resizeEvent(QResizeEvent *)
         createFbo();
         m_context->doneCurrent();
         updateSizes();
+        render();
     }
 }
 
