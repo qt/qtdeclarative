@@ -270,11 +270,6 @@ QString QQmlBinding::expression() const
     return v->toQStringNoThrow();
 }
 
-QObject *QQmlBinding::targetObject() const
-{
-    return *m_target;
-}
-
 int QQmlBinding::targetPropertyIndex() const
 {
     return m_index;

@@ -77,7 +77,7 @@ public:
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
-    virtual QObject *targetObject() const = 0;
+    QObject *targetObject() const { return m_target.data(); }
 
     virtual void setEnabled(bool e, QQmlPropertyPrivate::WriteFlags f = QQmlPropertyPrivate::DontRemoveBinding) = 0;
 
@@ -121,6 +121,9 @@ private:
     // This saves a compiler-generated pointer to a compiler-generated vTable, and thus reduces
     // the binding object size by sizeof(void*).
     qintptr m_nextBindingPtr;
+
+protected:
+    QFlagPointer<QObject> m_target;
 };
 
 QQmlAbstractBinding::Pointer

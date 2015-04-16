@@ -59,15 +59,13 @@ public:
 
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
     virtual int targetPropertyIndex() const;
-    virtual QObject *targetObject() const;
 
 protected:
     ~QQmlValueTypeProxyBinding();
 
 private:
     friend class QQmlAbstractBinding;
-    QObject *m_object;
-    int m_index;
+    int m_targetIndex;
     QQmlAbstractBinding *m_bindings;
 };
 

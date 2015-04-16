@@ -84,7 +84,6 @@ public:
     // Inherited from QQmlAbstractBinding
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
     virtual QString expression() const;
-    virtual QObject *targetObject() const;
     virtual int targetPropertyIndex() const;
     void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
@@ -107,7 +106,6 @@ private:
     inline void setEnabledFlag(bool);
     QQmlPropertyData getPropertyData() const;
 
-    QFlagPointer<QObject> m_target;
     int m_index;
 };
 
