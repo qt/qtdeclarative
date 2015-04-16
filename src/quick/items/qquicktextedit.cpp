@@ -1436,6 +1436,11 @@ void QQuickTextEdit::setReadOnly(bool r)
     emit readOnlyChanged(r);
     if (!d->selectByKeyboardSet)
         emit selectByKeyboardChanged(!r);
+    if (r) {
+        setCursorVisible(false);
+    } else if (hasActiveFocus()) {
+        setCursorVisible(true);
+    }
 }
 
 bool QQuickTextEdit::isReadOnly() const
@@ -1937,9 +1942,9 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         std::sort(d->textNodeMap.begin(), d->textNodeMap.end(), &comesBefore);
     }
 
-    if (d->cursorComponent == 0 && !isReadOnly()) {
+    if (d->cursorComponent == 0) {
         QSGRectangleNode* cursor = 0;
-        if (d->cursorVisible && d->control->cursorOn())
+        if (!isReadOnly() && d->cursorVisible && d->control->cursorOn())
             cursor = d->sceneGraphContext()->createRectangleNode(d->control->cursorRect(), d->color);
         rootNode->resetCursorNode(cursor);
     }
@@ -2408,7 +2413,8 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
 {
     Q_Q(QQuickTextEdit);
     bool focus = event->type() == QEvent::FocusIn;
-    q->setCursorVisible(focus);
+    if (!q->isReadOnly())
+        q->setCursorVisible(focus);
     control->processEvent(event, QPointF(-xoff, -yoff));
     if (focus) {
         q->q_updateAlignment();

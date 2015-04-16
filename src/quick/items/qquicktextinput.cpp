@@ -662,6 +662,12 @@ void QQuickTextInput::setReadOnly(bool ro)
     q_canPasteChanged();
     d->emitUndoRedoChanged();
     emit readOnlyChanged(ro);
+    if (ro) {
+        setCursorVisible(false);
+    } else if (hasActiveFocus()) {
+        setCursorVisible(true);
+    }
+    update();
 }
 
 /*!
@@ -2606,7 +2612,8 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
 {
     Q_Q(QQuickTextInput);
     bool focus = event->gotFocus();
-    q->setCursorVisible(focus);
+    if (!m_readOnly)
+        q->setCursorVisible(focus);
     if (focus) {
         q->q_updateAlignment();
 #ifndef QT_NO_IM
