@@ -58,14 +58,12 @@ public:
     void removeBindings(quint32 mask);
 
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
-    virtual int targetPropertyIndex() const;
 
 protected:
     ~QQmlValueTypeProxyBinding();
 
 private:
     friend class QQmlAbstractBinding;
-    int m_targetIndex;
     QQmlAbstractBinding *m_bindings;
 };
 

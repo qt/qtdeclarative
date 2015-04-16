@@ -84,7 +84,6 @@ public:
     // Inherited from QQmlAbstractBinding
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
     virtual QString expression() const;
-    virtual int targetPropertyIndex() const;
     void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
     typedef int Identifier;
@@ -105,8 +104,6 @@ private:
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
     QQmlPropertyData getPropertyData() const;
-
-    int m_index;
 };
 
 bool QQmlBinding::updatingFlag() const

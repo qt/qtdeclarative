@@ -37,10 +37,10 @@ QT_BEGIN_NAMESPACE
 
 QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, int index)
     : QQmlAbstractBinding(ValueTypeProxy),
-      m_targetIndex(index),
       m_bindings(0)
 {
     m_target = o;
+    m_targetIndex = index;
 }
 
 QQmlValueTypeProxyBinding::~QQmlValueTypeProxyBinding()
@@ -102,11 +102,6 @@ void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
             binding = binding->nextBinding();
         }
     }
-}
-
-int QQmlValueTypeProxyBinding::targetPropertyIndex() const
-{
-    return m_targetIndex;
 }
 
 QT_END_NAMESPACE

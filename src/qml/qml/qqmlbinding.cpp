@@ -270,11 +270,6 @@ QString QQmlBinding::expression() const
     return v->toQStringNoThrow();
 }
 
-int QQmlBinding::targetPropertyIndex() const
-{
-    return m_index;
-}
-
 void QQmlBinding::setTarget(const QQmlProperty &prop)
 {
     setTarget(prop.object(), QQmlPropertyPrivate::get(prop)->core);
@@ -286,7 +281,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
     QQmlPropertyData pd = core;
 
     if (!object) {
-        m_index = -1;
+        m_targetIndex = -1;
         return;
     }
 
@@ -298,7 +293,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
             m_target = 0;
-            m_index = -1;
+            m_targetIndex = -1;
             return;
         }
         if (valueTypeIndex == -1)
@@ -307,7 +302,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
         QQmlData *data = QQmlData::get(object, false);
         if (!data || !data->propertyCache) {
             m_target = 0;
-            m_index = -1;
+            m_targetIndex = -1;
             return;
         }
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
@@ -325,7 +320,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
             pd.valueTypeCoreIndex = valueTypeIndex;
         }
     }
-    m_index = pd.encodedIndex();
+    m_targetIndex = pd.encodedIndex();
 
     QQmlData *data = QQmlData::get(*m_target, true);
     if (!data->propertyCache) {
@@ -337,7 +332,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 QQmlPropertyData QQmlBinding::getPropertyData() const
 {
     int coreIndex;
-    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(m_index, &coreIndex);
+    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(m_targetIndex, &coreIndex);
 
     QQmlData *data = QQmlData::get(*m_target, false);
     Q_ASSERT(data && data->propertyCache);

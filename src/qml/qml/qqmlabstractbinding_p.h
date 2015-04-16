@@ -73,7 +73,7 @@ public:
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
-    virtual int targetPropertyIndex() const = 0;
+    int targetPropertyIndex() const { return m_targetIndex; }
 
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
@@ -124,6 +124,7 @@ private:
 
 protected:
     QFlagPointer<QObject> m_target;
+    int m_targetIndex;
 };
 
 QQmlAbstractBinding::Pointer
