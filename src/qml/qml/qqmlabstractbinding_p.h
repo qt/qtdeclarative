@@ -95,15 +95,11 @@ protected:
     void clear();
 
 private:
-    Pointer weakPointer();
-
     friend class QQmlData;
-    friend class QQmlComponentPrivate;
     friend class QQmlValueTypeProxyBinding;
-    friend class QQmlPropertyPrivate;
-    friend class QtSharedPointer::ExternalRefCount<QQmlAbstractBinding>;
-    friend class QV4Bindings;
     friend class QQmlObjectCreator;
+
+    Pointer weakPointer();
 
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
     // To save memory, we also store the rarely used weakPointer() instance in here

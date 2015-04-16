@@ -700,8 +700,7 @@ QQmlPropertyPrivate::binding(const QQmlProperty &that)
     if (!that.d || !that.isProperty() || !that.d->object)
         return 0;
 
-    return binding(that.d->object, that.d->core.coreIndex,
-                   that.d->core.getValueTypeCoreIndex());
+    return binding(that.d->object, that.d->core.encodedIndex());
 }
 
 /*!
@@ -792,26 +791,16 @@ QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(const QQmlProperty &that
 }
 
 QQmlAbstractBinding *
-QQmlPropertyPrivate::binding(QObject *object, int coreIndex, int valueTypeIndex)
+QQmlPropertyPrivate::binding(QObject *object, int index)
 {
     QQmlData *data = QQmlData::get(object);
     if (!data)
         return 0;
 
-    QQmlPropertyData *propertyData =
-        data->propertyCache?data->propertyCache->property(coreIndex):0;
-    if (propertyData && propertyData->isAlias()) {
-        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
+    findAliasTarget(object, index, &object, &index);
 
-        QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
-        if (!vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex) || aCoreIndex == -1)
-            return 0;
-
-        // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
-        Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
-        aValueTypeIndex = (valueTypeIndex == -1)?aValueTypeIndex:valueTypeIndex;
-        return binding(aObject, aCoreIndex, aValueTypeIndex);
-    }
+    int coreIndex;
+    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
 
     if (!data->hasBindingBit(coreIndex))
         return 0;

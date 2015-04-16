@@ -652,14 +652,12 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
 
     // ### this is best done through type-compile-time binding skip lists.
     if (_valueTypeProperty) {
-        QQmlAbstractBinding *binding =
-            QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex, -1);
+        QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex);
 
         if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
             QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
         } else if (binding) {
-            QQmlValueTypeProxyBinding *proxy =
-                static_cast<QQmlValueTypeProxyBinding *>(binding);
+            QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);
 
             if (qmlTypeForObject(_bindingTarget)) {
                 quint32 bindingSkipList = 0;
