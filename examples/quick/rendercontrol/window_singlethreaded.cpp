@@ -56,6 +56,23 @@
 #include <QQuickRenderControl>
 #include <QCoreApplication>
 
+class RenderControl : public QQuickRenderControl
+{
+public:
+    RenderControl(QWindow *w) : m_window(w) { }
+    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE;
+
+private:
+    QWindow *m_window;
+};
+
+QWindow *RenderControl::renderWindow(QPoint *offset)
+{
+    if (offset)
+        *offset = QPoint(0, 0);
+    return m_window;
+}
+
 WindowSingleThreaded::WindowSingleThreaded()
     : m_rootItem(0),
       m_fbo(0),
@@ -85,7 +102,7 @@ WindowSingleThreaded::WindowSingleThreaded()
 
     m_cubeRenderer = new CubeRenderer(m_offscreenSurface);
 
-    m_renderControl = new QQuickRenderControl(this);
+    m_renderControl = new RenderControl(this);
 
     // Create a QQuickWindow that is associated with out render control. Note that this
     // window never gets created or shown, meaning that it will never get an underlying

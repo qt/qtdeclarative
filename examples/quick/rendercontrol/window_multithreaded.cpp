@@ -213,6 +213,16 @@ void QuickRenderer::aboutToQuit()
     m_quit = true;
 }
 
+class RenderControl : public QQuickRenderControl
+{
+public:
+    RenderControl(QWindow *w) : m_window(w) { }
+    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE;
+
+private:
+    QWindow *m_window;
+};
+
 WindowMultiThreaded::WindowMultiThreaded()
     : m_qmlComponent(Q_NULLPTR),
       m_rootItem(0),
@@ -239,7 +249,7 @@ WindowMultiThreaded::WindowMultiThreaded()
     m_offscreenSurface->setFormat(m_context->format());
     m_offscreenSurface->create();
 
-    m_renderControl = new QQuickRenderControl(this);
+    m_renderControl = new RenderControl(this);
 
     // Create a QQuickWindow that is associated with out render control. Note that this
     // window never gets created or shown, meaning that it will never get an underlying
