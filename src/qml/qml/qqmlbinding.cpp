@@ -161,7 +161,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     Q_ASSERT(f);
 
     if (updatingFlag()) {
-        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), m_core, 0);
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), getPropertyData(), 0);
         QQmlAbstractBinding::printBindingLoopError(p);
         return;
     }
@@ -171,15 +171,17 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
-    if (m_core.propType == qMetaTypeId<QQmlBinding *>()) {
+    QQmlPropertyData pd = getPropertyData();
 
-        int idx = m_core.coreIndex;
+    if (pd.propType == qMetaTypeId<QQmlBinding *>()) {
+
+        int idx = pd.coreIndex;
         Q_ASSERT(idx != -1);
 
         QQmlBinding *t = this;
         int status = -1;
         void *a[] = { &t, 0, &status, &flags };
-        QMetaObject::metacall(*m_coreObject, QMetaObject::WriteProperty, idx, a);
+        QMetaObject::metacall(*m_target, QMetaObject::WriteProperty, idx, a);
 
     } else {
         ep->referenceScarceResources();
@@ -190,7 +192,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         bool needsErrorLocationData = false;
         if (!watcher.wasDeleted() && !hasError())
-            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_coreObject, m_core, context(),
+            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_target, pd, context(),
                                                                 this, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
@@ -270,12 +272,12 @@ QString QQmlBinding::expression() const
 
 QObject *QQmlBinding::targetObject() const
 {
-    return *m_coreObject;
+    return *m_target;
 }
 
 int QQmlBinding::targetPropertyIndex() const
 {
-    return m_core.encodedIndex();
+    return m_index;
 }
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)
@@ -285,18 +287,23 @@ void QQmlBinding::setTarget(const QQmlProperty &prop)
 
 void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 {
-    m_coreObject = object;
-    m_core = core;
+    m_target = object;
+    QQmlPropertyData pd = core;
 
-    while (m_core.isAlias()) {
+    if (!object) {
+        m_index = -1;
+        return;
+    }
+
+    while (pd.isAlias()) {
         int coreIndex = core.coreIndex;
         int valueTypeIndex = core.getValueTypeCoreIndex();
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
-            m_core.coreIndex = -1;
-            m_coreObject = 0;
+            m_target = 0;
+            m_index = -1;
             return;
         }
         if (valueTypeIndex == -1)
@@ -304,25 +311,56 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 
         QQmlData *data = QQmlData::get(object, false);
         if (!data || !data->propertyCache) {
-            m_core.coreIndex = -1;
-            m_coreObject = 0;
+            m_target = 0;
+            m_index = -1;
             return;
         }
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
         Q_ASSERT(propertyData);
 
-        m_coreObject = object;
-        m_core = *propertyData;
+        m_target = object;
+        pd = *propertyData;
         if (valueTypeIndex != -1) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(m_core.propType);
+            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(pd.propType);
             Q_ASSERT(valueTypeMetaObject);
             QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
-            m_core.setFlags(m_core.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
-            m_core.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
-            m_core.valueTypePropType = vtProp.userType();
-            m_core.valueTypeCoreIndex = valueTypeIndex;
+            pd.setFlags(pd.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+            pd.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
+            pd.valueTypePropType = vtProp.userType();
+            pd.valueTypeCoreIndex = valueTypeIndex;
         }
     }
+    m_index = pd.encodedIndex();
+
+    QQmlData *data = QQmlData::get(*m_target, true);
+    if (!data->propertyCache) {
+        data->propertyCache = QQmlEnginePrivate::get(context()->engine)->cache(m_target->metaObject());
+        data->propertyCache->addref();
+    }
+}
+
+QQmlPropertyData QQmlBinding::getPropertyData() const
+{
+    int coreIndex;
+    int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(m_index, &coreIndex);
+
+    QQmlData *data = QQmlData::get(*m_target, false);
+    Q_ASSERT(data && data->propertyCache);
+
+    QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
+    Q_ASSERT(propertyData);
+
+    QQmlPropertyData d = *propertyData;
+    if (valueTypeIndex != -1) {
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d.propType);
+        Q_ASSERT(valueTypeMetaObject);
+        QMetaProperty vtProp = valueTypeMetaObject->property(valueTypeIndex);
+        d.setFlags(d.getFlags() | QQmlPropertyData::IsValueTypeVirtual);
+        d.valueTypeFlags = QQmlPropertyData::flagsForProperty(vtProp);
+        d.valueTypePropType = vtProp.userType();
+        d.valueTypeCoreIndex = valueTypeIndex;
+    }
+    return d;
 }
 
 QT_END_NAMESPACE

@@ -105,29 +105,30 @@ private:
     inline void setUpdatingFlag(bool);
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
+    QQmlPropertyData getPropertyData() const;
 
-    QFlagPointer<QObject> m_coreObject;
-    QQmlPropertyData m_core;
+    QFlagPointer<QObject> m_target;
+    int m_index;
 };
 
 bool QQmlBinding::updatingFlag() const
 {
-    return m_coreObject.flag();
+    return m_target.flag();
 }
 
 void QQmlBinding::setUpdatingFlag(bool v)
 {
-    m_coreObject.setFlagValue(v);
+    m_target.setFlagValue(v);
 }
 
 bool QQmlBinding::enabledFlag() const
 {
-    return m_coreObject.flag2();
+    return m_target.flag2();
 }
 
 void QQmlBinding::setEnabledFlag(bool v)
 {
-    m_coreObject.setFlag2Value(v);
+    m_target.setFlag2Value(v);
 }
 
 QT_END_NAMESPACE
