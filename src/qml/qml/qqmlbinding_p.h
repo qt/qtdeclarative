@@ -102,7 +102,7 @@ protected:
     ~QQmlBinding();
 
 private:
-    QV4::PersistentValue v4function;
+    QV4::PersistentValue m_function;
 
     inline bool updatingFlag() const;
     inline void setUpdatingFlag(bool);
