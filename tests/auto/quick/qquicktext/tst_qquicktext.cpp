@@ -2052,7 +2052,7 @@ void tst_qquicktext::embeddedImages_data()
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
                                   << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading " SERVER_ADDR "/notexists.png - server replied: Not found";
-    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
 void tst_qquicktext::embeddedImages()
@@ -2061,6 +2061,12 @@ void tst_qquicktext::embeddedImages()
 
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
+
+    if (qstrcmp(QTest::currentDataTag(), "remote") == 0
+        || qstrcmp(QTest::currentDataTag(), "remote-error") == 0
+        || qstrcmp(QTest::currentDataTag(), "remote-relative") == 0) {
+        QSKIP("Remote tests cause occasional hangs in the CI system -- QTBUG-45655");
+    }
 
     TestHTTPServer server;
     QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));

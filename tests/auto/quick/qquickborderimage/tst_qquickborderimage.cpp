@@ -135,6 +135,11 @@ void tst_qquickborderimage::imageSource()
     QFETCH(bool, remote);
     QFETCH(QString, error);
 
+    if (qstrcmp(QTest::currentDataTag(), "remote") == 0
+        || qstrcmp(QTest::currentDataTag(), "remote not found") == 0) {
+        QSKIP("Remote tests cause occasional hangs in the CI system -- QTBUG-45655");
+    }
+
     TestHTTPServer server;
     if (remote) {
         QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
