@@ -104,6 +104,11 @@ private:
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
     QQmlPropertyData getPropertyData() const;
+
+    bool write(const QQmlPropertyData &core,
+                       const QV4::Value &result, bool isUndefined,
+                       QQmlPropertyPrivate::WriteFlags flags);
+
 };
 
 bool QQmlBinding::updatingFlag() const

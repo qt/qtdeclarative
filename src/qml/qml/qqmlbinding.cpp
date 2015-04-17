@@ -190,15 +190,16 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
         QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
-        bool needsErrorLocationData = false;
+        bool error = false;
         if (!watcher.wasDeleted() && !hasError())
-            needsErrorLocationData = !QQmlPropertyPrivate::writeBinding(*m_target, pd, context(),
-                                                                this, result, isUndefined, flags);
+            error = !write(pd, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
 
-            if (needsErrorLocationData)
+            if (error) {
                 delayedError()->setErrorLocation(f->sourceLocation());
+                delayedError()->setErrorObject(m_target.data());
+            }
 
             if (hasError()) {
                 if (!delayedError()->addError(ep)) ep->warning(this->error(context()->engine));
@@ -213,6 +214,153 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
 
     if (!watcher.wasDeleted())
         setUpdatingFlag(false);
+}
+
+// Returns true if successful, false if an error description was set on expression
+bool QQmlBinding::write(const QQmlPropertyData &core,
+                       const QV4::Value &result, bool isUndefined,
+                       QQmlPropertyPrivate::WriteFlags flags)
+{
+    Q_ASSERT(m_target.data());
+    Q_ASSERT(core.coreIndex != -1);
+
+    QQmlEngine *engine = context()->engine;
+    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
+
+#define QUICK_STORE(cpptype, conversion) \
+        { \
+            cpptype o = (conversion); \
+            int status = -1; \
+            void *argv[] = { &o, 0, &status, &flags }; \
+            QMetaObject::metacall(m_target.data(), QMetaObject::WriteProperty, core.coreIndex, argv); \
+            return true; \
+        } \
+
+
+    if (!isUndefined && !core.isValueTypeVirtual()) {
+        switch (core.propType) {
+        case QMetaType::Int:
+            if (result.isInteger())
+                QUICK_STORE(int, result.integerValue())
+            else if (result.isNumber())
+                QUICK_STORE(int, result.doubleValue())
+            break;
+        case QMetaType::Double:
+            if (result.isNumber())
+                QUICK_STORE(double, result.asDouble())
+            break;
+        case QMetaType::Float:
+            if (result.isNumber())
+                QUICK_STORE(float, result.asDouble())
+            break;
+        case QMetaType::QString:
+            if (result.isString())
+                QUICK_STORE(QString, result.toQStringNoThrow())
+            break;
+        default:
+            break;
+        }
+    }
+#undef QUICK_STORE
+
+    int type = core.isValueTypeVirtual() ? core.valueTypePropType : core.propType;
+
+    QQmlJavaScriptExpression::DeleteWatcher watcher(this);
+
+    QVariant value;
+    bool isVarProperty = core.isVarProperty();
+
+    if (isUndefined) {
+    } else if (core.isQList()) {
+        value = QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QObject *> >());
+    } else if (result.isNull() && core.isQObject()) {
+        value = QVariant::fromValue((QObject *)0);
+    } else if (core.propType == qMetaTypeId<QList<QUrl> >()) {
+        value = QQmlPropertyPrivate::resolvedUrlSequence(QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
+    } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
+        value = QV8Engine::getV4(v8engine)->toVariant(result, type);
+    }
+
+    if (hasError()) {
+        return false;
+    } else if (isVarProperty) {
+        const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
+        if (f && f->isBinding()) {
+            // we explicitly disallow this case to avoid confusion.  Users can still store one
+            // in an array in a var property if they need to, but the common case is user error.
+            delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            return false;
+        }
+
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
+        Q_ASSERT(vmemo);
+        vmemo->setVMEProperty(core.coreIndex, result);
+    } else if (isUndefined && core.isResettable()) {
+        void *args[] = { 0 };
+        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex, args);
+    } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant(), context(), flags);
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
+        if (f && f->isBinding()) {
+            delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+            return false;
+        }
+        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, QVariant::fromValue(
+                               QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
+                           context(), flags);
+    } else if (isUndefined) {
+        QString errorStr = QLatin1String("Unable to assign [undefined] to ");
+        if (!QMetaType::typeName(type))
+            errorStr += QLatin1String("[unknown property type]");
+        else
+            errorStr += QLatin1String(QMetaType::typeName(type));
+        delayedError()->setErrorDescription(errorStr);
+        return false;
+    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
+        if (f->isBinding())
+            delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
+        else
+            delayedError()->setErrorDescription(QLatin1String("Unable to assign a function to a property of any type other than var."));
+        return false;
+    } else if (!QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, value, context(), flags)) {
+
+        if (watcher.wasDeleted())
+            return true;
+
+        const char *valueType = 0;
+        const char *propertyType = 0;
+
+        if (value.userType() == QMetaType::QObjectStar) {
+            if (QObject *o = *(QObject **)value.constData()) {
+                valueType = o->metaObject()->className();
+
+                QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);
+                if (!propertyMetaObject.isNull())
+                    propertyType = propertyMetaObject.className();
+            }
+        } else if (value.userType() != QVariant::Invalid) {
+            if (value.userType() == QMetaType::VoidStar)
+                valueType = "null";
+            else
+                valueType = QMetaType::typeName(value.userType());
+        }
+
+        if (!valueType)
+            valueType = "undefined";
+        if (!propertyType)
+            propertyType = QMetaType::typeName(type);
+        if (!propertyType)
+            propertyType = "[unknown property type]";
+
+        delayedError()->setErrorDescription(QLatin1String("Unable to assign ") +
+                                                        QLatin1String(valueType) +
+                                                        QLatin1String(" to ") +
+                                                        QLatin1String(propertyType));
+        return false;
+    }
+
+    return true;
 }
 
 QVariant QQmlBinding::evaluate()

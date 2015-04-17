@@ -140,11 +140,6 @@ public:
     static QQmlBoundSignalExpressionPointer takeSignalExpression(const QQmlProperty &that,
                                                                  QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
-    static bool writeBinding(QObject *, const QQmlPropertyData &,
-                             QQmlContextData *context,
-                             QQmlJavaScriptExpression *expression,
-                             const QV4::Value &result, bool isUndefined,
-                             WriteFlags flags);
     static int valueTypeCoreIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlProperty &that);
     static int bindingIndex(const QQmlPropertyData &that);
@@ -153,6 +148,8 @@ public:
                         const QObject *receiver, int method_index,
                         int type = 0, int *types = 0);
     static void flushSignal(const QObject *sender, int signal_index);
+
+    static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *context);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::WriteFlags)
