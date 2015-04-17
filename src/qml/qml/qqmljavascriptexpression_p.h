@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlSourceLocation;
+struct QQmlSourceLocation;
 
 class QQmlDelayedError
 {
