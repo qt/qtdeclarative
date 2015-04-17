@@ -264,7 +264,7 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(QQmlV4Function
     int argc = args->length();
     for (int i = from; i < argc; ++i) {
         QV4::ScopedValue arg(scope, (*args)[i]);
-        if (QV4::ArrayObject *array = arg->asArrayObject()) {
+        if (QV4::ArrayObject *array = arg->as<QV4::ArrayObject>()) {
             int len = array->getLength();
             for (int j = 0; j < len; ++j) {
                 QV4::ScopedValue value(scope, array->getIndexed(j));
