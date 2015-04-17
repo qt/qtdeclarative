@@ -168,7 +168,7 @@ Item {
             width: display.width
             height: display.height - 50 - y
             delegate: Item {
-                height: 20
+                height: display.fontSize * 1.1
                 width: parent.width
                 Text {
                     id: operator
