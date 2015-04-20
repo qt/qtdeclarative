@@ -2594,7 +2594,7 @@ void QQmlScriptBlob::dataReceived(const Data &data)
         return;
     }
     if (!unit) {
-        unit.take(new EmptyCompilationUnit);
+        unit.adopt(new EmptyCompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
     irUnit.imports = collector.imports;

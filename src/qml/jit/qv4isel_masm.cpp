@@ -317,7 +317,7 @@ const void *InstructionSelection::addConstantTable(QVector<Primitive> *values)
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backendCompileStep()
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
-    result.take(compilationUnit.take());
+    result.adopt(compilationUnit.take());
     return result;
 }
 

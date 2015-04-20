@@ -72,13 +72,16 @@ template<class T>
 class QQmlRefPointer
 {
 public:
+    enum Mode {
+        AddRef,
+        Adopt
+    };
     inline QQmlRefPointer();
-    inline QQmlRefPointer(T *);
+    inline QQmlRefPointer(T *, Mode m = AddRef);
     inline QQmlRefPointer(const QQmlRefPointer<T> &);
     inline ~QQmlRefPointer();
 
     inline QQmlRefPointer<T> &operator=(const QQmlRefPointer<T> &o);
-    inline QQmlRefPointer<T> &operator=(T *);
 
     inline bool isNull() const { return !o; }
 
@@ -87,7 +90,7 @@ public:
     inline operator T*() const { return o; }
     inline T* data() const { return o; }
 
-    inline QQmlRefPointer<T> &take(T *);
+    inline QQmlRefPointer<T> &adopt(T *);
 
 private:
     T *o;
@@ -133,10 +136,11 @@ QQmlRefPointer<T>::QQmlRefPointer()
 }
 
 template<class T>
-QQmlRefPointer<T>::QQmlRefPointer(T *o)
+QQmlRefPointer<T>::QQmlRefPointer(T *o, Mode m)
 : o(o)
 {
-    if (o) o->addref();
+    if (m == AddRef && o)
+        o->addref();
 }
 
 template<class T>
@@ -161,21 +165,12 @@ QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(const QQmlRefPointer<T> &other)
     return *this;
 }
 
-template<class T>
-QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(T *other)
-{
-    if (other) other->addref();
-    if (o) o->release();
-    o = other;
-    return *this;
-}
-
 /*!
 Takes ownership of \a other.  take() does *not* add a reference, as it assumes ownership
 of the callers reference of other.
 */
 template<class T>
-QQmlRefPointer<T> &QQmlRefPointer<T>::take(T *other)
+QQmlRefPointer<T> &QQmlRefPointer<T>::adopt(T *other)
 {
     if (o) o->release();
     o = other;

@@ -447,7 +447,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
     foreach (IR::Function *irFunction, irModule->functions)
         compilationUnit->codeRefs[i++] = codeRefs[irFunction];
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> result;
-    result.take(compilationUnit.take());
+    result.adopt(compilationUnit.take());
     return result;
 }
 

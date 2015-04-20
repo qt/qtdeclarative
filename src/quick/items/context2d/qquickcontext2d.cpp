@@ -2912,7 +2912,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
             } else if (QQuickCanvasItem *canvas = qobject_cast<QQuickCanvasItem*>(qobjectWrapper->object())) {
                 QImage img = canvas->toImage();
                 if (!img.isNull())
-                    pixmap.take(new QQuickCanvasPixmap(img));
+                    pixmap.adopt(new QQuickCanvasPixmap(img));
             } else {
                 V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
             }
@@ -2921,7 +2921,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(QV4::CallContext
             if (!!imageData) {
                 QV4::Scoped<QQuickJSContext2DPixelData> pix(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
                 if (pix && !pix->d()->image.isNull()) {
-                    pixmap.take(new QQuickCanvasPixmap(pix->d()->image));
+                    pixmap.adopt(new QQuickCanvasPixmap(pix->d()->image));
                 } else {
                     V4THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
                 }

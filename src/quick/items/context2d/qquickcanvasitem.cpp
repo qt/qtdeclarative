@@ -990,7 +990,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url)
     if (!d->pixmaps.contains(fullPathUrl)) {
         QQuickPixmap* pix = new QQuickPixmap();
         QQmlRefPointer<QQuickCanvasPixmap> canvasPix;
-        canvasPix.take(new QQuickCanvasPixmap(pix));
+        canvasPix.adopt(new QQuickCanvasPixmap(pix));
         d->pixmaps.insert(fullPathUrl, canvasPix);
 
         pix->load(qmlEngine(this)
