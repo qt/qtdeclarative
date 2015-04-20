@@ -147,6 +147,9 @@ private slots:
 
     void padding();
 
+    void zeroWidthAndElidedDoesntRender();
+
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4144,6 +4147,26 @@ void tst_qquicktext::padding()
     QCOMPARE(obj->bottomPadding(), 0.0);
 
     delete root;
+}
+
+void tst_qquicktext::zeroWidthAndElidedDoesntRender()
+{
+    // Tests QTBUG-34990
+
+    QQmlComponent component(&engine, testFile("ellipsisText.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+
+    QCOMPARE(text->contentWidth(), 0.0);
+
+    QQuickText *reference = text->findChild<QQuickText *>("elidedRef");
+    QVERIFY(reference);
+
+    text->setWidth(10);
+    QCOMPARE(text->contentWidth(), reference->contentWidth());
 }
 
 QTEST_MAIN(tst_qquicktext)
