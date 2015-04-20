@@ -1485,7 +1485,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
         Q_UNUSED(s);
     }
 
-    _as->exceptionReturnLabel = _as->label();
+    Assembler::Label leaveStackFrame = _as->label();
 
     const int locals = _as->stackLayout().calculateJSStackFrameSize();
     _as->subPtr(Assembler::TrustedImm32(sizeof(QV4::Value)*locals), Assembler::LocalsRegister);
@@ -1495,6 +1495,19 @@ void InstructionSelection::visitRet(IR::Ret *s)
 
     _as->leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
     _as->ret();
+
+    _as->exceptionReturnLabel = _as->label();
+    QV4::Primitive retVal = Primitive::undefinedValue();
+#if CPU(X86)
+    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
+    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
+#elif CPU(ARM)
+    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
+    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
+#else
+    _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
+#endif
+    _as->jump(leaveStackFrame);
 }
 
 int InstructionSelection::prepareVariableArguments(IR::ExprList* args)
