@@ -54,7 +54,7 @@ QQmlBinding::Identifier QQmlBinding::Invalid = -1;
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding)
+      QQmlAbstractBinding()
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt));
@@ -66,7 +66,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
 
 QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding)
+      QQmlAbstractBinding()
 {
     if (ctxt && !ctxt->isValid())
         return;
@@ -101,7 +101,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContextData *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding)
+      QQmlAbstractBinding()
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);
@@ -115,7 +115,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
                          QQmlContextData *ctxt,
                          const QString &url, quint16 lineNumber, quint16 columnNumber)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding)
+      QQmlAbstractBinding()
 {
     Q_UNUSED(columnNumber);
     setNotifyOnValueChanged(true);
@@ -128,7 +128,7 @@ QQmlBinding::QQmlBinding(const QString &str, QObject *obj,
 
 QQmlBinding::QQmlBinding(const QV4::Value &functionPtr, QObject *obj, QQmlContextData *ctxt)
     : QQmlJavaScriptExpression(),
-      QQmlAbstractBinding(Binding)
+      QQmlAbstractBinding()
 {
     setNotifyOnValueChanged(true);
     QQmlJavaScriptExpression::setContext(ctxt);

@@ -36,7 +36,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, int index)
-    : QQmlAbstractBinding(ValueTypeProxy),
+    : QQmlAbstractBinding(),
       m_bindings(0)
 {
     m_target = o;
@@ -63,6 +63,11 @@ void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFla
         b->setEnabled(e, flags);
         b = b->nextBinding();
     }
+}
+
+bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
+{
+    return true;
 }
 
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(int propertyIndex)

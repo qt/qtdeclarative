@@ -59,9 +59,6 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 public:
     typedef QWeakPointer<QQmlAbstractBinding> Pointer;
 
-    enum BindingType { Binding = 0, ValueTypeProxy = 1 };
-    inline BindingType bindingType() const;
-
     void destroy() {
         removeFromObject();
         clear();
@@ -69,6 +66,8 @@ public:
     }
 
     virtual QString expression() const;
+
+    virtual bool isValueTypeProxy() const;
 
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.
@@ -90,7 +89,7 @@ public:
     inline QQmlAbstractBinding *nextBinding() const;
 
 protected:
-    QQmlAbstractBinding(BindingType);
+    QQmlAbstractBinding();
     virtual ~QQmlAbstractBinding();
     void clear();
 
@@ -113,14 +112,7 @@ private:
     inline void setNextBinding(QQmlAbstractBinding *);
 
     // Pointer to the next binding in the linked list of bindings.
-    // Being a pointer, the address is always aligned to at least 4 bytes, which means the last two
-    // bits of the pointer are free to be used for something else. They are used to store the binding
-    // type. The binding type serves as an index into the static vTables array, which is used instead
-    // of a compiler-generated vTable. Instead of virtual functions, pointers to static functions in
-    // the vTables array are used for dispatching.
-    // This saves a compiler-generated pointer to a compiler-generated vTable, and thus reduces
-    // the binding object size by sizeof(void*).
-    qintptr m_nextBindingPtr;
+    QQmlAbstractBinding *m_nextBinding;
 
 protected:
     QFlagPointer<QObject> m_target;
@@ -145,17 +137,12 @@ bool QQmlAbstractBinding::isAddedToObject() const
 
 QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
 {
-    return (QQmlAbstractBinding *)(m_nextBindingPtr & ~0x3);
+    return m_nextBinding;
 }
 
 void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
 {
-    m_nextBindingPtr = qintptr(b) | (m_nextBindingPtr & 0x3);
-}
-
-QQmlAbstractBinding::BindingType QQmlAbstractBinding::bindingType() const
-{
-    return (BindingType)(m_nextBindingPtr & 0x3);
+    m_nextBinding = b;
 }
 
 QT_END_NAMESPACE

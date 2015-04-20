@@ -654,7 +654,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
     if (_valueTypeProperty) {
         QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex);
 
-        if (binding && binding->bindingType() != QQmlAbstractBinding::ValueTypeProxy) {
+        if (binding && !binding->isValueTypeProxy()) {
             QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);

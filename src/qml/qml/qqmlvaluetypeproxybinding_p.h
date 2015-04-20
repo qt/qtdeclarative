@@ -58,6 +58,7 @@ public:
     void removeBindings(quint32 mask);
 
     virtual void setEnabled(bool, QQmlPropertyPrivate::WriteFlags);
+    virtual bool isValueTypeProxy() const;
 
 protected:
     ~QQmlValueTypeProxyBinding();

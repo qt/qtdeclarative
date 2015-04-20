@@ -39,8 +39,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlAbstractBinding::QQmlAbstractBinding(BindingType bt)
-    : m_nextBindingPtr(bt)
+QQmlAbstractBinding::QQmlAbstractBinding()
+    : m_nextBinding(0)
 {
 }
 
@@ -79,7 +79,7 @@ void QQmlAbstractBinding::addToObject()
             QQmlAbstractBinding *b = data->bindings;
             while (b && b->targetPropertyIndex() != coreIndex)
                 b = b->nextBinding();
-            Q_ASSERT(b && b->bindingType() == QQmlAbstractBinding::ValueTypeProxy);
+            Q_ASSERT(b && b->isValueTypeProxy());
             proxy = static_cast<QQmlValueTypeProxyBinding *>(b);
         }
 
@@ -126,7 +126,7 @@ void QQmlAbstractBinding::removeFromObject()
             vtbinding = vtbinding->nextBinding();
             Q_ASSERT(vtbinding);
         }
-        Q_ASSERT(vtbinding->bindingType() == QQmlAbstractBinding::ValueTypeProxy);
+        Q_ASSERT(vtbinding->isValueTypeProxy());
 
         QQmlValueTypeProxyBinding *vtproxybinding =
             static_cast<QQmlValueTypeProxyBinding *>(vtbinding);
@@ -195,6 +195,11 @@ void QQmlAbstractBinding::clear()
 QString QQmlAbstractBinding::expression() const
 {
     return QLatin1String("<Unknown>");
+}
+
+bool QQmlAbstractBinding::isValueTypeProxy() const
+{
+    return false;
 }
 
 QT_END_NAMESPACE
