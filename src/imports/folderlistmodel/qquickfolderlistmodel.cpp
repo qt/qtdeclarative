@@ -788,6 +788,20 @@ QVariant QQuickFolderListModel::get(int idx, const QString &property) const
         return QVariant();
 }
 
+/*!
+    \qmlmethod int FolderListModel::indexOf(url file)
+    \since 5.6
+
+    Get the index of the given file URL if the model contains it,
+    or -1 if not.
+*/
+int QQuickFolderListModel::indexOf(const QUrl &file) const
+{
+    Q_D(const QQuickFolderListModel);
+    FileProperty toFind(QFileInfo(file.toLocalFile()));
+    return d->data.indexOf(toFind);
+}
+
 #include "moc_qquickfolderlistmodel.cpp"
 
 //![code]

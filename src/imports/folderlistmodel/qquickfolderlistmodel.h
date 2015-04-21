@@ -132,6 +132,7 @@ public:
 
     Q_INVOKABLE bool isFolder(int index) const;
     Q_INVOKABLE QVariant get(int idx, const QString &property) const;
+    Q_INVOKABLE int indexOf(const QUrl &file) const;
 
 //![parserstatus]
     virtual void classBegin();
