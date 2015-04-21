@@ -4579,9 +4579,9 @@ QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
         // Map coordinates to the child element's coordinate space
         QPointF point = mapToItem(child, QPointF(x, y));
         if (child->isVisible() && point.x() >= 0
-                && child->width() >= point.x()
+                && child->width() > point.x()
                 && point.y() >= 0
-                && child->height() >= point.y())
+                && child->height() > point.y())
             return child;
     }
     return 0;

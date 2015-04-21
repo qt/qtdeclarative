@@ -2995,12 +2995,12 @@ void tst_QQuickItem::childAt()
     child3.setParentItem(&parent);
 
     QCOMPARE(parent.childAt(0, 0), &child1);
-    QCOMPARE(parent.childAt(0, 100), &child1);
+    QCOMPARE(parent.childAt(0, 99), &child1);
     QCOMPARE(parent.childAt(25, 25), &child1);
     QCOMPARE(parent.childAt(25, 75), &child1);
     QCOMPARE(parent.childAt(75, 25), &child1);
     QCOMPARE(parent.childAt(75, 75), &child2);
-    QCOMPARE(parent.childAt(150, 150), &child2);
+    QCOMPARE(parent.childAt(149, 149), &child2);
     QCOMPARE(parent.childAt(25, 200), &child3);
     QCOMPARE(parent.childAt(0, 150), static_cast<QQuickItem *>(0));
     QCOMPARE(parent.childAt(300, 300), static_cast<QQuickItem *>(0));
