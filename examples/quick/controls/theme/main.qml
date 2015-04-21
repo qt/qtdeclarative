@@ -51,7 +51,10 @@ ApplicationWindow {
     header: ToolBar {
         ToolButton {
             label: Text {
-                text: "\u25C0"
+                // \u25C0 (black left-pointing triangle is) missing in some fonts
+                // => use a rotated \u25B2 (black up-pointing triangle) instead
+                text: "\u25B2"
+                rotation: -90
                 color: enabled ? Theme.accentColor : Theme.frameColor
                 anchors.centerIn: parent
             }
