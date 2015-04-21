@@ -1,5 +1,5 @@
 TARGET = QtQuickControls
-MODULE = quickcontrols
+MODULE = quickcontrols2
 CONFIG += internal_module
 
 QT += quick
