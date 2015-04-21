@@ -492,7 +492,7 @@ void tst_qquickwindow::touchEvent_basic()
     window->resize(250, 250);
     window->setPosition(100, 100);
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->contentItem());
     bottomItem->setObjectName("Bottom Item");
@@ -622,7 +622,7 @@ void tst_qquickwindow::touchEvent_propagation()
     window->resize(250, 250);
     window->setPosition(100, 100);
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->contentItem());
     bottomItem->setObjectName("Bottom Item");
@@ -755,7 +755,7 @@ void tst_qquickwindow::touchEvent_cancel()
     window->resize(250, 250);
     window->setPosition(100, 100);
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     TestTouchItem *item = new TestTouchItem(window->contentItem());
     item->setPosition(QPointF(50, 50));
@@ -788,7 +788,7 @@ void tst_qquickwindow::touchEvent_reentrant()
     window->resize(250, 250);
     window->setPosition(100, 100);
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     TestTouchItem *item = new TestTouchItem(window->contentItem());
 
@@ -974,7 +974,7 @@ void tst_qquickwindow::mouseFiltering()
     window->resize(250, 250);
     window->setPosition(100, 100);
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     TestTouchItem *bottomItem = new TestTouchItem(window->contentItem());
     bottomItem->setObjectName("Bottom Item");
@@ -1420,7 +1420,7 @@ void tst_qquickwindow::cursor()
     clippedItem.setParentItem(&clippingItem);
 
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     // Position the cursor over the parent and child item and the clipped section of clippedItem.
     QTest::mouseMove(&window, QPoint(100, 100));
@@ -1774,7 +1774,7 @@ void tst_qquickwindow::crashWhenHoverItemDeleted()
     QQuickWindow *window = qobject_cast<QQuickWindow *>(component.create());
     QVERIFY(window);
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QTest::qWaitForWindowActive(window);
 
     // Simulate a move from the first rectangle to the second. Crash will happen in here
     // Moving instantaneously from (0, 99) to (0, 102) does not cause the crash
@@ -1811,7 +1811,7 @@ void tst_qquickwindow::qobjectEventFilter_touch()
     window.resize(250, 250);
     window.setPosition(100, 100);
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     TestTouchItem *item = new TestTouchItem(window.contentItem());
     item->setSize(QSizeF(150, 150));
@@ -1864,7 +1864,7 @@ void tst_qquickwindow::qobjectEventFilter_mouse()
     window.resize(250, 250);
     window.setPosition(100, 100);
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     TestTouchItem *item = new TestTouchItem(window.contentItem());
     item->setSize(QSizeF(150, 150));
@@ -2166,7 +2166,7 @@ void tst_qquickwindow::testHoverChildMouseEventFilter()
     window.resize(250, 250);
     window.setPosition(100, 100);
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     EventCounter *bottomItem = new EventCounter(window.contentItem());
     bottomItem->setObjectName("Bottom Item");
