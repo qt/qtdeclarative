@@ -55,7 +55,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
 {
     QQmlContextData *rootContext;
     QQmlContextData *creationContext;
-    QFiniteStack<QQmlAbstractBinding*> allCreatedBindings;
+    QFiniteStack<QQmlAbstractBinding::Ptr> allCreatedBindings;
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
     QFiniteStack<QPointer<QObject> > allCreatedObjects;
     QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.

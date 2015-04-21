@@ -674,7 +674,7 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
 
         if (object->property(parentProperty.toLatin1()).isValid()) {
             QQmlProperty property(object, propertyName);
-            QQmlPropertyPrivate::removeBinding(property, QQmlPropertyPrivate::DestroyOldBinding);
+            QQmlPropertyPrivate::removeBinding(property);
             if (property.isResettable()) {
                 // Note: this will reset the property in any case, without regard to states
                 // Right now almost no QQuickItem has reset methods for its properties (with the

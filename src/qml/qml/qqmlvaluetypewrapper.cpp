@@ -435,11 +435,10 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
 
             QQmlBinding *newBinding = new QQmlBinding(value, reference->d()->object, context);
             newBinding->setTarget(reference->d()->object, cacheData);
-            QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::DestroyOldBinding);
+            QQmlPropertyPrivate::setBinding(newBinding);
             return;
         } else {
-            QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyData::encodeValueTypePropertyIndex(reference->d()->property, pd->coreIndex),
-                                               QQmlPropertyPrivate::DestroyOldBinding);
+            QQmlPropertyPrivate::removeBinding(reference->d()->object, QQmlPropertyData::encodeValueTypePropertyIndex(reference->d()->property, pd->coreIndex));
 
         }
     }

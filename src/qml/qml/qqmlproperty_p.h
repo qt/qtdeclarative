@@ -106,16 +106,15 @@ public:
 
     enum BindingFlag {
         None = 0,
-        DestroyOldBinding = 0x1,
-        DontEnable = 0x2
+        DontEnable = 0x1
     };
     Q_DECLARE_FLAGS(BindingFlags, BindingFlag)
 
     static void setBinding(QQmlAbstractBinding *binding, BindingFlags flags = None, WriteFlags writeFlags = DontRemoveBinding);
 
-    static QQmlAbstractBinding *removeBinding(const QQmlProperty &that, BindingFlag flag = None);
-    static QQmlAbstractBinding *removeBinding(QObject *o, int index, QQmlPropertyPrivate::BindingFlag flags = None);
-    static QQmlAbstractBinding *removeBinding(QQmlAbstractBinding *b, BindingFlag flag = None);
+    static void removeBinding(const QQmlProperty &that);
+    static void removeBinding(QObject *o, int index);
+    static void removeBinding(QQmlAbstractBinding *b);
     static QQmlAbstractBinding *binding(QObject *, int index);
 
     static QQmlPropertyData saveValueType(const QQmlPropertyData &,

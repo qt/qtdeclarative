@@ -464,10 +464,10 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
                 // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
                 // so that we can avoid creating then destroying the binding in this case.
                 a.toValue = newBinding->evaluate();
-                newBinding->destroy();
+                delete newBinding;
             } else {
                 newBinding->setTarget(prop);
-                a.toBinding = QQmlAbstractBinding::getPointer(newBinding);
+                a.toBinding = newBinding;
                 a.deletableToBinding = true;
             }
 
@@ -558,7 +558,7 @@ void QQuickPropertyChanges::changeValue(const QString &name, const QVariant &val
         if (entry.name == name) {
             expressionIterator.remove();
             if (state() && state()->isStateActive()) {
-                QQmlPropertyPrivate::removeBinding(d->property(name), QQmlPropertyPrivate::DestroyOldBinding);
+                QQmlPropertyPrivate::removeBinding(d->property(name));
                 d->property(name).write(value);
             }
 
@@ -656,10 +656,10 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
                 // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
                 // so that we can avoid creating then destroying the binding in this case.
                 action.toValue = newBinding->evaluate();
-                newBinding->destroy();
+                delete newBinding;
             } else {
                 newBinding->setTarget(action.property);
-                action.toBinding = QQmlAbstractBinding::getPointer(newBinding);
+                action.toBinding = newBinding;
                 action.deletableToBinding = true;
 
                 state()->addEntryToRevertList(action);

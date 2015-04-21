@@ -85,7 +85,6 @@ class QQmlImportDatabase;
 class QNetworkReply;
 class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
-class QQmlAbstractBinding;
 class QQmlTypeNameCache;
 class QQmlComponentAttached;
 class QQmlCleanup;

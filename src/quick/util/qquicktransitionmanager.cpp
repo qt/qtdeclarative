@@ -101,7 +101,7 @@ void QQuickTransitionManager::complete()
 void QQuickTransitionManagerPrivate::applyBindings()
 {
     foreach(const QQuickStateAction &action, bindingsList) {
-        if (!action.toBinding.isNull()) {
+        if (action.toBinding) {
             QQmlPropertyPrivate::setBinding(action.toBinding.data());
         } else if (action.event) {
             if (action.reverseEvent)
@@ -155,7 +155,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
         // Apply all the property and binding changes
         for (int ii = 0; ii < applyList.size(); ++ii) {
             const QQuickStateAction &action = applyList.at(ii);
-            if (!action.toBinding.isNull()) {
+            if (action.toBinding) {
                 QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
             } else if (!action.event) {
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
@@ -175,7 +175,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
                 continue;
             }
             const QQmlProperty &prop = action->property;
-            if (!action->toBinding.isNull() || !action->toValue.isValid()) {
+            if (action->toBinding || !action->toValue.isValid()) {
                 action->toValue = prop.read();
             }
         }
@@ -269,10 +269,9 @@ void QQuickTransitionManager::cancel()
 
     for(int i = 0; i < d->bindingsList.count(); ++i) {
         QQuickStateAction action = d->bindingsList[i];
-        if (!action.toBinding.isNull() && action.deletableToBinding) {
+        if (action.toBinding && action.deletableToBinding) {
             QQmlPropertyPrivate::removeBinding(action.property);
-            action.toBinding.data()->destroy();
-            action.toBinding.clear();
+            action.toBinding = 0;
             action.deletableToBinding = false;
         } else if (action.event) {
             //### what do we do here?

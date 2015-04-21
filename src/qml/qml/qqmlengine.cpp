@@ -657,6 +657,17 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
     }
 }
 
+QQmlData::QQmlData()
+    : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
+      hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
+      hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
+      bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
+      lineNumber(0), columnNumber(0), jsEngineId(0), compiledData(0), deferredData(0),
+      propertyCache(0), guards(0), extendedData(0)
+{
+    init();
+}
+
 void QQmlData::destroyed(QAbstractDeclarativeData *d, QObject *o)
 {
     QQmlData *ddata = static_cast<QQmlData *>(d);
@@ -815,14 +826,12 @@ void QQmlData::flushPendingBindingImpl(int coreIndex)
 
     // Find the binding
     QQmlAbstractBinding *b = bindings;
-    while (b && *b->m_mePtr && b->targetPropertyIndex() != coreIndex)
+    while (b && b->targetPropertyIndex() != coreIndex)
         b = b->nextBinding();
 
-    if (b && b->targetPropertyIndex() == coreIndex) {
-        b->clear();
+    if (b && b->targetPropertyIndex() == coreIndex)
         b->setEnabled(true, QQmlPropertyPrivate::BypassInterceptor |
                             QQmlPropertyPrivate::DontRemoveBinding);
-    }
 }
 
 bool QQmlEnginePrivate::baseModulesUninitialized = true;
@@ -1642,12 +1651,11 @@ void QQmlData::destroyed(QObject *object)
 
     QQmlAbstractBinding *binding = bindings;
     while (binding) {
-        QQmlAbstractBinding *next = binding->nextBinding();
         binding->setAddedToObject(false);
-        binding->setNextBinding(0);
-        binding->destroy();
-        binding = next;
+        binding = binding->nextBinding();
     }
+    if (bindings && !bindings->ref.deref())
+        delete bindings;
 
     if (compiledData) {
         compiledData->release();

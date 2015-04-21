@@ -191,7 +191,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
         bool error = false;
-        if (!watcher.wasDeleted() && !hasError())
+        if (!watcher.wasDeleted() && m_isAddedToObject && !hasError())
             error = !write(pd, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
@@ -426,6 +426,12 @@ void QQmlBinding::setTarget(const QQmlProperty &prop)
 void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 {
     m_target = object;
+
+    if (!object) {
+        m_targetIndex = -1;
+        return;
+    }
+
     QQmlPropertyData pd = core;
 
     if (!object) {

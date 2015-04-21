@@ -45,20 +45,16 @@ QQmlValueTypeProxyBinding::QQmlValueTypeProxyBinding(QObject *o, int index)
 
 QQmlValueTypeProxyBinding::~QQmlValueTypeProxyBinding()
 {
-    QQmlAbstractBinding *binding = m_bindings;
-    // This must be identical to the logic in QQmlData::destroyed()
+    QQmlAbstractBinding *binding = m_bindings.data();
     while (binding) {
-        QQmlAbstractBinding *next = binding->nextBinding();
         binding->setAddedToObject(false);
-        binding->setNextBinding(0);
-        binding->destroy();
-        binding = next;
+        binding = binding->nextBinding();
     }
 }
 
 void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyPrivate::WriteFlags flags)
 {
-    QQmlAbstractBinding *b = m_bindings;
+    QQmlAbstractBinding *b = m_bindings.data();
     while (b) {
         b->setEnabled(e, flags);
         b = b->nextBinding();
@@ -72,7 +68,7 @@ bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
 
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(int propertyIndex)
 {
-    QQmlAbstractBinding *binding = m_bindings;
+    QQmlAbstractBinding *binding = m_bindings.data();
 
     while (binding && binding->targetPropertyIndex() != propertyIndex)
         binding = binding->nextBinding();
@@ -85,23 +81,20 @@ Removes a collection of bindings, corresponding to the set bits in \a mask.
 */
 void QQmlValueTypeProxyBinding::removeBindings(quint32 mask)
 {
-    QQmlAbstractBinding *binding = m_bindings;
+    QQmlAbstractBinding *binding = m_bindings.data();
     QQmlAbstractBinding *lastBinding = 0;
 
     while (binding) {
         int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(binding->targetPropertyIndex());
         if (valueTypeIndex != -1 && (mask & (1 << valueTypeIndex))) {
             QQmlAbstractBinding *remove = binding;
+            remove->setAddedToObject(false);
             binding = remove->nextBinding();
 
             if (lastBinding == 0)
                 m_bindings = remove->nextBinding();
             else
                 lastBinding->setNextBinding(remove->nextBinding());
-
-            remove->setAddedToObject(false);
-            remove->setNextBinding(0);
-            remove->destroy();
         } else {
             lastBinding = binding;
             binding = binding->nextBinding();

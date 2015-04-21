@@ -725,13 +725,14 @@ QQmlPropertyPrivate::setBinding(const QQmlProperty &that, QQmlAbstractBinding *n
     }
 
     if (!that.d || !that.isProperty() || !that.d->object) {
-        newBinding->destroy();
+        if (!newBinding->ref)
+            delete newBinding;
         return;
     }
     setBinding(newBinding);
 }
 
-static QQmlAbstractBinding *removeOldBinding(QObject *object, int index, QQmlPropertyPrivate::BindingFlags flags)
+static void removeOldBinding(QObject *object, int index, QQmlPropertyPrivate::BindingFlags flags = QQmlPropertyPrivate::None)
 {
     int coreIndex;
     int valueTypeIndex = QQmlPropertyData::decodeValueTypePropertyIndex(index, &coreIndex);
@@ -739,55 +740,49 @@ static QQmlAbstractBinding *removeOldBinding(QObject *object, int index, QQmlPro
     QQmlData *data = QQmlData::get(object, false);
 
     if (!data || !data->hasBindingBit(coreIndex))
-        return 0;
+        return;
 
-    QQmlAbstractBinding *oldBinding = data->bindings;
+    QQmlAbstractBinding::Ptr oldBinding;
+    oldBinding = data->bindings;
 
     while (oldBinding && oldBinding->targetPropertyIndex() != coreIndex)
         oldBinding = oldBinding->nextBinding();
 
     if (!oldBinding)
-        return 0;
+        return;
 
     if (valueTypeIndex != -1 && oldBinding->isValueTypeProxy())
-        oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding)->binding(index);
+        oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
 
     if (!oldBinding)
-        return 0;
+        return;
 
-    oldBinding->removeFromObject();
     if (!(flags & QQmlPropertyPrivate::DontEnable))
         oldBinding->setEnabled(false, 0);
-
-    if (flags & QQmlPropertyPrivate::DestroyOldBinding) {
-        oldBinding->destroy();
-        return 0;
-    }
-
-    return oldBinding;
+    oldBinding->removeFromObject();
 }
 
-QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(QQmlAbstractBinding *b, QQmlPropertyPrivate::BindingFlag flags)
+void QQmlPropertyPrivate::removeBinding(QQmlAbstractBinding *b)
 {
-    return removeBinding(b->targetObject(), b->targetPropertyIndex(), flags);
+    removeBinding(b->targetObject(), b->targetPropertyIndex());
 }
 
-QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(QObject *o, int index, QQmlPropertyPrivate::BindingFlag flags)
+void QQmlPropertyPrivate::removeBinding(QObject *o, int index)
 {
     Q_ASSERT(o);
 
     QObject *target;
     int targetIndex;
     findAliasTarget(o, index, &target, &targetIndex);
-    return removeOldBinding(target, targetIndex, flags);
+    removeOldBinding(target, targetIndex);
 }
 
-QQmlAbstractBinding *QQmlPropertyPrivate::removeBinding(const QQmlProperty &that, BindingFlag flags)
+void QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
 {
     if (!that.d || !that.isProperty() || !that.d->object)
-        return 0;
+        return;
 
-    return removeBinding(that.d->object, that.d->core.encodedIndex(), flags);
+    removeBinding(that.d->object, that.d->core.encodedIndex());
 }
 
 QQmlAbstractBinding *
@@ -1164,7 +1159,7 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
 {
     // Remove any existing bindings on this property
     if (!(flags & DontRemoveBinding) && object)
-        removeBinding(object, core.encodedIndex(), DestroyOldBinding);
+        removeBinding(object, core.encodedIndex());
 
     bool rv = false;
     if (core.isValueTypeVirtual()) {

@@ -65,6 +65,7 @@ class QQmlContext;
 class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractBinding
 {
+    friend class QQmlAbstractBinding;
 public:
     QQmlBinding(const QString &, QObject *, QQmlContext *);
     QQmlBinding(const QQmlScriptString &, QObject *, QQmlContext *);
@@ -72,6 +73,7 @@ public:
     QQmlBinding(const QString &, QObject *, QQmlContextData *,
                 const QString &url, quint16 lineNumber, quint16 columnNumber);
     QQmlBinding(const QV4::Value &, QObject *, QQmlContextData *);
+    ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &);
@@ -93,10 +95,6 @@ public:
 
     virtual QString expressionIdentifier();
     virtual void expressionChanged();
-
-protected:
-    friend class QQmlAbstractBinding;
-    ~QQmlBinding();
 
 private:
     inline bool updatingFlag() const;

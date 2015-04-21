@@ -46,6 +46,7 @@
 //
 
 #include <QtCore/qsharedpointer.h>
+#include <QtCore/qshareddata.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qpointervaluepair_p.h>
@@ -56,14 +57,12 @@ class QQmlObjectCreator;
 
 class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 {
+protected:
+    QQmlAbstractBinding();
 public:
-    typedef QWeakPointer<QQmlAbstractBinding> Pointer;
+    virtual ~QQmlAbstractBinding();
 
-    void destroy() {
-        removeFromObject();
-        clear();
-        delete this;
-    }
+    typedef QExplicitlySharedDataPointer<QQmlAbstractBinding> Ptr;
 
     virtual QString expression() const;
 
@@ -83,28 +82,26 @@ public:
     void addToObject();
     void removeFromObject();
 
-    static inline Pointer getPointer(QQmlAbstractBinding *p);
     static void printBindingLoopError(QQmlProperty &prop);
 
     inline QQmlAbstractBinding *nextBinding() const;
 
-protected:
-    QQmlAbstractBinding();
-    virtual ~QQmlAbstractBinding();
-    void clear();
+
+    struct RefCount {
+        RefCount() : refCount(0) {}
+        int refCount;
+        void ref() { ++refCount; }
+        int deref() { return --refCount; }
+        operator int() const { return refCount; }
+    };
+    RefCount ref;
 
 private:
     friend class QQmlData;
     friend class QQmlValueTypeProxyBinding;
     friend class QQmlObjectCreator;
 
-    Pointer weakPointer();
-
     typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
-    // To save memory, we also store the rarely used weakPointer() instance in here
-    // We also use the flag bits:
-    //    m_mePtr.flag1: added to object
-    QPointerValuePair<QQmlAbstractBinding*, SharedPointer> m_mePtr;
 
     inline void setAddedToObject(bool v);
     inline bool isAddedToObject() const;
@@ -112,32 +109,27 @@ private:
     inline void setNextBinding(QQmlAbstractBinding *);
 
     // Pointer to the next binding in the linked list of bindings.
-    QQmlAbstractBinding *m_nextBinding;
+    Ptr m_nextBinding;
 
 protected:
     QFlagPointer<QObject> m_target;
     int m_targetIndex;
+    bool m_isAddedToObject;
 };
-
-QQmlAbstractBinding::Pointer
-QQmlAbstractBinding::getPointer(QQmlAbstractBinding *p)
-{
-    return p ? p->weakPointer() : Pointer();
-}
 
 void QQmlAbstractBinding::setAddedToObject(bool v)
 {
-    m_mePtr.setFlagValue(v);
+    m_isAddedToObject = v;
 }
 
 bool QQmlAbstractBinding::isAddedToObject() const
 {
-    return m_mePtr.flag();
+    return m_isAddedToObject;
 }
 
 QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
 {
-    return m_nextBinding;
+    return m_nextBinding.data();
 }
 
 void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)

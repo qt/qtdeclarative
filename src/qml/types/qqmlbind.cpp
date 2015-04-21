@@ -52,8 +52,8 @@ QT_BEGIN_NAMESPACE
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
-    QQmlBindPrivate() : componentComplete(true), obj(0), prevBind(0) {}
-    ~QQmlBindPrivate() { if (prevBind) prevBind->destroy(); }
+    QQmlBindPrivate() : componentComplete(true), obj(0) {}
+    ~QQmlBindPrivate() { }
 
     QQmlNullableValue<bool> when;
     bool componentComplete;
@@ -61,7 +61,7 @@ public:
     QString propName;
     QQmlNullableValue<QVariant> value;
     QQmlProperty prop;
-    QQmlAbstractBinding *prevBind;
+    QQmlAbstractBinding::Ptr prevBind;
 };
 
 
@@ -277,18 +277,17 @@ void QQmlBind::eval()
         if (!d->when) {
             //restore any previous binding
             if (d->prevBind) {
-                QQmlAbstractBinding *b = QQmlPropertyPrivate::binding(d->prop);
-                if (b != d->prevBind)
-                    QQmlPropertyPrivate::setBinding(d->prevBind, QQmlPropertyPrivate::DestroyOldBinding);
+                QQmlAbstractBinding::Ptr p = d->prevBind;
                 d->prevBind = 0;
+                QQmlPropertyPrivate::setBinding(p.data());
             }
             return;
         }
 
         //save any set binding for restoration
-        QQmlAbstractBinding *tmp = QQmlPropertyPrivate::removeBinding(d->prop, (d->prevBind ? QQmlPropertyPrivate::DestroyOldBinding : QQmlPropertyPrivate::None));
-        if (tmp && !d->prevBind)
-            d->prevBind = tmp;
+        if (!d->prevBind)
+            d->prevBind = QQmlPropertyPrivate::binding(d->prop);
+        QQmlPropertyPrivate::removeBinding(d->prop);
     }
 
     d->prop.write(d->value.value);

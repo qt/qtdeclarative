@@ -129,11 +129,6 @@ QQmlObjectCreator::~QQmlObjectCreator()
         {
             QQmlObjectCreatorRecursionWatcher watcher(this);
         }
-        for (int i = 0; i < sharedState->allCreatedBindings.count(); ++i) {
-            QQmlAbstractBinding *b = sharedState->allCreatedBindings.at(i);
-            if (b)
-                b->m_mePtr = 0;
-        }
         for (int i = 0; i < sharedState->allParserStatusCallbacks.count(); ++i) {
             QQmlParserStatus *ps = sharedState->allParserStatusCallbacks.at(i);
             if (ps)
@@ -655,7 +650,7 @@ void QQmlObjectCreator::setupBindings(const QBitArray &bindingsToSkip)
         QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, _valueTypeProperty->coreIndex);
 
         if (binding && !binding->isValueTypeProxy()) {
-            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
+            QQmlPropertyPrivate::removeBinding(_bindingTarget, _valueTypeProperty->coreIndex);
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);
 
@@ -789,7 +784,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
     if (_ddata->hasBindingBit(property->coreIndex) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
         && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
         && !_valueTypeProperty)
-        QQmlPropertyPrivate::removeBinding(_bindingTarget, property->coreIndex, QQmlPropertyPrivate::DestroyOldBinding);
+        QQmlPropertyPrivate::removeBinding(_bindingTarget, property->coreIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QV4::Function *runtimeFunction = compiledData->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
@@ -817,13 +812,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
             if (_valueTypeProperty)
                 targetCorePropertyData = QQmlPropertyPrivate::saveValueType(*_valueTypeProperty, _qobject->metaObject(), property->coreIndex, engine);
 
-            sharedState->allCreatedBindings.push(qmlBinding);
-            qmlBinding->m_mePtr = &sharedState->allCreatedBindings.top();
+            sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
 
             qmlBinding->setTarget(_bindingTarget, targetCorePropertyData);
 
             if (targetCorePropertyData.isAlias()) {
-                QQmlPropertyPrivate::setBinding(qmlBinding, QQmlPropertyPrivate::DontEnable|QQmlPropertyPrivate::DestroyOldBinding);
+                QQmlPropertyPrivate::setBinding(qmlBinding, QQmlPropertyPrivate::DontEnable);
             } else {
                 qmlBinding->addToObject();
 
@@ -1167,10 +1161,11 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     while (!sharedState->allCreatedBindings.isEmpty()) {
-        QQmlAbstractBinding *b = sharedState->allCreatedBindings.pop();
-        if (!b)
+        QQmlAbstractBinding::Ptr b = sharedState->allCreatedBindings.pop();
+        Q_ASSERT(b);
+        // skip, if b is not added to an object
+        if (!b->isAddedToObject())
             continue;
-        b->m_mePtr = 0;
         QQmlData *data = QQmlData::get(b->targetObject());
         Q_ASSERT(data);
         data->clearPendingBindingBit(b->targetPropertyIndex());

@@ -65,7 +65,7 @@ protected:
 
 private:
     friend class QQmlAbstractBinding;
-    QQmlAbstractBinding *m_bindings;
+    Ptr m_bindings;
 };
 
 QT_END_NAMESPACE

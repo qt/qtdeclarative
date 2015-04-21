@@ -39,13 +39,14 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qsharedpointer.h>
 #include <private/qtquickglobal_p.h>
+#include <private/qqmlabstractbinding_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStateActionEvent;
-class QQmlAbstractBinding;
 class QQmlBinding;
 class QQmlExpression;
+
 class QQuickStateAction
 {
 public:
@@ -63,8 +64,8 @@ public:
     QVariant fromValue;
     QVariant toValue;
 
-    QQmlAbstractBinding *fromBinding;
-    QWeakPointer<QQmlAbstractBinding> toBinding;
+    QQmlAbstractBinding::Ptr fromBinding;
+    QQmlAbstractBinding::Ptr toBinding;
     QQuickStateActionEvent *event;
 
     //strictly for matching

@@ -1637,7 +1637,7 @@ void tst_qquickstates::QTBUG_38492()
 
 void tst_qquickstates::revertListMemoryLeak()
 {
-    QWeakPointer<QQmlAbstractBinding> weakPtr;
+    QQmlAbstractBinding::Ptr bindingPtr;
     {
         QQmlEngine engine;
 
@@ -1651,12 +1651,12 @@ void tst_qquickstates::revertListMemoryLeak()
 
         QQmlAbstractBinding *binding = state->bindingInRevertList(item, "height");
         QVERIFY(binding);
-        weakPtr = QQmlAbstractBinding::getPointer(binding);
-        QVERIFY(!weakPtr.toStrongRef().isNull());
+        bindingPtr = binding;
+        QVERIFY(bindingPtr->ref > 1);
 
         delete item;
     }
-    QVERIFY(weakPtr.toStrongRef().isNull());
+    QVERIFY(bindingPtr->ref == 1);
 }
 
 QTEST_MAIN(tst_qquickstates)

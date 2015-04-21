@@ -71,7 +71,7 @@ public:
         if (state == StartState) {
             m_value = a.fromValue;
             if (QQmlPropertyPrivate::binding(m_property)) {
-                m_binding = QQmlAbstractBinding::getPointer(QQmlPropertyPrivate::binding(m_property));
+                m_binding = QQmlPropertyPrivate::binding(m_property);
             }
             m_reverseEvent = true;
         } else {
@@ -88,7 +88,7 @@ public:
     QQuickSimpleAction(const QQuickSimpleAction &other)
         :  m_property(other.m_property),
         m_value(other.m_value),
-        m_binding(QQmlAbstractBinding::getPointer(other.binding())),
+        m_binding(other.binding()),
         m_specifiedObject(other.m_specifiedObject),
         m_specifiedProperty(other.m_specifiedProperty),
         m_event(other.m_event),
@@ -100,7 +100,7 @@ public:
     {
         m_property = other.m_property;
         m_value = other.m_value;
-        m_binding = QQmlAbstractBinding::getPointer(other.binding());
+        m_binding = other.binding();
         m_specifiedObject = other.m_specifiedObject;
         m_specifiedProperty = other.m_specifiedProperty;
         m_event = other.m_event;
@@ -131,7 +131,7 @@ public:
 
     void setBinding(QQmlAbstractBinding *binding)
     {
-        m_binding = QQmlAbstractBinding::getPointer(binding);
+        m_binding = binding;
     }
 
     QQmlAbstractBinding *binding() const
@@ -162,7 +162,7 @@ public:
 private:
     QQmlProperty m_property;
     QVariant m_value;
-    QQmlAbstractBinding::Pointer m_binding;
+    QQmlAbstractBinding::Ptr m_binding;
     QObject *m_specifiedObject;
     QString m_specifiedProperty;
     QQuickStateActionEvent *m_event;
