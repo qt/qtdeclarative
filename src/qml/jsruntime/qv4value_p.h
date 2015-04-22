@@ -54,8 +54,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     /*
         We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
 
-        In both cases, we 8 bytes for a value and different variant of NaN boxing. A Double NaN (actually -qNaN)
-        is indicated by a number that has the top 13 bits set. THe other values are usually set to 0 by the
+        In both cases, we use 8 bytes for a value and a different variant of NaN boxing. A Double NaN (actually -qNaN)
+        is indicated by a number that has the top 13 bits set. The other values are usually set to 0 by the
         processor, and are thus free for us to store other data. We keep pointers in there for managed objects,
         and encode the other types using the free space given to use by the unused bits for NaN values. This also
         works for pointers on 64 bit systems, as they all currently only have 48 bits of addressable memory.
@@ -63,7 +63,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         On 32bit, we store doubles as doubles. All other values, have the high 32bits set to a value that
         will make the number a NaN. The Masks below are used for encoding the other types.
 
-        On 64 bit, we xor Doubles with (0xffff8000 << 32). Thas has the effect that no doubles will get encoded
+        On 64 bit, we xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will get encoded
         with the 13 highest bits all 0. We are now using special values for bits 14-17 to encode our values. These
         can be used, as the highest valid pointer on a 64 bit system is 2^48-1.
 

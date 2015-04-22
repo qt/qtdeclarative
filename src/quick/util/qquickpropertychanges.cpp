@@ -295,8 +295,8 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         int column = -1;
 
         QQmlData *ddata = QQmlData::get(q);
-        if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty()) {
-            url = ddata->outerContext->url;
+        if (ddata && ddata->outerContext && !ddata->outerContext->url().isEmpty()) {
+            url = ddata->outerContext->url();
             line = ddata->lineNumber;
             column = ddata->columnNumber;
         }

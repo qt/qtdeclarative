@@ -62,6 +62,7 @@ using namespace QV4;
 
 Heap::ErrorObject::ErrorObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
+    , stack(Q_NULLPTR)
 {
     Scope scope(ic->engine);
     Scoped<QV4::ErrorObject> e(scope, this);

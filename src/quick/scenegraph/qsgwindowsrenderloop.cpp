@@ -35,6 +35,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLibraryInfo>
+#include <QtCore/QThread>
 
 #include <QtGui/QScreen>
 #include <QtGui/QGuiApplication>
@@ -355,11 +356,18 @@ bool QSGWindowsRenderLoop::event(QEvent *event)
 void QSGWindowsRenderLoop::render()
 {
     RLDEBUG("render");
+    bool rendered = false;
     foreach (const WindowData &wd, m_windows) {
         if (wd.pendingUpdate) {
             const_cast<WindowData &>(wd).pendingUpdate = false;
             renderWindow(wd.window);
+            rendered = true;
         }
+    }
+
+    if (!rendered) {
+        RLDEBUG("no changes, sleep");
+        QThread::msleep(m_vsyncDelta);
     }
 
     if (m_animationDriver->isRunning()) {

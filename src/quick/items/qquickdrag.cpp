@@ -33,6 +33,9 @@
 
 #include "qquickdrag_p.h"
 
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
+#include <qpa/qplatformdrag.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
@@ -724,7 +727,8 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
 
     Qt::DropAction dropAction = drag->exec(supportedActions);
 
-    delete drag;
+    if (!QGuiApplicationPrivate::platformIntegration()->drag()->ownsDragObject())
+        drag->deleteLater();
 
     deliverLeaveEvent();
 

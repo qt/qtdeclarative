@@ -256,12 +256,12 @@ public:
         advanceAnimation();
     }
 
-    float m_time;
-    float m_vsync;
+    double m_time;
+    double m_vsync;
     Mode m_mode;
     QElapsedTimer m_timer;
     QElapsedTimer m_wallTime;
-    float m_lag;
+    double m_lag;
     int m_bad;
     int m_good;
 };

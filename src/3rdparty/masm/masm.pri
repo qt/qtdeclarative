@@ -63,7 +63,20 @@ HEADERS += $$PWD/disassembler/ARMv7/ARMv7DOpcode.h
 SOURCES += $$PWD/yarr/*.cpp
 HEADERS += $$PWD/yarr/*.h
 
-retgen.output = RegExpJitTables.h
+#
+# Generate RegExpJitTables.h
+#
+GENERATEDDIR = .generated
+debug_and_release {
+    CONFIG(debug, debug|release) {
+        GENERATEDDIR = $$GENERATEDDIR/debug
+    } else {
+        GENERATEDDIR = $$GENERATEDDIR/release
+    }
+}
+INCLUDEPATH += $$GENERATEDDIR
+
+retgen.output = $$GENERATEDDIR/RegExpJitTables.h
 retgen.script = $$PWD/create_regex_tables
 retgen.input = retgen.script
 retgen.CONFIG += no_link

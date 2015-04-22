@@ -167,7 +167,7 @@ Heap::CallContext::CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::F
     callData->argc = 0;
     callData->thisObject = Primitive::undefinedValue();
 
-    strictMode = true;
+    strictMode = false;
     outer = function->scope();
 
     activation = qml->d();

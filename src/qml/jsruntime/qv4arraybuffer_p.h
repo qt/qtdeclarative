@@ -48,6 +48,7 @@ struct ArrayBufferCtor : FunctionObject {
 
 struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
     ArrayBuffer(ExecutionEngine *e, size_t length);
+    ArrayBuffer(ExecutionEngine *e, const QByteArray& array);
     ~ArrayBuffer();
     QTypedArrayData<char> *data;
 
@@ -74,15 +75,11 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }
-    char *data() {
-        // ### detach if refcount > 1
-        return d()->data->data();
-    }
-    const char *constData() {
-        // ### detach if refcount > 1
-        return d()->data->data();
-    }
+    char *data() { detach(); return d()->data ? d()->data->data() : 0; }
+    const char *constData() { detach(); return d()->data ? d()->data->data() : 0; }
 
+private:
+    void detach();
 };
 
 struct ArrayBufferPrototype: Object

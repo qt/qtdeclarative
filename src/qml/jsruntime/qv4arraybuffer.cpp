@@ -95,6 +95,13 @@ Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, size_t length)
     memset(data->data(), 0, length + 1);
 }
 
+Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, const QByteArray& array)
+    : Heap::Object(e->emptyClass, e->arrayBufferPrototype.as<QV4::Object>())
+    , data(const_cast<QByteArray&>(array).data_ptr())
+{
+    data->ref.ref();
+}
+
 Heap::ArrayBuffer::~ArrayBuffer()
 {
     if (!data->ref.deref())
@@ -107,6 +114,25 @@ QByteArray ArrayBuffer::asByteArray() const
     ba.ptr->ref.ref();
     return QByteArray(ba);
 }
+
+void ArrayBuffer::detach() {
+    if (!d()->data->ref.isShared())
+        return;
+
+    QTypedArrayData<char> *oldData = d()->data;
+
+    d()->data = QTypedArrayData<char>::allocate(oldData->size + 1);
+    if (!d()->data) {
+        engine()->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
+        return;
+    }
+
+    memcpy(d()->data->data(), oldData->data(), oldData->size + 1);
+
+    if (!oldData->ref.deref())
+        QTypedArrayData<char>::deallocate(oldData);
+}
+
 
 void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {

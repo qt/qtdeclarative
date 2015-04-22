@@ -395,8 +395,10 @@ public:
 
     void or32(TrustedImm32 imm, RegisterID src, RegisterID dest)
     {
-        if (!imm.m_value && !m_fixedWidth)
+        if (!imm.m_value && !m_fixedWidth) {
+            move(src, dest);
             return;
+        }
 
         if (imm.m_value > 0 && imm.m_value < 65535 && !m_fixedWidth) {
             m_assembler.ori(dest, src, imm.m_value);
@@ -2647,7 +2649,7 @@ public:
     {
         m_assembler.truncwd(fpTempRegister, src);
         m_assembler.mfc1(dest, fpTempRegister);
-        return branch32(branchType == BranchIfTruncateFailed ? Equal : NotEqual, dest, TrustedImm32(0));
+        return branch32(branchType == BranchIfTruncateFailed ? Equal : NotEqual, dest, TrustedImm32(0x7fffffff));
     }
 
     // Result is undefined if the value is outside of the integer range.

@@ -60,6 +60,7 @@ Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlCon
     , isNullWrapper(false)
     , context(context)
     , scopeObject(scopeObject)
+    , idObjectsWrapper(Q_NULLPTR)
 {
 }
 
@@ -82,7 +83,8 @@ ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
     Scope scope(v4);
 
     QQmlContextData *context = new QQmlContextData;
-    context->url = url;
+    context->baseUrl = url;
+    context->baseUrlString = url.toString();
     context->isInternal = true;
     context->isJSContext = true;
 
@@ -199,8 +201,9 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
 
     while (context) {
         // Search context properties
-        if (context->propertyNames.count()) {
-            int propertyIdx = context->propertyNames.value(name);
+        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        if (properties.count()) {
+            int propertyIdx = properties.value(name);
 
             if (propertyIdx != -1) {
 
@@ -308,8 +311,9 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     QObject *scopeObject = wrapper->getScopeObject();
 
     while (context) {
+        const QV4::IdentifierHash<int> &properties = context->propertyNames();
         // Search context properties
-        if (context->propertyNames.count() && -1 != context->propertyNames.value(name))
+        if (properties.count() && properties.value(name) != -1)
             return;
 
         // Search scope object

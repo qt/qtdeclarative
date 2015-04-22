@@ -144,8 +144,9 @@ public:
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
 
-    // Property name cache
-    QV4::IdentifierHash<int> propertyNames;
+    mutable QHash<int, int> objectIndexToId;
+    mutable QV4::IdentifierHash<int> propertyNameCache;
+    QV4::IdentifierHash<int> &propertyNames() const;
 
     // Context object
     QObject *contextObject;
@@ -153,9 +154,11 @@ public:
     // Any script blocks that exist on this context
     QV4::PersistentValue importedScripts; // This is a JS Array
 
-    // Context base url
-    QUrl url;
-    QString urlString;
+    QUrl baseUrl;
+    QString baseUrlString;
+
+    QUrl url() const;
+    QString urlString() const;
 
     // List of imports that apply to this context
     QQmlTypeNameCache *imports;
@@ -188,17 +191,10 @@ public:
         QFlagPointer<QQmlContextData> context;
         QQmlNotifier bindings;
     };
-    struct ObjectIdMapping {
-        ObjectIdMapping() : id(-1) {}
-        ObjectIdMapping(const QString &name, int id)
-            : name(name), id(id) {}
-        QString name;
-        int id;
-    };
     ContextGuard *idValues;
     int idValueCount;
     void setIdProperty(int, QObject *);
-    void setIdPropertyData(const QVector<ObjectIdMapping> &);
+    void setIdPropertyData(const QHash<int, int> &);
 
     // Linked contexts. this owns linkedContext.
     QQmlContextData *linkedContext;

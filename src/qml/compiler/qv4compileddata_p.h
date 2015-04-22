@@ -46,6 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyCache;
+class QQmlPropertyData;
+
 namespace QmlIR {
 struct Document;
 }
@@ -556,6 +559,9 @@ struct TypeReferenceMap : QHash<int, TypeReference>
     }
 };
 
+// index is per-object binding index
+typedef QVector<QQmlPropertyData*> BindingPropertyData;
+
 // This is how this hooks into the existing structures:
 
 //VM::Function
@@ -570,14 +576,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     {}
     virtual ~CompilationUnit() {}
 #else
-    CompilationUnit()
-        : data(0)
-        , engine(0)
-        , runtimeStrings(0)
-        , runtimeLookups(0)
-        , runtimeRegularExpressions(0)
-        , runtimeClasses(0)
-    {}
+    CompilationUnit();
     virtual ~CompilationUnit();
 #endif
 
@@ -597,6 +596,11 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public QQmlRefCount
     QV4::InternalClass **runtimeClasses;
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
+
+    // index is object index. This allows fast access to the
+    // property data when initializing bindings, avoiding expensive
+    // lookups by string (property name).
+    QVector<BindingPropertyData> bindingPropertyDataPerObject;
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
