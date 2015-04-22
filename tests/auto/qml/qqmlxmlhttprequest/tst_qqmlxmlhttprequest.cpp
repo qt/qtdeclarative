@@ -847,6 +847,7 @@ void tst_qqmlxmlhttprequest::getBinaryData()
 
     QFileInfo fileInfo("data/qml_logo.png");
     QTRY_VERIFY(object->property("readSize").toInt() == fileInfo.size());
+    QCOMPARE(object->property("status").toInt(), 200);
 }
 
 void tst_qqmlxmlhttprequest::getJsonData()
@@ -1164,6 +1165,7 @@ void tst_qqmlxmlhttprequest::text()
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
 
     QCOMPARE(object->property("xmlTest").toBool(), true);
+    QCOMPARE(object->property("status").toInt(), 200);
 }
 
 // Test the CDataSection DOM element
@@ -1176,6 +1178,7 @@ void tst_qqmlxmlhttprequest::cdata()
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
 
     QCOMPARE(object->property("xmlTest").toBool(), true);
+    QCOMPARE(object->property("status").toInt(), 200);
 }
 
 void tst_qqmlxmlhttprequest::stateChangeCallingContext()

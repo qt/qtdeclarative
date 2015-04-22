@@ -3,6 +3,7 @@ import QtQuick 2.0
 QtObject {
     property bool xmlTest: false
     property bool dataOK: false
+    property int status: 0
 
     function checkCData(text, whitespacetext)
     {
@@ -114,12 +115,11 @@ QtObject {
         // Test to the end
         x.onreadystatechange = function() {
             if (x.readyState == XMLHttpRequest.DONE) {
-
                 dataOK = true;
+                status = x.status;
 
                 if (x.responseXML != null)
                     checkXML(x.responseXML);
-
             }
         }
 
