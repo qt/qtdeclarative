@@ -76,6 +76,7 @@ private slots:
     void jsArrayChange();
     void clearRemovalOrder();
     void destroyCount();
+    void stackingOrder();
 };
 
 class TestObject : public QObject
@@ -892,6 +893,24 @@ void tst_QQuickRepeater::destroyCount()
     model.removeRows(2,1);
     QCOMPARE(model.rowCount(), 4);
     QCOMPARE(repeater->property("componentCount").toInt(), 4);
+}
+
+void tst_QQuickRepeater::stackingOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("stackingorder.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
+    QVERIFY(repeater);
+    int count = 1;
+    do {
+        bool stackingOrderOk = rootObject->property("stackingOrderOk").toBool();
+        QVERIFY(stackingOrderOk);
+        repeater->setModel(QVariant(++count));
+    } while (count < 3);
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

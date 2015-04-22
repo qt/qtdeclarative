@@ -398,9 +398,17 @@ void QQuickRepeaterPrivate::requestItems()
 void QQuickRepeater::createdItem(int index, QObject *)
 {
     Q_D(QQuickRepeater);
+    QObject *object = d->model->object(index, false);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+    emit itemAdded(index, item);
+}
+
+void QQuickRepeater::initItem(int index, QObject *object)
+{
+    Q_D(QQuickRepeater);
+    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+
     if (!d->deletables.at(index)) {
-        QObject *object = d->model->object(index, false);
-        QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
         if (!item) {
             if (object) {
                 d->model->release(object);
@@ -426,15 +434,7 @@ void QQuickRepeater::createdItem(int index, QObject *)
             }
             item->stackBefore(after);
         }
-        emit itemAdded(index, item);
     }
-}
-
-void QQuickRepeater::initItem(int, QObject *object)
-{
-    QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
-    if (item)
-        item->setParentItem(parentItem());
 }
 
 void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
