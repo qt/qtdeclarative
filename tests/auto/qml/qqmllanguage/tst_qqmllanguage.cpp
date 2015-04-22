@@ -229,6 +229,7 @@ private slots:
     void customParserEvaluateEnum();
     void customParserProperties();
     void customParserWithExtendedObject();
+    void nestedCustomParsers();
 
     void preservePropertyCacheOnGroupObjects();
     void propertyCacheInSync();
@@ -3928,6 +3929,20 @@ void tst_qqmllanguage::customParserWithExtendedObject()
     QVariant returnValue;
     QVERIFY(QMetaObject::invokeMethod(o.data(), "getExtendedProperty", Q_RETURN_ARG(QVariant, returnValue)));
     QCOMPARE(returnValue.toInt(), 1584);
+}
+
+void tst_qqmllanguage::nestedCustomParsers()
+{
+    QQmlComponent component(&engine, testFile("nestedCustomParsers.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    SimpleObjectWithCustomParser *testObject = qobject_cast<SimpleObjectWithCustomParser*>(o.data());
+    QVERIFY(testObject);
+    QCOMPARE(testObject->customBindingsCount(), 1);
+    SimpleObjectWithCustomParser *nestedObject = qobject_cast<SimpleObjectWithCustomParser*>(testObject->property("nested").value<QObject*>());
+    QVERIFY(nestedObject);
+    QCOMPARE(nestedObject->customBindingsCount(), 1);
 }
 
 void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
