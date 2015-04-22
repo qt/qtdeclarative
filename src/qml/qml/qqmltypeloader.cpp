@@ -81,7 +81,7 @@
 
 #define ASSERT_MAINTHREAD() do { if (m_thread->isThisThread()) qFatal("QQmlTypeLoader: Caller not in main thread"); } while (false)
 #define ASSERT_LOADTHREAD() do { if (!m_thread->isThisThread()) qFatal("QQmlTypeLoader: Caller not in load thread"); } while (false)
-#define ASSERT_CALLBACK() do { if(!m_manager || !m_manager->m_thread->isThisThread()) qFatal("QQmlDataBlob: An API call was made outside a callback"); } while(false)
+#define ASSERT_CALLBACK() do { if (!m_typeLoader || !m_typeLoader->m_thread->isThisThread()) qFatal("QQmlDataBlob: An API call was made outside a callback"); } while (false)
 
 #else
 
