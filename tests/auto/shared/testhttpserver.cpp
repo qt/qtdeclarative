@@ -87,9 +87,28 @@ TestHTTPServer::TestHTTPServer()
 
 }
 
-bool TestHTTPServer::listen(quint16 port)
+bool TestHTTPServer::listen()
 {
-    return server.listen(QHostAddress::LocalHost, port);
+    return server.listen(QHostAddress::LocalHost, 0);
+}
+
+QUrl TestHTTPServer::baseUrl() const
+{
+    QUrl url;
+    url.setScheme(QStringLiteral("http"));
+    url.setHost(QStringLiteral("127.0.0.1"));
+    url.setPort(server.serverPort());
+    return url;
+}
+
+QUrl TestHTTPServer::url(const QString &documentPath) const
+{
+    return baseUrl().resolved(documentPath);
+}
+
+QString TestHTTPServer::urlString(const QString &documentPath) const
+{
+    return url(documentPath).toString();
 }
 
 QString TestHTTPServer::errorString() const
@@ -117,6 +136,11 @@ void TestHTTPServer::addRedirect(const QString &filename, const QString &redirec
     redirects.insert(filename, redirectName);
 }
 
+void TestHTTPServer::registerFileNameForContentSubstitution(const QString &fileName)
+{
+    contentSubstitutedFileNames.insert(fileName);
+}
+
 bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &body)
 {
     m_state = AwaitingHeader;
@@ -135,6 +159,8 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
         bodyData = bodyFile.readAll();
     }
 
+    const QByteArray serverHostUrl = QByteArrayLiteral("127.0.0.1:") + QByteArray::number(server.serverPort());
+
     QByteArray line;
     bool headers_done = false;
     while (!(line = expectFile.readLine()).isEmpty()) {
@@ -143,10 +169,12 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
             headers_done = true;
             continue;
         }
-        if (headers_done)
+        if (headers_done) {
             waitData.body.append(line);
-        else
+        } else {
+            line.replace("{{ServerHostUrl}}", serverHostUrl);
             waitData.headers.append(line);
+        }
     }
     /*
     while (waitData.endsWith('\n'))
@@ -277,6 +305,9 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
                 return true;
 
             QByteArray data = file.readAll();
+            if (contentSubstitutedFileNames.contains("/" + fileName)) {
+                data.replace(QByteArrayLiteral("{{ServerBaseUrl}}"), baseUrl().toString().toUtf8());
+            }
 
             QByteArray response = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
             response += QByteArray::number(data.count());

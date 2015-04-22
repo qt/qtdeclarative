@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 TextEdit {
+    property string serverBaseUrl;
     textFormat: TextEdit.RichText
-    text: "<img src='http://127.0.0.1:42332/notexists.png'>"
+    text: "<img src='" + serverBaseUrl + "/notexists.png'>"
 }

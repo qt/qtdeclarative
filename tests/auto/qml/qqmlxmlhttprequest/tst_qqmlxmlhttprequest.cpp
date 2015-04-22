@@ -37,10 +37,11 @@
 #include <QDebug>
 #include <QScopedPointer>
 #include <QNetworkCookieJar>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 #include "testhttpserver.h"
 #include "../../shared/util.h"
-
-#define SERVER_PORT 14445
 
 class tst_qqmlxmlhttprequest : public QQmlDataTest
 {
@@ -234,10 +235,11 @@ void tst_qqmlxmlhttprequest::open()
 
     TestHTTPServer server;
     if (remote) {
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("open_network.expect"),
                             testFileUrl("open_network.reply"),
                             testFileUrl("testdocument.html")));
+        url = server.urlString(url);
     }
 
     QQmlComponent component(&engine, qmlFile);
@@ -264,10 +266,10 @@ void tst_qqmlxmlhttprequest::open_data()
 
     QTest::newRow("Relative url)") << testFileUrl("open.qml") << "testdocument.html" << false;
     QTest::newRow("Absolute url)") << testFileUrl("open.qml") << testFileUrl("testdocument.html").toString() << false;
-    QTest::newRow("Absolute network url)") << testFileUrl("open.qml") << "http://127.0.0.1:14445/testdocument.html" << true;
+    QTest::newRow("Absolute network url)") << testFileUrl("open.qml") << "/testdocument.html" << true;
 
     // ### Check that the username/password were sent to the server
-    QTest::newRow("User/pass") << testFileUrl("open_user.qml") << "http://127.0.0.1:14445/testdocument.html" << true;
+    QTest::newRow("User/pass") << testFileUrl("open_user.qml") << "/testdocument.html" << true;
 }
 
 // Test that calling XMLHttpRequest.open() with an invalid method raises an exception
@@ -314,7 +316,7 @@ void tst_qqmlxmlhttprequest::open_arg_count()
 void tst_qqmlxmlhttprequest::setRequestHeader()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("setRequestHeader.expect"),
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -322,7 +324,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader()
     QQmlComponent component(&engine, testFileUrl("setRequestHeader.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -332,7 +334,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader()
 void tst_qqmlxmlhttprequest::setRequestHeader_caseInsensitive()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("setRequestHeader.expect"),
                         testFileUrl("setRequestHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -340,7 +342,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_caseInsensitive()
     QQmlComponent component(&engine, testFileUrl("setRequestHeader_caseInsensitive.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -389,7 +391,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
     QFETCH(QString, name);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("open_network.expect"),
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
@@ -397,7 +399,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
     QQmlComponent component(&engine, testFileUrl("setRequestHeader_illegalName.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("header", name);
     component.completeCreate();
 
@@ -415,7 +417,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName()
 void tst_qqmlxmlhttprequest::setRequestHeader_sent()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("open_network.expect"),
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
@@ -423,7 +425,7 @@ void tst_qqmlxmlhttprequest::setRequestHeader_sent()
     QQmlComponent component(&engine, testFileUrl("setRequestHeader_sent.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QCOMPARE(object->property("test").toBool(), true);
@@ -467,7 +469,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
 {
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_GET.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             testFileUrl("testdocument.html")));
@@ -476,7 +478,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "GET");
-        object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+        object->setProperty("url", server.urlString("/testdocument.html"));
         component.completeCreate();
 
         QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -484,7 +486,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
 
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_HEAD.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
@@ -493,7 +495,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "HEAD");
-        object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+        object->setProperty("url", server.urlString("/testdocument.html"));
         component.completeCreate();
 
         QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -501,7 +503,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
 
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
         QVERIFY(server.wait(testFileUrl("send_ignoreData_DELETE.expect"),
                             testFileUrl("send_ignoreData.reply"),
                             QUrl()));
@@ -510,7 +512,7 @@ void tst_qqmlxmlhttprequest::send_ignoreData()
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
         object->setProperty("reqType", "DELETE");
-        object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+        object->setProperty("url", server.urlString("/testdocument.html"));
         component.completeCreate();
 
         QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -524,7 +526,7 @@ void tst_qqmlxmlhttprequest::send_withdata()
     QFETCH(QString, file_qml);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl(file_expected),
                         testFileUrl("send_data.reply"),
                         testFileUrl("testdocument.html")));
@@ -532,7 +534,7 @@ void tst_qqmlxmlhttprequest::send_withdata()
     QQmlComponent component(&engine, testFileUrl(file_qml));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QTRY_VERIFY(object->property("dataOK").toBool() == true);
@@ -594,7 +596,7 @@ void tst_qqmlxmlhttprequest::abort_opened()
 void tst_qqmlxmlhttprequest::abort()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("abort.expect"),
                         testFileUrl("abort.reply"),
                         testFileUrl("testdocument.html")));
@@ -602,8 +604,11 @@ void tst_qqmlxmlhttprequest::abort()
     QQmlComponent component(&engine, testFileUrl("abort.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("urlDummy", "http://127.0.0.1:14449/testdocument.html");
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    const QUrl url = server.url("/testdocument.html");
+    QUrl dummyUrl = url;
+    dummyUrl.setPort(dummyUrl.port() - 1);
+    object->setProperty("urlDummy", dummyUrl.toString());
+    object->setProperty("url", url.toString());
     component.completeCreate();
 
     QCOMPARE(object->property("seenDone").toBool(), true);
@@ -618,7 +623,7 @@ void tst_qqmlxmlhttprequest::getResponseHeader()
     QQmlEngine engine; // Avoid cookie contamination
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("getResponseHeader.expect"),
                         testFileUrl("getResponseHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -627,7 +632,7 @@ void tst_qqmlxmlhttprequest::getResponseHeader()
     QQmlComponent component(&engine, testFileUrl("getResponseHeader.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QCOMPARE(object->property("unsentException").toBool(), true);
@@ -685,7 +690,7 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders()
     QQmlEngine engine; // Avoid cookie contamination
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("getResponseHeader.expect"),
                         testFileUrl("getResponseHeader.reply"),
                         testFileUrl("testdocument.html")));
@@ -693,7 +698,7 @@ void tst_qqmlxmlhttprequest::getAllResponseHeaders()
     QQmlComponent component(&engine, testFileUrl("getAllResponseHeaders.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     component.completeCreate();
 
     QCOMPARE(object->property("unsentException").toBool(), true);
@@ -746,7 +751,7 @@ void tst_qqmlxmlhttprequest::status()
     QFETCH(int, status);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         testFileUrl("testdocument.html")));
@@ -754,7 +759,7 @@ void tst_qqmlxmlhttprequest::status()
     QQmlComponent component(&engine, testFileUrl("status.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedStatus", status);
     component.completeCreate();
 
@@ -785,7 +790,7 @@ void tst_qqmlxmlhttprequest::statusText()
     QFETCH(QString, statusText);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         testFileUrl("testdocument.html")));
@@ -793,7 +798,7 @@ void tst_qqmlxmlhttprequest::statusText()
     QQmlComponent component(&engine, testFileUrl("statusText.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedStatus", statusText);
     component.completeCreate();
 
@@ -825,7 +830,7 @@ void tst_qqmlxmlhttprequest::responseText()
     QFETCH(QString, responseText);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     QVERIFY(server.wait(testFileUrl("status.expect"),
                         replyUrl,
                         bodyUrl));
@@ -833,7 +838,7 @@ void tst_qqmlxmlhttprequest::responseText()
     QQmlComponent component(&engine, testFileUrl("responseText.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    object->setProperty("url", server.urlString("/testdocument.html"));
     object->setProperty("expectedText", responseText);
     component.completeCreate();
 
@@ -926,14 +931,14 @@ void tst_qqmlxmlhttprequest::redirects()
 {
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
-        server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirecttarget.html");
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.addRedirect("redirect.html", server.urlString("/redirecttarget.html"));
         server.serveDirectory(dataDirectory());
 
         QQmlComponent component(&engine, testFileUrl("redirects.qml"));
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
-        object->setProperty("url", "http://127.0.0.1:14445/redirect.html");
+        object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
         component.completeCreate();
 
@@ -943,14 +948,14 @@ void tst_qqmlxmlhttprequest::redirects()
 
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
-        server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirectmissing.html");
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.addRedirect("redirect.html", server.urlString("/redirectmissing.html"));
         server.serveDirectory(dataDirectory());
 
         QQmlComponent component(&engine, testFileUrl("redirectError.qml"));
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
-        object->setProperty("url", "http://127.0.0.1:14445/redirect.html");
+        object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
         component.completeCreate();
 
@@ -960,14 +965,14 @@ void tst_qqmlxmlhttprequest::redirects()
 
     {
         TestHTTPServer server;
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
-        server.addRedirect("redirect.html", "http://127.0.0.1:14445/redirect.html");
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.addRedirect("redirect.html", server.urlString("/redirect.html"));
         server.serveDirectory(dataDirectory());
 
         QQmlComponent component(&engine, testFileUrl("redirectRecur.qml"));
         QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
         QVERIFY(!object.isNull());
-        object->setProperty("url", "http://127.0.0.1:14445/redirect.html");
+        object->setProperty("url", server.urlString("/redirect.html"));
         object->setProperty("expectedText", "");
         component.completeCreate();
 
@@ -1062,12 +1067,14 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     // without a valid calling context.
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQmlComponent component(&engine, testFileUrl("stateChangeCallingContext.qml"));
-    QScopedPointer<QObject> object(component.create());
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
     QVERIFY(!object.isNull());
+    object->setProperty("serverBaseUrl", server.baseUrl().toString());
+    component.completeCreate();
     server.sendDelayedItem();
     QTRY_VERIFY(object->property("success").toBool() == true);
 }

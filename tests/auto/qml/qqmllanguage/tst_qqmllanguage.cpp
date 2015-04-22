@@ -2511,7 +2511,7 @@ void tst_qqmllanguage::basicRemote_data()
     QTest::addColumn<QString>("type");
     QTest::addColumn<QString>("error");
 
-    QString serverdir = "http://127.0.0.1:14447/qtest/qml/qqmllanguage/";
+    QString serverdir = "/qtest/qml/qqmllanguage/";
 
     QTest::newRow("no need for qmldir") << QUrl(serverdir+"Test.qml") << "" << "";
     QTest::newRow("absent qmldir") << QUrl(serverdir+"/noqmldir/Test.qml") << "" << "";
@@ -2525,8 +2525,10 @@ void tst_qqmllanguage::basicRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
+
+    url = server.baseUrl().resolved(url);
 
     QQmlComponent component(&engine, url);
 
@@ -2547,7 +2549,7 @@ void tst_qqmllanguage::importsRemote_data()
     QTest::addColumn<QString>("type");
     QTest::addColumn<QString>("error");
 
-    QString serverdir = "http://127.0.0.1:14447/qtest/qml/qqmllanguage";
+    QString serverdir = "{{ServerBaseUrl}}/qtest/qml/qqmllanguage";
 
     QTest::newRow("remote import") << "import \""+serverdir+"\"\nTest {}" << "QQuickRectangle"
         << "";
@@ -2570,8 +2572,10 @@ void tst_qqmllanguage::importsRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
+
+    qml.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
     testType(qml,type,error);
 }
@@ -2663,10 +2667,10 @@ void tst_qqmllanguage::importsInstalledRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
-    QString serverdir = "http://127.0.0.1:14447/lib/";
+    QString serverdir = server.urlString("/lib/");
     engine.setImportPathList(QStringList(defaultImportPathList) << serverdir);
 
     testType(qml,type,error);
@@ -2681,43 +2685,43 @@ void tst_qqmllanguage::importsPath_data()
     QTest::addColumn<QString>("value");
 
     QTest::newRow("local takes priority normal")
-        << (QStringList() << testFile("lib") << "http://127.0.0.1:14447/lib2/")
+        << (QStringList() << testFile("lib") << "{{ServerBaseUrl}}/lib2/")
         << "import testModule 1.0\n"
            "Test {}"
         << "foo";
 
     QTest::newRow("local takes priority reversed")
-        << (QStringList() << "http://127.0.0.1:14447/lib/" << testFile("lib2"))
+        << (QStringList() << "{{ServerBaseUrl}}/lib/" << testFile("lib2"))
         << "import testModule 1.0\n"
            "Test {}"
         << "bar";
 
     QTest::newRow("earlier takes priority 1")
-        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib2/")
+        << (QStringList() << "{{ServerBaseUrl}}/lib/" << "{{ServerBaseUrl}}/lib2/")
         << "import testModule 1.0\n"
            "Test {}"
         << "foo";
 
     QTest::newRow("earlier takes priority 2")
-        << (QStringList() << "http://127.0.0.1:14447/lib2/" << "http://127.0.0.1:14447/lib/")
+        << (QStringList() << "{{ServerBaseUrl}}/lib2/" << "{{ServerBaseUrl}}/lib/")
         << "import testModule 1.0\n"
            "Test {}"
         << "bar";
 
     QTest::newRow("major version takes priority over unversioned")
-        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib3/")
+        << (QStringList() << "{{ServerBaseUrl}}/lib/" << "{{ServerBaseUrl}}/lib3/")
         << "import testModule 1.0\n"
            "Test {}"
         << "baz";
 
     QTest::newRow("major version takes priority over minor")
-        << (QStringList() << "http://127.0.0.1:14447/lib4/" << "http://127.0.0.1:14447/lib3/")
+        << (QStringList() << "{{ServerBaseUrl}}/lib4/" << "{{ServerBaseUrl}}/lib3/")
         << "import testModule 1.0\n"
            "Test {}"
         << "baz";
 
     QTest::newRow("minor version takes priority over unversioned")
-        << (QStringList() << "http://127.0.0.1:14447/lib/" << "http://127.0.0.1:14447/lib4/")
+        << (QStringList() << "{{ServerBaseUrl}}/lib/" << "{{ServerBaseUrl}}/lib4/")
         << "import testModule 1.0\n"
            "Test {}"
         << "qux";
@@ -2730,8 +2734,11 @@ void tst_qqmllanguage::importsPath()
     QFETCH(QString, value);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
+
+    for (int i = 0; i < importPath.count(); ++i)
+        importPath[i].replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
     engine.setImportPathList(QStringList(defaultImportPathList) << importPath);
 
@@ -3325,11 +3332,11 @@ void tst_qqmllanguage::registeredCompositeType()
 void tst_qqmllanguage::remoteLoadCrash()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14448), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
+    component.setData("import QtQuick 2.0; Text {}", server.url("/remoteLoadCrash.qml"));
     while (component.isLoading())
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 
@@ -3816,10 +3823,18 @@ void tst_qqmllanguage::compositeSingletonQmlDirError()
 void tst_qqmllanguage::compositeSingletonRemote()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14447), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
-    QQmlComponent component(&engine, testFile("singletonTest15.qml"));
+    QFile f(testFile("singletonTest15.qml"));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QByteArray contents = f.readAll();
+    f.close();
+
+    contents.replace(QByteArrayLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString().toUtf8());
+
+    QQmlComponent component(&engine);
+    component.setData(contents, testFileUrl("singletonTest15.qml"));
 
     while (component.isLoading())
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
