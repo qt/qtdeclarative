@@ -44,6 +44,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4qmlextensions_p.h>
+#include <private/qv4alloca_p.h>
 
 QT_BEGIN_NAMESPACE
 
