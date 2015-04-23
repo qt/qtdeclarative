@@ -3,7 +3,7 @@ TARGETPATH = QtQuick/Controls.2
 IMPORT_VERSION = 2.0
 
 QT += qml quick
-QT += core-private gui-private qml-private quick-private quickcontrols-private
+QT += core-private gui-private qml-private quick-private quickcontrols2-private
 
 OTHER_FILES += \
     qmldir
