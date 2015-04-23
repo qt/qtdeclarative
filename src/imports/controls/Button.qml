@@ -51,14 +51,17 @@ AbstractButton {
 
     padding: Theme.padding
 
+    //! [label]
     label: Text {
         text: control.text
         color: control.Theme.selectedTextColor
-        elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
     }
+    //! [label]
 
+    //! [background]
     background: Rectangle {
         implicitWidth: 26
         implicitHeight: 26
@@ -68,4 +71,5 @@ AbstractButton {
                         control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
                         control.pressed ? control.Theme.pressColor : "transparent")
     }
+    //! [background]
 }

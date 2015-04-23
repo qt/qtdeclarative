@@ -47,25 +47,83 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A button control.
 
-    TODO
+    Button presents a push-button control that can be pushed or clicked by
+    the user. Buttons are normally used to perform an action, or to answer
+    a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
+    \e Yes, \e No and \e Help.
+
+    \table
+    \row \li \image qtquickcontrols2-button-normal.png
+         \li A button in its normal state.
+    \row \li \image qtquickcontrols2-button-pressed.png
+         \li A button that is pressed.
+    \row \li \image qtquickcontrols2-button-focused.png
+         \li A button that has active focus.
+    \row \li \image qtquickcontrols2-button-disabled.png
+         \li A button that is disabled.
+    \endtable
+
+    \code
+    RowLayout {
+        Button {
+            text: "Ok"
+            onClicked: model.submit()
+        }
+        Button {
+            text: "Cancel"
+            onClicked: model.revert()
+        }
+    }
+    \endcode
+
+
+    \section1 Structure
+
+    Button consists of two delegates, \l {Control::background}{background}
+    and \l {Button::label}{label}. The implicit sizes of both delegates are
+    used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-button-background.png
+
+    If the \l {Control::background}{background} delegate has no explicit size
+    specified, it automatically follows the control's size. The following
+    snippet presents the default background delegate implementation.
+
+    \snippet Button.qml background
+
+    \section3 Label
+
+    \image qtquickcontrols2-button-label.png
+
+    If the \l {Button::label}{label} delegate has no explicit size specified,
+    it automatically follows the control's size without padding. The following
+    snippet presents the default label delegate implementation.
+
+    \snippet Button.qml label
+
+    \section1 Theming
+
+    \note ### TODO: Document what is used and how to customize.
 */
 
 /*!
     \qmlsignal QtQuickControls2::Button::pressed()
 
-    TODO
+    This signal is emitted when the button is pressed.
 */
 
 /*!
     \qmlsignal QtQuickControls2::Button::released()
 
-    TODO
+    This signal is emitted when the button is released.
 */
 
 /*!
     \qmlsignal QtQuickControls2::Button::clicked()
 
-    TODO
+    This signal is emitted when the button is clicked.
 */
 
 QQuickButtonPrivate::QQuickButtonPrivate() :
@@ -105,7 +163,12 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
 /*!
     \qmlproperty string QtQuickControls2::Button::text
 
-    TODO
+    This property holds the text shown on the button.
+
+    \note The text is used for accessibility purposes, so it makes sense to
+          set a textual description even if the label delegate is an image.
+
+    \sa label
 */
 QString QQuickButton::text() const
 {
@@ -125,7 +188,7 @@ void QQuickButton::setText(const QString &text)
 /*!
     \qmlproperty bool QtQuickControls2::Button::pressed
 
-    TODO
+    This property holds whether the button is pressed.
 */
 bool QQuickButton::isPressed() const
 {
@@ -149,7 +212,15 @@ void QQuickButton::setPressed(bool isPressed)
 /*!
     \qmlproperty Item QtQuickControls2::Button::label
 
-    TODO
+    This property holds the label delegate.
+
+    If the label delegate has no explicit size specified, it
+    automatically follows the control's size without padding.
+
+    The implicit size of the label delegate is used to calculate
+    the implicit size of the control.
+
+    \sa Structure, text
 */
 QQuickItem *QQuickButton::label() const
 {
