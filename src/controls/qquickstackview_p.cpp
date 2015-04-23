@@ -314,7 +314,7 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value)
 QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value)
 {
     Q_Q(QQuickStackView);
-    if (QV4::String *s = value.asString())
+    if (const QV4::String *s = value.as<QV4::String>())
         return QQuickStackElement::fromString(s->toQString(), q);
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
         return QQuickStackElement::fromObject(o->object(), q);
