@@ -96,35 +96,30 @@ public:
     };
     RefCount ref;
 
-private:
+protected:
     friend class QQmlData;
     friend class QQmlValueTypeProxyBinding;
     friend class QQmlObjectCreator;
-
-    typedef QSharedPointer<QQmlAbstractBinding> SharedPointer;
 
     inline void setAddedToObject(bool v);
     inline bool isAddedToObject() const;
 
     inline void setNextBinding(QQmlAbstractBinding *);
 
-    // Pointer to the next binding in the linked list of bindings.
-    Ptr m_nextBinding;
-
-protected:
-    QFlagPointer<QObject> m_target;
     int m_targetIndex;
-    bool m_isAddedToObject;
+    QFlagPointer<QObject> m_target;
+    // Pointer to the next binding in the linked list of bindings.
+    QFlagPointer<QQmlAbstractBinding> m_nextBinding;
 };
 
 void QQmlAbstractBinding::setAddedToObject(bool v)
 {
-    m_isAddedToObject = v;
+    m_nextBinding.setFlagValue(v);
 }
 
 bool QQmlAbstractBinding::isAddedToObject() const
 {
-    return m_isAddedToObject;
+    return m_nextBinding.flag();
 }
 
 QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
@@ -134,6 +129,10 @@ QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
 
 void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
 {
+    if (b)
+        b->ref.ref();
+    if (m_nextBinding.data() && !m_nextBinding->ref.deref())
+        delete m_nextBinding.data();
     m_nextBinding = b;
 }
 

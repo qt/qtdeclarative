@@ -40,9 +40,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlAbstractBinding::QQmlAbstractBinding()
-    : m_nextBinding(0),
-      m_targetIndex(-1),
-      m_isAddedToObject(false)
+    : m_targetIndex(-1)
 {
     Q_ASSERT(!isAddedToObject());
 }
@@ -51,6 +49,9 @@ QQmlAbstractBinding::~QQmlAbstractBinding()
 {
     Q_ASSERT(!ref);
     Q_ASSERT(!isAddedToObject());
+
+    if (m_nextBinding.data() && !m_nextBinding->ref.deref())
+        delete m_nextBinding.data();
 }
 
 /*!

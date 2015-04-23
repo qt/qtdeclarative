@@ -191,7 +191,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
         QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
         bool error = false;
-        if (!watcher.wasDeleted() && m_isAddedToObject && !hasError())
+        if (!watcher.wasDeleted() && isAddedToObject() && !hasError())
             error = !write(pd, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
