@@ -1,5 +1,5 @@
 TARGET = QtQuickExtras
-MODULE = quickextras
+MODULE = quickextras2
 CONFIG += internal_module
 
 QT += quick

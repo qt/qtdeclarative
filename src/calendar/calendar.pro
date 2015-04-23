@@ -1,5 +1,5 @@
 TARGET = QtQuickCalendar
-MODULE = quickcalendar
+MODULE = quickcalendar2
 CONFIG += internal_module
 
 QT += quick

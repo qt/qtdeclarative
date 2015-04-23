@@ -3,7 +3,7 @@ TARGETPATH = QtQuick/Calendar.2
 IMPORT_VERSION = 2.0
 
 QT += qml quick
-QT += core-private gui-private qml-private quick-private quickcontrols2-private quickcalendar-private
+QT += core-private gui-private qml-private quick-private quickcontrols2-private quickcalendar2-private
 
 OTHER_FILES += \
     qmldir
