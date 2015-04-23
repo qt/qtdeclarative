@@ -146,9 +146,6 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     //
     // This doesn't catch everything, and it might be a little fragile in
     // some cases - but whatcha going to do?
-    //
-    // Note that we only fast forward if both a transition and bindings are
-    // present, as it is unnecessary (and potentially expensive) otherwise.
 
     if (transition && !d->bindingsList.isEmpty()) {
 
@@ -161,9 +158,9 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyPrivate::BypassInterceptor | QQmlPropertyPrivate::DontRemoveBinding);
             } else if (action.event->isReversable()) {
                 if (action.reverseEvent)
-                    action.event->reverse(QQuickStateActionEvent::FastForward);
+                    action.event->reverse();
                 else
-                    action.event->execute(QQuickStateActionEvent::FastForward);
+                    action.event->execute();
             }
         }
 

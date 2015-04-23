@@ -81,13 +81,12 @@ public:
     virtual ~QQuickStateActionEvent();
 
     enum EventType { Script, SignalHandler, ParentChange, AnchorChanges };
-    enum Reason { ActualChange, FastForward };
 
     virtual EventType type() const = 0;
 
-    virtual void execute(Reason reason = ActualChange);
+    virtual void execute();
     virtual bool isReversable();
-    virtual void reverse(Reason reason = ActualChange);
+    virtual void reverse();
     virtual void saveOriginals() {}
     virtual bool needsCopy() { return false; }
     virtual void copyOriginals(QQuickStateActionEvent *) {}

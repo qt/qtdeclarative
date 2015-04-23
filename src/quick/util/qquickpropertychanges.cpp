@@ -145,12 +145,12 @@ public:
     QQmlBoundSignalExpressionPointer reverseExpression;
     QQmlBoundSignalExpressionPointer rewindExpression;
 
-    virtual void execute(Reason) {
+    virtual void execute() {
         QQmlPropertyPrivate::setSignalExpression(property, expression);
     }
 
     virtual bool isReversable() { return true; }
-    virtual void reverse(Reason) {
+    virtual void reverse() {
         QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
     }
 

@@ -78,7 +78,7 @@ QQuickStateActionEvent::~QQuickStateActionEvent()
 {
 }
 
-void QQuickStateActionEvent::execute(Reason)
+void QQuickStateActionEvent::execute()
 {
 }
 
@@ -87,7 +87,7 @@ bool QQuickStateActionEvent::isReversable()
     return false;
 }
 
-void QQuickStateActionEvent::reverse(Reason)
+void QQuickStateActionEvent::reverse()
 {
 }
 

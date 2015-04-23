@@ -62,7 +62,7 @@ public:
     QString name() const;
     void setName(const QString &);
 
-    virtual void execute(Reason reason = ActualChange);
+    virtual void execute();
 };
 
 

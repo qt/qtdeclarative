@@ -118,7 +118,7 @@ void QQuickStateChangeScript::setName(const QString &n)
     d->name = n;
 }
 
-void QQuickStateChangeScript::execute(Reason)
+void QQuickStateChangeScript::execute()
 {
     Q_D(QQuickStateChangeScript);
     if (!d->script.isEmpty()) {

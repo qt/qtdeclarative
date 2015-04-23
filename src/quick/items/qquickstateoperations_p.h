@@ -97,9 +97,9 @@ public:
 
     void saveOriginals() Q_DECL_OVERRIDE;
     //virtual void copyOriginals(QQuickStateActionEvent*);
-    void execute(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    void execute() Q_DECL_OVERRIDE;
     bool isReversable() Q_DECL_OVERRIDE;
-    void reverse(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    void reverse() Q_DECL_OVERRIDE;
     EventType type() const Q_DECL_OVERRIDE;
     bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
     void rewind() Q_DECL_OVERRIDE;
@@ -180,9 +180,9 @@ public:
     QQuickItem *object() const;
     void setObject(QQuickItem *);
 
-    void execute(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    void execute() Q_DECL_OVERRIDE;
     bool isReversable() Q_DECL_OVERRIDE;
-    void reverse(Reason reason = ActualChange) Q_DECL_OVERRIDE;
+    void reverse() Q_DECL_OVERRIDE;
     EventType type() const Q_DECL_OVERRIDE;
     bool override(QQuickStateActionEvent*other) Q_DECL_OVERRIDE;
     bool changesBindings() Q_DECL_OVERRIDE;
