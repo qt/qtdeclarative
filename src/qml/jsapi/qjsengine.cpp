@@ -103,8 +103,8 @@ Q_DECLARE_METATYPE(QList<int>)
 
   Here we pass the name of the file as the second argument to
   evaluate().  This does not affect evaluation in any way; the second
-  argument is a general-purpose string that is used to identify the
-  script for debugging purposes.
+  argument is a general-purpose string that is stored in the \c Error
+  object for debugging purposes.
 
   \section1 Engine Configuration
 
@@ -125,11 +125,21 @@ Q_DECLARE_METATYPE(QList<int>)
   \section1 Script Exceptions
 
   evaluate() can throw a script exception (e.g. due to a syntax
-  error); in that case, the return value is the value that was thrown
-  (typically an \c{Error} object). You can check whether the
-  evaluation caused an exception by calling isError() on the return
-  value. If isError() returns true, you can call toString() on the
-  error object to obtain an error message.
+  error). If it does, then evaluate() returns the value that was thrown
+  (typically an \c{Error} object). Use \l QJSValue::isError() to check
+  for exceptions.
+
+  For detailed information about the error, use \l QJSValue::toString() to
+  obtain an error message, and use \l QJSValue::property() to query the
+  properties of the \c Error object. The following properties are available:
+
+  \list
+  \li \c name
+  \li \c message
+  \li \c fileName
+  \li \c lineNumber
+  \li \c stack
+  \endlist
 
   \snippet code/src_script_qjsengine.cpp 4
 
@@ -282,7 +292,7 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
 
     The script code will be evaluated in the context of the global object.
 
-    The evaluation of \a program can cause an exception in the
+    The evaluation of \a program can cause an \l{Script Exceptions}{exception} in the
     engine; in this case the return value will be the exception
     that was thrown (typically an \c{Error} object; see
     QJSValue::isError()).
@@ -372,7 +382,7 @@ QJSValue QJSEngine::newArray(uint length)
   If the given \a object is deleted outside of the engine's control, any
   attempt to access the deleted QObject's members through the JavaScript
   wrapper object (either by script code or C++) will result in a
-  script exception.
+  \l{Script Exceptions}{script exception}.
 
   \sa QJSValue::toQObject()
 */

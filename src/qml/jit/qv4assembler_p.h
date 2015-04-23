@@ -916,25 +916,25 @@ public:
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType());
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, arg4, VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2, typename Arg3>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType());
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, arg3, VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1, typename Arg2>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1, Arg2 arg2)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(r, functionName, function, arg1, arg2, VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     template <typename ArgRet, typename Callable, typename Arg1>
     void generateFunctionCallImp(ArgRet r, const char* functionName, Callable function, Arg1 arg1)
     {
-        generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType());
+        generateFunctionCallImp(r, functionName, function, arg1, VoidType(), VoidType(), VoidType(), VoidType(), VoidType());
     }
 
     Pointer toAddress(RegisterID tmpReg, IR::Expr *e, int offset)

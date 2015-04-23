@@ -305,12 +305,10 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         }
     }
 
-    if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
-
-    int idx = data->propertyNames.value(name);
+    QV4::IdentifierHash<int> &properties = data->propertyNames();
+    int idx = properties.value(name);
     if (idx == -1) {
-        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
+        properties.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(value);
 
         data->refreshExpressions();
@@ -343,12 +341,11 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
         return;
     }
 
-    if (data->propertyNames.isEmpty())
-        data->propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine()->handle()));
-    int idx = data->propertyNames.value(name);
+    QV4::IdentifierHash<int> &properties = data->propertyNames();
+    int idx = properties.value(name);
 
     if (idx == -1) {
-        data->propertyNames.add(name, data->idValueCount + d->propertyValues.count());
+        properties.add(name, data->idValueCount + d->propertyValues.count());
         d->propertyValues.append(QVariant::fromValue(value));
 
         data->refreshExpressions();
@@ -370,8 +367,9 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 
     QQmlContextData *data = d->data;
 
-    if (data->propertyNames.count())
-        idx = data->propertyNames.value(name);
+    const QV4::IdentifierHash<int> &properties = data->propertyNames();
+    if (properties.count())
+        idx = properties.value(name);
 
     if (idx == -1) {
         if (data->contextObject) {
@@ -428,14 +426,14 @@ QUrl QQmlContextData::resolvedUrl(const QUrl &src)
     if (src.isRelative() && !src.isEmpty()) {
         if (ctxt) {
             while(ctxt) {
-                if(ctxt->url.isValid())
+                if (ctxt->url().isValid())
                     break;
                 else
                     ctxt = ctxt->parent;
             }
 
             if (ctxt)
-                resolved = ctxt->url.resolved(src);
+                resolved = ctxt->url().resolved(src);
             else if (engine)
                 resolved = engine->baseUrl().resolved(src);
         }
@@ -464,8 +462,8 @@ void QQmlContext::setBaseUrl(const QUrl &baseUrl)
 {
     Q_D(QQmlContext);
 
-    d->data->url = baseUrl;
-    d->data->urlString = baseUrl.toString();
+    d->data->baseUrl = baseUrl;
+    d->data->baseUrlString = baseUrl.toString();
 }
 
 /*!
@@ -476,11 +474,11 @@ QUrl QQmlContext::baseUrl() const
 {
     Q_D(const QQmlContext);
     const QQmlContextData* data = d->data;
-    while (data && data->url.isEmpty())
+    while (data && data->url().isEmpty())
         data = data->parent;
 
     if (data)
-        return data->url;
+        return data->url();
     else
         return QUrl();
 }
@@ -762,33 +760,31 @@ void QQmlContextData::setIdProperty(int idx, QObject *obj)
     idValues[idx].context = this;
 }
 
-void QQmlContextData::setIdPropertyData(const QVector<ObjectIdMapping> &data)
+void QQmlContextData::setIdPropertyData(const QHash<int, int> &data)
 {
-    Q_ASSERT(propertyNames.isEmpty());
-    propertyNames = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
-    for (QVector<ObjectIdMapping>::ConstIterator it = data.begin(), end = data.end();
-         it != end; ++it)
-        propertyNames.add(it->name, it->id);
-
+    Q_ASSERT(objectIndexToId.isEmpty());
+    objectIndexToId = data;
+    Q_ASSERT(propertyNameCache.isEmpty());
     idValueCount = data.count();
     idValues = new ContextGuard[idValueCount];
 }
 
 QString QQmlContextData::findObjectId(const QObject *obj) const
 {
-    if (propertyNames.isEmpty())
+    const QV4::IdentifierHash<int> &properties = propertyNames();
+    if (propertyNameCache.isEmpty())
         return QString();
 
     for (int ii = 0; ii < idValueCount; ii++) {
         if (idValues[ii] == obj)
-            return propertyNames.findId(ii);
+            return properties.findId(ii);
     }
 
     if (publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(publicContext);
         for (int ii = 0; ii < p->propertyValues.count(); ++ii)
             if (p->propertyValues.at(ii) == QVariant::fromValue((QObject *)obj))
-                return propertyNames.findId(ii);
+                return properties.findId(ii);
     }
 
     if (linkedContext)
@@ -806,6 +802,35 @@ QQmlContext *QQmlContextData::asQQmlContext()
 QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
 {
     return QQmlContextPrivate::get(asQQmlContext());
+}
+
+QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
+{
+    if (propertyNameCache.isEmpty()) {
+        propertyNameCache = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
+        for (QHash<int, int>::ConstIterator it = objectIndexToId.begin(), end = objectIndexToId.end();
+             it != end; ++it) {
+            const QV4::CompiledData::Object *obj = typeCompilationUnit->data->objectAt(it.key());
+            const QString name = typeCompilationUnit->data->stringAt(obj->idIndex);
+            propertyNameCache.add(name, it.value());
+        }
+        objectIndexToId.clear();
+    }
+    return propertyNameCache;
+}
+
+QUrl QQmlContextData::url() const
+{
+    if (typeCompilationUnit)
+        return typeCompilationUnit->url();
+    return baseUrl;
+}
+
+QString QQmlContextData::urlString() const
+{
+    if (typeCompilationUnit)
+        return typeCompilationUnit->fileName();
+    return baseUrlString;
 }
 
 QT_END_NAMESPACE

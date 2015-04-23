@@ -93,6 +93,7 @@ public:
     QStringRef newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
     void setDeferredBindingsPerObject(const QHash<int, QBitArray> &deferredBindingsPerObject);
+    void setBindingPropertyDataPerObject(const QVector<QV4::CompiledData::BindingPropertyData> &propertyData);
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
 
@@ -116,7 +117,7 @@ struct QQmlCompilePass
 
     QString stringAt(int idx) const { return compiler->stringAt(idx); }
 protected:
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
+    void recordError(const QV4::CompiledData::Location &location, const QString &description) const;
 
     QQmlTypeCompiler *compiler;
 };
@@ -276,13 +277,13 @@ public:
     virtual QString bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const;
 
 private:
-    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false);
-    bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
-    bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding);
+    bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;
+    bool validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const;
+    bool validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const;
 
     bool isComponent(int objectIndex) const { return objectIndexToIdPerComponent.contains(objectIndex); }
 
-    bool canCoerce(int to, QQmlPropertyCache *fromMo);
+    bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
     QQmlEnginePrivate *enginePrivate;
     const QV4::CompiledData::Unit *qmlUnit;
@@ -291,9 +292,11 @@ private:
     const QVector<QQmlPropertyCache *> &propertyCaches;
     const QHash<int, QHash<int, int> > objectIndexToIdPerComponent;
     QHash<int, QBitArray> *customParserBindingsPerObject;
-    QHash<int, QBitArray> deferredBindingsPerObject;
 
-    bool _seenObjectWithId;
+    // collected state variables, essentially write-only
+    mutable QHash<int, QBitArray> _deferredBindingsPerObject;
+    mutable bool _seenObjectWithId;
+    mutable QVector<QV4::CompiledData::BindingPropertyData> _bindingPropertyDataPerObject;
 };
 
 // ### merge with QtQml::JSCodeGen and operate directly on object->functionsAndExpressions once old compiler is gone.

@@ -127,7 +127,7 @@ public:
 };
 
 Q_GLOBAL_STATIC(QQmlMetaTypeData, metaTypeData)
-Q_GLOBAL_STATIC_WITH_ARGS(QReadWriteLock, metaTypeDataLock, (QReadWriteLock::Recursive))
+Q_GLOBAL_STATIC_WITH_ARGS(QMutex, metaTypeDataLock, (QMutex::Recursive))
 
 static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 {
@@ -565,7 +565,7 @@ void QQmlTypePrivate::init() const
     if (isSetup)
         return;
 
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     if (isSetup)
         return;
 
@@ -646,7 +646,7 @@ void QQmlTypePrivate::initEnums() const
 
     init();
 
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     if (isEnumSetup) return;
 
     if (baseMetaObject) // could be singleton type without metaobject
@@ -1000,7 +1000,7 @@ void QQmlTypeModulePrivate::add(QQmlType *type)
 
 QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QList<QQmlType *> *types = d->typeHash.value(name);
     if (!types) return 0;
@@ -1014,7 +1014,7 @@ QQmlType *QQmlTypeModule::type(const QHashedStringRef &name, int minor)
 
 QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QList<QQmlType *> *types = d->typeHash.value(name);
     if (!types) return 0;
@@ -1028,7 +1028,7 @@ QQmlType *QQmlTypeModule::type(const QV4::String *name, int minor)
 
 QList<QQmlType*> QQmlTypeModule::singletonTypes(int minor) const
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QList<QQmlType *> retn;
     for (int ii = 0; ii < d->types.count(); ++ii) {
@@ -1089,7 +1089,7 @@ QQmlType *QQmlTypeModuleVersion::type(const QV4::String *name) const
 void qmlClearTypeRegistrations() // Declared in qqml.h
 {
     //Only cleans global static, assumed no running engine
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     for (int i = 0; i < data->types.count(); ++i)
@@ -1112,7 +1112,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 
 int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
 {
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     data->parentFunctions.append(autoparent.function);
@@ -1125,7 +1125,7 @@ int registerInterface(const QQmlPrivate::RegisterInterface &interface)
     if (interface.version > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     int index = data->types.count();
@@ -1163,7 +1163,7 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
     return typeStr;
 }
 
-// NOTE: caller must hold a QWriteLocker on "data"
+// NOTE: caller must hold a QMutexLocker on "data"
 bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data, const char *uri, const QString &typeName, int majorVersion = -1)
 {
     if (!typeName.isEmpty()) {
@@ -1214,7 +1214,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     return true;
 }
 
-// NOTE: caller must hold a QWriteLocker on "data"
+// NOTE: caller must hold a QMutexLocker on "data"
 void addTypeToData(QQmlType* type, QQmlMetaTypeData *data)
 {
     if (!type->elementName().isEmpty())
@@ -1253,7 +1253,7 @@ void addTypeToData(QQmlType* type, QQmlMetaTypeData *data)
 
 int registerType(const QQmlPrivate::RegisterType &type)
 {
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString elementName = QString::fromUtf8(type.elementName);
     if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.versionMajor))
@@ -1273,7 +1273,7 @@ int registerType(const QQmlPrivate::RegisterType &type)
 
 int registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
 {
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString typeName = QString::fromUtf8(type.typeName);
     if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.versionMajor))
@@ -1292,7 +1292,7 @@ int registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
 int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
 {
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString typeName = QString::fromUtf8(type.typeName);
     bool fileImport = false;
@@ -1317,7 +1317,7 @@ int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingleton
 int registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
 {
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QString typeName = QString::fromUtf8(type.typeName);
     bool fileImport = false;
@@ -1342,7 +1342,7 @@ int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRe
 {
     if (hookRegistration.version > 0)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     data->lookupCachedQmlUnit << hookRegistration.lookupCachedQmlUnit;
     return 0;
@@ -1375,7 +1375,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
 //From qqml.h
 bool qmlProtectModule(const char *uri, int majVersion)
 {
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::VersionedUri versionedUri;
@@ -1424,7 +1424,7 @@ QStringList QQmlMetaType::typeRegistrationFailures()
     return data->typeRegistrationFailures;
 }
 
-QReadWriteLock *QQmlMetaType::typeRegistrationLock()
+QMutex *QQmlMetaType::typeRegistrationLock()
 {
     return metaTypeDataLock();
 }
@@ -1434,7 +1434,7 @@ QReadWriteLock *QQmlMetaType::typeRegistrationLock()
 */
 bool QQmlMetaType::isAnyModule(const QString &uri)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.begin();
@@ -1451,7 +1451,7 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
 */
 bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::VersionedUri versionedUri;
@@ -1472,7 +1472,7 @@ bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
 bool QQmlMetaType::isModule(const QString &module, int versionMajor, int versionMinor)
 {
     Q_ASSERT(versionMajor >= 0 && versionMinor >= 0);
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QQmlMetaTypeData *data = metaTypeData();
 
@@ -1487,14 +1487,14 @@ bool QQmlMetaType::isModule(const QString &module, int versionMajor, int version
 
 QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, int majorVersion)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, majorVersion));
 }
 
 QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return data->parentFunctions;
 }
@@ -1516,7 +1516,7 @@ bool QQmlMetaType::isQObject(int userType)
     if (userType == QMetaType::QObjectStar)
         return true;
 
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return userType >= 0 && userType < data->objects.size() && data->objects.testBit(userType);
 }
@@ -1526,7 +1526,7 @@ bool QQmlMetaType::isQObject(int userType)
  */
 int QQmlMetaType::listType(int id)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QQmlType *type = data->idToType.value(id);
     if (type && type->qListTypeId() == id)
@@ -1537,7 +1537,7 @@ int QQmlMetaType::listType(int id)
 
 int QQmlMetaType::attachedPropertiesFuncId(const QMetaObject *mo)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlType *type = data->metaObjectToType.value(mo);
@@ -1551,7 +1551,7 @@ QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(int id)
 {
     if (id < 0)
         return 0;
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return data->types.at(id)->attachedPropertiesFunction();
 }
@@ -1615,7 +1615,7 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
     if (userType == QMetaType::QObjectStar)
         return Object;
 
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     if (userType < data->objects.size() && data->objects.testBit(userType))
         return Object;
@@ -1627,14 +1627,14 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
 
 bool QQmlMetaType::isInterface(int userType)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return userType >= 0 && userType < data->interfaces.size() && data->interfaces.testBit(userType);
 }
 
 const char *QQmlMetaType::interfaceIId(int userType)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     QQmlType *type = data->idToType.value(userType);
     lock.unlock();
@@ -1646,7 +1646,7 @@ const char *QQmlMetaType::interfaceIId(int userType)
 
 bool QQmlMetaType::isList(int userType)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return userType >= 0 && userType < data->lists.size() && data->lists.testBit(userType);
 }
@@ -1668,7 +1668,7 @@ bool QQmlMetaType::isList(int userType)
  */
 void QQmlMetaType::registerCustomStringConverter(int type, StringConverter converter)
 {
-    QWriteLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QQmlMetaTypeData *data = metaTypeData();
     if (data->stringConverters.contains(type))
@@ -1682,7 +1682,7 @@ void QQmlMetaType::registerCustomStringConverter(int type, StringConverter conve
  */
 QQmlMetaType::StringConverter QQmlMetaType::customStringConverter(int type)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
 
     QQmlMetaTypeData *data = metaTypeData();
     return data->stringConverters.value(type);
@@ -1711,7 +1711,7 @@ QQmlType *QQmlMetaType::qmlType(const QString &qualifiedName, int version_major,
 QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int version_major, int version_minor)
 {
     Q_ASSERT(version_major >= 0 && version_minor >= 0);
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
@@ -1731,7 +1731,7 @@ QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStrin
 */
 QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     return data->metaObjectToType.value(metaObject);
@@ -1745,7 +1745,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject)
 QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor)
 {
     Q_ASSERT(version_major >= 0 && version_minor >= 0);
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
@@ -1765,7 +1765,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStri
 */
 QQmlType *QQmlMetaType::qmlType(int userType)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlType *type = data->idToType.value(userType);
@@ -1783,7 +1783,7 @@ QQmlType *QQmlMetaType::qmlType(int userType)
 */
 QQmlType *QQmlMetaType::qmlType(const QUrl &url, bool includeNonFileImports /* = false */)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlType *type = data->urlToType.value(url);
@@ -1803,7 +1803,7 @@ QQmlType *QQmlMetaType::qmlType(const QUrl &url, bool includeNonFileImports /* =
 */
 QQmlType *QQmlMetaType::qmlTypeFromIndex(int idx)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     if (idx < 0 || idx >= data->types.count())
@@ -1816,7 +1816,7 @@ QQmlType *QQmlMetaType::qmlTypeFromIndex(int idx)
 */
 QList<QString> QQmlMetaType::qmlTypeNames()
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QList<QString> names;
@@ -1834,7 +1834,7 @@ QList<QString> QQmlMetaType::qmlTypeNames()
 */
 QList<QQmlType*> QQmlMetaType::qmlTypes()
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     return data->nameToType.values();
@@ -1845,7 +1845,7 @@ QList<QQmlType*> QQmlMetaType::qmlTypes()
 */
 QList<QQmlType*> QQmlMetaType::qmlAllTypes()
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     return data->types;
@@ -1856,7 +1856,7 @@ QList<QQmlType*> QQmlMetaType::qmlAllTypes()
 */
 QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QList<QQmlType*> alltypes = data->nameToType.values();
@@ -1872,7 +1872,7 @@ QList<QQmlType*> QQmlMetaType::qmlSingletonTypes()
 
 const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
 {
-    QReadLocker lock(metaTypeDataLock());
+    QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     for (QVector<QQmlPrivate::QmlUnitCacheLookupFunction>::ConstIterator it = data->lookupCachedQmlUnit.constBegin(), end = data->lookupCachedQmlUnit.constEnd();
          it != end; ++it) {

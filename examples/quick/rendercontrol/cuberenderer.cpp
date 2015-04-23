@@ -52,7 +52,9 @@ CubeRenderer::CubeRenderer(QOffscreenSurface *offscreenSurface)
     : m_offscreenSurface(offscreenSurface),
       m_context(0),
       m_program(0),
-      m_vbo(0)
+      m_vbo(0),
+      m_vao(0),
+      m_matrixLoc(0)
 {
 }
 

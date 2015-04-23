@@ -93,8 +93,8 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
     QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-    if (engine && ctxtdata && !ctxtdata->url.isEmpty() && ctxtdata->typeCompilationUnit) {
-        url = ctxtdata->url.toString();
+    if (engine && ctxtdata && !ctxtdata->urlString().isEmpty() && ctxtdata->typeCompilationUnit) {
+        url = ctxtdata->urlString();
         if (scriptPrivate->bindingId != QQmlBinding::Invalid)
             runtimeFunction = ctxtdata->typeCompilationUnit->runtimeFunctions.at(scriptPrivate->bindingId);
     }
@@ -165,34 +165,13 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
     if (QQmlData::wasDeleted(object()))
         return;
 
-    QString url;
-    quint16 lineNumber;
-    quint16 columnNumber;
-
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
     QV4::Scope scope(ep->v4engine());
     QV4::ScopedFunctionObject f(scope, v4function.value());
     Q_ASSERT(f);
-    if (f->isBinding()) {
-        Q_ASSERT(f->as<QV4::QQmlBindingFunction>());
-        QQmlSourceLocation loc = static_cast<QV4::Heap::QQmlBindingFunction *>(f->d())->bindingLocation;
-        url = loc.sourceFile;
-        lineNumber = loc.line;
-        columnNumber = loc.column;
-    } else {
-        QV4::Function *function = f->as<QV4::FunctionObject>()->function();
-        Q_ASSERT(function);
-
-        url = function->sourceFile();
-        lineNumber = function->compiledFunction->location.line;
-        columnNumber = function->compiledFunction->location.column;
-    }
-
-    int lineNo = qmlSourceCoordinate(lineNumber);
-    int columnNo = qmlSourceCoordinate(columnNumber);
 
     if (!updatingFlag()) {
-        QQmlBindingProfiler prof(ep->profiler, url, lineNo, columnNo);
+        QQmlBindingProfiler prof(ep->profiler, f);
         setUpdatingFlag(true);
 
         QQmlAbstractExpression::DeleteWatcher watcher(this);
@@ -222,7 +201,7 @@ void QQmlBinding::update(QQmlPropertyPrivate::WriteFlags flags)
             if (!watcher.wasDeleted()) {
 
                 if (needsErrorLocationData)
-                    delayedError()->setErrorLocation(QUrl(url), lineNumber, columnNumber);
+                    delayedError()->setErrorLocation(f->sourceLocation());
 
                 if (hasError()) {
                     if (!delayedError()->addError(ep)) ep->warning(this->error(context()->engine));

@@ -140,7 +140,7 @@ QQmlInfo::~QQmlInfo()
 
                 QQmlData *ddata = QQmlData::get(object, false);
                 if (ddata && ddata->outerContext) {
-                    error.setUrl(ddata->outerContext->url);
+                    error.setUrl(ddata->outerContext->url());
                     error.setLine(ddata->lineNumber);
                     error.setColumn(ddata->columnNumber);
                 }

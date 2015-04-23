@@ -1,5 +1,5 @@
 TARGET = qmldbg_tcp
-QT = qml-private
+QT = qml-private core-private
 
 PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QTcpServerConnection

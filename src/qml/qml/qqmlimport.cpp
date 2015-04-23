@@ -1829,7 +1829,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
     {
         // Create a scope for QWriteLocker to keep it as narrow as possible, and
         // to ensure that we release it before the call to initalizeEngine below
-        QWriteLocker lock(QQmlMetaType::typeRegistrationLock());
+        QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
 
         if (!typeNamespace.isEmpty()) {
             // This is an 'identified' module

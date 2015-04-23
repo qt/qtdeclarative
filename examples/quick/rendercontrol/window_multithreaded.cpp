@@ -77,7 +77,12 @@ static const QEvent::Type STOP = QEvent::Type(QEvent::User + 4);
 static const QEvent::Type UPDATE = QEvent::Type(QEvent::User + 5);
 
 QuickRenderer::QuickRenderer()
-    : m_fbo(0),
+    : m_context(0),
+      m_surface(0),
+      m_fbo(0),
+      m_window(0),
+      m_quickWindow(0),
+      m_renderControl(0),
       m_cubeRenderer(0),
       m_quit(false)
 {
@@ -209,7 +214,8 @@ void QuickRenderer::aboutToQuit()
 }
 
 WindowMultiThreaded::WindowMultiThreaded()
-    : m_rootItem(0),
+    : m_qmlComponent(Q_NULLPTR),
+      m_rootItem(0),
       m_quickInitialized(false),
       m_psrRequested(false)
 {

@@ -815,8 +815,15 @@ ReturnedValue QtObject::method_formatDateTime(QV4::CallContext *ctx)
 }
 
 /*!
-\qmlmethod bool Qt::openUrlExternally(url target)
-Attempts to open the specified \c target url in an external application, based on the user's desktop preferences. Returns true if it succeeds, and false otherwise.
+    \qmlmethod bool Qt::openUrlExternally(url target)
+
+    Attempts to open the specified \c target url in an external application, based on the user's
+    desktop preferences. Returns true if it succeeds, and false otherwise.
+
+    \warning A return value of \c true indicates that the application has successfully requested
+    the operating system to open the URL in an external application. The external application may
+    still fail to launch or fail to open the requested URL. This result will not be reported back
+    to the application.
 */
 ReturnedValue QtObject::method_openUrlExternally(QV4::CallContext *ctx)
 {
@@ -1723,7 +1730,7 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QString context;
     if (QQmlContextData *ctxt = v8engine->callingContext()) {
-        QString path = ctxt->url.toString();
+        QString path = ctxt->urlString();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         int lastDot = path.lastIndexOf(QLatin1Char('.'));
         int length = lastDot - (lastSlash + 1);

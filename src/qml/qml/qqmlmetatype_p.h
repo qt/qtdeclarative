@@ -62,7 +62,7 @@ class QQmlTypePrivate;
 class QQmlTypeModule;
 class QHashedString;
 class QHashedStringRef;
-class QReadWriteLock;
+class QMutex;
 
 namespace QV4 { struct String; }
 
@@ -121,7 +121,7 @@ public:
     static void setTypeRegistrationNamespace(const QString &);
     static QStringList typeRegistrationFailures();
 
-    static QReadWriteLock *typeRegistrationLock();
+    static QMutex *typeRegistrationLock();
 };
 
 struct QQmlMetaTypeData;

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the manual tests of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -37,57 +37,15 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-//! [0]
-QJSEngine myEngine;
-QJSValue three = myEngine.evaluate("1 + 2");
-//! [0]
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
 
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-//! [1]
-QJSValue fun = myEngine.evaluate("(function(a, b) { return a + b; })");
-QJSValueList args;
-args << 1 << 2;
-QJSValue threeAgain = fun.call(QJSValue(), args);
-//! [1]
-
-
-//! [2]
-QString fileName = "helloworld.qs";
-QFile scriptFile(fileName);
-if (!scriptFile.open(QIODevice::ReadOnly))
-    // handle error
-QTextStream stream(&scriptFile);
-QString contents = stream.readAll();
-scriptFile.close();
-myEngine.evaluate(contents, fileName);
-//! [2]
-
-
-//! [3]
-myEngine.globalObject().setProperty("myNumber", 123);
-...
-QJSValue myNumberPlusOne = myEngine.evaluate("myNumber + 1");
-//! [3]
-
-
-//! [4]
-QJSValue result = myEngine.evaluate(...);
-if (result.isError())
-    qDebug()
-            << "Uncaught exception at line"
-            << result.property("lineNumber").toInt()
-            << ":" << result.toString();
-//! [4]
-
-
-//! [5]
-QPushButton *button = new QPushButton;
-QJSValue scriptButton = myEngine.newQObject(button);
-myEngine.globalObject().setProperty("button", scriptButton);
-
-myEngine.evaluate("button.checkable = true");
-
-qDebug() << scriptButton.property("checkable").toBool();
-scriptButton.property("show").call(); // call the show() slot
-//! [5]
+    return app.exec();
+}

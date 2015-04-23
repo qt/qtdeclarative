@@ -40,6 +40,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qqmlpropertycache_p.h>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -53,6 +54,15 @@ namespace QV4 {
 namespace CompiledData {
 
 #ifndef V4_BOOTSTRAP
+CompilationUnit::CompilationUnit()
+    : data(0)
+    , engine(0)
+    , runtimeStrings(0)
+    , runtimeLookups(0)
+    , runtimeRegularExpressions(0)
+    , runtimeClasses(0)
+{}
+
 CompilationUnit::~CompilationUnit()
 {
     unlink();

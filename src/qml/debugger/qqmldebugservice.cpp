@@ -215,7 +215,7 @@ QList<QObject*> QQmlDebugService::objectForLocationInfo(const QString &filename,
         } else {
             QQmlData *ddata = QQmlData::get(iter.value());
             if (ddata && ddata->outerContext) {
-                if (QFileInfo(ddata->outerContext->urlString).fileName() == filename &&
+                if (QFileInfo(ddata->outerContext->urlString()).fileName() == filename &&
                     ddata->lineNumber == lineNumber &&
                     ddata->columnNumber >= columnNumber) {
                     objects << *iter;

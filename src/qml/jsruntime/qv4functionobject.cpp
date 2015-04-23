@@ -65,6 +65,7 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -74,6 +75,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedString name(s, function->name());
@@ -84,6 +86,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -94,6 +97,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
     : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.objectValue())
     , scope(scope)
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
@@ -104,6 +108,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype.objectValue())
     , scope(scope->d())
+    , function(Q_NULLPTR)
 {
     Scope s(scope);
     ScopedFunctionObject f(s, this);
@@ -114,6 +119,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
     : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype.objectValue())
     , scope(scope)
+    , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
     ScopedFunctionObject f(s, this);
@@ -124,6 +130,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
 Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
     , scope(ic->engine->rootContext())
+    , function(Q_NULLPTR)
 {
     Scope scope(ic->engine);
     ScopedObject o(scope, this);
@@ -207,6 +214,18 @@ bool FunctionObject::isBinding() const
 bool FunctionObject::isBoundFunction() const
 {
     return d()->vtable == BoundFunction::staticVTable();
+}
+
+QQmlSourceLocation FunctionObject::sourceLocation() const
+{
+    if (isBinding()) {
+        Q_ASSERT(as<const QV4::QQmlBindingFunction>());
+        return static_cast<QV4::Heap::QQmlBindingFunction *>(d())->bindingLocation;
+    }
+    QV4::Function *function = d()->function;
+    Q_ASSERT(function);
+
+    return QQmlSourceLocation(function->sourceFile(), function->compiledFunction->location.line, function->compiledFunction->location.column);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionCtor);
@@ -446,21 +465,27 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::FunctionObject(scope, function, createProto)
+    : Heap::FunctionObject(function->compilationUnit->engine->simpleScriptFunctionClass, function->compilationUnit->engine->functionPrototype.as<QV4::Object>())
 {
+    this->scope = scope->d();
+
     this->function = function;
     function->compilationUnit->addref();
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 
-    // global function
-    if (!scope)
-        return;
-
     Scope s(scope);
     ScopedFunctionObject f(s, this);
 
-    f->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(f->formalParameterCount()));
+    if (createProto) {
+        ScopedString name(s, function->name());
+        f->init(name, createProto);
+        f->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(f->formalParameterCount()));
+    } else {
+        f->ensureMemberIndex(s.engine, Index_Length);
+        memberData->data[Index_Name] = function->name();
+        memberData->data[Index_Length] = Primitive::fromInt32(f->formalParameterCount());
+    }
 
     if (scope->d()->strictMode) {
         ScopedProperty pd(s);

@@ -158,7 +158,6 @@ struct Options
     bool maximized;
     bool fullscreen;
     bool transparent;
-    bool scenegraphOnGraphicsview;
     bool clip;
     bool versionDetection;
     bool slowAnimations;

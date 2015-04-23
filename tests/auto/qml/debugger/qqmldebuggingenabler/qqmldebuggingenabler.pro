@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmldebuggingenabler
-QT += qml testlib gui-private
+QT += qml testlib gui-private core-private
 osx:CONFIG -= app_bundle
 
 SOURCES +=     tst_qqmldebuggingenabler.cpp

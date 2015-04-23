@@ -308,6 +308,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     functionPrototype = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype.as<Object>());
     functionClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
+    simpleScriptFunctionClass = functionClass->addMember(id_name, Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Name);
+    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length, Attr_ReadOnly, &index);
+    Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Length);
     protoClass = emptyClass->addMember(id_constructor, Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
@@ -585,10 +589,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic, Object *pr
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
     Scope scope(this);
-    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array.size()));
-    if (!hasException) {
-        memcpy(object->d()->data->data(), array.data(), array.size());
-    }
+    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array));
     return object->d();
 }
 
@@ -1741,9 +1742,8 @@ bool ExecutionEngine::metaTypeFromJS(const QV4::Value &value, int type, void *da
 
     {
         QV4::Scoped<QV4::QQmlValueTypeWrapper> vtw(scope, value);
-        if (vtw && vtw->d()->metaType == type) {
-            vtw->toGadget(data);
-            return true;
+        if (vtw && vtw->typeId() == type) {
+            return vtw->toGadget(data);
         }
     }
 
