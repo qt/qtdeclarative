@@ -464,6 +464,7 @@ QQuickAsyncImageProvider::QQuickAsyncImageProvider()
  : QQuickImageProvider(ImageResponse, ForceAsynchronousImageLoading)
  , d(0) // just as a placeholder in case we need it for the future
 {
+    Q_UNUSED(d);
 }
 
 QQuickAsyncImageProvider::~QQuickAsyncImageProvider()
