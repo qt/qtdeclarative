@@ -48,6 +48,7 @@ QQmlInstantiatorPrivate::QQmlInstantiatorPrivate()
     , active(true)
     , async(false)
     , ownModel(false)
+    , requestedIndex(-1)
     , model(QVariant(1))
     , instanceModel(0)
     , delegate(0)
@@ -75,6 +76,15 @@ void QQmlInstantiatorPrivate::clear()
     q->objectChanged();
 }
 
+QObject *QQmlInstantiatorPrivate::modelObject(int index, bool async)
+{
+    requestedIndex = index;
+    QObject *o = instanceModel->object(index, async);
+    requestedIndex = -1;
+    return o;
+}
+
+
 void QQmlInstantiatorPrivate::regenerate()
 {
     Q_Q(QQmlInstantiator);
@@ -92,7 +102,7 @@ void QQmlInstantiatorPrivate::regenerate()
     }
 
     for (int i = 0; i < instanceModel->count(); i++) {
-        QObject *object = instanceModel->object(i, async);
+        QObject *object = modelObject(i, async);
         // If the item was already created we won't get a createdItem
         if (object)
             _q_createdItem(i, object);
@@ -106,8 +116,18 @@ void QQmlInstantiatorPrivate::_q_createdItem(int idx, QObject* item)
     Q_Q(QQmlInstantiator);
     if (objects.contains(item)) //Case when it was created synchronously in regenerate
         return;
+    if (requestedIndex != idx) // Asynchronous creation, reference the object
+        (void)instanceModel->object(idx, false);
     item->setParent(q);
-    objects.insert(idx, item);
+    if (objects.size() < idx + 1) {
+        int modelCount = instanceModel->count();
+        if (objects.capacity() < modelCount)
+            objects.reserve(modelCount);
+        objects.resize(idx + 1);
+    }
+    if (QObject *o = objects.at(idx))
+        instanceModel->release(o);
+    objects.replace(idx, item);
     if (objects.count() == 1)
         q->objectChanged();
     q->objectAdded(idx, item);
@@ -153,11 +173,15 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
         if (insert.isMove()) {
             QVector<QPointer<QObject> > movedObjects = moved.value(insert.moveId);
             objects = objects.mid(0, index) + movedObjects + objects.mid(index);
-        } else for (int i = 0; i < insert.count; ++i) {
-            int modelIndex = index + i;
-            QObject* obj = instanceModel->object(modelIndex, async);
-            if (obj)
-                _q_createdItem(modelIndex, obj);
+        } else {
+            if (insert.index <= objects.size())
+                objects.insert(insert.index, insert.count, 0);
+            for (int i = 0; i < insert.count; ++i) {
+                int modelIndex = index + i;
+                QObject* obj = modelObject(modelIndex, async);
+                if (obj)
+                    _q_createdItem(modelIndex, obj);
+            }
         }
         difference += insert.count;
     }

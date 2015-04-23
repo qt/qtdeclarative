@@ -66,12 +66,14 @@ public:
     void makeModel();
     void _q_createdItem(int, QObject *);
     void _q_modelUpdated(const QQmlChangeSet &, bool);
+    QObject *modelObject(int index, bool async);
 
     bool componentComplete:1;
     bool effectiveReset:1;
     bool active:1;
     bool async:1;
     bool ownModel:1;
+    int requestedIndex;
     QVariant model;
     QQmlInstanceModel *instanceModel;
     QQmlComponent *delegate;
