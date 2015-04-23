@@ -70,6 +70,9 @@ public:
     QColor baseColor() const { return d->baseColor; }
     void setBaseColor(const QColor &color) { d->baseColor = color; }
 
+    QColor disabledColor() const { return d->disabledColor; }
+    void setDisabledColor(const QColor &color) { d->disabledColor = color; }
+
     QColor focusColor() const { return d->focusColor; }
     void setFocusColor(const QColor &color) { d->focusColor = color; }
 
@@ -108,6 +111,7 @@ private:
         QColor accentColor;
         QColor baseColor;
         QColor backgroundColor;
+        QColor disabledColor;
         QColor focusColor;
         QColor frameColor;
         QColor pressColor;

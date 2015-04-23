@@ -2,6 +2,7 @@
     "accentColor": "#7bc258",
     "backgroundColor": "#ffffff",
     "baseColor": "#eeeeee",
+    "disabledColor": "#c2c2c2",
     "focusColor": "#45a7d7",
     "frameColor": "#bdbebf",
     "pressColor": "#33333333",

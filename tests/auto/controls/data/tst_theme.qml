@@ -62,6 +62,7 @@ TestCase {
             Theme.accentColor: "#111111"
             Theme.backgroundColor: "#222222"
             Theme.baseColor: "#333333"
+            Theme.disabledColor: "#aaaaaa"
             Theme.focusColor: "#444444"
             Theme.frameColor: "#555555"
             Theme.pressColor: "#666666"
@@ -86,6 +87,7 @@ TestCase {
             Theme.accentColor: "#111111"
             Theme.backgroundColor: "#222222"
             Theme.baseColor: "#333333"
+            Theme.disabledColor: "#aaaaaa"
             Theme.focusColor: "#444444"
             Theme.frameColor: "#555555"
             Theme.pressColor: "#666666"
@@ -114,6 +116,7 @@ TestCase {
         verify(control.Theme.accentColor !== undefined)
         verify(control.Theme.backgroundColor !== undefined)
         verify(control.Theme.baseColor !== undefined)
+        verify(control.Theme.disabledColor !== undefined)
         verify(control.Theme.focusColor !== undefined)
         verify(control.Theme.frameColor !== undefined)
         verify(control.Theme.pressColor !== undefined)
@@ -133,6 +136,7 @@ TestCase {
         control.Theme.accentColor = "#111111"
         control.Theme.backgroundColor = "#222222"
         control.Theme.baseColor = "#333333"
+        control.Theme.disabledColor = "#aaaaaa"
         control.Theme.focusColor = "#444444"
         control.Theme.frameColor = "#555555"
         control.Theme.pressColor = "#666666"
@@ -146,6 +150,7 @@ TestCase {
         compare(control.Theme.accentColor, "#111111")
         compare(control.Theme.backgroundColor, "#222222")
         compare(control.Theme.baseColor, "#333333")
+        compare(control.Theme.disabledColor, "#aaaaaa")
         compare(control.Theme.focusColor, "#444444")
         compare(control.Theme.frameColor, "#555555")
         compare(control.Theme.pressColor, "#666666")
@@ -165,6 +170,7 @@ TestCase {
         compare(control.Theme.accentColor, "#111111")
         compare(control.Theme.backgroundColor, "#222222")
         compare(control.Theme.baseColor, "#333333")
+        compare(control.Theme.disabledColor, "#aaaaaa")
         compare(control.Theme.focusColor, "#444444")
         compare(control.Theme.frameColor, "#555555")
         compare(control.Theme.pressColor, "#666666")
@@ -178,6 +184,7 @@ TestCase {
         control.Theme.accentColor = undefined
         control.Theme.backgroundColor = undefined
         control.Theme.baseColor = undefined
+        control.Theme.disabledColor = undefined
         control.Theme.focusColor = undefined
         control.Theme.frameColor = undefined
         control.Theme.pressColor = undefined
@@ -191,6 +198,7 @@ TestCase {
         compare(control.Theme.accentColor, testCase.Theme.accentColor)
         compare(control.Theme.backgroundColor, testCase.Theme.backgroundColor)
         compare(control.Theme.baseColor, testCase.Theme.baseColor)
+        compare(control.Theme.disabledColor, testCase.Theme.disabledColor)
         compare(control.Theme.focusColor, testCase.Theme.focusColor)
         compare(control.Theme.frameColor, testCase.Theme.frameColor)
         compare(control.Theme.pressColor, testCase.Theme.pressColor)
@@ -209,6 +217,7 @@ TestCase {
             { tag: "accentColor", value1: "#111111", value2: "#101010" },
             { tag: "backgroundColor", value1: "#222222", value2: "#202020" },
             { tag: "baseColor", value1: "#333333", value2: "#303030" },
+            { tag: "disabledColor", value1: "#aaaaaa", value2: "#a0a0a0" },
             { tag: "focusColor", value1: "#444444", value2: "#404040" },
             { tag: "frameColor", value1: "#555555", value2: "#505050" },
             { tag: "pressColor", value1: "#666666", value2: "#606060" },

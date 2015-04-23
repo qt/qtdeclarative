@@ -67,6 +67,10 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlattachedproperty color QtQuickControls2::Theme::disabledColor
+*/
+
+/*!
     \qmlattachedproperty color QtQuickControls2::Theme::focusColor
 */
 
@@ -214,6 +218,7 @@ public:
         explicitAccentColor(false),
         explicitBackgroundColor(false),
         explicitBaseColor(false),
+        explicitDisabledColor(false),
         explicitFocusColor(false),
         explicitFrameColor(false),
         explicitPressColor(false),
@@ -231,6 +236,7 @@ public:
     void setAccentColor(const QColor &color, Method method);
     void setBackgroundColor(const QColor &color, Method method);
     void setBaseColor(const QColor &color, Method method);
+    void setDisabledColor(const QColor &color, Method method);
     void setFocusColor(const QColor &color, Method method);
     void setFrameColor(const QColor &color, Method method);
     void setPressColor(const QColor &color, Method method);
@@ -257,6 +263,7 @@ public:
     bool explicitAccentColor;
     bool explicitBackgroundColor;
     bool explicitBaseColor;
+    bool explicitDisabledColor;
     bool explicitFocusColor;
     bool explicitFrameColor;
     bool explicitPressColor;
@@ -311,6 +318,21 @@ void QQuickThemePrivate::setBaseColor(const QColor &color, Method method)
 
             foreach (QQuickTheme *child, childThemes)
                 child->d_func()->setBaseColor(color, Inherit);
+        }
+    }
+}
+
+void QQuickThemePrivate::setDisabledColor(const QColor &color, Method method)
+{
+    Q_Q(QQuickTheme);
+    if (!explicitDisabledColor || method != Inherit) {
+        explicitDisabledColor = method == Explicit;
+        if (data.disabledColor() != color) {
+            data.setDisabledColor(color);
+            emit q->disabledColorChanged();
+
+            foreach (QQuickTheme *child, childThemes)
+                child->d_func()->setDisabledColor(color, Inherit);
         }
     }
 }
@@ -485,6 +507,7 @@ void QQuickThemePrivate::inherit(QQuickTheme *theme)
     setAccentColor(theme->accentColor(), Inherit);
     setBackgroundColor(theme->backgroundColor(), Inherit);
     setBaseColor(theme->baseColor(), QQuickThemePrivate::Inherit);
+    setDisabledColor(theme->disabledColor(), QQuickThemePrivate::Inherit);
     setFocusColor(theme->focusColor(), Inherit);
     setFrameColor(theme->frameColor(), Inherit);
     setPressColor(theme->pressColor(), Inherit);
@@ -623,6 +646,24 @@ void QQuickTheme::resetBaseColor()
 {
     Q_D(QQuickTheme);
     d->setBaseColor(d->resolve().baseColor(), QQuickThemePrivate::Implicit);
+}
+
+QColor QQuickTheme::disabledColor() const
+{
+    Q_D(const QQuickTheme);
+    return d->data.disabledColor();
+}
+
+void QQuickTheme::setDisabledColor(const QColor &color)
+{
+    Q_D(QQuickTheme);
+    d->setDisabledColor(color, QQuickThemePrivate::Explicit);
+}
+
+void QQuickTheme::resetDisabledColor()
+{
+    Q_D(QQuickTheme);
+    d->setDisabledColor(d->resolve().disabledColor(), QQuickThemePrivate::Implicit);
 }
 
 QColor QQuickTheme::focusColor() const

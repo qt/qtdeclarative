@@ -84,6 +84,7 @@ bool QQuickThemeData::load(const QString &filePath)
     d->accentColor = readColorValue(theme.value(QStringLiteral("accentColor")), QColor("#7bc258"));
     d->backgroundColor = readColorValue(theme.value(QStringLiteral("backgroundColor")), QColor("#ffffff"));
     d->baseColor = readColorValue(theme.value(QStringLiteral("baseColor")), QColor("#eeeeee"));
+    d->disabledColor = readColorValue(theme.value(QStringLiteral("disabledColor")), QColor("#c2c2c2"));
     d->focusColor = readColorValue(theme.value(QStringLiteral("focusColor")), QColor("#45a7d7"));
     d->frameColor = readColorValue(theme.value(QStringLiteral("frameColor")), QColor("#bdbebf"));
     d->pressColor = readColorValue(theme.value(QStringLiteral("pressColor")), QColor("#33333333"));

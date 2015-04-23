@@ -63,6 +63,7 @@ class QQuickTheme : public QObject
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor RESET resetAccentColor NOTIFY accentColorChanged FINAL)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor RESET resetBackgroundColor NOTIFY backgroundColorChanged FINAL)
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor RESET resetBaseColor NOTIFY baseColorChanged FINAL)
+    Q_PROPERTY(QColor disabledColor READ disabledColor WRITE setDisabledColor RESET resetDisabledColor NOTIFY disabledColorChanged FINAL)
     Q_PROPERTY(QColor focusColor READ focusColor WRITE setFocusColor RESET resetFocusColor NOTIFY focusColorChanged FINAL)
     Q_PROPERTY(QColor frameColor READ frameColor WRITE setFrameColor RESET resetFrameColor NOTIFY frameColorChanged FINAL)
     Q_PROPERTY(QColor pressColor READ pressColor WRITE setPressColor RESET resetPressColor NOTIFY pressColorChanged FINAL)
@@ -87,6 +88,10 @@ public:
     QColor accentColor() const;
     void setAccentColor(const QColor &color);
     void resetAccentColor();
+
+    QColor disabledColor() const;
+    void setDisabledColor(const QColor &color);
+    void resetDisabledColor();
 
     QColor backgroundColor() const;
     void setBackgroundColor(const QColor &color);
@@ -144,6 +149,7 @@ Q_SIGNALS:
     void accentColorChanged();
     void backgroundColorChanged();
     void baseColorChanged();
+    void disabledColorChanged();
     void focusColorChanged();
     void frameColorChanged();
     void pressColorChanged();
