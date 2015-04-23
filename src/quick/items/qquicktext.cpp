@@ -749,6 +749,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             : largeFont;
     int scaledFontSize = largeFont;
 
+    bool widthChanged = false;
     widthExceeded = q->width() <= 0 && (singlelineElide || canWrap || horizontalFit);
     heightExceeded = q->height() <= 0 && (multilineElide || verticalFit);
 
@@ -945,6 +946,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             if ((lineWidth < qMin(oldWidth, naturalWidth) || (widthExceeded && lineWidth > oldWidth))
                     && (singlelineElide || multilineElide || canWrap || horizontalFit
                         || q->effectiveHAlign() != QQuickText::AlignLeft)) {
+                widthChanged = true;
                 widthExceeded = false;
                 heightExceeded = false;
                 continue;
@@ -962,6 +964,39 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             // If the horizontal alignment is not left and the width was not valid we need to relayout
             // now that we know the maximum line width.
             if (!q->widthValid() && !implicitWidthValid && unwrappedLineCount > 1 && q->effectiveHAlign() != QQuickText::AlignLeft) {
+                widthExceeded = false;
+                heightExceeded = false;
+                continue;
+            }
+        } else if (widthChanged) {
+            widthChanged = false;
+            if (line.isValid()) {
+                for (int lineCount = layout.lineCount(); lineCount < maxLineCount; ++lineCount) {
+                    line = layout.createLine();
+                    if (!line.isValid())
+                        break;
+                    setLineGeometry(line, lineWidth, naturalHeight);
+                }
+            }
+            layout.endLayout();
+
+            bool wasInLayout = internalWidthUpdate;
+            internalWidthUpdate = true;
+            q->setImplicitHeight(naturalHeight);
+            internalWidthUpdate = wasInLayout;
+
+            multilineElide = elideMode == QQuickText::ElideRight
+                    && q->widthValid()
+                    && (q->heightValid() || maximumLineCountValid);
+            verticalFit = fontSizeMode() & QQuickText::VerticalFit
+                    && (q->heightValid() || (maximumLineCountValid && canWrap));
+
+            const qreal oldHeight = maxHeight;
+            maxHeight = q->heightValid() ? q->height() : FLT_MAX;
+            // If the height of the item has changed and it's possible the result of eliding,
+            // line count truncation or scaling has changed, do another layout.
+            if ((maxHeight < qMin(oldHeight, naturalHeight) || (heightExceeded && maxHeight > oldHeight))
+                    && (multilineElide || (canWrap && maximumLineCountValid))) {
                 widthExceeded = false;
                 heightExceeded = false;
                 continue;
