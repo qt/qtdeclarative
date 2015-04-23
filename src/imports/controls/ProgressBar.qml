@@ -68,7 +68,7 @@ AbstractProgressBar {
                 width: offset * (parent.width - x) - 2
                 height: 2
 
-                color: control.Theme.accentColor
+                color: control.enabled ? control.Theme.accentColor : control.Theme.disabledColor
                 radius: control.Theme.roundness
 
                 SequentialAnimation on offset {

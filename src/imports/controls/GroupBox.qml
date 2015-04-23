@@ -66,9 +66,8 @@ AbstractGroupBox {
         width: parent.width - control.leftPadding - control.rightPadding
 
         text: control.title
-        color: control.Theme.textColor
+        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

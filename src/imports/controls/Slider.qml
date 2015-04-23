@@ -71,9 +71,9 @@ AbstractSlider {
             height: 12
             radius: width / 2
 
-            color: Qt.tint(Qt.tint(control.Theme.accentColor,
-                                   control.activeFocus ? control.Theme.focusColor : "transparent"),
-                                   control.pressed ? control.Theme.pressColor : "transparent")
+            color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
+                            control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
+                            control.pressed ? control.Theme.pressColor : "transparent")
         }
     }
 
@@ -97,7 +97,7 @@ AbstractSlider {
             width: parent.horizontal ? control.position * parent.width - 4 : 2
             height: parent.horizontal ? 2 : control.position * parent.height - 4
 
-            color: control.Theme.accentColor
+            color: control.enabled ? control.Theme.accentColor : control.Theme.disabledColor
             radius: control.Theme.roundness
         }
     }

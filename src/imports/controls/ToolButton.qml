@@ -58,9 +58,8 @@ AbstractButton {
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.Theme.textColor
+        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

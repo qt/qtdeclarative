@@ -48,7 +48,7 @@ AbstractTextField {
 
     padding: Theme.padding
 
-    color: Theme.textColor
+    color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor
     verticalAlignment: TextInput.AlignVCenter
@@ -69,6 +69,5 @@ AbstractTextField {
         radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
     }
 }

@@ -67,16 +67,16 @@ AbstractToggleButton {
         radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         color: control.Theme.backgroundColor
 
         Rectangle {
             width: 12
             height: 12
 
-            color: Qt.tint(Qt.tint(control.checked ? control.Theme.accentColor : control.Theme.baseColor,
-                                   control.checked && control.activeFocus ? control.Theme.focusColor : "transparent"),
-                                   control.pressed ? control.Theme.pressColor : "transparent")
+            color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
+                           control.checked && control.activeFocus ? control.Theme.focusColor :
+                           control.checked ? control.Theme.accentColor : control.Theme.baseColor,
+                           control.pressed ? control.Theme.pressColor : "transparent")
             border.width: control.checked || control.pressed ? 0 : 1
             border.color: control.Theme.frameColor
 
@@ -100,10 +100,9 @@ AbstractToggleButton {
         height: parent.height - control.topPadding - control.bottomPadding
 
         text: control.text
-        color: control.Theme.textColor
+        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         visible: control.text
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }

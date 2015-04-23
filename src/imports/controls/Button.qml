@@ -60,7 +60,6 @@ AbstractButton {
         text: control.text
         color: control.Theme.selectedTextColor
         elide: Text.ElideRight
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -70,9 +69,8 @@ AbstractButton {
         implicitHeight: 26
 
         radius: control.Theme.roundness
-        opacity: control.enabled ? 1.0 : control.Theme.disabledOpacity
-        color: Qt.tint(Qt.tint(control.Theme.accentColor,
-                               control.activeFocus ? control.Theme.focusColor : "transparent"),
-                               control.pressed ? control.Theme.pressColor : "transparent")
+        color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
+                        control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
+                        control.pressed ? control.Theme.pressColor : "transparent")
     }
 }

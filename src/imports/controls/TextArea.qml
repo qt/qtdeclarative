@@ -46,7 +46,7 @@ AbstractTextArea {
     Accessible.readOnly: readOnly
     Accessible.description: placeholder ? placeholder.text : ""
 
-    color: Theme.textColor
+    color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor
 

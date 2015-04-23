@@ -61,8 +61,7 @@ AbstractTabButton {
         text: control.text
         font.pointSize: 10
         elide: Text.ElideRight
-        color: control.pressed ? control.Theme.accentColor : control.Theme.textColor
-        opacity: enabled ? 1.0 : control.Theme.disabledOpacity
+        color: !control.enabled ? control.Theme.disabledColor : control.pressed ? control.Theme.accentColor : control.Theme.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
