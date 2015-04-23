@@ -89,7 +89,9 @@ public:
     void update(QQmlPropertyPrivate::WriteFlags flags = QQmlPropertyPrivate::DontRemoveBinding);
 
     typedef int Identifier;
-    static Identifier Invalid;
+    enum {
+        Invalid = -1
+    };
 
     QVariant evaluate();
 

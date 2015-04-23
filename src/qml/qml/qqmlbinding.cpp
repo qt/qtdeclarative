@@ -50,8 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlBinding::Identifier QQmlBinding::Invalid = -1;
-
 QQmlBinding::QQmlBinding(const QString &str, QObject *obj, QQmlContext *ctxt)
     : QQmlJavaScriptExpression(),
       QQmlAbstractBinding()
