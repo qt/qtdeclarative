@@ -2550,8 +2550,15 @@ void Renderer::render()
         QSGNodeDumper::dump(rootNode());
     }
 
-    if (Q_UNLIKELY(debug_render() || debug_build())) {
+    QElapsedTimer timer;
+    quint64 timeRenderLists = 0;
+    quint64 timePrepareOpaque = 0;
+    quint64 timePrepareAlpha = 0;
+    quint64 timeSorting = 0;
+    quint64 timeUploadOpaque = 0;
+    quint64 timeUploadAlpha = 0;
 
+    if (Q_UNLIKELY(debug_render() || debug_build())) {
         QByteArray type("rebuild:");
         if (m_rebuild == 0)
             type += " none";
@@ -2567,6 +2574,7 @@ void Renderer::render()
         }
 
         qDebug() << "Renderer::render()" << this << type;
+        timer.start();
     }
 
     if (m_vao)
@@ -2593,6 +2601,7 @@ void Renderer::render()
             }
         }
     }
+    if (Q_UNLIKELY(debug_render())) timeRenderLists = timer.restart();
 
     for (int i=0; i<m_opaqueBatches.size(); ++i)
         m_opaqueBatches.at(i)->cleanupRemovedElements();
@@ -2605,7 +2614,9 @@ void Renderer::render()
 
     if (m_rebuild & BuildBatches) {
         prepareOpaqueBatches();
+        if (Q_UNLIKELY(debug_render())) timePrepareOpaque = timer.restart();
         prepareAlphaBatches();
+        if (Q_UNLIKELY(debug_render())) timePrepareAlpha = timer.restart();
 
         if (Q_UNLIKELY(debug_build())) {
             qDebug() << "Opaque Batches:";
@@ -2625,7 +2636,10 @@ void Renderer::render()
                 }
             }
         }
+    } else {
+        if (Q_UNLIKELY(debug_render())) timePrepareOpaque = timePrepareAlpha = timer.restart();
     }
+
 
     deleteRemovedElements();
 
@@ -2642,6 +2656,8 @@ void Renderer::render()
         m_zRange = 1.0 / (m_nextRenderOrder);
     }
 
+    if (Q_UNLIKELY(debug_render())) timeSorting = timer.restart();
+
     int largestVBO = 0;
 #ifdef QSG_SEPARATE_INDEX_BUFFER
     int largestIBO = 0;
@@ -2656,6 +2672,8 @@ void Renderer::render()
 #endif
         uploadBatch(b);
     }
+    if (Q_UNLIKELY(debug_render())) timeUploadOpaque = timer.restart();
+
 
     if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Alpha Batches:";
     for (int i=0; i<m_alphaBatches.size(); ++i) {
@@ -2666,6 +2684,7 @@ void Renderer::render()
         largestIBO = qMax(b->ibo.size, largestIBO);
 #endif
     }
+    if (Q_UNLIKELY(debug_render())) timeUploadAlpha = timer.restart();
 
     if (largestVBO * 2 < m_vertexUploadPool.size())
         m_vertexUploadPool.resize(largestVBO * 2);
@@ -2675,6 +2694,15 @@ void Renderer::render()
 #endif
 
     renderBatches();
+
+    if (Q_UNLIKELY(debug_render())) {
+        qDebug(" -> times: build: %d, prepare(opaque/alpha): %d/%d, sorting: %d, upload(opaque/alpha): %d/%d, render: %d",
+               (int) timeRenderLists,
+               (int) timePrepareOpaque, (int) timePrepareAlpha,
+               (int) timeSorting,
+               (int) timeUploadOpaque, (int) timeUploadAlpha,
+               (int) timer.elapsed());
+    }
 
     m_rebuild = 0;
     m_renderOrderRebuildLower = -1;
