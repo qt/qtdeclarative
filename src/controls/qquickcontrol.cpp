@@ -68,8 +68,10 @@ void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
     qreal oldPadding = q->topPadding();
     topPadding = value;
     hasTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->topPaddingChanged();
+        q->paddingChange();
+    }
 }
 
 void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
@@ -78,8 +80,10 @@ void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
     qreal oldPadding = q->leftPadding();
     leftPadding = value;
     hasLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->leftPaddingChanged();
+        q->paddingChange();
+    }
 }
 
 void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
@@ -88,8 +92,10 @@ void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
     qreal oldPadding = q->rightPadding();
     rightPadding = value;
     hasRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->rightPaddingChanged();
+        q->paddingChange();
+    }
 }
 
 void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
@@ -98,8 +104,10 @@ void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
     qreal oldPadding = q->bottomPadding();
     bottomPadding = value;
     hasBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding)))
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->bottomPaddingChanged();
+        q->paddingChange();
+    }
 }
 
 QQuickControl::QQuickControl(QQuickItem *parent) :
@@ -142,6 +150,7 @@ void QQuickControl::setPadding(qreal padding)
         emit rightPaddingChanged();
     if (!d->hasBottomPadding)
         emit bottomPaddingChanged();
+    paddingChange();
 }
 
 void QQuickControl::resetPadding()
@@ -279,6 +288,10 @@ bool QQuickControl::isMirrored() const
 }
 
 void QQuickControl::mirrorChange()
+{
+}
+
+void QQuickControl::paddingChange()
 {
 }
 

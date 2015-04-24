@@ -107,6 +107,8 @@ protected:
     bool isMirrored() const;
     virtual void mirrorChange();
 
+    virtual void paddingChange();
+
 private:
     Q_DISABLE_COPY(QQuickControl)
     Q_DECLARE_PRIVATE(QQuickControl)
