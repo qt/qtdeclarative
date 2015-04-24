@@ -92,6 +92,11 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
+    void componentComplete() Q_DECL_OVERRIDE;
+
+    void paddingChange() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickButton)
     Q_DECLARE_PRIVATE(QQuickButton)

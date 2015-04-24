@@ -69,8 +69,23 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickButtonPrivate::QQuickButtonPrivate() :
-    pressed(false), label(Q_NULLPTR)
+    pressed(false), label(Q_NULLPTR), labelHasWidth(true), labelHasHeight(true)
 {
+}
+
+void QQuickButtonPrivate::updateGeometry()
+{
+    Q_Q(QQuickButton);
+    if (label) {
+        if (!labelHasWidth) {
+            label->setX(q->leftPadding());
+            label->setWidth(q->width() - q->leftPadding() - q->rightPadding());
+        }
+        if (!labelHasHeight) {
+            label->setY(q->topPadding());
+            label->setHeight(q->height() - q->topPadding() - q->bottomPadding());
+        }
+    }
 }
 
 QQuickButton::QQuickButton(QQuickItem *parent) :
@@ -206,6 +221,29 @@ void QQuickButton::mouseUngrabEvent()
 {
     QQuickControl::mouseUngrabEvent();
     setPressed(false);
+}
+
+void QQuickButton::componentComplete()
+{
+    Q_D(QQuickButton);
+    QQuickControl::componentComplete();
+    d->labelHasWidth = d->label && QQuickItemPrivate::get(d->label)->widthValid;
+    d->labelHasHeight = d->label && QQuickItemPrivate::get(d->label)->heightValid;
+    d->updateGeometry();
+}
+
+void QQuickButton::paddingChange()
+{
+    Q_D(QQuickButton);
+    QQuickControl::paddingChange();
+    d->updateGeometry();
+}
+
+void QQuickButton::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickButton);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    d->updateGeometry();
 }
 
 QT_END_NAMESPACE

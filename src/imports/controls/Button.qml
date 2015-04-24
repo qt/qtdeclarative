@@ -52,11 +52,6 @@ AbstractButton {
     padding: Theme.padding
 
     label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
-
         text: control.text
         color: control.Theme.selectedTextColor
         elide: Text.ElideRight
