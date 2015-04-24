@@ -47,9 +47,12 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
     \ingroup application
-    \brief An application window.
+    \brief Provides a top-level application window.
 
-    TODO
+    ApplicationWindow is a \l Window which makes it convenient to add
+    a \l header and \l footer item to the window.
+
+    \note By default, an ApplicationWindow is not visible.
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
@@ -117,7 +120,10 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 /*!
     \qmlproperty Item QtQuickControls2::ApplicationWindow::header
 
-    TODO
+    A header item for the window, for example a title bar, menu or tool-bar.
+    By default this property is empty, no header will be shown.
+
+    \sa footer
 */
 QQuickItem *QQuickApplicationWindow::header() const
 {
@@ -145,7 +151,10 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 /*!
     \qmlproperty Item QtQuickControls2::ApplicationWindow::footer
 
-    TODO
+    A footer item for the window, for example a status bar or menu.
+    By default this property is empty, no footer will be shown.
+
+    \sa header
 */
 QQuickItem *QQuickApplicationWindow::footer() const
 {
@@ -173,7 +182,11 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 /*!
     \qmlproperty real QtQuickControls2::ApplicationWindow::contentWidth
 
-    TODO
+    This property is the width of the window content without header and footer.
+    Setting it will resize the window accordingly.
+    By default the implicit width of the child items is used.
+
+    \sa contentHeight
 */
 qreal QQuickApplicationWindow::contentWidth() const
 {
@@ -193,7 +206,11 @@ void QQuickApplicationWindow::setContentWidth(qreal width)
 /*!
     \qmlproperty real QtQuickControls2::ApplicationWindow::contentHeight
 
-    TODO
+    This property is the height of the window content without header and footer.
+    Setting it will resize the window accordingly.
+    By default the implicit height of the child items is used.
+
+    \sa contentWidth
 */
 qreal QQuickApplicationWindow::contentHeight() const
 {
