@@ -57,9 +57,9 @@ TestCase {
 
     function test_running() {
         var control = busyIndicator.createObject(testCase)
-        compare(control.running, false)
-        control.running = true
         compare(control.running, true)
+        control.running = false
+        compare(control.running, false)
         control.destroy()
     }
 }
