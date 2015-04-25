@@ -44,9 +44,6 @@
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
 
-#define SERVER_ADDR "http://127.0.0.1:14456"
-#define SERVER_PORT 14456
-
 // Note: this test does not use module identifier directives in the qmldir files, because
 // it would result in repeated attempts to insert types into the same namespace.
 // This occurs because type registration is process-global, while the test
@@ -240,12 +237,13 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
 void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import \"" SERVER_ADDR "/org/qtproject/PureQmlModule\" \nComponentA { width: 300; ComponentB{} }", QUrl());
+    const QString qml = "import \"" + server.urlString("/org/qtproject/PureQmlModule") + "\" \nComponentA { width: 300; ComponentB{} }";
+    component.setData(qml.toUtf8(), QUrl());
 
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();
@@ -261,7 +259,7 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(m_dataImportsDirectory);
 
     QQmlEngine engine;

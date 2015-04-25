@@ -252,11 +252,11 @@ void tst_qquickanimatedimage::remote()
     QFETCH(bool, paused);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
-    QQmlComponent component(&engine, QUrl("http://127.0.0.1:14449/" + fileName));
+    QQmlComponent component(&engine, server.url(fileName));
     QTRY_VERIFY(component.isReady());
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(component.create());
@@ -317,7 +317,7 @@ void tst_qquickanimatedimage::invalidSource()
 void tst_qquickanimatedimage::sourceSizeChanges()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -357,19 +357,19 @@ void tst_qquickanimatedimage::sourceSizeChanges()
     QTRY_VERIFY(sourceSizeSpy.count() == 3);
 
     // Remote
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/hearts.gif"));
+    ctxt->setContextProperty("srcImage", server.url("/hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
     QTRY_VERIFY(sourceSizeSpy.count() == 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/hearts.gif"));
+    ctxt->setContextProperty("srcImage", server.url("/hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
     QTRY_VERIFY(sourceSizeSpy.count() == 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/hearts_copy.gif"));
+    ctxt->setContextProperty("srcImage", server.url("/hearts_copy.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
     QTRY_VERIFY(sourceSizeSpy.count() == 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/colors.gif"));
+    ctxt->setContextProperty("srcImage", server.url("/colors.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
     QTRY_VERIFY(sourceSizeSpy.count() == 5);
 
@@ -383,7 +383,7 @@ void tst_qquickanimatedimage::sourceSizeChanges()
 void tst_qquickanimatedimage::qtbug_16520()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -395,7 +395,7 @@ void tst_qquickanimatedimage::qtbug_16520()
     QQuickAnimatedImage *anim = root->findChild<QQuickAnimatedImage*>("anim");
     QVERIFY(anim != 0);
 
-    anim->setProperty("source", "http://127.0.0.1:14449/stickman.gif");
+    anim->setProperty("source", server.urlString("/stickman.gif"));
     QTRY_VERIFY(anim->opacity() == 0);
     QTRY_VERIFY(anim->opacity() == 1);
 
@@ -406,7 +406,7 @@ void tst_qquickanimatedimage::qtbug_16520()
 void tst_qquickanimatedimage::progressAndStatusChanges()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -442,7 +442,7 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     QTRY_COMPARE(statusSpy.count(), 1);
 
     // Loading remote file
-    ctxt->setContextProperty("srcImage", "http://127.0.0.1:14449/stickman.gif");
+    ctxt->setContextProperty("srcImage", server.url("/stickman.gif"));
     QTRY_VERIFY(obj->status() == QQuickImage::Loading);
     QTRY_VERIFY(obj->progress() == 0.0);
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);

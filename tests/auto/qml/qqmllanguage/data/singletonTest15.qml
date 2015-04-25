@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import "http://127.0.0.1:14447/singleton/remote"
+import "{{ServerBaseUrl}}/singleton/remote"
 
 Item {
     property int value1: RemoteSingletonType2.testProp1;

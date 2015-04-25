@@ -8,7 +8,7 @@ Item {
     GridView {
         anchors.fill: parent
         delegate: Image {
-            source: imagePath;
+            source: serverBaseUrl + imagePath;
             asynchronous: true
             smooth: true
             width: 200
@@ -16,28 +16,28 @@ Item {
         }
         model: ListModel {
             ListElement {
-                imagePath: "http://127.0.0.1:14451/big256.png"
+                imagePath: "/big256.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/big256.png"
+                imagePath: "/big256.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/big256.png"
+                imagePath: "/big256.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/colors.png"
+                imagePath: "/colors.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/colors1.png"
+                imagePath: "/colors1.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/big.jpeg"
+                imagePath: "/big.jpeg"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/heart.png"
+                imagePath: "/heart.png"
             }
             ListElement {
-                imagePath: "http://127.0.0.1:14451/green.png"
+                imagePath: "/green.png"
             }
         }
     }

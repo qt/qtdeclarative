@@ -50,9 +50,6 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-#define SERVER_PORT 14459
-#define SERVER_ADDR "http://127.0.0.1:14459"
-
 Q_DECLARE_METATYPE(QQuickText::TextFormat)
 
 QT_BEGIN_NAMESPACE
@@ -2049,7 +2046,7 @@ void tst_qquicktext::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading " SERVER_ADDR "/notexists.png - server replied: Not found";
+                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading {{ServerBaseUrl}}/notexists.png - server replied: Not found";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
@@ -2061,13 +2058,16 @@ void tst_qquicktext::embeddedImages()
     QFETCH(QString, error);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(testFile("http"));
+    error.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
-    QQuickView *view = new QQuickView(qmlfile);
+    QQuickView *view = new QQuickView;
+    view->rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
+    view->setSource(qmlfile);
     view->show();
     view->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(view));
@@ -2777,20 +2777,31 @@ void tst_qquicktext::imgTagsBaseUrl_data()
             << 181.;
 
     QTest::newRow("absolute remote")
-            << QUrl(SERVER_ADDR "/images/heart200.png")
+            << QUrl("http://testserver/images/heart200.png")
             << QUrl()
             << QUrl()
             << 181.;
     QTest::newRow("relative remote base 1")
             << QUrl("images/heart200.png")
-            << QUrl(SERVER_ADDR "/")
+            << QUrl("http://testserver/")
             << testFileUrl("nonexistant/app.qml")
             << 181.;
     QTest::newRow("relative remote base 2")
             << QUrl("heart200.png")
-            << QUrl(SERVER_ADDR "/images/")
+            << QUrl("http://testserver/images/")
             << testFileUrl("nonexistant/app.qml")
             << 181.;
+}
+
+static QUrl substituteTestServerUrl(const QUrl &serverUrl, const QUrl &testUrl)
+{
+    QUrl result = testUrl;
+    if (result.host() == QStringLiteral("testserver")) {
+        result.setScheme(serverUrl.scheme());
+        result.setHost(serverUrl.host());
+        result.setPort(serverUrl.port());
+    }
+    return result;
 }
 
 void tst_qquicktext::imgTagsBaseUrl()
@@ -2801,8 +2812,12 @@ void tst_qquicktext::imgTagsBaseUrl()
     QFETCH(qreal, imgHeight);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(testFile(""));
+
+    src = substituteTestServerUrl(server.baseUrl(), src);
+    baseUrl = substituteTestServerUrl(server.baseUrl(), baseUrl);
+    contextUrl = substituteTestServerUrl(server.baseUrl(), contextUrl);
 
     QByteArray baseUrlFragment;
     if (!baseUrl.isEmpty())

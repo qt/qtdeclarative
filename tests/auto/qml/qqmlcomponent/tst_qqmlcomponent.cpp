@@ -44,8 +44,6 @@
 #include "../../shared/util.h"
 #include "testhttpserver.h"
 
-#define SERVER_PORT 14450
-
 class MyIC : public QObject, public QQmlIncubationController
 {
     Q_OBJECT
@@ -260,12 +258,12 @@ void tst_qqmlcomponent::qmlCreateParentReference()
 void tst_qqmlcomponent::async()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine);
     ComponentWatcher watcher(&component);
-    component.loadUrl(QUrl("http://127.0.0.1:14450/TestComponent.qml"), QQmlComponent::Asynchronous);
+    component.loadUrl(server.url("/TestComponent.qml"), QQmlComponent::Asynchronous);
     QCOMPARE(watcher.loading, 1);
     QTRY_VERIFY(component.isReady());
     QCOMPARE(watcher.ready, 1);
@@ -280,13 +278,13 @@ void tst_qqmlcomponent::async()
 void tst_qqmlcomponent::asyncHierarchy()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     // ensure that the item hierarchy is compiled correctly.
     QQmlComponent component(&engine);
     ComponentWatcher watcher(&component);
-    component.loadUrl(QUrl("http://127.0.0.1:14450/TestComponent.2.qml"), QQmlComponent::Asynchronous);
+    component.loadUrl(server.url("/TestComponent.2.qml"), QQmlComponent::Asynchronous);
     QCOMPARE(watcher.loading, 1);
     QTRY_VERIFY(component.isReady());
     QCOMPARE(watcher.ready, 1);

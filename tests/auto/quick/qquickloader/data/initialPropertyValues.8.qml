@@ -3,6 +3,7 @@ import QtQuick 2.0
 Item {
     id: root
     property int initialValue: 0
+    property string serverBaseUrl;
 
     Loader {
         id: loader
@@ -14,7 +15,7 @@ Item {
     }
 
     Component.onCompleted: {
-        loader.setSource("http://127.0.0.1:14458/InitialPropertyValuesComponent.qml", {"canary": 6});
+        loader.setSource(serverBaseUrl + "/InitialPropertyValuesComponent.qml", {"canary": 6});
         loader.active = true;
     }
 }

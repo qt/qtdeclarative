@@ -58,9 +58,6 @@
 #include "../../shared/platformquirks.h"
 #include "../../shared/platforminputcontext.h"
 
-#define SERVER_PORT 14460
-#define SERVER_ADDR "http://localhost:14460"
-
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 Q_DECLARE_METATYPE(QQuickTextInput::EchoMode)
 Q_DECLARE_METATYPE(Qt::Key)
@@ -2859,12 +2856,12 @@ void tst_qquicktextinput::cursorDelegate()
 void tst_qquicktextinput::remoteCursorDelegate()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
 
-    QQmlComponent component(view.engine(), QUrl(SERVER_ADDR "/RemoteCursor.qml"));
+    QQmlComponent component(view.engine(), server.url("/RemoteCursor.qml"));
 
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));

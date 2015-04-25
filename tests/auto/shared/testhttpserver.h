@@ -45,7 +45,10 @@ class TestHTTPServer : public QObject
 public:
     TestHTTPServer();
 
-    bool listen(quint16 port);
+    bool listen();
+    QUrl baseUrl() const;
+    QUrl url(const QString &documentPath) const;
+    QString urlString(const QString &documentPath) const;
     QString errorString() const;
 
     enum Mode { Normal, Delay, Disconnect };
@@ -56,6 +59,8 @@ public:
 
     void addAlias(const QString &filename, const QString &aliasName);
     void addRedirect(const QString &filename, const QString &redirectName);
+
+    void registerFileNameForContentSubstitution(const QString &fileName);
 
     // In Delay mode, each item needs one call to this function to be sent
     void sendDelayedItem();
@@ -79,6 +84,7 @@ private:
     QList<QPair<QString, Mode> > dirs;
     QHash<QTcpSocket *, QByteArray> dataCache;
     QList<QPair<QTcpSocket *, QByteArray> > toSend;
+    QSet<QString> contentSubstitutedFileNames;
 
     struct WaitData {
         QList <QByteArray>headers;
