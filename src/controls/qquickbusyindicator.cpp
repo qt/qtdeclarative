@@ -47,7 +47,22 @@ QT_BEGIN_NAMESPACE
     \ingroup indicators
     \brief A busy indicator.
 
-    TODO
+    The busy indicator should be used to indicate activity while content is
+    being loaded or the UI is blocked waiting for a resource to become available.
+
+    The following snippet shows how to use the BusyIndicator:
+
+    \qml
+    BusyIndicator {
+        running: image.status === Image.Loading
+    }
+    \endqml
+
+    You can create a custom appearance for a Busy Indicator by
+    assigning an item to the \l indicator property.
+
+    The default implementation uses this QML item as indicator:
+    \snippet BusyIndicator.qml indicator
 */
 
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
@@ -67,7 +82,13 @@ QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
 /*!
     \qmlproperty bool QtQuickControls2::BusyIndicator::running
 
-    TODO
+    This property holds whether the busy indicator is currently indicating
+    activity.
+
+    \note The indicator is only visible when this property is set to \c true.
+
+    The default value is \c true.
+
 */
 bool QQuickBusyIndicator::isRunning() const
 {
@@ -87,7 +108,7 @@ void QQuickBusyIndicator::setRunning(bool running)
 /*!
     \qmlproperty Item QtQuickControls2::BusyIndicator::indicator
 
-    TODO
+    This property holds the \l{QQuickItem,item} which graphically implements the busy indicator.
 */
 QQuickItem *QQuickBusyIndicator::indicator() const
 {
