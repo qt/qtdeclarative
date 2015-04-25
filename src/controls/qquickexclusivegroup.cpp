@@ -107,6 +107,9 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
 */
 void QQuickExclusiveGroup::addCheckable(QObject *object)
 {
+    if (!object)
+        return;
+
     connect(object, SIGNAL(checkedChanged()), this, SLOT(_q_updateCurrent()), Qt::UniqueConnection);
     connect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)), Qt::UniqueConnection);
 
@@ -122,6 +125,9 @@ void QQuickExclusiveGroup::addCheckable(QObject *object)
 void QQuickExclusiveGroup::removeCheckable(QObject *object)
 {
     Q_D(QQuickExclusiveGroup);
+    if (!object)
+        return;
+
     if (object->metaObject()->indexOfProperty("checked") != -1)
         disconnect(object, SIGNAL(checkedChanged()), this, SLOT(_q_updateCurrent()));
     disconnect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)));

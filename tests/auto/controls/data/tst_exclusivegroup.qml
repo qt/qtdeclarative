@@ -77,6 +77,15 @@ TestCase {
         group.destroy()
     }
 
+    function test_null() {
+        var group = exclusiveGroup.createObject(testCase)
+
+        group.addCheckable(null)
+        group.removeCheckable(null)
+
+        group.destroy()
+    }
+
     Component {
         id: checkable
         QtObject { property bool checked }
