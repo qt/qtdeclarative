@@ -396,33 +396,6 @@ inline Value &Value::operator=(const Scoped<T> &t)
     return *this;
 }
 
-template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator =(T *t)
-{
-    m = t ? t->m : 0;
-#if QT_POINTER_SIZE == 4
-    tag = Managed_Type;
-#endif
-    return *this;
-}
-
-template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator =(const Scoped<T> &v)
-{
-    m = v.ptr->m;
-#if QT_POINTER_SIZE == 4
-    tag = Managed_Type;
-#endif
-    return *this;
-}
-
-template<typename T>
-inline TypedValue<T> &TypedValue<T>::operator=(const TypedValue<T> &t)
-{
-    val = t.val;
-    return *this;
-}
-
 struct ScopedProperty
 {
     ScopedProperty(Scope &scope)
