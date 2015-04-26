@@ -982,7 +982,7 @@ QV4::ReturnedValue JsonObject::fromJsonObject(ExecutionEngine *engine, const QJs
     return o.asReturnedValue();
 }
 
-QJsonObject JsonObject::toJsonObject(Object *o, V4ObjectSet &visitedObjects)
+QJsonObject JsonObject::toJsonObject(const Object *o, V4ObjectSet &visitedObjects)
 {
     QJsonObject result;
     if (!o || o->as<FunctionObject>())
@@ -1030,7 +1030,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     return a.asReturnedValue();
 }
 
-QJsonArray JsonObject::toJsonArray(ArrayObject *a, V4ObjectSet &visitedObjects)
+QJsonArray JsonObject::toJsonArray(const ArrayObject *a, V4ObjectSet &visitedObjects)
 {
     QJsonArray result;
     if (!a)

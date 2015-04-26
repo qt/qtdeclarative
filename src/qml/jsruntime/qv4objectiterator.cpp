@@ -51,7 +51,7 @@ ObjectIterator::ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scrat
     init(o);
 }
 
-ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
+ObjectIterator::ObjectIterator(Scope &scope, const Object *o, uint flags)
     : engine(scope.engine)
     , object(scope.alloc(1))
     , current(scope.alloc(1))
@@ -63,7 +63,7 @@ ObjectIterator::ObjectIterator(Scope &scope, Object *o, uint flags)
     init(o);
 }
 
-void ObjectIterator::init(Object *o)
+void ObjectIterator::init(const Object *o)
 {
     object->m = o ? o->m : 0;
     current->m = o ? o->m : 0;

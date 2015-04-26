@@ -428,9 +428,9 @@ public:
     QVariant toVariant(const QV4::Value &value, int typeHint, bool createJSValueForObjects = true);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
-    QVariantMap variantMapFromJS(QV4::Object *o);
+    QVariantMap variantMapFromJS(const QV4::Object *o);
 
-    bool metaTypeFromJS(const Value &value, int type, void *data);
+    bool metaTypeFromJS(const Value *value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
