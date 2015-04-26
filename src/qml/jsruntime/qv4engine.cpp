@@ -906,9 +906,6 @@ void ExecutionEngine::markObjects()
         c = c->parent;
     }
 
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        typedArrayCtors[i].mark(this);
-
     if (m_qmlExtensions)
         m_qmlExtensions->markObjects(this);
 
