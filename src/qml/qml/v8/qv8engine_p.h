@@ -163,8 +163,6 @@ class QQmlContextData;
 class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
-    // ### GC
-    typedef QSet<QV4::Heap::Object *> V8ObjectSet;
 public:
     static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
 //    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
