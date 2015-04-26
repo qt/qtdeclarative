@@ -59,7 +59,6 @@
 #include "qv4executableallocator_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"
-#include "qv4qmlextensions_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4dataview_p.h"
@@ -207,7 +206,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
-    , m_qmlExtensions(0)
 {
     MemoryManager::GCBlocker gcBlocker(memoryManager);
 
@@ -392,6 +390,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[DataView_Ctor] = memoryManager->alloc<DataViewCtor>(global);
     jsObjects[DataViewProto] = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype());
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
+    jsObjects[ValueTypeProto] = (Heap::Base *) 0;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
@@ -470,7 +469,6 @@ ExecutionEngine::~ExecutionEngine()
     foreach (QV4::CompiledData::CompilationUnit *unit, remainingUnits)
         unit->unlink();
 
-    delete m_qmlExtensions;
     emptyClass->destroy();
     delete classPool;
     delete bumperPointerAllocator;
@@ -906,21 +904,11 @@ void ExecutionEngine::markObjects()
         c = c->parent;
     }
 
-    if (m_qmlExtensions)
-        m_qmlExtensions->markObjects(this);
-
     classPool->markObjects(this);
 
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
          it != end; ++it)
         (*it)->markObjects(this);
-}
-
-QmlExtensions *ExecutionEngine::qmlExtensions()
-{
-    if (!m_qmlExtensions)
-        m_qmlExtensions = new QmlExtensions;
-    return m_qmlExtensions;
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

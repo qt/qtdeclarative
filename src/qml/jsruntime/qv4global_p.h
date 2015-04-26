@@ -213,7 +213,6 @@ class WeakValue;
 struct IdentifierTable;
 class RegExpCache;
 class MultiplyWrappedQObjectMap;
-struct QmlExtensions;
 
 namespace Global {
     enum {

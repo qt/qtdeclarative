@@ -147,6 +147,7 @@ public:
         SequenceProto,
         ArrayBufferProto,
         DataViewProto,
+        ValueTypeProto,
 
         Object_Ctor,
         String_Ctor,
@@ -213,6 +214,8 @@ public:
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
     Object *typedArrayPrototype;
+
+    Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
@@ -397,8 +400,6 @@ public:
 
     InternalClass *newClass(const InternalClass &other);
 
-    QmlExtensions *qmlExtensions();
-
     bool recheckCStackLimits();
 
     // Exception handling
@@ -433,9 +434,6 @@ public:
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
-
-private:
-    QmlExtensions *m_qmlExtensions;
 };
 
 inline void ExecutionEngine::pushContext(CallContext *context)

@@ -43,7 +43,6 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4variantobject_p.h>
-#include <private/qv4qmlextensions_p.h>
 #include <private/qv4alloca_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -165,13 +164,13 @@ bool QQmlValueTypeReference::readReferenceValue() const
 
 void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (v4->qmlExtensions()->valueTypeWrapperPrototype)
+    if (v4->valueTypeWrapperPrototype()->as<Object>())
         return;
 
     Scope scope(v4);
     ScopedObject o(scope, v4->newObject());
     o->defineDefaultProperty(v4->id_toString(), method_toString, 1);
-    v4->qmlExtensions()->valueTypeWrapperPrototype = o->d();
+    v4->jsObjects[QV4::ExecutionEngine::ValueTypeProto] = o->d();
 }
 
 ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *object, int property, const QMetaObject *metaObject, int typeId)
@@ -180,7 +179,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     initProto(engine);
 
     Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->alloc<QQmlValueTypeReference>(engine));
-    ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
+    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
     r->setPrototype(proto);
     r->d()->object = object; r->d()->property = property;
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
@@ -195,7 +194,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     initProto(engine);
 
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->alloc<QQmlValueTypeWrapper>(engine));
-    ScopedObject proto(scope, engine->qmlExtensions()->valueTypeWrapperPrototype);
+    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
     r->setPrototype(proto);
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
