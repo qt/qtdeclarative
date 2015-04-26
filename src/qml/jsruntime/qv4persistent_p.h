@@ -99,6 +99,12 @@ public:
             return 0;
         return val->as<Managed>();
     }
+    template<typename T>
+    T *as() const {
+        if (!val)
+            return 0;
+        return val->as<T>();
+    }
 
     ExecutionEngine *engine() const {
         if (!val)
