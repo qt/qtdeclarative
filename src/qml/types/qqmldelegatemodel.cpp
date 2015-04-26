@@ -3311,7 +3311,7 @@ public:
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
         const QQmlDelegateModelGroupChangeArray *array = static_cast<const QQmlDelegateModelGroupChangeArray *>(m);
 
-        if (name->equals(array->engine()->id_length)) {
+        if (name->equals(array->engine()->id_length())) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Encode(array->count());

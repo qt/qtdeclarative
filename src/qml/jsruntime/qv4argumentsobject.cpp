@@ -54,8 +54,8 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     args->setArrayType(Heap::ArrayData::Complex);
 
     if (context->d()->strictMode) {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
-        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller));
+        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
+        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller()));
         args->propertyAt(CalleePropertyIndex)->value = v4->thrower();
         args->propertyAt(CalleePropertyIndex)->set = v4->thrower();
         args->propertyAt(CallerPropertyIndex)->value = v4->thrower();
@@ -65,10 +65,10 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
         args->arrayPut(0, context->args(), context->argc());
         args->d()->fullyCreated = true;
     } else {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee));
+        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
         args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
     }
-    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length));
+    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length()));
     args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->callData->argc);
 }
 

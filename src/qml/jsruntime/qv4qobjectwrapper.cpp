@@ -272,8 +272,8 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     QV4::Scope scope(engine());
     QV4::ScopedString name(scope, n);
 
-    if (name->equals(scope.engine->id_destroy) || name->equals(scope.engine->id_toString)) {
-        int index = name->equals(scope.engine->id_destroy) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
+    if (name->equals(scope.engine->id_destroy()) || name->equals(scope.engine->id_toString())) {
+        int index = name->equals(scope.engine->id_destroy()) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
         ScopedContext global(scope, scope.engine->rootContext());
         QV4::ScopedValue method(scope, QV4::QObjectMethod::create(global, d()->object, index));
         if (hasProperty)
@@ -727,7 +727,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
     QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
     QQmlPropertyData local;
     if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
-        || name->equals(engine->id_destroy) || name->equals(engine->id_toString))
+        || name->equals(engine->id_destroy()) || name->equals(engine->id_toString()))
         return QV4::Attr_Data;
     else
         return QV4::Object::query(m, name);

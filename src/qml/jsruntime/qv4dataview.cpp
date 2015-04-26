@@ -95,9 +95,9 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(3));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
-    defineDefaultProperty(engine->id_constructor, (o = ctor));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(3));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, 0);
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
     defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, 0);

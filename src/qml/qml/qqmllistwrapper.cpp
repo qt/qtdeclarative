@@ -98,7 +98,7 @@ ReturnedValue QmlListWrapper::get(const Managed *m, String *name, bool *hasPrope
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
-    if (name->equals(v4->id_length) && !w->d()->object.isNull()) {
+    if (name->equals(v4->id_length()) && !w->d()->object.isNull()) {
         quint32 count = w->d()->property.count ? w->d()->property.count(&w->d()->property) : 0;
         return Primitive::fromUInt32(count).asReturnedValue();
     }

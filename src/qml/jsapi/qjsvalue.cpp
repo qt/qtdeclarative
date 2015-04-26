@@ -1028,7 +1028,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
     if (!o)
         return QJSValue();
 
-    QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax) : o->getIndexed(arrayIndex));
+    QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax()) : o->getIndexed(arrayIndex));
     if (engine->hasException)
         engine->catchException();
     return QJSValue(engine, result->asReturnedValue());
@@ -1107,7 +1107,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     if (arrayIndex != UINT_MAX)
         o->putIndexed(arrayIndex, v);
     else
-        o->put(engine->id_uintMax, v);
+        o->put(engine->id_uintMax(), v);
     if (engine->hasException)
         engine->catchException();
 }

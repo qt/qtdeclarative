@@ -61,11 +61,11 @@ void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString);
-    defineDefaultProperty(engine->id_valueOf, method_valueOf);
+    defineDefaultProperty(engine->id_toString(), method_toString);
+    defineDefaultProperty(engine->id_valueOf(), method_valueOf);
 }
 
 ReturnedValue BooleanPrototype::method_toString(CallContext *ctx)

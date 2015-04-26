@@ -139,7 +139,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     ScopedString s(scope, e->newIdentifier(name));
     ScopedContext global(scope, e->rootContext());
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
-    function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
 }
 
@@ -149,7 +149,7 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallConte
     Scope scope(e);
     ScopedContext global(scope, e->rootContext());
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
-    function->defineReadonlyProperty(e->id_length, Primitive::fromInt32(argumentCount));
+    function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
 }
 
@@ -675,7 +675,7 @@ void Object::internalPut(String *name, const Value &value)
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
-        else if (isArrayObject() && name->equals(engine()->id_length)) {
+        else if (isArrayObject() && name->equals(engine()->id_length())) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok) {
@@ -859,8 +859,8 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     PropertyAttributes *cattrs;
     uint memberIndex;
 
-    if (isArrayObject() && name->equals(engine->id_length)) {
-        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length));
+    if (isArrayObject() && name->equals(engine->id_length())) {
+        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()));
         Property *lp = propertyAt(Heap::ArrayObject::LengthPropertyIndex);
         cattrs = internalClass()->propertyData.constData() + Heap::ArrayObject::LengthPropertyIndex;
         if (attrs.isEmpty() || p->isSubset(attrs, lp, *cattrs))
@@ -1098,7 +1098,7 @@ void Object::copyArrayData(Object *other)
 uint Object::getLength(const Managed *m)
 {
     Scope scope(static_cast<const Object *>(m)->engine());
-    ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length));
+    ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length()));
     return v->toUInt32();
 }
 
@@ -1160,7 +1160,7 @@ ReturnedValue ArrayObject::getLookup(const Managed *m, Lookup *l)
 {
     Scope scope(static_cast<const Object *>(m)->engine());
     ScopedString name(scope, scope.engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (name->equals(scope.engine->id_length)) {
+    if (name->equals(scope.engine->id_length())) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;
         const ArrayObject *a = static_cast<const ArrayObject *>(m);

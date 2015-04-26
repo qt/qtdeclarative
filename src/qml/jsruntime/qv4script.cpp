@@ -87,7 +87,7 @@ DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml)
-    : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
     , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
@@ -99,7 +99,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     Scope s(scope);
     Scoped<QV4::QmlBindingWrapper> o(s, this);
 
-    o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
+    o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
 
     ScopedContext ctx(s, s.engine->currentContext());
     o->d()->qmlContext = ctx->newQmlContext(o, qml);
@@ -107,7 +107,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 }
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml)
-    : Heap::FunctionObject(scope, scope->d()->engine->id_eval, /*createProto = */ false)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
     , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
@@ -115,7 +115,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
     Scope s(scope);
     Scoped<QV4::QmlBindingWrapper> o(s, this);
 
-    o->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(1));
+    o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
 
     ScopedContext ctx(s, s.engine->currentContext());
     o->d()->qmlContext = ctx->newQmlContext(o, qml);

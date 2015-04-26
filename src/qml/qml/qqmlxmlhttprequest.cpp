@@ -895,7 +895,7 @@ ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasPropert
     QV4::ExecutionEngine *v4 = r->engine();
 
     name->makeIdentifier(v4);
-    if (name->equals(v4->id_length))
+    if (name->equals(v4->id_length()))
         return Primitive::fromInt32(r->d()->list.count()).asReturnedValue();
 
     QString str = name->toQString();
@@ -941,7 +941,7 @@ ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
 
     name->makeIdentifier(v4);
 
-    if (name->equals(v4->id_length))
+    if (name->equals(v4->id_length()))
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }
@@ -1702,7 +1702,7 @@ Heap::QQmlXMLHttpRequestCtor::QQmlXMLHttpRequestCtor(ExecutionEngine *engine)
     ctor->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
     if (!ctor->d()->proto)
         ctor->setupProto();
-    ScopedString s(scope, engine->id_prototype);
+    ScopedString s(scope, engine->id_prototype());
     ctor->defineDefaultProperty(s, ScopedObject(scope, ctor->d()->proto));
 }
 

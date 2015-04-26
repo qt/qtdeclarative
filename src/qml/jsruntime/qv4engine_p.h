@@ -235,42 +235,83 @@ public:
     Property *argumentsAccessors;
     int nArgumentsAccessors;
 
-    StringValue id_empty;
-    StringValue id_undefined;
-    StringValue id_null;
-    StringValue id_true;
-    StringValue id_false;
-    StringValue id_boolean;
-    StringValue id_number;
-    StringValue id_string;
-    StringValue id_object;
-    StringValue id_function;
-    StringValue id_length;
-    StringValue id_prototype;
-    StringValue id_constructor;
-    StringValue id_arguments;
-    StringValue id_caller;
-    StringValue id_callee;
-    StringValue id_this;
-    StringValue id___proto__;
-    StringValue id_enumerable;
-    StringValue id_configurable;
-    StringValue id_writable;
-    StringValue id_value;
-    StringValue id_get;
-    StringValue id_set;
-    StringValue id_eval;
-    StringValue id_uintMax;
-    StringValue id_name;
-    StringValue id_index;
-    StringValue id_input;
-    StringValue id_toString;
-    StringValue id_destroy;
-    StringValue id_valueOf;
-    StringValue id_byteLength;
-    StringValue id_byteOffset;
-    StringValue id_buffer;
-    StringValue id_lastIndex;
+    enum JSStrings {
+        String_Empty,
+        String_undefined,
+        String_null,
+        String_true,
+        String_false,
+        String_boolean,
+        String_number,
+        String_string,
+        String_object,
+        String_function,
+        String_length,
+        String_prototype,
+        String_constructor,
+        String_arguments,
+        String_caller,
+        String_callee,
+        String_this,
+        String___proto__,
+        String_enumerable,
+        String_configurable,
+        String_writable,
+        String_value,
+        String_get,
+        String_set,
+        String_eval,
+        String_uintMax,
+        String_name,
+        String_index,
+        String_input,
+        String_toString,
+        String_destroy,
+        String_valueOf,
+        String_byteLength,
+        String_byteOffset,
+        String_buffer,
+        String_lastIndex,
+        NJSStrings
+    };
+    Value *jsStrings;
+
+    String *id_empty() const { return reinterpret_cast<String *>(jsStrings + String_Empty); }
+    String *id_undefined() const { return reinterpret_cast<String *>(jsStrings + String_undefined); }
+    String *id_null() const { return reinterpret_cast<String *>(jsStrings + String_null); }
+    String *id_true() const { return reinterpret_cast<String *>(jsStrings + String_true); }
+    String *id_false() const { return reinterpret_cast<String *>(jsStrings + String_false); }
+    String *id_boolean() const { return reinterpret_cast<String *>(jsStrings + String_boolean); }
+    String *id_number() const { return reinterpret_cast<String *>(jsStrings + String_number); }
+    String *id_string() const { return reinterpret_cast<String *>(jsStrings + String_string); }
+    String *id_object() const { return reinterpret_cast<String *>(jsStrings + String_object); }
+    String *id_function() const { return reinterpret_cast<String *>(jsStrings + String_function); }
+    String *id_length() const { return reinterpret_cast<String *>(jsStrings + String_length); }
+    String *id_prototype() const { return reinterpret_cast<String *>(jsStrings + String_prototype); }
+    String *id_constructor() const { return reinterpret_cast<String *>(jsStrings + String_constructor); }
+    String *id_arguments() const { return reinterpret_cast<String *>(jsStrings + String_arguments); }
+    String *id_caller() const { return reinterpret_cast<String *>(jsStrings + String_caller); }
+    String *id_callee() const { return reinterpret_cast<String *>(jsStrings + String_callee); }
+    String *id_this() const { return reinterpret_cast<String *>(jsStrings + String_this); }
+    String *id___proto__() const { return reinterpret_cast<String *>(jsStrings + String___proto__); }
+    String *id_enumerable() const { return reinterpret_cast<String *>(jsStrings + String_enumerable); }
+    String *id_configurable() const { return reinterpret_cast<String *>(jsStrings + String_configurable); }
+    String *id_writable() const { return reinterpret_cast<String *>(jsStrings + String_writable); }
+    String *id_value() const { return reinterpret_cast<String *>(jsStrings + String_value); }
+    String *id_get() const { return reinterpret_cast<String *>(jsStrings + String_get); }
+    String *id_set() const { return reinterpret_cast<String *>(jsStrings + String_set); }
+    String *id_eval() const { return reinterpret_cast<String *>(jsStrings + String_eval); }
+    String *id_uintMax() const { return reinterpret_cast<String *>(jsStrings + String_uintMax); }
+    String *id_name() const { return reinterpret_cast<String *>(jsStrings + String_name); }
+    String *id_index() const { return reinterpret_cast<String *>(jsStrings + String_index); }
+    String *id_input() const { return reinterpret_cast<String *>(jsStrings + String_input); }
+    String *id_toString() const { return reinterpret_cast<String *>(jsStrings + String_toString); }
+    String *id_destroy() const { return reinterpret_cast<String *>(jsStrings + String_destroy); }
+    String *id_valueOf() const { return reinterpret_cast<String *>(jsStrings + String_valueOf); }
+    String *id_byteLength() const { return reinterpret_cast<String *>(jsStrings + String_byteLength); }
+    String *id_byteOffset() const { return reinterpret_cast<String *>(jsStrings + String_byteOffset); }
+    String *id_buffer() const { return reinterpret_cast<String *>(jsStrings + String_buffer); }
+    String *id_lastIndex() const { return reinterpret_cast<String *>(jsStrings + String_lastIndex); }
 
     QSet<CompiledData::CompilationUnit*> compilationUnits;
 

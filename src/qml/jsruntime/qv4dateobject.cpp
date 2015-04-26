@@ -695,8 +695,8 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(7));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(7));
     LocalTZA = getLocalTZA();
 
     ctor->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
@@ -704,13 +704,13 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("now"), method_now, 0);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString, 0);
+    defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toDateString"), method_toDateString, 0);
     defineDefaultProperty(QStringLiteral("toTimeString"), method_toTimeString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString, 0);
-    defineDefaultProperty(engine->id_valueOf, method_valueOf, 0);
+    defineDefaultProperty(engine->id_valueOf(), method_valueOf, 0);
     defineDefaultProperty(QStringLiteral("getTime"), method_getTime, 0);
     defineDefaultProperty(QStringLiteral("getYear"), method_getYear, 0);
     defineDefaultProperty(QStringLiteral("getFullYear"), method_getFullYear, 0);

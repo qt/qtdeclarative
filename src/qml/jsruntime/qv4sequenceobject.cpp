@@ -605,7 +605,7 @@ void SequencePrototype::init()
 {
     FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
-    defineDefaultProperty(engine()->id_valueOf, method_valueOf, 0);
+    defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 

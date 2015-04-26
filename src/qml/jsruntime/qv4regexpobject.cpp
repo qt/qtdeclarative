@@ -174,7 +174,7 @@ void RegExpObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 Property *RegExpObject::lastIndexProperty()
 {
-    Q_ASSERT(0 == internalClass()->find(engine()->id_lastIndex));
+    Q_ASSERT(0 == internalClass()->find(engine()->id_lastIndex()));
     return propertyAt(0);
 }
 
@@ -231,7 +231,7 @@ Heap::RegExpCtor::RegExpCtor(QV4::ExecutionContext *scope)
 void Heap::RegExpCtor::clearLastMatch()
 {
     lastMatch = Primitive::nullValue();
-    lastInput = internalClass->engine->id_empty->d();
+    lastInput = internalClass->engine->id_empty()->d();
     lastMatchStart = 0;
     lastMatchEnd = 0;
 }
@@ -310,8 +310,8 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ScopedObject o(scope);
     ScopedObject ctor(scope, constructor);
 
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(2));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(2));
 
     // Properties deprecated in the spec but required by "the web" :(
     ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, 0);
@@ -337,7 +337,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
-    defineDefaultProperty(engine->id_toString, method_toString, 0);
+    defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 

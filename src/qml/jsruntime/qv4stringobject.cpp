@@ -76,7 +76,7 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
 
     Scope scope(ic->engine);
     ScopedObject s(scope, this);
-    s->defineReadonlyProperty(ic->engine->id_length, Primitive::fromInt32(0));
+    s->defineReadonlyProperty(ic->engine->id_length(), Primitive::fromInt32(0));
 }
 
 Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
@@ -88,7 +88,7 @@ Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
 
     Scope scope(engine);
     ScopedObject s(scope, this);
-    s->defineReadonlyProperty(engine->id_length, Primitive::fromUInt32(value.stringValue()->toQString().length()));
+    s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(value.stringValue()->toQString().length()));
 }
 
 Property *Heap::StringObject::getIndex(uint index) const
@@ -187,13 +187,13 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
 
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString);
-    defineDefaultProperty(engine->id_valueOf, method_toString); // valueOf and toString are identical
+    defineDefaultProperty(engine->id_toString(), method_toString);
+    defineDefaultProperty(engine->id_valueOf(), method_toString); // valueOf and toString are identical
     defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
     defineDefaultProperty(QStringLiteral("charCodeAt"), method_charCodeAt, 1);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);

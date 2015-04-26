@@ -234,7 +234,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (const Object *o = v.as<Object>()) {
         if (o->isListType()) {
             // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-            uint seqLength = ScopedValue(scope, o->get(engine->id_length))->toUInt32();
+            uint seqLength = ScopedValue(scope, o->get(engine->id_length()))->toUInt32();
             uint length = seqLength + 1;
             if (length > 0xFFFFFF) {
                 push(data, valueheader(WorkerUndefined));

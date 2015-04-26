@@ -139,10 +139,10 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isView"), ArrayBufferCtor::method_isView, 1);
-    defineDefaultProperty(engine->id_constructor, (o = ctor));
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
 }
@@ -173,7 +173,7 @@ ReturnedValue ArrayBufferPrototype::method_slice(CallContext *ctx)
     double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
     double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
 
-    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor));
+    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
     if (!constructor)
         return scope.engine->throwTypeError();
 

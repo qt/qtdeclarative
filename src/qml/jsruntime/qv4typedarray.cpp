@@ -300,7 +300,7 @@ ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
     // ECMA 6 22.2.1.3
 
     ScopedObject o(scope, callData->argument(0));
-    uint l = (uint) qBound(0., ScopedValue(scope, o->get(scope.engine->id_length))->toInteger(), (double)UINT_MAX);
+    uint l = (uint) qBound(0., ScopedValue(scope, o->get(scope.engine->id_length()))->toInteger(), (double)UINT_MAX);
     if (scope.engine->hasException)
         return scope.engine->throwTypeError();
 
@@ -391,10 +391,10 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(3));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(3));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
-    defineDefaultProperty(engine->id_constructor, (o = ctor));
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, 0);
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
     defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, 0);
@@ -471,7 +471,7 @@ ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
         if (scope.engine->hasException || !o)
             return scope.engine->throwTypeError();
 
-        double len = ScopedValue(scope, o->get(scope.engine->id_length))->toNumber();
+        double len = ScopedValue(scope, o->get(scope.engine->id_length()))->toNumber();
         uint l = (uint)len;
         if (scope.engine->hasException || l != len)
             return scope.engine->throwTypeError();
@@ -564,7 +564,7 @@ ReturnedValue TypedArrayPrototype::method_subarray(CallContext *ctx)
 
     int newLen = end - begin;
 
-    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor));
+    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
     if (!constructor)
         return scope.engine->throwTypeError();
 

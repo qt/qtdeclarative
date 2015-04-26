@@ -340,11 +340,11 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 DEFINE_OBJECT_VTABLE(EvalFunction);
 
 Heap::EvalFunction::EvalFunction(QV4::ExecutionContext *scope)
-    : Heap::FunctionObject(scope, scope->d()->engine->id_eval)
+    : Heap::FunctionObject(scope, scope->d()->engine->id_eval())
 {
     Scope s(scope);
     ScopedFunctionObject f(s, this);
-    f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(1));
+    f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(1));
 }
 
 ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const

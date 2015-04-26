@@ -82,11 +82,11 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString, 0);
+    defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
@@ -186,7 +186,7 @@ ReturnedValue ArrayPrototype::method_join(CallContext *ctx)
         r4 = arg->toQString();
 
     ScopedObject self(scope, ctx->thisObject());
-    ScopedValue length(scope, self->get(ctx->d()->engine->id_length));
+    ScopedValue length(scope, self->get(ctx->d()->engine->id_length()));
     const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
 
     if (!r2)
@@ -243,7 +243,7 @@ ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromInt32(0)));
+            instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromInt32(0)));
         return Encode::undefined();
     }
 
@@ -257,7 +257,7 @@ ReturnedValue ArrayPrototype::method_pop(CallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLength(len - 1);
     else
-        instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - 1)));
+        instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
     return result->asReturnedValue();
 }
 
@@ -283,7 +283,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
         }
         double newLen = l + ctx->argc();
         if (!instance->isArrayObject())
-            instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(newLen)));
+            instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
         else {
             ScopedString str(scope, ctx->d()->engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
             return ctx->engine()->throwRangeError(str);
@@ -304,7 +304,7 @@ ReturnedValue ArrayPrototype::method_push(CallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
     else
-        instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len)));
+        instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len)));
 
     return Encode(len);
 }
@@ -355,7 +355,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromInt32(0)));
+            instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromInt32(0)));
         return Encode::undefined();
     }
 
@@ -389,7 +389,7 @@ ReturnedValue ArrayPrototype::method_shift(CallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
     else
-        instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - 1)));
+        instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
     return result->asReturnedValue();
 }
 
@@ -524,7 +524,7 @@ ReturnedValue ArrayPrototype::method_splice(CallContext *ctx)
     }
 
     ctx->d()->strictMode = true;
-    instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
+    instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
 
     return newArray.asReturnedValue();
 }
@@ -562,7 +562,7 @@ ReturnedValue ArrayPrototype::method_unshift(CallContext *ctx)
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else
-        instance->put(ctx->d()->engine->id_length, ScopedValue(scope, Primitive::fromDouble(newLen)));
+        instance->put(ctx->d()->engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
 
     return Encode(newLen);
 }

@@ -239,6 +239,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects = jsAlloca(NJSObjects);
     typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));
     typedArrayCtors = static_cast<FunctionObject *>(jsAlloca(NTypedArrayTypes));
+    jsStrings = jsAlloca(NJSStrings);
 
 #ifdef V4_USE_VALGRIND
     VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, 2*JSStackLimit);
@@ -256,52 +257,52 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     emptyClass =  new (classPool) InternalClass(this);
 
-    id_empty = newIdentifier(QString());
-    id_undefined = newIdentifier(QStringLiteral("undefined"));
-    id_null = newIdentifier(QStringLiteral("null"));
-    id_true = newIdentifier(QStringLiteral("true"));
-    id_false = newIdentifier(QStringLiteral("false"));
-    id_boolean = newIdentifier(QStringLiteral("boolean"));
-    id_number = newIdentifier(QStringLiteral("number"));
-    id_string = newIdentifier(QStringLiteral("string"));
-    id_object = newIdentifier(QStringLiteral("object"));
-    id_function = newIdentifier(QStringLiteral("function"));
-    id_length = newIdentifier(QStringLiteral("length"));
-    id_prototype = newIdentifier(QStringLiteral("prototype"));
-    id_constructor = newIdentifier(QStringLiteral("constructor"));
-    id_arguments = newIdentifier(QStringLiteral("arguments"));
-    id_caller = newIdentifier(QStringLiteral("caller"));
-    id_callee = newIdentifier(QStringLiteral("callee"));
-    id_this = newIdentifier(QStringLiteral("this"));
-    id___proto__ = newIdentifier(QStringLiteral("__proto__"));
-    id_enumerable = newIdentifier(QStringLiteral("enumerable"));
-    id_configurable = newIdentifier(QStringLiteral("configurable"));
-    id_writable = newIdentifier(QStringLiteral("writable"));
-    id_value = newIdentifier(QStringLiteral("value"));
-    id_get = newIdentifier(QStringLiteral("get"));
-    id_set = newIdentifier(QStringLiteral("set"));
-    id_eval = newIdentifier(QStringLiteral("eval"));
-    id_uintMax = newIdentifier(QStringLiteral("4294967295"));
-    id_name = newIdentifier(QStringLiteral("name"));
-    id_index = newIdentifier(QStringLiteral("index"));
-    id_input = newIdentifier(QStringLiteral("input"));
-    id_toString = newIdentifier(QStringLiteral("toString"));
-    id_destroy = newIdentifier(QStringLiteral("destroy"));
-    id_valueOf = newIdentifier(QStringLiteral("valueOf"));
-    id_byteLength = newIdentifier(QStringLiteral("byteLength"));
-    id_byteOffset = newIdentifier(QStringLiteral("byteOffset"));
-    id_buffer = newIdentifier(QStringLiteral("buffer"));
-    id_lastIndex = newIdentifier(QStringLiteral("lastIndex"));
+    jsStrings[String_Empty] = newIdentifier(QString());
+    jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));
+    jsStrings[String_null] = newIdentifier(QStringLiteral("null"));
+    jsStrings[String_true] = newIdentifier(QStringLiteral("true"));
+    jsStrings[String_false] = newIdentifier(QStringLiteral("false"));
+    jsStrings[String_boolean] = newIdentifier(QStringLiteral("boolean"));
+    jsStrings[String_number] = newIdentifier(QStringLiteral("number"));
+    jsStrings[String_string] = newIdentifier(QStringLiteral("string"));
+    jsStrings[String_object] = newIdentifier(QStringLiteral("object"));
+    jsStrings[String_function] = newIdentifier(QStringLiteral("function"));
+    jsStrings[String_length] = newIdentifier(QStringLiteral("length"));
+    jsStrings[String_prototype] = newIdentifier(QStringLiteral("prototype"));
+    jsStrings[String_constructor] = newIdentifier(QStringLiteral("constructor"));
+    jsStrings[String_arguments] = newIdentifier(QStringLiteral("arguments"));
+    jsStrings[String_caller] = newIdentifier(QStringLiteral("caller"));
+    jsStrings[String_callee] = newIdentifier(QStringLiteral("callee"));
+    jsStrings[String_this] = newIdentifier(QStringLiteral("this"));
+    jsStrings[String___proto__] = newIdentifier(QStringLiteral("__proto__"));
+    jsStrings[String_enumerable] = newIdentifier(QStringLiteral("enumerable"));
+    jsStrings[String_configurable] = newIdentifier(QStringLiteral("configurable"));
+    jsStrings[String_writable] = newIdentifier(QStringLiteral("writable"));
+    jsStrings[String_value] = newIdentifier(QStringLiteral("value"));
+    jsStrings[String_get] = newIdentifier(QStringLiteral("get"));
+    jsStrings[String_set] = newIdentifier(QStringLiteral("set"));
+    jsStrings[String_eval] = newIdentifier(QStringLiteral("eval"));
+    jsStrings[String_uintMax] = newIdentifier(QStringLiteral("4294967295"));
+    jsStrings[String_name] = newIdentifier(QStringLiteral("name"));
+    jsStrings[String_index] = newIdentifier(QStringLiteral("index"));
+    jsStrings[String_input] = newIdentifier(QStringLiteral("input"));
+    jsStrings[String_toString] = newIdentifier(QStringLiteral("toString"));
+    jsStrings[String_destroy] = newIdentifier(QStringLiteral("destroy"));
+    jsStrings[String_valueOf] = newIdentifier(QStringLiteral("valueOf"));
+    jsStrings[String_byteLength] = newIdentifier(QStringLiteral("byteLength"));
+    jsStrings[String_byteOffset] = newIdentifier(QStringLiteral("byteOffset"));
+    jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
+    jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
     jsObjects[ObjectProto] = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
 
-    arrayClass = emptyClass->addMember(id_length, Attr_NotConfigurable|Attr_NotEnumerable);
+    arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
     jsObjects[ArrayProto] = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype());
 
-    InternalClass *argsClass = emptyClass->addMember(id_length, Attr_NotEnumerable);
-    argumentsObjectClass = argsClass->addMember(id_callee, Attr_Data|Attr_NotEnumerable);
-    strictArgumentsObjectClass = argsClass->addMember(id_callee, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    InternalClass *argsClass = emptyClass->addMember(id_length(), Attr_NotEnumerable);
+    argumentsObjectClass = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
+    strictArgumentsObjectClass = argsClass->addMember(id_callee(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
     *static_cast<Value *>(globalObject) = newObject();
     Q_ASSERT(globalObject->d()->vtable);
@@ -313,22 +314,22 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[DateProto] = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype());
 
     uint index;
-    InternalClass *functionProtoClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable, &index);
+    InternalClass *functionProtoClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     jsObjects[FunctionProto] = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype());
-    functionClass = emptyClass->addMember(id_prototype, Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    functionClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    simpleScriptFunctionClass = functionClass->addMember(id_name, Attr_ReadOnly, &index);
+    simpleScriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Name);
-    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length, Attr_ReadOnly, &index);
+    simpleScriptFunctionClass = simpleScriptFunctionClass->addMember(id_length(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::SimpleScriptFunction::Index_Length);
-    protoClass = emptyClass->addMember(id_constructor, Attr_NotEnumerable, &index);
+    protoClass = emptyClass->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
     jsObjects[RegExpProto] = memoryManager->alloc<RegExpPrototype>(this);
-    regExpExecArrayClass = arrayClass->addMember(id_index, Attr_Data, &index);
+    regExpExecArrayClass = arrayClass->addMember(id_index(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
-    regExpExecArrayClass = regExpExecArrayClass->addMember(id_input, Attr_Data, &index);
+    regExpExecArrayClass = regExpExecArrayClass->addMember(id_input(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
     jsObjects[ErrorProto] = memoryManager->alloc<ErrorPrototype>(emptyClass, objectPrototype());
@@ -904,43 +905,6 @@ void ExecutionEngine::markObjects()
         }
         c = c->parent;
     }
-
-    id_empty->mark(this);
-    id_undefined->mark(this);
-    id_null->mark(this);
-    id_true->mark(this);
-    id_false->mark(this);
-    id_boolean->mark(this);
-    id_number->mark(this);
-    id_string->mark(this);
-    id_object->mark(this);
-    id_function->mark(this);
-    id_length->mark(this);
-    id_prototype->mark(this);
-    id_constructor->mark(this);
-    id_arguments->mark(this);
-    id_caller->mark(this);
-    id_callee->mark(this);
-    id_this->mark(this);
-    id___proto__->mark(this);
-    id_enumerable->mark(this);
-    id_configurable->mark(this);
-    id_writable->mark(this);
-    id_value->mark(this);
-    id_get->mark(this);
-    id_set->mark(this);
-    id_eval->mark(this);
-    id_uintMax->mark(this);
-    id_name->mark(this);
-    id_index->mark(this);
-    id_input->mark(this);
-    id_toString->mark(this);
-    id_destroy->mark(this);
-    id_valueOf->mark(this);
-    id_byteLength->mark(this);
-    id_byteOffset->mark(this);
-    id_buffer->mark(this);
-    id_lastIndex->mark(this);
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         typedArrayCtors[i].mark(this);

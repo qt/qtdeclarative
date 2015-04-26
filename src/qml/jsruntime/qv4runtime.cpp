@@ -394,8 +394,8 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     if (engine->hasException)
         return Encode::undefined();
 
-    StringValue *meth1 = &engine->id_toString;
-    StringValue *meth2 = &engine->id_valueOf;
+    String *meth1 = engine->id_toString();
+    String *meth2 = engine->id_valueOf();
 
     if (typeHint == NUMBER_HINT)
         qSwap(meth1, meth2);
@@ -404,7 +404,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     ScopedCallData callData(scope, 0);
     callData->thisObject = *object;
 
-    ScopedValue conv(scope, object->get(*meth1));
+    ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         ScopedValue r(scope, o->call(callData));
         if (r->isPrimitive())
@@ -414,7 +414,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     if (engine->hasException)
         return Encode::undefined();
 
-    conv = object->get(*meth2);
+    conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         ScopedValue r(scope, o->call(callData));
         if (r->isPrimitive())
@@ -451,14 +451,14 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined->d();
+        return engine->id_undefined()->d();
     case Value::Null_Type:
-        return engine->id_null->d();
+        return engine->id_null()->d();
     case Value::Boolean_Type:
         if (value.booleanValue())
-            return engine->id_true->d();
+            return engine->id_true()->d();
         else
-            return engine->id_false->d();
+            return engine->id_false()->d();
     case Value::Managed_Type:
         if (value.isString())
             return value.stringValue()->d();
@@ -482,14 +482,14 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value 
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
     case Value::Undefined_Type:
-        return engine->id_undefined->d();
+        return engine->id_undefined()->d();
     case Value::Null_Type:
-        return engine->id_null->d();
+        return engine->id_null()->d();
     case Value::Boolean_Type:
         if (value.booleanValue())
-            return engine->id_true->d();
+            return engine->id_true()->d();
         else
-            return engine->id_false->d();
+            return engine->id_false()->d();
     case Value::Managed_Type:
         if (value.isString())
             return value.stringValue()->d();
@@ -910,7 +910,7 @@ ReturnedValue Runtime::callGlobalLookup(ExecutionEngine *engine, uint index, Cal
         return engine->throwTypeError();
 
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval))
+    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval()))
         return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
     return o->call(callData);
@@ -941,7 +941,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionEngine *engine, int nameI
         return engine->throwTypeError(msg);
     }
 
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval)) {
+    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval())) {
         return static_cast<EvalFunction *>(o)->evalCall(callData, true);
     }
 
@@ -1090,24 +1090,24 @@ ReturnedValue Runtime::typeofValue(ExecutionEngine *engine, const Value &value)
     ScopedString res(scope);
     switch (value.type()) {
     case Value::Undefined_Type:
-        res = engine->id_undefined;
+        res = engine->id_undefined();
         break;
     case Value::Null_Type:
-        res = engine->id_object;
+        res = engine->id_object();
         break;
     case Value::Boolean_Type:
-        res = engine->id_boolean;
+        res = engine->id_boolean();
         break;
     case Value::Managed_Type:
         if (value.isString())
-            res = engine->id_string;
+            res = engine->id_string();
         else if (value.objectValue()->as<FunctionObject>())
-            res = engine->id_function;
+            res = engine->id_function();
         else
-            res = engine->id_object; // ### implementation-defined
+            res = engine->id_object(); // ### implementation-defined
         break;
     default:
-        res = engine->id_number;
+        res = engine->id_number();
         break;
     }
     return res.asReturnedValue();

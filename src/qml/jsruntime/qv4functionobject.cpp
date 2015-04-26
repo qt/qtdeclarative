@@ -161,12 +161,12 @@ void FunctionObject::init(String *n, bool createProto)
     }
 
     ScopedValue v(s, n);
-    defineReadonlyProperty(s.engine->id_name, v);
+    defineReadonlyProperty(s.engine->id_name(), v);
 }
 
 ReturnedValue FunctionObject::name() const
 {
-    return get(scope()->engine->id_name);
+    return get(scope()->engine->id_name());
 }
 
 
@@ -303,12 +303,12 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
 
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
 
-    defineReadonlyProperty(engine->id_length, Primitive::fromInt32(0));
+    defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(0));
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString, 0);
+    defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(QStringLiteral("bind"), method_bind, 1);
@@ -480,7 +480,7 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
     if (createProto) {
         ScopedString name(s, function->name());
         f->init(name, createProto);
-        f->defineReadonlyProperty(scope->d()->engine->id_length, Primitive::fromInt32(f->formalParameterCount()));
+        f->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(f->formalParameterCount()));
     } else {
         f->ensureMemberIndex(s.engine, Index_Length);
         memberData->data[Index_Name] = function->name();
@@ -491,8 +491,8 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
         ScopedProperty pd(s);
         pd->value = s.engine->thrower();
         pd->set = s.engine->thrower();
-        f->insertMember(scope->d()->engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        f->insertMember(scope->d()->engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(scope->d()->engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+        f->insertMember(scope->d()->engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     }
 }
 
@@ -649,19 +649,19 @@ Heap::BoundFunction::BoundFunction(QV4::ExecutionContext *scope, QV4::FunctionOb
     Scope s(scope);
     ScopedObject f(s, this);
 
-    ScopedValue l(s, target->get(s.engine->id_length));
+    ScopedValue l(s, target->get(s.engine->id_length()));
     int len = l->toUInt32();
     if (boundArgs)
         len -= boundArgs->size();
     if (len < 0)
         len = 0;
-    f->defineReadonlyProperty(s.engine->id_length, Primitive::fromInt32(len));
+    f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(len));
 
     ScopedProperty pd(s);
     pd->value = s.engine->thrower();
     pd->set = s.engine->thrower();
-    f->insertMember(s.engine->id_arguments, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    f->insertMember(s.engine->id_caller, pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    f->insertMember(s.engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
 ReturnedValue BoundFunction::call(const Managed *that, CallData *dd)

@@ -343,10 +343,10 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj)
     Scope scope(engine);
     ScopedString s(scope);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = obj));
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = obj));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
     obj->defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    obj->defineDefaultProperty(engine->id_toString, method_toString, 0);
+    obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
     obj->defineDefaultProperty(QStringLiteral("message"), (s = engine->newString()));
 }
 
@@ -358,7 +358,7 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
     if (!o)
         return ctx->engine()->throwTypeError();
 
-    ScopedValue name(scope, o->get(ctx->d()->engine->id_name));
+    ScopedValue name(scope, o->get(ctx->d()->engine->id_name()));
     QString qname;
     if (name->isUndefined())
         qname = QString::fromLatin1("Error");

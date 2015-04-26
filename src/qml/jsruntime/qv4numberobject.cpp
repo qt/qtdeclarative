@@ -68,8 +68,8 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_prototype, (o = this));
-    ctor->defineReadonlyProperty(engine->id_length, Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
 
     ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
     ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
@@ -86,9 +86,9 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
 #endif
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineDefaultProperty(engine->id_toString, method_toString);
+    defineDefaultProperty(engine->id_toString(), method_toString);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
-    defineDefaultProperty(engine->id_valueOf, method_valueOf);
+    defineDefaultProperty(engine->id_valueOf(), method_valueOf);
     defineDefaultProperty(QStringLiteral("toFixed"), method_toFixed, 1);
     defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential);
     defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision);

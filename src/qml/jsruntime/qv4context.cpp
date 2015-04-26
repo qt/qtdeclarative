@@ -328,7 +328,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
             }
         }
     }
-    if (d()->strictMode || name->equals(d()->engine->id_this)) {
+    if (d()->strictMode || name->equals(d()->engine->id_this())) {
         ScopedValue n(scope, name->asReturnedValue());
         engine()->throwReferenceError(n);
         return;
@@ -342,7 +342,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     ScopedValue v(scope);
     name->makeIdentifier(scope.engine);
 
-    if (name->equals(d()->engine->id_this))
+    if (name->equals(d()->engine->id_this()))
         return thisObject().asReturnedValue();
 
     bool hasWith = false;
@@ -409,7 +409,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Heap::Object **
     *base = (Heap::Object *)0;
     name->makeIdentifier(scope.engine);
 
-    if (name->equals(d()->engine->id_this))
+    if (name->equals(d()->engine->id_this()))
         return thisObject().asReturnedValue();
 
     bool hasWith = false;

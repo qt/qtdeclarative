@@ -170,7 +170,7 @@ void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 
     Scope scope(v4);
     ScopedObject o(scope, v4->newObject());
-    o->defineDefaultProperty(v4->id_toString, method_toString, 1);
+    o->defineDefaultProperty(v4->id_toString(), method_toString, 1);
     v4->qmlExtensions()->valueTypeWrapperPrototype = o->d();
 }
 

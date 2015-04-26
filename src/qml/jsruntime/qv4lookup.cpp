@@ -252,7 +252,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
         proto = engine->stringPrototype();
         Scope scope(engine);
         ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
-        if (name->equals(engine->id_length)) {
+        if (name->equals(engine->id_length())) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;
             return stringLengthGetter(l, engine, object);
