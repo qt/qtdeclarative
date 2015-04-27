@@ -4,4 +4,4 @@ border.right:30
 border.bottom:40
 horizontalTileRule:Round
 verticalTileRule:Repeat
-source:http://127.0.0.1:14446/colors.png
+source:{{ServerBaseUrl}}/colors.png

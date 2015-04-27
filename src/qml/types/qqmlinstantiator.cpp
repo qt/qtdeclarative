@@ -193,7 +193,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
 void QQmlInstantiatorPrivate::makeModel()
 {
     Q_Q(QQmlInstantiator);
-    QQmlDelegateModel* delegateModel = new QQmlDelegateModel(qmlContext(q));
+    QQmlDelegateModel* delegateModel = new QQmlDelegateModel(qmlContext(q), q);
     instanceModel = delegateModel;
     ownModel = true;
     delegateModel->setDelegate(delegate);

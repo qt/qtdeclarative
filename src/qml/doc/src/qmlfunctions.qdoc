@@ -516,7 +516,7 @@
 
   #include <QtQml> to use this function.
 
-  Returns non-zero if the registration was sucessful.
+  Returns -1 if the registration was not successful.
 */
 
 /*!
