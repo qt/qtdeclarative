@@ -8,5 +8,7 @@ QtObject {
     property bool test2: false
     property bool test3: false
 
-    Component.onCompleted: IncludeTest.go();
+    property string serverBaseUrl;
+
+    Component.onCompleted: IncludeTest.go(serverBaseUrl);
 }

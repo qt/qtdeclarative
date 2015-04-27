@@ -5,6 +5,7 @@ Item {
 
     property int whichCount: 0
     property bool success: false
+    property string serverBaseUrl;
 
     SequentialAnimation {
         id: anim
@@ -23,7 +24,7 @@ Item {
 
     function updateList() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET","http://127.0.0.1:14445/testlist"); // list of components
+        xhr.open("GET",serverBaseUrl + "/testlist"); // list of components
         xhr.onreadystatechange = function () {
             if (xhr.readyState == XMLHttpRequest.DONE) {
                 var components = xhr.responseText.split('\n');

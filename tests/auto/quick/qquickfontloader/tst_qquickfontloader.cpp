@@ -41,9 +41,6 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
-#define SERVER_PORT 14457
-#define SERVER_ADDR "http://localhost:14457"
-
 class tst_qquickfontloader : public QQmlDataTest
 {
     Q_OBJECT
@@ -75,7 +72,7 @@ void tst_qquickfontloader::initTestCase()
 {
     QQmlDataTest::initTestCase();
     server.serveDirectory(dataDirectory());
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
 }
 
 void tst_qquickfontloader::noFont()
@@ -135,7 +132,7 @@ void tst_qquickfontloader::failLocalFont()
 
 void tst_qquickfontloader::webFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" SERVER_ADDR "/tarzeau_ocr_a.ttf\" }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + server.baseUrl().toString() + "/tarzeau_ocr_a.ttf\" }";
     QQmlComponent component(&engine);
 
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -151,7 +148,7 @@ void tst_qquickfontloader::redirWebFont()
 {
     server.addRedirect("olddir/oldname.ttf","../tarzeau_ocr_a.ttf");
 
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" SERVER_ADDR "/olddir/oldname.ttf\" }";
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + server.baseUrl().toString() + "/olddir/oldname.ttf\" }";
     QQmlComponent component(&engine);
 
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -165,8 +162,9 @@ void tst_qquickfontloader::redirWebFont()
 
 void tst_qquickfontloader::failWebFont()
 {
-    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" SERVER_ADDR "/nonexist.ttf\" }";
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:2:1: QML FontLoader: Cannot load font: \"" SERVER_ADDR "/nonexist.ttf\"");
+    QString componentStr = "import QtQuick 2.0\nFontLoader { source: \"" + server.baseUrl().toString() + "/nonexist.ttf\" }";
+    const QString expectedError = "<Unknown File>:2:1: QML FontLoader: Cannot load font: \"" + server.baseUrl().toString() + "/nonexist.ttf\"";
+    QTest::ignoreMessage(QtWarningMsg, expectedError.toUtf8());
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(component.create());
@@ -196,7 +194,7 @@ void tst_qquickfontloader::changeFont()
     QCOMPARE(statusSpy.count(), 0);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    ctxt->setContextProperty("font", SERVER_ADDR "/daniel.ttf");
+    ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
     QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Loading);
     QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 1);
@@ -209,7 +207,7 @@ void tst_qquickfontloader::changeFont()
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
-    ctxt->setContextProperty("font", SERVER_ADDR "/daniel.ttf");
+    ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
     QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 3);
     QCOMPARE(statusSpy.count(), 2);

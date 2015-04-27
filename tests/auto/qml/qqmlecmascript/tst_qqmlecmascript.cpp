@@ -4203,12 +4203,12 @@ void tst_qqmlecmascript::importScripts()
     QFETCH(QVariantList, propertyValues);
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory() + "/remote");
 
     QStringList importPathList = engine.importPathList();
 
-    QString remotePath(QLatin1String("http://127.0.0.1:8111/"));
+    QString remotePath(server.urlString("/"));
     engine.addImportPath(remotePath);
 
     QQmlComponent component(&engine, testfile);
@@ -6055,12 +6055,14 @@ void tst_qqmlecmascript::include()
     // Remote - error
     {
     TestHTTPServer server;
-    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFileUrl("include_remote_missing.qml"));
-    QObject *o = component.create();
+    QObject *o = component.beginCreate(engine.rootContext());
     QVERIFY(o != 0);
+    o->setProperty("serverBaseUrl", server.baseUrl().toString());
+    component.completeCreate();
 
     QTRY_VERIFY(o->property("done").toBool() == true);
 
@@ -6097,12 +6099,14 @@ void tst_qqmlecmascript::includeRemoteSuccess()
 
     // Remote - success
     TestHTTPServer server;
-    QVERIFY2(server.listen(8111), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFileUrl("include_remote.qml"));
-    QObject *o = component.create();
+    QObject *o = component.beginCreate(engine.rootContext());
     QVERIFY(o != 0);
+    o->setProperty("serverBaseUrl", server.baseUrl().toString());
+    component.completeCreate();
 
     QTRY_VERIFY(o->property("done").toBool() == true);
     QTRY_VERIFY(o->property("done2").toBool() == true);
