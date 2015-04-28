@@ -381,11 +381,10 @@ bool QQuickShaderEffectMaterial::UniformData::operator == (const UniformData &ot
         return false;
 
     if (specialType == UniformData::Sampler) {
-        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(value));
-        QQuickItem *otherSource = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(other.value));
-        if (!source || !otherSource || !source->isTextureProvider() || !otherSource->isTextureProvider())
-            return false;
-        return source->textureProvider()->texture()->textureId() == otherSource->textureProvider()->texture()->textureId();
+        // We can't check the source objects as these live in the GUI thread,
+        // so return true here and rely on the textureProvider check for
+        // equality of these..
+        return true;
     } else {
         return value == other.value;
     }
@@ -400,6 +399,23 @@ int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
         return 1;
     for (int shaderType = 0; shaderType < QQuickShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         if (uniforms[shaderType] != other->uniforms[shaderType])
+            return 1;
+    }
+
+    // Check the texture providers..
+    if (textureProviders.size() != other->textureProviders.size())
+        return 1;
+    for (int i=0; i<textureProviders.size(); ++i) {
+        QSGTextureProvider *tp1 = textureProviders.at(i);
+        QSGTextureProvider *tp2 = other->textureProviders.at(i);
+        if (!tp1 || !tp2)
+            return tp1 == tp2 ? 0 : 1;
+        QSGTexture *t1 = tp1->texture();
+        QSGTexture *t2 = tp2->texture();
+        if (!t1 || !t2)
+            return t1 == t2 ? 0 : 1;
+        // Check texture id's as textures may be in the same atlas.
+        if (t1->textureId() != t2->textureId())
             return 1;
     }
     return 0;
