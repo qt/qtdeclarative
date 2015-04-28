@@ -40,10 +40,10 @@ using namespace QV4;
 
 RegExpCache::~RegExpCache()
 {
-    for (RegExpCache::Iterator it = begin(), e = end();
-         it != e; ++it)
-        it.value()->cache = 0;
-    clear();
+    for (RegExpCache::Iterator it = begin(), e = end(); it != e; ++it) {
+        if (RegExp *re = it.value().as<RegExp>())
+            re->d()->cache = 0;
+    }
 }
 
 DEFINE_MANAGED_VTABLE(RegExp);
@@ -68,19 +68,18 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     RegExpCacheKey key(pattern, ignoreCase, multiline);
 
     RegExpCache *cache = engine->regExpCache;
-    if (cache) {
-        if (Heap::RegExp *result = cache->value(key))
-            return result;
-    }
+    if (!cache)
+        cache = engine->regExpCache = new RegExpCache;
+
+    QV4::WeakValue &cachedValue = (*cache)[key];
+    if (QV4::RegExp *result = cachedValue.as<RegExp>())
+        return result->d();
 
     Scope scope(engine);
     Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline));
 
-    if (!cache)
-        cache = engine->regExpCache = new RegExpCache;
-
     result->d()->cache = cache;
-    cache->insert(key, result->d());
+    cachedValue.set(engine, result);
 
     return result->d();
 }

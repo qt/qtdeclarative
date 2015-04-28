@@ -129,6 +129,7 @@ class Q_QML_EXPORT WeakValue
 public:
     WeakValue() : val(0) {}
     WeakValue(const WeakValue &other);
+    WeakValue(ExecutionEngine *engine, const Value &value);
     WeakValue &operator=(const WeakValue &other);
     ~WeakValue();
 
@@ -146,6 +147,12 @@ public:
         if (!val)
             return 0;
         return val->as<Managed>();
+    }
+    template <typename T>
+    T *as() const {
+        if (!val)
+            return 0;
+        return val->as<T>();
     }
 
     ExecutionEngine *engine() const {

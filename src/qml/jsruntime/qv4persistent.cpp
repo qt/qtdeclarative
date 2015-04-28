@@ -312,6 +312,12 @@ WeakValue::WeakValue(const WeakValue &other)
     }
 }
 
+WeakValue::WeakValue(ExecutionEngine *engine, const Value &value)
+{
+    val = engine->memoryManager->m_weakValues->allocate();
+    *val = value;
+}
+
 WeakValue &WeakValue::operator=(const WeakValue &other)
 {
     if (!val) {
