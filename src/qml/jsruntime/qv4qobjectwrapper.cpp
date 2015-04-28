@@ -751,7 +751,6 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::Strin
         const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
         const int propertyCount = mo->propertyCount();
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            // #### GC
             Scope scope(that->engine());
             ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
             *name = propName->d();
@@ -767,7 +766,6 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::Strin
             ++it->arrayIndex;
             if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
                 continue;
-            // #### GC
             Scope scope(that->engine());
             ScopedString methodName(scope, that->engine()->newString(QString::fromUtf8(method.name())));
             *name = methodName->d();
