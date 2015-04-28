@@ -129,7 +129,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
 
 Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
-    , scope(ic->engine->rootContext())
+    , scope(ic->engine->rootContext()->d())
     , function(Q_NULLPTR)
 {
     Scope scope(ic->engine);

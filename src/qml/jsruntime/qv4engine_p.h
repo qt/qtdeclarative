@@ -81,8 +81,6 @@ public:
 
     Value *jsStackTop;
     quint32 hasException;
-    Heap::GlobalContext *m_rootContext;
-    Heap::GlobalContext *rootContext() const { return m_rootContext; }
 
     MemoryManager *memoryManager;
     ExecutableAllocator *executableAllocator;
@@ -128,6 +126,7 @@ public:
     QV8Engine *v8Engine;
 
     enum JSObjects {
+        RootContect,
         ObjectProto,
         ArrayProto,
         StringProto,
@@ -174,6 +173,7 @@ public:
     Value *jsObjects;
     enum { NTypedArrayTypes = 9 }; // == TypedArray::NValues, avoid header dependency
 
+    GlobalContext *rootContext() const { return reinterpret_cast<GlobalContext *>(jsObjects + RootContect); }
     FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
     FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
     FunctionObject *numberCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Number_Ctor); }

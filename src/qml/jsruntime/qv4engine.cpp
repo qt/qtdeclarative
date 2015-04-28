@@ -401,8 +401,8 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     // set up the global object
     //
-    rootContext()->global = globalObject->d();
-    rootContext()->callData->thisObject = globalObject;
+    rootContext()->d()->global = globalObject->d();
+    rootContext()->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable);
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
@@ -504,7 +504,7 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
 
-    m_rootContext = r->d();
+    jsObjects[RootContect] = r;
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -516,7 +516,7 @@ Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     Scope scope(this);
     Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
-    g->d()->callData = rootContext()->callData;
+    g->d()->callData = rootContext()->d()->callData;
 
     Q_ASSERT(currentContext() == g->d());
     return g->d();
@@ -774,7 +774,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
         StackFrame frame;
         frame.source = globalCode->sourceFile();
         frame.function = globalCode->name()->toQString();
-        frame.line = rootContext()->lineNumber;
+        frame.line = rootContext()->d()->lineNumber;
         frame.column = -1;
 
         stack.append(frame);
