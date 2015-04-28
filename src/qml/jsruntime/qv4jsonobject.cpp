@@ -618,9 +618,14 @@ struct Stringify
     int propertyListSize;
     QString gap;
     QString indent;
+    QStack<Object *> stack;
 
-    // ### GC
-    QStack<Heap::Object *> stack;
+    bool stackContains(Object *o) {
+        for (int i = 0; i < stack.size(); ++i)
+            if (stack.at(i)->d() == o->d())
+                return true;
+        return false;
+    }
 
     Stringify(ExecutionEngine *e) : v4(e), replacerFunction(0), propertyList(0), propertyListSize(0) {}
 
@@ -750,7 +755,7 @@ QString Stringify::makeMember(const QString &key, const Value &v)
 
 QString Stringify::JO(Object *o)
 {
-    if (stack.contains(o->d())) {
+    if (stackContains(o)) {
         v4->throwTypeError();
         return QString();
     }
@@ -758,7 +763,7 @@ QString Stringify::JO(Object *o)
     Scope scope(v4);
 
     QString result;
-    stack.push(o->d());
+    stack.push(o);
     QString stepback = indent;
     indent += gap;
 
@@ -809,7 +814,7 @@ QString Stringify::JO(Object *o)
 
 QString Stringify::JA(ArrayObject *a)
 {
-    if (stack.contains(a->d())) {
+    if (stackContains(a)) {
         v4->throwTypeError();
         return QString();
     }
@@ -817,7 +822,7 @@ QString Stringify::JA(ArrayObject *a)
     Scope scope(a->engine());
 
     QString result;
-    stack.push(a->d());
+    stack.push(a);
     QString stepback = indent;
     indent += gap;
 
