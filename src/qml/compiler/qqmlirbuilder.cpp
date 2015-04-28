@@ -290,6 +290,7 @@ void Document::removeScriptPragmas(QString &script)
 Document::Document(bool debugMode)
     : jsModule(debugMode)
     , program(0)
+    , indexOfRootObject(0)
     , jsGenerator(&jsModule)
     , unitFlags(0)
 {

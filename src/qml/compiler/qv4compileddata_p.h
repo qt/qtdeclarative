@@ -135,7 +135,7 @@ struct String
     // uint16 strdata[]
 
     static int calculateSize(const QString &str) {
-        return (sizeof(String) + (str.length() + 1) * sizeof(quint16) + 7) & ~0x7;
+        return (sizeof(String) + str.length() * sizeof(quint16) + 7) & ~0x7;
     }
 };
 

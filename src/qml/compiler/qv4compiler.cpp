@@ -78,7 +78,7 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
         s->flags = 0; // ###
         s->size = qstr.length();
-        memcpy(s + 1, qstr.constData(), (qstr.length() + 1)*sizeof(ushort));
+        memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);
     }
