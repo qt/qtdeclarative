@@ -111,11 +111,11 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope->d()), strictMode(false), inheritContext(false), parsed(false)
+        , scope(scope), strictMode(false), inheritContext(false), parsed(false)
         , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext()->d()), strictMode(false), inheritContext(true), parsed(false)
+        , scope(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
         , qml(engine, qml), vmFunction(0), parseAsBinding(true) {}
     Script(ExecutionEngine *engine, Object *qml, CompiledData::CompilationUnit *compilationUnit);
     ~Script();
@@ -123,8 +123,7 @@ struct Q_QML_EXPORT Script {
     int line;
     int column;
     QString sourceCode;
-    // ### GC
-    Heap::ExecutionContext *scope;
+    ExecutionContext *scope;
     bool strictMode;
     bool inheritContext;
     bool parsed;
