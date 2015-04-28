@@ -38,6 +38,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qqmlinstantiator_p.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlincubator.h>
 #include "../../shared/util.h"
 #include "stringmodel.h"
 
@@ -53,6 +54,9 @@ private slots:
     void activeProperty();
     void intModelChange();
     void createAndRemove();
+
+    void asynchronous_data();
+    void asynchronous();
 };
 
 void tst_qqmlinstantiator::createNone()
@@ -209,6 +213,45 @@ void tst_qqmlinstantiator::createAndRemove()
         QCOMPARE(object->property("datum").toString(), names[i]);
     }
 }
+
+void tst_qqmlinstantiator::asynchronous_data()
+{
+    QTest::addColumn<bool>("asyncIncubator");
+    QTest::addColumn<QString>("fileName");
+
+    QTest::newRow("Asynchronous Instantiator") << false << "createMultipleAsync.qml";
+    QTest::newRow("Nested-asynchronous Instantiator") << true << "createMultiple.qml";
+}
+
+void tst_qqmlinstantiator::asynchronous()
+{
+    QFETCH(bool, asyncIncubator);
+    QFETCH(QString, fileName);
+
+    QQmlEngine engine;
+    QQmlIncubationController incubationController;
+    engine.setIncubationController(&incubationController);
+    QQmlComponent component(&engine, testFileUrl(fileName));
+    QQmlIncubator incubator(asyncIncubator ? QQmlIncubator::Asynchronous : QQmlIncubator::Synchronous);
+    component.create(incubator);
+    while (!incubator.isReady())
+        incubationController.incubateFor(10);
+    QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator *>(incubator.object());
+    while (incubationController.incubatingObjectCount() > 0)
+        incubationController.incubateFor(10);
+    QVERIFY(instantiator != 0);
+    QCOMPARE(instantiator->isActive(), true);
+    QCOMPARE(instantiator->count(), 10);
+
+    for (int i=0; i<10; i++) {
+        QObject *object = instantiator->objectAt(i);
+        QVERIFY(object);
+        QCOMPARE(object->parent(), instantiator);
+        QCOMPARE(object->property("success").toBool(), true);
+        QCOMPARE(object->property("idx").toInt(), i);
+    }
+}
+
 QTEST_MAIN(tst_qqmlinstantiator)
 
 #include "tst_qqmlinstantiator.moc"

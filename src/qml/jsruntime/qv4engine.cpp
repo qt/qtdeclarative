@@ -124,8 +124,14 @@ quintptr getStackLimit()
     } else
         size = pthread_get_stacksize_np(thread_self);
     stackLimit -= size;
+#  elif defined(__hppa)
+    // On some architectures the stack grows upwards. All of these are rather exotic, so simply assume
+    // everything is fine there.
+    // Known examples:
+    // -HP PA-RISC
+    stackLimit = 0;
+
 #  else
-    void* stackBottom = 0;
     pthread_attr_t attr;
 #if HAVE(PTHREAD_NP_H) && OS(FREEBSD)
     // on FreeBSD pthread_attr_init() must be called otherwise getting the attrs crashes
@@ -133,7 +139,9 @@ quintptr getStackLimit()
 #else
     if (pthread_getattr_np(pthread_self(), &attr) == 0) {
 #endif
+        void *stackBottom = Q_NULLPTR;
         size_t stackSize = 0;
+
         pthread_attr_getstack(&attr, &stackBottom, &stackSize);
         pthread_attr_destroy(&attr);
 

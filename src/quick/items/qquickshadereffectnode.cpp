@@ -38,6 +38,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -348,7 +349,10 @@ uint qHash(const QQuickShaderEffectMaterialKey &key)
 }
 
 
-QHash<QQuickShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > QQuickShaderEffectMaterial::materialMap;
+typedef QHash<QQuickShaderEffectMaterialKey, QWeakPointer<QSGMaterialType> > MaterialHash;
+
+Q_GLOBAL_STATIC(MaterialHash, materialHash)
+Q_GLOBAL_STATIC(QMutex, materialHashMutex)
 
 QQuickShaderEffectMaterial::QQuickShaderEffectMaterial(QQuickShaderEffectNode *node)
     : cullMode(NoCulling)
@@ -403,12 +407,30 @@ int QQuickShaderEffectMaterial::compare(const QSGMaterial *o) const
 
 void QQuickShaderEffectMaterial::setProgramSource(const QQuickShaderEffectMaterialKey &source)
 {
+    QMutexLocker locker(materialHashMutex);
+    Q_UNUSED(locker);
+
     m_source = source;
     m_emittedLogChanged = false;
-    m_type = materialMap.value(m_source);
+    QWeakPointer<QSGMaterialType> weakPtr = materialHash->value(m_source);
+    m_type = weakPtr.toStrongRef();
+
     if (m_type.isNull()) {
         m_type = QSharedPointer<QSGMaterialType>(new QSGMaterialType);
-        materialMap.insert(m_source, m_type);
+        materialHash->insert(m_source, m_type.toWeakRef());
+    }
+}
+
+void QQuickShaderEffectMaterial::cleanupMaterialCache()
+{
+    QMutexLocker locker(materialHashMutex);
+    Q_UNUSED(locker);
+
+    for (MaterialHash::iterator it = materialHash->begin(); it != materialHash->end(); ) {
+        if (!it.value().toStrongRef())
+            it = materialHash->erase(it);
+        else
+            ++it;
     }
 }
 

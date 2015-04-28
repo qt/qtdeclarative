@@ -1891,7 +1891,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         bool seenSubObjectWithId = false;
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object && (!customParser || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
             qSwap(_seenObjectWithId, seenSubObjectWithId);
             const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType));
             qSwap(_seenObjectWithId, seenSubObjectWithId);

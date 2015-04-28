@@ -43,12 +43,11 @@
 // Timeout values:
 
 // A valid screen grab requires the scene to not change
-// for SCENE_STABLE_TIME ms (default 500)
-#define SCENE_STABLE_TIME  500
+// for SCENE_STABLE_TIME ms
+#define SCENE_STABLE_TIME 200
 
 // Give up after SCENE_TIMEOUT ms
-#define SCENE_TIMEOUT     16000
-
+#define SCENE_TIMEOUT     6000
 
 //#define GRABBERDEBUG
 
@@ -58,30 +57,44 @@ class GrabbingView : public QQuickView
 
 public:
     GrabbingView(const QString &outputFile)
-        : ofile(outputFile), frames(0), isGrabbing(false)
+        : ofile(outputFile), grabNo(0), isGrabbing(false), initDone(false)
     {
-        connect(this, SIGNAL(afterRendering()), SLOT(renderingDone()));
+        grabTimer = new QTimer(this);
+        grabTimer->setSingleShot(true);
+        grabTimer->setInterval(SCENE_STABLE_TIME);
+        connect(grabTimer, SIGNAL(timeout()), SLOT(grab()));
+
+        connect(this, SIGNAL(afterRendering()), SLOT(startGrabbing()));
+
         QTimer::singleShot(SCENE_TIMEOUT, this, SLOT(timedOut()));
-        stableSceneTimer.setSingleShot(true);
-        connect(&stableSceneTimer, SIGNAL(timeout()), SLOT(sceneStabilized()));
     }
 
 private slots:
-    void renderingDone()
+    void startGrabbing()
+    {
+        if (!initDone) {
+            initDone = true;
+            grabTimer->start();
+        }
+    }
+
+    void grab()
     {
         if (isGrabbing)
             return;
         isGrabbing = true;
-        frames++;
+        grabNo++;
 #ifdef GRABBERDEBUG
-        printf("...frame %i\n", frames);
+        printf("grab no. %i\n", grabNo);
 #endif
         QImage img = grabWindow();
-        //qDebug() << "Rendering done, grab is" << !img.isNull() << "timer valid:" << stableSceneTimer.isActive()  << "same as last:" << (img == lastGrab);
-        if (!img.isNull() && img != lastGrab) {
+        if (!img.isNull() && img == lastGrab) {
+            sceneStabilized();
+        } else {
             lastGrab = img;
-            stableSceneTimer.start(SCENE_STABLE_TIME);
+            grabTimer->start();
         }
+
         isGrabbing = false;
     }
 
@@ -104,7 +117,6 @@ private slots:
                 return;
             }
         }
-
         QGuiApplication::exit(0);
 #ifdef GRABBERDEBUG
         printf("...sceneStabilized OUT\n");
@@ -113,16 +125,17 @@ private slots:
 
     void timedOut()
     {
-        qWarning() << "Error: timed out waiting for scene to stabilize." << frames << "frame(s) received. Last grab was" << (lastGrab.isNull() ? "invalid." : "valid.");
+        qWarning() << "Error: timed out waiting for scene to stabilize." << grabNo << "grab(s) done. Last grab was" << (lastGrab.isNull() ? "invalid." : "valid.");
         QGuiApplication::exit(3);
     }
 
 private:
     QImage lastGrab;
-    QTimer stableSceneTimer;
+    QTimer *grabTimer;
     QString ofile;
-    int frames;
+    int grabNo;
     bool isGrabbing;
+    bool initDone;
 };
 
 
