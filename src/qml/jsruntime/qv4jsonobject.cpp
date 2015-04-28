@@ -612,7 +612,7 @@ bool JsonParser::parseString(QString *string)
 
 struct Stringify
 {
-    ExecutionContext *ctx;
+    ExecutionEngine *v4;
     FunctionObject *replacerFunction;
     // ### GC
     QVector<Heap::String *> propertyList;
@@ -622,7 +622,7 @@ struct Stringify
     // ### GC
     QStack<Heap::Object *> stack;
 
-    Stringify(ExecutionContext *ctx) : ctx(ctx), replacerFunction(0) {}
+    Stringify(ExecutionEngine *e) : v4(e), replacerFunction(0) {}
 
     QString Str(const QString &key, const Value &v);
     QString JA(ArrayObject *a);
@@ -674,26 +674,26 @@ static QString quote(const QString &str)
 
 QString Stringify::Str(const QString &key, const Value &v)
 {
-    Scope scope(ctx);
+    Scope scope(v4);
 
     ScopedValue value(scope, v);
     ScopedObject o(scope, value);
     if (o) {
-        ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("toJSON")));
+        ScopedString s(scope, v4->newString(QStringLiteral("toJSON")));
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
             ScopedCallData callData(scope, 1);
             callData->thisObject = value;
-            callData->args[0] = ctx->d()->engine->newString(key);
+            callData->args[0] = v4->newString(key);
             value = toJSON->call(callData);
         }
     }
 
     if (replacerFunction) {
-        ScopedObject holder(scope, ctx->d()->engine->newObject());
+        ScopedObject holder(scope, v4->newObject());
         holder->put(scope.engine, QString(), value);
         ScopedCallData callData(scope, 2);
-        callData->args[0] = ctx->d()->engine->newString(key);
+        callData->args[0] = v4->newString(key);
         callData->args[1] = value;
         callData->thisObject = holder;
         value = replacerFunction->call(callData);
@@ -751,11 +751,11 @@ QString Stringify::makeMember(const QString &key, const Value &v)
 QString Stringify::JO(Object *o)
 {
     if (stack.contains(o->d())) {
-        ctx->engine()->throwTypeError();
+        v4->throwTypeError();
         return QString();
     }
 
-    Scope scope(ctx);
+    Scope scope(v4);
 
     QString result;
     stack.push(o->d());
@@ -808,7 +808,7 @@ QString Stringify::JO(Object *o)
 QString Stringify::JA(ArrayObject *a)
 {
     if (stack.contains(a->d())) {
-        ctx->engine()->throwTypeError();
+        v4->throwTypeError();
         return QString();
     }
 
@@ -884,7 +884,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 {
     Scope scope(ctx);
 
-    Stringify stringify(ctx);
+    Stringify stringify(scope.engine);
 
     ScopedObject o(scope, ctx->argument(1));
     if (o) {
