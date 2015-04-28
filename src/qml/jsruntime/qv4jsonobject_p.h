@@ -38,6 +38,7 @@
 #include <qjsonobject.h>
 #include <qjsonvalue.h>
 #include <qjsondocument.h>
+#include <qhash.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,12 +52,23 @@ struct JsonObject : Object {
 
 }
 
+struct ObjectItem {
+    const QV4::Object *o;
+    ObjectItem(const QV4::Object *o) : o(o) {}
+};
+
+inline bool operator ==(const ObjectItem &a, const ObjectItem &b)
+{ return a.o->d() == b.o->d(); }
+
+inline int qHash(const ObjectItem &i, uint seed = 0)
+{ return ::qHash((void *)i.o->d(), seed); }
+
 struct JsonObject : Object {
     Q_MANAGED_TYPE(JsonObject)
     V4_OBJECT2(JsonObject, Object)
 private:
-    // ### GC
-    typedef QSet<QV4::Heap::Base *> V4ObjectSet;
+
+    typedef QSet<ObjectItem> V4ObjectSet;
 public:
 
     static ReturnedValue method_parse(CallContext *ctx);

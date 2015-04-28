@@ -990,14 +990,14 @@ QJsonObject JsonObject::toJsonObject(const Object *o, V4ObjectSet &visitedObject
 
     Scope scope(o->engine());
 
-    if (visitedObjects.contains(o->d())) {
+    if (visitedObjects.contains(ObjectItem(o))) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty object (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(o->d());
+    visitedObjects.insert(ObjectItem(o));
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
@@ -1012,7 +1012,7 @@ QJsonObject JsonObject::toJsonObject(const Object *o, V4ObjectSet &visitedObject
             result.insert(key, toJsonValue(val, visitedObjects));
     }
 
-    visitedObjects.remove(o->d());
+    visitedObjects.remove(ObjectItem(o));
 
     return result;
 }
@@ -1038,14 +1038,14 @@ QJsonArray JsonObject::toJsonArray(const ArrayObject *a, V4ObjectSet &visitedObj
 
     Scope scope(a->engine());
 
-    if (visitedObjects.contains(a->d())) {
+    if (visitedObjects.contains(ObjectItem(a))) {
         // Avoid recursion.
         // For compatibility with QVariant{List,Map} conversion, we return an
         // empty array (and no error is thrown).
         return result;
     }
 
-    visitedObjects.insert(a->d());
+    visitedObjects.insert(ObjectItem(a));
 
     ScopedValue v(scope);
     quint32 length = a->getLength();
@@ -1056,7 +1056,7 @@ QJsonArray JsonObject::toJsonArray(const ArrayObject *a, V4ObjectSet &visitedObj
         result.append(toJsonValue(v, visitedObjects));
     }
 
-    visitedObjects.remove(a->d());
+    visitedObjects.remove(ObjectItem(a));
 
     return result;
 }
