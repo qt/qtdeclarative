@@ -390,7 +390,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
         for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {
-            if (!it.value()->markBit())
+            if (!it.value().isNullOrUndefined())
                 it = multiplyWrappedQObjects->erase(it);
             else
                 ++it;

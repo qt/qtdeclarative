@@ -74,7 +74,7 @@ class Q_QML_PRIVATE_EXPORT QQmlData : public QAbstractDeclarativeData
 public:
     QQmlData()
         : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
-          hasTaintedV8Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
+          hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
           hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
           bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
           lineNumber(0), columnNumber(0), jsEngineId(0), compiledData(0), deferredData(0),
@@ -112,7 +112,7 @@ public:
     quint32 ownContext:1;
     quint32 indestructible:1;
     quint32 explicitIndestructibleSet:1;
-    quint32 hasTaintedV8Object:1;
+    quint32 hasTaintedV4Object:1;
     quint32 isQueuedForDeletion:1;
     /*
      * rootObjectInCreation should be true only when creating top level CPP and QML objects,
