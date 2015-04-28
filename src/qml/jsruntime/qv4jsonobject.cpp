@@ -614,15 +614,15 @@ struct Stringify
 {
     ExecutionEngine *v4;
     FunctionObject *replacerFunction;
-    // ### GC
-    QVector<Heap::String *> propertyList;
+    QV4::String *propertyList;
+    int propertyListSize;
     QString gap;
     QString indent;
 
     // ### GC
     QStack<Heap::Object *> stack;
 
-    Stringify(ExecutionEngine *e) : v4(e), replacerFunction(0) {}
+    Stringify(ExecutionEngine *e) : v4(e), replacerFunction(0), propertyList(0), propertyListSize(0) {}
 
     QString Str(const QString &key, const Value &v);
     QString JA(ArrayObject *a);
@@ -763,7 +763,7 @@ QString Stringify::JO(Object *o)
     indent += gap;
 
     QStringList partial;
-    if (propertyList.isEmpty()) {
+    if (!propertyListSize) {
         ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
         ScopedValue name(scope);
 
@@ -778,11 +778,13 @@ QString Stringify::JO(Object *o)
                 partial += member;
         }
     } else {
-        ScopedString s(scope);
-        for (int i = 0; i < propertyList.size(); ++i) {
+        ScopedValue v(scope);
+        for (int i = 0; i < propertyListSize; ++i) {
             bool exists;
-            s = propertyList.at(i);
-            ScopedValue v(scope, o->get(s, &exists));
+            String *s = propertyList + i;
+            if (!s)
+                continue;
+            v = o->get(s, &exists);
             if (!exists)
                 continue;
             QString member = makeMember(s->toQString(), v);
@@ -891,15 +893,21 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
         stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
             uint arrayLen = o->getLength();
-            ScopedValue v(scope);
+            stringify.propertyList = static_cast<QV4::String *>(scope.alloc(arrayLen));
             for (uint i = 0; i < arrayLen; ++i) {
-                v = o->getIndexed(i);
+                Value *v = stringify.propertyList + i;
+                *v = o->getIndexed(i);
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
-                    v = RuntimeHelpers::toString(scope.engine, v);
-                if (v->isString()) {
-                    String *s = v->stringValue();
-                    if (!stringify.propertyList.contains(s->d()))
-                    stringify.propertyList.append(s->d());
+                    *v = RuntimeHelpers::toString(scope.engine, *v);
+                if (!v->isString()) {
+                    v->m = 0;
+                } else {
+                    for (uint j = 0; j <i; ++j) {
+                        if (stringify.propertyList[j].m == v->m) {
+                            v->m = 0;
+                            break;
+                        }
+                    }
                 }
             }
         }
