@@ -55,9 +55,6 @@
 #include "../../shared/testhttpserver.h"
 #include "../shared/visualtestutil.h"
 
-#define SERVER_PORT 14451
-#define SERVER_ADDR "http://127.0.0.1:14451"
-
 
 using namespace QQuickVisualTestUtil;
 
@@ -150,14 +147,14 @@ void tst_qquickimage::imageSource_data()
         << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file.png").toString();
     QTest::newRow("local async not found") << testFileUrl("no-such-file-1.png").toString() << 0.0 << 0.0 << false
         << true << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file-1.png").toString();
-    QTest::newRow("remote") << SERVER_ADDR "/colors.png" << 120.0 << 120.0 << true << false << true << "";
-    QTest::newRow("remote redirected") << SERVER_ADDR "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
+    QTest::newRow("remote") << "/colors.png" << 120.0 << 120.0 << true << false << true << "";
+    QTest::newRow("remote redirected") << "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svg"))
-        QTest::newRow("remote svg") << SERVER_ADDR "/heart.svg" << 550.0 << 500.0 << true << false << false << "";
+        QTest::newRow("remote svg") << "/heart.svg" << 550.0 << 500.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svgz"))
-        QTest::newRow("remote svgz") << SERVER_ADDR "/heart.svgz" << 550.0 << 500.0 << true << false << false << "";
-    QTest::newRow("remote not found") << SERVER_ADDR "/no-such-file.png" << 0.0 << 0.0 << true
-        << false << true << "<Unknown File>:2:1: QML Image: Error downloading " SERVER_ADDR "/no-such-file.png - server replied: Not found";
+        QTest::newRow("remote svgz") << "/heart.svgz" << 550.0 << 500.0 << true << false << false << "";
+    QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
+        << false << true << "<Unknown File>:2:1: QML Image: Error downloading {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
 
 }
 
@@ -185,9 +182,11 @@ void tst_qquickimage::imageSource()
 
     TestHTTPServer server;
     if (remote) {
-        QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
         server.serveDirectory(dataDirectory());
-        server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
+        server.addRedirect("oldcolors.png", server.urlString("/colors.png"));
+        source = server.urlString(source);
+        error.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
     }
 
     if (!error.isEmpty())
@@ -535,9 +534,9 @@ void tst_qquickimage::noLoading()
     qRegisterMetaType<QQuickImageBase::Status>();
 
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
-    server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
+    server.addRedirect("oldcolors.png", server.urlString("/colors.png"));
 
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage; cache: true }";
     QQmlContext *ctxt = engine.rootContext();
@@ -561,7 +560,7 @@ void tst_qquickimage::noLoading()
     QTRY_COMPARE(statusSpy.count(), 1);
 
     // Loading remote file
-    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
+    ctxt->setContextProperty("srcImage", server.url("/rect.png"));
     QTRY_VERIFY(obj->status() == QQuickImage::Loading);
     QTRY_VERIFY(obj->progress() == 0.0);
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
@@ -573,7 +572,7 @@ void tst_qquickimage::noLoading()
     // Loading remote file again - should not go through 'Loading' state.
     progressSpy.clear();
     ctxt->setContextProperty("srcImage", testFileUrl("green.png"));
-    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
+    ctxt->setContextProperty("srcImage", server.url("/rect.png"));
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 4);
@@ -679,9 +678,13 @@ void tst_qquickimage::nullPixmapPaint()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
     QTRY_VERIFY(image != 0);
-    image->setSource(SERVER_ADDR + QString("/no-such-file.png"));
+    image->setSource(server.url("/no-such-file.png"));
 
     QQmlTestMessageHandler messageHandler;
     // used to print "QTransform::translate with NaN called"
@@ -693,11 +696,13 @@ void tst_qquickimage::nullPixmapPaint()
 void tst_qquickimage::imageCrash_QTBUG_22125()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     {
-        QQuickView view(testFileUrl("qtbug_22125.qml"));
+        QQuickView view;
+        view.rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
+        view.setSource(testFileUrl("qtbug_22125.qml"));
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
         qApp->processEvents();
@@ -762,7 +767,7 @@ void tst_qquickimage::sourceSize()
 void tst_qquickimage::sourceSizeChanges()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -802,19 +807,19 @@ void tst_qquickimage::sourceSizeChanges()
     QTRY_COMPARE(sourceSizeSpy.count(), 3);
 
     // Remote
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/heart.png"));
+    ctxt->setContextProperty("srcImage", server.url("/heart.png"));
     QTRY_COMPARE(img->status(), QQuickImage::Ready);
     QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/heart.png"));
+    ctxt->setContextProperty("srcImage", server.url("/heart.png"));
     QTRY_COMPARE(img->status(), QQuickImage::Ready);
     QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/heart_copy.png"));
+    ctxt->setContextProperty("srcImage", server.url("/heart_copy.png"));
     QTRY_COMPARE(img->status(), QQuickImage::Ready);
     QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
-    ctxt->setContextProperty("srcImage", QUrl("http://127.0.0.1:14449/colors.png"));
+    ctxt->setContextProperty("srcImage", server.url("/colors.png"));
     QTRY_COMPARE(img->status(), QQuickImage::Ready);
     QTRY_COMPARE(sourceSizeSpy.count(), 5);
 
@@ -828,7 +833,7 @@ void tst_qquickimage::sourceSizeChanges()
 void tst_qquickimage::progressAndStatusChanges()
 {
     TestHTTPServer server;
-    QVERIFY2(server.listen(14449), qPrintable(server.errorString()));
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
     QQmlEngine engine;
@@ -864,7 +869,7 @@ void tst_qquickimage::progressAndStatusChanges()
     QTRY_COMPARE(statusSpy.count(), 1);
 
     // Loading remote file
-    ctxt->setContextProperty("srcImage", "http://127.0.0.1:14449/heart.png");
+    ctxt->setContextProperty("srcImage", server.url("/heart.png"));
     QTRY_VERIFY(obj->status() == QQuickImage::Loading);
     QTRY_VERIFY(obj->progress() == 0.0);
     QTRY_VERIFY(obj->status() == QQuickImage::Ready);
@@ -935,10 +940,6 @@ void tst_qquickimage::correctStatus()
 
 void tst_qquickimage::highdpi()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(SERVER_PORT), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
-
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage ;  }";
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));

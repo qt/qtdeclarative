@@ -315,14 +315,15 @@ void QQmlSettingsPrivate::load()
 
 void QQmlSettingsPrivate::store()
 {
-    QHash<const char *, QVariant>::iterator it = changedProperties.begin();
-    while (it != changedProperties.end()) {
+    QHash<const char *, QVariant>::const_iterator it = changedProperties.constBegin();
+    while (it != changedProperties.constEnd()) {
         instance()->setValue(it.key(), it.value());
 #ifdef SETTINGS_DEBUG
         qDebug() << "QQmlSettings: store" << it.key() << ":" << it.value();
 #endif
-        it = changedProperties.erase(it);
+        ++it;
     }
+    changedProperties.clear();
 }
 
 void QQmlSettingsPrivate::_q_propertyChanged()
@@ -394,12 +395,10 @@ void QQmlSettings::timerEvent(QTimerEvent *event)
 {
     Q_D(QQmlSettings);
     if (event->timerId() == d->timerId) {
-        if (d->changedProperties.isEmpty()) {
-            killTimer(d->timerId);
-            d->timerId = 0;
-        } else {
-            d->store();
-        }
+        killTimer(d->timerId);
+        d->timerId = 0;
+
+        d->store();
     }
     QObject::timerEvent(event);
 }

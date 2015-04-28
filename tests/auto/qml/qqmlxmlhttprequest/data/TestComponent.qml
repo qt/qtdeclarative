@@ -17,7 +17,7 @@ Item {
                 var o = Qt.createQmlObject(seqComponent,root);
             }
         }
-        doc.open("GET", "http://127.0.0.1:14445/TestComponent3.qml");
+        doc.open("GET", serverBaseUrl + "/TestComponent3.qml");
         doc.send();
     }
 }
