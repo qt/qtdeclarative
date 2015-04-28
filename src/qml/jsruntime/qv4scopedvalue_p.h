@@ -218,7 +218,6 @@ struct Scoped
 #endif
     }
 
-    // ### GC FIX casting below to be safe
     Scoped(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
