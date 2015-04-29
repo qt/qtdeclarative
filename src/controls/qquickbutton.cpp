@@ -121,6 +121,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlsignal QtQuickControls2::Button::canceled()
+
+    This signal is emitted when the button loses mouse grab
+    while being pressed, or when it would emit the \l release
+    signal but the mouse cursor is not inside the button.
+*/
+
+/*!
     \qmlsignal QtQuickControls2::Button::clicked()
 
     This signal is emitted when the button is clicked.
@@ -202,10 +210,6 @@ void QQuickButton::setPressed(bool isPressed)
     if (d->pressed != isPressed) {
         d->pressed = isPressed;
         emit pressedChanged();
-        if (isPressed)
-            emit pressed();
-        else
-            emit released();
     }
 }
 
@@ -242,8 +246,12 @@ void QQuickButton::setLabel(QQuickItem *label)
 
 void QQuickButton::focusOutEvent(QFocusEvent *event)
 {
+    Q_D(QQuickButton);
     QQuickControl::focusOutEvent(event);
-    setPressed(false);
+    if (d->pressed) {
+        setPressed(false);
+        emit canceled();
+    }
 }
 
 void QQuickButton::keyPressEvent(QKeyEvent *event)
@@ -251,6 +259,7 @@ void QQuickButton::keyPressEvent(QKeyEvent *event)
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(true);
+        emit pressed();
         event->accept();
     }
 }
@@ -259,8 +268,9 @@ void QQuickButton::keyReleaseEvent(QKeyEvent *event)
 {
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
-        emit clicked();
         setPressed(false);
+        emit released();
+        emit clicked();
         event->accept();
     }
 }
@@ -269,6 +279,7 @@ void QQuickButton::mousePressEvent(QMouseEvent *event)
 {
     QQuickControl::mousePressEvent(event);
     setPressed(true);
+    emit pressed();
     event->accept();
 }
 
@@ -281,17 +292,27 @@ void QQuickButton::mouseMoveEvent(QMouseEvent *event)
 
 void QQuickButton::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_D(QQuickButton);
     QQuickControl::mouseReleaseEvent(event);
-    if (contains(event->pos()))
-        emit clicked();
+    bool wasPressed = d->pressed;
     setPressed(false);
+    if (wasPressed) {
+        emit released();
+        emit clicked();
+    } else {
+        emit canceled();
+    }
     event->accept();
 }
 
 void QQuickButton::mouseUngrabEvent()
 {
+    Q_D(QQuickButton);
     QQuickControl::mouseUngrabEvent();
-    setPressed(false);
+    if (d->pressed) {
+        setPressed(false);
+        emit canceled();
+    }
 }
 
 void QQuickButton::componentComplete()

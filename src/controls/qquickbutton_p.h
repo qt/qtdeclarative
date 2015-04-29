@@ -76,6 +76,7 @@ public:
 Q_SIGNALS:
     void pressed();
     void released();
+    void canceled();
     void clicked();
     void textChanged();
     void pressedChanged();
