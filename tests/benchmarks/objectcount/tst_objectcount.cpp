@@ -213,10 +213,6 @@ void tst_ObjectCount::testCount_data()
             << QByteArray()
             << QByteArray("import QtQuick.Controls 2.0; TabButton { }");
 
-    QTest::newRow("TabView")
-            << QByteArray("import QtQuick.Controls 1.3; TabView { }")
-            << QByteArray("import QtQuick.Controls 2.0; TabView { }");
-
     QTest::newRow("TextArea")
             << QByteArray("import QtQuick.Controls 1.3; TextArea { }")
             << QByteArray("import QtQuick.Controls 2.0; TextArea { }");

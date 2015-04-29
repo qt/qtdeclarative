@@ -54,7 +54,6 @@
 #include <QtQuickControls/private/qquickswitch_p.h>
 #include <QtQuickControls/private/qquicktabbar_p.h>
 #include <QtQuickControls/private/qquicktabbutton_p.h>
-#include <QtQuickControls/private/qquicktabview_p.h>
 #include <QtQuickControls/private/qquicktextarea_p.h>
 #include <QtQuickControls/private/qquicktextfield_p.h>
 #include <QtQuickControls/private/qquicktogglebutton_p.h>
@@ -99,7 +98,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwitch>(uri, 2, 0, "AbstractSwitch");
     qmlRegisterType<QQuickTabBar>(uri, 2, 0, "AbstractTabBar");
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "AbstractTabButton");
-    qmlRegisterType<QQuickTabView>(uri, 2, 0, "AbstractTabView");
     qmlRegisterType<QQuickTextArea>(uri, 2, 0, "AbstractTextArea");
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "AbstractTextField");
     qmlRegisterType<QQuickToggleButton>(uri, 2, 0, "AbstractToggleButton");
@@ -108,7 +106,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickExclusiveAttached>(uri, 2, 0, "Exclusive", "Exclusive is an attached property");
     qmlRegisterUncreatableType<QQuickStackAttached>(uri, 2, 0, "Stack", "Stack is an attached property");
     qmlRegisterUncreatableType<QQuickTheme>(uri, 2, 0, "Theme", "Theme is an attached property");
-    qmlRegisterUncreatableType<QQuickTabAttached>(uri, 2, 0, "Tab", "Tab is an attached property");
 
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");

@@ -18,7 +18,6 @@ StackView 2.0 StackView.qml
 Switch 2.0 Switch.qml
 TabBar 2.0 TabBar.qml
 TabButton 2.0 TabButton.qml
-TabView 2.0 TabView.qml
 TextArea 2.0 TextArea.qml
 TextField 2.0 TextField.qml
 ToggleButton 2.0 ToggleButton.qml

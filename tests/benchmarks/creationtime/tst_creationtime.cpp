@@ -110,8 +110,9 @@ void tst_CreationTime::testControls_data()
 #ifndef QT_QUICK_CONTROLS_V1
     QTest::newRow("TabBar") << QByteArray("TabBar");
     QTest::newRow("TabButton") << QByteArray("TabButton");
-#endif
+#else
     QTest::newRow("TabView") << QByteArray("TabView");
+#endif
     QTest::newRow("TextArea") << QByteArray("TextArea");
     QTest::newRow("TextField") << QByteArray("TextField");
     QTest::newRow("ToolBar") << QByteArray("ToolBar");
