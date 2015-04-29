@@ -9,4 +9,4 @@ OTHER_FILES += \
     $$PWD/data/*
 
 TESTDATA += \
-    $$PWD/data/*
+    $$PWD/data/tst_*

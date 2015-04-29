@@ -50,47 +50,28 @@ TestCase {
     when: windowShown
     name: "Button"
 
-    SignalSpy {
-        id: pressedChangedSpy
-        signalName: "pressedChanged"
-    }
-
-    SignalSpy {
-        id: releasedSpy
-        signalName: "released"
-    }
-
-    SignalSpy {
-        id: canceledSpy
-        signalName: "canceled"
-    }
-
-    SignalSpy {
-        id: clickedSpy
-        signalName: "clicked"
-    }
-
     Component {
         id: button
-        Button { }
+        Button {
+            id: control
+
+            property ControlSpy spy: ControlSpy {
+                id: spy
+                target: control
+            }
+
+            onPressed: spy.checkSignal("pressed")
+            onReleased: spy.checkSignal("released")
+            onCanceled: spy.checkSignal("canceled")
+            onClicked: spy.checkSignal("clicked")
+            onPressedChanged: spy.checkSignal("pressedChanged")
+        }
     }
 
     function init() {
-        verify(!pressedChangedSpy.target)
-        verify(!releasedSpy.target)
-        verify(!clickedSpy.target)
-        compare(pressedChangedSpy.count, 0)
-        compare(releasedSpy.count, 0)
-        compare(clickedSpy.count, 0)
     }
 
     function cleanup() {
-        pressedChangedSpy.target = null
-        releasedSpy.target = null
-        clickedSpy.target = null
-        pressedChangedSpy.clear()
-        releasedSpy.clear()
-        clickedSpy.clear()
     }
 
     function test_defaults() {
@@ -115,77 +96,41 @@ TestCase {
     function test_mouse() {
         var control = button.createObject(testCase)
 
-        pressedChangedSpy.target = control
-        releasedSpy.target = control
-        canceledSpy.target = control
-        clickedSpy.target = control
-        verify(pressedChangedSpy.valid)
-        verify(releasedSpy.valid)
-        verify(canceledSpy.valid)
-        verify(clickedSpy.valid)
-
-        // check
+        // click
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 1)
-        compare(releasedSpy.count, 0)
-        compare(canceledSpy.count, 0)
-        compare(clickedSpy.count, 0)
         compare(control.pressed, true)
+        verify(control.spy.success)
 
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 2)
-        compare(releasedSpy.count, 1)
-        compare(canceledSpy.count, 0)
-        compare(clickedSpy.count, 1)
         compare(control.pressed, false)
-
-        // uncheck
-        mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 3)
-        compare(releasedSpy.count, 1)
-        compare(canceledSpy.count, 0)
-        compare(clickedSpy.count, 1)
-        compare(control.pressed, true)
-
-        mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 4)
-        compare(releasedSpy.count, 2)
-        compare(canceledSpy.count, 0)
-        compare(clickedSpy.count, 2)
-        compare(control.pressed, false)
+        verify(control.spy.success)
 
         // release outside
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 5)
-        compare(releasedSpy.count, 2)
-        compare(canceledSpy.count, 0)
-        compare(clickedSpy.count, 2)
         compare(control.pressed, true)
+        verify(control.spy.success)
 
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }]]
         mouseMove(control, control.width * 2, control.height * 2, 0, Qt.LeftButton)
         compare(control.pressed, false)
+        verify(control.spy.success)
 
+        control.spy.expectedSequence = [["canceled", { "pressed": false }]]
         mouseRelease(control, control.width * 2, control.height * 2, Qt.LeftButton)
-        compare(pressedChangedSpy.count, 6)
-        compare(releasedSpy.count, 2)
-        compare(canceledSpy.count, 1)
-        compare(clickedSpy.count, 2)
         compare(control.pressed, false)
+        verify(control.spy.success)
 
         // right button
+        control.spy.expectedSequence = []
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(pressedChangedSpy.count, 6)
-        compare(releasedSpy.count, 2)
-        compare(canceledSpy.count, 1)
-        compare(clickedSpy.count, 2)
         compare(control.pressed, false)
 
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
-        compare(pressedChangedSpy.count, 6)
-        compare(releasedSpy.count, 2)
-        compare(canceledSpy.count, 1)
-        compare(clickedSpy.count, 2)
         compare(control.pressed, false)
+        verify(control.spy.success)
 
         control.destroy()
     }
@@ -193,25 +138,21 @@ TestCase {
     function test_keys() {
         var control = button.createObject(testCase)
 
-        clickedSpy.target = control
-        verify(clickedSpy.valid)
-
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        // check
+        // click
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed",
+                                        ["pressedChanged", { "pressed": false }], "released", "clicked"]
         keyClick(Qt.Key_Space)
-        compare(clickedSpy.count, 1)
-
-        // uncheck
-        keyClick(Qt.Key_Space)
-        compare(clickedSpy.count, 2)
+        verify(control.spy.success)
 
         // no change
+        control.spy.expectedSequence = []
         var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
             keyClick(keys[i])
-            compare(clickedSpy.count, 2)
+            verify(control.spy.success)
         }
 
         control.destroy()
