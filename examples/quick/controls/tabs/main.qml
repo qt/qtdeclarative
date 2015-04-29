@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Extras 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
 import QtQuick.XmlListModel 2.0
@@ -50,17 +51,29 @@ ApplicationWindow {
     visible: true
     title: "Qt Quick Controls - Tabs Example"
 
-    TabView {
-        id: tabView
+    header: TabBar {
+        id: bar
+        currentIndex: view.currentIndex
+        TabButton {
+            text: "Home"
+        }
+        TabButton {
+            text: "Discover"
+        }
+        TabButton {
+            text: "Activity"
+        }
+    }
+
+    SwipeView {
+        id: view
 
         spacing: 1
         anchors.fill: parent
+        currentIndex: bar.currentIndex
         background: Rectangle { color: Theme.frameColor }
 
         Rectangle {
-            Tab.title: "Home"
-            anchors.fill: parent
-
             Image {
                 id: logo
                 width: window.width / 2
@@ -86,9 +99,6 @@ ApplicationWindow {
         }
 
         Rectangle {
-            Tab.title: "Discover"
-            anchors.fill: parent
-
             ListView {
                 anchors.fill: parent
                 anchors.topMargin: -1
@@ -176,9 +186,6 @@ ApplicationWindow {
         }
 
         Rectangle {
-            Tab.title: "Activity"
-            anchors.fill: parent
-
             ListView {
                 anchors.fill: parent
                 anchors.topMargin: -1
@@ -268,8 +275,8 @@ ApplicationWindow {
     }
 
     PageIndicator {
-        count: tabView.count
-        currentIndex: tabView.currentIndex
+        count: view.count
+        currentIndex: view.currentIndex
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
     }
