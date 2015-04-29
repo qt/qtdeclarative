@@ -40,14 +40,7 @@ import QtQuick.Controls 2.0
 AbstractTabBar {
     id: control
 
-    property list<Item> items
-    readonly property int count: items.length
     property alias highlight: listView.highlight
-    property alias spacing: listView.spacing
-
-    property Component delegate: TabButton {
-        width: (listView.width - Math.max(0, count - 1) * spacing) / count
-    }
 
     contentWidth: listView.contentWidth
     contentHeight: listView.contentHeight
@@ -57,10 +50,6 @@ AbstractTabBar {
 
     Accessible.role: Accessible.PageTabList
 
-    ExclusiveGroup {
-        id: group
-    }
-
     contentItem: ListView {
         id: listView
 
@@ -69,17 +58,8 @@ AbstractTabBar {
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem
 
-        model: control.items
+        model: control.model
         currentIndex: control.currentIndex
-
-        delegate: Loader {
-            sourceComponent: control.delegate
-            visible: modelData.Tab.visible
-            Binding { target: item; property: "Exclusive.group"; value: group }
-            Binding { target: item; property: "text"; value: modelData.Tab.title }
-            Binding { target: item; property: "checked"; value: control.currentIndex === index }
-            Connections { target: item; onClicked: control.currentIndex = index }
-        }
 
         highlightMoveDuration: 250
         highlightResizeDuration: 0
@@ -98,10 +78,11 @@ AbstractTabBar {
     background: Rectangle {
         implicitWidth: 26
         implicitHeight: 26
-        width: listView.width
+
         border.color: control.Theme.backgroundColor
         border.width: 8
-        color: listView.count > 1 ? control.Theme.frameColor : control.Theme.backgroundColor
+        color: control.count > 1 ? control.Theme.frameColor : control.Theme.backgroundColor
+
         Rectangle {
             y: parent.height - height
             width: parent.width

@@ -49,6 +49,7 @@
 //
 
 #include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,23 +58,44 @@ class QQuickTabBarPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
+    Q_PROPERTY(QVariant model READ model CONSTANT FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickTabBar(QQuickItem *parent = Q_NULLPTR);
 
+    int count() const;
     int currentIndex() const;
+    QQuickItem *currentItem() const;
+
+    QVariant model() const;
+    QQmlListProperty<QObject> contentData();
+
+    Q_INVOKABLE QQuickItem *itemAt(int index) const;
+    Q_INVOKABLE void addItem(QQuickItem *item);
+    Q_INVOKABLE void insertItem(int index, QQuickItem *item);
+    Q_INVOKABLE void moveItem(int from, int to);
+    Q_INVOKABLE void removeItem(int index);
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
 
 Q_SIGNALS:
-    void currentIndexChanged(int index);
+    void countChanged();
+    void currentIndexChanged();
+    void currentItemChanged();
+
+protected:
+    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickTabBar)
     Q_DECLARE_PRIVATE(QQuickTabBar)
-    friend class QQuickTabView;
 };
 
 QT_END_NAMESPACE
