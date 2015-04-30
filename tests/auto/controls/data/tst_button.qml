@@ -56,15 +56,9 @@ TestCase {
             id: control
 
             property ControlSpy spy: ControlSpy {
-                id: spy
                 target: control
+                signals: ["pressed", "released", "canceled", "clicked", "pressedChanged"]
             }
-
-            onPressed: spy.checkSignal("pressed")
-            onReleased: spy.checkSignal("released")
-            onCanceled: spy.checkSignal("canceled")
-            onClicked: spy.checkSignal("clicked")
-            onPressedChanged: spy.checkSignal("pressedChanged")
         }
     }
 
@@ -102,7 +96,9 @@ TestCase {
         compare(control.pressed, true)
         verify(control.spy.success)
 
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }], "released", "clicked"]
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
         mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.pressed, false)
         verify(control.spy.success)
@@ -142,8 +138,11 @@ TestCase {
         verify(control.activeFocus)
 
         // click
-        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed",
-                                        ["pressedChanged", { "pressed": false }], "released", "clicked"]
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
         keyClick(Qt.Key_Space)
         verify(control.spy.success)
 
@@ -151,6 +150,7 @@ TestCase {
         control.spy.expectedSequence = []
         var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
+            control.spy.reset()
             keyClick(keys[i])
             verify(control.spy.success)
         }

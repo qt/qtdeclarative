@@ -42,18 +42,46 @@ import QtQuick 2.5
 
 QtObject {
     property QtObject target: null
+    property var signals: []
     property var expectedSequence: []
     property int sequenceIndex: 0
     property bool sequenceFailure: false
-    readonly property bool success: sequenceIndex === expectedSequence.length
-                                    && !sequenceFailure
+    readonly property bool success: !sequenceFailure && sequenceIndex === expectedSequence.length
 
     function reset() {
         sequenceIndex = 0
         sequenceFailure = false
     }
 
-    function checkSignal(signalName) {
+    property QtObject __oldTarget: null
+    property var __connections: []
+
+    onExpectedSequenceChanged: reset()
+    onTargetChanged: __setup()
+    onSignalsChanged: __setup()
+
+    function __setup() {
+        if (__oldTarget) {
+            __connections.forEach(function (cx) {
+                __oldTarget[cx.name].disconnect(cx.method)
+            })
+            __oldTarget = null
+        }
+
+        __connections = []
+
+        if (!!target && !!signals && signals.length > 0) {
+            signals.forEach(function (signalName) {
+                var handlerName = "on" + signalName.substr(0, 1).toUpperCase() + signalName.substr(1)
+                var method = function() { __checkSignal(signalName, arguments) }
+                target[handlerName].connect(method)
+                __connections.push({ "name": handlerName, "method": method })
+            })
+            __oldTarget = target
+        }
+    }
+
+    function __checkSignal(signalName, signalArgs) {
         if (sequenceFailure)
             return;
 
@@ -70,28 +98,30 @@ QtObject {
                 return
             }
         } else if (typeof expectedSignal === "object") {
-            expectedSignal = expectedSignal[0]
+            var expectedSignalData = expectedSignal
+            expectedSignal = expectedSignalData[0]
             if (expectedSignal === signalName) {
-                var expectedValues = expectedSequence[sequenceIndex][1]
-                for (var p in expectedValues)
+                var expectedValues = expectedSignalData[1]
+                for (var p in expectedValues) {
                     if (target[p] != expectedValues[p]) {
                         console.warn("ControlSpy: Value mismatch for property '" + p + "' after '" + signalName + "' signal." +
-                                     "\n    Actual   : " + target[p] +
-                                     "\n    Expected : " + expectedValues[p] +
-                                     "\n    Sequence index: " + sequenceIndex)
+                                     __mismatchValuesFormat(target[p], expectedValues[p]))
                         sequenceFailure = true
                         return
                     }
+                }
                 sequenceIndex++
                 return
             }
         }
         console.warn("ControlSpy: Received unexpected signal." +
-                     "\n    Actual   : " + signalName +
-                     "\n    Expected : " + expectedSignal +
-                     "\n    Sequence index: " + sequenceIndex)
+                     __mismatchValuesFormat(signalName, expectedSignal))
         sequenceFailure = true
     }
 
-    onExpectedSequenceChanged: reset()
+    function __mismatchValuesFormat(actual, expected) {
+        return "\n    Actual   : " + actual +
+               "\n    Expected : " + expected +
+               "\n    Sequence index: " + sequenceIndex
+    }
 }

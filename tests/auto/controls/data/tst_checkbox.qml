@@ -56,16 +56,9 @@ TestCase {
             id: control
 
             property ControlSpy spy: ControlSpy {
-                id: spy
                 target: control
+                signals: ["pressed", "released", "canceled", "clicked", "pressedChanged", "checkedChanged"]
             }
-
-            onPressed: spy.checkSignal("pressed")
-            onReleased: spy.checkSignal("released")
-            onCanceled: spy.checkSignal("canceled")
-            onClicked: spy.checkSignal("clicked")
-            onPressedChanged: spy.checkSignal("pressedChanged")
-            onCheckedChanged: spy.checkSignal("checkedChanged")
         }
     }
 
@@ -146,7 +139,6 @@ TestCase {
 
     function test_mouse() {
         var control = checkBox.createObject(testCase)
-
 
         // check
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
