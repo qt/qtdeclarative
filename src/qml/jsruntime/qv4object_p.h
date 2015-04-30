@@ -144,8 +144,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::Object *prototype() const { return d()->prototype; }
     bool setPrototype(Object *proto);
 
-    Property *__getOwnProperty__(String *name, PropertyAttributes *attrs = 0);
-    Property *__getOwnProperty__(uint index, PropertyAttributes *attrs = 0);
+    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
+    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
 
     Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs = 0) const;
     Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;

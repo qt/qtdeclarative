@@ -278,10 +278,9 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         return;
     QV4::Scoped<QmlContextWrapper> wrapper(scope, resource);
 
-    PropertyAttributes attrs;
-    Property *pd  = wrapper->__getOwnProperty__(name, &attrs);
-    if (pd) {
-        wrapper->putValue(pd, attrs, value);
+    uint member = wrapper->internalClass()->find(name);
+    if (member < UINT_MAX) {
+        wrapper->putValue(wrapper->propertyAt(member), wrapper->internalClass()->propertyData[member], value);
         return;
     }
 

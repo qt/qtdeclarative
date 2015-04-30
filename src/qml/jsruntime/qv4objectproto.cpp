@@ -141,8 +141,9 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
-    Property *desc = O->__getOwnProperty__(name, &attrs);
-    return fromPropertyDescriptor(scope.engine, desc, attrs);
+    Property desc;
+    O->getOwnProperty(name, &attrs, &desc);
+    return fromPropertyDescriptor(scope.engine, &desc, attrs);
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
@@ -463,7 +464,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
     PropertyAttributes attrs;
-    o->__getOwnProperty__(p, &attrs);
+    o->getOwnProperty(p, &attrs);
     return Encode(attrs.isEnumerable());
 }
 

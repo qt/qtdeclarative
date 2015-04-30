@@ -220,41 +220,44 @@ void Object::insertMember(String *s, const Property *p, PropertyAttributes attri
 }
 
 // Section 8.12.1
-Property *Object::__getOwnProperty__(String *name, PropertyAttributes *attrs)
+void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
-        return __getOwnProperty__(idx, attrs);
+        return getOwnProperty(idx, attrs, p);
 
     uint member = internalClass()->find(name);
     if (member < UINT_MAX) {
-        if (attrs)
-            *attrs = internalClass()->propertyData[member];
-        return propertyAt(member);
+        *attrs = internalClass()->propertyData[member];
+        if (p)
+            p->copy(propertyAt(member), *attrs);
+        return;
     }
 
     if (attrs)
         *attrs = Attr_Invalid;
-    return 0;
+    return;
 }
 
-Property *Object::__getOwnProperty__(uint index, PropertyAttributes *attrs)
+void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 {
-    Property *p = arrayData() ? arrayData()->getProperty(index) : 0;
-    if (p) {
-        if (attrs)
-            *attrs = arrayData()->attributes(index);
-        return p;
+    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
+    if (pd) {
+        *attrs = arrayData()->attributes(index);
+        if (p)
+            p->copy(pd, *attrs);
+        return;
     }
     if (isStringObject()) {
-        if (attrs)
-            *attrs = Attr_NotConfigurable|Attr_NotWritable;
-        return static_cast<StringObject *>(this)->getIndex(index);
+        *attrs = Attr_NotConfigurable|Attr_NotWritable;
+        if (p)
+            p->copy(static_cast<StringObject *>(this)->getIndex(index), *attrs);
+        return;
     }
 
     if (attrs)
         *attrs = Attr_Invalid;
-    return 0;
+    return;
 }
 
 // Section 8.12.2

@@ -125,10 +125,11 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Heap::String 
             *index = it->arrayIndex;
             ++it->arrayIndex;
             PropertyAttributes a;
-            Property *pd = s->__getOwnProperty__(*index, &a);
+            Property pd;
+            s->getOwnProperty(*index, &a, &pd);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                 *attrs = a;
-                p->copy(pd, a);
+                p->copy(&pd, a);
                 return;
             }
         }
