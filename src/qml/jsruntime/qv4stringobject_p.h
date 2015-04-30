@@ -45,8 +45,8 @@ namespace Heap {
 
 struct StringObject : Object {
     StringObject(InternalClass *ic, QV4::Object *prototype);
-    StringObject(ExecutionEngine *engine, const Value &value);
-    Value value;
+    StringObject(ExecutionEngine *engine, const QV4::String *string);
+    String *string;
 
     Heap::String *getIndex(uint index) const;
     uint length() const;

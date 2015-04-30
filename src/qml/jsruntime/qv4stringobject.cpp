@@ -71,27 +71,26 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
 {
     Q_ASSERT(vtable == QV4::StringObject::staticVTable());
-    value = ic->engine->newString()->asReturnedValue();
+    string = ic->engine->newString();
 
     Scope scope(ic->engine);
     ScopedObject s(scope, this);
     s->defineReadonlyProperty(ic->engine->id_length(), Primitive::fromInt32(0));
 }
 
-Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
+Heap::StringObject::StringObject(ExecutionEngine *engine, const QV4::String *str)
     : Heap::Object(engine->emptyClass, engine->stringPrototype())
 {
-    value = val;
-    Q_ASSERT(value.isString());
+    string = str->d();
 
     Scope scope(engine);
     ScopedObject s(scope, this);
-    s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(value.stringValue()->toQString().length()));
+    s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(length()));
 }
 
 Heap::String *Heap::StringObject::getIndex(uint index) const
 {
-    QString str = value.stringValue()->toQString();
+    QString str = string->toQString();
     if (index >= (uint)str.length())
         return 0;
     return internalClass->engine->newString(str.mid(index, 1));
@@ -99,7 +98,7 @@ Heap::String *Heap::StringObject::getIndex(uint index) const
 
 uint Heap::StringObject::length() const
 {
-    return value.stringValue()->toQString().length();
+    return string->toQString().length();
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
@@ -109,7 +108,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Scoped<StringObject> o(scope, m->as<StringObject>());
     Q_ASSERT(!!o);
 
-    if (index < static_cast<uint>(o->d()->value.stringValue()->toQString().length())) {
+    if (index < static_cast<uint>(o->d()->string->toQString().length())) {
         if (v4->currentContext()->strictMode)
             v4->throwTypeError();
         return false;
@@ -121,7 +120,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Heap::String 
 {
     *name = (Heap::String *)0;
     StringObject *s = static_cast<StringObject *>(m);
-    uint slen = s->d()->value.stringValue()->toQString().length();
+    uint slen = s->d()->string->toQString().length();
     if (it->arrayIndex <= slen) {
         while (it->arrayIndex < slen) {
             *index = it->arrayIndex;
@@ -149,7 +148,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Heap::String 
 void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     StringObject::Data *o = static_cast<StringObject::Data *>(that);
-    o->value.stringValue()->mark(e);
+    o->string->mark(e);
     Object::markObjects(that, e);
 }
 
@@ -164,7 +163,7 @@ ReturnedValue StringCtor::construct(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
     Scope scope(v4);
-    ScopedValue value(scope);
+    ScopedString value(scope);
     if (callData->argc)
         value = callData->args[0].toString(v4);
     else
@@ -223,7 +222,7 @@ static QString getThisString(ExecutionContext *ctx)
     if (t->isString())
         return t->stringValue()->toQString();
     if (StringObject *thisString = t->as<StringObject>())
-        return thisString->d()->value.stringValue()->toQString();
+        return thisString->d()->string->toQString();
     if (t->isUndefined() || t->isNull()) {
         scope.engine->throwTypeError();
         return QString();
@@ -239,7 +238,7 @@ ReturnedValue StringPrototype::method_toString(CallContext *context)
     StringObject *o = context->thisObject().as<StringObject>();
     if (!o)
         return context->engine()->throwTypeError();
-    return o->d()->value.asReturnedValue();
+    return Encode(o->d()->string);
 }
 
 ReturnedValue StringPrototype::method_charAt(CallContext *context)
@@ -473,7 +472,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     Scope scope(ctx);
     QString string;
     if (StringObject *thisString = ctx->thisObject().as<StringObject>())
-        string = thisString->d()->value.stringValue()->toQString();
+        string = thisString->d()->string->toQString();
     else
         string = ctx->thisObject().toQString();
 

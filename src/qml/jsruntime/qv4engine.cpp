@@ -548,10 +548,10 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
     return identifierTable->insertString(text);
 }
 
-Heap::Object *ExecutionEngine::newStringObject(const Value &value)
+Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
     Scope scope(this);
-    Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, value));
+    Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, string));
     return object->d();
 }
 

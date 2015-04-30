@@ -709,7 +709,7 @@ QString Stringify::Str(const QString &key, const Value &v)
         if (NumberObject *n = o->as<NumberObject>())
             value = Encode(n->value());
         else if (StringObject *so = o->as<StringObject>())
-            value = so->d()->value;
+            value = so->d()->string;
         else if (BooleanObject *b = o->as<BooleanObject>())
             value = Encode(b->value());
     }
@@ -922,7 +922,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
     if (NumberObject *n = s->as<NumberObject>())
         s = Encode(n->value());
     else if (StringObject *so = s->as<StringObject>())
-        s = so->d()->value;
+        s = so->d()->string;
 
     if (s->isNumber()) {
         stringify.gap = QString(qMin(10, (int)s->toInteger()), ' ');
