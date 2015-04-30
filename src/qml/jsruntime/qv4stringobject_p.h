@@ -48,9 +48,8 @@ struct StringObject : Object {
     StringObject(ExecutionEngine *engine, const Value &value);
     Value value;
 
-    Property *getIndex(uint index) const;
-    // ### get rid of tmpProperty
-    mutable Property tmpProperty;
+    Heap::String *getIndex(uint index) const;
+    uint length() const;
 };
 
 struct StringCtor : FunctionObject {
@@ -63,8 +62,11 @@ struct StringObject: Object {
     V4_OBJECT2(StringObject, Object)
     Q_MANAGED_TYPE(StringObject)
 
-    Property *getIndex(uint index) const {
+    Heap::String *getIndex(uint index) const {
         return d()->getIndex(index);
+    }
+    uint length() const {
+        return d()->length();
     }
 
     static bool deleteIndexedProperty(Managed *m, uint index);

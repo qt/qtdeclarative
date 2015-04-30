@@ -147,8 +147,8 @@ struct Q_QML_EXPORT Object: Managed {
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
 
-    Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs = 0) const;
-    Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs = 0) const;
+    Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const;
+    Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs) const;
 
     bool hasProperty(String *name) const;
     bool hasProperty(uint index) const;

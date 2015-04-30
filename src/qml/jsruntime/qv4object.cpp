@@ -251,7 +251,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
     if (isStringObject()) {
         *attrs = Attr_NotConfigurable|Attr_NotWritable;
         if (p)
-            p->copy(static_cast<StringObject *>(this)->getIndex(index), *attrs);
+            p->value = static_cast<StringObject *>(this)->getIndex(index);
         return;
     }
 
@@ -263,10 +263,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 // Section 8.12.2
 Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const
 {
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return __getPropertyDescriptor__(idx, attrs);
-
+    Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
     const Heap::Object *o = d();
     while (o) {
@@ -290,16 +287,15 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
     while (o) {
         Property *p = o->arrayData ? o->arrayData->getProperty(index) : 0;
         if (p) {
-            if (attrs)
-                *attrs = o->arrayData->attributes(index);
+            *attrs = o->arrayData->attributes(index);
             return p;
         }
         if (o->vtable->type == Type_StringObject) {
-            Property *p = static_cast<const Heap::StringObject *>(o)->getIndex(index);
-            if (p) {
-                if (attrs)
-                    *attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                return p;
+            if (index < static_cast<const Heap::StringObject *>(o)->length()) {
+                // this is an evil hack, but it works, as the method is only ever called from putIndexed,
+                // where we don't use the returned pointer there for non writable attributes
+                *attrs = (Attr_NotWritable|Attr_NotConfigurable);
+                return reinterpret_cast<Property *>(0x1);
             }
         }
         o = o->prototype;
@@ -629,10 +625,12 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
             break;
         }
         if (o->isStringObject()) {
-            pd = static_cast<StringObject *>(o.getPointer())->getIndex(index);
-            if (pd) {
+            ScopedString str(scope, static_cast<StringObject *>(o.getPointer())->getIndex(index));
+            if (str) {
                 attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                break;
+                if (hasProperty)
+                    *hasProperty = true;
+                return str.asReturnedValue();
             }
         }
         o = o->prototype();
@@ -749,8 +747,7 @@ void Object::internalPutIndexed(uint index, const Value &value)
         attrs = arrayData()->attributes(index);
 
     if (!pd && isStringObject()) {
-        pd = static_cast<StringObject *>(this)->getIndex(index);
-        if (pd)
+        if (index < static_cast<StringObject *>(this)->length())
             // not writable
             goto reject;
     }
@@ -930,16 +927,16 @@ reject:
 
 bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
 {
-    Property *current = 0;
+    bool hasProperty = 0;
 
     // Clause 1
     if (arrayData()) {
-        current = arrayData()->getProperty(index);
-        if (!current && isStringObject())
-            current = static_cast<StringObject *>(this)->getIndex(index);
+        hasProperty = arrayData()->getProperty(index);
+        if (!hasProperty  && isStringObject())
+            hasProperty = (index < static_cast<StringObject *>(this)->length());
     }
 
-    if (!current) {
+    if (!hasProperty) {
         // clause 3
         if (!isExtensible())
             goto reject;

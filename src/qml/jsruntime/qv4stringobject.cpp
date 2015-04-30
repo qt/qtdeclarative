@@ -72,7 +72,6 @@ Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
 {
     Q_ASSERT(vtable == QV4::StringObject::staticVTable());
     value = ic->engine->newString()->asReturnedValue();
-    tmpProperty.value = Primitive::undefinedValue();
 
     Scope scope(ic->engine);
     ScopedObject s(scope, this);
@@ -84,20 +83,23 @@ Heap::StringObject::StringObject(ExecutionEngine *engine, const Value &val)
 {
     value = val;
     Q_ASSERT(value.isString());
-    tmpProperty.value = Primitive::undefinedValue();
 
     Scope scope(engine);
     ScopedObject s(scope, this);
     s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(value.stringValue()->toQString().length()));
 }
 
-Property *Heap::StringObject::getIndex(uint index) const
+Heap::String *Heap::StringObject::getIndex(uint index) const
 {
     QString str = value.stringValue()->toQString();
     if (index >= (uint)str.length())
         return 0;
-    tmpProperty.value = Encode(internalClass->engine->newString(str.mid(index, 1)));
-    return &tmpProperty;
+    return internalClass->engine->newString(str.mid(index, 1));
+}
+
+uint Heap::StringObject::length() const
+{
+    return value.stringValue()->toQString().length();
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
@@ -148,7 +150,6 @@ void StringObject::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     StringObject::Data *o = static_cast<StringObject::Data *>(that);
     o->value.stringValue()->mark(e);
-    o->tmpProperty.value.mark(e);
     Object::markObjects(that, e);
 }
 
