@@ -101,19 +101,19 @@ namespace QV4 {
         return rv; \
     } \
 
-// Used to allow a QObject method take and return raw V8 handles without having to expose
-// v8 in the public API.
+// Used to allow a QObject method take and return raw V4 handles without having to expose
+// 48 in the public API.
 // Use like this:
 //     class MyClass : public QObject {
 //         Q_OBJECT
 //         ...
-//         Q_INVOKABLE void myMethod(QQmlV8Function*);
+//         Q_INVOKABLE void myMethod(QQmlV4Function*);
 //     };
 // The QQmlV8Function - and consequently the arguments and return value - only remains
 // valid during the call.  If the return value isn't set within myMethod(), the will return
 // undefined.
 class QV8Engine;
-// ### GC
+
 class QQmlV4Function
 {
 public:
