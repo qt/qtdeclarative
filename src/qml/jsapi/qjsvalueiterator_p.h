@@ -48,14 +48,8 @@ public:
 
     QJSValue value;
     QV4::PersistentValue iterator;
-    // ### GC
-    QV4::Property currentProperty;
-    QV4::PropertyAttributes currentAttributes;
     QV4::PersistentValue currentName;
     uint currentIndex;
-    // ### GC
-    QV4::Property nextProperty;
-    QV4::PropertyAttributes nextAttributes;
     QV4::PersistentValue nextName;
     uint nextIndex;
 };
