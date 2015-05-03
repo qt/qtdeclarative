@@ -91,31 +91,10 @@ private:
 
     void init(QQmlContextData *ctxt, QObject *scope);
 
-    bool expressionFunctionValid() const { return m_extra.flag(); }
-    void setExpressionFunctionValid(bool v) { m_extra.setFlagValue(v); }
-
-    bool invalidParameterName() const { return m_extra.flag2(); }
-    void setInvalidParameterName(bool v) { m_extra.setFlag2Value(v); }
+    bool expressionFunctionValid() const { return !m_function.isNullOrUndefined(); }
 
     int m_index;
     QObject *m_target;
-
-    // only needed when !expressionFunctionValid()
-    struct ExtraData {
-        ExtraData(const QString &handlerName, const QString &parameterString,
-                  const QString &expression, const QString &fileName,
-                  quint16 line, quint16 column);
-        QString m_handlerName;
-        QString m_parameterString;
-        QString m_expression;
-        QQmlSourceLocation m_sourceLocation;
-        QV4::PersistentValue m_v8qmlscope;
-    };
-
-    // We store some flag bits in the following flag pointers.
-    //    flag  - expressionFunctionValid
-    //    flag2 - invalidParameterName
-    QFlagPointer<ExtraData> m_extra;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint

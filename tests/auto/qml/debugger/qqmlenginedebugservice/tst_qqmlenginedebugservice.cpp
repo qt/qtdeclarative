@@ -1020,7 +1020,7 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     mouseAreaObject = m_dbg->object();
     onEnteredRef = findProperty(mouseAreaObject.properties, "onEntered");
     QCOMPARE(onEnteredRef.name, QString("onEntered"));
-    QCOMPARE(onEnteredRef.value,  QVariant("{console.log('hello, world') }"));
+    QCOMPARE(onEnteredRef.value, QVariant("function() { [code] }"));
 }
 
 void tst_QQmlEngineDebugService::resetBindingForObject()
