@@ -500,8 +500,8 @@ void QQmlVMEVariant::ensureValueType(int t)
 }
 
 QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
+    : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlVMEMetaObjectEndpoint)
 {
-    setCallback(QQmlNotifierEndpoint::QQmlVMEMetaObjectEndpoint);
 }
 
 void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *e, void **)

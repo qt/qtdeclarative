@@ -236,9 +236,9 @@ bool QQmlJavaScriptExpression::hasDelayedError() const
 }
 
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)
-: expression(e), next(0)
+    : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard),
+      expression(e), next(0)
 {
-    setCallback(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard);
 }
 
 QQmlJavaScriptExpressionGuard *

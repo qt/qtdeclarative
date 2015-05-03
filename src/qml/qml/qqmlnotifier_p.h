@@ -61,9 +61,6 @@ class QQmlEngine;
 class QQmlNotifierEndpoint
 {
 public:
-    inline QQmlNotifierEndpoint();
-    inline ~QQmlNotifierEndpoint();
-
     // QQmlNotifierEndpoint can only invoke one of a set of pre-defined callbacks.
     // To add another callback, extend this enum and add the callback to the top
     // of qqmlnotifier.cpp.  Four bits are reserved for the callback, so there can
@@ -75,7 +72,8 @@ public:
         QQmlVMEMetaObjectEndpoint = 3
     };
 
-    inline void setCallback(Callback c) { callback = c; }
+    inline QQmlNotifierEndpoint(Callback callback);
+    inline ~QQmlNotifierEndpoint();
 
     inline bool isConnected();
     inline bool isConnected(QObject *source, int sourceSignal);
@@ -138,8 +136,8 @@ void QQmlNotifier::notify()
     if (endpoints) emitNotify(endpoints, args);
 }
 
-QQmlNotifierEndpoint::QQmlNotifierEndpoint()
-: senderPtr(0), callback(None), sourceSignal(-1), next(0), prev(0)
+QQmlNotifierEndpoint::QQmlNotifierEndpoint(Callback callback)
+: senderPtr(0), callback(callback), sourceSignal(-1), next(0), prev(0)
 {
 }
 

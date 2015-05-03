@@ -247,11 +247,11 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 */
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
-    : m_prevSignal(0), m_nextSignal(0),
+    : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
+      m_prevSignal(0), m_nextSignal(0),
       m_expression(0)
 {
     addToObject(owner);
-    setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
 
     /*
         If this is a cloned method, connect to the 'original'. For example,
