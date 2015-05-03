@@ -248,7 +248,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : m_prevSignal(0), m_nextSignal(0),
-      m_expression(0), m_isEvaluating(false)
+      m_expression(0)
 {
     addToObject(owner);
     setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
@@ -333,13 +333,12 @@ QQmlBoundSignalExpressionPointer QQmlBoundSignal::takeExpression(QQmlBoundSignal
 void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 {
     QQmlBoundSignal *s = static_cast<QQmlBoundSignal*>(e);
+
     if (!s->m_expression)
         return;
 
     if (QQmlDebugService::isDebuggingEnabled())
         QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->signalIndex()).methodSignature()));
-
-    s->m_isEvaluating = true;
 
     QQmlEngine *engine;
     if (s->m_expression && (engine = s->m_expression->engine())) {
@@ -349,8 +348,6 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
             QQmlEnginePrivate::warning(engine, s->m_expression->error(engine));
         }
     }
-
-    s->m_isEvaluating = false;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -1670,7 +1670,7 @@ void QQmlData::destroyed(QObject *object)
 
     QQmlBoundSignal *signalHandler = signalHandlers;
     while (signalHandler) {
-        if (signalHandler->isEvaluating()) {
+        if (signalHandler->isNotifying()) {
             // The object is being deleted during signal handler evaluation.
             // This will cause a crash due to invalid memory access when the
             // evaluation has completed.

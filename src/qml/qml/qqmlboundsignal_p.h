@@ -109,8 +109,6 @@ public:
     QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *);
     QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
 
-    bool isEvaluating() const { return m_isEvaluating; }
-
 private:
     friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlPropertyPrivate;
@@ -123,7 +121,6 @@ private:
     QQmlBoundSignal  *m_nextSignal;
 
     QQmlBoundSignalExpressionPointer m_expression;
-    bool m_isEvaluating;
 };
 
 QT_END_NAMESPACE

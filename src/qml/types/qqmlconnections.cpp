@@ -165,7 +165,7 @@ void QQmlConnections::setTarget(QObject *obj)
     foreach (QQmlBoundSignal *s, d->boundsignals) {
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
-        if (s->isEvaluating())
+        if (s->isNotifying())
             (new QQmlBoundSignalDeleter(s))->deleteLater();
         else
             delete s;
