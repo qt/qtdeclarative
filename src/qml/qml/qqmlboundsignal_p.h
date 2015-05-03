@@ -118,36 +118,13 @@ private:
     QFlagPointer<ExtraData> m_extra;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlAbstractBoundSignal
-{
-public:
-    QQmlAbstractBoundSignal();
-    virtual ~QQmlAbstractBoundSignal();
-
-    virtual int index() const = 0;
-    virtual QQmlBoundSignalExpression *expression() const = 0;
-    virtual QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *) = 0;
-    virtual QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *) = 0;
-    virtual bool isEvaluating() const = 0;
-
-    void removeFromObject();
-protected:
-    void addToObject(QObject *owner);
-
-private:
-    friend class QQmlData;
-    friend class QQmlPropertyPrivate;
-    friend class QQmlEngineDebugService;
-    QQmlAbstractBoundSignal **m_prevSignal;
-    QQmlAbstractBoundSignal  *m_nextSignal;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlAbstractBoundSignal,
-                                             public QQmlNotifierEndpoint
+class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint
 {
 public:
     QQmlBoundSignal(QObject *target, int signal, QObject *owner, QQmlEngine *engine);
     virtual ~QQmlBoundSignal();
+
+    void removeFromObject();
 
     int index() const;
 
@@ -159,6 +136,14 @@ public:
 
 private:
     friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
+    friend class QQmlPropertyPrivate;
+    friend class QQmlData;
+    friend class QQmlEngineDebugService;
+
+    void addToObject(QObject *owner);
+
+    QQmlBoundSignal **m_prevSignal;
+    QQmlBoundSignal  *m_nextSignal;
 
     QQmlBoundSignalExpressionPointer m_expression;
     int m_index;

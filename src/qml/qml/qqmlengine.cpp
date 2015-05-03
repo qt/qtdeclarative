@@ -1668,7 +1668,7 @@ void QQmlData::destroyed(QObject *object)
         deferredData = 0;
     }
 
-    QQmlAbstractBoundSignal *signalHandler = signalHandlers;
+    QQmlBoundSignal *signalHandler = signalHandlers;
     while (signalHandler) {
         if (signalHandler->isEvaluating()) {
             // The object is being deleted during signal handler evaluation.
@@ -1699,7 +1699,7 @@ void QQmlData::destroyed(QObject *object)
                    "%s", object, qPrintable(locationString));
         }
 
-        QQmlAbstractBoundSignal *next = signalHandler->m_nextSignal;
+        QQmlBoundSignal *next = signalHandler->m_nextSignal;
         signalHandler->m_prevSignal = 0;
         signalHandler->m_nextSignal = 0;
         delete signalHandler;

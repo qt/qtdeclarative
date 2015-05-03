@@ -278,7 +278,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
 
     QQmlData *ddata = QQmlData::get(object);
     if (ddata && ddata->signalHandlers) {
-        QQmlAbstractBoundSignal *signalHandler = ddata->signalHandlers;
+        QQmlBoundSignal *signalHandler = ddata->signalHandlers;
 
         while (signalHandler) {
             QQmlObjectProperty prop;

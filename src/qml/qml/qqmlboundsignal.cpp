@@ -279,38 +279,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
 ////////////////////////////////////////////////////////////////////////
 
-QQmlAbstractBoundSignal::QQmlAbstractBoundSignal()
-: m_prevSignal(0), m_nextSignal(0)
-{
-}
-
-QQmlAbstractBoundSignal::~QQmlAbstractBoundSignal()
-{
-    removeFromObject();
-}
-
-void QQmlAbstractBoundSignal::addToObject(QObject *obj)
-{
-    Q_ASSERT(!m_prevSignal);
-    Q_ASSERT(obj);
-
-    QQmlData *data = QQmlData::get(obj, true);
-
-    m_nextSignal = data->signalHandlers;
-    if (m_nextSignal) m_nextSignal->m_prevSignal = &m_nextSignal;
-    m_prevSignal = &data->signalHandlers;
-    data->signalHandlers = this;
-}
-
-void QQmlAbstractBoundSignal::removeFromObject()
-{
-    if (m_prevSignal) {
-        *m_prevSignal = m_nextSignal;
-        if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
-        m_prevSignal = 0;
-        m_nextSignal = 0;
-    }
-}
 
 /*! \internal
     \a signal MUST be in the signal index range (see QObjectPrivate::signalIndex()).
@@ -318,7 +286,8 @@ void QQmlAbstractBoundSignal::removeFromObject()
 */
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
-: m_expression(0), m_index(signal), m_isEvaluating(false)
+    : m_prevSignal(0), m_nextSignal(0),
+      m_expression(0), m_index(signal), m_isEvaluating(false)
 {
     addToObject(owner);
     setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
@@ -335,8 +304,33 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
 
 QQmlBoundSignal::~QQmlBoundSignal()
 {
+    removeFromObject();
     m_expression = 0;
 }
+
+void QQmlBoundSignal::addToObject(QObject *obj)
+{
+    Q_ASSERT(!m_prevSignal);
+    Q_ASSERT(obj);
+
+    QQmlData *data = QQmlData::get(obj, true);
+
+    m_nextSignal = data->signalHandlers;
+    if (m_nextSignal) m_nextSignal->m_prevSignal = &m_nextSignal;
+    m_prevSignal = &data->signalHandlers;
+    data->signalHandlers = this;
+}
+
+void QQmlBoundSignal::removeFromObject()
+{
+    if (m_prevSignal) {
+        *m_prevSignal = m_nextSignal;
+        if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
+        m_prevSignal = 0;
+        m_nextSignal = 0;
+    }
+}
+
 
 /*!
     Returns the signal index in the range returned by QObjectPrivate::signalIndex().

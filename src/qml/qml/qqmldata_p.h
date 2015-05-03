@@ -59,7 +59,7 @@ class QQmlEngine;
 class QQmlGuardImpl;
 class QQmlCompiledData;
 class QQmlAbstractBinding;
-class QQmlAbstractBoundSignal;
+class QQmlBoundSignal;
 class QQmlContext;
 class QQmlPropertyCache;
 class QQmlContextData;
@@ -151,7 +151,7 @@ public:
     QQmlContextData *outerContext;
 
     QQmlAbstractBinding *bindings;
-    QQmlAbstractBoundSignal *signalHandlers;
+    QQmlBoundSignal *signalHandlers;
 
     // Linked list for QQmlContext::contextObjects
     QQmlData *nextContextObject;
