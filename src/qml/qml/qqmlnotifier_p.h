@@ -88,6 +88,8 @@ public:
     inline bool isNotifying() const;
     inline void cancelNotify();
 
+    inline int signalIndex() const { return sourceSignal; }
+
 private:
     friend class QQmlData;
     friend class QQmlNotifier;

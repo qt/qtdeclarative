@@ -105,8 +105,6 @@ public:
 
     void removeFromObject();
 
-    int index() const;
-
     QQmlBoundSignalExpression *expression() const;
     QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *);
     QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
@@ -125,7 +123,6 @@ private:
     QQmlBoundSignal  *m_nextSignal;
 
     QQmlBoundSignalExpressionPointer m_expression;
-    int m_index;
     bool m_isEvaluating;
 };
 

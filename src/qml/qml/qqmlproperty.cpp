@@ -890,7 +890,7 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 
     QQmlBoundSignal *signalHandler = data->signalHandlers;
 
-    while (signalHandler && signalHandler->index() != QQmlPropertyPrivate::get(that)->signalIndex())
+    while (signalHandler && signalHandler->signalIndex() != QQmlPropertyPrivate::get(that)->signalIndex())
         signalHandler = signalHandler->m_nextSignal;
 
     if (signalHandler)
@@ -938,7 +938,7 @@ QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
 
     QQmlBoundSignal *signalHandler = data->signalHandlers;
 
-    while (signalHandler && signalHandler->index() != QQmlPropertyPrivate::get(that)->signalIndex())
+    while (signalHandler && signalHandler->signalIndex() != QQmlPropertyPrivate::get(that)->signalIndex())
         signalHandler = signalHandler->m_nextSignal;
 
     if (signalHandler)

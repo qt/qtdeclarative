@@ -248,7 +248,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : m_prevSignal(0), m_nextSignal(0),
-      m_expression(0), m_index(signal), m_isEvaluating(false)
+      m_expression(0), m_isEvaluating(false)
 {
     addToObject(owner);
     setCallback(QQmlNotifierEndpoint::QQmlBoundSignal);
@@ -259,8 +259,8 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
         index refers to 'aSignal()', get the index of 'aSignal(int)'.
         This ensures that 'parameter' will be available from QML.
     */
-    m_index = QQmlPropertyCache::originalClone(target, m_index);
-    QQmlNotifierEndpoint::connect(target, m_index, engine);
+    signal = QQmlPropertyCache::originalClone(target, signal);
+    QQmlNotifierEndpoint::connect(target, signal, engine);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()
@@ -291,15 +291,6 @@ void QQmlBoundSignal::removeFromObject()
     }
 }
 
-
-/*!
-    Returns the signal index in the range returned by QObjectPrivate::signalIndex().
-    This is different from QMetaMethod::methodIndex().
-*/
-int QQmlBoundSignal::index() const
-{
-    return m_index;
-}
 
 /*!
     Returns the signal expression.
@@ -346,7 +337,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         return;
 
     if (QQmlDebugService::isDebuggingEnabled())
-        QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->m_index).methodSignature()));
+        QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->signalIndex()).methodSignature()));
 
     s->m_isEvaluating = true;
 
