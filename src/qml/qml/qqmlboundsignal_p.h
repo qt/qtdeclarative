@@ -101,7 +101,7 @@ class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint
 {
 public:
     QQmlBoundSignal(QObject *target, int signal, QObject *owner, QQmlEngine *engine);
-    virtual ~QQmlBoundSignal();
+    ~QQmlBoundSignal();
 
     void removeFromObject();
 
