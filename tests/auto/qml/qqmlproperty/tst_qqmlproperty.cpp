@@ -192,7 +192,7 @@ void tst_qqmlproperty::qmlmetaproperty()
     QQmlPropertyPrivate::setBinding(prop, binding.data());
     QVERIFY(binding->ref == 1);
     QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-    QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+    QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
     QVERIFY(sigExprWatcher.wasDeleted());
     QCOMPARE(prop.index(), -1);
     QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -443,7 +443,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -493,7 +493,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QVERIFY(binding);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -546,7 +546,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -596,7 +596,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QVERIFY(binding);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -644,7 +644,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
@@ -693,7 +693,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
@@ -747,7 +747,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -797,7 +797,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QVERIFY(binding);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -850,7 +850,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -900,7 +900,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QVERIFY(binding);
         QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
@@ -948,7 +948,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
@@ -997,7 +997,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
-        QVERIFY(QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr) == 0);
+        QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
         QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
@@ -1145,7 +1145,7 @@ void tst_qqmlproperty::read()
         QQmlProperty p(&o, "onClicked");
         QCOMPARE(p.read(), QVariant());
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1)));
+        QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.read(), QVariant());
@@ -1157,7 +1157,7 @@ void tst_qqmlproperty::read()
         QQmlProperty p(&o, "onPropertyWithNotifyChanged");
         QCOMPARE(p.read(), QVariant());
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1)));
+        QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.read(), QVariant());
@@ -1336,7 +1336,7 @@ void tst_qqmlproperty::write()
         QQmlProperty p(&o, "onClicked");
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1)));
+        QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
@@ -1350,7 +1350,7 @@ void tst_qqmlproperty::write()
         QQmlProperty p(&o, "onPropertyWithNotifyChanged");
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);
 
-        QVERIFY(0 == QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1)));
+        QQmlPropertyPrivate::takeSignalExpression(p, new QQmlBoundSignalExpression(&o, QQmlPropertyPrivate::get(p)->signalIndex(), QQmlContextData::get(engine.rootContext()), 0, QLatin1String("null"), QString(), -1, -1));
         QVERIFY(0 != QQmlPropertyPrivate::signalExpression(p));
 
         QCOMPARE(p.write(QVariant("console.log(1921)")), false);

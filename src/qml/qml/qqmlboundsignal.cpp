@@ -301,33 +301,15 @@ QQmlBoundSignalExpression *QQmlBoundSignal::expression() const
 }
 
 /*!
-    Sets the signal expression to \a e.  Returns the current signal expression,
-    or null if there is no signal expression.
+    Sets the signal expression to \a e.
 
-    The QQmlBoundSignal instance adds a reference to \a e.  The caller
-    assumes ownership of the returned QQmlBoundSignalExpression reference.
+    The QQmlBoundSignal instance takes ownership of \a e (and does not add a reference).
 */
-QQmlBoundSignalExpressionPointer QQmlBoundSignal::setExpression(QQmlBoundSignalExpression *e)
+void QQmlBoundSignal::takeExpression(QQmlBoundSignalExpression *e)
 {
-    QQmlBoundSignalExpressionPointer rv = m_expression;
-    m_expression = e;
-    if (m_expression) m_expression->setNotifyOnValueChanged(false);
-    return rv;
-}
-
-/*!
-    Sets the signal expression to \a e.  Returns the current signal expression,
-    or null if there is no signal expression.
-
-    The QQmlBoundSignal instance takes ownership of \a e (and does not add a reference).  The caller
-    assumes ownership of the returned QQmlBoundSignalExpression reference.
-*/
-QQmlBoundSignalExpressionPointer QQmlBoundSignal::takeExpression(QQmlBoundSignalExpression *e)
-{
-    QQmlBoundSignalExpressionPointer rv = m_expression;
     m_expression.take(e);
-    if (m_expression) m_expression->setNotifyOnValueChanged(false);
-    return rv;
+    if (m_expression)
+        m_expression->setNotifyOnValueChanged(false);
 }
 
 void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)

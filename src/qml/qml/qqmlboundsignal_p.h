@@ -106,8 +106,7 @@ public:
     void removeFromObject();
 
     QQmlBoundSignalExpression *expression() const;
-    QQmlBoundSignalExpressionPointer setExpression(QQmlBoundSignalExpression *);
-    QQmlBoundSignalExpressionPointer takeExpression(QQmlBoundSignalExpression *);
+    void takeExpression(QQmlBoundSignalExpression *);
 
 private:
     friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);

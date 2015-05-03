@@ -134,9 +134,9 @@ public:
     static QQmlAbstractBinding *binding(const QQmlProperty &that);
     static void setBinding(const QQmlProperty &that, QQmlAbstractBinding *);
     static QQmlBoundSignalExpression *signalExpression(const QQmlProperty &that);
-    static QQmlBoundSignalExpressionPointer setSignalExpression(const QQmlProperty &that,
+    static void setSignalExpression(const QQmlProperty &that,
                                                                 QQmlBoundSignalExpression *);
-    static QQmlBoundSignalExpressionPointer takeSignalExpression(const QQmlProperty &that,
+    static void takeSignalExpression(const QQmlProperty &that,
                                                                  QQmlBoundSignalExpression *);
     static bool write(const QQmlProperty &that, const QVariant &, WriteFlags);
     static int valueTypeCoreIndex(const QQmlProperty &that);

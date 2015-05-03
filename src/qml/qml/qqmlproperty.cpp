@@ -901,48 +901,41 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
 
 /*!
     Set the signal expression associated with this signal property to \a expr.
-    Returns the existing signal expression (if any), otherwise null.
-
-    A reference to \a expr will be added by QML.  Ownership of the return value
-    reference is assumed by the caller.
+    A reference to \a expr will be added by QML.
 */
-QQmlBoundSignalExpressionPointer
-QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that,
-                                         QQmlBoundSignalExpression *expr)
+void QQmlPropertyPrivate::setSignalExpression(const QQmlProperty &that, QQmlBoundSignalExpression *expr)
 {
     if (expr)
         expr->addref();
-    return QQmlPropertyPrivate::takeSignalExpression(that, expr);
+    QQmlPropertyPrivate::takeSignalExpression(that, expr);
 }
 
 /*!
     Set the signal expression associated with this signal property to \a expr.
-    Returns the existing signal expression (if any), otherwise null.
-
-    Ownership of \a expr transfers to QML.  Ownership of the return value
-    reference is assumed by the caller.
+    Ownership of \a expr transfers to QML.
 */
-QQmlBoundSignalExpressionPointer
-QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
+void QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
                                          QQmlBoundSignalExpression *expr)
 {
     if (!(that.type() & QQmlProperty::SignalProperty)) {
         if (expr)
             expr->release();
-        return 0;
+        return;
     }
 
     QQmlData *data = QQmlData::get(that.d->object, 0 != expr);
     if (!data)
-        return 0;
+        return;
 
     QQmlBoundSignal *signalHandler = data->signalHandlers;
 
     while (signalHandler && signalHandler->signalIndex() != QQmlPropertyPrivate::get(that)->signalIndex())
         signalHandler = signalHandler->m_nextSignal;
 
-    if (signalHandler)
-        return signalHandler->takeExpression(expr);
+    if (signalHandler) {
+        signalHandler->takeExpression(expr);
+        return;
+    }
 
     if (expr) {
         int signalIndex = QQmlPropertyPrivate::get(that)->signalIndex();
@@ -950,7 +943,6 @@ QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
                                                       expr->context()->engine);
         signal->takeExpression(expr);
     }
-    return 0;
 }
 
 /*!
