@@ -246,7 +246,7 @@ QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(q->engine())->v4engine();
 
     if (!expressionFunctionValid) {
-        m_function.set(v4, qmlBinding(context(), scopeObject(), expression, url, line, &qmlscope));
+        m_function.set(v4, qmlBinding(context(), scopeObject(), expression, url, line));
         expressionFunctionValid = true;
     }
 

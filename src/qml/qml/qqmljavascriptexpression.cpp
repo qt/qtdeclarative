@@ -313,8 +313,7 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 
 QV4::ReturnedValue
 QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObject,
-                                       const QString &code, const QString &filename, quint16 line,
-                                       QV4::PersistentValue *qmlscope)
+                                       const QString &code, const QString &filename, quint16 line)
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -340,14 +339,11 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
         ep->warning(error);
         return QV4::Encode::undefined();
     }
-    if (qmlscope)
-        qmlscope->set(v4, qmlScopeObject);
     return result->asReturnedValue();
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
-                                                       const QString &code, const QString &filename, quint16 line,
-                                                       QV4::PersistentValue *qmlscope)
+                                                       const QString &code, const QString &filename, quint16 line)
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -373,8 +369,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
         ep->warning(error);
         return QV4::Encode::undefined();
     }
-    if (qmlscope)
-        qmlscope->set(v4, qmlScopeObject);
     return result->asReturnedValue();
 }
 

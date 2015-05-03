@@ -137,13 +137,11 @@ public:
 
     static QV4::ReturnedValue evalFunction(QQmlContextData *ctxt, QObject *scope,
                                                      const QString &code, const QString &filename,
-                                                     quint16 line,
-                                                     QV4::PersistentValue *qmlscope = 0);
+                                                     quint16 line);
     // doesn't require rewriting the expression
     static QV4::ReturnedValue qmlBinding(QQmlContextData *ctxt, QObject *scope,
                                         const QString &code,
-                                        const QString &filename, quint16 line,
-                                        QV4::PersistentValue *qmlscope = 0);
+                                        const QString &filename, quint16 line);
 
 private:
     friend class QQmlContextData;
