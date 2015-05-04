@@ -178,6 +178,8 @@ private slots:
     void intConversion_QTBUG43309();
     void toFixed();
 
+    void argumentEvaluationOrder();
+
 signals:
     void testSignal();
 };
@@ -3663,6 +3665,25 @@ void tst_QJSEngine::toFixed()
     result = engine.evaluate(QStringLiteral("(12.05).toFixed(1)"));
     QVERIFY(result.isString());
     QCOMPARE(result.toString(), QStringLiteral("12.1"));
+}
+
+void tst_QJSEngine::argumentEvaluationOrder()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+            "function record(arg1, arg2) {\n"
+            "    parameters = [arg1, arg2]\n"
+            "}\n"
+            "function test() {\n"
+            "    var i = 2;\n"
+            "    record(i, i += 2);\n"
+            "}\n"
+            "test()\n"
+            "parameters[0] == 2 && parameters[1] == 4");
+    qDebug() << ok.toString();
+    QVERIFY(ok.isBool());
+    QVERIFY(ok.toBool());
+
 }
 
 QTEST_MAIN(tst_QJSEngine)
