@@ -1319,6 +1319,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
+    memset(data + unitSize, 0, totalSize - unitSize);
     if (jsUnit != compilationUnit->data)
         free(jsUnit);
     jsUnit = 0;
