@@ -386,6 +386,17 @@ QOpenGLFramebufferObject *QQuickFramebufferObject::Renderer::framebufferObject()
  * the FBO size.
  *
  * The FBO will be automatically unbound after the function returns.
+ *
+ * \note Do not assume that the OpenGL state is all set to the defaults when
+ * this function is invoked, or that it is maintained between calls. Both the Qt
+ * Quick renderer and the custom rendering code uses the same OpenGL
+ * context. This means that the state might have been modified by Quick before
+ * invoking this function.
+ *
+ * \note It is recommended to call QQuickWindow::resetOpenGLState() before
+ * returning. This resets OpenGL state used by the Qt Quick renderer and thus
+ * avoids interference from the state changes made by the rendering code in this
+ * function.
  */
 
 /*!
