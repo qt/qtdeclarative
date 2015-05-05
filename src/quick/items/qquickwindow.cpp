@@ -1989,7 +1989,12 @@ void QQuickWindowPrivate::reallyDeliverTouchEvent(QTouchEvent *event)
     }
 
     if (event->type() == QEvent::TouchEnd) {
-        Q_ASSERT(itemForTouchPointId.isEmpty());
+        if (!itemForTouchPointId.isEmpty()) {
+            qWarning() << "No release received for" << itemForTouchPointId.size()
+                << "touch points over" << itemForTouchPointId.begin().value()
+                << "on touch end.";
+            itemForTouchPointId.clear();
+        }
     }
 
     --touchRecursionGuard;
