@@ -155,7 +155,6 @@ public:
     QQuickTimeLine tl;
     QQuickTimeLineValueProxy<QQuickPathViewPrivate> moveOffset;
     int flickDuration;
-    int firstIndex;
     int pathItems;
     int requestedIndex;
     int cacheSize;

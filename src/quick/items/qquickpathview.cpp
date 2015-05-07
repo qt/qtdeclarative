@@ -98,7 +98,7 @@ QQuickPathViewPrivate::QQuickPathViewPrivate()
     , inRefill(false)
     , dragMargin(0), deceleration(100), maximumFlickVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , moveOffset(this, &QQuickPathViewPrivate::setAdjustedOffset), flickDuration(0)
-    , firstIndex(-1), pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
+    , pathItems(-1), requestedIndex(-1), cacheSize(0), requestedZ(0)
     , moveReason(Other), moveDirection(Shortest), attType(0), highlightComponent(0), highlightItem(0)
     , moveHighlight(this, &QQuickPathViewPrivate::setHighlightPosition)
     , highlightPosition(0)
@@ -447,7 +447,6 @@ void QQuickPathViewPrivate::regenerate()
     if (!isValid())
         return;
 
-    firstIndex = -1;
     updateMappedRange();
     q->refill();
 }
@@ -1473,7 +1472,7 @@ int QQuickPathView::indexAt(qreal x, qreal y) const
         QQuickItem *item = d->items.at(idx);
         QPointF p = item->mapFromItem(this, QPointF(x, y));
         if (item->contains(p))
-            return (d->firstIndex + idx) % d->modelCount;
+            return d->model->indexOf(item, 0);
     }
 
     return -1;
@@ -1896,12 +1895,12 @@ void QQuickPathView::refill()
     int count = d->pathItems == -1 ? d->modelCount : qMin(d->pathItems, d->modelCount);
 
     // first move existing items and remove items off path
-    int idx = d->firstIndex;
-    qCDebug(lcItemViewDelegateLifecycle) << "firstIndex" << idx << "currentIndex" << d->currentIndex << "offset" << d->offset;
+    qCDebug(lcItemViewDelegateLifecycle) << "currentIndex" << d->currentIndex << "offset" << d->offset;
     QList<QQuickItem*>::iterator it = d->items.begin();
     while (it != d->items.end()) {
-        qreal pos = d->positionOfIndex(idx);
         QQuickItem *item = *it;
+        int idx = d->model->indexOf(item, 0);
+        qreal pos = d->positionOfIndex(idx);
         if (lcItemViewDelegateLifecycle().isDebugEnabled()) {
             QQuickText *text = qmlobject_cast<QQuickText*>(item);
             if (text)
@@ -1923,81 +1922,140 @@ void QQuickPathView::refill()
             if (!d->isInBound(pos, d->mappedRange - d->mappedCache, 1.0 + d->mappedCache)) {
                 qCDebug(lcItemViewDelegateLifecycle) << "release" << idx << "@" << pos << ", !isInBound: lower" << (d->mappedRange - d->mappedCache) << "upper" << (1.0 + d->mappedCache);
                 d->releaseItem(item);
-                if (it == d->items.begin()) {
-                    if (++d->firstIndex >= d->modelCount) {
-                        d->firstIndex = 0;
-                    }
-                }
                 it = d->items.erase(it);
             } else {
                 ++it;
             }
         }
-        ++idx;
-        if (idx >= d->modelCount)
-            idx = 0;
     }
-
-    if (!d->items.count())
-        d->firstIndex = -1;
 
     bool waiting = false;
     if (d->modelCount) {
-        // add items to beginning and end
+        // add items as needed
         if (d->items.count() < count+d->cacheSize) {
-            int idx = qRound(d->modelCount - d->offset) % d->modelCount;
+            int endIdx = 0;
+            qreal endPos;
+            int startIdx = 0;
             qreal startPos = 0.0;
-            if (d->haveHighlightRange && (d->highlightRangeMode != QQuickPathView::NoHighlightRange
-                                          || d->snapMode != QQuickPathView::NoSnap))
-                startPos = d->highlightRangeStart;
-            if (d->firstIndex >= 0) {
-                startPos = d->positionOfIndex(d->firstIndex);
-                idx = (d->firstIndex + d->items.count()) % d->modelCount;
+            if (d->items.count()) {
+                //Find the beginning and end, items may not be in sorted order
+                endPos = -1.0;
+                startPos = 2.0;
+
+                for (int i = 0; i < d->items.count(); i++) {
+                    int idx = d->model->indexOf(d->items[i], 0);
+                    qreal curPos = d->positionOfIndex(idx);
+                    if (curPos > endPos) {
+                        endPos = curPos;
+                        endIdx = idx;
+                    }
+
+                    if (curPos < startPos) {
+                        startPos = curPos;
+                        startIdx = idx;
+                    }
+                }
+            } else {
+                if (d->haveHighlightRange
+                            && (d->highlightRangeMode != QQuickPathView::NoHighlightRange
+                                    || d->snapMode != QQuickPathView::NoSnap))
+                    startPos = d->highlightRangeStart;
+                // With no items, then "end" is just off the top so we populate via append
+                endIdx = (qRound(d->modelCount - d->offset) - 1) % d->modelCount;
+                endPos = d->positionOfIndex(endIdx);
             }
-            qreal pos = d->positionOfIndex(idx);
-            while ((d->isInBound(pos, startPos, 1.0 + d->mappedCache) || !d->items.count()) && d->items.count() < count+d->cacheSize) {
-                qCDebug(lcItemViewDelegateLifecycle)  << "append" << idx << "@" << pos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
-                QQuickItem *item = d->getItem(idx, idx+1, pos >= 1.0);
+            //Append
+            int idx = endIdx + 1;
+            if (idx >= d->modelCount)
+                idx = 0;
+            qreal nextPos = d->positionOfIndex(idx);
+            while ((d->isInBound(nextPos, endPos, 1.0 + d->mappedCache) || !d->items.count())
+                    && d->items.count() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "append" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
+                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
                 if (!item) {
                     waiting = true;
                     break;
                 }
+                if (d->items.contains(item)) {
+                    break; //Otherwise we'd "re-add" it, and get confused
+                }
                 if (d->currentIndex == idx) {
                     currentVisible = true;
-                    d->currentItemOffset = pos;
+                    d->currentItemOffset = nextPos;
                 }
-                if (d->items.count() == 0)
-                    d->firstIndex = idx;
                 d->items.append(item);
-                d->updateItem(item, pos);
+                d->updateItem(item, nextPos);
+                endIdx = idx;
+                endPos = nextPos;
                 ++idx;
                 if (idx >= d->modelCount)
                     idx = 0;
-                pos = d->positionOfIndex(idx);
+                nextPos = d->positionOfIndex(idx);
             }
 
-            idx = d->firstIndex - 1;
+            //Prepend
+            idx = startIdx - 1;
             if (idx < 0)
                 idx = d->modelCount - 1;
-            pos = d->positionOfIndex(idx);
-            while (!waiting && d->isInBound(pos, d->mappedRange - d->mappedCache, startPos) && d->items.count() < count+d->cacheSize) {
-                qCDebug(lcItemViewDelegateLifecycle)  << "prepend" << idx << "@" << pos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
-                QQuickItem *item = d->getItem(idx, idx+1, pos >= 1.0);
+            nextPos = d->positionOfIndex(idx);
+            while (!waiting && d->isInBound(nextPos, d->mappedRange - d->mappedCache, startPos)
+                    && d->items.count() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "prepend" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
+                QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
                 if (!item) {
                     waiting = true;
                     break;
                 }
+                if (d->items.contains(item)) {
+                    break; //Otherwise we'd "re-add" it, and get confused
+                }
                 if (d->currentIndex == idx) {
                     currentVisible = true;
-                    d->currentItemOffset = pos;
+                    d->currentItemOffset = nextPos;
                 }
                 d->items.prepend(item);
-                d->updateItem(item, pos);
-                d->firstIndex = idx;
-                idx = d->firstIndex - 1;
+                d->updateItem(item, nextPos);
+                startIdx = idx;
+                startPos = nextPos;
+                --idx;
                 if (idx < 0)
                     idx = d->modelCount - 1;
-                pos = d->positionOfIndex(idx);
+                nextPos = d->positionOfIndex(idx);
+            }
+
+            // In rare cases, when jumping around with pathCount close to modelCount,
+            // new items appear in the middle. This more generic addition iteration handles this
+            // Since this is the rare case, we try append/prepend first and only do this if
+            // there are gaps still left to fill.
+            if (!waiting && d->items.count() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "Checking for pathview middle inserts, items count was" << d->items.count();
+                idx = startIdx;
+                QQuickItem *lastItem = d->items[0];
+                while (idx != endIdx) {
+                    //This gets the reference from the delegate model, and will not re-create
+                    QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1.0);
+                    if (!item) {
+                        waiting = true;
+                        break;
+                    }
+                    if (!d->items.contains(item)) { //We found a hole
+                        nextPos = d->positionOfIndex(idx);
+                        qCDebug(lcItemViewDelegateLifecycle) << "middle insert" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
+                        if (d->currentIndex == idx) {
+                            currentVisible = true;
+                            d->currentItemOffset = nextPos;
+                        }
+                        int lastListIdx = d->items.indexOf(lastItem);
+                        d->items.insert(lastListIdx + 1, item);
+                        d->updateItem(item, nextPos);
+                    }
+
+                    lastItem = item;
+                    ++idx;
+                    if (idx >= d->modelCount)
+                        idx = 0;
+                }
             }
         }
     }
@@ -2128,7 +2186,6 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             d->offset = qmlMod(d->modelCount - d->currentIndex, d->modelCount);
             changedOffset = true;
         }
-        d->firstIndex = -1;
         d->updateMappedRange();
         d->scheduleLayout();
     }
@@ -2185,8 +2242,16 @@ void QQuickPathViewPrivate::createCurrentItem()
 {
     if (requestedIndex != -1)
         return;
-    int itemIndex = (currentIndex - firstIndex + modelCount) % modelCount;
-    if (itemIndex < items.count()) {
+
+    bool inItems = false;
+    for (int i = 0; i < items.count(); i++) {
+        if (model->indexOf(items[i], 0) == currentIndex) {
+            inItems = true;
+            break;
+        }
+    }
+
+    if (inItems) {
         if ((currentItem = getItem(currentIndex, currentIndex))) {
             currentItem->setFocus(true);
             if (QQuickPathViewAttached *att = attached(currentItem))

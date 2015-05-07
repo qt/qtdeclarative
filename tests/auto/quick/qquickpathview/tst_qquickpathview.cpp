@@ -140,6 +140,7 @@ private slots:
     void nestedinFlickable();
     void flickableDelegate();
     void jsArrayChange();
+    void qtbug42716();
 };
 
 class TestObject : public QObject
@@ -2320,6 +2321,54 @@ void tst_QQuickPathView::jsArrayChange()
     // no change
     view->setModel(QVariant::fromValue(array2));
     QCOMPARE(spy.count(), 1);
+}
+
+/* This bug was one where if you jump the list such that the sole missing item needed to be
+ * added in the middle of the list, it would instead move an item somewhere else in the list
+ * to the middle (messing it up very badly).
+ *
+ * The test checks correct visual order both before and after the jump.
+ */
+void tst_QQuickPathView::qtbug42716()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("qtbug42716.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QCOMPARE(window.data(), qGuiApp->focusWindow());
+
+    QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
+    QVERIFY(pathView != 0);
+
+    int order1[] = {5,6,7,0,1,2,3};
+    int missing1 = 4;
+    int order2[] = {0,1,2,3,4,5,6};
+    int missing2 = 7;
+
+    qreal lastY = 0.0;
+    for (int i = 0; i<7; i++) {
+        QQuickItem *item = findItem<QQuickItem>(pathView, QString("delegate%1").arg(order1[i]));
+        QVERIFY(item);
+        QVERIFY(item->y() > lastY);
+        lastY = item->y();
+    }
+    QQuickItem *itemMiss = findItem<QQuickItem>(pathView, QString("delegate%1").arg(missing1));
+    QVERIFY(!itemMiss);
+
+    pathView->setOffset(0.0882353);
+    //Note refill is delayed, needs time to take effect
+    QTest::qWait(100);
+
+    lastY = 0.0;
+    for (int i = 0; i<7; i++) {
+        QQuickItem *item = findItem<QQuickItem>(pathView, QString("delegate%1").arg(order2[i]));
+        QVERIFY(item);
+        QVERIFY(item->y() > lastY);
+        lastY = item->y();
+    }
+    itemMiss = findItem<QQuickItem>(pathView, QString("delegate%1").arg(missing2));
+    QVERIFY(!itemMiss);
 }
 
 QTEST_MAIN(tst_QQuickPathView)
