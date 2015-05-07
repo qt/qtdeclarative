@@ -110,6 +110,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
+    static void markWrapper(QObject *object, ExecutionEngine *engine);
 
     using Object::get;
 
@@ -189,6 +190,7 @@ public:
     ReturnedValue value(QObject *key) const { return QHash<QObject*, QV4::WeakValue>::value(key).value(); }
     Iterator erase(Iterator it);
     void remove(QObject *key);
+    void mark(QObject *key, ExecutionEngine *engine);
 
 private Q_SLOTS:
     void removeDestroyedObject(QObject*);

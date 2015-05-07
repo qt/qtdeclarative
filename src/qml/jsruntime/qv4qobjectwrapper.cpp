@@ -624,6 +624,21 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     }
 }
 
+void QObjectWrapper::markWrapper(QObject *object, ExecutionEngine *engine)
+{
+    if (QQmlData::wasDeleted(object))
+        return;
+
+    QQmlData *ddata = QQmlData::get(object);
+    if (!ddata)
+        return;
+
+    if (ddata->jsEngineId == engine->m_engineId)
+        ddata->jsWrapper.markOnce(engine);
+    else  if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
+        engine->m_multiplyWrappedQObjects->mark(object, engine);
+}
+
 ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx, int propertyIndex, bool captureRequired)
 {
     if (QQmlData::wasDeleted(object))
@@ -993,9 +1008,7 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *
         QObject *child = children.at(i);
         if (!child)
             continue;
-        QQmlData *ddata = QQmlData::get(child, /*create*/false);
-        if (ddata)
-            ddata->jsWrapper.markOnce(e);
+        QObjectWrapper::markWrapper(child, e);
         markChildQObjectsRecursively(child, e);
     }
 }
@@ -1930,6 +1943,14 @@ void MultiplyWrappedQObjectMap::remove(QObject *key)
     if (it == end())
         return;
     erase(it);
+}
+
+void MultiplyWrappedQObjectMap::mark(QObject *key, ExecutionEngine *engine)
+{
+    Iterator it = find(key);
+    if (it == end())
+        return;
+    it->markOnce(engine);
 }
 
 void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)

@@ -1227,6 +1227,11 @@ void QQmlVMEMetaObject::ensureQObjectWrapper()
 
 void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 {
+    QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
+    QV4::ExecutionEngine *v4 = (ep == 0) ? 0 : ep->v4engine();
+    if (v4 != e)
+        return;
+
     varProperties.markOnce(e);
 
     // add references created by VMEVariant properties
@@ -1234,12 +1239,8 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
     for (int ii = 0; ii < maxDataIdx; ++ii) { // XXX TODO: optimize?
         if (data[ii].dataType() == QMetaType::QObjectStar) {
             // possible QObject reference.
-            QObject *ref = data[ii].asQObject();
-            if (ref) {
-                QQmlData *ddata = QQmlData::get(ref);
-                if (ddata)
-                    ddata->jsWrapper.markOnce(e);
-            }
+            if (QObject *ref = data[ii].asQObject())
+                QV4::QObjectWrapper::markWrapper(ref, e);
         }
     }
 

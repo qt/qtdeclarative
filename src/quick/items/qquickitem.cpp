@@ -6740,9 +6740,7 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
 void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
 {
     Q_Q(QQuickItem);
-    QQmlData *ddata = QQmlData::get(q);
-    if (ddata)
-        ddata->jsWrapper.markOnce(e);
+    QV4::QObjectWrapper::markWrapper(q, e);
 
     foreach (QQuickItem *child, childItems)
         QQuickItemPrivate::get(child)->markObjects(e);
