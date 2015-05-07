@@ -691,8 +691,10 @@ void QQuickWidgetPrivate::createContext()
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
 
-        if (qt_gl_global_share_context())
+        if (qt_gl_global_share_context()) {
             context->setShareContext(qt_gl_global_share_context());
+            context->setScreen(context->shareContext()->screen());
+        }
 
         if (!context->create()) {
             const bool isEs = context->isOpenGLES();
@@ -707,6 +709,7 @@ void QQuickWidgetPrivate::createContext()
         // contains a QSurfaceFormat representing the _actual_ format of the underlying
         // configuration. This is essential to get a surface that is compatible with the context.
         offscreenSurface->setFormat(context->format());
+        offscreenSurface->setScreen(context->screen());
         offscreenSurface->create();
     }
 
@@ -742,7 +745,14 @@ void QQuickWidget::createFramebufferObject()
 
     if (context->shareContext() != QWidgetPrivate::get(window())->shareContext()) {
         context->setShareContext(QWidgetPrivate::get(window())->shareContext());
-        context->create();
+        context->setScreen(context->shareContext()->screen());
+        if (!context->create())
+            qWarning("QQuickWidget: Failed to recreate context");
+        // The screen may be different so we must recreate the offscreen surface too.
+        // Unlike QOpenGLContext, QOffscreenSurface's create() does not recreate so have to destroy() first.
+        d->offscreenSurface->destroy();
+        d->offscreenSurface->setScreen(context->screen());
+        d->offscreenSurface->create();
     }
 
     context->makeCurrent(d->offscreenSurface);
