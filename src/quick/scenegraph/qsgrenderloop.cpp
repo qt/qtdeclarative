@@ -320,6 +320,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!gl) {
         gl = new QOpenGLContext();
         gl->setFormat(window->requestedFormat());
+        gl->setScreen(window->screen());
         if (qt_gl_global_share_context())
             gl->setShareContext(qt_gl_global_share_context());
         if (!gl->create()) {
