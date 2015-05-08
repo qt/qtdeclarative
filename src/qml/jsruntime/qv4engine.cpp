@@ -1623,6 +1623,15 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     return 0;
 }
 
+#ifndef QT_NO_DEBUG
+void ExecutionEngine::assertObjectBelongsToEngine(const Value &v)
+{
+    if (!v.isObject())
+        return;
+    Q_ASSERT(v.objectValue()->engine() == this);
+}
+#endif
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
