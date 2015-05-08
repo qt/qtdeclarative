@@ -92,7 +92,7 @@ bool tst_QQmlDebuggingEnabler::init(bool blockMode, bool qmlscene, int portFrom,
         process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
         process->setMaximumBindErrors(1);
     } else {
-        process = new QQmlDebugProcess(QCoreApplication::applicationFilePath(), this);
+        process = new QQmlDebugProcess(QCoreApplication::applicationDirPath() + QLatin1String("/qqmldebuggingenablerserver"), this);
         process->setMaximumBindErrors(portTo - portFrom);
     }
 
@@ -103,7 +103,6 @@ bool tst_QQmlDebuggingEnabler::init(bool blockMode, bool qmlscene, int portFrom,
                        testFile(QLatin1String("test.qml")));
     } else {
         QStringList args;
-        args << QLatin1String("-server");
         if (blockMode)
             args << QLatin1String("-block");
         args << QString::number(portFrom) << QString::number(portTo);
@@ -163,27 +162,7 @@ void tst_QQmlDebuggingEnabler::customBlock()
     QVERIFY(init(true, false, 5555, 5565));
 }
 
-namespace QQmlDebuggingEnablerTest {
-    QTEST_MAIN(tst_QQmlDebuggingEnabler)
-}
-
-int main(int argc, char *argv[])
-{
-    if (argc > 1 && QLatin1String(argv[1]) == QLatin1String("-server")) {
-        int one = 1;
-        QCoreApplication app(one, argv);
-        bool block = argc > 2 && QLatin1String(argv[2]) == QLatin1String("-block");
-        int portFrom = QString(QLatin1String(argv[argc - 2])).toInt();
-        int portTo = QString(QLatin1String(argv[argc - 1])).toInt();
-        while (portFrom <= portTo)
-            QQmlDebuggingEnabler::startTcpDebugServer(portFrom++, block);
-        QQmlEngine engine;
-        Q_UNUSED(engine);
-        app.exec();
-    } else {
-        QQmlDebuggingEnablerTest::main(argc, argv);
-    }
-}
+QTEST_MAIN(tst_QQmlDebuggingEnabler)
 
 #include "tst_qqmldebuggingenabler.moc"
 

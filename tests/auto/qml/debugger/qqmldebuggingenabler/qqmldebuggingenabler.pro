@@ -1,13 +1,4 @@
-CONFIG += testcase
-TARGET = tst_qqmldebuggingenabler
-QT += qml testlib gui-private core-private
-osx:CONFIG -= app_bundle
+TEMPLATE = subdirs
+SUBDIRS = qqmldebuggingenabler qqmldebuggingenablerserver
 
-SOURCES +=     tst_qqmldebuggingenabler.cpp
-
-INCLUDEPATH += ../shared
-include(../../../shared/util.pri)
-include(../shared/debugutil.pri)
-
-OTHER_FILES += data/test.qml
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0 QT_QML_DEBUG_NO_WARNING
+qqmldebuggingenabler.depends = qqmldebuggingenablerserver
