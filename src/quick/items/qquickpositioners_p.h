@@ -86,6 +86,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeIte
     Q_PROPERTY(QQuickTransition *populate READ populate WRITE setPopulate NOTIFY populateChanged)
     Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged)
     Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged)
+
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
 public:
     enum PositionerType { None = 0x0, Horizontal = 0x1, Vertical = 0x2, Both = 0x3 };
 
@@ -108,6 +114,26 @@ public:
 
     void updateAttachedProperties(QQuickPositionerAttached *specificProperty = 0, QQuickItem *specificPropertyOwner = 0) const;
 
+    qreal padding() const;
+    void setPadding(qreal padding);
+    void resetPadding();
+
+    qreal topPadding() const;
+    void setTopPadding(qreal padding);
+    void resetTopPadding();
+
+    qreal leftPadding() const;
+    void setLeftPadding(qreal padding);
+    void resetLeftPadding();
+
+    qreal rightPadding() const;
+    void setRightPadding(qreal padding);
+    void resetRightPadding();
+
+    qreal bottomPadding() const;
+    void setBottomPadding(qreal padding);
+    void resetBottomPadding();
+
 protected:
     QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent);
     void componentComplete() Q_DECL_OVERRIDE;
@@ -120,6 +146,11 @@ Q_SIGNALS:
     void populateChanged();
     void moveChanged();
     void addChanged();
+    Q_REVISION(6) void paddingChanged();
+    Q_REVISION(6) void topPaddingChanged();
+    Q_REVISION(6) void leftPaddingChanged();
+    Q_REVISION(6) void rightPaddingChanged();
+    Q_REVISION(6) void bottomPaddingChanged();
 
 protected Q_SLOTS:
     void prePositioning();
@@ -144,11 +175,18 @@ protected:
         bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
         void startTransition(QQuickItemViewTransitioner *transitioner);
 
+        void updatePadding(qreal lp, qreal tp, qreal rp, qreal bp);
+
         QQuickItem *item;
         QQuickItemViewTransitionableItem *transitionableItem;
         int index;
         bool isNew;
         bool isVisible;
+
+        qreal topPadding;
+        qreal leftPadding;
+        qreal rightPadding;
+        qreal bottomPadding;
     };
 
     QPODVector<PositionedItem,8> positionedItems;

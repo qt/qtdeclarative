@@ -69,6 +69,16 @@ public:
         : spacing(0), type(QQuickBasePositioner::None)
         , transitioner(0), positioningDirty(false)
         , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
+        , padding(0)
+        , topPadding(0)
+        , leftPadding(0)
+        , rightPadding(0)
+        , bottomPadding(0)
+        , explicitTopPadding(false)
+        , explicitLeftPadding(false)
+        , explicitRightPadding(false)
+        , explicitBottomPadding(false)
+
     {
     }
 
@@ -97,6 +107,16 @@ public:
     bool anchorConflict : 1;
 
     Qt::LayoutDirection layoutDirection;
+
+    qreal padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
+    bool explicitTopPadding;
+    bool explicitLeftPadding;
+    bool explicitRightPadding;
+    bool explicitBottomPadding;
 
     void mirrorChange() Q_DECL_OVERRIDE {
         effectiveLayoutDirectionChange();
@@ -149,6 +169,11 @@ public:
     virtual void effectiveLayoutDirectionChange()
     {
     }
+
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
 };
 
 QT_END_NAMESPACE

@@ -70,6 +70,10 @@ QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
     , index(-1)
     , isNew(false)
     , isVisible(true)
+    , topPadding(0)
+    , leftPadding(0)
+    , rightPadding(0)
+    , bottomPadding(0)
 {
 }
 
@@ -114,6 +118,14 @@ void QQuickBasePositioner::PositionedItem::startTransition(QQuickItemViewTransit
 {
     if (transitionableItem)
         transitionableItem->startTransition(transitioner, index);
+}
+
+void QQuickBasePositioner::PositionedItem::updatePadding(qreal lp, qreal tp, qreal rp, qreal bp)
+{
+    leftPadding = lp;
+    topPadding = tp;
+    rightPadding = rp;
+    bottomPadding = bp;
 }
 
 
@@ -388,11 +400,8 @@ void QQuickBasePositioner::prePositioning()
 
 void QQuickBasePositioner::positionItem(qreal x, qreal y, PositionedItem *target)
 {
-    Q_D(QQuickBasePositioner);
-    if ( (target->itemX() != x || target->itemY() != y)
-            && d->type == Both) {
+    if ( target->itemX() != x || target->itemY() != y )
         target->moveTo(QPointF(x, y));
-    }
 }
 
 void QQuickBasePositioner::positionItemX(qreal x, PositionedItem *target)
@@ -500,6 +509,163 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
             property->setIsFirstItem(false);
             property->setIsLastItem(false);
         }
+    }
+}
+
+qreal QQuickBasePositioner::padding() const
+{
+    Q_D(const QQuickBasePositioner);
+    return d->padding;
+}
+
+void QQuickBasePositioner::setPadding(qreal padding)
+{
+    Q_D(QQuickBasePositioner);
+    if (qFuzzyCompare(d->padding, padding))
+        return;
+    d->padding = padding;
+    d->setPositioningDirty();
+    emit paddingChanged();
+    if (!d->explicitTopPadding)
+        emit topPaddingChanged();
+    if (!d->explicitLeftPadding)
+        emit leftPaddingChanged();
+    if (!d->explicitRightPadding)
+        emit rightPaddingChanged();
+    if (!d->explicitBottomPadding)
+        emit bottomPaddingChanged();
+}
+
+void QQuickBasePositioner::resetPadding()
+{
+    setPadding(0);
+}
+
+qreal QQuickBasePositioner::topPadding() const
+{
+    Q_D(const QQuickBasePositioner);
+    if (d->explicitTopPadding)
+        return d->topPadding;
+    return d->padding;
+}
+
+void QQuickBasePositioner::setTopPadding(qreal padding)
+{
+    Q_D(QQuickBasePositioner);
+    d->setTopPadding(padding);
+}
+
+void QQuickBasePositioner::resetTopPadding()
+{
+    Q_D(QQuickBasePositioner);
+    d->setTopPadding(0, true);
+}
+
+qreal QQuickBasePositioner::leftPadding() const
+{
+    Q_D(const QQuickBasePositioner);
+    if (d->explicitLeftPadding)
+        return d->leftPadding;
+    return d->padding;
+}
+
+void QQuickBasePositioner::setLeftPadding(qreal padding)
+{
+    Q_D(QQuickBasePositioner);
+    d->setLeftPadding(padding);
+}
+
+void QQuickBasePositioner::resetLeftPadding()
+{
+    Q_D(QQuickBasePositioner);
+    d->setLeftPadding(0, true);
+}
+
+qreal QQuickBasePositioner::rightPadding() const
+{
+    Q_D(const QQuickBasePositioner);
+    if (d->explicitRightPadding)
+        return d->rightPadding;
+    return d->padding;
+}
+
+void QQuickBasePositioner::setRightPadding(qreal padding)
+{
+    Q_D(QQuickBasePositioner);
+    d->setRightPadding(padding);
+}
+
+void QQuickBasePositioner::resetRightPadding()
+{
+    Q_D(QQuickBasePositioner);
+    d->setRightPadding(0, true);
+}
+
+qreal QQuickBasePositioner::bottomPadding() const
+{
+    Q_D(const QQuickBasePositioner);
+    if (d->explicitBottomPadding)
+        return d->bottomPadding;
+    return d->padding;
+}
+
+void QQuickBasePositioner::setBottomPadding(qreal padding)
+{
+    Q_D(QQuickBasePositioner);
+    d->setBottomPadding(padding);
+}
+
+void QQuickBasePositioner::resetBottomPadding()
+{
+    Q_D(QQuickBasePositioner);
+    d->setBottomPadding(0, true);
+}
+
+void QQuickBasePositionerPrivate::setTopPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickBasePositioner);
+    qreal tmp = q->topPadding();
+    topPadding = value;
+    explicitTopPadding = !reset;
+    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+        setPositioningDirty();
+        emit q->topPaddingChanged();
+    }
+}
+
+void QQuickBasePositionerPrivate::setLeftPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickBasePositioner);
+    qreal tmp = q->leftPadding();
+    leftPadding = value;
+    explicitLeftPadding = !reset;
+    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+        setPositioningDirty();
+        emit q->leftPaddingChanged();
+    }
+}
+
+void QQuickBasePositionerPrivate::setRightPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickBasePositioner);
+    qreal tmp = q->rightPadding();
+    rightPadding = value;
+    explicitRightPadding = !reset;
+    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+        setPositioningDirty();
+        emit q->rightPaddingChanged();
+    }
+}
+
+void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickBasePositioner);
+    qreal tmp = q->bottomPadding();
+    bottomPadding = value;
+    explicitBottomPadding = !reset;
+    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+        setPositioningDirty();
+        emit q->bottomPaddingChanged();
     }
 }
 
@@ -640,6 +806,16 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \sa Row, Grid, Flow, Positioner, ColumnLayout, {Qt Quick Examples - Positioners}
 */
 /*!
+    \since 5.6
+    \qmlproperty real QtQuick::Column::padding
+    \qmlproperty real QtQuick::Column::topPadding
+    \qmlproperty real QtQuick::Column::leftPadding
+    \qmlproperty real QtQuick::Column::bottomPadding
+    \qmlproperty real QtQuick::Column::rightPadding
+
+    These properties hold the padding around the content.
+*/
+/*!
     \qmlproperty Transition QtQuick::Column::populate
 
     This property holds the transition to be run for items that are part of
@@ -715,20 +891,23 @@ QQuickColumn::QQuickColumn(QQuickItem *parent)
 void QQuickColumn::doPositioning(QSizeF *contentSize)
 {
     //Precondition: All items in the positioned list have a valid item pointer and should be positioned
-    qreal voffset = 0;
+    qreal voffset = topPadding();
+    const qreal padding = leftPadding() + rightPadding();
+    contentSize->setWidth(qMax(contentSize->width(), padding));
 
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         PositionedItem &child = positionedItems[ii];
-        positionItemY(voffset, &child);
-        contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
+        positionItem(child.itemX() + leftPadding() - child.leftPadding, voffset, &child);
+        child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
+        contentSize->setWidth(qMax(contentSize->width(), child.item->width() + padding));
 
         voffset += child.item->height();
         voffset += spacing();
     }
 
-    if (voffset != 0)//If we positioned any items, undo the spacing from the last item
+    if (voffset - topPadding() != 0)//If we positioned any items, undo the spacing from the last item
         voffset -= spacing();
-    contentSize->setHeight(voffset);
+    contentSize->setHeight(voffset + bottomPadding());
 }
 
 void QQuickColumn::reportConflictingAnchors()
@@ -792,6 +971,16 @@ void QQuickColumn::reportConflictingAnchors()
 
 
     \sa Column, Grid, Flow, Positioner, RowLayout, {Qt Quick Examples - Positioners}
+*/
+/*!
+    \since 5.6
+    \qmlproperty real QtQuick::Row::padding
+    \qmlproperty real QtQuick::Row::topPadding
+    \qmlproperty real QtQuick::Row::leftPadding
+    \qmlproperty real QtQuick::Row::bottomPadding
+    \qmlproperty real QtQuick::Row::rightPadding
+
+    These properties hold the padding around the content.
 */
 /*!
     \qmlproperty Transition QtQuick::Row::populate
@@ -940,27 +1129,34 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
 {
     //Precondition: All items in the positioned list have a valid item pointer and should be positioned
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate* >(QQuickBasePositionerPrivate::get(this));
-    qreal hoffset = 0;
+    qreal hoffset1 = leftPadding();
+    qreal hoffset2 = rightPadding();
+    if (!d->isLeftToRight())
+        qSwap(hoffset1, hoffset2);
+    qreal hoffset = hoffset1;
+    const qreal padding = topPadding() + bottomPadding();
+    contentSize->setHeight(qMax(contentSize->height(), padding));
 
     QList<qreal> hoffsets;
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         PositionedItem &child = positionedItems[ii];
 
         if (d->isLeftToRight()) {
-            positionItemX(hoffset, &child);
+            positionItem(hoffset, child.itemY() + topPadding() - child.topPadding, &child);
+            child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
         } else {
             hoffsets << hoffset;
         }
 
-        contentSize->setHeight(qMax(contentSize->height(), child.item->height()));
+        contentSize->setHeight(qMax(contentSize->height(), child.item->height() + padding));
 
         hoffset += child.item->width();
         hoffset += spacing();
     }
 
-    if (hoffset != 0)//If we positioned any items, undo the extra spacing from the last item
+    if (hoffset - hoffset1 != 0)//If we positioned any items, undo the extra spacing from the last item
         hoffset -= spacing();
-    contentSize->setWidth(hoffset);
+    contentSize->setWidth(hoffset + hoffset2);
 
     if (d->isLeftToRight())
         return;
@@ -976,7 +1172,8 @@ void QQuickRow::doPositioning(QSizeF *contentSize)
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         PositionedItem &child = positionedItems[ii];
         hoffset = end - hoffsets[acc++] - child.item->width();
-        positionItemX(hoffset, &child);
+        positionItem(hoffset, child.itemY() + topPadding() - child.topPadding, &child);
+        child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
     }
 }
 
@@ -1042,6 +1239,16 @@ void QQuickRow::reportConflictingAnchors()
 
 
     \sa Flow, Row, Column, Positioner, GridLayout, {Qt Quick Examples - Positioners}
+*/
+/*!
+    \since 5.6
+    \qmlproperty real QtQuick::Grid::padding
+    \qmlproperty real QtQuick::Grid::topPadding
+    \qmlproperty real QtQuick::Grid::leftPadding
+    \qmlproperty real QtQuick::Grid::bottomPadding
+    \qmlproperty real QtQuick::Grid::rightPadding
+
+    These properties hold the padding around the content.
 */
 /*!
     \qmlproperty Transition QtQuick::Grid::populate
@@ -1423,8 +1630,11 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
         c = (numVisible+(m_rows-1))/m_rows;
     }
 
-    if (r == 0 || c == 0)
-        return; //Nothing to do
+    if (r == 0 || c == 0) {
+        contentSize->setHeight(topPadding() + bottomPadding());
+        contentSize->setWidth(leftPadding() + rightPadding());
+        return; //Nothing else to do
+    }
 
     QList<qreal> maxColWidth;
     QList<qreal> maxRowHeight;
@@ -1476,6 +1686,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             widthSum += columnSpacing;
         widthSum += maxColWidth[j];
     }
+    widthSum += leftPadding() + rightPadding();
 
     qreal heightSum = 0;
     for (int i = 0; i < maxRowHeight.size(); i++) {
@@ -1483,6 +1694,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             heightSum += rowSpacing;
         heightSum += maxRowHeight[i];
     }
+    heightSum += topPadding() + bottomPadding();
 
     contentSize->setHeight(heightSum);
     contentSize->setWidth(widthSum);
@@ -1493,10 +1705,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     else
         end = widthSum;
 
-    qreal xoffset = 0;
+    qreal xoffset = leftPadding();
     if (!d->isLeftToRight())
-        xoffset = end;
-    qreal yoffset = 0;
+        xoffset = end - rightPadding();
+    qreal yoffset = topPadding();
     int curRow =0;
     int curCol =0;
     for (int i = 0; i < positionedItems.count(); ++i) {
@@ -1518,6 +1730,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             alignYOffset += maxRowHeight[curRow] - child.item->height();
 
         positionItem(childXOffset, alignYOffset, &child);
+        child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
 
         if (m_flow == LeftToRight) {
             if (d->isLeftToRight())
@@ -1529,9 +1742,9 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
             if (!curCol) {
                 yoffset += maxRowHeight[curRow]+rowSpacing;
                 if (d->isLeftToRight())
-                    xoffset = 0;
+                    xoffset = leftPadding();
                 else
-                    xoffset = end;
+                    xoffset = end - rightPadding();
                 curRow++;
                 if (curRow>=r)
                     break;
@@ -1545,7 +1758,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
                     xoffset += maxColWidth[curCol]+columnSpacing;
                 else
                     xoffset -= maxColWidth[curCol]+columnSpacing;
-                yoffset = 0;
+                yoffset = topPadding();
                 curCol++;
                 if (curCol>=c)
                     break;
@@ -1601,6 +1814,16 @@ void QQuickGrid::reportConflictingAnchors()
     \l{Item Positioners}.
 
   \sa Column, Row, Grid, Positioner, {Qt Quick Examples - Positioners}
+*/
+/*!
+    \since 5.6
+    \qmlproperty real QtQuick::Flow::padding
+    \qmlproperty real QtQuick::Flow::topPadding
+    \qmlproperty real QtQuick::Flow::leftPadding
+    \qmlproperty real QtQuick::Flow::bottomPadding
+    \qmlproperty real QtQuick::Flow::rightPadding
+
+    These properties hold the padding around the content.
 */
 /*!
     \qmlproperty Transition QtQuick::Flow::populate
@@ -1786,23 +2009,30 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
     //Precondition: All items in the positioned list have a valid item pointer and should be positioned
     Q_D(QQuickFlow);
 
-    qreal hoffset = 0;
-    qreal voffset = 0;
+    qreal hoffset1 = leftPadding();
+    qreal hoffset2 = rightPadding();
+    if (!d->isLeftToRight())
+        qSwap(hoffset1, hoffset2);
+    qreal hoffset = hoffset1;
+    const qreal voffset1 = topPadding();
+    qreal voffset = voffset1;
     qreal linemax = 0;
     QList<qreal> hoffsets;
+    contentSize->setWidth(qMax(contentSize->width(), hoffset1 + hoffset2));
+    contentSize->setHeight(qMax(contentSize->height(), voffset + bottomPadding()));
 
     for (int i = 0; i < positionedItems.count(); ++i) {
         PositionedItem &child = positionedItems[i];
 
         if (d->flow == LeftToRight)  {
-            if (widthValid() && hoffset && hoffset + child.item->width() > width()) {
-                hoffset = 0;
+            if (widthValid() && hoffset != hoffset1 && hoffset + child.item->width() + hoffset2 > width()) {
+                hoffset = hoffset1;
                 voffset += linemax + spacing();
                 linemax = 0;
             }
         } else {
-            if (heightValid() && voffset && voffset + child.item->height() > height()) {
-                voffset = 0;
+            if (heightValid() && voffset != voffset1 && voffset + child.item->height() + bottomPadding() > height()) {
+                voffset = voffset1;
                 hoffset += linemax + spacing();
                 linemax = 0;
             }
@@ -1810,13 +2040,16 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
 
         if (d->isLeftToRight()) {
             positionItem(hoffset, voffset, &child);
+            child.updatePadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
         } else {
             hoffsets << hoffset;
             positionItemY(voffset, &child);
+            child.topPadding = topPadding();
+            child.bottomPadding = bottomPadding();
         }
 
-        contentSize->setWidth(qMax(contentSize->width(), hoffset + child.item->width()));
-        contentSize->setHeight(qMax(contentSize->height(), voffset + child.item->height()));
+        contentSize->setWidth(qMax(contentSize->width(), hoffset + child.item->width() + hoffset2));
+        contentSize->setHeight(qMax(contentSize->height(), voffset + child.item->height() + bottomPadding()));
 
         if (d->flow == LeftToRight)  {
             hoffset += child.item->width();
@@ -1828,6 +2061,7 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
             linemax = qMax(linemax, child.item->width());
         }
     }
+
     if (d->isLeftToRight())
         return;
 
@@ -1841,6 +2075,8 @@ void QQuickFlow::doPositioning(QSizeF *contentSize)
         PositionedItem &child = positionedItems[i];
         hoffset = end - hoffsets[acc++] - child.item->width();
         positionItemX(hoffset, &child);
+        child.leftPadding = leftPadding();
+        child.rightPadding = rightPadding();
     }
 }
 

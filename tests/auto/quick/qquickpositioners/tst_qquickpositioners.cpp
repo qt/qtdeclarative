@@ -53,33 +53,50 @@ public:
 
 private slots:
     void test_horizontal();
+    void test_horizontal_padding();
     void test_horizontal_rtl();
     void test_horizontal_spacing();
     void test_horizontal_spacing_rightToLeft();
     void test_horizontal_animated();
+    void test_horizontal_animated_padding();
     void test_horizontal_animated_rightToLeft();
+    void test_horizontal_animated_rightToLeft_padding();
     void test_horizontal_animated_disabled();
+    void test_horizontal_animated_disabled_padding();
     void test_vertical();
+    void test_vertical_padding();
     void test_vertical_spacing();
     void test_vertical_animated();
+    void test_vertical_animated_padding();
     void test_grid();
+    void test_grid_padding();
     void test_grid_topToBottom();
     void test_grid_rightToLeft();
     void test_grid_spacing();
     void test_grid_row_column_spacing();
     void test_grid_animated();
+    void test_grid_animated_padding();
     void test_grid_animated_rightToLeft();
+    void test_grid_animated_rightToLeft_padding();
     void test_grid_zero_columns();
     void test_grid_H_alignment();
+    void test_grid_H_alignment_padding();
     void test_grid_V_alignment();
+    void test_grid_V_alignment_padding();
     void test_propertychanges();
     void test_repeater();
+    void test_repeater_padding();
     void test_flow();
+    void test_flow_padding();
     void test_flow_rightToLeft();
     void test_flow_topToBottom();
+    void test_flow_topToBottom_padding();
     void test_flow_resize();
+    void test_flow_resize_padding();
     void test_flow_resize_rightToLeft();
+    void test_flow_resize_rightToLeft_padding();
     void test_flow_implicit_resize();
+    void test_flow_implicit_resize_padding();
     void test_conflictinganchors();
     void test_mirroring();
     void test_allInvisible();
@@ -198,18 +215,25 @@ void tst_qquickpositioners::addTransitions_grid_data()
     // (adding items further down the grid can cause displace transitions at
     // previous indexes, since grid is auto-resized to tightly fit all of its items)
 
+    QTest::addColumn<QString>("qmlFile");
     QTest::addColumn<int>("initialItemCount");
     QTest::addColumn<int>("insertionIndex");
     QTest::addColumn<int>("insertionCount");
     QTest::addColumn<ListRange>("expectedDisplacedIndexes");
 
-    QTest::newRow("add one @ start") << 10 << 0 << 1 << ListRange(0, 9);
-    QTest::newRow("add one @ middle") << 10 << 5 << 1 << ListRange(3, 3) + ListRange(5, 9);
-    QTest::newRow("add one @ end") << 10 << 10 << 1 << ListRange(3, 3) + ListRange(7, 7);
+    QTest::newRow("add one @ start") << "transitions.qml" << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("add one @ middle") << "transitions.qml" << 10 << 5 << 1 << ListRange(3, 3) + ListRange(5, 9);
+    QTest::newRow("add one @ end") << "transitions.qml" << 10 << 10 << 1 << ListRange(3, 3) + ListRange(7, 7);
+    QTest::newRow("padding, add one @ start") << "transitions-padding.qml" << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("padding, add one @ middle") << "transitions-padding.qml" << 10 << 5 << 1 << ListRange(3, 3) + ListRange(5, 9);
+    QTest::newRow("padding, add one @ end") << "transitions-padding.qml" << 10 << 10 << 1 << ListRange(3, 3) + ListRange(7, 7);
 
-    QTest::newRow("add multiple @ start") << 10 << 0 << 3 << ListRange(0, 9);
-    QTest::newRow("add multiple @ middle") << 10 << 5 << 3 << ListRange(1, 3) + ListRange(5, 9);
-    QTest::newRow("add multiple @ end") << 10 << 10 << 3 << ListRange(1, 3) + ListRange(5, 7) + ListRange(9, 9);
+    QTest::newRow("add multiple @ start") << "transitions.qml" << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("add multiple @ middle") << "transitions.qml" << 10 << 5 << 3 << ListRange(1, 3) + ListRange(5, 9);
+    QTest::newRow("add multiple @ end") << "transitions.qml" << 10 << 10 << 3 << ListRange(1, 3) + ListRange(5, 7) + ListRange(9, 9);
+    QTest::newRow("padding, add multiple @ start") << "transitions-padding.qml" << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("padding, add multiple @ middle") << "transitions-padding.qml" << 10 << 5 << 3 << ListRange(1, 3) + ListRange(5, 9);
+    QTest::newRow("padding, add multiple @ end") << "transitions-padding.qml" << 10 << 10 << 3 << ListRange(1, 3) + ListRange(5, 7) + ListRange(9, 9);
 }
 
 void tst_qquickpositioners::addTransitions_flow()
@@ -253,17 +277,24 @@ void tst_qquickpositioners::moveTransitions_grid_data()
     // (removing items further down the grid can cause displace transitions at
     // previous indexes, since grid is auto-resized to tightly fit all of its items)
 
+    QTest::addColumn<QString>("qmlFile");
     QTest::addColumn<int>("initialItemCount");
     QTest::addColumn<ListChange>("change");
     QTest::addColumn<ListRange>("expectedDisplacedIndexes");
 
-    QTest::newRow("remove one @ start") << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
-    QTest::newRow("remove one @ middle") << 10 << ListChange::remove(4, 1) << ListRange(2, 3) + ListRange(5, 9);
-    QTest::newRow("remove one @ end") << 10 << ListChange::remove(9, 1) << ListRange(2, 3) + ListRange(6, 7);
+    QTest::newRow("remove one @ start") << "transitions.qml" << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("remove one @ middle") << "transitions.qml" << 10 << ListChange::remove(4, 1) << ListRange(2, 3) + ListRange(5, 9);
+    QTest::newRow("remove one @ end") << "transitions.qml" << 10 << ListChange::remove(9, 1) << ListRange(2, 3) + ListRange(6, 7);
+    QTest::newRow("padding, remove one @ start") << "transitions-padding.qml" << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("padding, remove one @ middle") << "transitions-padding.qml" << 10 << ListChange::remove(4, 1) << ListRange(2, 3) + ListRange(5, 9);
+    QTest::newRow("padding, remove one @ end") << "transitions-padding.qml" << 10 << ListChange::remove(9, 1) << ListRange(2, 3) + ListRange(6, 7);
 
-    QTest::newRow("remove multiple @ start") << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
-    QTest::newRow("remove multiple @ middle") << 10 << ListChange::remove(4, 3) << ListRange(1, 3) + ListRange(7, 9);
-    QTest::newRow("remove multiple @ end") << 10 << ListChange::remove(7, 3) << ListRange(1, 3) + ListRange(5, 6);
+    QTest::newRow("remove multiple @ start") << "transitions.qml" << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("remove multiple @ middle") << "transitions.qml" << 10 << ListChange::remove(4, 3) << ListRange(1, 3) + ListRange(7, 9);
+    QTest::newRow("remove multiple @ end") << "transitions.qml" << 10 << ListChange::remove(7, 3) << ListRange(1, 3) + ListRange(5, 6);
+    QTest::newRow("padding, remove multiple @ start") << "transitions-padding.qml" << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("padding, remove multiple @ middle") << "transitions-padding.qml" << 10 << ListChange::remove(4, 3) << ListRange(1, 3) + ListRange(7, 9);
+    QTest::newRow("padding, remove multiple @ end") << "transitions-padding.qml" << 10 << ListChange::remove(7, 3) << ListRange(1, 3) + ListRange(5, 6);
 }
 
 void tst_qquickpositioners::moveTransitions_flow()
@@ -305,6 +336,185 @@ void tst_qquickpositioners::test_horizontal()
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 110.0);
     QCOMPARE(row->height(), 50.0);
+
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 117.0);
+    QCOMPARE(row->height(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+}
+
+void tst_qquickpositioners::test_horizontal_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal.qml")));
+
+    window->rootObject()->setProperty("testRightToLeft", false);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
+    QCOMPARE(row->width(), 110.0);
+    QCOMPARE(row->height(), 50.0);
+
+    QQuickRow *obj = qobject_cast<QQuickRow*>(row);
+    QVERIFY(obj != 0);
+
+    QCOMPARE(row->property("padding").toDouble(), 0.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 0.0);
+
+    obj->setPadding(1.0);
+
+    QCOMPARE(row->property("padding").toDouble(), 1.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(row->width(), 112.0);
+    QCOMPARE(row->height(), 52.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 1.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 1.0);
+    QCOMPARE(three->x(), 71.0);
+    QCOMPARE(three->y(), 1.0);
+
+    obj->setTopPadding(2.0);
+
+    QCOMPARE(row->property("padding").toDouble(), 1.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(row->height(), 53.0);
+    QCOMPARE(row->width(), 112.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 71.0);
+    QCOMPARE(three->y(), 2.0);
+
+    obj->setLeftPadding(3.0);
+
+    QCOMPARE(row->property("padding").toDouble(), 1.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(row->width(), 114.0);
+    QCOMPARE(row->height(), 53.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+
+    obj->setRightPadding(4.0);
+
+    QCOMPARE(row->property("padding").toDouble(), 1.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(row->width(), 117.0);
+    QCOMPARE(row->height(), 53.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+
+    obj->setBottomPadding(5.0);
+
+    QCOMPARE(row->property("padding").toDouble(), 1.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 5.0);
+
+    QTRY_COMPARE(row->height(), 57.0);
+    QCOMPARE(row->width(), 117.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+
+    obj->resetBottomPadding();
+    QCOMPARE(row->property("bottomPadding").toDouble(), 1.0);
+    QTRY_COMPARE(row->height(), 53.0);
+    QCOMPARE(row->width(), 117.0);
+
+    obj->resetRightPadding();
+    QCOMPARE(row->property("rightPadding").toDouble(), 1.0);
+    QTRY_COMPARE(row->width(), 114.0);
+    QCOMPARE(row->height(), 53.0);
+
+    obj->resetLeftPadding();
+    QCOMPARE(row->property("leftPadding").toDouble(), 1.0);
+    QTRY_COMPARE(row->width(), 112.0);
+    QCOMPARE(row->height(), 53.0);
+
+    obj->resetTopPadding();
+    QCOMPARE(row->property("topPadding").toDouble(), 1.0);
+    QTRY_COMPARE(row->height(), 52.0);
+    QCOMPARE(row->width(), 112.0);
+
+    obj->resetPadding();
+    QCOMPARE(row->property("padding").toDouble(), 0.0);
+    QCOMPARE(row->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(row->property("bottomPadding").toDouble(), 0.0);
+    QTRY_COMPARE(row->height(), 50.0);
+    QCOMPARE(row->width(), 110.0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
 }
 
 void tst_qquickpositioners::test_horizontal_rtl()
@@ -333,6 +543,36 @@ void tst_qquickpositioners::test_horizontal_rtl()
     QCOMPARE(row->width(), 110.0);
     QCOMPARE(row->height(), 50.0);
 
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 117.0);
+    QCOMPARE(row->height(), 57.0);
+
+    QCOMPARE(one->x(), 63.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 43.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 2.0);
+
+    row->setProperty("topPadding", 0);
+    row->setProperty("leftPadding", 0);
+    row->setProperty("rightPadding", 0);
+    row->setProperty("bottomPadding", 0);
+    row->setProperty("padding", 0);
+
+    QTRY_COMPARE(one->x(), 60.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 40.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 0.0);
+
     // Change the width of the row and check that items stay to the right
     row->setWidth(200);
     QTRY_COMPARE(one->x(), 150.0);
@@ -342,6 +582,18 @@ void tst_qquickpositioners::test_horizontal_rtl()
     QCOMPARE(three->x(), 90.0);
     QCOMPARE(three->y(), 0.0);
 
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(one->x(), 146.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 126.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 86.0);
+    QCOMPARE(three->y(), 2.0);
 }
 
 void tst_qquickpositioners::test_horizontal_spacing()
@@ -370,6 +622,22 @@ void tst_qquickpositioners::test_horizontal_spacing()
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 137.0);
+    QCOMPARE(row->height(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 63.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 93.0);
+    QCOMPARE(three->y(), 2.0);
 }
 
 void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
@@ -391,13 +659,29 @@ void tst_qquickpositioners::test_horizontal_spacing_rightToLeft()
     QCOMPARE(one->y(), 0.0);
     QCOMPARE(two->x(), 50.0);
     QCOMPARE(two->y(), 0.0);
-    QCOMPARE(three->x(), 00.0);
+    QCOMPARE(three->x(), 0.0);
     QCOMPARE(three->y(), 0.0);
 
     QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
     QCOMPARE(row->width(), 130.0);
     QCOMPARE(row->height(), 50.0);
 
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 137.0);
+    QCOMPARE(row->height(), 57.0);
+
+    QCOMPARE(one->x(), 83.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 2.0);
 }
 
 void tst_qquickpositioners::test_horizontal_animated()
@@ -450,6 +734,70 @@ void tst_qquickpositioners::test_horizontal_animated()
 
     QTRY_COMPARE(two->x(), 50.0);
     QTRY_COMPARE(three->x(), 100.0);
+
+}
+
+void tst_qquickpositioners::test_horizontal_animated_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated.qml"), false));
+
+    window->rootObject()->setProperty("testRightToLeft", false);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+
+    //Note that they animate in
+    QCOMPARE(one->x(), -100.0);
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(three->x(), -100.0);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
+
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
+    QVERIFY(row);
+    QCOMPARE(row->width(), 100.0);
+    QCOMPARE(row->height(), 50.0);
+
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 107.0);
+    QCOMPARE(row->height(), 57.0);
+
+    //QTRY_COMPARE used instead of waiting for the expected time of animation completion
+    //Note that this means the duration of the animation is NOT tested
+
+    QTRY_COMPARE(one->x(), 3.0);
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(two->isVisible(), false);
+    QTRY_COMPARE(two->x(), -100.0);//Not 'in' yet
+    QTRY_COMPARE(two->y(), 0.0);
+    QTRY_COMPARE(three->x(), 53.0);
+    QTRY_COMPARE(three->y(), 2.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
+    QTRY_COMPARE(row->width(), 157.0);
+    QTRY_COMPARE(row->height(), 57.0);
+
+    QTest::qWait(0);//Let the animation start
+    QVERIFY(two->x() >= -100.0 && two->x() < 53.0);
+    QVERIFY(three->x() >= 53.0 && three->x() < 103.0);
+
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(two->x(), 53.0);
+    QTRY_COMPARE(three->x(), 103.0);
 
 }
 
@@ -508,7 +856,121 @@ void tst_qquickpositioners::test_horizontal_animated_rightToLeft()
 
 }
 
+void tst_qquickpositioners::test_horizontal_animated_rightToLeft_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated.qml"), false));
+
+    window->rootObject()->setProperty("testRightToLeft", true);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+
+    //Note that they animate in
+    QCOMPARE(one->x(), -100.0);
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(three->x(), -100.0);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
+
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
+    QVERIFY(row);
+    QCOMPARE(row->width(), 100.0);
+    QCOMPARE(row->height(), 50.0);
+
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 107.0);
+    QCOMPARE(row->height(), 57.0);
+
+    //QTRY_COMPARE used instead of waiting for the expected time of animation completion
+    //Note that this means the duration of the animation is NOT tested
+
+    QTRY_COMPARE(one->x(), 53.0);
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(two->isVisible(), false);
+    QTRY_COMPARE(two->x(), -100.0);//Not 'in' yet
+    QTRY_COMPARE(two->y(), 0.0);
+    QTRY_COMPARE(three->x(), 3.0);
+    QTRY_COMPARE(three->y(), 2.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
+
+    // New size should propagate after visible change
+    QTRY_COMPARE(row->width(), 157.0);
+    QTRY_COMPARE(row->height(), 57.0);
+
+    QTest::qWait(0);//Let the animation start
+    QVERIFY(one->x() >= 53.0 && one->x() < 100);
+    QVERIFY(two->x() >= -100.0 && two->x() < 53.0);
+
+    QTRY_COMPARE(one->x(), 103.0);
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(two->x(), 53.0);
+
+}
+
 void tst_qquickpositioners::test_horizontal_animated_disabled()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated-disabled.qml")));
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+
+    QQuickItem *row = window->rootObject()->findChild<QQuickItem*>("row");
+    QVERIFY(row);
+
+    qApp->processEvents();
+
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->width(), 107.0);
+    QCOMPARE(row->height(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->isVisible(), false);
+    QCOMPARE(two->x(), -100.0);//Not 'in' yet
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 53.0);
+    QCOMPARE(three->y(), 2.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
+    QTRY_COMPARE(row->width(), 157.0);
+    QTRY_COMPARE(row->height(), 57.0);
+
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(two->x(), 53.0);
+    QTRY_COMPARE(three->x(), 103.0);
+
+}
+
+void tst_qquickpositioners::test_horizontal_animated_disabled_padding()
 {
     QScopedPointer<QQuickView> window(createView(testFile("horizontal-animated-disabled.qml")));
 
@@ -547,6 +1009,7 @@ void tst_qquickpositioners::test_horizontal_animated_disabled()
 
 void tst_qquickpositioners::populateTransitions(const QString &positionerObjectName)
 {
+    QFETCH(QString, qmlFile);
     QFETCH(bool, dynamicallyPopulate);
     QFETCH(bool, usePopulateTransition);
 
@@ -574,7 +1037,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     ctxt->setContextProperty("testedPositioner", positionerObjectName);
-    window->setSource(testFileUrl("transitions.qml"));
+    window->setSource(testFileUrl(qmlFile));
 
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
@@ -619,18 +1082,24 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
 
 void tst_qquickpositioners::populateTransitions_data()
 {
+    QTest::addColumn<QString>("qmlFile");
     QTest::addColumn<bool>("dynamicallyPopulate");
     QTest::addColumn<bool>("usePopulateTransition");
 
-    QTest::newRow("statically populate") << false << true;
-    QTest::newRow("statically populate, no populate transition") << false << false;
+    QTest::newRow("statically populate") << "transitions.qml" << false << true;
+    QTest::newRow("statically populate, no populate transition") << "transitions.qml" << false << false;
+    QTest::newRow("padding, statically populate") << "transitions-padding.qml" << false << true;
+    QTest::newRow("padding, statically populate, no populate transition") << "transitions-padding.qml" << false << false;
 
-    QTest::newRow("dynamically populate") << true << true;
-    QTest::newRow("dynamically populate, no populate transition") << true << false;
+    QTest::newRow("dynamically populate") << "transitions.qml" << true << true;
+    QTest::newRow("dynamically populate, no populate transition") << "transitions.qml" << true << false;
+    QTest::newRow("padding, dynamically populate") << "transitions-padding.qml" << true << true;
+    QTest::newRow("padding, dynamically populate, no populate transition") << "transitions-padding.qml" << true << false;
 }
 
 void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
 {
+    QFETCH(QString, qmlFile);
     QFETCH(int, initialItemCount);
     QFETCH(int, insertionIndex);
     QFETCH(int, insertionCount);
@@ -654,7 +1123,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     ctxt->setContextProperty("testedPositioner", QString());
-    window->setSource(testFileUrl("transitions.qml"));
+    window->setSource(testFileUrl(qmlFile));
     window->show();
     QTest::qWaitForWindowExposed(window.data());
     qApp->processEvents();
@@ -729,22 +1198,30 @@ void tst_qquickpositioners::addTransitions_data()
 {
     // If this data changes, update addTransitions_grid_data() also
 
+    QTest::addColumn<QString>("qmlFile");
     QTest::addColumn<int>("initialItemCount");
     QTest::addColumn<int>("insertionIndex");
     QTest::addColumn<int>("insertionCount");
     QTest::addColumn<ListRange>("expectedDisplacedIndexes");
 
-    QTest::newRow("add one @ start") << 10 << 0 << 1 << ListRange(0, 9);
-    QTest::newRow("add one @ middle") << 10 << 5 << 1 << ListRange(5, 9);
-    QTest::newRow("add one @ end") << 10 << 10 << 1 << ListRange();
+    QTest::newRow("add one @ start") << "transitions.qml" << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("add one @ middle") << "transitions.qml" << 10 << 5 << 1 << ListRange(5, 9);
+    QTest::newRow("add one @ end") << "transitions.qml" << 10 << 10 << 1 << ListRange();
+    QTest::newRow("padding, add one @ start") << "transitions-padding.qml" << 10 << 0 << 1 << ListRange(0, 9);
+    QTest::newRow("padding, add one @ middle") << "transitions-padding.qml" << 10 << 5 << 1 << ListRange(5, 9);
+    QTest::newRow("padding, add one @ end") << "transitions-padding.qml" << 10 << 10 << 1 << ListRange();
 
-    QTest::newRow("add multiple @ start") << 10 << 0 << 3 << ListRange(0, 9);
-    QTest::newRow("add multiple @ middle") << 10 << 5 << 3 << ListRange(5, 9);
-    QTest::newRow("add multiple @ end") << 10 << 10 << 3 << ListRange();
+    QTest::newRow("add multiple @ start") << "transitions.qml" << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("add multiple @ middle") << "transitions.qml" << 10 << 5 << 3 << ListRange(5, 9);
+    QTest::newRow("add multiple @ end") << "transitions.qml" << 10 << 10 << 3 << ListRange();
+    QTest::newRow("padding, add multiple @ start") << "transitions-padding.qml" << 10 << 0 << 3 << ListRange(0, 9);
+    QTest::newRow("padding, add multiple @ middle") << "transitions-padding.qml" << 10 << 5 << 3 << ListRange(5, 9);
+    QTest::newRow("padding, add multiple @ end") << "transitions-padding.qml" << 10 << 10 << 3 << ListRange();
 }
 
 void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
 {
+    QFETCH(QString, qmlFile);
     QFETCH(int, initialItemCount);
     QFETCH(ListChange, change);
     QFETCH(ListRange, expectedDisplacedIndexes);
@@ -769,7 +1246,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("targetItems_transitionFrom", targetItems_transitionFrom);
     ctxt->setContextProperty("displacedItems_transitionVia", displacedItems_transitionVia);
     ctxt->setContextProperty("testedPositioner", QString());
-    window->setSource(testFileUrl("transitions.qml"));
+    window->setSource(testFileUrl(qmlFile));
     window->show();
     QTest::qWaitForWindowExposed(window.data());
     qApp->processEvents();
@@ -840,27 +1317,36 @@ void tst_qquickpositioners::moveTransitions_data()
 {
     // If this data changes, update moveTransitions_grid_data() also
 
+    QTest::addColumn<QString>("qmlFile");
     QTest::addColumn<int>("initialItemCount");
     QTest::addColumn<ListChange>("change");
     QTest::addColumn<ListRange>("expectedDisplacedIndexes");
 
-    QTest::newRow("remove one @ start") << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
-    QTest::newRow("remove one @ middle") << 10 << ListChange::remove(4, 1) << ListRange(5, 9);
-    QTest::newRow("remove one @ end") << 10 << ListChange::remove(9, 1) << ListRange();
+    QTest::newRow("remove one @ start") << "transitions.qml" << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("remove one @ middle") << "transitions.qml" << 10 << ListChange::remove(4, 1) << ListRange(5, 9);
+    QTest::newRow("remove one @ end") << "transitions.qml" << 10 << ListChange::remove(9, 1) << ListRange();
+    QTest::newRow("padding, remove one @ start") << "transitions-padding.qml" << 10 << ListChange::remove(0, 1) << ListRange(1, 9);
+    QTest::newRow("padding, remove one @ middle") << "transitions-padding.qml" << 10 << ListChange::remove(4, 1) << ListRange(5, 9);
+    QTest::newRow("padding, remove one @ end") << "transitions-padding.qml" << 10 << ListChange::remove(9, 1) << ListRange();
 
-    QTest::newRow("remove multiple @ start") << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
-    QTest::newRow("remove multiple @ middle") << 10 << ListChange::remove(4, 3) << ListRange(7, 9);
-    QTest::newRow("remove multiple @ end") << 10 << ListChange::remove(7, 3) << ListRange();
+    QTest::newRow("remove multiple @ start") << "transitions.qml" << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("remove multiple @ middle") << "transitions.qml" << 10 << ListChange::remove(4, 3) << ListRange(7, 9);
+    QTest::newRow("remove multiple @ end") << "transitions.qml" << 10 << ListChange::remove(7, 3) << ListRange();
+    QTest::newRow("padding, remove multiple @ start") << "transitions-padding.qml" << 10 << ListChange::remove(0, 3) << ListRange(3, 9);
+    QTest::newRow("padding, remove multiple @ middle") << "transitions-padding.qml" << 10 << ListChange::remove(4, 3) << ListRange(7, 9);
+    QTest::newRow("padding, remove multiple @ end") << "transitions-padding.qml" << 10 << ListChange::remove(7, 3) << ListRange();
 }
-
 
 void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel *model, qreal incrementalSize)
 {
     QVERIFY(model->count() > 0);
+
+    QQuickBasePositioner *p = qobject_cast<QQuickBasePositioner*>(positioner);
+
     qreal padding = 0;
     qreal currentSize = 30;
-    qreal rowX = 0;
-    qreal rowY = 0;
+    qreal rowX = p->leftPadding();
+    qreal rowY = p->topPadding();
 
     for (int i=0; i<model->count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(positioner, "wrapper", i);
@@ -870,11 +1356,11 @@ void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel
         QCOMPARE(item->height(), currentSize);
 
         if (qobject_cast<QQuickRow*>(positioner)) {
-            QCOMPARE(item->x(), (i * 30.0) + padding);
-            QCOMPARE(item->y(), 0.0);
+            QCOMPARE(item->x(), (i * 30.0) + padding + p->leftPadding());
+            QCOMPARE(item->y(), p->topPadding());
         } else if (qobject_cast<QQuickColumn*>(positioner)) {
-            QCOMPARE(item->x(), 0.0);
-            QCOMPARE(item->y(), (i * 30.0) + padding);
+            QCOMPARE(item->x(), p->leftPadding());
+            QCOMPARE(item->y(), (i * 30.0) + padding + p->topPadding());
         } else if (qobject_cast<QQuickGrid*>(positioner)) {
             int columns = 4;
             int rows = qCeil(model->count() / qreal(columns));
@@ -886,20 +1372,20 @@ void tst_qquickpositioners::checkItemPositions(QQuickItem *positioner, QaimModel
                 QVERIFY(finalAlignedRowItem);
                 QCOMPARE(item->x(), finalAlignedRowItem->x());
             } else {
-                QCOMPARE(item->x(), 0.0);
+                QCOMPARE(item->x(), p->leftPadding());
             }
             if (i / columns > 0) {
                 QQuickItem *prevRowLastItem = findItem<QQuickItem>(positioner, "wrapper", (i/columns * columns) - 1);
                 QVERIFY(prevRowLastItem);
                 QCOMPARE(item->y(), prevRowLastItem->y() + prevRowLastItem->height());
             } else {
-                QCOMPARE(item->y(), 0.0);
+                QCOMPARE(item->y(), p->topPadding());
             }
         } else if (qobject_cast<QQuickFlow*>(positioner)) {
             if (rowX + item->width() > positioner->width()) {
                 QQuickItem *prevItem = findItem<QQuickItem>(positioner, "wrapper", i-1);
                 QVERIFY(prevItem);
-                rowX = 0;
+                rowX = p->leftPadding();
                 rowY = prevItem->y() + prevItem->height();
             }
             QCOMPARE(item->x(), rowX);
@@ -942,6 +1428,183 @@ void tst_qquickpositioners::test_vertical()
     QCOMPARE(column->height(), 80.0);
     QCOMPARE(column->width(), 50.0);
 
+    // test padding
+    column->setProperty("padding", 1);
+    column->setProperty("topPadding", 2);
+    column->setProperty("leftPadding", 3);
+    column->setProperty("rightPadding", 4);
+    column->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(column->height(), 87.0);
+    QCOMPARE(column->width(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 62.0);
+}
+
+void tst_qquickpositioners::test_vertical_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("vertical.qml")));
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 0.0);
+    QCOMPARE(two->y(), 50.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 60.0);
+
+    QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
+    QVERIFY(column);
+    QCOMPARE(column->height(), 80.0);
+    QCOMPARE(column->width(), 50.0);
+
+    QQuickColumn *obj = qobject_cast<QQuickColumn*>(column);
+    QVERIFY(obj != 0);
+
+    QCOMPARE(column->property("padding").toDouble(), 0.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 0.0);
+
+    obj->setPadding(1.0);
+
+    QCOMPARE(column->property("padding").toDouble(), 1.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(column->height(), 82.0);
+    QCOMPARE(column->width(), 52.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 1.0);
+    QCOMPARE(two->x(), 1.0);
+    QCOMPARE(two->y(), 51.0);
+    QCOMPARE(three->x(), 1.0);
+    QCOMPARE(three->y(), 61.0);
+
+    obj->setTopPadding(2.0);
+
+    QCOMPARE(column->property("padding").toDouble(), 1.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(column->height(), 83.0);
+    QCOMPARE(column->width(), 52.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 1.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 1.0);
+    QCOMPARE(three->y(), 62.0);
+
+    obj->setLeftPadding(3.0);
+
+    QCOMPARE(column->property("padding").toDouble(), 1.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(column->width(), 54.0);
+    QCOMPARE(column->height(), 83.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 62.0);
+
+    obj->setRightPadding(4.0);
+
+    QCOMPARE(column->property("padding").toDouble(), 1.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(column->width(), 57.0);
+    QCOMPARE(column->height(), 83.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 62.0);
+
+    obj->setBottomPadding(5.0);
+
+    QCOMPARE(column->property("padding").toDouble(), 1.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 5.0);
+
+    QTRY_COMPARE(column->height(), 87.0);
+    QCOMPARE(column->width(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 62.0);
+
+    obj->resetBottomPadding();
+    QCOMPARE(column->property("bottomPadding").toDouble(), 1.0);
+    QTRY_COMPARE(column->height(), 83.0);
+    QCOMPARE(column->width(), 57.0);
+
+    obj->resetRightPadding();
+    QCOMPARE(column->property("rightPadding").toDouble(), 1.0);
+    QTRY_COMPARE(column->width(), 54.0);
+    QCOMPARE(column->height(), 83.0);
+
+    obj->resetLeftPadding();
+    QCOMPARE(column->property("leftPadding").toDouble(), 1.0);
+    QTRY_COMPARE(column->width(), 52.0);
+    QCOMPARE(column->height(), 83.0);
+
+    obj->resetTopPadding();
+    QCOMPARE(column->property("topPadding").toDouble(), 1.0);
+    QTRY_COMPARE(column->height(), 82.0);
+    QCOMPARE(column->width(), 52.0);
+
+    obj->resetPadding();
+    QCOMPARE(column->property("padding").toDouble(), 0.0);
+    QCOMPARE(column->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(column->property("bottomPadding").toDouble(), 0.0);
+    QTRY_COMPARE(column->height(), 80.0);
+    QCOMPARE(column->width(), 50.0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 0.0);
+    QCOMPARE(two->y(), 50.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 60.0);
 }
 
 void tst_qquickpositioners::test_vertical_spacing()
@@ -968,6 +1631,22 @@ void tst_qquickpositioners::test_vertical_spacing()
     QCOMPARE(column->height(), 100.0);
     QCOMPARE(column->width(), 50.0);
 
+    // test padding
+    column->setProperty("padding", 1);
+    column->setProperty("topPadding", 2);
+    column->setProperty("leftPadding", 3);
+    column->setProperty("rightPadding", 4);
+    column->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(column->height(), 107.0);
+    QCOMPARE(column->width(), 57.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 62.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 82.0);
 }
 
 void tst_qquickpositioners::test_vertical_animated()
@@ -1019,6 +1698,66 @@ void tst_qquickpositioners::test_vertical_animated()
 
 }
 
+void tst_qquickpositioners::test_vertical_animated_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("vertical-animated.qml"), false));
+
+    //Note that they animate in
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QCOMPARE(one->y(), -100.0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QCOMPARE(two->y(), -100.0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QCOMPARE(three->y(), -100.0);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
+
+    QQuickItem *column = window->rootObject()->findChild<QQuickItem*>("column");
+    QVERIFY(column);
+    QCOMPARE(column->height(), 100.0);
+    QCOMPARE(column->width(), 50.0);
+
+    // test padding
+    column->setProperty("padding", 1);
+    column->setProperty("topPadding", 2);
+    column->setProperty("leftPadding", 3);
+    column->setProperty("rightPadding", 4);
+    column->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(column->height(), 107.0);
+    QCOMPARE(column->width(), 57.0);
+
+    //QTRY_COMPARE used instead of waiting for the expected time of animation completion
+    //Note that this means the duration of the animation is NOT tested
+
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(one->x(), 3.0);
+    QTRY_COMPARE(two->isVisible(), false);
+    QTRY_COMPARE(two->y(), -100.0);//Not 'in' yet
+    QTRY_COMPARE(two->x(), 0.0);
+    QTRY_COMPARE(three->y(), 52.0);
+    QTRY_COMPARE(three->x(), 3.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
+    QTRY_COMPARE(column->height(), 157.0);
+    QTRY_COMPARE(column->width(), 57.0);
+    QTest::qWait(0);//Let the animation start
+    QVERIFY(two->y() >= -100.0 && two->y() < 52.0);
+    QVERIFY(three->y() >= 52.0 && three->y() < 102.0);
+
+    QTRY_COMPARE(two->x(), 3.0);
+    QTRY_COMPARE(two->y(), 52.0);
+    QTRY_COMPARE(three->y(), 102.0);
+
+}
+
 void tst_qquickpositioners::test_grid()
 {
     QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
@@ -1050,6 +1789,214 @@ void tst_qquickpositioners::test_grid()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 52.0);
+}
+
+void tst_qquickpositioners::test_grid_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 50.0);
+
+    QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
+    QCOMPARE(grid->flow(), QQuickGrid::LeftToRight);
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 0.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 0.0);
+
+    grid->setPadding(1.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 1.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(grid->width(), 102.0);
+    QCOMPARE(grid->height(), 102.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 1.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 1.0);
+    QCOMPARE(three->x(), 71.0);
+    QCOMPARE(three->y(), 1.0);
+    QCOMPARE(four->x(), 1.0);
+    QCOMPARE(four->y(), 51.0);
+    QCOMPARE(five->x(), 51.0);
+    QCOMPARE(five->y(), 51.0);
+
+    grid->setTopPadding(2.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 1.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(grid->height(), 103.0);
+    QCOMPARE(grid->width(), 102.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 71.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 1.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 51.0);
+    QCOMPARE(five->y(), 52.0);
+
+    grid->setLeftPadding(3.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 1.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(grid->width(), 104.0);
+    QCOMPARE(grid->height(), 103.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 52.0);
+
+    grid->setRightPadding(4.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 1.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 103.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 52.0);
+
+    grid->setBottomPadding(5.0);
+
+    QCOMPARE(grid->property("padding").toDouble(), 1.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 5.0);
+
+    QTRY_COMPARE(grid->height(), 107.0);
+    QCOMPARE(grid->width(), 107.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 52.0);
+
+    grid->resetBottomPadding();
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 1.0);
+    QTRY_COMPARE(grid->height(), 103.0);
+    QCOMPARE(grid->width(), 107.0);
+
+    grid->resetRightPadding();
+    QCOMPARE(grid->property("rightPadding").toDouble(), 1.0);
+    QTRY_COMPARE(grid->width(), 104.0);
+    QCOMPARE(grid->height(), 103.0);
+
+    grid->resetLeftPadding();
+    QCOMPARE(grid->property("leftPadding").toDouble(), 1.0);
+    QTRY_COMPARE(grid->width(), 102.0);
+    QCOMPARE(grid->height(), 103.0);
+
+    grid->resetTopPadding();
+    QCOMPARE(grid->property("topPadding").toDouble(), 1.0);
+    QTRY_COMPARE(grid->height(), 102.0);
+    QCOMPARE(grid->width(), 102.0);
+
+    grid->resetPadding();
+    QCOMPARE(grid->property("padding").toDouble(), 0.0);
+    QCOMPARE(grid->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(grid->property("bottomPadding").toDouble(), 0.0);
+    QTRY_COMPARE(grid->height(), 100.0);
+    QCOMPARE(grid->width(), 100.0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 50.0);
 }
 
 void tst_qquickpositioners::test_grid_topToBottom()
@@ -1083,6 +2030,26 @@ void tst_qquickpositioners::test_grid_topToBottom()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 120.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 127.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 3.0);
+    QCOMPARE(two->y(), 52.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 102.0);
+    QCOMPARE(four->x(), 53.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 52.0);
 }
 
 void tst_qquickpositioners::test_grid_rightToLeft()
@@ -1118,6 +2085,44 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     QCOMPARE(grid->width(), 100.0);
     QCOMPARE(grid->height(), 100.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    QCOMPARE(one->x(), 53.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 33.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 53.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 43.0);
+    QCOMPARE(five->y(), 52.0);
+
+    grid->setProperty("topPadding", 0);
+    grid->setProperty("leftPadding", 0);
+    grid->setProperty("rightPadding", 0);
+    grid->setProperty("bottomPadding", 0);
+    grid->setProperty("padding", 0);
+
+    QTRY_COMPARE(one->x(), 50.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 30.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 50.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 40.0);
+    QCOMPARE(five->y(), 50.0);
+
     // Change the width of the grid and check that items stay to the right
     grid->setWidth(200);
     QTRY_COMPARE(one->x(), 150.0);
@@ -1131,6 +2136,22 @@ void tst_qquickpositioners::test_grid_rightToLeft()
     QCOMPARE(five->x(), 140.0);
     QCOMPARE(five->y(), 50.0);
 
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(one->x(), 146.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 126.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 96.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 146.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 136.0);
+    QCOMPARE(five->y(), 52.0);
 }
 
 void tst_qquickpositioners::test_grid_spacing()
@@ -1163,6 +2184,26 @@ void tst_qquickpositioners::test_grid_spacing()
     QCOMPARE(grid->width(), 128.0);
     QCOMPARE(grid->height(), 104.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 135.0);
+    QCOMPARE(grid->height(), 111.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 57.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 81.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 56.0);
+    QCOMPARE(five->x(), 57.0);
+    QCOMPARE(five->y(), 56.0);
 }
 
 void tst_qquickpositioners::test_grid_row_column_spacing()
@@ -1195,6 +2236,26 @@ void tst_qquickpositioners::test_grid_row_column_spacing()
     QCOMPARE(grid->width(), 142.0);
     QCOMPARE(grid->height(), 107.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 149.0);
+    QCOMPARE(grid->height(), 114.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 64.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 95.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 59.0);
+    QCOMPARE(five->x(), 64.0);
+    QCOMPARE(five->y(), 59.0);
 }
 
 void tst_qquickpositioners::test_grid_animated()
@@ -1278,6 +2339,100 @@ void tst_qquickpositioners::test_grid_animated()
     QTRY_COMPARE(four->y(), 50.0);
     QTRY_COMPARE(five->x(), 50.0);
     QTRY_COMPARE(five->y(), 50.0);
+
+}
+
+void tst_qquickpositioners::test_grid_animated_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("grid-animated.qml"), false));
+
+    window->rootObject()->setProperty("testRightToLeft", false);
+
+    //Note that all animate in
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QCOMPARE(one->x(), -100.0);
+    QCOMPARE(one->y(), -100.0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(two->y(), -100.0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QCOMPARE(three->x(), -100.0);
+    QCOMPARE(three->y(), -100.0);
+
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QCOMPARE(four->x(), -100.0);
+    QCOMPARE(four->y(), -100.0);
+
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+    QCOMPARE(five->x(), -100.0);
+    QCOMPARE(five->y(), -100.0);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
+
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
+    QVERIFY(grid);
+    QCOMPARE(grid->width(), 150.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 157.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    //QTRY_COMPARE used instead of waiting for the expected time of animation completion
+    //Note that this means the duration of the animation is NOT tested
+
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(one->x(), 3.0);
+    QTRY_COMPARE(two->isVisible(), false);
+    QTRY_COMPARE(two->y(), -100.0);
+    QTRY_COMPARE(two->x(), -100.0);
+    QTRY_COMPARE(three->y(), 2.0);
+    QTRY_COMPARE(three->x(), 53.0);
+    QTRY_COMPARE(four->y(), 2.0);
+    QTRY_COMPARE(four->x(), 103.0);
+    QTRY_COMPARE(five->y(), 52.0);
+    QTRY_COMPARE(five->x(), 3.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
+    QCOMPARE(grid->width(), 157.0);
+    QCOMPARE(grid->height(), 107.0);
+    QTest::qWait(0);//Let the animation start
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(two->y(), -100.0);
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(three->x(), 53.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 103.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 3.0);
+    QCOMPARE(five->y(), 52.0);
+    //Let the animation complete
+    QTRY_COMPARE(two->x(), 53.0);
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(one->x(), 3.0);
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(three->x(), 103.0);
+    QTRY_COMPARE(three->y(), 2.0);
+    QTRY_COMPARE(four->x(), 3.0);
+    QTRY_COMPARE(four->y(), 52.0);
+    QTRY_COMPARE(five->x(), 53.0);
+    QTRY_COMPARE(five->y(), 52.0);
 
 }
 
@@ -1365,6 +2520,100 @@ void tst_qquickpositioners::test_grid_animated_rightToLeft()
 
 }
 
+void tst_qquickpositioners::test_grid_animated_rightToLeft_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("grid-animated.qml"), false));
+
+    window->rootObject()->setProperty("testRightToLeft", true);
+
+    //Note that all animate in
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QCOMPARE(one->x(), -100.0);
+    QCOMPARE(one->y(), -100.0);
+
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(two->y(), -100.0);
+
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QCOMPARE(three->x(), -100.0);
+    QCOMPARE(three->y(), -100.0);
+
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QCOMPARE(four->x(), -100.0);
+    QCOMPARE(four->y(), -100.0);
+
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+    QCOMPARE(five->x(), -100.0);
+    QCOMPARE(five->y(), -100.0);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data())); //It may not relayout until the next frame, so it needs to be drawn
+
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
+    QVERIFY(grid);
+    QCOMPARE(grid->width(), 150.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 157.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    //QTRY_COMPARE used instead of waiting for the expected time of animation completion
+    //Note that this means the duration of the animation is NOT tested
+
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(one->x(), 103.0);
+    QTRY_COMPARE(two->isVisible(), false);
+    QTRY_COMPARE(two->y(), -100.0);
+    QTRY_COMPARE(two->x(), -100.0);
+    QTRY_COMPARE(three->y(), 2.0);
+    QTRY_COMPARE(three->x(), 53.0);
+    QTRY_COMPARE(four->y(), 2.0);
+    QTRY_COMPARE(four->x(), 3.0);
+    QTRY_COMPARE(five->y(), 52.0);
+    QTRY_COMPARE(five->x(), 103.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
+    QCOMPARE(grid->width(), 157.0);
+    QCOMPARE(grid->height(), 107.0);
+    QTest::qWait(0);//Let the animation start
+    QCOMPARE(two->x(), -100.0);
+    QCOMPARE(two->y(), -100.0);
+    QCOMPARE(one->x(), 103.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(three->x(), 53.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 103.0);
+    QCOMPARE(five->y(), 52.0);
+    //Let the animation complete
+    QTRY_COMPARE(two->x(), 53.0);
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(one->x(), 103.0);
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(three->x(), 3.0);
+    QTRY_COMPARE(three->y(), 2.0);
+    QTRY_COMPARE(four->x(), 103.0);
+    QTRY_COMPARE(four->y(), 52.0);
+    QTRY_COMPARE(five->x(), 53.0);
+    QTRY_COMPARE(five->y(), 52.0);
+
+}
+
 void tst_qquickpositioners::test_grid_zero_columns()
 {
     QScopedPointer<QQuickView> window(createView(testFile("gridzerocolumns.qml")));
@@ -1395,6 +2644,26 @@ void tst_qquickpositioners::test_grid_zero_columns()
     QCOMPARE(grid->width(), 170.0);
     QCOMPARE(grid->height(), 60.0);
 
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 177.0);
+    QCOMPARE(grid->height(), 67.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 123.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 3.0);
+    QCOMPARE(five->y(), 52.0);
 }
 
 void tst_qquickpositioners::test_grid_H_alignment()
@@ -1476,6 +2745,95 @@ void tst_qquickpositioners::test_grid_H_alignment()
 
 }
 
+void tst_qquickpositioners::test_grid_H_alignment_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 70.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 50.0);
+    QCOMPARE(five->x(), 55.0);
+    QCOMPARE(five->y(), 50.0);
+
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignRight);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 63.0);
+    QCOMPARE(five->y(), 52.0);
+    QCOMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    window->rootObject()->setProperty("testRightToLeft", true);
+
+    QCOMPARE(one->x(), 53.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 33.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 53.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 33.0);
+    QCOMPARE(five->y(), 52.0);
+    QCOMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    window->rootObject()->setProperty("testHAlignment", QQuickGrid::AlignHCenter);
+
+    QCOMPARE(one->x(), 53.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 33.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 2.0);
+    QCOMPARE(four->x(), 53.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 38.0);
+    QCOMPARE(five->y(), 52.0);
+    QCOMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+}
+
 void tst_qquickpositioners::test_grid_V_alignment()
 {
     QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
@@ -1516,6 +2874,63 @@ void tst_qquickpositioners::test_grid_V_alignment()
     QCOMPARE(four->y(), 50.0);
     QCOMPARE(five->x(), 50.0);
     QCOMPARE(five->y(), 90.0);
+
+}
+
+void tst_qquickpositioners::test_grid_V_alignment_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("gridtest.qml")));
+
+    window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignVCenter);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QQuickItem *grid = window->rootObject()->findChild<QQuickItem*>("grid");
+    QCOMPARE(grid->width(), 100.0);
+    QCOMPARE(grid->height(), 100.0);
+
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->width(), 107.0);
+    QCOMPARE(grid->height(), 107.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 17.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 72.0);
+
+    window->rootObject()->setProperty("testVAlignment", QQuickGrid::AlignBottom);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 73.0);
+    QCOMPARE(three->y(), 32.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 92.0);
 
 }
 
@@ -1599,6 +3014,28 @@ void tst_qquickpositioners::test_repeater()
 
 }
 
+void tst_qquickpositioners::test_repeater_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("repeatertest-padding.qml")));
+
+    QQuickRectangle *one = findItem<QQuickRectangle>(window->contentItem(), "one");
+    QVERIFY(one != 0);
+
+    QQuickRectangle *two = findItem<QQuickRectangle>(window->contentItem(), "two");
+    QVERIFY(two != 0);
+
+    QQuickRectangle *three = findItem<QQuickRectangle>(window->contentItem(), "three");
+    QVERIFY(three != 0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 103.0);
+    QCOMPARE(three->y(), 2.0);
+
+}
+
 void tst_qquickpositioners::test_flow()
 {
     QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
@@ -1632,6 +3069,219 @@ void tst_qquickpositioners::test_flow()
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
+    // test padding
+    flow->setProperty("padding", 1);
+    flow->setProperty("topPadding", 2);
+    flow->setProperty("leftPadding", 3);
+    flow->setProperty("rightPadding", 4);
+    flow->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(flow->height(), 127.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 72.0);
+}
+
+void tst_qquickpositioners::test_flow_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
+
+    window->rootObject()->setProperty("testRightToLeft", false);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 50.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 70.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 70.0);
+
+    QQuickItem *flow = window->rootObject()->findChild<QQuickItem*>("flow");
+    QVERIFY(flow);
+    QCOMPARE(flow->width(), 90.0);
+    QCOMPARE(flow->height(), 120.0);
+
+    QQuickFlow *obj = qobject_cast<QQuickFlow*>(flow);
+    QVERIFY(obj != 0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 0.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 0.0);
+
+    obj->setPadding(1.0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 1.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(flow->height(), 122.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 1.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 1.0);
+    QCOMPARE(three->x(), 1.0);
+    QCOMPARE(three->y(), 51.0);
+    QCOMPARE(four->x(), 1.0);
+    QCOMPARE(four->y(), 71.0);
+    QCOMPARE(five->x(), 51.0);
+    QCOMPARE(five->y(), 71.0);
+
+    obj->setTopPadding(2.0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 1.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 1.0);
+
+    QTRY_COMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 1.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 1.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 1.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 51.0);
+    QCOMPARE(five->y(), 72.0);
+
+    obj->setLeftPadding(3.0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 1.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 1.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 1.0);
+
+    QCOMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QTRY_COMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 72.0);
+
+    obj->setRightPadding(4.0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 1.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 1.0);
+
+    QCOMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QTRY_COMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 72.0);
+
+    obj->setBottomPadding(5.0);
+
+    QCOMPARE(flow->property("padding").toDouble(), 1.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 2.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 3.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 4.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 5.0);
+
+    QTRY_COMPARE(flow->height(), 127.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 3.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 53.0);
+    QCOMPARE(five->y(), 72.0);
+
+    obj->resetBottomPadding();
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 1.0);
+    QTRY_COMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    obj->resetRightPadding();
+    QCOMPARE(flow->property("rightPadding").toDouble(), 1.0);
+    QTRY_COMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    obj->resetLeftPadding();
+    QCOMPARE(flow->property("leftPadding").toDouble(), 1.0);
+    QTRY_COMPARE(flow->height(), 123.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    obj->resetTopPadding();
+    QCOMPARE(flow->property("topPadding").toDouble(), 1.0);
+    QTRY_COMPARE(flow->height(), 122.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    obj->resetPadding();
+    QCOMPARE(flow->property("padding").toDouble(), 0.0);
+    QCOMPARE(flow->property("topPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("leftPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("rightPadding").toDouble(), 0.0);
+    QCOMPARE(flow->property("bottomPadding").toDouble(), 0.0);
+    QTRY_COMPARE(flow->height(), 120.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 0.0);
+    QCOMPARE(three->y(), 50.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 70.0);
+    QCOMPARE(five->x(), 50.0);
+    QCOMPARE(five->y(), 70.0);
 }
 
 void tst_qquickpositioners::test_flow_rightToLeft()
@@ -1667,6 +3317,26 @@ void tst_qquickpositioners::test_flow_rightToLeft()
     QCOMPARE(flow->width(), 90.0);
     QCOMPARE(flow->height(), 120.0);
 
+    // test padding
+    flow->setProperty("padding", 1);
+    flow->setProperty("topPadding", 2);
+    flow->setProperty("leftPadding", 3);
+    flow->setProperty("rightPadding", 4);
+    flow->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(flow->height(), 127.0);
+    QCOMPARE(flow->width(), 90.0);
+
+    QCOMPARE(one->x(), 36.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 16.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 36.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 36.0);
+    QCOMPARE(four->y(), 72.0);
+    QCOMPARE(five->x(), 26.0);
+    QCOMPARE(five->y(), 72.0);
 }
 
 void tst_qquickpositioners::test_flow_topToBottom()
@@ -1693,7 +3363,7 @@ void tst_qquickpositioners::test_flow_topToBottom()
     QCOMPARE(three->x(), 50.0);
     QCOMPARE(three->y(), 50.0);
     QCOMPARE(four->x(), 100.0);
-    QCOMPARE(four->y(), 00.0);
+    QCOMPARE(four->y(), 0.0);
     QCOMPARE(five->x(), 100.0);
     QCOMPARE(five->y(), 50.0);
 
@@ -1718,6 +3388,79 @@ void tst_qquickpositioners::test_flow_topToBottom()
     QCOMPARE(four->y(), 0.0);
     QCOMPARE(five->x(), 40.0);
     QCOMPARE(five->y(), 50.0);
+
+}
+
+void tst_qquickpositioners::test_flow_topToBottom_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest-toptobottom.qml")));
+
+    window->rootObject()->setProperty("testRightToLeft", false);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 50.0);
+    QCOMPARE(three->y(), 50.0);
+    QCOMPARE(four->x(), 100.0);
+    QCOMPARE(four->y(), 0.0);
+    QCOMPARE(five->x(), 100.0);
+    QCOMPARE(five->y(), 50.0);
+
+    QQuickItem *flow = window->rootObject()->findChild<QQuickItem*>("flow");
+    QVERIFY(flow);
+    QCOMPARE(flow->height(), 90.0);
+    QCOMPARE(flow->width(), 150.0);
+
+    // test padding
+    flow->setProperty("padding", 1);
+    flow->setProperty("topPadding", 2);
+    flow->setProperty("leftPadding", 3);
+    flow->setProperty("rightPadding", 4);
+    flow->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(flow->width(), 157.0);
+    QCOMPARE(flow->height(), 90.0);
+
+    QCOMPARE(one->x(), 3.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 53.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 53.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 103.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 103.0);
+    QCOMPARE(five->y(), 52.0);
+
+    window->rootObject()->setProperty("testRightToLeft", true);
+
+    QVERIFY(flow);
+    QTRY_COMPARE(flow->width(), 157.0);
+    QCOMPARE(flow->height(), 90.0);
+
+    QCOMPARE(one->x(), 103.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 83.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 53.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 3.0);
+    QCOMPARE(four->y(), 2.0);
+    QCOMPARE(five->x(), 43.0);
+    QCOMPARE(five->y(), 52.0);
 
 }
 
@@ -1754,6 +3497,39 @@ void tst_qquickpositioners::test_flow_resize()
 
 }
 
+void tst_qquickpositioners::test_flow_resize_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest-padding.qml")));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
+    QVERIFY(root);
+    root->setWidth(125);
+    root->setProperty("testRightToLeft", false);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QVERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QTRY_COMPARE(one->x(), 3.0);
+    QTRY_COMPARE(one->y(), 2.0);
+    QTRY_COMPARE(two->x(), 53.0);
+    QTRY_COMPARE(two->y(), 2.0);
+    QTRY_COMPARE(three->x(), 3.0);
+    QTRY_COMPARE(three->y(), 52.0);
+    QTRY_COMPARE(four->x(), 53.0);
+    QTRY_COMPARE(four->y(), 52.0);
+    QTRY_COMPARE(five->x(), 103.0);
+    QTRY_COMPARE(five->y(), 52.0);
+
+}
+
 void tst_qquickpositioners::test_flow_resize_rightToLeft()
 {
     QScopedPointer<QQuickView> window(createView(testFile("flowtest.qml")));
@@ -1787,6 +3563,39 @@ void tst_qquickpositioners::test_flow_resize_rightToLeft()
 
 }
 
+void tst_qquickpositioners::test_flow_resize_rightToLeft_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("flowtest-padding.qml")));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
+    QVERIFY(root);
+    root->setWidth(125);
+    root->setProperty("testRightToLeft", true);
+
+    QQuickRectangle *one = window->rootObject()->findChild<QQuickRectangle*>("one");
+    QTRY_VERIFY(one != 0);
+    QQuickRectangle *two = window->rootObject()->findChild<QQuickRectangle*>("two");
+    QVERIFY(two != 0);
+    QQuickRectangle *three = window->rootObject()->findChild<QQuickRectangle*>("three");
+    QVERIFY(three != 0);
+    QQuickRectangle *four = window->rootObject()->findChild<QQuickRectangle*>("four");
+    QVERIFY(four != 0);
+    QQuickRectangle *five = window->rootObject()->findChild<QQuickRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 71.0);
+    QCOMPARE(one->y(), 2.0);
+    QCOMPARE(two->x(), 51.0);
+    QCOMPARE(two->y(), 2.0);
+    QCOMPARE(three->x(), 71.0);
+    QCOMPARE(three->y(), 52.0);
+    QCOMPARE(four->x(), 21.0);
+    QCOMPARE(four->y(), 52.0);
+    QCOMPARE(five->x(), 11.0);
+    QCOMPARE(five->y(), 52.0);
+
+}
+
 void tst_qquickpositioners::test_flow_implicit_resize()
 {
     QScopedPointer<QQuickView> window(createView(testFile("flow-testimplicitsize.qml")));
@@ -1812,6 +3621,44 @@ void tst_qquickpositioners::test_flow_implicit_resize()
     QCOMPARE(flow->layoutDirection(), Qt::RightToLeft);
     QCOMPARE(flow->width(), 220.0);
     QCOMPARE(flow->height(), 50.0);
+
+}
+
+void tst_qquickpositioners::test_flow_implicit_resize_padding()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("flow-testimplicitsize.qml")));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
+    QVERIFY(flow != 0);
+
+    QCOMPARE(flow->width(), 100.0);
+    QCOMPARE(flow->height(), 120.0);
+
+    // test padding
+    flow->setProperty("padding", 1);
+    flow->setProperty("topPadding", 2);
+    flow->setProperty("leftPadding", 3);
+    flow->setProperty("rightPadding", 4);
+    flow->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(flow->width(), 107.0);
+    QCOMPARE(flow->height(), 127.0);
+
+    window->rootObject()->setProperty("flowLayout", 0);
+    QCOMPARE(flow->flow(), QQuickFlow::LeftToRight);
+    QCOMPARE(flow->width(), 227.0);
+    QCOMPARE(flow->height(), 57.0);
+
+    window->rootObject()->setProperty("flowLayout", 1);
+    QCOMPARE(flow->flow(), QQuickFlow::TopToBottom);
+    QCOMPARE(flow->width(), 107.0);
+    QCOMPARE(flow->height(), 127.0);
+
+    window->rootObject()->setProperty("flowLayout", 2);
+    QCOMPARE(flow->layoutDirection(), Qt::RightToLeft);
+    QCOMPARE(flow->width(), 227.0);
+    QCOMPARE(flow->height(), 57.0);
 
 }
 
@@ -1924,7 +3771,9 @@ void tst_qquickpositioners::test_conflictinganchors()
 void tst_qquickpositioners::test_mirroring()
 {
     QList<QString> qmlFiles;
-    qmlFiles << "horizontal.qml" << "gridtest.qml" << "flowtest.qml";
+    qmlFiles << "horizontal.qml" << "horizontal-padding.qml"
+             << "gridtest.qml" << "gridtest-padding.qml"
+             << "flowtest.qml" << "flowtest-padding.qml";
     QList<QString> objectNames;
     objectNames << "one" << "two" << "three" << "four" << "five";
 
@@ -1942,8 +3791,8 @@ void tst_qquickpositioners::test_mirroring()
 
         // LTR != RTL
         foreach (const QString objectName, objectNames) {
-            // horizontal.qml only has three items
-            if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
+            // horizontal.qml and horizontal-padding.qml only have three items
+            if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
             QQuickItem *itemA = rootA->findChild<QQuickItem*>(objectName);
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
@@ -1957,8 +3806,8 @@ void tst_qquickpositioners::test_mirroring()
 
         // RTL == mirror
         foreach (const QString objectName, objectNames) {
-            // horizontal.qml only has three items
-            if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
+            // horizontal.qml and horizontal-padding.qml only have three items
+            if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
             QQuickItem *itemA = rootA->findChild<QQuickItem*>(objectName);
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
@@ -1978,8 +3827,8 @@ void tst_qquickpositioners::test_mirroring()
 
         // LTR == RTL + mirror
         foreach (const QString objectName, objectNames) {
-            // horizontal.qml only has three items
-            if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
+            // horizontal.qml and horizontal-padding.qml only have three items
+            if (qmlFile.startsWith(QString("horizontal")) && objectName == QString("four"))
                 break;
             QQuickItem *itemA = rootA->findChild<QQuickItem*>(objectName);
             QQuickItem *itemB = rootB->findChild<QQuickItem*>(objectName);
@@ -2000,10 +3849,61 @@ void tst_qquickpositioners::test_allInvisible()
     QVERIFY(row != 0);
     QVERIFY(row->width() == 0);
     QVERIFY(row->height() == 0);
+
+    // test padding
+    row->setProperty("padding", 1);
+    row->setProperty("topPadding", 2);
+    row->setProperty("leftPadding", 3);
+    row->setProperty("rightPadding", 4);
+    row->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(row->height(), 7.0);
+    QCOMPARE(row->width(), 7.0);
+
     QQuickColumn *column = window->rootObject()->findChild<QQuickColumn*>("column");
     QVERIFY(column != 0);
     QVERIFY(column->width() == 0);
     QVERIFY(column->height() == 0);
+
+    // test padding
+    column->setProperty("padding", 1);
+    column->setProperty("topPadding", 2);
+    column->setProperty("leftPadding", 3);
+    column->setProperty("rightPadding", 4);
+    column->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(column->height(), 7.0);
+    QCOMPARE(column->width(), 7.0);
+
+    QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
+    QVERIFY(grid != 0);
+    QVERIFY(grid->width() == 0);
+    QVERIFY(grid->height() == 0);
+
+    // test padding
+    grid->setProperty("padding", 1);
+    grid->setProperty("topPadding", 2);
+    grid->setProperty("leftPadding", 3);
+    grid->setProperty("rightPadding", 4);
+    grid->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(grid->height(), 7.0);
+    QCOMPARE(grid->width(), 7.0);
+
+    QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
+    QVERIFY(flow != 0);
+    QVERIFY(flow->width() == 0);
+    QVERIFY(flow->height() == 0);
+
+    // test padding
+    flow->setProperty("padding", 1);
+    flow->setProperty("topPadding", 2);
+    flow->setProperty("leftPadding", 3);
+    flow->setProperty("rightPadding", 4);
+    flow->setProperty("bottomPadding", 5);
+
+    QTRY_COMPARE(flow->height(), 7.0);
+    QCOMPARE(flow->width(), 7.0);
 }
 
 void tst_qquickpositioners::test_attachedproperties()

@@ -1,9 +1,10 @@
-import QtQuick 2.0
+import QtQuick 2.6
 
 Item {
     width: 640
     height: 480
     Row {
+        padding: 1; topPadding: 2; leftPadding: 3; rightPadding: 4; bottomPadding: 5
         Repeater{ model: 3;
             delegate: Component {
                 Rectangle {

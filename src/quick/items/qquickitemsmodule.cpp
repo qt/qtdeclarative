@@ -263,6 +263,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickText, 6>(uri, 2, 6, "Text");
     qmlRegisterType<QQuickTextEdit, 6>(uri, 2, 6, "TextEdit");
     qmlRegisterType<QQuickTextInput, 6>(uri, 2, 6, "TextInput");
+    qmlRegisterUncreatableType<QQuickBasePositioner, 6>(uri, 2, 6, "Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
+    qmlRegisterType<QQuickColumn, 6>(uri, 2, 6, "Column");
+    qmlRegisterType<QQuickRow, 6>(uri, 2, 6, "Row");
+    qmlRegisterType<QQuickGrid, 6>(uri, 2, 6, "Grid");
+    qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
 }
 
 static void initResources()
