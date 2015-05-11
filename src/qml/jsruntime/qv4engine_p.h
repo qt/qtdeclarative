@@ -340,9 +340,7 @@ public:
     bool metaTypeFromJS(const Value &value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
-#ifndef QT_NO_DEBUG
     void assertObjectBelongsToEngine(const Value &v);
-#endif
 
 private:
     QmlExtensions *m_qmlExtensions;
