@@ -283,11 +283,15 @@ class QQuickFontValueType
     Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
 
 public:
-    enum FontWeight { Light = QFont::Light,
-                       Normal = QFont::Normal,
-                       DemiBold = QFont::DemiBold,
-                       Bold = QFont::Bold,
-                       Black = QFont::Black };
+    enum FontWeight { Thin = QFont::Thin,
+                      ExtraLight = QFont::ExtraLight,
+                      Light = QFont::Light,
+                      Normal = QFont::Normal,
+                      Medium = QFont::Medium,
+                      DemiBold = QFont::DemiBold,
+                      Bold = QFont::Bold,
+                      ExtraBold = QFont::ExtraBold,
+                      Black = QFont::Black };
     enum Capitalization { MixedCase = QFont::MixedCase,
                            AllUppercase = QFont::AllUppercase,
                            AllLowercase = QFont::AllLowercase,

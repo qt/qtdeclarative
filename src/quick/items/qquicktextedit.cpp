@@ -211,10 +211,14 @@ QString QQuickTextEdit::text() const
 
     The weight can be one of:
     \list
+    \li Font.Thin
     \li Font.Light
+    \li Font.ExtraLight
     \li Font.Normal - the default
+    \li Font.Medium
     \li Font.DemiBold
     \li Font.Bold
+    \li Font.ExtraBold
     \li Font.Black
     \endlist
 
