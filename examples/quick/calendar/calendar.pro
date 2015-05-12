@@ -10,3 +10,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     calendar.qrc
+
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcalendar2/calendar
+INSTALLS += target

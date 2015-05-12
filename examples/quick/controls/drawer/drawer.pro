@@ -10,3 +10,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     drawer.qrc
+
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/drawer
+INSTALLS += target

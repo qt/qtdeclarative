@@ -10,3 +10,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     theme.qrc
+
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/theme
+INSTALLS += target

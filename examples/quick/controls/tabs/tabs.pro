@@ -10,3 +10,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     tabs.qrc
+
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/tabs
+INSTALLS += target
