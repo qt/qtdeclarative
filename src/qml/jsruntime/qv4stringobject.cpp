@@ -482,12 +482,12 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
     uint allocatedMatchOffsets = 64;
     uint _matchOffsets[64];
     uint *matchOffsets = _matchOffsets;
-    uint nMatchOffsets = 0;
 
     ScopedValue searchValue(scope, ctx->argument(0));
     Scoped<RegExpObject> regExp(scope, searchValue);
     if (regExp) {
         uint offset = 0;
+        uint nMatchOffsets = 0;
 
         // We extract the pointer here to work around a compiler bug on Android.
         Scoped<RegExp> re(scope, regExp->value());
@@ -520,7 +520,6 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
         int idx = string.indexOf(searchString);
         if (idx != -1) {
             numStringMatches = 1;
-            nMatchOffsets = 2;
             matchOffsets[0] = idx;
             matchOffsets[1] = idx + searchString.length();
         }
