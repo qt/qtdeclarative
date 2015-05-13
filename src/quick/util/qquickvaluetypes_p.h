@@ -268,6 +268,7 @@ class QQuickFontValueType
     Q_GADGET
 
     Q_PROPERTY(QString family READ family WRITE setFamily FINAL)
+    Q_PROPERTY(QString styleName READ styleName WRITE setStyleName FINAL)
     Q_PROPERTY(bool bold READ bold WRITE setBold FINAL)
     Q_PROPERTY(FontWeight weight READ weight WRITE setWeight FINAL)
     Q_PROPERTY(bool italic READ italic WRITE setItalic FINAL)
@@ -302,6 +303,9 @@ public:
 
     QString family() const;
     void setFamily(const QString &);
+
+    QString styleName() const;
+    void setStyleName(const QString &);
 
     bool bold() const;
     void setBold(bool b);

@@ -1728,6 +1728,7 @@ Module {
             }
         }
         Property { name: "family"; type: "string" }
+        Property { name: "styleName"; type: "string" }
         Property { name: "bold"; type: "bool" }
         Property { name: "weight"; type: "FontWeight" }
         Property { name: "italic"; type: "bool" }

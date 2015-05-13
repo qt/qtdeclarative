@@ -206,6 +206,17 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty string QtQuick::TextEdit::font.styleName
+    \since 5.6
+
+    Sets the style name of the font.
+
+    The style name is case insensitive. If set, the font will be matched against style name instead
+    of the font properties \l weight, \l bold and \l italic.
+*/
+
+
+/*!
     \qmlproperty bool QtQuick::TextEdit::font.bold
 
     Sets whether the font weight is bold.

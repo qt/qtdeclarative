@@ -533,6 +533,16 @@ void QQuickFontValueType::setFamily(const QString &family)
     v.setFamily(family);
 }
 
+QString QQuickFontValueType::styleName() const
+{
+    return v.styleName();
+}
+
+void QQuickFontValueType::setStyleName(const QString &style)
+{
+    v.setStyleName(style);
+}
+
 bool QQuickFontValueType::bold() const
 {
     return v.bold();

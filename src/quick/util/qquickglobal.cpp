@@ -285,6 +285,7 @@ public:
         QV4::ScopedValue vbold(scope, obj->get((s = v4->newString(QStringLiteral("bold")))));
         QV4::ScopedValue vcap(scope, obj->get((s = v4->newString(QStringLiteral("capitalization")))));
         QV4::ScopedValue vfam(scope, obj->get((s = v4->newString(QStringLiteral("family")))));
+        QV4::ScopedValue vstyle(scope, obj->get((s = v4->newString(QStringLiteral("styleName")))));
         QV4::ScopedValue vital(scope, obj->get((s = v4->newString(QStringLiteral("italic")))));
         QV4::ScopedValue vlspac(scope, obj->get((s = v4->newString(QStringLiteral("letterSpacing")))));
         QV4::ScopedValue vpixsz(scope, obj->get((s = v4->newString(QStringLiteral("pixelSize")))));
@@ -305,6 +306,10 @@ public:
         }
         if (vfam->isString()) {
             retn.setFamily(vfam->toQString());
+            if (ok) *ok = true;
+        }
+        if (vstyle->isString()) {
+            retn.setStyleName(vstyle->toQString());
             if (ok) *ok = true;
         }
         if (vital->isBoolean()) {
