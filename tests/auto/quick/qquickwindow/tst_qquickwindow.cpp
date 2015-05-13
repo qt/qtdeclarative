@@ -761,12 +761,12 @@ void tst_qquickwindow::touchEvent_cancel()
     item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
 
-    QPointF pos(10, 10);
-    QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(),window);
+    QPointF pos(50, 50);
+    QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(), window);
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(item->lastEvent.touchPoints.count(), 1);
-    TouchEventData d = makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(item,pos));
+    TouchEventData d = makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(item, pos));
     COMPARE_TOUCH_DATA(item->lastEvent, d);
     item->reset();
 
