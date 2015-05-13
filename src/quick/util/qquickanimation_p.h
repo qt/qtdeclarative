@@ -57,7 +57,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAbstractAnimation : public QObject, public QQ
 
     Q_INTERFACES(QQmlParserStatus)
     Q_INTERFACES(QQmlPropertyValueSource)
-    Q_ENUMS(Loops)
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(bool alwaysRunToEnd READ alwaysRunToEnd WRITE setAlwaysRunToEnd NOTIFY alwaysRunToEndChanged)
@@ -75,6 +74,7 @@ public:
     virtual ~QQuickAbstractAnimation();
 
     enum Loops { Infinite = -2 };
+    Q_ENUM(Loops)
 
     bool isRunning() const;
     void setRunning(bool);
@@ -367,7 +367,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnim
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimation)
-    Q_ENUMS(RotationDirection)
 
     Q_PROPERTY(qreal from READ from WRITE setFrom)
     Q_PROPERTY(qreal to READ to WRITE setTo)
@@ -384,6 +383,7 @@ public:
     void setTo(qreal);
 
     enum RotationDirection { Numerical, Shortest, Clockwise, Counterclockwise };
+    Q_ENUM(RotationDirection)
     RotationDirection direction() const;
     void setDirection(RotationDirection direction);
 

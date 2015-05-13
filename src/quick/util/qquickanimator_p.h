@@ -136,10 +136,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimator : public QQuickAnimator
     Q_DECLARE_PRIVATE(QQuickRotationAnimator)
     Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
 
-    Q_ENUMS(RotationDirection)
-
 public:
     enum RotationDirection { Numerical, Shortest, Clockwise, Counterclockwise };
+    Q_ENUM(RotationDirection)
 
     QQuickRotationAnimator(QObject *parent = 0);
 

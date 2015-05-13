@@ -45,13 +45,6 @@ class QValidator;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_ENUMS(HAlignment)
-    Q_ENUMS(VAlignment)
-    Q_ENUMS(WrapMode)
-    Q_ENUMS(EchoMode)
-    Q_ENUMS(SelectionMode)
-    Q_ENUMS(CursorPosition)
-    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(int length READ length NOTIFY textChanged)
@@ -114,18 +107,21 @@ public:
         Password,
         PasswordEchoOnEdit
     };
+    Q_ENUM(EchoMode)
 
     enum HAlignment {
         AlignLeft = Qt::AlignLeft,
         AlignRight = Qt::AlignRight,
         AlignHCenter = Qt::AlignHCenter
     };
+    Q_ENUM(HAlignment)
 
     enum VAlignment {
         AlignTop = Qt::AlignTop,
         AlignBottom = Qt::AlignBottom,
         AlignVCenter = Qt::AlignVCenter
     };
+    Q_ENUM(VAlignment)
 
     enum WrapMode {
         NoWrap = QTextOption::NoWrap,
@@ -134,20 +130,24 @@ public:
         WrapAtWordBoundaryOrAnywhere = QTextOption::WrapAtWordBoundaryOrAnywhere, // COMPAT
         Wrap = QTextOption::WrapAtWordBoundaryOrAnywhere
     };
+    Q_ENUM(WrapMode)
 
     enum SelectionMode {
         SelectCharacters,
         SelectWords
     };
+    Q_ENUM(SelectionMode)
 
     enum CursorPosition {
         CursorBetweenCharacters,
         CursorOnCharacter
     };
+    Q_ENUM(CursorPosition)
 
     enum RenderType { QtRendering,
                       NativeRendering
                     };
+    Q_ENUM(RenderType)
 
     //Auxilliary functions needed to control the TextInput from QML
     Q_INVOKABLE void positionAt(QQmlV4Function *args) const;

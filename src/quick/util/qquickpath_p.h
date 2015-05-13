@@ -265,7 +265,7 @@ public:
         : QQuickCurve(parent), _radiusX(0), _radiusY(0), _useLargeArc(false), _direction(Clockwise) {}
 
     enum ArcDirection { Clockwise, Counterclockwise };
-    Q_ENUMS(ArcDirection)
+    Q_ENUM(ArcDirection)
 
     qreal radiusX() const;
     void setRadiusX(qreal);

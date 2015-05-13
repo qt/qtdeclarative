@@ -266,8 +266,6 @@ class QQuickFontValueType
 {
     QFont v;
     Q_GADGET
-    Q_ENUMS(FontWeight)
-    Q_ENUMS(Capitalization)
 
     Q_PROPERTY(QString family READ family WRITE setFamily FINAL)
     Q_PROPERTY(bool bold READ bold WRITE setBold FINAL)
@@ -292,11 +290,13 @@ public:
                       Bold = QFont::Bold,
                       ExtraBold = QFont::ExtraBold,
                       Black = QFont::Black };
+    Q_ENUM(FontWeight)
     enum Capitalization { MixedCase = QFont::MixedCase,
                            AllUppercase = QFont::AllUppercase,
                            AllLowercase = QFont::AllLowercase,
                            SmallCaps = QFont::SmallCaps,
                            Capitalize = QFont::Capitalize };
+    Q_ENUM(Capitalization)
 
     Q_INVOKABLE QString toString() const;
 

@@ -48,11 +48,11 @@ class QQuickTrailEmitter : public QQuickParticleEmitter
     Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged)
     Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged)
 
-    Q_ENUMS(EmitSize)
 public:
     enum EmitSize {
         ParticleSize = -2//Anything less than 0 will do
     };
+    Q_ENUM(EmitSize)
     explicit QQuickTrailEmitter(QQuickItem *parent = 0);
     virtual void emitWindow(int timeStamp);
     virtual void reset();

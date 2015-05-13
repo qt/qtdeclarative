@@ -45,8 +45,6 @@ class QQuickAttractorAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged)
     Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
     Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
-    Q_ENUMS(AffectableParameters)
-    Q_ENUMS(Proportion)
 
 public:
     enum Proportion{
@@ -56,12 +54,14 @@ public:
         InverseLinear,
         InverseQuadratic
     };
+    Q_ENUM(Proportion)
 
     enum AffectableParameters {
         Position,
         Velocity,
         Acceleration
     };
+    Q_ENUM(AffectableParameters)
 
     explicit QQuickAttractorAffector(QQuickItem *parent = 0);
 

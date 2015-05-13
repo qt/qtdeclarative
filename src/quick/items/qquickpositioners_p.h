@@ -274,8 +274,8 @@ public:
     void setColumnSpacing(qreal);
     void resetColumnSpacing() { m_useColumnSpacing = false; }
 
-    Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
+    Q_ENUM(Flow)
     Flow flow() const;
     void setFlow(Flow);
 
@@ -283,14 +283,14 @@ public:
     void setLayoutDirection (Qt::LayoutDirection);
     Qt::LayoutDirection effectiveLayoutDirection() const;
 
-    Q_ENUMS(HAlignment)
-    Q_ENUMS(VAlignment)
     enum HAlignment { AlignLeft = Qt::AlignLeft,
                        AlignRight = Qt::AlignRight,
                        AlignHCenter = Qt::AlignHCenter};
+    Q_ENUM(HAlignment)
     enum VAlignment { AlignTop = Qt::AlignTop,
                        AlignBottom = Qt::AlignBottom,
                        AlignVCenter = Qt::AlignVCenter };
+    Q_ENUM(VAlignment)
 
     HAlignment hItemAlign() const;
     void setHItemAlign(HAlignment align);
@@ -339,8 +339,8 @@ class Q_AUTOTEST_EXPORT QQuickFlow: public QQuickBasePositioner
 public:
     QQuickFlow(QQuickItem *parent=0);
 
-    Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
+    Q_ENUM(Flow)
     Flow flow() const;
     void setFlow(Flow);
 

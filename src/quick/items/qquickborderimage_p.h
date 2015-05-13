@@ -44,7 +44,6 @@ class QQuickBorderImagePrivate;
 class Q_AUTOTEST_EXPORT QQuickBorderImage : public QQuickImageBase
 {
     Q_OBJECT
-    Q_ENUMS(TileMode)
 
     Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT)
     Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
@@ -59,6 +58,7 @@ public:
     QQuickScaleGrid *border();
 
     enum TileMode { Stretch = Qt::StretchTile, Repeat = Qt::RepeatTile, Round = Qt::RoundTile };
+    Q_ENUM(TileMode)
 
     TileMode horizontalTileMode() const;
     void setHorizontalTileMode(TileMode);

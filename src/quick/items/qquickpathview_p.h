@@ -78,10 +78,6 @@ class Q_AUTOTEST_EXPORT QQuickPathView : public QQuickItem
 
     Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
 
-    Q_ENUMS(HighlightRangeMode)
-    Q_ENUMS(SnapMode)
-    Q_ENUMS(PositionMode)
-
 public:
     QQuickPathView(QQuickItem *parent=0);
     virtual ~QQuickPathView();
@@ -105,6 +101,7 @@ public:
     QQuickItem *highlightItem();
 
     enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
+    Q_ENUM(HighlightRangeMode)
     HighlightRangeMode highlightRangeMode() const;
     void setHighlightRangeMode(HighlightRangeMode mode);
 
@@ -146,10 +143,12 @@ public:
     void setCacheItemCount(int);
 
     enum SnapMode { NoSnap, SnapToItem, SnapOneItem };
+    Q_ENUM(SnapMode)
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
     enum PositionMode { Beginning, Center, End, Contain=4, SnapPosition }; // 3 == Visible in other views
+    Q_ENUM(PositionMode)
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;

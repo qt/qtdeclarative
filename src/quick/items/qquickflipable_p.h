@@ -47,7 +47,6 @@ class Q_AUTOTEST_EXPORT QQuickFlipable : public QQuickItem
 {
     Q_OBJECT
 
-    Q_ENUMS(Side)
     Q_PROPERTY(QQuickItem *front READ front WRITE setFront NOTIFY frontChanged)
     Q_PROPERTY(QQuickItem *back READ back WRITE setBack NOTIFY backChanged)
     Q_PROPERTY(Side side READ side NOTIFY sideChanged)
@@ -64,6 +63,7 @@ public:
     void setBack(QQuickItem *);
 
     enum Side { Front, Back };
+    Q_ENUM(Side)
     Side side() const;
 
 Q_SIGNALS:

@@ -42,7 +42,6 @@ class QQuickLoaderPrivate;
 class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_ENUMS(Status)
 
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
@@ -69,6 +68,7 @@ public:
     void resetSourceComponent();
 
     enum Status { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
     Status status() const;
     qreal progress() const;
 

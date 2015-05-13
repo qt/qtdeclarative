@@ -47,12 +47,6 @@ class QTextBlock;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_ENUMS(VAlignment)
-    Q_ENUMS(HAlignment)
-    Q_ENUMS(TextFormat)
-    Q_ENUMS(WrapMode)
-    Q_ENUMS(SelectionMode)
-    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
@@ -108,18 +102,21 @@ public:
         AlignHCenter = Qt::AlignHCenter,
         AlignJustify = Qt::AlignJustify
     };
+    Q_ENUM(HAlignment)
 
     enum VAlignment {
         AlignTop = Qt::AlignTop,
         AlignBottom = Qt::AlignBottom,
         AlignVCenter = Qt::AlignVCenter
     };
+    Q_ENUM(VAlignment)
 
     enum TextFormat {
         PlainText = Qt::PlainText,
         RichText = Qt::RichText,
         AutoText = Qt::AutoText
     };
+    Q_ENUM(TextFormat)
 
     enum WrapMode { NoWrap = QTextOption::NoWrap,
                     WordWrap = QTextOption::WordWrap,
@@ -127,15 +124,18 @@ public:
                     WrapAtWordBoundaryOrAnywhere = QTextOption::WrapAtWordBoundaryOrAnywhere, // COMPAT
                     Wrap = QTextOption::WrapAtWordBoundaryOrAnywhere
                   };
+    Q_ENUM(WrapMode)
 
     enum SelectionMode {
         SelectCharacters,
         SelectWords
     };
+    Q_ENUM(SelectionMode)
 
     enum RenderType { QtRendering,
                       NativeRendering
                     };
+    Q_ENUM(RenderType)
 
     QString text() const;
     void setText(const QString &);

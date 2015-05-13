@@ -175,13 +175,12 @@ class QQuickImageParticle : public QQuickParticlePainter
     Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
-    Q_ENUMS(EntryEffect)
-    Q_ENUMS(Status)
 public:
     explicit QQuickImageParticle(QQuickItem *parent = 0);
     virtual ~QQuickImageParticle();
 
     enum Status { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
 
     QQmlListProperty<QQuickSprite> sprites();
     QQuickStochasticEngine* spriteEngine() {return m_spriteEngine;}
@@ -191,6 +190,7 @@ public:
         Fade = 1,
         Scale = 2
     };
+    Q_ENUM(EntryEffect)
 
     enum PerformanceLevel{//TODO: Expose?
         Unknown = 0,

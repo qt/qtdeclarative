@@ -47,7 +47,6 @@ class Q_AUTOTEST_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSmoothedAnimation)
-    Q_ENUMS(ReversingMode)
 
     Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
     Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged)
@@ -55,6 +54,7 @@ class Q_AUTOTEST_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
 
 public:
     enum ReversingMode { Eased, Immediate, Sync };
+    Q_ENUM(ReversingMode)
 
     QQuickSmoothedAnimation(QObject *parent = 0);
     ~QQuickSmoothedAnimation();

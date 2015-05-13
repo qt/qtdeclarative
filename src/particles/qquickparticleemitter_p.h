@@ -67,7 +67,6 @@ class QQuickParticleEmitter : public QQuickItem
     Q_PROPERTY(QQuickDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
     Q_PROPERTY(qreal velocityFromMovement READ velocityFromMovement WRITE setVelocityFromMovement NOTIFY velocityFromMovementChanged)
 
-    Q_ENUMS(Lifetime)
 public:
     explicit QQuickParticleEmitter(QQuickItem *parent = 0);
     virtual ~QQuickParticleEmitter();
@@ -76,6 +75,7 @@ public:
     enum Lifetime {
         InfiniteLife = QQuickParticleSystem::maxLife
     };
+    Q_ENUM(Lifetime)
 
     bool enabled() const
     {

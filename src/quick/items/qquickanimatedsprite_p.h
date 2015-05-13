@@ -70,12 +70,12 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
 
-    Q_ENUMS(LoopParameters)
 public:
     explicit QQuickAnimatedSprite(QQuickItem *parent = 0);
     enum LoopParameters {
         Infinite = -1
     };
+    Q_ENUM(LoopParameters)
 
     bool running() const
     {

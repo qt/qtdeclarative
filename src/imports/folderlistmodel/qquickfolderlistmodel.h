@@ -109,9 +109,9 @@ public:
     void setNameFilters(const QStringList &filters);
 
     enum SortField { Unsorted, Name, Time, Size, Type };
+    Q_ENUM(SortField)
     SortField sortField() const;
     void setSortField(SortField field);
-    Q_ENUMS(SortField)
 
     bool sortReversed() const;
     void setSortReversed(bool rev);

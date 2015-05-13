@@ -45,15 +45,6 @@ class QQuickTextLine;
 class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_ENUMS(HAlignment)
-    Q_ENUMS(VAlignment)
-    Q_ENUMS(TextStyle)
-    Q_ENUMS(TextFormat)
-    Q_ENUMS(TextElideMode)
-    Q_ENUMS(WrapMode)
-    Q_ENUMS(LineHeightMode)
-    Q_ENUMS(FontSizeMode)
-    Q_ENUMS(RenderType)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
@@ -98,21 +89,26 @@ public:
                        AlignRight = Qt::AlignRight,
                        AlignHCenter = Qt::AlignHCenter,
                        AlignJustify = Qt::AlignJustify };
+    Q_ENUM(HAlignment)
     enum VAlignment { AlignTop = Qt::AlignTop,
                        AlignBottom = Qt::AlignBottom,
                        AlignVCenter = Qt::AlignVCenter };
+    Q_ENUM(VAlignment)
     enum TextStyle { Normal,
                       Outline,
                       Raised,
                       Sunken };
+    Q_ENUM(TextStyle)
     enum TextFormat { PlainText = Qt::PlainText,
                        RichText = Qt::RichText,
                        AutoText = Qt::AutoText,
                        StyledText = 4 };
+    Q_ENUM(TextFormat)
     enum TextElideMode { ElideLeft = Qt::ElideLeft,
                           ElideRight = Qt::ElideRight,
                           ElideMiddle = Qt::ElideMiddle,
                           ElideNone = Qt::ElideNone };
+    Q_ENUM(TextElideMode)
 
     enum WrapMode { NoWrap = QTextOption::NoWrap,
                     WordWrap = QTextOption::WordWrap,
@@ -120,15 +116,19 @@ public:
                     WrapAtWordBoundaryOrAnywhere = QTextOption::WrapAtWordBoundaryOrAnywhere, // COMPAT
                     Wrap = QTextOption::WrapAtWordBoundaryOrAnywhere
                   };
+    Q_ENUM(WrapMode)
 
     enum RenderType { QtRendering,
                       NativeRendering
                     };
+    Q_ENUM(RenderType)
 
     enum LineHeightMode { ProportionalHeight, FixedHeight };
+    Q_ENUM(LineHeightMode)
 
     enum FontSizeMode { FixedSize = 0x0, HorizontalFit = 0x01, VerticalFit = 0x02,
                         Fit = HorizontalFit | VerticalFit };
+    Q_ENUM(FontSizeMode)
 
     QString text() const;
     void setText(const QString &);

@@ -43,7 +43,6 @@ class QQuickPaintedItemPrivate;
 class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
 {
     Q_OBJECT
-    Q_ENUMS(RenderTarget)
 
     Q_PROPERTY(QSize contentsSize READ contentsSize WRITE setContentsSize NOTIFY contentsSizeChanged)
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor NOTIFY fillColorChanged)
@@ -58,6 +57,7 @@ public:
         FramebufferObject,
         InvertedYFramebufferObject
     };
+    Q_ENUM(RenderTarget)
 
     enum PerformanceHint {
         FastFBOResizing = 0x1

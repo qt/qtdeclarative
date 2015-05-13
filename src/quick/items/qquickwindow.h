@@ -87,7 +87,7 @@ public:
     enum SceneGraphError {
         ContextNotAvailable = 1
     };
-    Q_ENUMS(SceneGraphError)
+    Q_ENUM(SceneGraphError)
 
     QQuickWindow(QWindow *parent = 0);
     explicit QQuickWindow(QQuickRenderControl *renderControl);

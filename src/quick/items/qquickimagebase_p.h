@@ -43,7 +43,6 @@ class QQuickImageBasePrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_ENUMS(Status)
 
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
@@ -57,6 +56,7 @@ public:
     QQuickImageBase(QQuickItem *parent=0);
     ~QQuickImageBase();
     enum Status { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
     Status status() const;
     qreal progress() const;
 

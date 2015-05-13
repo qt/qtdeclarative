@@ -68,8 +68,6 @@ private:
 class QQuickCanvasItem : public QQuickItem
 {
     Q_OBJECT
-    Q_ENUMS(RenderTarget)
-    Q_ENUMS(RenderStrategy)
 
     Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged)
     Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
@@ -85,12 +83,14 @@ public:
         Image,
         FramebufferObject
     };
+    Q_ENUM(RenderTarget)
 
     enum RenderStrategy {
         Immediate,
         Threaded,
         Cooperative
     };
+    Q_ENUM(RenderStrategy)
 
     QQuickCanvasItem(QQuickItem *parent = 0);
     ~QQuickCanvasItem();

@@ -74,10 +74,6 @@ private:
 class Q_AUTOTEST_EXPORT QQmlLocale
 {
     Q_GADGET
-    Q_ENUMS(MeasurementSystem)
-    Q_ENUMS(FormatType)
-    Q_ENUMS(CurrencySymbolFormat)
-    Q_ENUMS(DayOfWeek)
 
 public:
     ~QQmlLocale();
@@ -88,16 +84,19 @@ public:
         ImperialUSSystem = QLocale::ImperialUSSystem,
         ImperialUKSystem = QLocale::ImperialUKSystem
     };
+    Q_ENUM(MeasurementSystem)
     enum FormatType {
         LongFormat = QLocale::LongFormat,
         ShortFormat = QLocale::ShortFormat,
         NarrowFormat = QLocale::NarrowFormat
     };
+    Q_ENUM(FormatType)
     enum CurrencySymbolFormat {
         CurrencyIsoCode = QLocale::CurrencyIsoCode,
         CurrencySymbol = QLocale::CurrencySymbol,
         CurrencyDisplayName = QLocale::CurrencyDisplayName
     };
+    Q_ENUM(CurrencySymbolFormat)
     // Qt defines Sunday as 7, but JS Date assigns Sunday 0
     enum DayOfWeek {
         Sunday = 0,
@@ -108,6 +107,7 @@ public:
         Friday = Qt::Friday,
         Saturday = Qt::Saturday
     };
+    Q_ENUM(DayOfWeek)
 
     static QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
     static QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);

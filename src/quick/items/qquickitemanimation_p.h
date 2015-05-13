@@ -136,7 +136,7 @@ public:
         BottomFirst,
         TopFirst
     };
-    Q_ENUMS(Orientation)
+    Q_ENUM(Orientation)
 
     int duration() const;
     void setDuration(int);

@@ -43,9 +43,6 @@ class QQuickImagePrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
 {
     Q_OBJECT
-    Q_ENUMS(FillMode)
-    Q_ENUMS(HAlignment)
-    Q_ENUMS(VAlignment)
 
     Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
     Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedGeometryChanged)
@@ -62,11 +59,14 @@ public:
     enum HAlignment { AlignLeft = Qt::AlignLeft,
                        AlignRight = Qt::AlignRight,
                        AlignHCenter = Qt::AlignHCenter };
+    Q_ENUM(HAlignment)
     enum VAlignment { AlignTop = Qt::AlignTop,
                        AlignBottom = Qt::AlignBottom,
                        AlignVCenter = Qt::AlignVCenter };
+    Q_ENUM(VAlignment)
 
     enum FillMode { Stretch, PreserveAspectFit, PreserveAspectCrop, Tile, TileVertically, TileHorizontally, Pad };
+    Q_ENUM(FillMode)
 
     FillMode fillMode() const;
     void setFillMode(FillMode);

@@ -47,7 +47,6 @@ QT_BEGIN_NAMESPACE
 class QQuickScaleGrid : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(TileRule)
 
     Q_PROPERTY(int left READ left WRITE setLeft NOTIFY borderChanged)
     Q_PROPERTY(int top READ top WRITE setTop NOTIFY borderChanged)

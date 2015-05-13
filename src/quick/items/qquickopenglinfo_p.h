@@ -63,7 +63,6 @@ class QQuickOpenGLInfo : public QObject
     Q_PROPERTY(int minorVersion READ minorVersion NOTIFY minorVersionChanged FINAL)
     Q_PROPERTY(ContextProfile profile READ profile NOTIFY profileChanged FINAL)
     Q_PROPERTY(RenderableType renderableType READ renderableType NOTIFY renderableTypeChanged FINAL)
-    Q_ENUMS(ContextProfile RenderableType)
 
 public:
     QQuickOpenGLInfo(QQuickItem *item = 0);
@@ -77,6 +76,7 @@ public:
         CoreProfile = QSurfaceFormat::CoreProfile,
         CompatibilityProfile = QSurfaceFormat::CompatibilityProfile
     };
+    Q_ENUM(ContextProfile)
     ContextProfile profile() const;
 
     // keep in sync with QSurfaceFormat::RenderableType
@@ -85,6 +85,7 @@ public:
         OpenGL = QSurfaceFormat::OpenGL,
         OpenGLES = QSurfaceFormat::OpenGLES
     };
+    Q_ENUM(RenderableType)
     RenderableType renderableType() const;
 
     static QQuickOpenGLInfo *qmlAttachedProperties(QObject *object);

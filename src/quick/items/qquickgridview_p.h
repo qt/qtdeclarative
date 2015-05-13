@@ -52,8 +52,6 @@ class Q_AUTOTEST_EXPORT QQuickGridView : public QQuickItemView
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
-    Q_ENUMS(SnapMode)
-    Q_ENUMS(Flow)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -61,6 +59,7 @@ public:
         FlowLeftToRight = LeftToRight,
         FlowTopToBottom = TopToBottom
     };
+    Q_ENUM(Flow)
 
     QQuickGridView(QQuickItem *parent=0);
     ~QQuickGridView();
@@ -78,6 +77,7 @@ public:
     void setCellHeight(qreal);
 
     enum SnapMode { NoSnap, SnapToRow, SnapOneRow };
+    Q_ENUM(SnapMode)
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 

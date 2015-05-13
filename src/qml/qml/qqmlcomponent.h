@@ -63,8 +63,8 @@ class Q_QML_EXPORT QQmlComponent : public QObject
     Q_PROPERTY(QUrl url READ url CONSTANT)
 
 public:
-    Q_ENUMS(CompilationMode)
     enum CompilationMode { PreferSynchronous, Asynchronous };
+    Q_ENUM(CompilationMode)
 
     QQmlComponent(QObject *parent = 0);
     QQmlComponent(QQmlEngine *, QObject *parent=0);
@@ -74,8 +74,8 @@ public:
     QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = 0);
     virtual ~QQmlComponent();
 
-    Q_ENUMS(Status)
     enum Status { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
     Status status() const;
 
     bool isNull() const;
@@ -125,7 +125,6 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQmlComponent::Status)
 QML_DECLARE_TYPE(QQmlComponent)
 QML_DECLARE_TYPEINFO(QQmlComponent, QML_HAS_ATTACHED_PROPERTIES)
 

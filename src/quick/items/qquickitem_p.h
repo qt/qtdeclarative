@@ -645,8 +645,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, publi
     Q_PROPERTY(QQuickItem *backtab READ backtab WRITE setBacktab NOTIFY backtabChanged)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
-    Q_ENUMS(Priority)
-
 public:
     QQuickKeyNavigationAttached(QObject * = 0);
 
@@ -664,6 +662,7 @@ public:
     void setBacktab(QQuickItem *);
 
     enum Priority { BeforeItem, AfterItem };
+    Q_ENUM(Priority)
     Priority priority() const;
     void setPriority(Priority);
 
@@ -739,8 +738,6 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
     Q_PROPERTY(QQmlListProperty<QQuickItem> forwardTo READ forwardTo)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
-    Q_ENUMS(Priority)
-
 public:
     QQuickKeysAttached(QObject *parent=0);
     ~QQuickKeysAttached();
@@ -755,6 +752,7 @@ public:
     }
 
     enum Priority { BeforeItem, AfterItem};
+    Q_ENUM(Priority)
     Priority priority() const;
     void setPriority(Priority);
 

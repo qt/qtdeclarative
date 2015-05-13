@@ -45,7 +45,6 @@ class QQuickSystemPalettePrivate;
 class Q_AUTOTEST_EXPORT QQuickSystemPalette : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(ColorGroup)
     Q_DECLARE_PRIVATE(QQuickSystemPalette)
 
     Q_PROPERTY(QQuickSystemPalette::ColorGroup colorGroup READ colorGroup WRITE setColorGroup NOTIFY paletteChanged)
@@ -69,6 +68,7 @@ public:
     ~QQuickSystemPalette();
 
     enum ColorGroup { Active = QPalette::Active, Inactive = QPalette::Inactive, Disabled = QPalette::Disabled };
+    Q_ENUM(ColorGroup)
 
     QColor window() const;
     QColor windowText() const;

@@ -88,11 +88,6 @@ class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged RESET resetPreferredHighlightEnd)
     Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
-    Q_ENUMS(HighlightRangeMode)
-    Q_ENUMS(PositionMode)
-    Q_ENUMS(VerticalLayoutDirection)
-    Q_ENUMS(LayoutDirection)
-
 public:
     // this holds all layout enum values so they can be referred to by other enums
     // to ensure consistent values - e.g. QML references to GridView.TopToBottom flow
@@ -103,11 +98,13 @@ public:
         VerticalTopToBottom,
         VerticalBottomToTop
     };
+    Q_ENUM(LayoutDirection)
 
     enum VerticalLayoutDirection {
         TopToBottom = VerticalTopToBottom,
         BottomToTop = VerticalBottomToTop
     };
+    Q_ENUM(VerticalLayoutDirection)
 
     QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = 0);
     ~QQuickItemView();
@@ -185,6 +182,7 @@ public:
     virtual void setHighlightFollowsCurrentItem(bool);
 
     enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
+    Q_ENUM(HighlightRangeMode)
     HighlightRangeMode highlightRangeMode() const;
     void setHighlightRangeMode(HighlightRangeMode mode);
 
@@ -200,6 +198,7 @@ public:
     virtual void setHighlightMoveDuration(int);
 
     enum PositionMode { Beginning, Center, End, Visible, Contain, SnapPosition };
+    Q_ENUM(PositionMode)
 
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;

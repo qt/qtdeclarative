@@ -67,7 +67,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectSource : public QQuickItem, publi
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
     Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
 
-    Q_ENUMS(Format WrapMode)
 public:
     enum WrapMode {
         ClampToEdge,
@@ -75,12 +74,14 @@ public:
         RepeatVertically,
         Repeat
     };
+    Q_ENUM(WrapMode)
 
     enum Format {
         Alpha = GL_ALPHA,
         RGB = GL_RGB,
         RGBA = GL_RGBA
     };
+    Q_ENUM(Format)
 
     QQuickShaderEffectSource(QQuickItem *parent = 0);
     ~QQuickShaderEffectSource();

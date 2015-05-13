@@ -46,7 +46,6 @@ class Q_AUTOTEST_EXPORT QQuickFontLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFontLoader)
-    Q_ENUMS(Status)
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
@@ -54,6 +53,7 @@ class Q_AUTOTEST_EXPORT QQuickFontLoader : public QObject
 
 public:
     enum Status { Null = 0, Ready, Loading, Error };
+    Q_ENUM(Status)
 
     QQuickFontLoader(QObject *parent = 0);
     ~QQuickFontLoader();
