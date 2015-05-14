@@ -1444,7 +1444,7 @@ ptrdiff_t InstructionSelection::addInstructionHelper(Instr::Type type, Instr &in
 void InstructionSelection::patchJumpAddresses()
 {
     typedef QHash<IR::BasicBlock *, QVector<ptrdiff_t> >::ConstIterator PatchIt;
-    for (PatchIt i = _patches.begin(), ei = _patches.end(); i != ei; ++i) {
+    for (PatchIt i = _patches.cbegin(), ei = _patches.cend(); i != ei; ++i) {
         Q_ASSERT(_addrs.contains(i.key()));
         ptrdiff_t target = _addrs.value(i.key());
 

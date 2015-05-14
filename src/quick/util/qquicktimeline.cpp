@@ -659,7 +659,7 @@ void QQuickTimeLine::complete()
 */
 void QQuickTimeLine::clear()
 {
-    for (QQuickTimeLinePrivate::Ops::const_iterator iter = d->ops.begin(), cend  = d->ops.end(); iter != cend; ++iter)
+    for (QQuickTimeLinePrivate::Ops::const_iterator iter = d->ops.cbegin(), cend  = d->ops.cend(); iter != cend; ++iter)
         iter.key()->_t = 0;
     d->ops.clear();
     d->length = 0;

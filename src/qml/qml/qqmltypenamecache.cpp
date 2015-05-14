@@ -125,7 +125,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, cons
     const Import *i = static_cast<const Import *>(importNamespace);
     Q_ASSERT(i->scriptIndex == -1);
 
-    QMap<const Import *, QStringHash<Import> >::const_iterator it = m_namespacedImports.find(i);
+    QMap<const Import *, QStringHash<Import> >::const_iterator it = m_namespacedImports.constFind(i);
     if (it != m_namespacedImports.constEnd()) {
         Result r = query(*it, name);
         if (r.isValid())

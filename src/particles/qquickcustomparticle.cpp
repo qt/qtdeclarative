@@ -370,10 +370,10 @@ QQuickShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
         }
     }
 
-    NodeHashConstIt it = m_nodes.begin();
+    NodeHashConstIt it = m_nodes.cbegin();
     rootNode = it.value();
     rootNode->setFlag(QSGNode::OwnsMaterial, true);
-    const NodeHashConstIt cend = m_nodes.end();
+    NodeHashConstIt cend = m_nodes.cend();
     for (++it; it != cend; ++it)
         rootNode->appendChildNode(it.value());
 

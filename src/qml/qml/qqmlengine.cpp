@@ -599,8 +599,8 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
-    typedef QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::Iterator TypePropertyCacheIt;
-    typedef QHash<int, QQmlCompiledData *>::Iterator CompositeTypesIt;
+    typedef QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::const_iterator TypePropertyCacheIt;
+    typedef QHash<int, QQmlCompiledData *>::const_iterator CompositeTypesIt;
 
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
@@ -619,9 +619,9 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (incubationController) incubationController->d = 0;
     incubationController = 0;
 
-    for (TypePropertyCacheIt iter = typePropertyCache.begin(), end = typePropertyCache.end(); iter != end; ++iter)
+    for (TypePropertyCacheIt iter = typePropertyCache.cbegin(), end = typePropertyCache.cend(); iter != end; ++iter)
         (*iter)->release();
-    for (CompositeTypesIt iter = m_compositeTypes.begin(), end = m_compositeTypes.end(); iter != end; ++iter) {
+    for (CompositeTypesIt iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
         iter.value()->isRegisteredWithEngine = false;
 
         // since unregisterInternalCompositeType() will not be called in this
@@ -2247,8 +2247,8 @@ bool QQmlEnginePrivate::isList(int t) const
 int QQmlEnginePrivate::listType(int t) const
 {
     Locker locker(this);
-    QHash<int, int>::ConstIterator iter = m_qmlLists.find(t);
-    if (iter != m_qmlLists.end())
+    QHash<int, int>::ConstIterator iter = m_qmlLists.constFind(t);
+    if (iter != m_qmlLists.cend())
         return *iter;
     else
         return QQmlMetaType::listType(t);
@@ -2257,8 +2257,8 @@ int QQmlEnginePrivate::listType(int t) const
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
+    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
+    if (iter != m_compositeTypes.cend()) {
         return QQmlMetaObject((*iter)->rootPropertyCache);
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
@@ -2269,8 +2269,8 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
+    QHash<int, QQmlCompiledData *>::ConstIterator iter = m_compositeTypes.constFind(t);
+    if (iter != m_compositeTypes.cend()) {
         return QQmlMetaObject((*iter)->rootPropertyCache);
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
@@ -2281,8 +2281,8 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
+    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
+    if (iter != m_compositeTypes.cend()) {
         return (*iter)->rootPropertyCache;
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);
@@ -2294,8 +2294,8 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
 {
     Locker locker(this);
-    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
+    QHash<int, QQmlCompiledData*>::ConstIterator iter = m_compositeTypes.constFind(t);
+    if (iter != m_compositeTypes.cend()) {
         return (*iter)->rootPropertyCache;
     } else {
         QQmlType *type = QQmlMetaType::qmlType(t);

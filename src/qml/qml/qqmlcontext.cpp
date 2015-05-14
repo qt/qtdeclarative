@@ -808,7 +808,7 @@ QV4::IdentifierHash<int> &QQmlContextData::propertyNames() const
 {
     if (propertyNameCache.isEmpty()) {
         propertyNameCache = QV4::IdentifierHash<int>(QV8Engine::getV4(engine->handle()));
-        for (QHash<int, int>::ConstIterator it = objectIndexToId.begin(), end = objectIndexToId.end();
+        for (QHash<int, int>::ConstIterator it = objectIndexToId.cbegin(), end = objectIndexToId.cend();
              it != end; ++it) {
             const QV4::CompiledData::Object *obj = typeCompilationUnit->data->objectAt(it.key());
             const QString name = typeCompilationUnit->data->stringAt(obj->idIndex);

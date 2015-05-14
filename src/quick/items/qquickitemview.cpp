@@ -2421,7 +2421,7 @@ void QQuickItemViewPrivate::updateUnrequestedIndexes()
 
 void QQuickItemViewPrivate::updateUnrequestedPositions()
 {
-    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.begin(), cend = unrequestedItems.end(); it != cend; ++it)
+    for (QHash<QQuickItem*,int>::const_iterator it = unrequestedItems.cbegin(), cend = unrequestedItems.cend(); it != cend; ++it)
         repositionPackageItemAt(it.key(), it.value());
 }
 

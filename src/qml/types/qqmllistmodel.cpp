@@ -1330,8 +1330,8 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
             QQmlListModel *subModel = QQmlListModel::createWithOwner(m_owner);
 
             QVariantList subArray = value.toList();
-            QVariantList::const_iterator subIt = subArray.begin();
-            QVariantList::const_iterator subEnd = subArray.end();
+            QVariantList::const_iterator subIt = subArray.cbegin();
+            QVariantList::const_iterator subEnd = subArray.cend();
             while (subIt != subEnd) {
                 const QVariantMap &subObject = subIt->toMap();
                 subModel->m_modelObjects.append(DynamicRoleModelNode::create(subObject, subModel));
@@ -1398,8 +1398,8 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
         QQmlListModel *subModel = QQmlListModel::createWithOwner(parentModel);
 
         QVariantList subArray = v.toList();
-        QVariantList::const_iterator subIt = subArray.begin();
-        QVariantList::const_iterator subEnd = subArray.end();
+        QVariantList::const_iterator subIt = subArray.cbegin();
+        QVariantList::const_iterator subEnd = subArray.cend();
         while (subIt != subEnd) {
             const QVariantMap &subObject = subIt->toMap();
             subModel->m_modelObjects.append(DynamicRoleModelNode::create(subObject, subModel));

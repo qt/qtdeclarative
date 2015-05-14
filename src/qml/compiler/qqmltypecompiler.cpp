@@ -1022,10 +1022,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
             }
 
-            QHash<QString, QStringList>::ConstIterator entry = customSignals.find(propertyName);
+            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(propertyName);
             if (entry == customSignals.constEnd() && propertyName.endsWith(QStringLiteral("Changed"))) {
                 QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
-                entry = customSignals.find(alternateName);
+                entry = customSignals.constFind(alternateName);
             }
 
             if (entry == customSignals.constEnd()) {

@@ -1437,8 +1437,8 @@ bool QQmlMetaType::isAnyModule(const QString &uri)
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.begin();
-         iter != data->uriToModule.end(); ++iter) {
+    for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.cbegin();
+         iter != data->uriToModule.cend(); ++iter) {
         if ((*iter)->module() == uri)
             return true;
     }
@@ -1715,7 +1715,7 @@ QQmlType *QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStrin
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
-    while (it != data->nameToType.end() && it.key() == name) {
+    while (it != data->nameToType.cend() && it.key() == name) {
         // XXX version_major<0 just a kludge for QQmlPropertyPrivate::initProperty
         if (version_major < 0 || module.isEmpty() || (*it)->availableInVersion(module, version_major,version_minor))
             return (*it);
@@ -1749,7 +1749,7 @@ QQmlType *QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStri
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
-    while (it != data->metaObjectToType.end() && it.key() == metaObject) {
+    while (it != data->metaObjectToType.cend() && it.key() == metaObject) {
         QQmlType *t = *it;
         if (version_major < 0 || module.isEmpty() || t->availableInVersion(module, version_major,version_minor))
             return t;
@@ -1820,8 +1820,8 @@ QList<QString> QQmlMetaType::qmlTypeNames()
     QQmlMetaTypeData *data = metaTypeData();
 
     QList<QString> names;
-    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.begin();
-    while (it != data->nameToType.end()) {
+    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.cbegin();
+    while (it != data->nameToType.cend()) {
         names += (*it)->qmlTypeName();
         ++it;
     }

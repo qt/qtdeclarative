@@ -422,8 +422,8 @@ QQmlDebugServer::QQmlDebugServer()
         QString pluginName;
         QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
                                                                 .split(QLatin1Char(','));
-        QStringList::const_iterator argsItEnd = lstjsDebugArguments.end();
-        QStringList::const_iterator argsIt = lstjsDebugArguments.begin();
+        QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
+        QStringList::const_iterator argsIt = lstjsDebugArguments.cbegin();
         for (; argsIt != argsItEnd; ++argsIt) {
             const QString strArgument = *argsIt;
             if (strArgument.startsWith(QLatin1String("port:"))) {

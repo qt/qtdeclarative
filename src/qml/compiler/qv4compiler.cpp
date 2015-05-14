@@ -44,8 +44,8 @@ QV4::Compiler::StringTableGenerator::StringTableGenerator()
 
 int QV4::Compiler::StringTableGenerator::registerString(const QString &str)
 {
-    QHash<QString, int>::ConstIterator it = stringToId.find(str);
-    if (it != stringToId.end())
+    QHash<QString, int>::ConstIterator it = stringToId.constFind(str);
+    if (it != stringToId.cend())
         return *it;
     stringToId.insert(str, strings.size());
     strings.append(str);

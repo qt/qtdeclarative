@@ -525,7 +525,7 @@ void MemoryManager::runGC()
 size_t MemoryManager::getUsedMem() const
 {
     size_t usedMem = 0;
-    for (QVector<PageAllocation>::const_iterator i = m_d->heapChunks.begin(), ei = m_d->heapChunks.end(); i != ei; ++i) {
+    for (QVector<PageAllocation>::const_iterator i = m_d->heapChunks.cbegin(), ei = m_d->heapChunks.cend(); i != ei; ++i) {
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(i->base());
         for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
             Heap::Base *m = reinterpret_cast<Heap::Base *>(item);

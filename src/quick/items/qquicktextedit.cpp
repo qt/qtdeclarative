@@ -2153,7 +2153,7 @@ void QQuickTextEdit::markDirtyNodesForRange(int start, int end, int charDelta)
     }
 
     // mark the affected nodes as dirty
-    while (it != d->textNodeMap.constEnd()) {
+    while (it != d->textNodeMap.end()) {
         if ((*it)->startPos() <= end)
             (*it)->setDirty();
         else if (charDelta)

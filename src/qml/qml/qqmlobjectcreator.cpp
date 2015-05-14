@@ -1108,7 +1108,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     QBitArray bindingsToSkip;
     if (customParser) {
-        QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.find(index);
+        QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.constFind(index);
         if (customParserBindings != compiledData->customParserBindings.constEnd()) {
             customParser->imports = compiledData->importCache;
 
@@ -1283,7 +1283,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     QBitArray bindingSkipList = bindingsToSkip;
     {
-        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.find(_compiledObjectIndex);
+        QHash<int, QBitArray>::ConstIterator deferredBindings = compiledData->deferredBindingsPerObject.constFind(_compiledObjectIndex);
         if (deferredBindings != compiledData->deferredBindingsPerObject.constEnd()) {
             if (bindingSkipList.isEmpty())
                 bindingSkipList.resize(deferredBindings->count());
