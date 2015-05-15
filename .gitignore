@@ -1,6 +1,10 @@
 # This file is used to ignore files which are generated in the Qt build system
 # ----------------------------------------------------------------------------
 
+/include
+/lib
+/mkspecs
+
 /examples/quick/calendar/calendar
 /examples/quick/controls/drawer/drawer
 /examples/quick/controls/mirroring/mirroring
