@@ -4128,6 +4128,21 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
         return;
     }
 
+    if (m_blinkPeriod > 0) {
+        if (m_blinkTimer)
+            q->killTimer(m_blinkTimer);
+
+        m_blinkTimer = q->startTimer(m_blinkPeriod / 2);
+
+        if (m_blinkStatus == 0) {
+            m_blinkStatus = 1;
+
+            updateType = UpdatePaintNode;
+            q->polish();
+            q->update();
+        }
+    }
+
     if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit
         && !m_passwordEchoEditing
         && !m_readOnly
