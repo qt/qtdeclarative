@@ -41,6 +41,7 @@
 #include <private/qquickrepeater_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
+#include <QtQml/private/qqmlobjectmodel_p.h>
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
@@ -77,6 +78,7 @@ private slots:
     void clearRemovalOrder();
     void destroyCount();
     void stackingOrder();
+    void objectModel();
 };
 
 class TestObject : public QObject
@@ -911,6 +913,64 @@ void tst_QQuickRepeater::stackingOrder()
         QVERIFY(stackingOrderOk);
         repeater->setModel(QVariant(++count));
     } while (count < 3);
+}
+
+static bool compareObjectModel(QQuickRepeater *repeater, QQmlObjectModel *model)
+{
+    if (repeater->count() != model->count())
+        return false;
+    for (int i = 0; i < repeater->count(); ++i) {
+        if (repeater->itemAt(i) != model->get(i))
+            return false;
+    }
+    return true;
+}
+
+void tst_QQuickRepeater::objectModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("objectmodel.qml"));
+
+    QQuickItem *positioner = qobject_cast<QQuickItem *>(component.create());
+    QVERIFY(positioner);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(positioner, "repeater");
+    QVERIFY(repeater);
+
+    QQmlObjectModel *model = repeater->model().value<QQmlObjectModel *>();
+    QVERIFY(model);
+
+    QVERIFY(repeater->itemAt(0));
+    QVERIFY(repeater->itemAt(1));
+    QVERIFY(repeater->itemAt(2));
+    QCOMPARE(repeater->itemAt(0)->property("color").toString(), QColor("red").name());
+    QCOMPARE(repeater->itemAt(1)->property("color").toString(), QColor("green").name());
+    QCOMPARE(repeater->itemAt(2)->property("color").toString(), QColor("blue").name());
+
+    QQuickItem *item0 = new QQuickItem(positioner);
+    item0->setSize(QSizeF(20, 20));
+    model->append(item0);
+    QCOMPARE(model->count(), 4);
+    QVERIFY(compareObjectModel(repeater, model));
+
+    QQuickItem *item1 = new QQuickItem(positioner);
+    item1->setSize(QSizeF(20, 20));
+    model->insert(0, item1);
+    QCOMPARE(model->count(), 5);
+    QVERIFY(compareObjectModel(repeater, model));
+
+    model->move(1, 2, 3);
+    QVERIFY(compareObjectModel(repeater, model));
+
+    model->remove(2, 2);
+    QCOMPARE(model->count(), 3);
+    QVERIFY(compareObjectModel(repeater, model));
+
+    model->clear();
+    QCOMPARE(model->count(), 0);
+    QCOMPARE(repeater->count(), 0);
+
+    delete positioner;
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

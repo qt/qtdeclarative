@@ -107,6 +107,15 @@ public:
 
     static QQmlObjectModelAttached *qmlAttachedProperties(QObject *obj);
 
+    Q_REVISION(3) Q_INVOKABLE QObject *get(int index) const;
+    Q_REVISION(3) Q_INVOKABLE void append(QObject *object);
+    Q_REVISION(3) Q_INVOKABLE void insert(int index, QObject *object);
+    Q_REVISION(3) Q_INVOKABLE void move(int from, int to, int n = 1);
+    Q_REVISION(3) Q_INVOKABLE void remove(int index, int n = 1);
+
+public Q_SLOTS:
+    Q_REVISION(3) void clear();
+
 Q_SIGNALS:
     void childrenChanged();
 
@@ -120,7 +129,7 @@ class QQmlObjectModelAttached : public QObject
 
 public:
     QQmlObjectModelAttached(QObject *parent)
-        : QObject(parent), m_index(0) {}
+        : QObject(parent), m_index(-1) {}
     ~QQmlObjectModelAttached() {
         attachedProperties.remove(parent());
     }

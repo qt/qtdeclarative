@@ -240,6 +240,7 @@ private slots:
     void QTBUG_39492();
 
     void jsArrayChange();
+    void objectModel();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -7999,6 +8000,67 @@ void tst_QQuickListView::jsArrayChange()
     // no change
     view->setModel(QVariant::fromValue(array2));
     QCOMPARE(spy.count(), 1);
+}
+
+static bool compareObjectModel(QQuickListView *listview, QQmlObjectModel *model)
+{
+    if (listview->count() != model->count())
+        return false;
+    for (int i = 0; i < listview->count(); ++i) {
+        listview->setCurrentIndex(i);
+        if (listview->currentItem() != model->get(i))
+            return false;
+    }
+    return true;
+}
+
+void tst_QQuickListView::objectModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("objectmodel.qml"));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(component.create());
+    QVERIFY(listview);
+
+    QQmlObjectModel *model = listview->model().value<QQmlObjectModel *>();
+    QVERIFY(model);
+
+    listview->setCurrentIndex(0);
+    QVERIFY(listview->currentItem());
+    QCOMPARE(listview->currentItem()->property("color").toString(), QColor("red").name());
+
+    listview->setCurrentIndex(1);
+    QVERIFY(listview->currentItem());
+    QCOMPARE(listview->currentItem()->property("color").toString(), QColor("green").name());
+
+    listview->setCurrentIndex(2);
+    QVERIFY(listview->currentItem());
+    QCOMPARE(listview->currentItem()->property("color").toString(), QColor("blue").name());
+
+    QQuickItem *item0 = new QQuickItem(listview);
+    item0->setSize(QSizeF(20, 20));
+    model->append(item0);
+    QCOMPARE(model->count(), 4);
+    QVERIFY(compareObjectModel(listview, model));
+
+    QQuickItem *item1 = new QQuickItem(listview);
+    item1->setSize(QSizeF(20, 20));
+    model->insert(0, item1);
+    QCOMPARE(model->count(), 5);
+    QVERIFY(compareObjectModel(listview, model));
+
+    model->move(1, 2, 3);
+    QVERIFY(compareObjectModel(listview, model));
+
+    model->remove(2, 2);
+    QCOMPARE(model->count(), 3);
+    QVERIFY(compareObjectModel(listview, model));
+
+    model->clear();
+    QCOMPARE(model->count(), 0);
+    QCOMPARE(listview->count(), 0);
+
+    delete listview;
 }
 
 QTEST_MAIN(tst_QQuickListView)

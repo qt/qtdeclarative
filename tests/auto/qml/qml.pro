@@ -59,7 +59,8 @@ PRIVATETESTS += \
     qqmlenginecleanup \
     v4misc \
     qqmltranslation \
-    qqmlimport
+    qqmlimport \
+    qqmlobjectmodel
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \
