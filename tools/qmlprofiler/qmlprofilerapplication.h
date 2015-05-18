@@ -48,8 +48,7 @@ public:
     QmlProfilerApplication(int &argc, char **argv);
     ~QmlProfilerApplication();
 
-    bool parseArguments();
-    void printUsage();
+    void parseArguments();
     int exec();
 
 public slots:

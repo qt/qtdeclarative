@@ -38,10 +38,7 @@ int main(int argc, char *argv[])
 {
     QmlProfilerApplication app(argc, argv);
 
-    if (!app.parseArguments()) {
-        app.printUsage();
-        return 1;
-    }
+    app.parseArguments();
 
     CommandListener listener;
     QObject::connect(&listener, SIGNAL(command(QString)), &app, SLOT(userCommand(QString)));
@@ -50,7 +47,6 @@ int main(int argc, char *argv[])
     int exitValue = app.exec();
     // wait for listener to exit
     listener.wait();
-
 
     return exitValue;
 }

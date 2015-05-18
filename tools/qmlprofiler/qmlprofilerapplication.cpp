@@ -40,35 +40,15 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDebug>
-
-static const char usageTextC[] =
-"Usage:\n"
-"    qmlprofiler [options] [program] [program-options]\n"
-"    qmlprofiler [options] -attach [hostname]\n"
-"\n"
-"QML Profiler retrieves QML tracing data from a running application.\n"
-"The data collected can then be visualized in Qt Creator.\n"
-"\n"
-"The application to be profiled has to enable QML debugging. See the Qt Creator\n"
-"documentation on how to do this for different Qt versions.\n"
-"\n"
-"Options:\n"
-"    -help  Show this information and exit.\n"
-"    -fromStart\n"
-"           Record as soon as the engine is started, default is false.\n"
-"    -p <number>, -port <number>\n"
-"           TCP/IP port to use, default is 3768.\n"
-"    -v, -verbose\n"
-"           Print debugging output.\n"
-"    -version\n"
-"           Show the version of qmlprofiler and exit.\n";
+#include <QtCore/QCommandLineParser>
 
 static const char commandTextC[] =
-"Commands:\n"
-"    r, record\n"
-"           Switch recording on or off.\n"
-"    q, quit\n"
-"           Terminate program.";
+        "You can control the recoding interactively with the "
+        "following commands:\n"
+        "    r, record\n"
+        "        Switch recording on or off.\n"
+        "    q, quit\n"
+        "        Terminate program.";
 
 static const char TraceFileExtension[] = ".qtd";
 
@@ -140,63 +120,90 @@ QmlProfilerApplication::~QmlProfilerApplication()
     delete m_process;
 }
 
-bool QmlProfilerApplication::parseArguments()
+void QmlProfilerApplication::parseArguments()
 {
-    for (int argPos = 1; argPos < arguments().size(); ++argPos) {
-        const QString arg = arguments().at(argPos);
-        if (arg == QLatin1String("-attach") || arg == QLatin1String("-a")) {
-            if (argPos + 1 == arguments().size()) {
-                return false;
-            }
-            m_hostName = arguments().at(++argPos);
-            m_runMode = AttachMode;
-        } else if (arg == QLatin1String("-port") || arg == QLatin1String("-p")) {
-            if (argPos + 1 == arguments().size()) {
-                return false;
-            }
-            const QString portStr = arguments().at(++argPos);
-            bool isNumber;
-            m_port = portStr.toUShort(&isNumber);
-            if (!isNumber) {
-                logError(QString("'%1' is not a valid port").arg(portStr));
-                return false;
-            }
-        } else if (arg == QLatin1String("-fromStart")) {
-            m_qmlProfilerClient.setRecording(true);
-            m_v8profilerClient.setRecording(true);
-        } else if (arg == QLatin1String("-help") || arg == QLatin1String("-h") || arg == QLatin1String("/h") || arg == QLatin1String("/?")) {
-            return false;
-        } else if (arg == QLatin1String("-verbose") || arg == QLatin1String("-v")) {
-            m_verbose = true;
-        } else if (arg == QLatin1String("-version")) {
-            print(QString("QML Profiler based on Qt %1.").arg(qVersion()));
-            ::exit(1);
-            return false;
-        } else {
-            if (m_programPath.isEmpty()) {
-                m_programPath = arg;
-                m_tracePrefix = QFileInfo(m_programPath).fileName();
-            } else {
-                m_programArguments << arg;
-            }
+    setApplicationName(QLatin1String("qmlprofiler"));
+    setApplicationVersion(QLatin1String(qVersion()));
+
+    QCommandLineParser parser;
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    parser.setOptionsAfterPositionalArgumentsMode(QCommandLineParser::ParseAsPositionalArguments);
+
+    parser.setApplicationDescription(QChar::LineFeed + tr(
+        "The QML Profiler retrieves QML tracing data from an application. The data\n"
+        "collected can then be visualized in Qt Creator. The application to be profiled\n"
+        "has to enable QML debugging. See the Qt Creator documentation on how to do\n"
+        "this for different Qt versions.") + QChar::LineFeed + QChar::LineFeed + tr(commandTextC));
+
+    QCommandLineOption attach(QStringList() << QLatin1String("a") << QLatin1String("attach"),
+                              tr("Attach to an application already running on <hostname>, "
+                                 "instead of starting it locally."),
+                              QLatin1String("hostname"));
+    parser.addOption(attach);
+
+    QCommandLineOption port(QStringList() << QLatin1String("p") << QLatin1String("port"),
+                            tr("Connect to the TCP port <port>. The default is 3768."),
+                            QLatin1String("port"), QLatin1String("3768"));
+    parser.addOption(port);
+
+    QCommandLineOption fromStart(QLatin1String("fromStart"),
+                                 tr("Record as soon as the engine is started. "
+                                    "The default is false."));
+    parser.addOption(fromStart);
+
+    QCommandLineOption verbose(QStringList() << QLatin1String("verbose"),
+                               tr("Print debugging output."));
+    parser.addOption(verbose);
+
+    parser.addHelpOption();
+    parser.addVersionOption();
+
+    parser.addPositionalArgument(QLatin1String("program"),
+                                 tr("The program to be started and profiled."),
+                                 QLatin1String("[program]"));
+    parser.addPositionalArgument(QLatin1String("parameters"),
+                                 tr("Parameters for the program to be started."),
+                                 QLatin1String("[parameters...]"));
+
+    parser.process(*this);
+
+    if (parser.isSet(attach)) {
+        m_hostName = parser.value(attach);
+        m_runMode = AttachMode;
+    }
+
+    if (parser.isSet(port)) {
+        bool isNumber;
+        m_port = parser.value(port).toUShort(&isNumber);
+        if (!isNumber) {
+            logError(tr("'%1' is not a valid port.").arg(parser.value(port)));
+            parser.showHelp(1);
         }
     }
 
-    if (m_runMode == LaunchMode
-            && m_programPath.isEmpty())
-        return false;
+    if (parser.isSet(fromStart)) {
+        m_qmlProfilerClient.setRecording(true);
+        m_v8profilerClient.setRecording(true);
+    }
 
-    if (m_runMode == AttachMode
-            && !m_programPath.isEmpty())
-        return false;
+    if (parser.isSet(verbose))
+        m_verbose = true;
 
-    return true;
-}
+    m_programArguments = parser.positionalArguments();
+    if (!m_programArguments.isEmpty()) {
+        m_programPath = m_programArguments.takeFirst();
+        m_tracePrefix = QFileInfo(m_programPath).fileName();
+    }
 
-void QmlProfilerApplication::printUsage()
-{
-    print(QLatin1String(usageTextC));
-    print(QLatin1String(commandTextC));
+    if (m_runMode == LaunchMode && m_programPath.isEmpty()) {
+        logError(tr("You have to specify either --attach or a program to start."));
+        parser.showHelp(2);
+    }
+
+    if (m_runMode == AttachMode && !m_programPath.isEmpty()) {
+        logError(tr("--attach cannot be used when starting a program."));
+        parser.showHelp(3);
+    }
 }
 
 int QmlProfilerApplication::exec()
@@ -207,7 +214,7 @@ int QmlProfilerApplication::exec()
 
 void QmlProfilerApplication::printCommands()
 {
-    print(QLatin1String(commandTextC));
+    print(tr(commandTextC));
 }
 
 QString QmlProfilerApplication::traceFileName() const
