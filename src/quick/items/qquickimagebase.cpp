@@ -195,6 +195,10 @@ void QQuickImageBase::load()
             d->oldSourceSize = sourceSize();
             emit sourceSizeChanged();
         }
+        if (autoTransform() != d->oldAutoTransform) {
+            d->oldAutoTransform = autoTransform();
+            emit autoTransformBaseChanged();
+        }
         update();
 
     } else {
@@ -223,7 +227,7 @@ void QQuickImageBase::load()
             resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         }
 
-        d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options);
+        d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options, d->autoTransform);
 
         if (d->pix.isLoading()) {
             if (d->progress != 0.0) {
@@ -277,6 +281,10 @@ void QQuickImageBase::requestFinished()
     if (sourceSize() != d->oldSourceSize) {
         d->oldSourceSize = sourceSize();
         emit sourceSizeChanged();
+    }
+    if (autoTransform() != d->oldAutoTransform) {
+        d->oldAutoTransform = autoTransform();
+        emit autoTransformBaseChanged();
     }
     update();
 }
@@ -366,6 +374,23 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
     // @2x file found found: Change url and devicePixelRatio
     *sourceUrl = QUrl::fromLocalFile(localFile2x);
     *sourceDevicePixelRatio = qreal(2.0);
+}
+
+bool QQuickImageBase::autoTransform() const
+{
+    Q_D(const QQuickImageBase);
+    if (d->autoTransform == UsePluginDefault)
+        return d->pix.autoTransform() == ApplyTransform;
+    return d->autoTransform == ApplyTransform;
+}
+
+void QQuickImageBase::setAutoTransform(bool transform)
+{
+    Q_D(QQuickImageBase);
+    if (d->autoTransform != UsePluginDefault && transform == (d->autoTransform == ApplyTransform))
+        return;
+    d->autoTransform = transform ? ApplyTransform : DoNotApplyTransform;
+    emit autoTransformBaseChanged();
 }
 
 QT_END_NAMESPACE

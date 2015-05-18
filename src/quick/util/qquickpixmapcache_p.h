@@ -49,6 +49,12 @@ class QQmlEngine;
 class QQuickPixmapData;
 class QQuickTextureFactory;
 
+enum AutoTransform {
+    UsePluginDefault = -1,
+    ApplyTransform = 0,
+    DoNotApplyTransform = 1
+};
+
 class QQuickDefaultTextureFactory : public QQuickTextureFactory
 {
     Q_OBJECT
@@ -92,6 +98,7 @@ public:
     const QUrl &url() const;
     const QSize &implicitSize() const;
     const QSize &requestSize() const;
+    AutoTransform autoTransform() const;
     QImage image() const;
     void setImage(const QImage &);
     void setPixmap(const QQuickPixmap &other);
@@ -106,6 +113,7 @@ public:
     void load(QQmlEngine *, const QUrl &, QQuickPixmap::Options options);
     void load(QQmlEngine *, const QUrl &, const QSize &);
     void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options);
+    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, AutoTransform autoTransform);
 
     void clear();
     void clear(QObject *);

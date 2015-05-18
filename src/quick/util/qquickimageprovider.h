@@ -67,9 +67,15 @@ public:
     ImageType imageType() const;
     Flags flags() const;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+    virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+    virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize, bool requestedAutoTransform);
+#else
     virtual QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize);
     virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize);
+#endif
 
 private:
     QQuickImageProviderPrivate *d;

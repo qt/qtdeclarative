@@ -62,9 +62,11 @@ public:
       : status(QQuickImageBase::Null),
         progress(0.0),
         devicePixelRatio(1.0),
+        autoTransform(UsePluginDefault),
         async(false),
         cache(true),
-        mirror(false)
+        mirror(false),
+        oldAutoTransform(false)
     {
     }
 
@@ -75,9 +77,11 @@ public:
     QSize sourcesize;
     QSize oldSourceSize;
     qreal devicePixelRatio;
+    AutoTransform autoTransform;
     bool async : 1;
     bool cache : 1;
     bool mirror: 1;
+    bool oldAutoTransform : 1;
 };
 
 QT_END_NAMESPACE
