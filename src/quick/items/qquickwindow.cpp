@@ -467,8 +467,6 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     animationController = new QQuickAnimatorController(q);
 
-    delayedTouch = 0;
-
     QObject::connect(context, SIGNAL(initialized()), q, SIGNAL(sceneGraphInitialized()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SIGNAL(sceneGraphInvalidated()), Qt::DirectConnection);
     QObject::connect(context, SIGNAL(invalidated()), q, SLOT(cleanupSceneGraph()), Qt::DirectConnection);
@@ -1835,6 +1833,15 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     return true;
 }
 
+void QQuickWindowPrivate::deliverDelayedTouchEvent()
+{
+    // Deliver and delete delayedTouch.
+    // Set delayedTouch to 0 before delivery to avoid redelivery in case of
+    // event loop recursions (e.g if it the touch starts a dnd session).
+    QScopedPointer<QTouchEvent> e(delayedTouch.take());
+    reallyDeliverTouchEvent(e.data());
+}
+
 static bool qquickwindow_no_touch_compression = qEnvironmentVariableIsSet("QML_NO_TOUCH_COMPRESSION");
 
 // check what kind of touch we have (begin/update) and
@@ -1854,7 +1861,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
         && ((states & (Qt::TouchPointPressed | Qt::TouchPointReleased)) == 0)) {
         // we can only compress something that isn't a press or release
         if (!delayedTouch) {
-            delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
+            delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
             delayedTouch->setTimestamp(event->timestamp());
             if (renderControl)
                 QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
@@ -1900,19 +1907,14 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
             }
 
             // merging wasn't possible, so deliver the delayed event first, and then delay this one
-            reallyDeliverTouchEvent(delayedTouch);
-            delete delayedTouch;
-            delayedTouch = new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints());
+            deliverDelayedTouchEvent();
+            delayedTouch.reset(new QTouchEvent(event->type(), event->device(), event->modifiers(), event->touchPointStates(), event->touchPoints()));
             delayedTouch->setTimestamp(event->timestamp());
             return;
         }
     } else {
-        if (delayedTouch) {
-            // deliver the delayed touch first
-            reallyDeliverTouchEvent(delayedTouch);
-            delete delayedTouch;
-            delayedTouch = 0;
-        }
+        if (delayedTouch)
+            deliverDelayedTouchEvent();
         reallyDeliverTouchEvent(event);
     }
 }
@@ -1920,9 +1922,7 @@ void QQuickWindowPrivate::deliverTouchEvent(QTouchEvent *event)
 void QQuickWindowPrivate::flushDelayedTouchEvent()
 {
     if (delayedTouch) {
-        reallyDeliverTouchEvent(delayedTouch);
-        delete delayedTouch;
-        delayedTouch = 0;
+        deliverDelayedTouchEvent();
 
         // Touch events which constantly start animations (such as a behavior tracking
         // the mouse point) need animations to start.

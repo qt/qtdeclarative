@@ -350,9 +350,7 @@ namespace QQuickTouchUtils {
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
         if (!wd || !wd->delayedTouch)
             return;
-        wd->reallyDeliverTouchEvent(wd->delayedTouch);
-        delete wd->delayedTouch;
-        wd->delayedTouch = 0;
+        wd->deliverDelayedTouchEvent();
     }
 
 }
