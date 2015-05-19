@@ -86,6 +86,8 @@ void FileInfoThread::removePath(const QString &path)
 #ifndef QT_NO_FILESYSTEMWATCHER
     if (!path.startsWith(QLatin1Char(':')))
         watcher->removePath(path);
+#else
+    Q_UNUSED(path);
 #endif
     currentPath.clear();
 }
