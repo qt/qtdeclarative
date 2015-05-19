@@ -43,12 +43,9 @@
 #include <QtCore/QCommandLineParser>
 
 static const char commandTextC[] =
-        "You can control the recoding interactively with the "
-        "following commands:\n"
-        "    r, record\n"
-        "        Switch recording on or off.\n"
-        "    q, quit\n"
-        "        Terminate program.";
+        "The following commands are available:\n"
+        "\"r\", \"record\"    Switch recording on or off.\n"
+        "\"q\", \"quit\"      Terminate program.";
 
 static const char TraceFileExtension[] = ".qtd";
 
@@ -62,6 +59,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_verbose(false),
     m_quitAfterSave(false),
     m_recording(true),
+    m_interactive(false),
     m_qmlProfilerClient(&m_connection),
     m_v8profilerClient(&m_connection),
     m_connectionAttempts(0),
@@ -134,7 +132,7 @@ void QmlProfilerApplication::parseArguments()
         "The QML Profiler retrieves QML tracing data from an application. The data\n"
         "collected can then be visualized in Qt Creator. The application to be profiled\n"
         "has to enable QML debugging. See the Qt Creator documentation on how to do\n"
-        "this for different Qt versions.") + QChar::LineFeed + QChar::LineFeed + tr(commandTextC));
+        "this for different Qt versions."));
 
     QCommandLineOption attach(QStringList() << QLatin1String("a") << QLatin1String("attach"),
                               tr("Attach to an application already running on <hostname>, "
@@ -154,6 +152,12 @@ void QmlProfilerApplication::parseArguments()
                                  "By default the recording starts immediately."),
                               QLatin1String("on|off"), QLatin1String("on"));
     parser.addOption(record);
+
+    QCommandLineOption interactive(QLatin1String("interactive"),
+                                   tr("Manually control the recording from the command line. The "
+                                      "profiler will not terminate itself when the application "
+                                      "does so in this case.") + QChar::Space + tr(commandTextC));
+    parser.addOption(interactive);
 
     QCommandLineOption verbose(QStringList() << QLatin1String("verbose"),
                                tr("Print debugging output."));
@@ -186,6 +190,7 @@ void QmlProfilerApplication::parseArguments()
     }
 
     m_recording = (parser.value(record) == QLatin1String("on"));
+    m_interactive = parser.isSet(interactive);
 
     if (parser.isSet(verbose))
         m_verbose = true;
@@ -211,6 +216,11 @@ int QmlProfilerApplication::exec()
 {
     QTimer::singleShot(0, this, SLOT(run()));
     return QCoreApplication::exec();
+}
+
+bool QmlProfilerApplication::isInteractive() const
+{
+    return m_interactive;
 }
 
 void QmlProfilerApplication::printCommands()

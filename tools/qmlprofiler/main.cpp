@@ -40,13 +40,15 @@ int main(int argc, char *argv[])
 
     app.parseArguments();
 
-    CommandListener listener;
-    QObject::connect(&listener, SIGNAL(command(QString)), &app, SLOT(userCommand(QString)));
-    listener.start();
-
-    int exitValue = app.exec();
-    // wait for listener to exit
-    listener.wait();
-
-    return exitValue;
+    if (app.isInteractive()) {
+        CommandListener listener;
+        QObject::connect(&listener, SIGNAL(command(QString)), &app, SLOT(userCommand(QString)));
+        listener.start();
+        int exitValue = app.exec();
+        // wait for listener to exit
+        listener.wait();
+        return exitValue;
+    } else {
+        return app.exec();
+    }
 }

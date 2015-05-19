@@ -50,6 +50,7 @@ public:
 
     void parseArguments();
     int exec();
+    bool isInteractive() const;
 
 public slots:
     void userCommand(const QString &command);
@@ -95,6 +96,7 @@ private:
     bool m_verbose;
     bool m_quitAfterSave;
     bool m_recording;
+    bool m_interactive;
 
     QQmlDebugConnection m_connection;
     QmlProfilerClient m_qmlProfilerClient;
