@@ -1625,6 +1625,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 
 void ExecutionEngine::assertObjectBelongsToEngine(const Value &v)
 {
+    Q_UNUSED(v);
     Q_ASSERT(!v.isObject() || v.objectValue()->engine() == this);
 }
 
