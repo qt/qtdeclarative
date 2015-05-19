@@ -61,6 +61,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_port(3768),
     m_verbose(false),
     m_quitAfterSave(false),
+    m_recording(true),
     m_qmlProfilerClient(&m_connection),
     m_v8profilerClient(&m_connection),
     m_connectionAttempts(0),
@@ -75,11 +76,11 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_connection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(connectionError(QAbstractSocket::SocketError)));
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
-    connect(&m_qmlProfilerClient, SIGNAL(recordingChanged(bool)), this, SLOT(recordingChanged()));
     connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
             &m_profilerData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
     connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), this, SLOT(notifyTraceStarted()));
     connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int,int)));
     connect(&m_qmlProfilerClient, SIGNAL(sceneGraphFrame(QQmlProfilerService::SceneGraphFrameType,
                                          qint64,qint64,qint64,qint64,qint64,qint64)),
@@ -146,10 +147,13 @@ void QmlProfilerApplication::parseArguments()
                             QLatin1String("port"), QLatin1String("3768"));
     parser.addOption(port);
 
-    QCommandLineOption fromStart(QLatin1String("fromStart"),
-                                 tr("Record as soon as the engine is started. "
-                                    "The default is false."));
-    parser.addOption(fromStart);
+    QCommandLineOption record(QLatin1String("record"),
+                              tr("If set to 'off', don't immediately start recording data when the "
+                                 "QML engine starts, but instead either start the recording "
+                                 "interactively or with the JavaScript console.profile() function. "
+                                 "By default the recording starts immediately."),
+                              QLatin1String("on|off"), QLatin1String("on"));
+    parser.addOption(record);
 
     QCommandLineOption verbose(QStringList() << QLatin1String("verbose"),
                                tr("Print debugging output."));
@@ -181,10 +185,7 @@ void QmlProfilerApplication::parseArguments()
         }
     }
 
-    if (parser.isSet(fromStart)) {
-        m_qmlProfilerClient.setRecording(true);
-        m_v8profilerClient.setRecording(true);
-    }
+    m_recording = (parser.value(record) == QLatin1String("on"));
 
     if (parser.isSet(verbose))
         m_verbose = true;
@@ -244,24 +245,26 @@ void QmlProfilerApplication::userCommand(const QString &command)
         printCommands();
     } else if (cmd == Constants::CMD_RECORD
                || cmd == Constants::CMD_RECORD2) {
-        m_qmlProfilerClient.setRecording(
-                    !m_qmlProfilerClient.isRecording());
-        m_v8profilerClient.setRecording(!m_v8profilerClient.isRecording());
-        m_qmlDataReady = false;
-        m_v8DataReady = false;
+        m_qmlProfilerClient.sendRecordingStatus(!m_recording);
+        m_v8profilerClient.sendRecordingStatus(!m_recording);
     } else if (cmd == Constants::CMD_QUIT
                || cmd == Constants::CMD_QUIT2) {
         print(QLatin1String("Quit"));
-        if (m_qmlProfilerClient.isRecording()) {
+        if (m_recording) {
             m_quitAfterSave = true;
-            m_qmlDataReady = false;
-            m_v8DataReady = false;
-            m_qmlProfilerClient.setRecording(false);
-            m_v8profilerClient.setRecording(false);
+            m_qmlProfilerClient.sendRecordingStatus(false);
+            m_v8profilerClient.sendRecordingStatus(false);
         } else {
             quit();
         }
     }
+}
+
+void QmlProfilerApplication::notifyTraceStarted()
+{
+    // Synchronize to server state. It doesn't hurt to do this multiple times in a row for
+    // different traces. There is no symmetric event to "Complete" after all.
+    m_recording = true;
 }
 
 void QmlProfilerApplication::run()
@@ -311,17 +314,9 @@ void QmlProfilerApplication::tryToConnect()
 void QmlProfilerApplication::connected()
 {
     m_connectTimer.stop();
-    print(QString(QLatin1String("Connected to host:port %1:%2."
-                                "Wait for profile data or type a command"
-                                "(type 'help'' to show list of commands).")
-                  ).arg(m_hostName).arg((m_port)));
-    QString recordingStatus(QLatin1String("Recording Status: %1"));
-    if (!m_qmlProfilerClient.isRecording() &&
-            !m_v8profilerClient.isRecording())
-        recordingStatus = recordingStatus.arg(QLatin1String("Off"));
-    else
-        recordingStatus = recordingStatus.arg(QLatin1String("On"));
-    print(recordingStatus);
+    print(tr("Connected to host:port %1:%2. Wait for profile data or type a command (type 'help' "
+             "to show list of commands).").arg(m_hostName).arg((m_port)));
+    print(tr("Recording Status: %1").arg(m_recording ? tr("on") : tr("off")));
 }
 
 void QmlProfilerApplication::connectionStateChanged(
@@ -352,7 +347,7 @@ void QmlProfilerApplication::processFinished()
     if (m_process->exitStatus() == QProcess::NormalExit) {
         logStatus(QString("Process exited (%1).").arg(m_process->exitCode()));
 
-        if (m_qmlProfilerClient.isRecording()) {
+        if (m_recording) {
             logError("Process exited while recording, last trace is lost!");
             exit(2);
         } else {
@@ -369,8 +364,8 @@ void QmlProfilerApplication::traceClientEnabled()
     logStatus("Trace client is attached.");
     // blocked server is waiting for recording message from both clients
     // once the last one is connected, both messages should be sent
-    m_qmlProfilerClient.sendRecordingStatus();
-    m_v8profilerClient.sendRecordingStatus();
+    m_qmlProfilerClient.sendRecordingStatus(m_recording);
+    m_v8profilerClient.sendRecordingStatus(m_recording);
 }
 
 void QmlProfilerApplication::profilerClientEnabled()
@@ -379,28 +374,24 @@ void QmlProfilerApplication::profilerClientEnabled()
 
     // blocked server is waiting for recording message from both clients
     // once the last one is connected, both messages should be sent
-    m_qmlProfilerClient.sendRecordingStatus();
-    m_v8profilerClient.sendRecordingStatus();
+    m_qmlProfilerClient.sendRecordingStatus(m_recording);
+    m_v8profilerClient.sendRecordingStatus(m_recording);
 }
 
 void QmlProfilerApplication::traceFinished()
 {
+    m_recording = false; // only on "Complete" we know that the trace is really finished.
     const QString fileName = traceFileName();
 
     if (m_profilerData.save(fileName))
         print(QString("Saving trace to %1.").arg(fileName));
 
+    // after saving, reset the flags
+    m_qmlDataReady = false;
+    m_v8DataReady = false;
+
     if (m_quitAfterSave)
         quit();
-}
-
-void QmlProfilerApplication::recordingChanged()
-{
-    if (m_qmlProfilerClient.isRecording()) {
-        print(QLatin1String("Recording is on."));
-    } else {
-        print(QLatin1String("Recording is off."));
-    }
 }
 
 void QmlProfilerApplication::print(const QString &line)
@@ -429,8 +420,6 @@ void QmlProfilerApplication::qmlComplete()
     if (m_v8profilerClient.state() != QQmlDebugClient::Enabled ||
             m_v8DataReady) {
         m_profilerData.complete();
-        // once complete is sent, reset the flag
-        m_qmlDataReady = false;
     }
 }
 
@@ -440,7 +429,5 @@ void QmlProfilerApplication::v8Complete()
     if (m_qmlProfilerClient.state() != QQmlDebugClient::Enabled ||
             m_qmlDataReady) {
         m_profilerData.complete();
-        // once complete is sent, reset the flag
-        m_v8DataReady = false;
     }
 }

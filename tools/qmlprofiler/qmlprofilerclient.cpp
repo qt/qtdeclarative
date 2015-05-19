@@ -39,17 +39,12 @@
 ProfilerClient::ProfilerClient(const QString &clientName,
                              QQmlDebugConnection *client)
     : QQmlDebugClient(clientName, client),
-      m_recording(false),
       m_enabled(false)
 {
 }
 
 ProfilerClient::~ProfilerClient()
 {
-    //Disable profiling if started by client
-    //Profiling data will be lost!!
-    if (isRecording())
-        setRecording(false);
 }
 
 void ProfilerClient::clearData()
@@ -60,29 +55,6 @@ void ProfilerClient::clearData()
 bool ProfilerClient::isEnabled() const
 {
     return m_enabled;
-}
-
-void ProfilerClient::sendRecordingStatus()
-{
-}
-
-bool ProfilerClient::isRecording() const
-{
-    return m_recording;
-}
-
-void ProfilerClient::setRecording(bool v)
-{
-    if (v == m_recording)
-        return;
-
-    m_recording = v;
-
-    if (state() == Enabled) {
-        sendRecordingStatus();
-    }
-
-    emit recordingChanged(v);
 }
 
 void ProfilerClient::stateChanged(State status)
@@ -135,11 +107,11 @@ void QmlProfilerClient::clearData()
     ProfilerClient::clearData();
 }
 
-void QmlProfilerClient::sendRecordingStatus()
+void QmlProfilerClient::sendRecordingStatus(bool record)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
-    stream << isRecording();
+    stream << record;
     sendMessage(ba);
 }
 
@@ -296,19 +268,14 @@ V8ProfilerClient::~V8ProfilerClient()
 {
 }
 
-void V8ProfilerClient::sendRecordingStatus()
+void V8ProfilerClient::sendRecordingStatus(bool record)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
     QByteArray cmd("V8PROFILER");
-    QByteArray option("");
+    QByteArray option(record ? "start" : "stop");
     QByteArray title("");
 
-    if (m_recording) {
-        option = "start";
-    } else {
-        option = "stop";
-    }
     stream << cmd << option << title;
     sendMessage(ba);
 }

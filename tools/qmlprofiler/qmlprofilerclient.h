@@ -44,25 +44,18 @@ class ProfilerClient : public QQmlDebugClient
     Q_OBJECT
 
     Q_PROPERTY(bool enabled READ isEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(bool recording READ isRecording WRITE setRecording
-               NOTIFY recordingChanged)
-
 public:
     ProfilerClient(const QString &clientName,
                   QQmlDebugConnection *client);
     ~ProfilerClient();
 
     bool isEnabled() const;
-    bool isRecording() const;
 
 public slots:
-    void setRecording(bool);
     virtual void clearData();
-    virtual void sendRecordingStatus();
 
 signals:
     void complete();
-    void recordingChanged(bool arg);
     void enabledChanged();
     void cleared();
 
@@ -70,7 +63,6 @@ protected:
     virtual void stateChanged(State);
 
 protected:
-    bool m_recording;
     bool m_enabled;
 };
 
@@ -84,7 +76,7 @@ public:
 
 public slots:
     void clearData();
-    void sendRecordingStatus();
+    void sendRecordingStatus(bool record);
 
 signals:
     void traceFinished( qint64 time );
@@ -125,7 +117,7 @@ public:
     ~V8ProfilerClient();
 
 public slots:
-    void sendRecordingStatus();
+    void sendRecordingStatus(bool record);
 
 signals:
     void range(int depth, const QString &function, const QString &filename,

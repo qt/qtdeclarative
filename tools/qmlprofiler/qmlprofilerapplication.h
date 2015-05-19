@@ -53,6 +53,7 @@ public:
 
 public slots:
     void userCommand(const QString &command);
+    void notifyTraceStarted();
 
 private slots:
     void run();
@@ -66,7 +67,6 @@ private slots:
     void traceClientEnabled();
     void profilerClientEnabled();
     void traceFinished();
-    void recordingChanged();
 
     void print(const QString &line);
     void logError(const QString &error);
@@ -94,6 +94,7 @@ private:
     quint16 m_port;
     bool m_verbose;
     bool m_quitAfterSave;
+    bool m_recording;
 
     QQmlDebugConnection m_connection;
     QmlProfilerClient m_qmlProfilerClient;
