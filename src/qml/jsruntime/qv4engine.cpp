@@ -1627,6 +1627,7 @@ void ExecutionEngine::assertObjectBelongsToEngine(const Value &v)
 {
     Q_UNUSED(v);
     Q_ASSERT(!v.isObject() || v.objectValue()->engine() == this);
+    Q_UNUSED(v);
 }
 
 // Converts a JS value to a meta-type.
