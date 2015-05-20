@@ -219,7 +219,7 @@ void QQuickImageBase::load()
             // QQuickImageProvider and SVG can generate a high resolution image when
             // sourceSize is set. If sourceSize is not set then the provider default size
             // will be used, as usual.
-            if (d->sourcesize.isValid())
+            if (!d->sourcesize.isEmpty())
                 d->devicePixelRatio = targetDevicePixelRatio;
         } else {
             // (possible) local file: loadUrl and d->devicePixelRatio will be modified if
