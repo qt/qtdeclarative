@@ -354,19 +354,19 @@ void QmlProfilerApplication::processHasOutput()
 void QmlProfilerApplication::processFinished()
 {
     Q_ASSERT(m_process);
+    int exitCode = 0;
     if (m_process->exitStatus() == QProcess::NormalExit) {
         logStatus(QString("Process exited (%1).").arg(m_process->exitCode()));
-
         if (m_recording) {
-            logError("Process exited while recording, last trace is lost!");
-            exit(2);
-        } else {
-            exit(0);
+            logError("Process exited while recording, last trace is damaged!");
+            exitCode = 2;
         }
     } else {
-        logError("Process crashed! Exiting ...");
-        exit(3);
+        logError("Process crashed!");
+        exitCode = 3;
     }
+    if (!m_interactive)
+        exit(exitCode);
 }
 
 void QmlProfilerApplication::traceClientEnabled()
