@@ -187,8 +187,8 @@ void QmlProfilerData::clear()
     d->clearV8RootEvent();
     d->v8MeasuredTime = 0;
 
-    d->traceEndTime = 0;
-    d->traceStartTime = -1;
+    d->traceEndTime = std::numeric_limits<qint64>::min();
+    d->traceStartTime = std::numeric_limits<qint64>::max();
     d->qmlMeasuredTime = 0;
 
     setState(Empty);
@@ -226,12 +226,14 @@ QString QmlProfilerData::qmlMessageAsString(QQmlProfilerService::Message type)
 
 void QmlProfilerData::setTraceStartTime(qint64 time)
 {
-    d->traceStartTime = time;
+    if (time < d->traceStartTime)
+        d->traceStartTime = time;
 }
 
 void QmlProfilerData::setTraceEndTime(qint64 time)
 {
-    d->traceEndTime = time;
+    if (time > d->traceEndTime)
+        d->traceEndTime = time;
 }
 
 qint64 QmlProfilerData::traceStartTime() const
