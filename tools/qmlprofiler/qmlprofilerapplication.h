@@ -41,6 +41,15 @@
 #include "qmlprofilerclient.h"
 #include "qmlprofilerdata.h"
 
+enum PendingRequest {
+    REQUEST_QUIT,
+    REQUEST_FLUSH_FILE,
+    REQUEST_FLUSH,
+    REQUEST_OUTPUT_FILE,
+    REQUEST_TOGGLE_RECORDING,
+    REQUEST_NONE
+};
+
 class QmlProfilerApplication : public QCoreApplication
 {
     Q_OBJECT
@@ -72,7 +81,7 @@ private slots:
     void profilerClientEnabled();
     void traceFinished();
 
-    void print(const QString &line);
+    void prompt(const QString &line = QString(), bool ready = true);
     void logError(const QString &error);
     void logStatus(const QString &status);
 
@@ -80,8 +89,9 @@ private slots:
     void v8Complete();
 
 private:
-    void printCommands();
-    QString traceFileName() const;
+    bool checkOutputFile(PendingRequest pending);
+    void flush();
+    void output();
 
     enum ApplicationMode {
         LaunchMode,
@@ -96,8 +106,11 @@ private:
 
     QString m_hostName;
     quint16 m_port;
+    QString m_outputFile;
+    QString m_interactiveOutputFile;
+
+    PendingRequest m_pendingRequest;
     bool m_verbose;
-    bool m_quitAfterSave;
     bool m_recording;
     bool m_interactive;
 

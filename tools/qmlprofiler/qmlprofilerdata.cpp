@@ -553,10 +553,18 @@ bool QmlProfilerData::save(const QString &filename)
         return false;
     }
 
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly)) {
-        emit error(tr("Could not open %1 for writing").arg(filename));
-        return false;
+    QFile file;
+    if (!filename.isEmpty()) {
+        file.setFileName(filename);
+        if (!file.open(QIODevice::WriteOnly)) {
+            emit error(tr("Could not open %1 for writing").arg(filename));
+            return false;
+        }
+    } else {
+        if (!file.open(stdout, QIODevice::WriteOnly)) {
+            emit error(tr("Could not open stdout for writing"));
+            return false;
+        }
     }
 
     QXmlStreamWriter stream(&file);
