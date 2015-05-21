@@ -390,6 +390,25 @@ void QmlProfilerData::addMemoryEvent(QQmlProfilerService::MemoryType type, qint6
     d->startInstanceList.append(rangeEventStartInstance);
 }
 
+void QmlProfilerData::addInputEvent(QQmlProfilerDefinitions::EventType type, qint64 time)
+{
+    setState(AcquiringData);
+
+    QString eventHashStr = QString::fromLatin1("Input:%1").arg(type);
+
+    QmlRangeEventData *newEvent;
+    if (d->eventDescriptions.contains(eventHashStr)) {
+        newEvent = d->eventDescriptions[eventHashStr];
+    } else {
+        newEvent = new QmlRangeEventData(QString(), type, eventHashStr, QmlEventLocation(),
+                                         QString(), QQmlProfilerService::Event,
+                                         QQmlProfilerService::MaximumRangeType);
+        d->eventDescriptions.insert(eventHashStr, newEvent);
+    }
+
+    d->startInstanceList.append(QmlRangeEventStartInstance(time, -1, 0, 0, 0, newEvent));
+}
+
 QString QmlProfilerData::rootEventName()
 {
     return tr("<program>");
@@ -599,11 +618,22 @@ bool QmlProfilerData::save(const QString &filename)
         if (eventData->rangeType == QQmlProfilerService::Binding)
             stream.writeTextElement(QStringLiteral("bindingType"),
                                     QString::number((int)eventData->detailType));
-        else if (eventData->message == QQmlProfilerService::Event &&
-                 eventData->detailType == QQmlProfilerService::AnimationFrame)
-            stream.writeTextElement(QStringLiteral("animationFrame"),
-                                    QString::number((int)eventData->detailType));
-        else if (eventData->message == QQmlProfilerService::PixmapCacheEvent)
+        else if (eventData->message == QQmlProfilerService::Event) {
+            switch (eventData->detailType) {
+            case QQmlProfilerService::AnimationFrame:
+                stream.writeTextElement(QStringLiteral("animationFrame"),
+                                        QString::number((int)eventData->detailType));
+                break;
+            case QQmlProfilerService::Key:
+                stream.writeTextElement(QStringLiteral("keyEvent"),
+                                        QString::number((int)eventData->detailType));
+                break;
+            case QQmlProfilerService::Mouse:
+                stream.writeTextElement(QStringLiteral("mouseEvent"),
+                                        QString::number((int)eventData->detailType));
+                break;
+            }
+        } else if (eventData->message == QQmlProfilerService::PixmapCacheEvent)
             stream.writeTextElement(QStringLiteral("cacheEventType"),
                                     QString::number((int)eventData->detailType));
         else if (eventData->message == QQmlProfilerService::SceneGraphFrame)

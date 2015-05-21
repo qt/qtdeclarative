@@ -93,6 +93,7 @@ signals:
     void pixmapCache(QQmlProfilerService::PixmapEventType, qint64 time,
                      const QmlEventLocation &location, int width, int height, int refCount);
     void memoryAllocation(QQmlProfilerService::MemoryType type, qint64 time, qint64 amount);
+    void inputEvent(QQmlProfilerService::EventType, qint64 time);
 
 protected:
     virtual void messageReceived(const QByteArray &);

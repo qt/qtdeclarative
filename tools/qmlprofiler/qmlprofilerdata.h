@@ -88,6 +88,7 @@ public slots:
     void addPixmapCacheEvent(QQmlProfilerService::PixmapEventType type, qint64 time,
                              const QmlEventLocation &location, int width, int height, int refcount);
     void addMemoryEvent(QQmlProfilerService::MemoryType type, qint64 time, qint64 size);
+    void addInputEvent(QQmlProfilerService::EventType type, qint64 time);
 
     void complete();
     bool save(const QString &filename);

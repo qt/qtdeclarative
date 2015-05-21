@@ -141,7 +141,10 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             emit this->frame(time, frameRate, animationCount, threadId);
         } else if (event == QQmlProfilerService::StartTrace) {
             emit this->traceStarted(time);
-        } else if (event < QQmlProfilerService::MaximumEventType) {
+        } else if (event == QQmlProfilerService::Key || event == QQmlProfilerService::Mouse) {
+            if (!(d->features & one << QQmlProfilerService::ProfileInputEvents))
+                return;
+            emit this->inputEvent((QQmlProfilerService::EventType)event, time);
         }
     } else if (messageType == QQmlProfilerService::Complete) {
         emit complete();
