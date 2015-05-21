@@ -59,8 +59,8 @@ class QQuickScrollIndicatorPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickScrollIndicator : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(qreal size READ size NOTIFY sizeChanged FINAL)
-    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
