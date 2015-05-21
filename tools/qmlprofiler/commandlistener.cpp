@@ -35,24 +35,7 @@
 #include "constants.h"
 #include <QtCore/QTextStream>
 
-CommandListener::CommandListener(QObject *parent)
-    : QThread(parent)
-    , m_stopRequested(false)
+void CommandListener::readCommand()
 {
-}
-
-void CommandListener::run()
-{
-    QString line;
-    QTextStream in(stdin, QIODevice::ReadOnly);
-    do {
-        line = in.readLine();
-        line = line.trimmed();
-        if (!line.isEmpty()) {
-            emit command(line);
-            if (line == QLatin1String(Constants::CMD_QUIT)
-                    || line == QLatin1String(Constants::CMD_QUIT2))
-                return;
-        }
-    } while (!m_stopRequested && !line.isNull());
+    emit command(QTextStream(stdin).readLine());
 }

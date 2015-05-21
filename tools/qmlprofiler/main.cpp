@@ -41,12 +41,16 @@ int main(int argc, char *argv[])
     app.parseArguments();
 
     if (app.isInteractive()) {
+        QThread listenerThread;
         CommandListener listener;
+        listener.moveToThread(&listenerThread);
         QObject::connect(&listener, SIGNAL(command(QString)), &app, SLOT(userCommand(QString)));
-        listener.start();
+        QObject::connect(&app, SIGNAL(readyForCommand()), &listener, SLOT(readCommand()));
+        listenerThread.start();
         int exitValue = app.exec();
+        listenerThread.quit();
         // wait for listener to exit
-        listener.wait();
+        listenerThread.wait();
         return exitValue;
     } else {
         return app.exec();

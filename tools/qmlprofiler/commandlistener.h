@@ -36,20 +36,13 @@
 
 #include <QtCore/QThread>
 
-class CommandListener : public QThread
-{
+class CommandListener : public QObject {
     Q_OBJECT
-public:
-    CommandListener(QObject *parent = 0);
+public slots:
+    void readCommand();
 
-    void run();
-
-    void requestStop() { m_stopRequested = true; }
 signals:
     void command(const QString &command);
-
-private:
-    bool m_stopRequested;
 };
 
 #endif // COMMANDLISTENER_H

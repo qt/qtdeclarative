@@ -249,14 +249,10 @@ QString QmlProfilerApplication::traceFileName() const
 void QmlProfilerApplication::userCommand(const QString &command)
 {
     QString cmd = command.trimmed();
-    if (cmd == Constants::CMD_HELP
-            || cmd == Constants::CMD_HELP2
-            || cmd == Constants::CMD_HELP3) {
-        printCommands();
-    } else if (cmd == Constants::CMD_RECORD
-               || cmd == Constants::CMD_RECORD2) {
+    if (cmd == Constants::CMD_RECORD || cmd == Constants::CMD_RECORD2) {
         m_qmlProfilerClient.sendRecordingStatus(!m_recording);
         m_v8profilerClient.sendRecordingStatus(!m_recording);
+        emit readyForCommand();
     } else if (cmd == Constants::CMD_QUIT
                || cmd == Constants::CMD_QUIT2) {
         print(QLatin1String("Quit"));
@@ -267,6 +263,9 @@ void QmlProfilerApplication::userCommand(const QString &command)
         } else {
             quit();
         }
+    } else {
+        printCommands();
+        emit readyForCommand();
     }
 }
 
@@ -300,6 +299,7 @@ void QmlProfilerApplication::run()
 
     }
     m_connectTimer.start();
+    emit readyForCommand();
 }
 
 void QmlProfilerApplication::tryToConnect()

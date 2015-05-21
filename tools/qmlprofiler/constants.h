@@ -36,10 +36,6 @@
 
 namespace Constants {
 
-const char CMD_HELP[] ="help";
-const char CMD_HELP2[] = "h";
-const char CMD_HELP3[] = "?";
-
 const char CMD_RECORD[] ="record";
 const char CMD_RECORD2[] ="r";
 

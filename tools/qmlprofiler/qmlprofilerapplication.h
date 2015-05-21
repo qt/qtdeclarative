@@ -52,6 +52,9 @@ public:
     int exec();
     bool isInteractive() const;
 
+signals:
+    void readyForCommand();
+
 public slots:
     void userCommand(const QString &command);
     void notifyTraceStarted();
