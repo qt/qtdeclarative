@@ -72,7 +72,6 @@ class QmlProfilerClientPrivate
 public:
     QmlProfilerClientPrivate()
         : inProgressRanges(0)
-        , maximumTime(0)
     {
         ::memset(rangeCount, 0,
                  QQmlProfilerService::MaximumRangeType * sizeof(int));
@@ -84,7 +83,6 @@ public:
     QStack<QmlEventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
     QStack<QQmlProfilerService::BindingType> bindingTypes;
     int rangeCount[QQmlProfilerService::MaximumRangeType];
-    qint64 maximumTime;
 };
 
 QmlProfilerClient::QmlProfilerClient(
@@ -134,8 +132,6 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
 
         if (event == QQmlProfilerService::EndTrace) {
             emit this->traceFinished(time);
-            d->maximumTime = time;
-            d->maximumTime = qMax(time, d->maximumTime);
         } else if (event == QQmlProfilerService::AnimationFrame) {
             int frameRate, animationCount;
             int threadId = 0;
@@ -143,12 +139,9 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             if (!stream.atEnd())
                 stream >> threadId;
             emit this->frame(time, frameRate, animationCount, threadId);
-            d->maximumTime = qMax(time, d->maximumTime);
         } else if (event == QQmlProfilerService::StartTrace) {
             emit this->traceStarted(time);
-            d->maximumTime = time;
         } else if (event < QQmlProfilerService::MaximumEventType) {
-            d->maximumTime = qMax(time, d->maximumTime);
         }
     } else if (messageType == QQmlProfilerService::Complete) {
         emit complete();
@@ -165,7 +158,6 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             params[count++] = 0;
         emit sceneGraphFrame((QQmlProfilerService::SceneGraphFrameType)sgEventType, time,
                              params[0], params[1], params[2], params[3], params[4]);
-        d->maximumTime = qMax(time, d->maximumTime);
     } else if (messageType == QQmlProfilerService::PixmapCacheEvent) {
         int pixEvTy, width = 0, height = 0, refcount = 0;
         QString pixUrl;
@@ -179,13 +171,11 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         }
         emit pixmapCache((QQmlProfilerService::PixmapEventType)pixEvTy, time,
                          QmlEventLocation(pixUrl,0,0), width, height, refcount);
-        d->maximumTime = qMax(time, d->maximumTime);
     } else if (messageType == QQmlProfilerService::MemoryAllocation) {
         int type;
         qint64 delta;
         stream >> type >> delta;
         emit memoryAllocation((QQmlProfilerService::MemoryType)type, time, delta);
-        d->maximumTime = qMax(time, d->maximumTime);
     } else {
         int range;
         stream >> range;
@@ -235,7 +225,6 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
                 if (d->inProgressRanges & (static_cast<qint64>(1) << range))
                     d->inProgressRanges &= ~(static_cast<qint64>(1) << range);
 
-                d->maximumTime = qMax(time, d->maximumTime);
                 QStringList data = d->rangeDatas[range].count() ?
                             d->rangeDatas[range].pop() : QStringList();
                 QmlEventLocation location = d->rangeLocations[range].count() ?
