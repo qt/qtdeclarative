@@ -522,7 +522,8 @@ void QSGGeometry::setDrawingMode(GLenum mode)
 /*!
     Gets the current line or point width or to be used for this geometry. This property
     only applies to line width when the drawingMode is \c GL_LINES, \c GL_LINE_STRIP, or
-    \c GL_LINE_LOOP, and only applies to point size when the drawingMode is \c GL_POINTS.
+    \c GL_LINE_LOOP. For desktop OpenGL, it also applies to point size when the drawingMode
+    is \c GL_POINTS.
 
     The default value is \c 1.0
 
@@ -536,7 +537,12 @@ float QSGGeometry::lineWidth() const
 /*!
     Sets the line or point width to be used for this geometry to \a width. This property
     only applies to line width when the drawingMode is \c GL_LINES, \c GL_LINE_STRIP, or
-    \c GL_LINE_LOOP, and only applies to point size when the drawingMode is \c GL_POINTS.
+    \c GL_LINE_LOOP. For Desktop OpenGL, it also applies to point size when the drawingMode
+    is \c GL_POINTS.
+
+    \note How line width and point size are treated is implementation dependent: The application
+    should not rely on these, but rather create triangles or similar to draw areas. On OpenGL ES,
+    line width support is limited and point size is unsupported.
 
     \sa lineWidth(), drawingMode()
 */
