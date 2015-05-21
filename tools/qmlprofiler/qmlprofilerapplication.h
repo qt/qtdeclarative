@@ -90,6 +90,7 @@ private slots:
     void v8Complete();
 
 private:
+    quint64 parseFeatures(const QStringList &featureList, const QString &values, bool exclude);
     bool checkOutputFile(PendingRequest pending);
     void flush();
     void output();

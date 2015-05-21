@@ -74,6 +74,8 @@ public:
     QmlProfilerClient(QQmlDebugConnection *client);
     ~QmlProfilerClient();
 
+    void setFeatures(quint64 features);
+
 public slots:
     void clearData();
     void sendRecordingStatus(bool record);

@@ -59,6 +59,20 @@ static const char commandTextC[] =
         "    Terminate the program if started from qmlprofiler,\n"
         "    and qmlprofiler itself.";
 
+static const char *features[] = {
+    "javascript",
+    "memory",
+    "pixmapcache",
+    "scenegraph",
+    "animations",
+    "painting",
+    "compiling",
+    "creating",
+    "binding",
+    "handlingsignal",
+    "inputevents"
+};
+
 static const char TraceFileExtension[] = ".qtd";
 
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
@@ -172,6 +186,26 @@ void QmlProfilerApplication::parseArguments()
                               QLatin1String("on|off"), QLatin1String("on"));
     parser.addOption(record);
 
+    QStringList featureList;
+    for (int i = 0; i < QQmlProfilerService::MaximumProfileFeature; ++i)
+        featureList << QLatin1String(features[i]);
+
+    QCommandLineOption include(QLatin1String("include"),
+                               tr("Comma-separated list of features to record. By default all "
+                                  "features supported by the QML engine are recorded. If --include "
+                                  "is specified, only the given features will be recorded. "
+                                  "The following features are unserstood by qmlprofiler: %1").arg(
+                                   featureList.join(", ")),
+                               QLatin1String("feature,..."));
+    parser.addOption(include);
+
+    QCommandLineOption exclude(QLatin1String("exclude"),
+                            tr("Comma-separated list of features to exclude when recording. By "
+                               "default all features supported by the QML engine are recorded. "
+                               "See --include for the features understood by qmlprofiler."),
+                            QLatin1String("feature,..."));
+    parser.addOption(exclude);
+
     QCommandLineOption interactive(QLatin1String("interactive"),
                                    tr("Manually control the recording from the command line. The "
                                       "profiler will not terminate itself when the application "
@@ -213,6 +247,23 @@ void QmlProfilerApplication::parseArguments()
     m_recording = (parser.value(record) == QLatin1String("on"));
     m_interactive = parser.isSet(interactive);
 
+    quint64 features = std::numeric_limits<quint64>::max();
+    if (parser.isSet(include)) {
+        if (parser.isSet(exclude)) {
+            logError(tr("qmlprofiler can only process either --include or --exclude, not both."));
+            parser.showHelp(4);
+        }
+        features = parseFeatures(featureList, parser.value(include), false);
+    }
+
+    if (parser.isSet(exclude))
+        features = parseFeatures(featureList, parser.value(exclude), true);
+
+    if (features == 0)
+        parser.showHelp(4);
+
+    m_qmlProfilerClient.setFeatures(features);
+
     if (parser.isSet(verbose))
         m_verbose = true;
 
@@ -242,6 +293,27 @@ int QmlProfilerApplication::exec()
 bool QmlProfilerApplication::isInteractive() const
 {
     return m_interactive;
+}
+
+quint64 QmlProfilerApplication::parseFeatures(const QStringList &featureList, const QString &values,
+                                              bool exclude)
+{
+    quint64 features = exclude ? std::numeric_limits<quint64>::max() : 0;
+    QStringList givenFeatures = values.split(QLatin1Char(','));
+    foreach (const QString &f, givenFeatures) {
+        int index =  featureList.indexOf(f);
+        if (index < 0) {
+            logError(tr("Unknown feature '%1'").arg(f));
+            return 0;
+        }
+        quint64 flag = static_cast<quint64>(1) << index;
+        features = (exclude ? (features ^ flag) : (features | flag));
+    }
+    if (features == 0) {
+        logError(exclude ? tr("No features remaining to record after processing --exclude.") :
+                           tr("No features specified for --include."));
+    }
+    return features;
 }
 
 void QmlProfilerApplication::flush()

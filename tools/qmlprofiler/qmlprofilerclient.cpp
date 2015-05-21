@@ -71,7 +71,7 @@ class QmlProfilerClientPrivate
 {
 public:
     QmlProfilerClientPrivate()
-        : inProgressRanges(0)
+        : inProgressRanges(0) , features(std::numeric_limits<quint64>::max())
     {
         ::memset(rangeCount, 0,
                  QQmlProfilerService::MaximumRangeType * sizeof(int));
@@ -83,6 +83,8 @@ public:
     QStack<QmlEventLocation> rangeLocations[QQmlProfilerService::MaximumRangeType];
     QStack<QQmlProfilerService::BindingType> bindingTypes;
     int rangeCount[QQmlProfilerService::MaximumRangeType];
+
+    quint64 features;
 };
 
 QmlProfilerClient::QmlProfilerClient(
@@ -97,6 +99,11 @@ QmlProfilerClient::~QmlProfilerClient()
     delete d;
 }
 
+void QmlProfilerClient::setFeatures(quint64 features)
+{
+    d->features = features;
+}
+
 void QmlProfilerClient::clearData()
 {
     ::memset(d->rangeCount, 0,
@@ -109,14 +116,38 @@ void QmlProfilerClient::sendRecordingStatus(bool record)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
-    stream << record;
+    stream << record << -1 << d->features;
     sendMessage(ba);
+}
+
+inline QQmlProfilerService::ProfileFeature featureFromRangeType(
+        QQmlProfilerService::RangeType range)
+{
+    switch (range) {
+        case QQmlProfilerService::Painting:
+            return QQmlProfilerService::ProfilePainting;
+        case QQmlProfilerService::Compiling:
+            return QQmlProfilerService::ProfileCompiling;
+        case QQmlProfilerService::Creating:
+            return QQmlProfilerService::ProfileCreating;
+        case QQmlProfilerService::Binding:
+            return QQmlProfilerService::ProfileBinding;
+        case QQmlProfilerService::HandlingSignal:
+            return QQmlProfilerService::ProfileHandlingSignal;
+        case QQmlProfilerService::Javascript:
+            return QQmlProfilerService::ProfileJavaScript;
+        default:
+            return QQmlProfilerService::MaximumProfileFeature;
+    }
 }
 
 void QmlProfilerClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
+
+    // Force all the 1 << <FLAG> expressions to be done in 64 bit, to silence some warnings
+    const quint64 one = static_cast<quint64>(1);
 
     qint64 time;
     int messageType;
@@ -133,6 +164,8 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         if (event == QQmlProfilerService::EndTrace) {
             emit this->traceFinished(time);
         } else if (event == QQmlProfilerService::AnimationFrame) {
+            if (!(d->features & one << QQmlProfilerService::ProfileAnimations))
+                return;
             int frameRate, animationCount;
             int threadId = 0;
             stream >> frameRate >> animationCount;
@@ -149,6 +182,8 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
     } else if (messageType == QQmlProfilerService::Complete) {
         emit complete();
     } else if (messageType == QQmlProfilerService::SceneGraphFrame) {
+        if (!(d->features & one << QQmlProfilerService::ProfileSceneGraph))
+            return;
         int sgEventType;
         int count = 0;
         qint64 params[5];
@@ -162,6 +197,8 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         emit sceneGraphFrame((QQmlProfilerService::SceneGraphFrameType)sgEventType, time,
                              params[0], params[1], params[2], params[3], params[4]);
     } else if (messageType == QQmlProfilerService::PixmapCacheEvent) {
+        if (!(d->features & one << QQmlProfilerService::ProfilePixmapCache))
+            return;
         int pixEvTy, width = 0, height = 0, refcount = 0;
         QString pixUrl;
         stream >> pixEvTy >> pixUrl;
@@ -175,6 +212,8 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         emit pixmapCache((QQmlProfilerService::PixmapEventType)pixEvTy, time,
                          QmlEventLocation(pixUrl,0,0), width, height, refcount);
     } else if (messageType == QQmlProfilerService::MemoryAllocation) {
+        if (!(d->features & one << QQmlProfilerService::ProfileMemory))
+            return;
         int type;
         qint64 delta;
         stream >> type >> delta;
@@ -184,6 +223,10 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
         stream >> range;
 
         if (range >= QQmlProfilerService::MaximumRangeType)
+            return;
+
+        if (!(d->features & one << featureFromRangeType(
+                  static_cast<QQmlProfilerService::RangeType>(range))))
             return;
 
         if (messageType == QQmlProfilerService::RangeStart) {
