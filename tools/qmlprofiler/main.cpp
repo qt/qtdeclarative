@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
         listenerThread.wait();
         return exitValue;
     } else {
-        return app.exec();
+        int exitValue = app.exec();
+        app.outputData();
+        return exitValue;
     }
 }

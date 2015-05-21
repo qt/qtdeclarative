@@ -67,6 +67,7 @@ signals:
 public slots:
     void userCommand(const QString &command);
     void notifyTraceStarted();
+    void outputData();
 
 private slots:
     void run();

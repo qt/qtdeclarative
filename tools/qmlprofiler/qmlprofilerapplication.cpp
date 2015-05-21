@@ -394,6 +394,14 @@ void QmlProfilerApplication::notifyTraceStarted()
     }
 }
 
+void QmlProfilerApplication::outputData()
+{
+    if (!m_profilerData.isEmpty()) {
+        m_profilerData.save(m_outputFile);
+        m_profilerData.clear();
+    }
+}
+
 void QmlProfilerApplication::run()
 {
     if (m_runMode == LaunchMode) {
