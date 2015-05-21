@@ -36,6 +36,7 @@ PRIVATETESTS += \
     qqmldirparser \
     qqmlglobal \
     qqmllanguage \
+    qqmlopenmetaobject \
     qqmlproperty \
     qqmlpropertycache \
     qqmlpropertymap \

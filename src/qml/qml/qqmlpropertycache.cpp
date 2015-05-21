@@ -837,7 +837,7 @@ void QQmlPropertyCache::updateRecur(const QMetaObject *metaObject)
 void QQmlPropertyCache::update(const QMetaObject *metaObject)
 {
     Q_ASSERT(metaObject);
-    Q_ASSERT(stringCache.isEmpty());
+    stringCache.clear();
 
     // Preallocate enough space in the index caches for all the properties/methods/signals that
     // are not cached in a parent cache so that the caches never need to be reallocated as this
@@ -862,7 +862,6 @@ void QQmlPropertyCache::update(const QMetaObject *metaObject)
 */
 void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
 {
-    stringCache.clear();
     propertyIndexCache.clear();
     methodIndexCache.clear();
     signalHandlerIndexCache.clear();

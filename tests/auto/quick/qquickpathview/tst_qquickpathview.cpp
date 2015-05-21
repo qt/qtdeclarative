@@ -141,6 +141,7 @@ private slots:
     void flickableDelegate();
     void jsArrayChange();
     void qtbug42716();
+    void addCustomAttribute();
 };
 
 class TestObject : public QObject
@@ -2369,6 +2370,13 @@ void tst_QQuickPathView::qtbug42716()
     }
     itemMiss = findItem<QQuickItem>(pathView, QString("delegate%1").arg(missing2));
     QVERIFY(!itemMiss);
+}
+
+void tst_QQuickPathView::addCustomAttribute()
+{
+    const QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("customAttribute.qml"));
+    window->show();
 }
 
 QTEST_MAIN(tst_QQuickPathView)
