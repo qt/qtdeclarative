@@ -371,6 +371,10 @@ void tst_qqmlvaluetypes::rect()
         QCOMPARE(object->property("r_y").toInt(), 3);
         QCOMPARE(object->property("r_width").toInt(), 109);
         QCOMPARE(object->property("r_height").toInt(), 102);
+        QCOMPARE(object->property("r_left").toInt(), 2);
+        QCOMPARE(object->property("r_right").toInt(), 110);
+        QCOMPARE(object->property("r_top").toInt(), 3);
+        QCOMPARE(object->property("r_bottom").toInt(), 104);
         QCOMPARE(object->property("copy"), QVariant(QRect(2, 3, 109, 102)));
 
         delete object;
@@ -418,6 +422,10 @@ void tst_qqmlvaluetypes::rectf()
         QCOMPARE(float(object->property("r_y").toDouble()), float(99.2));
         QCOMPARE(float(object->property("r_width").toDouble()), float(88.1));
         QCOMPARE(float(object->property("r_height").toDouble()), float(77.6));
+        QCOMPARE(float(object->property("r_left").toDouble()), float(103.8));
+        QCOMPARE(float(object->property("r_right").toDouble()), float(191.9));
+        QCOMPARE(float(object->property("r_top").toDouble()), float(99.2));
+        QCOMPARE(float(object->property("r_bottom").toDouble()), float(176.8));
         QCOMPARE(object->property("copy"), QVariant(QRectF(103.8, 99.2, 88.1, 77.6)));
 
         delete object;

@@ -315,10 +315,12 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(CallContext *ctx)
         const QMetaObject *mo = w->d()->propertyCache->metaObject();
         const int propCount = mo->propertyCount();
         for (int i = 0; i < propCount; ++i) {
-            QVariant value = mo->property(i).readOnGadget(w->d()->gadgetPtr);
-            result += value.toString();
-            if (i < propCount - 1)
-                result += QStringLiteral(", ");
+            if (mo->property(i).isDesignable()) {
+                QVariant value = mo->property(i).readOnGadget(w->d()->gadgetPtr);
+                if (i > 0)
+                    result += QLatin1String(", ");
+                result += value.toString();
+            }
         }
         result += QLatin1Char(')');
     }

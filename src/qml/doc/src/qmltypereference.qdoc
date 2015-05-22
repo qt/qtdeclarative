@@ -208,6 +208,9 @@ Or use the \l{QtQml::Qt::rect()}{Qt.rect()} function:
 CustomObject { myRectProperty: Qt.rect(50, 50, 100, 100) }
 \endqml
 
+The \c rect type also exposes read-only \c left, \c right, \c top and \c bottom
+attributes. These are the same as their \l {QRectF}{C++ counterparts}.
+
 When integrating with C++, note that any QRect or QRectF value
 \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
 converted into a \c rect value, and vice-versa. When a \c rect value is passed to C++, it
