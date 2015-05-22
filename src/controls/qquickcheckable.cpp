@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickCheckablePrivate::QQuickCheckablePrivate() :
-    checked(false), exclusive(false), indicator(Q_NULLPTR), layoutDirection(Qt::LeftToRight)
+    checked(false), exclusive(false), indicator(Q_NULLPTR)
 {
 }
 
@@ -122,40 +122,6 @@ void QQuickCheckable::setIndicator(QQuickItem *indicator)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Checkable::layoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickCheckable::layoutDirection() const
-{
-    Q_D(const QQuickCheckable);
-    return d->layoutDirection;
-}
-
-/*!
-    \qmlproperty enumeration QtQuickControls2::Checkable::effectiveLayoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickCheckable::effectiveLayoutDirection() const
-{
-    Q_D(const QQuickCheckable);
-    if (isMirrored())
-        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
-    return d->layoutDirection;
-}
-
-void QQuickCheckable::setLayoutDirection(Qt::LayoutDirection direction)
-{
-    Q_D(QQuickCheckable);
-    if (d->layoutDirection != direction) {
-        d->layoutDirection = direction;
-        emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
-    }
-}
-
-/*!
     \qmlmethod void QtQuickControls2::Checkable::toggle()
 
     TODO
@@ -180,11 +146,6 @@ void QQuickCheckable::mouseReleaseEvent(QMouseEvent *event)
     QQuickButton::mouseReleaseEvent(event);
     if (contains(event->pos()))
         setChecked(d->exclusive || !d->checked);
-}
-
-void QQuickCheckable::mirrorChange()
-{
-    emit effectiveLayoutDirectionChanged();
 }
 
 QT_END_NAMESPACE

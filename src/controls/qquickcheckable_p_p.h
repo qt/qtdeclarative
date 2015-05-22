@@ -60,7 +60,6 @@ public:
     bool checked;
     bool exclusive;
     QQuickItem *indicator;
-    Qt::LayoutDirection layoutDirection;
 };
 
 QT_END_NAMESPACE

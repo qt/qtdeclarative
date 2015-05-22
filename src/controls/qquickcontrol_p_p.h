@@ -75,6 +75,7 @@ public:
     qreal leftPadding;
     qreal rightPadding;
     qreal bottomPadding;
+    Qt::LayoutDirection layoutDirection;
     QQuickItem *background;
 };
 

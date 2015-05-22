@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0),
-    background(Q_NULLPTR)
+    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR)
 {
 }
 
@@ -60,6 +60,7 @@ void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
     q->mirrorChange();
+    emit q->effectiveLayoutDirectionChanged();
 }
 
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
@@ -236,6 +237,40 @@ void QQuickControl::resetBottomPadding()
 {
     Q_D(QQuickControl);
     d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlproperty enumeration QtQuickControls2::Control::layoutDirection
+
+    TODO
+*/
+Qt::LayoutDirection QQuickControl::layoutDirection() const
+{
+    Q_D(const QQuickControl);
+    return d->layoutDirection;
+}
+
+/*!
+    \qmlproperty enumeration QtQuickControls2::Control::effectiveLayoutDirection
+
+    TODO
+*/
+Qt::LayoutDirection QQuickControl::effectiveLayoutDirection() const
+{
+    Q_D(const QQuickControl);
+    if (d->isMirrored())
+        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
+    return d->layoutDirection;
+}
+
+void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
+{
+    Q_D(QQuickControl);
+    if (d->layoutDirection != direction) {
+        d->layoutDirection = direction;
+        emit layoutDirectionChanged();
+        emit effectiveLayoutDirectionChanged();
+    }
 }
 
 /*!

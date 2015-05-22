@@ -96,34 +96,6 @@ TestCase {
         compare(control.text, "")
         compare(control.pressed, false)
         compare(control.checked, false)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-        control.destroy()
-    }
-
-    function test_layoutDirection() {
-        var control = toggleButton.createObject(testCase)
-
-        verify(!control.LayoutMirroring.enabled)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
-        control.layoutDirection = Qt.RightToLeft
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
-
-        control.LayoutMirroring.enabled = true
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
-        control.layoutDirection = Qt.LeftToRight
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
-
-        control.LayoutMirroring.enabled = false
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
         control.destroy()
     }
 

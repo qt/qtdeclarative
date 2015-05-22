@@ -64,8 +64,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickSlider : public QQuickControl
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     Q_PROPERTY(QQuickItem *track READ track WRITE setTrack NOTIFY trackChanged FINAL)
 
@@ -98,10 +96,6 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
-    Qt::LayoutDirection layoutDirection() const;
-    Qt::LayoutDirection effectiveLayoutDirection() const;
-    void setLayoutDirection(Qt::LayoutDirection direction);
-
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
@@ -120,8 +114,6 @@ Q_SIGNALS:
     void snapModeChanged();
     void pressedChanged();
     void orientationChanged();
-    void layoutDirectionChanged();
-    void effectiveLayoutDirectionChanged();
     void handleChanged();
     void trackChanged();
 

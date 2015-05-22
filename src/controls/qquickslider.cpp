@@ -57,9 +57,9 @@ class QQuickSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSlider)
 
 public:
-    QQuickSliderPrivate() : value(0), position(0), stepSize(0),
-        pressed(false), orientation(Qt::Horizontal), layoutDirection(Qt::LeftToRight),
-        snapMode(QQuickSlider::NoSnap), handle(Q_NULLPTR), track(Q_NULLPTR) { }
+    QQuickSliderPrivate() : value(0), position(0), stepSize(0), pressed(false),
+        orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
+        handle(Q_NULLPTR), track(Q_NULLPTR) { }
 
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPoint &point) const;
@@ -70,7 +70,6 @@ public:
     bool pressed;
     QPoint pressPoint;
     Qt::Orientation orientation;
-    Qt::LayoutDirection layoutDirection;
     QQuickSlider::SnapMode snapMode;
     QQuickItem *handle;
     QQuickItem *track;
@@ -251,40 +250,6 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Slider::layoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickSlider::layoutDirection() const
-{
-    Q_D(const QQuickSlider);
-    return d->layoutDirection;
-}
-
-/*!
-    \qmlproperty enumeration QtQuickControls2::Slider::effectiveLayoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickSlider::effectiveLayoutDirection() const
-{
-    Q_D(const QQuickSlider);
-    if (isMirrored())
-        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
-    return d->layoutDirection;
-}
-
-void QQuickSlider::setLayoutDirection(Qt::LayoutDirection direction)
-{
-    Q_D(QQuickSlider);
-    if (d->layoutDirection != direction) {
-        d->layoutDirection = direction;
-        emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
-    }
-}
-
-/*!
     \qmlproperty Item QtQuickControls2::Slider::handle
 
     TODO
@@ -447,7 +412,6 @@ void QQuickSlider::mouseUngrabEvent()
 
 void QQuickSlider::mirrorChange()
 {
-    emit effectiveLayoutDirectionChanged();
     emit visualPositionChanged();
 }
 

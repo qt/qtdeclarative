@@ -82,34 +82,6 @@ TestCase {
         compare(control.snapMode, AbstractSlider.NoSnap)
         compare(control.pressed, false)
         compare(control.orientation, Qt.Horizontal)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-        control.destroy()
-    }
-
-    function test_layoutDirection() {
-        var control = slider.createObject(testCase)
-
-        verify(!control.LayoutMirroring.enabled)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
-        control.layoutDirection = Qt.RightToLeft
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
-
-        control.LayoutMirroring.enabled = true
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
-        control.layoutDirection = Qt.LeftToRight
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
-
-        control.LayoutMirroring.enabled = false
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-
         control.destroy()
     }
 

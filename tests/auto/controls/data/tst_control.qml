@@ -48,49 +48,43 @@ TestCase {
     height: 400
     visible: true
     when: windowShown
-    name: "ProgressBar"
+    name: "Control"
 
     Component {
-        id: progressBar
-        ProgressBar { }
+        id: component
+        Control { }
     }
 
     function test_defaults() {
-        var control = progressBar.createObject(testCase)
-        compare(control.value, 0)
-        compare(control.visualPosition, 0)
-        compare(control.indeterminate, false)
+        var control = component.createObject(testCase)
+        verify(control)
+        compare(control.layoutDirection, Qt.LeftToRight)
+        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         control.destroy()
     }
 
-    function test_value() {
-        var control = progressBar.createObject(testCase, {value: 0.5})
-        compare(control.value, 0.5)
-        control.value = 1.0
-        compare(control.value, 1.0)
-        control.value = -1.0
-        compare(control.value, 0.0)
-        control.value = 2.0
-        compare(control.value, 1.0)
-        control.destroy()
-    }
+    function test_layoutDirection() {
+        var control = component.createObject(testCase)
 
-    function test_visualPosition() {
-        var control = progressBar.createObject(testCase, {value: 0.25})
-        compare(control.value, 0.25)
-        compare(control.visualPosition, 0.25)
+        verify(!control.LayoutMirroring.enabled)
+        compare(control.layoutDirection, Qt.LeftToRight)
+        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
 
         control.layoutDirection = Qt.RightToLeft
-        compare(control.visualPosition, 0.75)
+        compare(control.layoutDirection, Qt.RightToLeft)
+        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
 
         control.LayoutMirroring.enabled = true
-        compare(control.visualPosition, 0.25)
+        compare(control.layoutDirection, Qt.RightToLeft)
+        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
 
         control.layoutDirection = Qt.LeftToRight
-        compare(control.visualPosition, 0.75)
+        compare(control.layoutDirection, Qt.LeftToRight)
+        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
 
         control.LayoutMirroring.enabled = false
-        compare(control.visualPosition, 0.25)
+        compare(control.layoutDirection, Qt.LeftToRight)
+        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
 
         control.destroy()
     }

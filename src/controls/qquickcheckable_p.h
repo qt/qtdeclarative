@@ -59,8 +59,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickCheckable : public QQuickButton
     Q_OBJECT
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
 
 public:
     explicit QQuickCheckable(QQuickItem *parent = Q_NULLPTR);
@@ -74,26 +72,18 @@ public:
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
-    Qt::LayoutDirection layoutDirection() const;
-    Qt::LayoutDirection effectiveLayoutDirection() const;
-    void setLayoutDirection(Qt::LayoutDirection direction);
-
 public Q_SLOTS:
     void toggle();
 
 Q_SIGNALS:
     void checkedChanged();
     void indicatorChanged();
-    void layoutDirectionChanged();
-    void effectiveLayoutDirectionChanged();
 
 protected:
     QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent);
 
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-
-    void mirrorChange() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickCheckable)

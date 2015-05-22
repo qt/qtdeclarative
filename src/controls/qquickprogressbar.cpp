@@ -53,12 +53,10 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate() : value(0), indeterminate(false),
-        layoutDirection(Qt::LeftToRight), indicator(Q_NULLPTR) { }
+    QQuickProgressBarPrivate() : value(0), indeterminate(false), indicator(Q_NULLPTR) { }
 
     qreal value;
     bool indeterminate;
-    Qt::LayoutDirection layoutDirection;
     QQuickItem *indicator;
 };
 
@@ -123,40 +121,6 @@ void QQuickProgressBar::setIndeterminate(bool indeterminate)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::ProgressBar::layoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickProgressBar::layoutDirection() const
-{
-    Q_D(const QQuickProgressBar);
-    return d->layoutDirection;
-}
-
-/*!
-    \qmlproperty enumeration QtQuickControls2::ProgressBar::effectiveLayoutDirection
-
-    TODO
-*/
-Qt::LayoutDirection QQuickProgressBar::effectiveLayoutDirection() const
-{
-    Q_D(const QQuickProgressBar);
-    if (isMirrored())
-        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
-    return d->layoutDirection;
-}
-
-void QQuickProgressBar::setLayoutDirection(Qt::LayoutDirection direction)
-{
-    Q_D(QQuickProgressBar);
-    if (d->layoutDirection != direction) {
-        d->layoutDirection = direction;
-        emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
-    }
-}
-
-/*!
     \qmlproperty Item QtQuickControls2::ProgressBar::indicator
 
     TODO
@@ -181,7 +145,6 @@ void QQuickProgressBar::setIndicator(QQuickItem *indicator)
 
 void QQuickProgressBar::mirrorChange()
 {
-    emit effectiveLayoutDirectionChanged();
     emit visualPositionChanged();
 }
 

@@ -60,8 +60,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickProgressBar : public QQuickControl
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
@@ -75,10 +73,6 @@ public:
     bool isIndeterminate() const;
     void setIndeterminate(bool indeterminate);
 
-    Qt::LayoutDirection layoutDirection() const;
-    Qt::LayoutDirection effectiveLayoutDirection() const;
-    void setLayoutDirection(Qt::LayoutDirection direction);
-
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
@@ -86,8 +80,6 @@ Q_SIGNALS:
     void valueChanged();
     void visualPositionChanged();
     void indeterminateChanged();
-    void layoutDirectionChanged();
-    void effectiveLayoutDirectionChanged();
     void indicatorChanged();
 
 protected:
