@@ -859,7 +859,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         engine->currentContext()->lineNumber = instr.lineNumber;
         if (qt_v4IsDebugging)
             qt_v4CheckForBreak(context, scopes, scopeDepth);
-    MOTH_END_INSTR(Debug)
+    MOTH_END_INSTR(Line)
 
     MOTH_BEGIN_INSTR(LoadThis)
         VALUE(instr.result) = context->thisObject();
