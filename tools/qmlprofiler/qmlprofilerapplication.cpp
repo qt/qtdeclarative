@@ -463,7 +463,7 @@ void QmlProfilerApplication::processHasOutput()
 {
     Q_ASSERT(m_process);
     while (m_process->bytesAvailable()) {
-        QTextStream out(stdout);
+        QTextStream out(stderr);
         out << m_process->readAll();
     }
 }
