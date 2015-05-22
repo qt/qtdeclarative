@@ -42,7 +42,6 @@ AbstractApplicationWindow {
     id: window
 
     color: Theme.backgroundColor
-    flags: Qt.Window | Qt.WindowFullscreenButtonHint
 
     contentWidth: contentItem.children.length === 1 ? contentItem.children[0].implicitWidth : 0
     contentHeight: contentItem.children.length === 1 ? contentItem.children[0].implicitHeight : 0
