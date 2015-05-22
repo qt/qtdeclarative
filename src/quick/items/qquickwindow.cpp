@@ -3303,12 +3303,7 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
 QImage QQuickWindow::grabWindow()
 {
     Q_D(QQuickWindow);
-    if (!isVisible()) {
-
-        if (d->context->openglContext()) {
-            qWarning("QQuickWindow::grabWindow: scene graph already in use");
-            return QImage();
-        }
+    if (!isVisible() && !d->context->openglContext()) {
 
         if (!handle() || !size().isValid()) {
             qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");

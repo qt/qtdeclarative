@@ -406,20 +406,21 @@ bool QSGRenderThread::event(QEvent *e)
     case WM_Grab: {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "WM_Grab";
         WMGrabEvent *ce = static_cast<WMGrabEvent *>(e);
-        Q_ASSERT(ce->window == window);
+        Q_ASSERT(ce->window);
+        Q_ASSERT(ce->window == window || !window);
         mutex.lock();
-        if (window) {
-            gl->makeCurrent(window);
+        if (ce->window) {
+            gl->makeCurrent(ce->window);
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- sync scene graph";
-            QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+            QQuickWindowPrivate *d = QQuickWindowPrivate::get(ce->window);
             d->syncSceneGraph();
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- rendering scene graph";
-            QQuickWindowPrivate::get(window)->renderSceneGraph(windowSize);
+            QQuickWindowPrivate::get(ce->window)->renderSceneGraph(ce->window->size());
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- grabbing result";
-            *ce->image = qt_gl_read_framebuffer(windowSize * window->effectiveDevicePixelRatio(), false, false);
+            *ce->image = qt_gl_read_framebuffer(windowSize * ce->window->effectiveDevicePixelRatio(), false, false);
         }
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- waking gui to handle result";
         waitCondition.wakeOne();
