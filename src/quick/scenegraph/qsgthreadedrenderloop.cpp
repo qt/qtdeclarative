@@ -356,7 +356,6 @@ bool QSGRenderThread::event(QEvent *e)
         if (window) {
             QQuickWindowPrivate::get(window)->fireAboutToStop();
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- window removed";
-            gl->doneCurrent();
             window = 0;
         }
         waitCondition.wakeOne();
