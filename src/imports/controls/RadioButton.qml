@@ -56,11 +56,9 @@ AbstractRadioButton {
     padding: Theme.padding
 
     indicator: Rectangle {
-        readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
-
         implicitWidth: 20
         implicitHeight: 20
-        x: text ? (mirror ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
+        x: text ? (control.mirrored ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
         y: (parent.height - height) / 2
 
         radius: width / 2
@@ -84,9 +82,7 @@ AbstractRadioButton {
     }
 
     label: Text {
-        readonly property bool mirror: control.effectiveLayoutDirection == Qt.RightToLeft
-
-        x: mirror ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
+        x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
         width: parent.width - indicator.width - control.Theme.spacing - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding

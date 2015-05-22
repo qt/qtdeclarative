@@ -61,6 +61,7 @@ void QQuickControlPrivate::mirrorChange()
     Q_Q(QQuickControl);
     q->mirrorChange();
     emit q->effectiveLayoutDirectionChanged();
+    emit q->mirroredChanged();
 }
 
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
@@ -274,6 +275,17 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
 }
 
 /*!
+    \qmlproperty bool QtQuickControls2::Control::mirrored
+    \readonly
+
+    TODO
+*/
+bool QQuickControl::isMirrored() const
+{
+    return effectiveLayoutDirection() == Qt::RightToLeft;
+}
+
+/*!
     \qmlproperty Item QtQuickControls2::Control::background
 
     This property holds the background item.
@@ -314,12 +326,6 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
             p->heightValid = false;
         }
     }
-}
-
-bool QQuickControl::isMirrored() const
-{
-    Q_D(const QQuickControl);
-    return d->isMirrored();
 }
 
 void QQuickControl::mirrorChange()

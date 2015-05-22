@@ -89,7 +89,7 @@ AbstractSlider {
         radius: control.Theme.roundness
         border.color: control.Theme.frameColor
         color: control.Theme.backgroundColor
-        scale: horizontal && control.effectiveLayoutDirection === Qt.RightToLeft ? -1 : 1
+        scale: horizontal && control.mirrored ? -1 : 1
 
         Rectangle {
             x: 2

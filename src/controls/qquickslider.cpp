@@ -91,7 +91,7 @@ qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
         const qreal extent = q->width() - hw;
         if (!qFuzzyIsNull(extent)) {
             const qreal pos = (point.x() - offset) / extent;
-            if (q->effectiveLayoutDirection() == Qt::RightToLeft)
+            if (isMirrored())
                 return 1.0 - pos;
             return pos;
         }
@@ -153,7 +153,7 @@ qreal QQuickSlider::position() const
 qreal QQuickSlider::visualPosition() const
 {
     Q_D(const QQuickSlider);
-    if (d->orientation == Qt::Vertical || effectiveLayoutDirection() == Qt::RightToLeft)
+    if (d->orientation == Qt::Vertical || isMirrored())
         return 1.0 - d->position;
     return d->position;
 }
@@ -326,14 +326,14 @@ void QQuickSlider::keyPressEvent(QKeyEvent *event)
     if (d->orientation == Qt::Horizontal) {
         if (event->key() == Qt::Key_Left) {
             setPressed(true);
-            if (effectiveLayoutDirection() == Qt::RightToLeft)
+            if (isMirrored())
                 increase();
             else
                 decrease();
             event->accept();
         } else if (event->key() == Qt::Key_Right) {
             setPressed(true);
-            if (effectiveLayoutDirection() == Qt::RightToLeft)
+            if (isMirrored())
                 decrease();
             else
                 increase();

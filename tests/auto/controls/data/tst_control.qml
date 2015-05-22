@@ -60,6 +60,7 @@ TestCase {
         verify(control)
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
+        compare(control.mirrored, false)
         control.destroy()
     }
 
@@ -69,22 +70,27 @@ TestCase {
         verify(!control.LayoutMirroring.enabled)
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
+        compare(control.mirrored, false)
 
         control.layoutDirection = Qt.RightToLeft
         compare(control.layoutDirection, Qt.RightToLeft)
         compare(control.effectiveLayoutDirection, Qt.RightToLeft)
+        compare(control.mirrored, true)
 
         control.LayoutMirroring.enabled = true
         compare(control.layoutDirection, Qt.RightToLeft)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
+        compare(control.mirrored, false)
 
         control.layoutDirection = Qt.LeftToRight
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.RightToLeft)
+        compare(control.mirrored, true)
 
         control.LayoutMirroring.enabled = false
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
+        compare(control.mirrored, false)
 
         control.destroy()
     }

@@ -65,6 +65,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
+    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
 
 public:
@@ -94,6 +95,8 @@ public:
     Qt::LayoutDirection effectiveLayoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection direction);
 
+    bool isMirrored() const;
+
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
@@ -105,6 +108,7 @@ Q_SIGNALS:
     void bottomPaddingChanged();
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
+    void mirroredChanged();
     void backgroundChanged();
 
 protected:
@@ -112,7 +116,6 @@ protected:
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
-    bool isMirrored() const;
     virtual void mirrorChange();
 
     virtual void paddingChange();

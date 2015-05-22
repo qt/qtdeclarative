@@ -95,7 +95,7 @@ void QQuickProgressBar::setValue(qreal value)
 qreal QQuickProgressBar::visualPosition() const
 {
     Q_D(const QQuickProgressBar);
-    if (effectiveLayoutDirection() == Qt::RightToLeft)
+    if (isMirrored())
         return 1.0 - d->value;
     return d->value;
 }

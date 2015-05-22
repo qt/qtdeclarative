@@ -55,7 +55,7 @@ AbstractProgressBar {
         width: parent.width - control.leftPadding - control.rightPadding
         height: parent.height - control.topPadding - control.bottomPadding
 
-        scale: control.effectiveLayoutDirection === Qt.RightToLeft ? -1 : 1
+        scale: control.mirrored ? -1 : 1
 
         Repeater {
             model: indeterminate ? 2 : 1
