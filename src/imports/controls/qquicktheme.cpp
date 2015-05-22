@@ -99,15 +99,15 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty int QtQuickControls2::Theme::padding
+    \qmlattachedproperty real QtQuickControls2::Theme::padding
 */
 
 /*!
-    \qmlattachedproperty int QtQuickControls2::Theme::roundness
+    \qmlattachedproperty real QtQuickControls2::Theme::roundness
 */
 
 /*!
-    \qmlattachedproperty int QtQuickControls2::Theme::spacing
+    \qmlattachedproperty real QtQuickControls2::Theme::spacing
 */
 
 /*!
@@ -244,9 +244,9 @@ public:
     void setSelectionColor(const QColor &color, Method method);
     void setShadowColor(const QColor &color, Method method);
     void setTextColor(const QColor &color, Method method);
-    void setPadding(int padding, Method method);
-    void setRoundness(int roundness, Method method);
-    void setSpacing(int spacing, Method method);
+    void setPadding(qreal padding, Method method);
+    void setRoundness(qreal roundness, Method method);
+    void setSpacing(qreal spacing, Method method);
     void setDisabledOpacity(qreal opacity, Method method);
 
     void inherit(QQuickTheme *theme);
@@ -442,7 +442,7 @@ void QQuickThemePrivate::setTextColor(const QColor &color, Method method)
     }
 }
 
-void QQuickThemePrivate::setPadding(int padding, Method method)
+void QQuickThemePrivate::setPadding(qreal padding, Method method)
 {
     Q_Q(QQuickTheme);
     if (!explicitPadding || method != Inherit) {
@@ -457,7 +457,7 @@ void QQuickThemePrivate::setPadding(int padding, Method method)
     }
 }
 
-void QQuickThemePrivate::setRoundness(int roundness, Method method)
+void QQuickThemePrivate::setRoundness(qreal roundness, Method method)
 {
     Q_Q(QQuickTheme);
     if (!explicitRoundness || method != Inherit) {
@@ -472,7 +472,7 @@ void QQuickThemePrivate::setRoundness(int roundness, Method method)
     }
 }
 
-void QQuickThemePrivate::setSpacing(int spacing, Method method)
+void QQuickThemePrivate::setSpacing(qreal spacing, Method method)
 {
     Q_Q(QQuickTheme);
     if (!explicitSpacing || method != Inherit) {
@@ -792,13 +792,13 @@ void QQuickTheme::resetTextColor()
     d->setTextColor(d->resolve().textColor(), QQuickThemePrivate::Implicit);
 }
 
-int QQuickTheme::padding() const
+qreal QQuickTheme::padding() const
 {
     Q_D(const QQuickTheme);
     return d->data.padding();
 }
 
-void QQuickTheme::setPadding(int padding)
+void QQuickTheme::setPadding(qreal padding)
 {
     Q_D(QQuickTheme);
     d->setPadding(padding, QQuickThemePrivate::Explicit);
@@ -810,13 +810,13 @@ void QQuickTheme::resetPadding()
     d->setPadding(d->resolve().padding(), QQuickThemePrivate::Implicit);
 }
 
-int QQuickTheme::roundness() const
+qreal QQuickTheme::roundness() const
 {
     Q_D(const QQuickTheme);
     return d->data.roundness();
 }
 
-void QQuickTheme::setRoundness(int roundness)
+void QQuickTheme::setRoundness(qreal roundness)
 {
     Q_D(QQuickTheme);
     d->setRoundness(roundness, QQuickThemePrivate::Explicit);
@@ -828,13 +828,13 @@ void QQuickTheme::resetRoundness()
     d->setRoundness(d->resolve().roundness(), QQuickThemePrivate::Implicit);
 }
 
-int QQuickTheme::spacing() const
+qreal QQuickTheme::spacing() const
 {
     Q_D(const QQuickTheme);
     return d->data.spacing();
 }
 
-void QQuickTheme::setSpacing(int spacing)
+void QQuickTheme::setSpacing(qreal spacing)
 {
     Q_D(QQuickTheme);
     d->setSpacing(spacing, QQuickThemePrivate::Explicit);

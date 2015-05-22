@@ -71,9 +71,9 @@ class QQuickTheme : public QObject
     Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor RESET resetSelectionColor NOTIFY selectionColorChanged FINAL)
     Q_PROPERTY(QColor shadowColor READ shadowColor WRITE setShadowColor RESET resetShadowColor NOTIFY shadowColorChanged FINAL)
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor RESET resetTextColor NOTIFY textColorChanged FINAL)
-    Q_PROPERTY(int padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
-    Q_PROPERTY(int roundness READ roundness WRITE setRoundness RESET resetRoundness NOTIFY roundnessChanged FINAL)
-    Q_PROPERTY(int spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
+    Q_PROPERTY(qreal roundness READ roundness WRITE setRoundness RESET resetRoundness NOTIFY roundnessChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(qreal disabledOpacity READ disabledOpacity WRITE setDisabledOpacity RESET resetDisabledOpacity NOTIFY disabledOpacityChanged FINAL)
 
 public:
@@ -129,16 +129,16 @@ public:
     void setTextColor(const QColor &color);
     void resetTextColor();
 
-    int padding() const;
-    void setPadding(int padding);
+    qreal padding() const;
+    void setPadding(qreal padding);
     void resetPadding();
 
-    int roundness() const;
-    void setRoundness(int roundness);
+    qreal roundness() const;
+    void setRoundness(qreal roundness);
     void resetRoundness();
 
-    int spacing() const;
-    void setSpacing(int spacing);
+    qreal spacing() const;
+    void setSpacing(qreal spacing);
     void resetSpacing();
 
     qreal disabledOpacity() const;

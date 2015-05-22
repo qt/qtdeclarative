@@ -94,14 +94,14 @@ public:
     QColor textColor() const { return d->textColor; }
     void setTextColor(const QColor &color) { d->textColor = color; }
 
-    int padding() const { return d->padding; }
-    void setPadding(int padding) { d->padding = padding; }
+    qreal padding() const { return d->padding; }
+    void setPadding(qreal padding) { d->padding = padding; }
 
-    int roundness() const { return d->roundness; }
-    void setRoundness(int roundness) { d->roundness = roundness; }
+    qreal roundness() const { return d->roundness; }
+    void setRoundness(qreal roundness) { d->roundness = roundness; }
 
-    int spacing() const { return d->spacing; }
-    void setSpacing(int spacing) { d->spacing = spacing; }
+    qreal spacing() const { return d->spacing; }
+    void setSpacing(qreal spacing) { d->spacing = spacing; }
 
     qreal disabledOpacity() const { return d->disabledOpacity; }
     void setDisabledOpacity(qreal opacity) { d->disabledOpacity = opacity; }
@@ -119,9 +119,9 @@ private:
         QColor selectionColor;
         QColor shadowColor;
         QColor textColor;
-        int padding;
-        int spacing;
-        int roundness;
+        qreal padding;
+        qreal spacing;
+        qreal roundness;
         qreal disabledOpacity;
     };
     QSharedDataPointer<Data> d;
