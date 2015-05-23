@@ -53,6 +53,11 @@ AbstractButton {
 
     //! [label]
     label: Text {
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.contentWidth
+        height: control.contentHeight
+
         text: control.text
         color: control.Theme.selectedTextColor
         horizontalAlignment: Text.AlignHCenter

@@ -59,13 +59,9 @@ class QQuickButtonPrivate : public QQuickControlPrivate
 public:
     QQuickButtonPrivate();
 
-    void updateGeometry();
-
     QString text;
     bool pressed;
     QQuickItem *label;
-    bool labelHasWidth;
-    bool labelHasHeight;
 };
 
 QT_END_NAMESPACE

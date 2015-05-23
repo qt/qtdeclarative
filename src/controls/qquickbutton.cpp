@@ -97,9 +97,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-button-label.png
 
-    If the \l {Button::label}{label} delegate has no explicit size specified,
-    it automatically follows the control's size without padding. The following
-    snippet presents the default label delegate implementation.
+    The following snippet presents the default label delegate implementation.
 
     \snippet Button.qml label
 
@@ -134,24 +132,8 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the button is clicked.
 */
 
-QQuickButtonPrivate::QQuickButtonPrivate() :
-    pressed(false), label(Q_NULLPTR), labelHasWidth(true), labelHasHeight(true)
+QQuickButtonPrivate::QQuickButtonPrivate() : pressed(false), label(Q_NULLPTR)
 {
-}
-
-void QQuickButtonPrivate::updateGeometry()
-{
-    Q_Q(QQuickButton);
-    if (label) {
-        if (!labelHasWidth) {
-            label->setX(q->leftPadding());
-            label->setWidth(q->width() - q->leftPadding() - q->rightPadding());
-        }
-        if (!labelHasHeight) {
-            label->setY(q->topPadding());
-            label->setHeight(q->height() - q->topPadding() - q->bottomPadding());
-        }
-    }
 }
 
 QQuickButton::QQuickButton(QQuickItem *parent) :
@@ -217,9 +199,6 @@ void QQuickButton::setPressed(bool isPressed)
     \qmlproperty Item QtQuickControls2::Button::label
 
     This property holds the label delegate.
-
-    If the label delegate has no explicit size specified, it
-    automatically follows the control's size without padding.
 
     The implicit size of the label delegate is used to calculate
     the implicit size of the control.
@@ -313,29 +292,6 @@ void QQuickButton::mouseUngrabEvent()
         setPressed(false);
         emit canceled();
     }
-}
-
-void QQuickButton::componentComplete()
-{
-    Q_D(QQuickButton);
-    QQuickControl::componentComplete();
-    d->labelHasWidth = d->label && QQuickItemPrivate::get(d->label)->widthValid;
-    d->labelHasHeight = d->label && QQuickItemPrivate::get(d->label)->heightValid;
-    d->updateGeometry();
-}
-
-void QQuickButton::paddingChange()
-{
-    Q_D(QQuickButton);
-    QQuickControl::paddingChange();
-    d->updateGeometry();
-}
-
-void QQuickButton::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_D(QQuickButton);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
-    d->updateGeometry();
 }
 
 QT_END_NAMESPACE
