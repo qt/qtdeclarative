@@ -129,4 +129,50 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_background() {
+        var control = component.createObject(testCase)
+
+        control.background = component.createObject(control)
+
+        // background has no x or width set, so its width follows control's width
+        control.width = 320
+        compare(control.background.width, control.width)
+
+        // background has no y or height set, so its height follows control's height
+        compare(control.background.height, control.height)
+        control.height = 240
+
+        // has width => width does not follow
+        control.background.width /= 2
+        control.width += 20
+        verify(control.background.width !== control.width)
+
+        // reset width => width follows again
+        control.background.width = undefined
+        control.width += 20
+        compare(control.background.width, control.width)
+
+        // has x => width does not follow
+        control.background.x = 10
+        control.width += 20
+        verify(control.background.width !== control.width)
+
+        // has height => height does not follow
+        control.background.height /= 2
+        control.height -= 20
+        verify(control.background.height !== control.height)
+
+        // reset height => height follows again
+        control.background.height = undefined
+        control.height -= 20
+        compare(control.background.height, control.height)
+
+        // has y => height does not follow
+        control.background.y = 10
+        control.height -= 20
+        verify(control.background.height !== control.height)
+
+        control.destroy()
+    }
 }

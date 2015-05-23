@@ -127,11 +127,11 @@ void QQuickControlPrivate::resizeBackground()
     Q_Q(QQuickControl);
     if (background) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid) {
+        if (!p->widthValid && qFuzzyIsNull(background->x())) {
             background->setWidth(q->width());
             p->widthValid = false;
         }
-        if (!p->heightValid) {
+        if (!p->heightValid && qFuzzyIsNull(background->y())) {
             background->setHeight(q->height());
             p->heightValid = false;
         }
