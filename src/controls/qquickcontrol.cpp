@@ -124,6 +124,22 @@ void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
     }
 }
 
+void QQuickControlPrivate::resizeBackground()
+{
+    Q_Q(QQuickControl);
+    if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (!p->widthValid) {
+            background->setWidth(q->width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid) {
+            background->setHeight(q->height());
+            p->heightValid = false;
+        }
+    }
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent) :
     QQuickItem(*(new QQuickControlPrivate), parent)
 {
@@ -336,6 +352,8 @@ void QQuickControl::setBackground(QQuickItem *background)
             background->setParentItem(this);
             if (qFuzzyIsNull(background->z()))
                 background->setZ(-1);
+            if (isComponentComplete())
+                d->resizeBackground();
         }
         emit backgroundChanged();
     }
@@ -345,17 +363,7 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
 {
     Q_D(QQuickControl);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
-    if (d->background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
-        if (!p->widthValid) {
-            d->background->setWidth(newGeometry.width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid) {
-            d->background->setHeight(newGeometry.height());
-            p->heightValid = false;
-        }
-    }
+    d->resizeBackground();
     emit contentWidthChanged();
     emit contentHeightChanged();
 }

@@ -69,6 +69,8 @@ public:
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
 
+    void resizeBackground();
+
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;
