@@ -55,6 +55,21 @@ TestCase {
         Control { }
     }
 
+    SignalSpy {
+        id: layoutDirectionSpy
+        signalName: "layoutDirectionChanged"
+    }
+
+    SignalSpy {
+        id: effectiveLayoutDirectionSpy
+        signalName: "effectiveLayoutDirectionChanged"
+    }
+
+    SignalSpy {
+        id: mirroredSpy
+        signalName: "mirroredChanged"
+    }
+
     function test_defaults() {
         var control = component.createObject(testCase)
         verify(control)
@@ -67,6 +82,14 @@ TestCase {
     function test_layoutDirection() {
         var control = component.createObject(testCase)
 
+        layoutDirectionSpy.target = control
+        effectiveLayoutDirectionSpy.target = control
+        mirroredSpy.target = control
+
+        verify(layoutDirectionSpy.valid)
+        verify(effectiveLayoutDirectionSpy.valid)
+        verify(mirroredSpy.valid)
+
         verify(!control.LayoutMirroring.enabled)
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
@@ -76,21 +99,33 @@ TestCase {
         compare(control.layoutDirection, Qt.RightToLeft)
         compare(control.effectiveLayoutDirection, Qt.RightToLeft)
         compare(control.mirrored, true)
+        compare(layoutDirectionSpy.count, 1)
+        compare(effectiveLayoutDirectionSpy.count, 1)
+        compare(mirroredSpy.count, 1)
 
         control.LayoutMirroring.enabled = true
         compare(control.layoutDirection, Qt.RightToLeft)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
+        compare(layoutDirectionSpy.count, 1)
+        compare(effectiveLayoutDirectionSpy.count, 2)
+        compare(mirroredSpy.count, 2)
 
         control.layoutDirection = Qt.LeftToRight
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.RightToLeft)
         compare(control.mirrored, true)
+        compare(layoutDirectionSpy.count, 2)
+        compare(effectiveLayoutDirectionSpy.count, 3)
+        compare(mirroredSpy.count, 3)
 
         control.LayoutMirroring.enabled = false
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
+        compare(layoutDirectionSpy.count, 2)
+        compare(effectiveLayoutDirectionSpy.count, 4)
+        compare(mirroredSpy.count, 4)
 
         control.destroy()
     }

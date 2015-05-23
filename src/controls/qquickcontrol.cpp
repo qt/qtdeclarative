@@ -60,8 +60,6 @@ void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
     q->mirrorChange();
-    emit q->effectiveLayoutDirectionChanged();
-    emit q->mirroredChanged();
 }
 
 qreal QQuickControlPrivate::getContentWidth() const
@@ -316,7 +314,7 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
     if (d->layoutDirection != direction) {
         d->layoutDirection = direction;
         emit layoutDirectionChanged();
-        emit effectiveLayoutDirectionChanged();
+        mirrorChange();
     }
 }
 
@@ -370,6 +368,8 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
 
 void QQuickControl::mirrorChange()
 {
+    emit effectiveLayoutDirectionChanged();
+    emit mirroredChanged();
 }
 
 void QQuickControl::paddingChange()

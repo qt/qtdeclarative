@@ -145,6 +145,7 @@ void QQuickProgressBar::setIndicator(QQuickItem *indicator)
 
 void QQuickProgressBar::mirrorChange()
 {
+    QQuickControl::mirrorChange();
     emit visualPositionChanged();
 }
 

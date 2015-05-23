@@ -412,6 +412,7 @@ void QQuickSlider::mouseUngrabEvent()
 
 void QQuickSlider::mirrorChange()
 {
+    QQuickControl::mirrorChange();
     emit visualPositionChanged();
 }
 
