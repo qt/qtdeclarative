@@ -58,6 +58,8 @@ class QQuickControlPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentWidthChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentHeightChanged)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL)
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
@@ -70,6 +72,9 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
+
+    qreal contentWidth() const;
+    qreal contentHeight() const;
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -101,6 +106,8 @@ public:
     void setBackground(QQuickItem *background);
 
 Q_SIGNALS:
+    void contentWidthChanged();
+    void contentHeightChanged();
     void paddingChanged();
     void topPaddingChanged();
     void leftPaddingChanged();

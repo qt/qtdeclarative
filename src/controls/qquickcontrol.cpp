@@ -64,6 +64,18 @@ void QQuickControlPrivate::mirrorChange()
     emit q->mirroredChanged();
 }
 
+qreal QQuickControlPrivate::getContentWidth() const
+{
+    Q_Q(const QQuickControl);
+    return q->width() - q->leftPadding() - q->rightPadding();
+}
+
+qreal QQuickControlPrivate::getContentHeight() const
+{
+    Q_Q(const QQuickControl);
+    return q->height() - q->topPadding() - q->bottomPadding();
+}
+
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
@@ -120,6 +132,24 @@ QQuickControl::QQuickControl(QQuickItem *parent) :
 QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
     QQuickItem(dd, parent)
 {
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::Control::contentWidth
+    \qmlproperty real QtQuickControls2::Control::contentHeight
+
+    TODO
+*/
+qreal QQuickControl::contentWidth() const
+{
+    Q_D(const QQuickControl);
+    return d->getContentWidth();
+}
+
+qreal QQuickControl::contentHeight() const
+{
+    Q_D(const QQuickControl);
+    return d->getContentHeight();
 }
 
 /*!
@@ -326,6 +356,8 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
             p->heightValid = false;
         }
     }
+    emit contentWidthChanged();
+    emit contentHeightChanged();
 }
 
 void QQuickControl::mirrorChange()
@@ -334,6 +366,8 @@ void QQuickControl::mirrorChange()
 
 void QQuickControl::paddingChange()
 {
+    emit contentWidthChanged();
+    emit contentHeightChanged();
 }
 
 QT_END_NAMESPACE

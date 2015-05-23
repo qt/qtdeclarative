@@ -61,6 +61,9 @@ public:
 
     void mirrorChange() Q_DECL_OVERRIDE;
 
+    virtual qreal getContentWidth() const;
+    virtual qreal getContentHeight() const;
+
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);

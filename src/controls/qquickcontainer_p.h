@@ -64,10 +64,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 public:
     explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
 
-    qreal contentWidth() const;
     void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
     void setContentHeight(qreal height);
 
     QQuickItem *contentItem() const;

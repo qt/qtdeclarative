@@ -53,6 +53,16 @@ QQuickContainerPrivate::QQuickContainerPrivate() :
 {
 }
 
+qreal QQuickContainerPrivate::getContentWidth() const
+{
+    return contentWidth;
+}
+
+qreal QQuickContainerPrivate::getContentHeight() const
+{
+    return contentHeight;
+}
+
 QQuickContainer::QQuickContainer(QQuickItem *parent) :
     QQuickControl(*(new QQuickContainerPrivate), parent)
 {
@@ -65,15 +75,10 @@ QQuickContainer::QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent)
 
 /*!
     \qmlproperty real QtQuickControls2::Container::contentWidth
+    \qmlproperty real QtQuickControls2::Container::contentHeight
 
     TODO
 */
-qreal QQuickContainer::contentWidth() const
-{
-    Q_D(const QQuickContainer);
-    return d->contentWidth;
-}
-
 void QQuickContainer::setContentWidth(qreal width)
 {
     Q_D(QQuickContainer);
@@ -81,17 +86,6 @@ void QQuickContainer::setContentWidth(qreal width)
         d->contentWidth = width;
         emit contentWidthChanged();
     }
-}
-
-/*!
-    \qmlproperty real QtQuickControls2::Container::contentHeight
-
-    TODO
-*/
-qreal QQuickContainer::contentHeight() const
-{
-    Q_D(const QQuickContainer);
-    return d->contentHeight;
 }
 
 void QQuickContainer::setContentHeight(qreal height)
