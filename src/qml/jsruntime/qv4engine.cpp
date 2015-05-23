@@ -1266,6 +1266,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return ld->d()->locale;
     if (QV4::DateObject *d = value.asDateObject())
         return d->toQDateTime();
+    if (QV4::ArrayBuffer *d = value.as<ArrayBuffer>())
+        return d->asByteArray();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
     QV4::ScopedObject o(scope, value);

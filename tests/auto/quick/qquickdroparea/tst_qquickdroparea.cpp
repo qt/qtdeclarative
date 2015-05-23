@@ -78,6 +78,7 @@ private slots:
 //    void drop_external();
     void competingDrags();
     void simultaneousDrags();
+    void dropStuff();
 
 private:
     QQmlEngine engine;
@@ -1155,6 +1156,34 @@ void tst_QQuickDropArea::simultaneousDrags()
     QCOMPARE(evaluate<int>(dropArea2, "exitEvents"), 1);
 
     QWindowSystemInterface::handleDrop(&alternateWindow, &data, QPoint(50, 50), Qt::CopyAction);
+}
+
+void tst_QQuickDropArea::dropStuff()
+{
+    QQuickWindow window;
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQuick 2.3\n"
+            "DropArea {\n"
+                "width: 100; height: 100\n"
+                "property var array\n"
+                "onDropped: { array = drop.getDataAsArrayBuffer('text/x-red'); }\n"
+            "}", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QQuickItem *dropArea = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(dropArea);
+    dropArea->setParentItem(window.contentItem());
+
+    QMimeData data;
+    data.setData("text/x-red", "red");
+
+    QCOMPARE(evaluate<QVariant>(dropArea, "array"), QVariant());
+
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QWindowSystemInterface::handleDrop(&window, &data, QPoint(50, 50), Qt::CopyAction);
+    QCOMPARE(evaluate<int>(dropArea, "array.byteLength"), 3);
+    QCOMPARE(evaluate<QByteArray>(dropArea, "array"), QByteArray("red"));
 }
 
 QTEST_MAIN(tst_QQuickDropArea)
