@@ -80,6 +80,9 @@ protected:
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void paddingChange() Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickContainer)
     Q_DECLARE_PRIVATE(QQuickContainer)

@@ -129,4 +129,15 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
     Q_UNUSED(oldItem);
 }
 
+void QQuickContainer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickContainer);
+    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    d->resizeBackground();
+}
+
+void QQuickContainer::paddingChange()
+{
+}
+
 QT_END_NAMESPACE
