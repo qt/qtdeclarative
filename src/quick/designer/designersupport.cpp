@@ -213,10 +213,7 @@ bool isValidAnchorName(const QString &name)
 
 bool DesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
-#ifndef QT_NO_DYNAMIC_CAST
-    Q_ASSERT(dynamic_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem)));
-#endif
-    QQuickItemPrivate *fromItemPrivate = static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem));
+    QQuickItemPrivate *fromItemPrivate = QQuickItemPrivate::get(fromItem);
     QQuickAnchors *anchors = fromItemPrivate->anchors();
     return anchors->fill() == toItem
             || anchors->centerIn() == toItem
@@ -246,7 +243,7 @@ bool DesignerSupport::areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *to
 
 QQuickAnchors *anchors(QQuickItem *item)
 {
-    QQuickItemPrivate *itemPrivate = static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(item));
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     return itemPrivate->anchors();
 }
 
@@ -398,7 +395,7 @@ QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
 
 bool DesignerSupport::isComponentComplete(QQuickItem *item)
 {
-    return static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(item))->componentComplete;
+    return QQuickItemPrivate::get(item)->componentComplete;
 }
 
 int DesignerSupport::borderWidth(QQuickItem *item)
