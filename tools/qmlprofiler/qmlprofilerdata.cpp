@@ -509,21 +509,24 @@ bool QmlProfilerData::save(const QString &filename)
         stream.writeStartElement(QStringLiteral("event"));
         stream.writeAttribute(QStringLiteral("index"), QString::number(
                                   d->eventDescriptions.keys().indexOf(eventData->eventHashStr)));
-        stream.writeTextElement(QStringLiteral("displayname"), eventData->displayName);
+        if (!eventData->displayName.isEmpty())
+            stream.writeTextElement(QStringLiteral("displayname"), eventData->displayName);
         if (eventData->rangeType != QQmlProfilerDefinitions::MaximumRangeType)
             stream.writeTextElement(QStringLiteral("type"),
                                     qmlRangeTypeAsString(eventData->rangeType));
         else
             stream.writeTextElement(QStringLiteral("type"),
                                     qmlMessageAsString(eventData->message));
-        if (!eventData->location.filename.isEmpty()) {
+        if (!eventData->location.filename.isEmpty())
             stream.writeTextElement(QStringLiteral("filename"), eventData->location.filename);
+        if (eventData->location.line >= 0)
             stream.writeTextElement(QStringLiteral("line"),
                                     QString::number(eventData->location.line));
+        if (eventData->location.column >= 0)
             stream.writeTextElement(QStringLiteral("column"),
                                     QString::number(eventData->location.column));
-        }
-        stream.writeTextElement(QStringLiteral("details"), eventData->details);
+        if (!eventData->details.isEmpty())
+            stream.writeTextElement(QStringLiteral("details"), eventData->details);
         if (eventData->rangeType == QQmlProfilerDefinitions::Binding)
             stream.writeTextElement(QStringLiteral("bindingType"),
                                     QString::number((int)eventData->detailType));
