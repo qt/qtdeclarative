@@ -1916,6 +1916,7 @@ void tst_qquickwindow::qobjectEventFilter_mouse()
     item->installEventFilter(&eventFilter);
 
     QPoint point = item->mapToScene(QPointF(10, 10)).toPoint();
+    QTest::mouseMove(&window, point);
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, point);
 
     QVERIFY(eventFilter.events.contains((int)QEvent::MouseButtonPress));
