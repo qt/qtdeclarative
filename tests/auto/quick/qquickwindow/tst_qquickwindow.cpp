@@ -1878,7 +1878,7 @@ void tst_qquickwindow::qobjectEventFilter_key()
     window.setPosition(100, 100);
     window.setTitle(QTest::currentTestFunction());
     window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     TestTouchItem *item = new TestTouchItem(window.contentItem());
     item->setSize(QSizeF(150, 150));
