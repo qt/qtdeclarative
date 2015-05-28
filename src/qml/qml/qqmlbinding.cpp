@@ -286,8 +286,8 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
     }
 
     while (pd.isAlias()) {
-        int coreIndex = core.coreIndex;
-        int valueTypeIndex = core.getValueTypeCoreIndex();
+        int coreIndex = pd.coreIndex;
+        int valueTypeIndex = pd.getValueTypeCoreIndex();
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
