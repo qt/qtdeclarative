@@ -39,11 +39,12 @@
 ****************************************************************************/
 //![0]
 import QtQuick 2.0
+import QtQml.Models 2.2
 
 Rectangle {
     width: 200; height: 100
 
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
         model: ListModel {
             ListElement { name: "Apple" }

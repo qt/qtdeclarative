@@ -39,13 +39,14 @@
 ****************************************************************************/
 //![0]
 import QtQuick 2.0
+import QtQml.Models 2.2
 
 ListView {
     id: view
     width: 300
     height: 400
 
-    model: VisualDataModel {
+    model: DelegateModel {
         model: dirModel
 
         delegate: Rectangle {
