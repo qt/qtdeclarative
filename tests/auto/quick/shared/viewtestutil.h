@@ -48,6 +48,8 @@ namespace QQuickViewTestUtil
     void centerOnScreen(QQuickView *window, const QSize &size);
     void centerOnScreen(QQuickView *window);
     void moveMouseAway(QQuickView *window);
+    void moveAndPress(QQuickView *window, const QPoint &position);
+    void moveAndRelease(QQuickView *window, const QPoint &position);
 
     QList<int> adjustIndexesForAddDisplaced(const QList<int> &indexes, int index, int count);
     QList<int> adjustIndexesForMove(const QList<int> &indexes, int from, int to, int count);
