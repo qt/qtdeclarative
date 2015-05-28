@@ -299,7 +299,7 @@ void tst_qquickflickable::rebound()
     flick(window.data(), QPoint(20,120), QPoint(120,20), 200);     // only x will bounce back
 
     QVERIFY(flickable->isMoving());
-    QVERIFY(window->rootObject()->property("transitionsStarted").toInt() >= 1);
+    QTRY_VERIFY(window->rootObject()->property("transitionsStarted").toInt() >= 1);
     QCOMPARE(hMoveSpy.count(), 1);
     QCOMPARE(vMoveSpy.count(), 1);
     QCOMPARE(movementStartedSpy.count(), 1);
