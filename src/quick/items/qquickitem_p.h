@@ -78,6 +78,7 @@ QT_BEGIN_NAMESPACE
 class QNetworkReply;
 class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
+class QQuickEnterKeyAttached;
 class QQuickScreenAttached;
 
 class QQuickContents : public QQuickItemChangeListener
@@ -338,6 +339,7 @@ public:
         QQuickContents *contents;
         QQuickScreenAttached *screenAttached;
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
+        QQuickEnterKeyAttached *enterKeyAttached;
         QQuickItemKeyFilter *keyHandler;
         mutable QQuickItemLayer *layer;
 #ifndef QT_NO_CURSOR
@@ -709,6 +711,27 @@ private:
     QQuickItemPrivate *itemPrivate;
 };
 
+class QQuickEnterKeyAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged)
+
+public:
+    explicit QQuickEnterKeyAttached(QObject *parent = Q_NULLPTR);
+
+    Qt::EnterKeyType type() const;
+    void setType(Qt::EnterKeyType type);
+
+    static QQuickEnterKeyAttached *qmlAttachedProperties(QObject *);
+Q_SIGNALS:
+    void typeChanged();
+private:
+    friend class QQuickItemPrivate;
+    QQuickItemPrivate *itemPrivate;
+
+    Qt::EnterKeyType keyType;
+};
+
 class QQuickKeysAttachedPrivate : public QObjectPrivate
 {
 public:
@@ -893,5 +916,7 @@ QML_DECLARE_TYPE(QQuickKeyNavigationAttached)
 QML_DECLARE_TYPEINFO(QQuickKeyNavigationAttached, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QQuickLayoutMirroringAttached)
 QML_DECLARE_TYPEINFO(QQuickLayoutMirroringAttached, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QQuickEnterKeyAttached)
+QML_DECLARE_TYPEINFO(QQuickEnterKeyAttached, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKITEM_P_H

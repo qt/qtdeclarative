@@ -271,6 +271,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickRow, 6>(uri, 2, 6, "Row");
     qmlRegisterType<QQuickGrid, 6>(uri, 2, 6, "Grid");
     qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
+    qmlRegisterUncreatableType<QQuickEnterKeyAttached, 6>(uri, 2, 6, "EnterKey",
+                                                           QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
 }
 
 static void initResources()

@@ -1608,6 +1608,74 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
     }
 }
 
+/*!
+    \qmltype EnterKey
+    \instantiates QQuickEnterKeyAttached
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input
+    \since 5.6
+    \brief Property used to manipulate Enter key appearance
+
+    The EnterKey attached property is used to manipulate the appearance and behavior of the Enter key
+    on an on-screen keyboard.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::EnterKey::type
+
+    This property holds the type of the Enter key.
+
+    \note Not all of these values are supported on all platforms.
+    For unsupported values the default key will be used instead.
+
+    \li Qt.EnterKeyDefault      The default Enter key.
+                                This can either be a button closing the keyboard, or a Return button
+                                causing a new line in case of a multi-line input field.
+    \li Qt.EnterKeyReturn       Show a Return button that inserts a new line.
+    \li Qt.EnterKeyDone         Show a "Done" button.
+                                Typically the keyboard is expected to close when the button is pressed.
+    \li Qt.EnterKeyGo           Show a "Go" button.
+                                Typically used in an address bar when entering a URL.
+    \li Qt.EnterKeySend         Show a "Send" button.
+    \li Qt.EnterKeySearch       Show a "Search" button.
+    \li Qt.EnterKeyNext         Show a "Next" button.
+                                Typically used in a form to allow navigating to the next input field
+                                without the keyboard closing.
+    \li Qt.EnterKeyPrevious     Show a "Previous" button.
+*/
+
+QQuickEnterKeyAttached::QQuickEnterKeyAttached(QObject *parent)
+    : QObject(parent), itemPrivate(0), keyType(Qt::EnterKeyDefault)
+{
+    if (QQuickItem *item = qobject_cast<QQuickItem*>(parent)) {
+        itemPrivate = QQuickItemPrivate::get(item);
+        itemPrivate->extra.value().enterKeyAttached = this;
+    } else
+        qmlInfo(parent) << tr("EnterKey attached property only works with Items");
+}
+
+QQuickEnterKeyAttached *QQuickEnterKeyAttached::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickEnterKeyAttached(object);
+}
+
+Qt::EnterKeyType QQuickEnterKeyAttached::type() const
+{
+    return keyType;
+}
+
+void QQuickEnterKeyAttached::setType(Qt::EnterKeyType type)
+{
+    if (keyType != type) {
+        keyType = type;
+#ifndef QT_NO_IM
+        if (itemPrivate && itemPrivate->activeFocus)
+            QGuiApplication::inputMethod()->update(Qt::ImEnterKeyType);
+#endif
+        typeChanged();
+    }
+}
+
 void QQuickItemPrivate::setAccessible()
 {
     isAccessible = true;
@@ -3960,6 +4028,11 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
     case Qt::ImPreferredLanguage:
         if (d->extra.isAllocated() && d->extra->keyHandler)
             v = d->extra->keyHandler->inputMethodQuery(query);
+        break;
+    case Qt::ImEnterKeyType:
+        if (d->extra.isAllocated() && d->extra->enterKeyAttached)
+            v = d->extra->enterKeyAttached->type();
+        break;
     default:
         break;
     }
@@ -7816,6 +7889,7 @@ void QQuickItemLayer::updateMatrix()
 QQuickItemPrivate::ExtraData::ExtraData()
 : z(0), scale(1), rotation(0), opacity(1),
   contents(0), screenAttached(0), layoutDirectionAttached(0),
+  enterKeyAttached(0),
   keyHandler(0), layer(0),
   effectRefCount(0), hideRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0),
