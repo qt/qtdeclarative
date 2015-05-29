@@ -1065,7 +1065,7 @@ void QQuickWidget::showEvent(QShowEvent *)
     Q_D(QQuickWidget);
     d->updatePending = false;
     d->createContext();
-    triggerUpdate();
+    d->render(true);
 }
 
 /*! \reimp */
