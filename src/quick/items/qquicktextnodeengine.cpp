@@ -884,7 +884,7 @@ void QQuickTextNodeEngine::mergeFormats(QTextLayout *textLayout, QVarLengthArray
     if (textLayout == 0)
         return;
 
-    QList<QTextLayout::FormatRange> additionalFormats = textLayout->additionalFormats();
+    QVector<QTextLayout::FormatRange> additionalFormats = textLayout->formats();
     for (int i=0; i<additionalFormats.size(); ++i) {
         QTextLayout::FormatRange additionalFormat = additionalFormats.at(i);
         if (additionalFormat.format.hasProperty(QTextFormat::ForegroundBrush)

@@ -78,7 +78,7 @@ public:
 
     int lineHeightOffset() const;
     QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
-    void elideFormats(int start, int length, int offset, QList<QTextLayout::FormatRange> *elidedFormats);
+    void elideFormats(int start, int length, int offset, QVector<QTextLayout::FormatRange> *elidedFormats);
 
     void processHoverEvent(QHoverEvent *event);
 

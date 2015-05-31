@@ -402,9 +402,9 @@ void QQuickTextPrivate::updateLayout()
                 formatModifiesFontSize = fontSizeModified;
                 multilengthEos = -1;
             } else {
-                layout.clearAdditionalFormats();
+                layout.clearFormats();
                 if (elideLayout)
-                    elideLayout->clearAdditionalFormats();
+                    elideLayout->clearFormats();
                 QString tmp = text;
                 multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
                 if (multilengthEos != -1) {
@@ -713,10 +713,10 @@ void QQuickTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, 
 }
 
 void QQuickTextPrivate::elideFormats(
-        const int start, const int length, int offset, QList<QTextLayout::FormatRange> *elidedFormats)
+        const int start, const int length, int offset, QVector<QTextLayout::FormatRange> *elidedFormats)
 {
     const int end = start + length;
-    QList<QTextLayout::FormatRange> formats = layout.additionalFormats();
+    const QVector<QTextLayout::FormatRange> formats = layout.formats();
     for (int i = 0; i < formats.count(); ++i) {
         QTextLayout::FormatRange format = formats.at(i);
         const int formatLength = qMin(format.start + format.length, end) - qMax(format.start, start);
@@ -1155,7 +1155,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             elideLayout->setCacheEnabled(true);
         }
         if (styledText) {
-            QList<QTextLayout::FormatRange> formats;
+            QVector<QTextLayout::FormatRange> formats;
             switch (elideMode) {
             case QQuickText::ElideRight:
                 elideFormats(elideStart, elideText.length() - 1, 0, &formats);
@@ -1178,7 +1178,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             default:
                 break;
             }
-            elideLayout->setAdditionalFormats(formats);
+            elideLayout->setFormats(formats);
         }
 
         elideLayout->setFont(layout.font());
@@ -2650,7 +2650,7 @@ QString QQuickTextPrivate::anchorAt(const QTextLayout *layout, const QPointF &mo
         QTextLine line = layout->lineAt(i);
         if (line.naturalTextRect().contains(mousePos)) {
             int charPos = line.xToCursor(mousePos.x(), QTextLine::CursorOnCharacter);
-            foreach (const QTextLayout::FormatRange &formatRange, layout->additionalFormats()) {
+            foreach (const QTextLayout::FormatRange &formatRange, layout->formats()) {
                 if (formatRange.format.isAnchor()
                         && charPos >= formatRange.start
                         && charPos < formatRange.start + formatRange.length) {

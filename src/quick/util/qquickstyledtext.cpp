@@ -182,7 +182,7 @@ void QQuickStyledText::parse(const QString &string, QTextLayout &layout,
 
 void QQuickStyledTextPrivate::parse()
 {
-    QList<QTextLayout::FormatRange> ranges;
+    QVector<QTextLayout::FormatRange> ranges;
     QStack<QTextCharFormat> formatStack;
 
     QString drawText;
@@ -283,7 +283,7 @@ void QQuickStyledTextPrivate::parse()
     }
 
     layout.setText(drawText);
-    layout.setAdditionalFormats(ranges);
+    layout.setFormats(ranges);
 }
 
 void QQuickStyledTextPrivate::appendText(const QString &textIn, int start, int length, QString &textOut)
