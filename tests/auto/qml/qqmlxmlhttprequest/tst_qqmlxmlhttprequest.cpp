@@ -101,6 +101,10 @@ private slots:
     void nonUtf8();
     void nonUtf8_data();
 
+    // WebDAV
+    void sendPropfind();
+    void sendPropfind_data();
+
     // Attributes
     void document();
     void element();
@@ -1024,6 +1028,46 @@ void tst_qqmlxmlhttprequest::nonUtf8_data()
 
     QTest::newRow("responseText") << "utf16.html" << uc + '\n' << "";
     QTest::newRow("responseXML") << "utf16.xml" << "<?xml version=\"1.0\" encoding=\"UTF-16\" standalone='yes'?>\n<root>\n" + uc + "\n</root>\n" << QString('\n' + uc + '\n');
+}
+
+void tst_qqmlxmlhttprequest::sendPropfind()
+{
+    const QString prefix = "WebDAV//";
+
+    QFETCH(QString, qml);
+    QFETCH(QString, resource);
+    QFETCH(QString, expectedFile);
+    QFETCH(QString, replyHeader);
+    QFETCH(QString, replyBody);
+
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+
+    QVERIFY(server.wait(testFileUrl(prefix + expectedFile),
+                testFileUrl(prefix + replyHeader),
+                testFileUrl(prefix + replyBody)));
+
+    QQmlComponent component(&engine, testFileUrl(prefix + qml));
+    QScopedPointer<QObject> object(component.beginCreate(engine.rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", server.urlString(resource));
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("xmlTest").toBool());
+    QCOMPARE(object->property("typeTest").toBool(), true);
+}
+
+void tst_qqmlxmlhttprequest::sendPropfind_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QString>("resource");
+    QTest::addColumn<QString>("expectedFile");
+    QTest::addColumn<QString>("replyHeader");
+    QTest::addColumn<QString>("replyBody");
+
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with responseXML.") << "sendPropfind.responseXML.qml" << "/file" << "propfind.file.expect" << "propfind.file.reply.header" << "propfind.file.reply.body";
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with response.") << "sendPropfind.response.qml" << "/file" << "propfind.file.expect" << "propfind.file.reply.header" << "propfind.file.reply.body";
+    QTest::newRow("Send PROPFIND \"allprop\" request for collection.") << "sendPropfind.collection.allprop.qml" << "/container/" << "propfind.collection.allprop.expect" << "propfind.file.reply.header" << "propfind.collection.allprop.reply.body";
 }
 
 // Test that calling hte XMLHttpRequest methods on a non-XMLHttpRequest object

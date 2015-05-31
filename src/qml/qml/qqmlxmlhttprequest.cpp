@@ -274,6 +274,7 @@ public:
     static ReturnedValue method_get_nodeName(CallContext *ctx);
     static ReturnedValue method_get_nodeValue(CallContext *ctx);
     static ReturnedValue method_get_nodeType(CallContext *ctx);
+    static ReturnedValue method_get_namespaceUri(CallContext *ctx);
 
     static ReturnedValue method_get_parentNode(CallContext *ctx);
     static ReturnedValue method_get_childNodes(CallContext *ctx);
@@ -303,6 +304,7 @@ Heap::NodePrototype::NodePrototype(ExecutionEngine *engine)
     o->defineAccessorProperty(QStringLiteral("nodeName"), QV4::NodePrototype::method_get_nodeName, 0);
     o->defineAccessorProperty(QStringLiteral("nodeValue"), QV4::NodePrototype::method_get_nodeValue, 0);
     o->defineAccessorProperty(QStringLiteral("nodeType"), QV4::NodePrototype::method_get_nodeType, 0);
+    o->defineAccessorProperty(QStringLiteral("namespaceUri"), QV4::NodePrototype::method_get_namespaceUri, 0);
 
     o->defineAccessorProperty(QStringLiteral("parentNode"), QV4::NodePrototype::method_get_parentNode, 0);
     o->defineAccessorProperty(QStringLiteral("childNodes"), QV4::NodePrototype::method_get_childNodes, 0);
@@ -469,6 +471,16 @@ ReturnedValue NodePrototype::method_get_nodeType(CallContext *ctx)
         return ctx->engine()->throwTypeError();
 
     return Encode(r->d()->d->type);
+}
+
+ReturnedValue NodePrototype::method_get_namespaceUri(CallContext *ctx)
+{
+    Scope scope(ctx);
+    Scoped<Node> r(scope, ctx->thisObject().as<Node>());
+    if (!r)
+        return ctx->engine()->throwTypeError();
+
+    return Encode(ctx->d()->engine->newString(r->d()->d->namespaceUri));
 }
 
 ReturnedValue NodePrototype::method_get_parentNode(CallContext *ctx)
@@ -1020,7 +1032,6 @@ public:
     QString header(const QString &name);
     QString headers();
 
-
     QString responseBody();
     const QByteArray & rawResponseBody() const;
     bool receivedXml() const;
@@ -1029,6 +1040,7 @@ public:
     void setResponseType(const QString &);
 
     QV4::ReturnedValue jsonResponseBody(QV4::ExecutionEngine*);
+    QV4::ReturnedValue xmlResponseBody(QV4::ExecutionEngine*);
 private slots:
     void readyRead();
     void error(QNetworkReply::NetworkError);
@@ -1079,7 +1091,7 @@ private:
     QNetworkAccessManager *networkAccessManager() { return m_nam; }
 
     QString m_responseType;
-    QV4::PersistentValue m_parsedJson;
+    QV4::PersistentValue m_parsedDocument;
 };
 
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(ExecutionEngine *engine, QNetworkAccessManager *manager)
@@ -1087,7 +1099,7 @@ QQmlXMLHttpRequest::QQmlXMLHttpRequest(ExecutionEngine *engine, QNetworkAccessMa
     , m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
     , m_redirectCount(0), m_gotXml(false), m_textCodec(0), m_network(0), m_nam(manager)
     , m_responseType()
-    , m_parsedJson()
+    , m_parsedDocument()
 {
 }
 
@@ -1238,11 +1250,12 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         m_network = networkAccessManager()->put(request, m_data);
     } else if (m_method == QLatin1String("DELETE")) {
         m_network = networkAccessManager()->deleteResource(request);
-    } else if (m_method == QLatin1String("OPTIONS")) {
+    } else if ((m_method == QLatin1String("OPTIONS")) ||
+            m_method == QLatin1String("PROPFIND")) {
         QBuffer *buffer = new QBuffer;
         buffer->setData(m_data);
         buffer->open(QIODevice::ReadOnly);
-        m_network = networkAccessManager()->sendCustomRequest(request, QByteArrayLiteral("OPTIONS"), buffer);
+        m_network = networkAccessManager()->sendCustomRequest(request, QByteArray(m_method.toUtf8().constData()), buffer);
         buffer->setParent(m_network);
     }
 
@@ -1485,7 +1498,7 @@ void QQmlXMLHttpRequest::setResponseType(const QString &responseType)
 
 QV4::ReturnedValue QQmlXMLHttpRequest::jsonResponseBody(QV4::ExecutionEngine* engine)
 {
-    if (m_parsedJson.isEmpty()) {
+    if (m_parsedDocument.isEmpty()) {
         Scope scope(engine);
 
         QJsonParseError error;
@@ -1495,12 +1508,20 @@ QV4::ReturnedValue QQmlXMLHttpRequest::jsonResponseBody(QV4::ExecutionEngine* en
         if (error.error != QJsonParseError::NoError)
             return engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));
 
-        m_parsedJson.set(scope.engine, jsonObject);
+        m_parsedDocument.set(scope.engine, jsonObject);
     }
 
-    return m_parsedJson.value();
+    return m_parsedDocument.value();
 }
 
+QV4::ReturnedValue QQmlXMLHttpRequest::xmlResponseBody(QV4::ExecutionEngine* engine)
+{
+    if (m_parsedDocument.isEmpty()) {
+        m_parsedDocument.set(engine, Document::load(engine, rawResponseBody()));
+    }
+
+    return m_parsedDocument.value();
+}
 
 #ifndef QT_NO_TEXTCODEC
 QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
@@ -1762,7 +1783,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
         method != QLatin1String("HEAD") &&
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE") &&
-        method != QLatin1String("OPTIONS"))
+        method != QLatin1String("OPTIONS") &&
+        method != QLatin1String("PROPFIND"))
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
@@ -1988,7 +2010,9 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseXML(CallContext *ctx)
          r->readyState() != QQmlXMLHttpRequest::Done)) {
         return Encode::null();
     } else {
-        return Document::load(scope.engine, r->rawResponseBody());
+        if (r->responseType().isEmpty())
+            r->setResponseType(QLatin1String("document"));
+        return r->xmlResponseBody(scope.engine);
     }
 }
 
@@ -2011,6 +2035,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_response(CallContext *ctx)
         return QV4::Encode(scope.engine->newArrayBuffer(r->rawResponseBody()));
     } else if (responseType.compare(QLatin1String("json"), Qt::CaseInsensitive) == 0) {
         return r->jsonResponseBody(scope.engine);
+    } else if (responseType.compare(QLatin1String("document"), Qt::CaseInsensitive) == 0) {
+        return r->xmlResponseBody(scope.engine);
     } else {
         return QV4::Encode(scope.engine->newString(QString()));
     }
