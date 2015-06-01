@@ -38,6 +38,7 @@
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuick/private/qsgdistancefieldutil_p.h>
 #include <qopenglfunctions.h>
+#include <qopenglframebufferobject.h>
 #include <qmath.h>
 
 #if !defined(QT_OPENGL_ES_2)
@@ -324,7 +325,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
                                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         // Reset the default framebuffer
-        m_coreFuncs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        QOpenGLFramebufferObject::bindDefault();
 
         return;
     } else if (useTextureResizeWorkaround()) {
@@ -449,7 +450,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
     m_funcs->glDeleteTextures(1, &tmp_texture);
     m_funcs->glDeleteTextures(1, &oldTexture);
 
-    m_funcs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    QOpenGLFramebufferObject::bindDefault();
 
     // restore render states
     if (stencilTestEnabled)
