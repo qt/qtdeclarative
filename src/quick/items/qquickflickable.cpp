@@ -1330,7 +1330,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             if (window() && window()->mouseGrabberItem()) {
                 QPointF localPos = window()->mouseGrabberItem()->mapFromScene(event->windowPos());
                 QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
-                window()->sendEvent(window()->mouseGrabberItem(), mouseEvent.data());
+                QCoreApplication::sendEvent(window(), mouseEvent.data());
             }
 
             // And the event has been consumed
