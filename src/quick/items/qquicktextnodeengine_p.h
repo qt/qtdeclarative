@@ -231,8 +231,6 @@ private:
     QList<TextDecoration> m_lines;
     QVector<BinaryTreeNode> m_processedNodes;
 
-    QList<QPair<QRectF, QImage> > m_images;
-
     bool m_hasSelection : 1;
     bool m_hasContents : 1;
     friend class QQuickTextNode;
