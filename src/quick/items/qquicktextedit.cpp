@@ -1849,6 +1849,14 @@ void QQuickTextEdit::invalidateFontCaches()
     }
 }
 
+inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor)
+{
+    *engine = QQuickTextNodeEngine();
+    engine->setTextColor(textColor);
+    engine->setSelectedTextColor(selectedTextColor);
+    engine->setSelectionColor(selectionColor);
+}
+
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
     Q_UNUSED(updatePaintNodeData);
@@ -1874,6 +1882,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     while (nodeIterator != d->textNodeMap.end() && !(*nodeIterator)->dirty())
         ++nodeIterator;
 
+    QQuickTextNodeEngine engine;
+    QQuickTextNodeEngine frameDecorationsEngine;
 
     if (!oldNode || nodeIterator < d->textNodeMap.end()) {
 
@@ -1893,6 +1903,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
         // FIXME: the text decorations could probably be handled separately (only updated for affected textFrames)
         rootNode->resetFrameDecorations(d->createTextNode());
+        resetEngine(&frameDecorationsEngine, d->color, d->selectedTextColor, d->selectionColor);
 
         QQuickTextNode *node = 0;
 
@@ -1912,11 +1923,12 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         while (!frames.isEmpty()) {
             QTextFrame *textFrame = frames.takeFirst();
             frames.append(textFrame->childFrames());
-            rootNode->frameDecorationsNode->m_engine->addFrameDecorations(d->document, textFrame);
+            frameDecorationsEngine.addFrameDecorations(d->document, textFrame);
 
             if (textFrame->lastPosition() < firstDirtyPos || (firstCleanNode && textFrame->firstPosition() >= firstCleanNode->startPos()))
                 continue;
             node = d->createTextNode();
+            resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
 
             if (textFrame->firstPosition() > textFrame->lastPosition()
                     && textFrame->frameFormat().position() != QTextFrameFormat::InFlow) {
@@ -1925,8 +1937,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 ProtectedLayoutAccessor *a = static_cast<ProtectedLayoutAccessor *>(d->document->documentLayout());
                 QTextCharFormat format = a->formatAccessor(pos);
                 QTextBlock block = textFrame->firstCursorPosition().block();
-                node->m_engine->setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
-                node->m_engine->addTextObject(QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
+                engine.setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
+                engine.addTextObject(QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
                                               pos, textFrame->frameFormat().position());
                 nodeStart = pos;
             } else if (qobject_cast<QTextTable*>(textFrame)) { // To keep things simple, map text tables as one text node
@@ -1934,7 +1946,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 nodeOffset =  d->document->documentLayout()->frameBoundingRect(textFrame).topLeft();
                 updateNodeTransform(node, nodeOffset);
                 while (!it.atEnd())
-                    node->m_engine->addTextBlock(d->document, (it++).currentBlock(), -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
+                    engine.addTextBlock(d->document, (it++).currentBlock(), -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
                 nodeStart = textFrame->firstPosition();
             } else {
                 // Having nodes spanning across frame boundaries will break the current bookkeeping mechanism. We need to prevent that.
@@ -1951,13 +1963,13 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     if (block.position() < firstDirtyPos)
                         continue;
 
-                    if (!node->m_engine->hasContents()) {
+                    if (!engine.hasContents()) {
                         nodeOffset = d->document->documentLayout()->blockBoundingRect(block).topLeft();
                         updateNodeTransform(node, nodeOffset);
                         nodeStart = block.position();
                     }
 
-                    node->m_engine->addTextBlock(d->document, block, -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
+                    engine.addTextBlock(d->document, block, -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
                     currentNodeSize += block.length();
 
                     if ((it.atEnd()) || (firstCleanNode && block.next().position() >= firstCleanNode->startPos())) // last node that needed replacing or last block of the frame
@@ -1966,15 +1978,16 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
                     if (currentNodeSize > nodeBreakingSize || lowerBound == frameBoundaries.constEnd() || *lowerBound > nodeStart) {
                         currentNodeSize = 0;
-                        d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
+                        d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
                         node = d->createTextNode();
+                        resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
                         nodeStart = block.next().position();
                     }
                 }
             }
-            d->addCurrentTextNodeToRoot(rootNode, node, nodeIterator, nodeStart);
+            d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
         }
-        rootNode->frameDecorationsNode->m_engine->addToSceneGraph(rootNode->frameDecorationsNode, QQuickText::Normal, QColor());
+        frameDecorationsEngine.addToSceneGraph(rootNode->frameDecorationsNode, QQuickText::Normal, QColor());
         // Now prepend the frame decorations since we want them rendered first, with the text nodes and cursor in front.
         rootNode->prependChildNode(rootNode->frameDecorationsNode);
 
@@ -2489,9 +2502,9 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
     }
 }
 
-void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QSGTransformNode *root, QQuickTextNode *node, TextNodeIterator &it, int startPos)
+void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engine, QSGTransformNode *root, QQuickTextNode *node, TextNodeIterator &it, int startPos)
 {
-    node->m_engine->addToSceneGraph(node, QQuickText::Normal, QColor());
+    engine->addToSceneGraph(node, QQuickText::Normal, QColor());
     it = textNodeMap.insert(it, new TextNode(startPos, node));
     ++it;
     root->appendChildNode(node);
@@ -2502,7 +2515,6 @@ QQuickTextNode *QQuickTextEditPrivate::createTextNode()
     Q_Q(QQuickTextEdit);
     QQuickTextNode* node = new QQuickTextNode(q);
     node->setUseNativeRenderer(renderType == QQuickTextEdit::NativeRendering);
-    node->initEngine(color, selectedTextColor, selectionColor);
     return node;
 }
 

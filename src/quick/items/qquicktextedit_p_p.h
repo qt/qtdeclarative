@@ -57,6 +57,7 @@ class QTextLayout;
 class QQuickTextDocumentWithImageResources;
 class QQuickTextControl;
 class QQuickTextNode;
+class QQuickTextNodeEngine;
 
 class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
@@ -126,7 +127,7 @@ public:
 
     void setNativeCursorEnabled(bool) {}
     void handleFocusEvent(QFocusEvent *event);
-    void addCurrentTextNodeToRoot(QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
+    void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
     QQuickTextNode* createTextNode();
 
 #ifndef QT_NO_IM

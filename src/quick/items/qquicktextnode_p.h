@@ -101,14 +101,10 @@ public:
     void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
 
 private:
-    void initEngine(const QColor &textColor, const QColor &selectedTextColor, const QColor &selectionColor, const QColor& anchorColor = QColor()
-            , const QPointF &position = QPointF());
-
     QSGRectangleNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
     bool m_useNativeRenderer;
-    QScopedPointer<QQuickTextNodeEngine> m_engine;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;
