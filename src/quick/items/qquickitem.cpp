@@ -68,6 +68,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qqmlaccessors_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
+#include <QtQuick/private/qquickpointerhandler_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
@@ -87,6 +88,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
 Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
+Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
 {
@@ -3187,7 +3189,9 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     } else {
         if (o->inherits("QGraphicsItem"))
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
-        else {
+        else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+            pointerHandler->setTarget(that);
+        } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
             QQuickItem *item = that;
             QQuickWindow *itemWindow = that->window();
@@ -4963,6 +4967,17 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
     }
 }
 #endif // QT_NO_IM
+
+void QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event)
+{
+    Q_Q(QQuickItem);
+    if (extra.isAllocated()) {
+        for (QQuickPointerHandler *handler : extra->pointerHandlers) {
+            qCDebug(lcPointerHandlerDispatch) << "   delivering" << event << "to" << handler << "on" << q;
+            handler->handlePointerEvent(event);
+        }
+    }
+}
 
 /*!
     Called when \a change occurs for this item.

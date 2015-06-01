@@ -1618,6 +1618,12 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             return;
         }
 
+        // Let the Item's handlers (if any) have the event first.
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(grabber);
+        itemPrivate->handlePointerEvent(pointerEvent);
+        if (pointerEvent->allPointsAccepted())
+            return;
+
         // send update
         QPointF localPos = grabber->mapFromScene(lastMousePosition);
         auto me = pointerEvent->asMouseEvent(localPos);
@@ -2232,6 +2238,12 @@ bool QQuickWindowPrivate::deliverPressEvent(QQuickPointerEvent *event, QSet<QQui
 bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent, QSet<QQuickItem *> *hasFiltered)
 {
     Q_Q(QQuickWindow);
+    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+
+    // Let the Item's handlers (if any) have the event first.
+    itemPrivate->handlePointerEvent(pointerEvent);
+    if (pointerEvent->allPointsAccepted())
+        return true;
 
     // TODO: unite this mouse point delivery with the synthetic mouse event below
     if (auto event = pointerEvent->asPointerMouseEvent()) {
@@ -2283,7 +2295,6 @@ bool QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     eventAccepted = touchEvent->isAccepted();
 
     // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
         //  send mouse event
         if (deliverTouchAsMouse(item, event))

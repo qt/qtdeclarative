@@ -85,6 +85,7 @@ class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
 class QQuickEnterKeyAttached;
 class QQuickScreenAttached;
+class QQuickPointerHandler;
 
 class QQuickContents : public QQuickItemChangeListener
 {
@@ -340,6 +341,7 @@ public:
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
         QQuickEnterKeyAttached *enterKeyAttached;
         QQuickItemKeyFilter *keyHandler;
+        QVector<QQuickPointerHandler *> pointerHandlers;
         mutable QQuickItemLayer *layer;
 #ifndef QT_NO_CURSOR
         QCursor cursor;
@@ -554,6 +556,8 @@ public:
 #ifndef QT_NO_IM
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
+
+    virtual void handlePointerEvent(QQuickPointerEvent *);
 
     bool isTransparentForPositioner() const;
     void setTransparentForPositioner(bool trans);

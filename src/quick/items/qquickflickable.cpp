@@ -44,6 +44,7 @@
 #include "qquickwindow_p.h"
 #include "qquickevents_p_p.h"
 
+#include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -1763,6 +1764,8 @@ void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObjec
         i->setParentItem(static_cast<QQuickFlickablePrivate*>(prop->data)->contentItem);
     } else {
         o->setParent(prop->object); // XXX todo - do we want this?
+        if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o))
+            pointerHandler->setTarget(static_cast<QQuickItem *>(prop->object));
     }
 }
 

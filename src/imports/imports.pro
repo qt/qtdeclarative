@@ -11,6 +11,7 @@ SUBDIRS += \
 
 qtHaveModule(quick) {
     SUBDIRS += \
+        handlers \
         layouts \
         qtquick2 \
         window \
