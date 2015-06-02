@@ -200,7 +200,7 @@ public:
     QQuickItem *dirtyItemList;
     QList<QSGNode *> cleanupNodeList;
 
-    QSet<QQuickItem *> itemsToPolish;
+    QVector<QQuickItem *> itemsToPolish;
 
     void updateDirtyNodes();
     void cleanupNodes();

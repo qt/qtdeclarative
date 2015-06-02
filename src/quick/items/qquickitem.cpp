@@ -2776,7 +2776,7 @@ void QQuickItemPrivate::refWindow(QQuickWindow *c)
     window = c;
 
     if (polishScheduled)
-        QQuickWindowPrivate::get(window)->itemsToPolish.insert(q);
+        QQuickWindowPrivate::get(window)->itemsToPolish.append(q);
 
     if (!parentItem)
         QQuickWindowPrivate::get(window)->parentlessItems.insert(q);
@@ -2808,7 +2808,7 @@ void QQuickItemPrivate::derefWindow()
     removeFromDirtyList();
     QQuickWindowPrivate *c = QQuickWindowPrivate::get(window);
     if (polishScheduled)
-        c->itemsToPolish.remove(q);
+        c->itemsToPolish.removeOne(q);
     QMutableHashIterator<int, QQuickItem *> itemTouchMapIt(c->itemForTouchPointId);
     while (itemTouchMapIt.hasNext()) {
         if (itemTouchMapIt.next().value() == q)
@@ -4102,7 +4102,7 @@ void QQuickItem::polish()
         if (d->window) {
             QQuickWindowPrivate *p = QQuickWindowPrivate::get(d->window);
             bool maybeupdate = p->itemsToPolish.isEmpty();
-            p->itemsToPolish.insert(this);
+            p->itemsToPolish.append(this);
             if (maybeupdate) d->window->maybeUpdate();
         }
     }

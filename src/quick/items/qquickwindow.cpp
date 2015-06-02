@@ -259,8 +259,7 @@ void QQuickWindowPrivate::polishItems()
     // the user.
     int recursionSafeguard = INT_MAX;
     while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
-        QQuickItem *item = *itemsToPolish.begin();
-        itemsToPolish.remove(item);
+        QQuickItem *item = itemsToPolish.takeLast();
         QQuickItemPrivate::get(item)->polishScheduled = false;
         item->updatePolish();
     }
