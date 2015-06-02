@@ -1,0 +1,5 @@
+# Blacklist for testing
+[SelfTests::test_blacklisted_fail]
+*
+[SelfTests::test_blacklistWithData:test2]
+*

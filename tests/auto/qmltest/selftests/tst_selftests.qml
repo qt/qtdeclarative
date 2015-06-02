@@ -278,4 +278,30 @@ TestCase {
         }
         verify(caught)
     }
+
+    function test_blacklisted_fail()
+    {
+        verify(false)
+    }
+
+    function test_blacklistWithData_data() {
+        return [
+            {
+                tag: "test1",
+                success: true
+            },
+            {
+                tag: "test2",
+                success: false
+            },
+            {
+                tag: "test3",
+                success: true
+            }
+        ]
+    }
+
+    function test_blacklistWithData(row) {
+        verify(row.success)
+    }
 }

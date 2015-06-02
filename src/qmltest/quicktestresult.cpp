@@ -34,6 +34,7 @@
 #include "quicktestresult_p.h"
 #include <QtTest/qtestcase.h>
 #include <QtTest/qtestsystem.h>
+#include <QtTest/private/qtestblacklist_p.h>
 #include <QtTest/private/qtestresult_p.h>
 #include <QtTest/private/qtesttable_p.h>
 #include <QtTest/private/qtestlog_p.h>
@@ -213,6 +214,7 @@ void QuickTestResult::setFunctionName(const QString &name)
             QString fullName = d->testCaseName + QLatin1String("::") + name;
             QTestResult::setCurrentTestFunction
                 (d->intern(fullName).constData());
+            QTestPrivate::checkBlackLists(fullName.toUtf8().constData(), 0);
         }
     } else {
         QTestResult::setCurrentTestFunction(0);
@@ -241,6 +243,7 @@ void QuickTestResult::setDataTag(const QString &tag)
     if (!tag.isEmpty()) {
         QTestData *data = &(QTest::newRow(tag.toUtf8().constData()));
         QTestResult::setCurrentTestData(data);
+        QTestPrivate::checkBlackLists((testCaseName() + QStringLiteral("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
         emit dataTagChanged();
     } else {
         QTestResult::setCurrentTestData(0);
@@ -278,6 +281,8 @@ bool QuickTestResult::isSkipped() const
 void QuickTestResult::setSkipped(bool skip)
 {
     QTestResult::setSkipCurrentTest(skip);
+    if (!skip)
+        QTestResult::setBlacklistCurrentTest(false);
     emit skippedChanged();
 }
 
@@ -715,6 +720,8 @@ void QuickTestResult::parseArgs(int argc, char *argv[])
 void QuickTestResult::setProgramName(const char *name)
 {
     if (name) {
+        QTestPrivate::parseBlackList();
+        QTestPrivate::parseGpuBlackList();
         QTestResult::reset();
     } else if (!name && loggingStarted) {
         QTestResult::setCurrentTestObject(globalProgramName);
