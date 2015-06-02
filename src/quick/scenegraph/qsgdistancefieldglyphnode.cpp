@@ -200,9 +200,11 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     const QVector<QPointF> positions = m_glyphs.positions();
     qreal fontPixelSize = m_glyphs.rawFont().pixelSize();
 
-    QVector<QSGGeometry::TexturedPoint2D> vp;
+    // The template parameters here are assuming that most strings are short, 64
+    // characters or less.
+    QVarLengthArray<QSGGeometry::TexturedPoint2D, 256> vp;
     vp.reserve(indexes.size() * 4);
-    QVector<ushort> ip;
+    QVarLengthArray<ushort, 384> ip;
     ip.reserve(indexes.size() * 6);
 
     qreal maxTexMargin = m_glyph_cache->distanceFieldRadius();
