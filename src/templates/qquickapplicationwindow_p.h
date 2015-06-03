@@ -58,12 +58,18 @@ class QQuickApplicationWindowPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "data")
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
     ~QQuickApplicationWindow();
+
+    QQuickItem *contentItem();
+    QQmlListProperty<QObject> contentData();
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);

@@ -60,7 +60,12 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
-    QQuickApplicationWindowPrivate() : complete(false), header(Q_NULLPTR), footer(Q_NULLPTR) { }
+    QQuickApplicationWindowPrivate()
+        : complete(false)
+        , contentItem(Q_NULLPTR)
+        , header(Q_NULLPTR)
+        , footer(Q_NULLPTR)
+    { }
 
     void relayout();
 
@@ -68,6 +73,7 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
 
     bool complete;
+    QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
     QQuickApplicationWindow *q_ptr;
@@ -80,7 +86,9 @@ void QQuickApplicationWindowPrivate::relayout()
     qreal hh = header ? header->height() : 0;
     qreal fh = footer ? footer->height() : 0;
 
+    content->setX(0);
     content->setY(hh);
+    content->setWidth(q->width());
     content->setHeight(q->height() - hh - fh);
 
     if (header) {
@@ -193,6 +201,22 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
         }
         emit footerChanged();
     }
+}
+
+
+QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
+{
+    return QQuickItemPrivate::get(contentItem())->data();
+}
+
+QQuickItem *QQuickApplicationWindow::contentItem()
+{
+    Q_D(QQuickApplicationWindow);
+    if (!d->contentItem) {
+        d->contentItem = new QQuickItem(QQuickWindow::contentItem());
+        d->relayout();
+    }
+    return d->contentItem;
 }
 
 bool QQuickApplicationWindow::isComponentComplete() const
