@@ -76,6 +76,99 @@ TestCase {
         compare(control.layoutDirection, Qt.LeftToRight)
         compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
+        compare(control.padding, 0)
+        compare(control.topPadding, 0)
+        compare(control.leftPadding, 0)
+        compare(control.rightPadding, 0)
+        compare(control.bottomPadding, 0)
+        compare(control.availableWidth, 0)
+        compare(control.availableHeight, 0)
+        control.destroy()
+    }
+
+    function test_padding() {
+        var control = component.createObject(testCase)
+
+        control.width = 100
+        control.height = 100
+
+        control.padding = 10
+        compare(control.padding, 10)
+        compare(control.topPadding, 10)
+        compare(control.leftPadding, 10)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+
+        control.topPadding = 20
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 10)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+
+        control.leftPadding = 30
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 10)
+        compare(control.bottomPadding, 10)
+
+        control.rightPadding = 40
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 10)
+
+        control.bottomPadding = 50
+        compare(control.padding, 10)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+
+        control.padding = 60
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+
+        control.destroy()
+    }
+
+    function test_availableSize() {
+        var control = component.createObject(testCase)
+
+        control.width = 100
+        control.height = 100
+        compare(control.availableWidth, 100)
+        compare(control.availableHeight, 100)
+
+        control.padding = 10
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 80)
+
+        control.topPadding = 20
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 70)
+
+        control.leftPadding = 30
+        compare(control.availableWidth, 60)
+        compare(control.availableHeight, 70)
+
+        control.rightPadding = 40
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 70)
+
+        control.bottomPadding = 50
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
+
+        control.padding = 60
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
+
         control.destroy()
     }
 

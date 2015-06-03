@@ -57,9 +57,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickContainerPrivate : public QQuickControlPrivat
 public:
     QQuickContainerPrivate();
 
-    qreal getContentWidth() const Q_DECL_OVERRIDE;
-    qreal getContentHeight() const Q_DECL_OVERRIDE;
-
     qreal contentWidth;
     qreal contentHeight;
     QQuickItem *contentItem;

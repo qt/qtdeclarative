@@ -64,7 +64,10 @@ class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 public:
     explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
 
+    qreal contentWidth() const;
     void setContentWidth(qreal width);
+
+    qreal contentHeight() const;
     void setContentHeight(qreal height);
 
     QQuickItem *contentItem() const;
@@ -79,9 +82,6 @@ protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
-
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickContainer)
