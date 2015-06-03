@@ -1199,7 +1199,7 @@ void QQuickItemView::destroyRemoved()
     for (QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
             it != d->visibleItems.end();) {
         FxViewItem *item = *it;
-        if (item->index == -1 && item->attached->delayRemove() == false) {
+        if (item->index == -1 && (!item->attached || item->attached->delayRemove() == false)) {
             if (d->transitioner && d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
                 // don't remove from visibleItems until next layout()
                 d->runDelayedRemoveTransition = true;
@@ -1641,7 +1641,8 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     applyPendingChanges();
     if (!q->isComponentComplete() || !isValid() || modelIndex < 0 || modelIndex >= model->count()) {
         if (currentItem) {
-            currentItem->attached->setIsCurrentItem(false);
+            if (currentItem->attached)
+                currentItem->attached->setIsCurrentItem(false);
             releaseItem(currentItem);
             currentItem = 0;
             currentIndex = modelIndex;
@@ -1664,11 +1665,12 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     int oldCurrentIndex = currentIndex;
     currentIndex = modelIndex;
     currentItem = createItem(modelIndex, false);
-    if (oldCurrentItem && (!currentItem || oldCurrentItem->item != currentItem->item))
+    if (oldCurrentItem && oldCurrentItem->attached && (!currentItem || oldCurrentItem->item != currentItem->item))
         oldCurrentItem->attached->setIsCurrentItem(false);
     if (currentItem) {
         currentItem->item->setFocus(true);
-        currentItem->attached->setIsCurrentItem(true);
+        if (currentItem->attached)
+            currentItem->attached->setIsCurrentItem(true);
         initializeCurrentItem();
     }
 
@@ -1967,7 +1969,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         QQmlChangeSet::Change removal;
         for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end();) {
             FxViewItem *item = *it;
-            if (item->index == -1 && !item->attached->delayRemove()) {
+            if (item->index == -1 && (!item->attached || !item->attached->delayRemove())) {
                 removeItem(item, removal, &removalResult);
                 removedCount++;
                 it = visibleItems.erase(it);
@@ -2007,8 +2009,10 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         }
         itemCount += insertions[i].count;
     }
-    for (int i=0; i<newItems.count(); i++)
-        newItems.at(i)->attached->emitAdd();
+    for (int i=0; i<newItems.count(); i++) {
+        if (newItems.at(i)->attached)
+            newItems.at(i)->attached->emitAdd();
+    }
 
     // for each item that was moved directly into the view as a result of a move(),
     // find the index it was moved from in order to set its initial position, so that we
@@ -2039,7 +2043,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     currentChanges.removedItems.clear();
 
     if (currentChanges.currentChanged) {
-        if (currentChanges.currentRemoved && currentItem) {
+        if (currentChanges.currentRemoved && currentItem && currentItem->attached) {
             currentItem->attached->setIsCurrentItem(false);
             releaseItem(currentItem);
             currentItem = 0;
@@ -2092,10 +2096,10 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Change &remo
         } else {
             // removed item
             visibleAffected = true;
-            if (!removal.isMove())
+            if (!removal.isMove() && item->attached)
                 item->attached->emitRemove();
 
-            if (item->attached->delayRemove() && !removal.isMove()) {
+            if (item->attached && item->attached->delayRemove() && !removal.isMove()) {
                 item->index = -1;
                 QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
                 ++it;
