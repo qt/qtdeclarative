@@ -150,7 +150,9 @@ const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::R
 
 ListLayout::ListLayout(const ListLayout *other) : currentBlock(0), currentBlockOffset(0)
 {
-    for (int i=0 ; i < other->roles.count() ; ++i) {
+    const int otherRolesCount = other->roles.count();
+    roles.reserve(otherRolesCount);
+    for (int i=0 ; i < otherRolesCount; ++i) {
         Role *role = new Role(other->roles[i]);
         roles.append(role);
         roleHash.insert(role->name, role);

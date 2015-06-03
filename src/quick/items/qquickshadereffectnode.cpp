@@ -83,7 +83,9 @@ QQuickCustomMaterialShader::QQuickCustomMaterialShader(const QQuickShaderEffectM
     , m_compiled(false)
     , m_initialized(false)
 {
-    for (int i = 0; i < m_attributes.count(); ++i)
+    const int attributesCount = m_attributes.count();
+    m_attributeNames.reserve(attributesCount + 1);
+    for (int i = 0; i < attributesCount; ++i)
         m_attributeNames.append(m_attributes.at(i).constData());
     m_attributeNames.append(0);
 }

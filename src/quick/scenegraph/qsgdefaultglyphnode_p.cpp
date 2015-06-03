@@ -414,7 +414,9 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 {
     Q_ASSERT(m_font.isValid());
     QVector<QFixedPoint> fixedPointPositions;
-    for (int i=0; i<glyphPositions.size(); ++i)
+    const int glyphPositionsSize = glyphPositions.size();
+    fixedPointPositions.reserve(glyphPositionsSize);
+    for (int i=0; i < glyphPositionsSize; ++i)
         fixedPointPositions.append(QFixedPoint::fromPointF(glyphPositions.at(i)));
 
     QTextureGlyphCache *cache = glyphCache();

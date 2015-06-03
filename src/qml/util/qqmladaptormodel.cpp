@@ -159,7 +159,9 @@ public:
                 signalIndexes.append(propertyId + signalOffset);
         }
         if (roles.isEmpty()) {
-            for (int propertyId = 0; propertyId < propertyRoles.count(); ++propertyId)
+            const int propertyRolesCount = propertyRoles.count();
+            signalIndexes.reserve(propertyRolesCount);
+            for (int propertyId = 0; propertyId < propertyRolesCount; ++propertyId)
                 signalIndexes.append(propertyId + signalOffset);
         }
 
