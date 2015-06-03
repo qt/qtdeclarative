@@ -39,6 +39,8 @@
 #include <QGuiApplication>
 #include <QWindow>
 #include <QFileOpenEvent>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
 #endif // QT_WIDGETS_LIB
@@ -55,6 +57,7 @@
 #include <QStandardPaths>
 #include <QTranslator>
 #include <QtGlobal>
+#include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
 #include <private/qabstractanimation_p.h>
@@ -72,6 +75,7 @@
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
 static int exitTimerId = -1;
+bool verboseMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -100,6 +104,7 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
     }
 
     if (!quiet) {
+        printf("qml: %s\n", QLibraryInfo::build());
         if (builtIn)
             printf("qml: Using built-in configuration.\n");
         else
@@ -118,20 +123,6 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
         printf("qml: Error loading configuration file: %s\n", qPrintable(c2.errorString()));
         exit(1);
     }
-}
-
-void contain(QObject *o, const QUrl &containPath)
-{
-    QQmlComponent c(qae, containPath);
-    QObject *o2 = c.create();
-    if (!o2)
-        return;
-    bool success = false;
-    int idx;
-    if ((idx = o2->metaObject()->indexOfProperty("containedObject")) != -1)
-        success = o2->metaObject()->property(idx).write(o2, QVariant::fromValue<QObject*>(o));
-    if (!success)
-        o->setParent(o2); //Set QObject parent, and assume container will react as needed
 }
 
 #ifdef QT_GUI_LIB
@@ -180,6 +171,9 @@ public:
     }
 
 private:
+    void contain(QObject *o, const QUrl &containPath);
+    void checkForWindow(QObject *o);
+
     int expect;
     bool haveOne;
 
@@ -187,6 +181,7 @@ public Q_SLOTS:
     void checkFinished(QObject *o)
     {
         if (o) {
+            checkForWindow(o);
             haveOne = true;
             if (conf && qae)
                 foreach (PartialScene *ps, conf->completers)
@@ -201,7 +196,55 @@ public Q_SLOTS:
             exit(2);//Different return code from qFatal
         }
     }
+#ifdef QT_GUI_LIB
+    void onOpenGlContextCreated(QOpenGLContext *context);
+#endif
 };
+
+void LoadWatcher::contain(QObject *o, const QUrl &containPath)
+{
+    QQmlComponent c(qae, containPath);
+    QObject *o2 = c.create();
+    if (!o2)
+        return;
+    checkForWindow(o2);
+    bool success = false;
+    int idx;
+    if ((idx = o2->metaObject()->indexOfProperty("containedObject")) != -1)
+        success = o2->metaObject()->property(idx).write(o2, QVariant::fromValue<QObject*>(o));
+    if (!success)
+        o->setParent(o2); //Set QObject parent, and assume container will react as needed
+}
+
+void LoadWatcher::checkForWindow(QObject *o)
+{
+#ifdef QT_GUI_LIB
+    if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
+        connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
+                this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
+    }
+#else
+    Q_UNUSED(o)
+#endif // QT_GUI_LIB
+}
+
+#ifdef QT_GUI_LIB
+void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
+{
+    context->makeCurrent(qobject_cast<QWindow *>(sender()));
+    QOpenGLFunctions functions(context);
+    QByteArray output = "Vendor  : ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR));
+    output += "\nRenderer: ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER));
+    output += "\nVersion : ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_VERSION));
+    output += "\nLanguage: ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION));
+    puts(output.constData());
+    context->doneCurrent();
+}
+#endif // QT_GUI_LIB
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
@@ -238,7 +281,6 @@ QmlApplicationType applicationType = QmlApplicationTypeCore;
 QmlApplicationType applicationType = QmlApplicationTypeGui;
 #endif // QT_GUI_LIB
 bool quietMode = false;
-bool verboseMode = false;
 void printVersion()
 {
     printf("qml binary version ");
