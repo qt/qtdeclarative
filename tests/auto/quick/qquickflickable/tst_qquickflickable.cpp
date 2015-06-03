@@ -1651,12 +1651,14 @@ void tst_qquickflickable::stopAtBounds()
     } else {
         flickable->setContentX(invert ? 100 : 0);
     }
+
+    QSignalSpy flickSignal(flickable, SIGNAL(flickingChanged()));
     if (invert)
         flick(&view, QPoint(20,20), QPoint(120,120), 100);
     else
         flick(&view, QPoint(120,120), QPoint(20,20), 100);
 
-    QVERIFY(flickable->isFlicking());
+    QVERIFY(flickSignal.count() > 0);
     if (transpose) {
         if (invert)
             QTRY_COMPARE(flickable->isAtYBeginning(), true);
