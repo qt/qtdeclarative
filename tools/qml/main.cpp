@@ -274,6 +274,10 @@ void printUsage()
     printf("\t-f [file] .................... Load the given file as a QML file.\n");
     printf("\t-config [file] ............... Load the given file as the configuration file.\n");
     printf("\t-- ........................... Arguments after this one are ignored by the launcher, but may be used within the QML application.\n");
+    printf("\tGL options:\n");
+    printf("\t-desktop.......................Force use of desktop GL (AA_UseDesktopOpenGL)\n");
+    printf("\t-gles..........................Force use of GLES (AA_UseOpenGLES)\n");
+    printf("\t-software......................Force use of software rendering (AA_UseOpenGLES)\n");
     printf("\tDebugging options:\n");
     printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
     printf("\t-translation [file] .......... Load the given file as the translations file.\n");
@@ -439,6 +443,12 @@ int main(int argc, char *argv[])
                 continue;//Invalid usage, but just ignore it
             dummyDir = argList[i+1];
             i++;
+        } else if (arg == QLatin1String("-gles")) {
+            QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+        } else if (arg == QLatin1String("-software")) {
+            QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+        } else if (arg == QLatin1String("-desktop")) {
+            QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
         } else {
             //If it ends in .qml, treat it as a file. Else ignore it
             if (arg.endsWith(".qml"))
