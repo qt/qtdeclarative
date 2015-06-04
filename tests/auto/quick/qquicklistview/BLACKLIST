@@ -1,2 +1,4 @@
 [QTBUG_38209]
 *
+[enforceRange_withoutHighlight]
+osx
