@@ -2144,7 +2144,10 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     \c Easing.Linear.
 
     \qml
-    PropertyAnimation { properties: "y"; easing.type: Easing.InOutElastic; easing.amplitude: 2.0; easing.period: 1.5 }
+    PropertyAnimation { properties: "y";
+                        easing.type: Easing.InOutElastic;
+                        easing.amplitude: 2.0;
+                        easing.period: 1.5 }
     \endqml
 
     Available types are:

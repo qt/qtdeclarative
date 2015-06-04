@@ -34,21 +34,22 @@
 import QtQuick 2.0
 
 Item {
-    width: 200; height: 200
+  width: 200; height: 200
 
-    Loader {
-        // position the Loader in the center of the parent
-        anchors.centerIn: parent
-        sourceComponent: rect
-    }
+  Loader {
+    // position the Loader in the center
+    // of the parent
+    anchors.centerIn: parent
+    sourceComponent: rect
+  }
 
-    Component {
-        id: rect
-        Rectangle {
-            width: 50
-            height: 50
-            color: "red"
-        }
-    }
+  Component {
+      id: rect
+      Rectangle {
+          width: 50
+          height: 50
+          color: "red"
+      }
+  }
 }
 //![0]

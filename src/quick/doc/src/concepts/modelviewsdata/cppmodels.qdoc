@@ -169,6 +169,7 @@ created directly as types within QML:
 \table
 \row
 
+\li C++
 \li
 \code
 class MyModelPlugin : public QQmlExtensionPlugin
@@ -183,7 +184,8 @@ public:
     }
 }
 \endcode
-
+\row
+\li QML
 \li
 \qml
 MyModel {

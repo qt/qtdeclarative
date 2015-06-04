@@ -170,7 +170,10 @@ QMetaObject::invokeMethod():
 
 \table
 \row
+\li QML
 \li \snippet qml/qtbinding/functions-qml/MyItem.qml 0
+\row
+\li C++
 \li \snippet qml/qtbinding/functions-qml/main.cpp 0
 \endtable
 
@@ -195,6 +198,7 @@ QObject::connect(), so that the \c cppSlot() method is called whenever the
 \row
 \li
 \snippet qml/qtbinding/signals-qml/MyItem.qml 0
+\row
 \li
 \snippet qml/qtbinding/signals-qml/myclass.h 0
 \codeline
@@ -235,8 +239,10 @@ QVariant type:
      void cppSlot(const QVariant &v) {
         qDebug() << "Called the C++ slot with value:" << v;
 
-        QQuickItem *item = qobject_cast<QQuickItem*>(v.value<QObject*>());
-        qDebug() << "Item dimensions:" << item->width() << item->height();
+        QQuickItem *item =
+            qobject_cast<QQuickItem*>(v.value<QObject*>());
+        qDebug() << "Item dimensions:" << item->width()
+                 << item->height();
      }
  };
 

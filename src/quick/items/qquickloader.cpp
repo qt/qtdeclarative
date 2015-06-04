@@ -217,7 +217,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     loads \c MyItem.qml, and is able to receive the \c message signal from
     the loaded item through a \l Connections object:
 
-    \table
+    \table 70%
     \row
     \li application.qml
     \li MyItem.qml
@@ -263,7 +263,6 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     In some cases you may wish to use a Loader within a view delegate to improve delegate
     loading performance. This works well in most cases, but there is one important issue to
-    be aware of related to the \l{QtQml::Component#Creation Context}{creation context} of a Component.
 
     In the following example, the \c index context property inserted by the ListView into \c delegateComponent's
     context will be inaccessible to Text, as the Loader will use the creation context of \c myComponent as the parent
@@ -516,7 +515,7 @@ void QQuickLoader::loadFromSourceComponent()
     is changed after calling this function but prior to setting the loader \l active.
 
     Example:
-    \table
+    \table 70%
     \row
     \li
     \qml
@@ -545,11 +544,13 @@ void QQuickLoader::loadFromSourceComponent()
     Item {
         Loader {
             id: squareLoader
-            onLoaded: console.log(squareLoader.item.width); // prints [10], not [30]
+            onLoaded: console.log(squareLoader.item.width);
+            // prints [10], not [30]
         }
 
         Component.onCompleted: {
-            squareLoader.setSource("ExampleComponent.qml", { "color": "blue" });
+            squareLoader.setSource("ExampleComponent.qml",
+                                 { "color": "blue" });
             // will trigger the onLoaded code when complete.
         }
     }

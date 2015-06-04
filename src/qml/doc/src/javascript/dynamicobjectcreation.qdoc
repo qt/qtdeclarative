@@ -200,10 +200,10 @@ destroy itself:
 \table
 \row
 \li \c application.qml
-\li \c SelfDestroyingRect.qml
+\li \snippet qml/dynamicObjects-destroy.qml 0
 
 \row
-\li \snippet qml/dynamicObjects-destroy.qml 0
+\li \c SelfDestroyingRect.qml
 \li \snippet qml/SelfDestroyingRect.qml 0
 
 \endtable

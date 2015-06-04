@@ -395,6 +395,7 @@ methods, as shown below right:
 
 \table
 \row
+\li C++
 \li
 \code
  int main(int argc, char *argv[]) {
@@ -409,6 +410,8 @@ methods, as shown below right:
      return app.exec();
  }
 \endcode
+\row
+\li QML
 \li
 \qml
 // MyItem.qml

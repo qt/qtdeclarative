@@ -176,7 +176,10 @@ converted to JavaScript array and object values, repectively:
 \table
 \header
 \row
+\li QML
 \li \snippet qml/qtbinding/variantlistmap/MyItem.qml 0
+\row
+\li C++
 \li \snippet qml/qtbinding/variantlistmap/main.cpp 0
 \endtable
 
@@ -223,7 +226,7 @@ Item {
     }
 }
 \endqml
-
+\row
 \li
 \code
 // C++

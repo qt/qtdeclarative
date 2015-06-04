@@ -42,7 +42,8 @@
 Qt.include("factorial.js")
 
 function showCalculations(value) {
-    console.log("Call factorial() from script.js:",
+    console.log(
+        "Call factorial() from script.js:",
         factorial(value));
 }
 //![0]
