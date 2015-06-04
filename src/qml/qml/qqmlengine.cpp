@@ -225,7 +225,6 @@ void QQmlEnginePrivate::activateDesignerMode()
 /*!
     \class QQmlImageProviderBase
     \brief The QQmlImageProviderBase class is used to register image providers in the QML engine.
-    \mainclass
     \inmodule QtQml
 
     Image providers must be registered with the QML engine.  The only information the QML
@@ -878,7 +877,6 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
   \since 5.0
   \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
-  \mainclass
 
   Each QML component is instantiated in a QQmlContext.
   QQmlContext's are essential for passing data to QML

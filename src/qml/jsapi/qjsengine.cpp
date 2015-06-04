@@ -77,7 +77,6 @@ Q_DECLARE_METATYPE(QList<int>)
 
   \ingroup qtjavascript
   \inmodule QtQml
-  \mainclass
 
   \section1 Evaluating Scripts
 

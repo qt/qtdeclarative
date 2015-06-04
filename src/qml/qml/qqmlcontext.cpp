@@ -57,7 +57,6 @@ QQmlContextPrivate::QQmlContextPrivate()
 /*!
     \class QQmlContext
     \brief The QQmlContext class defines a context within a QML engine.
-    \mainclass
     \inmodule QtQml
 
     Contexts allow data to be exposed to the QML components instantiated by the

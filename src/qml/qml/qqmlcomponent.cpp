@@ -98,7 +98,6 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \class QQmlComponent
     \since 5.0
     \inmodule QtQml
-    \mainclass
 
     \brief The QQmlComponent class encapsulates a QML component definition
 

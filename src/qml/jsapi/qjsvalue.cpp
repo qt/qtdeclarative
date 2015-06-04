@@ -58,7 +58,6 @@
 
   \ingroup qtjavascript
   \inmodule QtQml
-  \mainclass
 
   QJSValue supports the types defined in the \l{ECMA-262}
   standard: The primitive types, which are Undefined, Null, Boolean,
