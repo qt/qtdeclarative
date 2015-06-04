@@ -539,7 +539,7 @@ IR::Expr *Codegen::subscript(IR::Expr *base, IR::Expr *index)
 
 IR::Expr *Codegen::argument(IR::Expr *expr)
 {
-    if (expr && !expr->asTemp() && !expr->asArgLocal()) {
+    if (expr && !expr->asTemp()) {
         const unsigned t = _block->newTemp();
         move(_block->TEMP(t), expr);
         expr = _block->TEMP(t);

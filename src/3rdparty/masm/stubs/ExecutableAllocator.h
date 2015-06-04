@@ -114,6 +114,9 @@ struct ExecutableAllocator {
 #if !OS(WINRT)
         DWORD oldProtect;
         VirtualProtect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), PAGE_EXECUTE_READWRITE, &oldProtect);
+#else
+        (void)size; // suppress unused parameter warning
+        (void)roundAddr; // suppress unused parameter warning
 #endif
 #else
         int mode = PROT_READ | PROT_EXEC;

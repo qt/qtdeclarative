@@ -590,7 +590,7 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
     } else if (ddata->jsWrapper.isUndefined() &&
                (ddata->jsEngineId == engine->m_engineId || // We own the QObject
                 ddata->jsEngineId == 0 ||    // No one owns the QObject
-                !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
+                !ddata->hasTaintedV4Object)) { // Someone else has used the QObject, but it isn't tainted
 
         QV4::ScopedValue rv(scope, create(engine, object));
         ddata->jsWrapper.set(scope.engine, rv);
@@ -601,11 +601,11 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
         ScopedObject alternateWrapper(scope, (Object *)0);
-        if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV8Object)
+        if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
             alternateWrapper = engine->m_multiplyWrappedQObjects->value(object);
 
         // If our tainted handle doesn't exist or has been collected, and there isn't
-        // a handle in the ddata, we can assume ownership of the ddata->v8object
+        // a handle in the ddata, we can assume ownership of the ddata->jsWrapper
         if (ddata->jsWrapper.isUndefined() && !alternateWrapper) {
             QV4::ScopedValue result(scope, create(engine, object));
             ddata->jsWrapper.set(scope.engine, result);
@@ -617,12 +617,27 @@ ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
             alternateWrapper = create(engine, object);
             if (!engine->m_multiplyWrappedQObjects)
                 engine->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
-            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper);
-            ddata->hasTaintedV8Object = true;
+            engine->m_multiplyWrappedQObjects->insert(object, alternateWrapper->d());
+            ddata->hasTaintedV4Object = true;
         }
 
         return alternateWrapper.asReturnedValue();
     }
+}
+
+void QObjectWrapper::markWrapper(QObject *object, ExecutionEngine *engine)
+{
+    if (QQmlData::wasDeleted(object))
+        return;
+
+    QQmlData *ddata = QQmlData::get(object);
+    if (!ddata)
+        return;
+
+    if (ddata->jsEngineId == engine->m_engineId)
+        ddata->jsWrapper.markOnce(engine);
+    else  if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
+        engine->m_multiplyWrappedQObjects->mark(object, engine);
 }
 
 ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx, int propertyIndex, bool captureRequired)
@@ -994,9 +1009,7 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::ExecutionEngine *
         QObject *child = children.at(i);
         if (!child)
             continue;
-        QQmlData *ddata = QQmlData::get(child, /*create*/false);
-        if (ddata)
-            ddata->jsWrapper.markOnce(e);
+        QObjectWrapper::markWrapper(child, e);
         markChildQObjectsRecursively(child, e);
     }
 }
@@ -1909,16 +1922,20 @@ Heap::QmlSignalHandler::QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);
 
-void MultiplyWrappedQObjectMap::insert(QObject *key, Object *value)
+void MultiplyWrappedQObjectMap::insert(QObject *key, Heap::Object *value)
 {
-    QHash<QObject*, Object*>::insert(key, value);
+    QV4::WeakValue v;
+    v.set(value->internalClass->engine, value);
+    QHash<QObject*, QV4::WeakValue>::insert(key, v);
     connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
 }
+
+
 
 MultiplyWrappedQObjectMap::Iterator MultiplyWrappedQObjectMap::erase(MultiplyWrappedQObjectMap::Iterator it)
 {
     disconnect(it.key(), SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
-    return QHash<QObject*, Object*>::erase(it);
+    return QHash<QObject*, QV4::WeakValue>::erase(it);
 }
 
 void MultiplyWrappedQObjectMap::remove(QObject *key)
@@ -1929,9 +1946,17 @@ void MultiplyWrappedQObjectMap::remove(QObject *key)
     erase(it);
 }
 
+void MultiplyWrappedQObjectMap::mark(QObject *key, ExecutionEngine *engine)
+{
+    Iterator it = find(key);
+    if (it == end())
+        return;
+    it->markOnce(engine);
+}
+
 void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)
 {
-    QHash<QObject*, Object*>::remove(object);
+    QHash<QObject*, QV4::WeakValue>::remove(object);
 }
 
 QT_END_NAMESPACE

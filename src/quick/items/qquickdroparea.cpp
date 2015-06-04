@@ -36,6 +36,7 @@
 #include "qquickitem_p.h"
 #include "qquickwindow.h"
 
+#include <private/qv4arraybuffer_p.h>
 #include <private/qqmlengine_p.h>
 
 #ifndef QT_NO_DRAGANDDROP
@@ -496,6 +497,14 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     Returns the data for the given \a format converted to a string. \a format should be one contained in the \l formats property.
 */
 
+/*!
+    \qmlmethod string QtQuick::DragEvent::getDataAsArrayBuffer(string format)
+    \since 5.5
+
+    Returns the data for the given \a format into an ArrayBuffer, which can
+    easily be translated into a QByteArray. \a format should be one contained in the \l formats property.
+*/
+
 QObject *QQuickDropEvent::source()
 {
     if (const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(event->mimeData()))
@@ -563,6 +572,17 @@ void QQuickDropEvent::getDataAsString(QQmlV4Function *args)
         QString format = v->toQString();
         QString rv = QString::fromUtf8(event->mimeData()->data(format));
         args->setReturnValue(v4->newString(rv)->asReturnedValue());
+    }
+}
+
+void QQuickDropEvent::getDataAsArrayBuffer(QQmlV4Function *args)
+{
+    if (args->length() != 0) {
+        QV4::ExecutionEngine *v4 = args->v4engine();
+        QV4::Scope scope(v4);
+        QV4::ScopedValue v(scope, (*args)[0]);
+        const QString format = v->toQString();
+        args->setReturnValue(v4->newArrayBuffer(event->mimeData()->data(format))->asReturnedValue());
     }
 }
 

@@ -2005,7 +2005,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_response(CallContext *ctx)
         return QV4::Encode(scope.engine->newString(QString()));
 
     const QString& responseType = r->responseType();
-    if (responseType.compare(QLatin1String("text"), Qt::CaseInsensitive) == 0) {
+    if (responseType.compare(QLatin1String("text"), Qt::CaseInsensitive) == 0 || responseType.isEmpty()) {
         return QV4::Encode(scope.engine->newString(r->responseBody()));
     } else if (responseType.compare(QLatin1String("arraybuffer"), Qt::CaseInsensitive) == 0) {
         return QV4::Encode(scope.engine->newArrayBuffer(r->rawResponseBody()));

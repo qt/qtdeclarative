@@ -290,6 +290,7 @@ void Document::removeScriptPragmas(QString &script)
 Document::Document(bool debugMode)
     : jsModule(debugMode)
     , program(0)
+    , indexOfRootObject(0)
     , jsGenerator(&jsModule)
     , unitFlags(0)
 {
@@ -1318,6 +1319,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output)
     const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
+    memset(data + unitSize, 0, totalSize - unitSize);
     if (jsUnit != compilationUnit->data)
         free(jsUnit);
     jsUnit = 0;

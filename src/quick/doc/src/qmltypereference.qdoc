@@ -185,17 +185,29 @@ available when you import \c QtQuick.
 
     \table
     \row
+        \li \c Font.Thin
+        \li 0
+    \row
+        \li \c Font.ExtraLight
+        \li 12
+    \row
         \li \c Font.Light
         \li 25
     \row
         \li \c Font.Normal
         \li 50
     \row
+        \li \c Font.Medium
+        \li 57
+    \row
         \li \c Font.DemiBold
         \li 63
     \row
         \li \c Font.Bold
         \li 75
+    \row
+        \li \c Font.ExtraBold
+        \li 81
     \row
         \li \c Font.Black
         \li 87

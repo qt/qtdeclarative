@@ -4244,7 +4244,7 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     This method sets focus on the item and ensures that all ancestor
     FocusScope objects in the object hierarchy are also given \l focus.
 
-    The reason for the focus change will be \a Qt::OtherFocusReason. Use
+    The reason for the focus change will be \l [CPP] Qt::OtherFocusReason. Use
     the overloaded method to specify the focus reason to enable better
     handling of the focus change.
 
@@ -6105,7 +6105,7 @@ qreal QQuickItem::implicitWidth() const
     Defines the natural width or height of the Item if no \l width or \l height is specified.
 
     The default implicit size for most items is 0x0, however some items have an inherent
-    implicit size which cannot be overridden, e.g. Image, Text.
+    implicit size which cannot be overridden, for example, \l [QML] Image and \l [QML] Text.
 
     Setting the implicit size is useful for defining components that have a preferred size
     based on their content, for example:
@@ -6129,7 +6129,7 @@ qreal QQuickItem::implicitWidth() const
     }
     \endqml
 
-    \b Note: using implicitWidth of Text or TextEdit and setting the width explicitly
+    \note Using implicitWidth of \l [QML] Text or \l [QML] TextEdit and setting the width explicitly
     incurs a performance penalty as the text must be laid out twice.
 */
 /*!
@@ -6139,7 +6139,7 @@ qreal QQuickItem::implicitWidth() const
     Defines the natural width or height of the Item if no \l width or \l height is specified.
 
     The default implicit size for most items is 0x0, however some items have an inherent
-    implicit size which cannot be overridden, e.g. Image, Text.
+    implicit size which cannot be overridden, for example, \l [QML] Image and \l [QML] Text.
 
     Setting the implicit size is useful for defining components that have a preferred size
     based on their content, for example:
@@ -6163,7 +6163,7 @@ qreal QQuickItem::implicitWidth() const
     }
     \endqml
 
-    \b Note: using implicitWidth of Text or TextEdit and setting the width explicitly
+    \note Using implicitWidth of \l [QML] Text or \l [QML] TextEdit and setting the width explicitly
     incurs a performance penalty as the text must be laid out twice.
 */
 void QQuickItem::setImplicitWidth(qreal w)
@@ -6740,9 +6740,7 @@ void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
 void QQuickItemPrivate::markObjects(QV4::ExecutionEngine *e)
 {
     Q_Q(QQuickItem);
-    QQmlData *ddata = QQmlData::get(q);
-    if (ddata)
-        ddata->jsWrapper.markOnce(e);
+    QV4::QObjectWrapper::markWrapper(q, e);
 
     foreach (QQuickItem *child, childItems)
         QQuickItemPrivate::get(child)->markObjects(e);

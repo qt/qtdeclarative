@@ -110,6 +110,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
+    static void markWrapper(QObject *object, ExecutionEngine *engine);
 
     using Object::get;
 
@@ -173,22 +174,23 @@ struct QmlSignalHandler : public QV4::Object
 };
 
 class MultiplyWrappedQObjectMap : public QObject,
-                                  private QHash<QObject*, Object*>
+                                  private QHash<QObject*, QV4::WeakValue>
 {
     Q_OBJECT
 public:
-    typedef QHash<QObject*, Object*>::ConstIterator ConstIterator;
-    typedef QHash<QObject*, Object*>::Iterator Iterator;
+    typedef QHash<QObject*, QV4::WeakValue>::ConstIterator ConstIterator;
+    typedef QHash<QObject*, QV4::WeakValue>::Iterator Iterator;
 
-    ConstIterator begin() const { return QHash<QObject*, Object*>::constBegin(); }
-    Iterator begin() { return QHash<QObject*, Object*>::begin(); }
-    ConstIterator end() const { return QHash<QObject*, Object*>::constEnd(); }
-    Iterator end() { return QHash<QObject*, Object*>::end(); }
+    ConstIterator begin() const { return QHash<QObject*, QV4::WeakValue>::constBegin(); }
+    Iterator begin() { return QHash<QObject*, QV4::WeakValue>::begin(); }
+    ConstIterator end() const { return QHash<QObject*, QV4::WeakValue>::constEnd(); }
+    Iterator end() { return QHash<QObject*, QV4::WeakValue>::end(); }
 
-    void insert(QObject *key, Object *value);
-    Object *value(QObject *key) const { return QHash<QObject*, Object*>::value(key, 0); }
+    void insert(QObject *key, Heap::Object *value);
+    ReturnedValue value(QObject *key) const { return QHash<QObject*, QV4::WeakValue>::value(key).value(); }
     Iterator erase(Iterator it);
     void remove(QObject *key);
+    void mark(QObject *key, ExecutionEngine *engine);
 
 private Q_SLOTS:
     void removeDestroyedObject(QObject*);

@@ -3194,6 +3194,7 @@ void tst_qquicktextinput::readOnly()
     QVERIFY(input != 0);
     QTRY_VERIFY(input->hasActiveFocus() == true);
     QVERIFY(input->isReadOnly() == true);
+    QVERIFY(input->isCursorVisible() == false);
     QString initial = input->text();
     for (int k=Qt::Key_0; k<=Qt::Key_Z; k++)
         simulateKey(&window, k);
@@ -3206,6 +3207,7 @@ void tst_qquicktextinput::readOnly()
     input->setReadOnly(false);
     QCOMPARE(input->isReadOnly(), false);
     QCOMPARE(input->cursorPosition(), input->text().length());
+    QVERIFY(input->isCursorVisible() == true);
 }
 
 void tst_qquicktextinput::echoMode()

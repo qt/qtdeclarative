@@ -162,6 +162,7 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         RLDEBUG(" - creating GL context");
         m_gl = new QOpenGLContext();
         m_gl->setFormat(window->requestedFormat());
+        m_gl->setScreen(window->screen());
         if (qt_gl_global_share_context())
             m_gl->setShareContext(qt_gl_global_share_context());
         bool created = m_gl->create();

@@ -234,10 +234,14 @@ QString QQuickTextInputPrivate::realText() const
 
     The weight can be one of:
     \list
+    \li Font.Thin
     \li Font.Light
+    \li Font.ExtraLight
     \li Font.Normal - the default
+    \li Font.Medium
     \li Font.DemiBold
     \li Font.Bold
+    \li Font.ExtraBold
     \li Font.Black
     \endlist
 
@@ -658,6 +662,12 @@ void QQuickTextInput::setReadOnly(bool ro)
     q_canPasteChanged();
     d->emitUndoRedoChanged();
     emit readOnlyChanged(ro);
+    if (ro) {
+        setCursorVisible(false);
+    } else if (hasActiveFocus()) {
+        setCursorVisible(true);
+    }
+    update();
 }
 
 /*!
@@ -2420,7 +2430,8 @@ void QQuickTextInputPrivate::handleFocusEvent(QFocusEvent *event)
 {
     Q_Q(QQuickTextInput);
     bool focus = event->gotFocus();
-    q->setCursorVisible(focus);
+    if (!m_readOnly)
+        q->setCursorVisible(focus);
     if (focus) {
         q->q_updateAlignment();
 #ifndef QT_NO_IM

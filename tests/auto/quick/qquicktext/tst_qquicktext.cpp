@@ -106,6 +106,7 @@ private slots:
 
     void implicitSize_data();
     void implicitSize();
+    void dependentImplicitSizes();
     void contentSize();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
@@ -2214,6 +2215,62 @@ void tst_qquicktext::implicitSize()
     QVERIFY(textObject->height() == textObject->implicitHeight());
 
     delete textObject;
+}
+
+void tst_qquicktext::dependentImplicitSizes()
+{
+    QQmlComponent component(&engine, testFile("implicitSizes.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object.data());
+
+    QQuickText *reference = object->findChild<QQuickText *>("reference");
+    QQuickText *fixedWidthAndHeight = object->findChild<QQuickText *>("fixedWidthAndHeight");
+    QQuickText *implicitWidthFixedHeight = object->findChild<QQuickText *>("implicitWidthFixedHeight");
+    QQuickText *fixedWidthImplicitHeight = object->findChild<QQuickText *>("fixedWidthImplicitHeight");
+    QQuickText *cappedWidthAndHeight = object->findChild<QQuickText *>("cappedWidthAndHeight");
+    QQuickText *cappedWidthFixedHeight = object->findChild<QQuickText *>("cappedWidthFixedHeight");
+    QQuickText *fixedWidthCappedHeight = object->findChild<QQuickText *>("fixedWidthCappedHeight");
+
+    QVERIFY(reference);
+    QVERIFY(fixedWidthAndHeight);
+    QVERIFY(implicitWidthFixedHeight);
+    QVERIFY(fixedWidthImplicitHeight);
+    QVERIFY(cappedWidthAndHeight);
+    QVERIFY(cappedWidthFixedHeight);
+    QVERIFY(fixedWidthCappedHeight);
+
+    QCOMPARE(reference->width(), reference->implicitWidth());
+    QCOMPARE(reference->height(), reference->implicitHeight());
+
+    QVERIFY(fixedWidthAndHeight->width() < fixedWidthAndHeight->implicitWidth());
+    QVERIFY(fixedWidthAndHeight->height() < fixedWidthAndHeight->implicitHeight());
+    QCOMPARE(fixedWidthAndHeight->implicitWidth(), reference->implicitWidth());
+    QVERIFY(fixedWidthAndHeight->implicitHeight() > reference->implicitHeight());
+
+    QCOMPARE(implicitWidthFixedHeight->width(), implicitWidthFixedHeight->implicitWidth());
+    QVERIFY(implicitWidthFixedHeight->height() < implicitWidthFixedHeight->implicitHeight());
+    QCOMPARE(implicitWidthFixedHeight->implicitWidth(), reference->implicitWidth());
+    QCOMPARE(implicitWidthFixedHeight->implicitHeight(), reference->implicitHeight());
+
+    QVERIFY(fixedWidthImplicitHeight->width() < fixedWidthImplicitHeight->implicitWidth());
+    QCOMPARE(fixedWidthImplicitHeight->height(), fixedWidthImplicitHeight->implicitHeight());
+    QCOMPARE(fixedWidthImplicitHeight->implicitWidth(), reference->implicitWidth());
+    QCOMPARE(fixedWidthImplicitHeight->implicitHeight(), fixedWidthAndHeight->implicitHeight());
+
+    QVERIFY(cappedWidthAndHeight->width() < cappedWidthAndHeight->implicitWidth());
+    QVERIFY(cappedWidthAndHeight->height() < cappedWidthAndHeight->implicitHeight());
+    QCOMPARE(cappedWidthAndHeight->implicitWidth(), reference->implicitWidth());
+    QCOMPARE(cappedWidthAndHeight->implicitHeight(), fixedWidthAndHeight->implicitHeight());
+
+    QVERIFY(cappedWidthFixedHeight->width() < cappedWidthAndHeight->implicitWidth());
+    QVERIFY(cappedWidthFixedHeight->height() < cappedWidthFixedHeight->implicitHeight());
+    QCOMPARE(cappedWidthFixedHeight->implicitWidth(), reference->implicitWidth());
+    QCOMPARE(cappedWidthFixedHeight->implicitHeight(), fixedWidthAndHeight->implicitHeight());
+
+    QVERIFY(fixedWidthCappedHeight->width() < fixedWidthCappedHeight->implicitWidth());
+    QVERIFY(fixedWidthCappedHeight->height() < fixedWidthCappedHeight->implicitHeight());
+    QCOMPARE(fixedWidthCappedHeight->implicitWidth(), reference->implicitWidth());
+    QCOMPARE(fixedWidthCappedHeight->implicitHeight(), fixedWidthAndHeight->implicitHeight());
 }
 
 void tst_qquicktext::contentSize()

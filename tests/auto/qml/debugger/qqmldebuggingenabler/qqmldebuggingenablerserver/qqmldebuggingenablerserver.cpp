@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,59 +31,36 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKIMAGEBASE_P_P_H
-#define QQUICKIMAGEBASE_P_P_H
+#include "debugutil_p.h"
+#include <QtCore/QCoreApplication>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qquickimplicitsizeitem_p_p.h"
-#include "qquickimagebase_p.h"
-
-#include <QtQuick/private/qquickpixmapcache_p.h>
-
-QT_BEGIN_NAMESPACE
-
-class QNetworkReply;
-class QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
+int main(int argc, char *argv[])
 {
-    Q_DECLARE_PUBLIC(QQuickImageBase)
+      bool block = false;
+      int portFrom = 0;
+      int portTo = 0;
 
-public:
-    QQuickImageBasePrivate()
-      : status(QQuickImageBase::Null),
-        progress(0.0),
-        devicePixelRatio(1.0),
-        autoTransform(UsePluginDefault),
-        async(false),
-        cache(true),
-        mirror(false),
-        oldAutoTransform(false)
-    {
-    }
+      QCoreApplication app(argc, argv);
+      QStringList arguments = app.arguments();
+      arguments.removeFirst();
 
-    QQuickPixmap pix;
-    QQuickImageBase::Status status;
-    QUrl url;
-    qreal progress;
-    QSize sourcesize;
-    QSize oldSourceSize;
-    qreal devicePixelRatio;
-    AutoTransform autoTransform;
-    bool async : 1;
-    bool cache : 1;
-    bool mirror: 1;
-    bool oldAutoTransform : 1;
-};
+      if (arguments.size() && arguments.first() == QLatin1String("-block")) {
+          block = true;
+          arguments.removeFirst();
+      }
 
-QT_END_NAMESPACE
+      if (arguments.size() >= 2) {
+          portFrom = arguments.takeFirst().toInt();
+          portTo = arguments.takeFirst().toInt();
+      }
 
-#endif // QQUICKIMAGEBASE_P_P_H
+      if (!portFrom || !portTo)
+          qFatal("Port range has to be specified.");
+
+      while (portFrom <= portTo)
+          QQmlDebuggingEnabler::startTcpDebugServer(portFrom++, block);
+      QQmlEngine engine;
+      Q_UNUSED(engine);
+      return app.exec();
+}
+

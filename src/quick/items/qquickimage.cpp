@@ -152,6 +152,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 QQuickImage::QQuickImage(QQuickItem *parent)
     : QQuickImageBase(*(new QQuickImagePrivate), parent)
 {
+    connect(this, SIGNAL(autoTransformBaseChanged()), SIGNAL(autoTransformChanged()));
 }
 
 QQuickImage::QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent)
@@ -819,5 +820,15 @@ void QQuickImage::setMipmap(bool use)
     d->pixmapChanged = true;
     update();
 }
+
+/*!
+    \qmlproperty bool QtQuick::Image::autoTransform
+    \since 5.5
+
+    This property holds whether the image should automatically apply
+    image transformation metadata such as EXIF orientation.
+
+    By default, this property is set to false.
+ */
 
 QT_END_NAMESPACE

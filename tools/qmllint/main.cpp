@@ -41,7 +41,6 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsengine_p.h>
-#include <private/qqmlirbuilder_p.h>
 
 static bool lint_file(const QString &filename, bool silent)
 {
@@ -59,10 +58,7 @@ static bool lint_file(const QString &filename, bool silent)
 
     QFileInfo info(filename);
     bool isJavaScript = info.suffix().toLower() == QLatin1String("js");
-    if (isJavaScript)
-        QmlIR::Document::removeScriptPragmas(/*by-ref*/code);
-
-    lexer.setCode(code, /*line = */ 1, true);
+    lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
     QQmlJS::Parser parser(&engine);
 
     bool success = isJavaScript ? parser.parseProgram() : parser.parse();

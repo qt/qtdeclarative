@@ -910,9 +910,11 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     w->thread->window = window;
 
     if (w->window->width() <= 0 || w->window->height() <= 0
-            || !w->window->geometry().intersects(w->window->screen()->availableGeometry())) {
+        || (w->window->isTopLevel() && !w->window->geometry().intersects(w->window->screen()->availableGeometry()))) {
 #ifndef QT_NO_DEBUG
-        qWarning("QSGThreadedRenderLoop: expose event received for window with invalid geometry.");
+        qWarning().noquote().nospace() << "QSGThreadedRenderLoop: expose event received for window "
+            << w->window << " with invalid geometry: " << w->window->geometry()
+            << " on " << w->window->screen();
 #endif
     }
 
@@ -931,6 +933,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             if (qt_gl_global_share_context())
                 w->thread->gl->setShareContext(qt_gl_global_share_context());
             w->thread->gl->setFormat(w->window->requestedFormat());
+            w->thread->gl->setScreen(w->window->screen());
             if (!w->thread->gl->create()) {
                 const bool isEs = w->thread->gl->isOpenGLES();
                 delete w->thread->gl;

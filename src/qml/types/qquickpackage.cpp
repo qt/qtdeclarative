@@ -45,8 +45,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-views
     \brief Specifies a collection of named items
 
-    The Package class is used in conjunction with
-    VisualDataModel to enable delegates with a shared context
+    The Package type is used in conjunction with
+    DelegateModel to enable delegates with a shared context
     to be provided to multiple views.
 
     Any item within a Package may be assigned a name via the

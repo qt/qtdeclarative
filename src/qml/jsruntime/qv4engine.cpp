@@ -1223,6 +1223,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
         return ld->d()->locale;
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
+    if (const QV4::ArrayBuffer *d = value.as<ArrayBuffer>())
+        return d->asByteArray();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
 
     QV4::ScopedObject o(scope, value);
@@ -1578,6 +1580,12 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     }
     Q_UNREACHABLE();
     return 0;
+}
+
+void ExecutionEngine::assertObjectBelongsToEngine(const Heap::Base &baseObject)
+{
+    Q_ASSERT(!baseObject.vtable->isObject || static_cast<const Heap::Object&>(baseObject).internalClass->engine == this);
+    Q_UNUSED(baseObject);
 }
 
 // Converts a JS value to a meta-type.

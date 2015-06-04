@@ -78,6 +78,9 @@ public:
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
+    virtual void setAutoTransform(bool transform);
+    bool autoTransform() const;
+
     void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
 Q_SIGNALS:
@@ -88,6 +91,7 @@ Q_SIGNALS:
     void asynchronousChanged();
     void cacheChanged();
     void mirrorChanged();
+    void autoTransformBaseChanged();
 
 protected:
     virtual void load();

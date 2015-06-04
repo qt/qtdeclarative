@@ -653,9 +653,10 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (candidate != end) {
+            QQmlType *returnType = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0);
             if (type_return)
-                *type_return = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0);
-            return (*type_return != 0);
+                *type_return = returnType;
+            return returnType != 0;
         }
     } else if (!isLibrary) {
         QString qmlUrl;
@@ -679,9 +680,10 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
                 if (typeRecursionDetected)
                     *typeRecursionDetected = true;
             } else {
+                QQmlType *returnType = getTypeForUrl(qmlUrl, type, false, 0);
                 if (type_return)
-                    *type_return = getTypeForUrl(qmlUrl, type, false, 0);
-                return (*type_return) != 0;
+                    *type_return = returnType;
+                return returnType != 0;
             }
         }
     }

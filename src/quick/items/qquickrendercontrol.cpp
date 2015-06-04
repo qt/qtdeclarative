@@ -367,6 +367,11 @@ void QQuickRenderControlPrivate::maybeUpdate()
 
   If \a offset in non-null, it is set to the offset of the control
   inside the window.
+
+  \note While not mandatory, reimplementing this function becomes essential for
+  supporting multiple screens with different device pixel ratios and properly positioning
+  popup windows opened from QML. Therefore providing it in subclasses is highly
+  recommended.
 */
 
 /*!

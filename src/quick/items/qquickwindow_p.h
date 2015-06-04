@@ -151,6 +151,7 @@ public:
     void deliverTouchEvent(QTouchEvent *);
     void reallyDeliverTouchEvent(QTouchEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
+    void deliverDelayedTouchEvent();
     void flushDelayedTouchEvent();
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
     bool deliverMatchingPointsToItem(QQuickItem *item, QTouchEvent *event, QSet<int> *acceptedNewPoints, const QSet<int> &matchingNewPoints, const QList<QTouchEvent::TouchPoint> &matchingPoints, QSet<QQuickItem*> *filtered);
@@ -219,7 +220,7 @@ public:
     QSGRenderLoop *windowManager;
     QQuickRenderControl *renderControl;
     QQuickAnimatorController *animationController;
-    QTouchEvent *delayedTouch;
+    QScopedPointer<QTouchEvent> delayedTouch;
     int touchRecursionGuard;
     QQuickCustomRenderStage *customRenderStage;
 

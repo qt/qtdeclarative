@@ -392,6 +392,8 @@ public:
     bool metaTypeFromJS(const Value &value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
+    void assertObjectBelongsToEngine(const Heap::Base &baseObject);
+
 private:
     QmlExtensions *m_qmlExtensions;
 };
@@ -432,6 +434,9 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
     Q_ASSERT(inUse());
     if (isMarked())
         return;
+#ifndef QT_NO_DEBUG
+    engine->assertObjectBelongsToEngine(*this);
+#endif
     setMarkBit();
     engine->pushForGC(this);
 }

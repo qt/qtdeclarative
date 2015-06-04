@@ -96,6 +96,7 @@ public:
     QStringList formats() const;
 
     Q_INVOKABLE void getDataAsString(QQmlV4Function *);
+    Q_INVOKABLE void getDataAsArrayBuffer(QQmlV4Function *);
     Q_INVOKABLE void acceptProposedAction(QQmlV4Function *);
     Q_INVOKABLE void accept(QQmlV4Function *);
 

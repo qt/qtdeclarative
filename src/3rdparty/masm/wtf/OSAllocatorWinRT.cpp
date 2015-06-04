@@ -55,7 +55,7 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
     return reserveUncommitted(bytes, usage, writable, executable);
 }
 
-void OSAllocator::commit(void* address, size_t bytes, bool writable, bool executable)
+void OSAllocator::commit(void*, size_t, bool, bool)
 {
     CRASH(); // Unimplemented
 }
