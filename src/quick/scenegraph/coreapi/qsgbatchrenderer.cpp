@@ -2,6 +2,7 @@
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
+** Copyright (C) 2015 Robin Burchell <robin.burchell@viroteck.net>
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -83,7 +84,7 @@ DECLARE_DEBUG_VAR(noclip)
 static QElapsedTimer qsg_renderer_timer;
 
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
-#define SHADOWNODE_TRAVERSE(NODE) for (QList<Node *>::const_iterator child = NODE->children.constBegin(); child != NODE->children.constEnd(); ++child)
+#define SHADOWNODE_TRAVERSE(NODE) for (Node *child = NODE->firstChild; child; child = child->nextSibling)
 
 static inline int size_of_type(GLenum type)
 {
@@ -248,7 +249,7 @@ void qsg_dumpShadowRoots(Node *n)
     }
 
     SHADOWNODE_TRAVERSE(n)
-            qsg_dumpShadowRoots(*child);
+            qsg_dumpShadowRoots(child);
 
     --indent;
 #else
@@ -331,7 +332,7 @@ void Updater::visitNode(Node *n)
             n->renderNodeElement()->root = m_roots.last();
         // Fall through to visit children.
     default:
-        SHADOWNODE_TRAVERSE(n) visitNode(*child);
+        SHADOWNODE_TRAVERSE(n) visitNode(child);
         break;
     }
 
@@ -357,7 +358,7 @@ void Updater::visitClipNode(Node *n)
     cn->m_matrix = &extra->matrix;
     m_combined_matrix_stack << &m_identityMatrix;
 
-    SHADOWNODE_TRAVERSE(n) visitNode(*child);
+    SHADOWNODE_TRAVERSE(n) visitNode(child);
 
     m_current_clip = cn->m_clip_list;
     m_rootMatrices.pop_back();
@@ -381,12 +382,12 @@ void Updater::visitOpacityNode(Node *n)
             n->isOpaque = is;
         }
         ++m_opacityChange;
-        SHADOWNODE_TRAVERSE(n) visitNode(*child);
+        SHADOWNODE_TRAVERSE(n) visitNode(child);
         --m_opacityChange;
     } else {
         if (m_added > 0)
             n->isOpaque = on->opacity() > OPAQUE_LIMIT;
-        SHADOWNODE_TRAVERSE(n) visitNode(*child);
+        SHADOWNODE_TRAVERSE(n) visitNode(child);
     }
 
     m_opacity_stack.pop_back();
@@ -436,7 +437,7 @@ void Updater::visitTransformNode(Node *n)
     if (dirty)
         ++m_transformChange;
 
-    SHADOWNODE_TRAVERSE(n) visitNode(*child);
+    SHADOWNODE_TRAVERSE(n) visitNode(child);
 
     if (dirty)
         --m_transformChange;
@@ -496,7 +497,7 @@ void Updater::visitGeometryNode(Node *n)
         }
     }
 
-    SHADOWNODE_TRAVERSE(n) visitNode(*child);
+    SHADOWNODE_TRAVERSE(n) visitNode(child);
 }
 
 void Updater::updateRootTransforms(Node *node, Node *root, const QMatrix4x4 &combined)
@@ -976,7 +977,7 @@ void Renderer::nodeChangedBatchRoot(Node *node, Node *root)
     }
 
     SHADOWNODE_TRAVERSE(node)
-            nodeChangedBatchRoot(*child, root);
+            nodeChangedBatchRoot(child, root);
 }
 
 void Renderer::nodeWasTransformed(Node *node, int *vertexCount)
@@ -998,7 +999,7 @@ void Renderer::nodeWasTransformed(Node *node, int *vertexCount)
     }
 
     SHADOWNODE_TRAVERSE(node)
-        nodeWasTransformed(*child, vertexCount);
+        nodeWasTransformed(child, vertexCount);
 }
 
 void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
@@ -1012,7 +1013,13 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
     m_nodes.insert(node, snode);
     if (shadowParent) {
         snode->parent = shadowParent;
-        shadowParent->children.append(snode);
+        if (shadowParent->lastChild) {
+            shadowParent->lastChild->nextSibling = snode;
+            shadowParent->lastChild = snode;
+        } else {
+            shadowParent->firstChild = snode;
+            shadowParent->lastChild = snode;
+        }
     }
 
     if (node->type() == QSGNode::GeometryNodeType) {
@@ -1038,10 +1045,24 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
 
 void Renderer::nodeWasRemoved(Node *node)
 {
-    // Prefix traversal as removeBatchFromParent below removes nodes
-    // in a bottom-up manner
-    SHADOWNODE_TRAVERSE(node)
-            nodeWasRemoved(*child);
+    // Prefix traversal as removeBatchRootFromParent below removes nodes
+    // in a bottom-up manner. Note that we *cannot* use SHADOWNODE_TRAVERSE
+    // here, because we delete 'child' (when recursed, down below), so we'd
+    // have a use-after-free.
+    {
+        Node *child = node->firstChild;
+        Node *nextChild = 0;
+
+        while (child) {
+            // Get the next child now before we proceed
+            nextChild = child ? child->nextSibling : 0;
+
+            // Remove (and delete) child
+            nodeWasRemoved(child);
+
+            child = nextChild;
+        }
+    }
 
     if (node->type() == QSGNode::GeometryNodeType) {
         Element *e = node->element();
@@ -1105,7 +1126,7 @@ void Renderer::turnNodeIntoBatchRoot(Node *node)
     }
 
     SHADOWNODE_TRAVERSE(node)
-            nodeChangedBatchRoot(*child, node);
+            nodeChangedBatchRoot(child, node);
 }
 
 
@@ -1237,8 +1258,23 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     // Delete happens at the very end because it deletes the shadownode.
     if (state & QSGNode::DirtyNodeRemoved) {
         Node *parent = shadowNode->parent;
-        if (parent)
-            parent->children.removeOne(shadowNode);
+        if (parent) {
+            Q_ASSERT(parent->firstChild);
+            Q_ASSERT(parent->lastChild);
+            shadowNode->parent = 0;
+            Node *child = parent->firstChild;
+            if (child == shadowNode) {
+                parent->firstChild = shadowNode->nextSibling;
+                if (parent->lastChild == shadowNode)
+                    parent->lastChild = 0;
+            } else {
+                while (child->nextSibling != shadowNode)
+                    child = child->nextSibling;
+                child->nextSibling = shadowNode->nextSibling;
+                if (shadowNode == parent->lastChild)
+                    parent->lastChild = child;
+            }
+        }
         nodeWasRemoved(shadowNode);
         Q_ASSERT(m_nodes.value(node) == 0);
     }
@@ -2926,7 +2962,7 @@ void Renderer::visualizeChangesPrepare(Node *n, uint parentChanges)
     if (n->type() == QSGNode::GeometryNodeType && selfDirty != 0)
         m_visualizeChanceSet.insert(n, selfDirty);
     SHADOWNODE_TRAVERSE(n) {
-        visualizeChangesPrepare(*child, childDirty);
+        visualizeChangesPrepare(child, childDirty);
     }
 }
 
@@ -2962,7 +2998,7 @@ void Renderer::visualizeChanges(Node *n)
     }
 
     SHADOWNODE_TRAVERSE(n) {
-        visualizeChanges(*child);
+        visualizeChanges(child);
     }
 }
 
@@ -2989,7 +3025,7 @@ void Renderer::visualizeOverdraw_helper(Node *node)
     }
 
     SHADOWNODE_TRAVERSE(node) {
-        visualizeOverdraw_helper(*child);
+        visualizeOverdraw_helper(child);
     }
 }
 

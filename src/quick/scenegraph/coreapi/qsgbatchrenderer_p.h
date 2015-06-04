@@ -1,6 +1,8 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
+** Copyright (C) 2015 Robin Burchell <robin.burchell@viroteck.net>
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -438,6 +440,9 @@ struct Node
         : sgNode(0)
         , parent(0)
         , data(0)
+        , firstChild(0)
+        , nextSibling(0)
+        , lastChild(0)
         , dirtyState(0)
         , isOpaque(false)
         , isBatchRoot(false)
@@ -447,7 +452,9 @@ struct Node
     QSGNode *sgNode;
     Node *parent;
     void *data;
-    QList<Node *> children;
+    Node *firstChild;
+    Node *nextSibling;
+    Node *lastChild;
 
     QSGNode::DirtyState dirtyState;
 
