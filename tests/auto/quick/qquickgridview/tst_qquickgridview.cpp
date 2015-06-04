@@ -4315,8 +4315,19 @@ void tst_QQuickGridView::snapToRow()
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
+    qreal origContentY = gridview->contentY();
+    qreal origContentX = gridview->contentX();
     // confirm that a flick hits an item boundary
     flick(window, flickStart, flickEnd, 180);
+
+    // wait until it's at least one cell further
+    QTRY_VERIFY(qAbs(gridview->contentX() - origContentX) > 80 ||
+                qAbs(gridview->contentY() - origContentY) > 80);
+
+    // click to stop it. Otherwise we wouldn't know how much further it will go. We don't want to it
+    // to hit the endExtent, yet.
+    QTest::mouseClick(window, Qt::LeftButton, 0, flickEnd);
+
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(qreal(fmod(gridview->contentY(),80.0)), snapAlignment);
