@@ -2729,7 +2729,7 @@ static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
     QQuickItem *before = 0;
     for (int i=0; i<childItems.size(); ++i) {
         QQuickItemPrivate *dd = QQuickItemPrivate::get(childItems.at(i));
-        // Perform the same check as the in buildOrderNodeList below.
+        // Perform the same check as the in fetchNextNode below.
         if (dd->z() < 0 && (dd->explicitVisible || (dd->extra.isAllocated() && dd->extra->effectRefCount)))
             before = childItems.at(i);
         else
@@ -2738,13 +2738,9 @@ static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
     return Q_UNLIKELY(before) ? QQuickItemPrivate::get(before)->itemNode() : 0;
 }
 
-static QVector<QSGNode *> buildOrderedNodeList(QQuickItemPrivate *itemPriv)
+static QSGNode *fetchNextNode(QQuickItemPrivate *itemPriv, int &ii, bool &returnedPaintNode)
 {
     QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
-    QVector<QSGNode *> desiredNodes;
-    desiredNodes.reserve(orderedChildren.size() + 1); // + 1 for the paintNode
-
-    int ii = 0;
 
     for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
@@ -2752,11 +2748,14 @@ static QVector<QSGNode *> buildOrderedNodeList(QQuickItemPrivate *itemPriv)
             (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
             continue;
 
-        desiredNodes.append(childPrivate->itemNode());
+        ii++;
+        return childPrivate->itemNode();
     }
 
-    if (itemPriv->paintNode)
-        desiredNodes.append(itemPriv->paintNode);
+    if (itemPriv->paintNode && !returnedPaintNode) {
+        returnedPaintNode = true;
+        return itemPriv->paintNode;
+    }
 
     for (; ii < orderedChildren.count(); ++ii) {
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
@@ -2764,10 +2763,11 @@ static QVector<QSGNode *> buildOrderedNodeList(QQuickItemPrivate *itemPriv)
             (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
             continue;
 
-        desiredNodes.append(childPrivate->itemNode());
+        ii++;
+        return childPrivate->itemNode();
     }
 
-    return desiredNodes;
+    return 0;
 }
 
 void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
@@ -2870,7 +2870,10 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     if (dirty & QQuickItemPrivate::ChildrenUpdateMask) {
-        QVector<QSGNode *> desiredNodes = buildOrderedNodeList(itemPriv);
+        int ii = 0;
+        bool fetchedPaintNode = false;
+        QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
+        int desiredNodesSize = orderedChildren.size() + (itemPriv->paintNode ? 1 : 0);
 
         // now start making current state match the promised land of
         // desiredNodes. in the case of our current state matching desiredNodes
@@ -2888,14 +2891,9 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         int added = 0;
         int removed = 0;
         int replaced = 0;
-#if defined(CHILDRENUPDATE_DEBUG)
-        // This is slow! Do not do this in a normal/profiling build!
-        int initialCount = groupNode->childCount();
-#endif
+        QSGNode *desiredNode = 0;
 
-        while (currentNode && desiredNodesProcessed < desiredNodes.size()) {
-            QSGNode *desiredNode = desiredNodes.at(desiredNodesProcessed);
-
+        while (currentNode && (desiredNode = fetchNextNode(itemPriv, ii, fetchedPaintNode))) {
             // uh oh... reality and our utopic paradise are diverging!
             // we need to reconcile this...
             if (currentNode != desiredNode) {
@@ -2919,9 +2917,8 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         // if we didn't process as many nodes as in the new list, then we have
         // more nodes at the end of desiredNodes to append to our list.
         // this will be the case when adding new nodes, for instance.
-        if (desiredNodesProcessed < desiredNodes.size()) {
-            for (int i = desiredNodesProcessed; i < desiredNodes.size(); ++i) {
-                QSGNode *desiredNode = desiredNodes.at(i);
+        if (desiredNodesProcessed < desiredNodesSize) {
+            while ((desiredNode = fetchNextNode(itemPriv, ii, fetchedPaintNode))) {
                 if (desiredNode->parent())
                     desiredNode->parent()->removeChildNode(desiredNode);
                 groupNode->appendChildNode(desiredNode);
@@ -2938,10 +2935,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                 removed++;
             }
         }
-
-#if defined(CHILDRENUPDATE_DEBUG)
-        qDebug() << "Done children update for " << itemPriv << "- before:" << initialCount << "after:" << groupNode->childCount() <<  "added:" << added << "removed:" << removed << "replaced:" << replaced;
-#endif
     }
 
     if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
