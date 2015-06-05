@@ -199,10 +199,7 @@ InternalClass *InternalClass::nonExtensible()
     if (!extensible)
         return this;
 
-    Transition temp;
-    temp.lookup = 0;
-    temp.flags = Transition::NotExtensible;
-
+    Transition temp = { Q_NULLPTR, Q_NULLPTR, Transition::NotExtensible};
     Transition &t = lookupOrInsertTransition(temp);
     if (t.lookup)
         return t.lookup;
