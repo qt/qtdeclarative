@@ -81,6 +81,8 @@ static void showMeTheCode(IR::Function *function, const char *marker)
     }
 }
 
+#if !defined(BROKEN_STD_VECTOR_BOOL_OR_BROKEN_STD_FIND)
+// Sanity:
 class BitVector
 {
     std::vector<bool> bits;
@@ -140,6 +142,58 @@ public:
     void clearBit(int idx)
     { bits[idx] = false; }
 };
+#else // Insanity:
+class BitVector
+{
+    QBitArray bits;
+
+public:
+    BitVector(int size = 0, bool value = false)
+        : bits(size, value)
+    {}
+
+    void reserve(int size)
+    { Q_UNUSED(size); }
+
+    int size() const
+    { return bits.size(); }
+
+    void resize(int newSize)
+    { bits.resize(newSize); }
+
+    void assign(int newSize, bool value)
+    {
+        bits.resize(newSize);
+        bits.fill(value);
+    }
+
+    int findNext(int start, bool value, bool wrapAround) const
+    {
+        for (int i = start, ei = size(); i < ei; ++i) {
+            if (at(i) == value)
+                return i;
+        }
+
+        if (wrapAround) {
+            for (int i = 0, ei = start; i < ei; ++i) {
+                if (at(i) == value)
+                    return i;
+            }
+        }
+
+        return size();
+    }
+
+    bool at(int idx) const
+    { return bits.at(idx); }
+
+    void setBit(int idx)
+    { bits[idx] = true; }
+
+    void clearBit(int idx)
+    { bits[idx] = false; }
+};
+#endif
 
 class ProcessedBlocks
 {
