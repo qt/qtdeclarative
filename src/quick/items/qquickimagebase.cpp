@@ -213,15 +213,27 @@ void QQuickImageBase::load()
         d->devicePixelRatio = 1.0;
 
         QUrl loadUrl = d->url;
-        if (d->url.scheme() == QStringLiteral("image")
-            || d->url.toString().endsWith(QLatin1String(".svg"))
-            || d->url.toString().endsWith(QLatin1String(".svgz"))) {
-            // QQuickImageProvider and SVG can generate a high resolution image when
-            // sourceSize is set. If sourceSize is not set then the provider default size
-            // will be used, as usual.
-            if (!d->sourcesize.isEmpty())
+
+        // QQuickImageProvider and SVG can generate a high resolution image when
+        // sourceSize is set. If sourceSize is not set then the provider default size
+        // will be used, as usual.
+        bool setDevicePixelRatio = false;
+        if (!d->sourcesize.isValid()) {
+            if (loadUrl.scheme() == QStringLiteral("image")) {
+                setDevicePixelRatio = true;
+            } else {
+                QString stringUrl = loadUrl.toString();
+                if (stringUrl.endsWith(QLatin1String("svg")) ||
+                    stringUrl.endsWith(QLatin1String("svgz"))) {
+                    setDevicePixelRatio = true;
+                }
+            }
+
+            if (setDevicePixelRatio)
                 d->devicePixelRatio = targetDevicePixelRatio;
-        } else {
+        }
+
+        if (!setDevicePixelRatio) {
             // (possible) local file: loadUrl and d->devicePixelRatio will be modified if
             // an "@2x" file is found.
             resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
