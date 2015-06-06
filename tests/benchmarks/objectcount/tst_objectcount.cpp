@@ -74,7 +74,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3; import QtQuick.Controls 2.0; Image { Accessible.role: Accessible.Button; source: 'qrc:/qt-logo.png' }", QUrl());
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3 as C1; import QtQuick.Controls 2.0 as C2; Row { C1.Button {} C2.Button {} }", QUrl());
     delete component.create();
 }
 
@@ -98,10 +98,11 @@ void tst_ObjectCount::testCount()
     QFETCH(QByteArray, v1);
     QFETCH(QByteArray, v2);
 
-    qt_qobjects->clear();
-
     if (!v1.isEmpty()) {
         QQmlComponent component(&engine);
+
+        qt_qobjects->clear();
+
         component.setData(v1, QUrl());
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(object.data(), qPrintable(component.errorString()));
@@ -115,10 +116,12 @@ void tst_ObjectCount::testCount()
         printItems("V1", items);
     }
 
-    qt_qobjects->clear();
 
     if (!v2.isEmpty()) {
         QQmlComponent component(&engine);
+
+        qt_qobjects->clear();
+
         component.setData(v2, QUrl());
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(object.data(), qPrintable(component.errorString()));

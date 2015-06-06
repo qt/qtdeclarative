@@ -7,6 +7,3 @@ osx:CONFIG -= app_bundle
 
 SOURCES += \
     tst_objectcount.cpp
-
-RESOURCES += \
-    objectcount.qrc
