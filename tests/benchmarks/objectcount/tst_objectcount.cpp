@@ -38,6 +38,8 @@
 #include <QtQuick>
 #include <QtCore/private/qhooks_p.h>
 
+static int qt_verbose = qgetenv("VERBOSE").toInt() != 0;
+
 Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
 
 extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
@@ -72,7 +74,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Item { Accessible.role: Accessible.Button }", QUrl());
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3; import QtQuick.Controls 2.0; Image { Accessible.role: Accessible.Button; source: 'qrc:/qt-logo.png' }", QUrl());
     delete component.create();
 }
 
@@ -80,6 +82,15 @@ void tst_ObjectCount::cleanup()
 {
     qtHookData[QHooks::AddQObject] = 0;
     qtHookData[QHooks::RemoveQObject] = 0;
+}
+
+static void printItems(const QString &prefix, const QList<QQuickItem *> &items)
+{
+    qInfo() << prefix << "QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
+    if (qt_verbose) {
+        foreach (QObject *object, *qt_qobjects)
+            qInfo() << "\t" << object;
+    }
 }
 
 void tst_ObjectCount::testCount()
@@ -101,8 +112,7 @@ void tst_ObjectCount::testCount()
             if (item)
                 items += item;
         }
-
-        qInfo() << "V1: QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
+        printItems("V1", items);
     }
 
     qt_qobjects->clear();
@@ -119,8 +129,7 @@ void tst_ObjectCount::testCount()
             if (item)
                 items += item;
         }
-
-        qInfo() << "V2: QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
+        printItems("V2", items);
     }
 }
 
