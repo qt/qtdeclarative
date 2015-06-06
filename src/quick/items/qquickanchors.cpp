@@ -414,13 +414,27 @@ void QQuickAnchorsPrivate::updateMe()
 void QQuickAnchorsPrivate::updateOnComplete()
 {
     //optimization to only set initial dependencies once, at completion time
-    QSet<QQuickItem *> dependencies;
-    dependencies << fill << centerIn
-                 << left.item << right.item << hCenter.item
-                 << top.item << bottom.item << vCenter.item << baseline.item;
+    QQuickItem *dependencies[9];
+    dependencies[0] = fill;
+    dependencies[1] = centerIn;
+    dependencies[2] = left.item;
+    dependencies[3] = right.item;
+    dependencies[4] = hCenter.item;
+    dependencies[5] = top.item;
+    dependencies[6] = bottom.item;
+    dependencies[7] = vCenter.item;
+    dependencies[8] = baseline.item;
 
-    foreach (QQuickItem *dependency, dependencies)
-        addDepend(dependency);
+    std::sort(dependencies, dependencies + 9);
+
+    QQuickItem *lastDependency = 0;
+    for (int i = 0; i < 9; ++i) {
+        QQuickItem *dependency = dependencies[i];
+        if (lastDependency != dependency) {
+            addDepend(dependency);
+            lastDependency = dependency;
+        }
+    }
 
     update();
 }
