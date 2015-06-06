@@ -1085,16 +1085,22 @@ QVariant QQmlPropertyPrivate::resolvedUrlSequence(const QVariant &value, QQmlCon
         urls = value.value<QList<QUrl> >();
     } else if (value.userType() == qMetaTypeId<QStringList>()) {
         QStringList urlStrings = value.value<QStringList>();
-        for (int i = 0; i < urlStrings.size(); ++i)
+        const int urlStringsSize = urlStrings.size();
+        urls.reserve(urlStringsSize);
+        for (int i = 0; i < urlStringsSize; ++i)
             urls.append(QUrl(urlStrings.at(i)));
     } else if (value.userType() == qMetaTypeId<QList<QString> >()) {
         QList<QString> urlStrings = value.value<QList<QString> >();
-        for (int i = 0; i < urlStrings.size(); ++i)
+        const int urlStringsSize = urlStrings.size();
+        urls.reserve(urlStringsSize);
+        for (int i = 0; i < urlStringsSize; ++i)
             urls.append(QUrl(urlStrings.at(i)));
     } // note: QList<QByteArray> is not currently supported.
 
     QList<QUrl> resolvedUrls;
-    for (int i = 0; i < urls.size(); ++i) {
+    const int urlsSize = urls.size();
+    resolvedUrls.reserve(urlsSize);
+    for (int i = 0; i < urlsSize; ++i) {
         QUrl u = urls.at(i);
         if (context && u.isRelative() && !u.isEmpty())
             u = context->resolvedUrl(u);

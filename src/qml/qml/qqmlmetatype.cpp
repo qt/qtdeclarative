@@ -1820,6 +1820,7 @@ QList<QString> QQmlMetaType::qmlTypeNames()
     QQmlMetaTypeData *data = metaTypeData();
 
     QList<QString> names;
+    names.reserve(data->nameToType.count());
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.cbegin();
     while (it != data->nameToType.cend()) {
         names += (*it)->qmlTypeName();

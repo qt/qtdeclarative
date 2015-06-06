@@ -372,6 +372,7 @@ void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
     ds << QByteArray(EVENT) << m_eventId++ << QByteArray(SELECT);
 
     QList<int> debugIds;
+    debugIds.reserve(objects.count());
     foreach (QObject *object, objects)
         debugIds << QQmlDebugService::idForObject(object);
     ds << debugIds;

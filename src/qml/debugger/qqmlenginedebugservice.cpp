@@ -192,6 +192,7 @@ QVariant QQmlEngineDebugService::valueContents(QVariant value) const
         QVariantList contents;
         QVariantList list = value.toList();
         int count = list.size();
+        contents.reserve(count);
         for (int i = 0; i < count; i++)
             contents << valueContents(list.at(i));
         return contents;

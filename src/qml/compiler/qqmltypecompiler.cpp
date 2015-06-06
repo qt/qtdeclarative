@@ -695,6 +695,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         const int paramCount = s->parameters->count;
 
         QList<QByteArray> names;
+        names.reserve(paramCount);
         QVarLengthArray<int, 10> paramTypes(paramCount?(paramCount + 1):0);
 
         if (paramCount) {

@@ -1156,7 +1156,9 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     QQuickParticleGroupData* gd = m_system->groupData[datum->group];
     if (!m_shadowData.contains(datum->group)) {
         QVector<QQuickParticleData*> data;
-        for (int i=0; i<gd->size(); i++){
+        const int gdSize = gd->size();
+        data.reserve(gdSize);
+        for (int i = 0; i < gdSize; i++) {
             QQuickParticleData* datum = new QQuickParticleData(m_system);
             *datum = *(gd->data[i]);
             data << datum;

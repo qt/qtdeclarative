@@ -169,6 +169,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *arg
     // ### re-use existing class definitions.
 
     QList<CompiledData::JSClassMember> members;
+    members.reserve(count);
 
     IR::ExprList *it = args;
     for (int i = 0; i < count; ++i, it = it->next) {

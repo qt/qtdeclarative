@@ -2385,7 +2385,9 @@ bool QQuickWindowPrivate::sendFilteredTouchEvent(QQuickItem *target, QQuickItem 
             if (target->childMouseEventFilter(item, targetEvent.data())) {
                 qCDebug(DBG_TOUCH) << " - first chance intercepted on childMouseEventFilter by " << target;
                 QVector<int> touchIds;
-                for (int i = 0; i < targetEvent->touchPoints().size(); ++i)
+                const int touchPointCount = targetEvent->touchPoints().size();
+                touchIds.reserve(touchPointCount);
+                for (int i = 0; i < touchPointCount; ++i)
                     touchIds.append(targetEvent->touchPoints().at(i).id());
                 target->grabTouchPoints(touchIds);
                 if (mouseGrabberItem) {

@@ -685,7 +685,9 @@ private:
         qml->writeScriptBinding(QLatin1String("name"), enquote(QString::fromUtf8(e.name())));
 
         QList<QPair<QString, QString> > namesValues;
-        for (int index = 0; index < e.keyCount(); ++index) {
+        const int keyCount = e.keyCount();
+        namesValues.reserve(keyCount);
+        for (int index = 0; index < keyCount; ++index) {
             namesValues.append(qMakePair(enquote(QString::fromUtf8(e.key(index))), QString::number(e.value(index))));
         }
 

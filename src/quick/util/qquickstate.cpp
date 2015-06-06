@@ -486,6 +486,7 @@ void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionL
     Q_D(QQuickState);
     if (isStateActive()) {
         QList<QQuickSimpleAction> simpleActionList;
+        simpleActionList.reserve(actionList.count());
 
         QListIterator<QQuickStateAction> actionListIterator(actionList);
         while(actionListIterator.hasNext()) {

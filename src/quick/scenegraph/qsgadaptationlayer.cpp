@@ -165,7 +165,9 @@ void QSGDistanceFieldGlyphCache::update()
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphAdaptationLayerFrame);
 
     QList<QDistanceField> distanceFields;
-    for (int i = 0; i < m_pendingGlyphs.size(); ++i) {
+    const int pendingGlyphsSize = m_pendingGlyphs.size();
+    distanceFields.reserve(pendingGlyphsSize);
+    for (int i = 0; i < pendingGlyphsSize; ++i) {
         GlyphData &gd = glyphData(m_pendingGlyphs.at(i));
         distanceFields.append(QDistanceField(gd.path,
                                              m_pendingGlyphs.at(i),

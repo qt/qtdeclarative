@@ -211,6 +211,7 @@ void QQuickViewInspector::setSelectedItems(const QList<QQuickItem *> &items)
         return;
 
     QList<QObject*> objectList;
+    objectList.reserve(items.count());
     foreach (QQuickItem *item, items)
         objectList << item;
 

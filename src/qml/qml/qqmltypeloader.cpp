@@ -2114,6 +2114,7 @@ void QQmlTypeData::dataReceived(const Data &data)
     QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
     if (!compiler.generateFromQml(code, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
+        errors.reserve(compiler.errors.count());
         foreach (const QQmlJS::DiagnosticMessage &msg, compiler.errors) {
             QQmlError e;
             e.setUrl(finalUrl());

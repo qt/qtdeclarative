@@ -304,7 +304,9 @@ QList<QQmlError> QQmlDirParser::errors(const QString &uri) const
 {
     QUrl url(uri);
     QList<QQmlError> errors;
-    for (int i = 0; i < _errors.size(); ++i) {
+    const int numErrors = _errors.size();
+    errors.reserve(numErrors);
+    for (int i = 0; i < numErrors; ++i) {
         const QQmlJS::DiagnosticMessage &msg = _errors.at(i);
         QQmlError e;
         QString description = msg.message;

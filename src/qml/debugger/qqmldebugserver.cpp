@@ -199,7 +199,11 @@ void QQmlDebugServerPrivate::advertisePlugins()
         QQmlDebugStream out(&message, QIODevice::WriteOnly);
         QStringList pluginNames;
         QList<float> pluginVersions;
-        foreach (QQmlDebugService *service, plugins.values()) {
+        const QList<QQmlDebugService *> debugServices = plugins.values();
+        const int count = debugServices.count();
+        pluginNames.reserve(count);
+        pluginVersions.reserve(count);
+        foreach (QQmlDebugService *service, debugServices) {
             pluginNames << service->name();
             pluginVersions << service->version();
         }
@@ -505,7 +509,11 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
             QStringList pluginNames;
             QList<float> pluginVersions;
-            foreach (QQmlDebugService *service, d->plugins.values()) {
+            const QList<QQmlDebugService*> debugServices = d->plugins.values();
+            const int count = debugServices.count();
+            pluginNames.reserve(count);
+            pluginVersions.reserve(count);
+            foreach (QQmlDebugService *service, debugServices) {
                 pluginNames << service->name();
                 pluginVersions << service->version();
             }
@@ -719,6 +727,7 @@ void QQmlDebugServer::sendMessages(QQmlDebugService *service,
                                           const QList<QByteArray> &messages)
 {
     QList<QByteArray> prefixedMessages;
+    prefixedMessages.reserve(messages.count());
     foreach (const QByteArray &message, messages) {
         QByteArray prefixed;
         QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);

@@ -1025,6 +1025,7 @@ void QQuickParticleSystem::createEngine()
         }
         m_groups = newList;
         QList<QQuickStochasticState*> states;
+        states.reserve(m_groups.count());
         foreach (QQuickParticleGroup* g, m_groups)
             states << (QQuickStochasticState*)g;
 

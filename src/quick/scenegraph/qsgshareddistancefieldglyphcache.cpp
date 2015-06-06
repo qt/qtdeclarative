@@ -475,6 +475,7 @@ void QSGSharedDistanceFieldGlyphCache::processPendingGlyphs()
 
         {
             QList<GlyphPosition> glyphPositions;
+            glyphPositions.reserve(m_pendingReadyGlyphs.count());
 
             QHash<void *, TextureContent> textureContentForBuffer;
             {

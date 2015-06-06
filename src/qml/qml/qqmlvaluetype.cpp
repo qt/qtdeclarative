@@ -478,7 +478,9 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     if ((variantList.count() % 6) == 0) {
         bool allRealsOk = true;
         QList<qreal> reals;
-        for (int i = 0; i < variantList.count(); i++) {
+        const int variantListCount = variantList.count();
+        reals.reserve(variantListCount);
+        for (int i = 0; i < variantListCount; i++) {
             bool ok;
             const qreal real = variantList.at(i).toReal(&ok);
             reals.append(real);
