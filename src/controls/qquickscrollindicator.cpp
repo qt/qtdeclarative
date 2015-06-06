@@ -211,6 +211,7 @@ void QQuickScrollIndicatorAttachedPrivate::activateVertical()
 
 void QQuickScrollIndicatorAttachedPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
+    Q_UNUSED(item);
     Q_ASSERT(item == flickable);
     if (horizontal) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(horizontal);
