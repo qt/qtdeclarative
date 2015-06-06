@@ -791,7 +791,7 @@ void QQmlData::markAsDeleted(QObject *o)
     QQmlData::setQueuedForDeletion(o);
 
     QObjectPrivate *p = QObjectPrivate::get(o);
-    for (QList<QObject *>::iterator it = p->children.begin(), end = p->children.end(); it != end; ++it) {
+    for (QList<QObject *>::const_iterator it = p->children.constBegin(), end = p->children.constEnd(); it != end; ++it) {
         QQmlData::markAsDeleted(*it);
     }
 }
