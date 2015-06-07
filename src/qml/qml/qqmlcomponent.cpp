@@ -1255,10 +1255,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QQmlData::get(rv)->explicitIndestructibleSet = false;
     QQmlData::get(rv)->indestructible = false;
 
-    if (!rv)
-        args->setReturnValue(QV4::Encode::null());
-    else
-        args->setReturnValue(object->asReturnedValue());
+    args->setReturnValue(object->asReturnedValue());
 }
 
 /*!
