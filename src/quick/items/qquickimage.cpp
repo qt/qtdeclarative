@@ -152,7 +152,6 @@ QQuickImagePrivate::QQuickImagePrivate()
 QQuickImage::QQuickImage(QQuickItem *parent)
     : QQuickImageBase(*(new QQuickImagePrivate), parent)
 {
-    connect(this, SIGNAL(autoTransformBaseChanged()), SIGNAL(autoTransformChanged()));
 }
 
 QQuickImage::QQuickImage(QQuickImagePrivate &dd, QQuickItem *parent)

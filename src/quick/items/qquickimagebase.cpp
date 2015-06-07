@@ -197,7 +197,7 @@ void QQuickImageBase::load()
         }
         if (autoTransform() != d->oldAutoTransform) {
             d->oldAutoTransform = autoTransform();
-            emit autoTransformBaseChanged();
+            emitAutoTransformBaseChanged();
         }
         update();
 
@@ -284,7 +284,7 @@ void QQuickImageBase::requestFinished()
     }
     if (autoTransform() != d->oldAutoTransform) {
         d->oldAutoTransform = autoTransform();
-        emit autoTransformBaseChanged();
+        emitAutoTransformBaseChanged();
     }
     update();
 }
@@ -390,7 +390,7 @@ void QQuickImageBase::setAutoTransform(bool transform)
     if (d->autoTransform != UsePluginDefault && transform == (d->autoTransform == ApplyTransform))
         return;
     d->autoTransform = transform ? ApplyTransform : DoNotApplyTransform;
-    emit autoTransformBaseChanged();
+    emitAutoTransformBaseChanged();
 }
 
 QT_END_NAMESPACE
