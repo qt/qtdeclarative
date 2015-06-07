@@ -280,10 +280,6 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
         QQmlAbstractBoundSignal *signalHandler = ddata->signalHandlers;
 
         while (signalHandler) {
-            if (!dumpProperties) {
-                signalHandler = signalHandler->m_nextSignal;
-                continue;
-            }
             QQmlObjectProperty prop;
             prop.type = QQmlObjectProperty::SignalProperty;
             prop.hasNotifySignal = false;
