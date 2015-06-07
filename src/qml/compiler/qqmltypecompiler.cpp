@@ -104,11 +104,10 @@ bool QQmlTypeCompiler::compile()
             }
 
             if (ref->type->containsRevisionedAttributes()) {
-                QQmlError cacheError;
                 ref->typePropertyCache = engine->cache(ref->type,
-                                                       resolvedType->minorVersion,
-                                                       cacheError);
+                                                       resolvedType->minorVersion);
                 if (!ref->typePropertyCache) {
+                    QQmlError cacheError;
                     cacheError.setColumn(resolvedType->location.column);
                     cacheError.setLine(resolvedType->location.line);
                     recordError(cacheError);

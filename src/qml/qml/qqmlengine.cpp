@@ -2104,8 +2104,7 @@ QString QQmlEngine::offlineStoragePath() const
     return d->offlineStoragePath;
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion,
-                                                                  QQmlError &error)
+QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion)
 {
     QList<QQmlType *> types;
 
@@ -2167,10 +2166,10 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
     // Properties override:
     //    * other elements of the same name
 
+#if 0
     bool overloadError = false;
     QString overloadName;
 
-#if 0
     for (QQmlPropertyCache::StringCache::ConstIterator iter = raw->stringCache.begin();
          !overloadError && iter != raw->stringCache.end();
          ++iter) {
@@ -2187,7 +2186,6 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
                 overloadError = true;
         }
     }
-#endif
 
     if (overloadError) {
         if (hasCopied) raw->release();
@@ -2195,6 +2193,7 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
         error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1Char(' ') + QString::number(type->majorVersion()) + QLatin1Char('.') + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
         return 0;
     }
+#endif
 
     if (!hasCopied) raw->addref();
     typePropertyCache.insert(qMakePair(type, minorVersion), raw);

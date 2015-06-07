@@ -208,7 +208,7 @@ public:
     inline static void deleteInEngineThread(QQmlEngine *, T *);
 
     // These methods may be called from the loader thread
-    inline QQmlPropertyCache *cache(QQmlType *, int, QQmlError &error);
+    inline QQmlPropertyCache *cache(QQmlType *, int);
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
@@ -262,7 +262,7 @@ public:
 
 private:
     // Must be called locked
-    QQmlPropertyCache *createCache(QQmlType *, int, QQmlError &error);
+    QQmlPropertyCache *createCache(QQmlType *, int);
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
@@ -346,7 +346,7 @@ Returns a QQmlPropertyCache for \a type with \a minorVersion.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QQmlEnginePrivate::cache(QQmlType *type, int minorVersion, QQmlError &error)
+QQmlPropertyCache *QQmlEnginePrivate::cache(QQmlType *type, int minorVersion)
 {
     Q_ASSERT(type);
 
@@ -355,7 +355,7 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(QQmlType *type, int minorVersion, QQ
 
     Locker locker(this);
     QQmlPropertyCache *rv = typePropertyCache.value(qMakePair(type, minorVersion));
-    if (!rv) rv = createCache(type, minorVersion, error);
+    if (!rv) rv = createCache(type, minorVersion);
     return rv;
 }
 
