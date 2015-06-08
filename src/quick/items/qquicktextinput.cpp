@@ -2492,6 +2492,19 @@ bool QQuickTextInput::isInputMethodComposing() const
 #endif
 }
 
+QQuickTextInputPrivate::ExtraData::ExtraData()
+    : padding(0)
+    , topPadding(0)
+    , leftPadding(0)
+    , rightPadding(0)
+    , bottomPadding(0)
+    , explicitTopPadding(false)
+    , explicitLeftPadding(false)
+    , explicitRightPadding(false)
+    , explicitBottomPadding(false)
+{
+}
+
 void QQuickTextInputPrivate::init()
 {
     Q_Q(QQuickTextInput);
@@ -2714,9 +2727,11 @@ void QQuickTextInputPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextInput);
     qreal oldPadding = q->topPadding();
-    topPadding = value;
-    explicitTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    if (!reset || extra.isAllocated()) {
+        extra.value().topPadding = value;
+        extra.value().explicitTopPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         updateLayout();
         emit q->topPaddingChanged();
     }
@@ -2726,9 +2741,11 @@ void QQuickTextInputPrivate::setLeftPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextInput);
     qreal oldPadding = q->leftPadding();
-    leftPadding = value;
-    explicitLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    if (!reset || extra.isAllocated()) {
+        extra.value().leftPadding = value;
+        extra.value().explicitLeftPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         updateLayout();
         emit q->leftPaddingChanged();
     }
@@ -2738,9 +2755,11 @@ void QQuickTextInputPrivate::setRightPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextInput);
     qreal oldPadding = q->rightPadding();
-    rightPadding = value;
-    explicitRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    if (!reset || extra.isAllocated()) {
+        extra.value().rightPadding = value;
+        extra.value().explicitRightPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         updateLayout();
         emit q->rightPaddingChanged();
     }
@@ -2750,9 +2769,11 @@ void QQuickTextInputPrivate::setBottomPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextInput);
     qreal oldPadding = q->bottomPadding();
-    bottomPadding = value;
-    explicitBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    if (!reset || extra.isAllocated()) {
+        extra.value().bottomPadding = value;
+        extra.value().explicitBottomPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         updateLayout();
         emit q->bottomPaddingChanged();
     }
@@ -4405,24 +4426,25 @@ void QQuickTextInput::ensureVisible(int position)
 qreal QQuickTextInput::padding() const
 {
     Q_D(const QQuickTextInput);
-    return d->padding;
+    return d->padding();
 }
 
 void QQuickTextInput::setPadding(qreal padding)
 {
     Q_D(QQuickTextInput);
-    if (qFuzzyCompare(d->padding, padding))
+    if (qFuzzyCompare(d->padding(), padding))
         return;
-    d->padding = padding;
+
+    d->extra.value().padding = padding;
     d->updateLayout();
     emit paddingChanged();
-    if (!d->explicitTopPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitTopPadding)
         emit topPaddingChanged();
-    if (!d->explicitLeftPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitLeftPadding)
         emit leftPaddingChanged();
-    if (!d->explicitRightPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitRightPadding)
         emit rightPaddingChanged();
-    if (!d->explicitBottomPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitBottomPadding)
         emit bottomPaddingChanged();
 }
 
@@ -4434,9 +4456,9 @@ void QQuickTextInput::resetPadding()
 qreal QQuickTextInput::topPadding() const
 {
     Q_D(const QQuickTextInput);
-    if (d->explicitTopPadding)
-        return d->topPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitTopPadding)
+        return d->extra->topPadding;
+    return d->padding();
 }
 
 void QQuickTextInput::setTopPadding(qreal padding)
@@ -4454,9 +4476,9 @@ void QQuickTextInput::resetTopPadding()
 qreal QQuickTextInput::leftPadding() const
 {
     Q_D(const QQuickTextInput);
-    if (d->explicitLeftPadding)
-        return d->leftPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitLeftPadding)
+        return d->extra->leftPadding;
+    return d->padding();
 }
 
 void QQuickTextInput::setLeftPadding(qreal padding)
@@ -4474,9 +4496,9 @@ void QQuickTextInput::resetLeftPadding()
 qreal QQuickTextInput::rightPadding() const
 {
     Q_D(const QQuickTextInput);
-    if (d->explicitRightPadding)
-        return d->rightPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitRightPadding)
+        return d->extra->rightPadding;
+    return d->padding();
 }
 
 void QQuickTextInput::setRightPadding(qreal padding)
@@ -4494,9 +4516,9 @@ void QQuickTextInput::resetRightPadding()
 qreal QQuickTextInput::bottomPadding() const
 {
     Q_D(const QQuickTextInput);
-    if (d->explicitBottomPadding)
-        return d->bottomPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitBottomPadding)
+        return d->extra->bottomPadding;
+    return d->padding();
 }
 
 void QQuickTextInput::setBottomPadding(qreal padding)
