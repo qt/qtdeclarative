@@ -87,14 +87,15 @@ public:
     struct ExtraData {
         ExtraData();
 
+        qreal padding;
         qreal topPadding;
         qreal leftPadding;
         qreal rightPadding;
         qreal bottomPadding;
-        bool explicitTopPadding;
-        bool explicitLeftPadding;
-        bool explicitRightPadding;
-        bool explicitBottomPadding;
+        bool explicitTopPadding : 1;
+        bool explicitLeftPadding : 1;
+        bool explicitRightPadding : 1;
+        bool explicitBottomPadding : 1;
         qreal lineHeight;
         QQuickTextDocumentWithImageResources *doc;
         QString activeLink;
@@ -119,7 +120,6 @@ public:
     QTextLayout *elideLayout;
     QQuickTextLine *textLine;
 
-    qreal padding;
     qreal lineWidth;
 
     QRgb color;
@@ -171,6 +171,7 @@ public:
     qreal availableWidth() const;
     qreal availableHeight() const;
 
+    inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
