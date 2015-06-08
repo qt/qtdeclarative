@@ -42,8 +42,13 @@ QT_BEGIN_NAMESPACE
 
 struct Q_QML_EXPORT QQmlDebuggingEnabler
 {
+    enum StartMode {
+        DoNotWaitForClient,
+        WaitForClient
+    };
+
     QQmlDebuggingEnabler(bool printWarning = true);
-    static bool startTcpDebugServer(int port, bool block = false,
+    static bool startTcpDebugServer(int port, StartMode mode = DoNotWaitForClient,
                                     const QString &hostName = QString());
 };
 
