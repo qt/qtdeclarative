@@ -51,6 +51,7 @@
 
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
+#include <private/qlazilyallocated_p.h>
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
@@ -82,11 +83,25 @@ public:
     };
     typedef QList<Node*>::iterator TextNodeIterator;
 
+    struct ExtraData {
+        ExtraData();
+
+        qreal padding;
+        qreal topPadding;
+        qreal leftPadding;
+        qreal rightPadding;
+        qreal bottomPadding;
+        bool explicitTopPadding : 1;
+        bool explicitLeftPadding : 1;
+        bool explicitRightPadding : 1;
+        bool explicitBottomPadding : 1;
+    };
+    QLazilyAllocated<ExtraData> extra;
+
 
     QQuickTextEditPrivate()
         : color(QRgb(0xFF000000)), selectionColor(QRgb(0xFF000080)), selectedTextColor(QRgb(0xFFFFFFFF))
-        , textMargin(0.0), xoff(0), yoff(0), padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0)
-        , explicitTopPadding(false), explicitLeftPadding(false), explicitRightPadding(false), explicitBottomPadding(false)
+        , textMargin(0.0), xoff(0), yoff(0)
         , font(sourceFont), cursorComponent(0), cursorItem(0), document(0), control(0)
         , quickDocument(0), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
@@ -134,6 +149,7 @@ public:
     Qt::InputMethodHints effectiveInputMethodHints() const;
 #endif
 
+    inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
@@ -148,15 +164,6 @@ public:
     qreal textMargin;
     qreal xoff;
     qreal yoff;
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
-    bool explicitTopPadding;
-    bool explicitLeftPadding;
-    bool explicitRightPadding;
-    bool explicitBottomPadding;
 
     QString text;
     QUrl baseUrl;

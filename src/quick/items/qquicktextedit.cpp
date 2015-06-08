@@ -703,9 +703,11 @@ void QQuickTextEditPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextEdit);
     qreal oldPadding = q->topPadding();
-    topPadding = value;
-    explicitTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    if (!reset || extra.isAllocated()) {
+        extra.value().topPadding = value;
+        extra.value().explicitTopPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         q->updateSize();
         emit q->topPaddingChanged();
     }
@@ -714,42 +716,40 @@ void QQuickTextEditPrivate::setTopPadding(qreal value, bool reset)
 void QQuickTextEditPrivate::setLeftPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextEdit);
-    qreal oldPadding = q->topPadding();
-    leftPadding = value;
-    explicitLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    qreal oldPadding = q->leftPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().leftPadding = value;
+        extra.value().explicitLeftPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         q->updateSize();
         emit q->leftPaddingChanged();
-        if (q->isComponentComplete()) {
-            updateType = QQuickTextEditPrivate::UpdatePaintNode;
-            q->update();
-        }
     }
 }
 
 void QQuickTextEditPrivate::setRightPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextEdit);
-    qreal oldPadding = q->topPadding();
-    rightPadding = value;
-    explicitRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    qreal oldPadding = q->rightPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().rightPadding = value;
+        extra.value().explicitRightPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         q->updateSize();
         emit q->rightPaddingChanged();
-        if (q->isComponentComplete()) {
-            updateType = QQuickTextEditPrivate::UpdatePaintNode;
-            q->update();
-        }
     }
 }
 
 void QQuickTextEditPrivate::setBottomPadding(qreal value, bool reset)
 {
     Q_Q(QQuickTextEdit);
-    qreal oldPadding = q->topPadding();
-    bottomPadding = value;
-    explicitBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    qreal oldPadding = q->bottomPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().bottomPadding = value;
+        extra.value().explicitBottomPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         q->updateSize();
         emit q->bottomPaddingChanged();
     }
@@ -2094,6 +2094,19 @@ bool QQuickTextEdit::isInputMethodComposing() const
 #endif // QT_NO_IM
 }
 
+QQuickTextEditPrivate::ExtraData::ExtraData()
+    : padding(0)
+    , topPadding(0)
+    , leftPadding(0)
+    , rightPadding(0)
+    , bottomPadding(0)
+    , explicitTopPadding(false)
+    , explicitLeftPadding(false)
+    , explicitRightPadding(false)
+    , explicitBottomPadding(false)
+{
+}
+
 void QQuickTextEditPrivate::init()
 {
     Q_Q(QQuickTextEdit);
@@ -2786,28 +2799,29 @@ QString QQuickTextEdit::linkAt(qreal x, qreal y) const
 qreal QQuickTextEdit::padding() const
 {
     Q_D(const QQuickTextEdit);
-    return d->padding;
+    return d->padding();
 }
 
 void QQuickTextEdit::setPadding(qreal padding)
 {
     Q_D(QQuickTextEdit);
-    if (qFuzzyCompare(d->padding, padding))
+    if (qFuzzyCompare(d->padding(), padding))
         return;
-    d->padding = padding;
+
+    d->extra.value().padding = padding;
     updateSize();
     if (isComponentComplete()) {
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
     emit paddingChanged();
-    if (!d->explicitTopPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitTopPadding)
         emit topPaddingChanged();
-    if (!d->explicitLeftPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitLeftPadding)
         emit leftPaddingChanged();
-    if (!d->explicitRightPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitRightPadding)
         emit rightPaddingChanged();
-    if (!d->explicitBottomPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitBottomPadding)
         emit bottomPaddingChanged();
 }
 
@@ -2819,9 +2833,9 @@ void QQuickTextEdit::resetPadding()
 qreal QQuickTextEdit::topPadding() const
 {
     Q_D(const QQuickTextEdit);
-    if (d->explicitTopPadding)
-        return d->topPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitTopPadding)
+        return d->extra->topPadding;
+    return d->padding();
 }
 
 void QQuickTextEdit::setTopPadding(qreal padding)
@@ -2839,9 +2853,9 @@ void QQuickTextEdit::resetTopPadding()
 qreal QQuickTextEdit::leftPadding() const
 {
     Q_D(const QQuickTextEdit);
-    if (d->explicitLeftPadding)
-        return d->leftPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitLeftPadding)
+        return d->extra->leftPadding;
+    return d->padding();
 }
 
 void QQuickTextEdit::setLeftPadding(qreal padding)
@@ -2859,9 +2873,9 @@ void QQuickTextEdit::resetLeftPadding()
 qreal QQuickTextEdit::rightPadding() const
 {
     Q_D(const QQuickTextEdit);
-    if (d->explicitRightPadding)
-        return d->rightPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitRightPadding)
+        return d->extra->rightPadding;
+    return d->padding();
 }
 
 void QQuickTextEdit::setRightPadding(qreal padding)
@@ -2879,9 +2893,9 @@ void QQuickTextEdit::resetRightPadding()
 qreal QQuickTextEdit::bottomPadding() const
 {
     Q_D(const QQuickTextEdit);
-    if (d->explicitBottomPadding)
-        return d->bottomPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitBottomPadding)
+        return d->extra->bottomPadding;
+    return d->padding();
 }
 
 void QQuickTextEdit::setBottomPadding(qreal padding)
