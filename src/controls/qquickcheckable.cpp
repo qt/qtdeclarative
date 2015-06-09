@@ -66,7 +66,7 @@ QQuickCheckable::QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent)
 /*!
     \qmlproperty bool QtQuickControls2::Checkable::checked
 
-    TODO
+    This property holds whether the control is checked.
 */
 bool QQuickCheckable::isChecked() const
 {
@@ -98,7 +98,7 @@ void QQuickCheckable::setExclusive(bool exclusive)
 /*!
     \qmlproperty Item QtQuickControls2::Checkable::indicator
 
-    TODO
+    This property holds the indicator item.
 */
 QQuickItem *QQuickCheckable::indicator() const
 {
@@ -124,7 +124,7 @@ void QQuickCheckable::setIndicator(QQuickItem *indicator)
 /*!
     \qmlmethod void QtQuickControls2::Checkable::toggle()
 
-    TODO
+    Toggles the checked state of the control.
 */
 void QQuickCheckable::toggle()
 {

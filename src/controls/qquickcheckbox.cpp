@@ -46,7 +46,64 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A check box control.
 
-    TODO
+    CheckBox presents an option button that can be toggled on (checked) or
+    off (unchecked). Check boxes are typically used to select one or more
+    options from a set of options.
+
+    \table
+    \row \li \image qtquickcontrols2-checkbox-normal.png
+         \li A check box in its normal state.
+    \row \li \image qtquickcontrols2-checkbox-checked.png
+         \li A check box that is checked.
+    \row \li \image qtquickcontrols2-checkbox-focused.png
+         \li A check box that has active focus.
+    \row \li \image qtquickcontrols2-checkbox-disabled.png
+         \li A check box that is disabled.
+    \endtable
+
+    \code
+    ColumnLayout {
+        CheckBox {
+            checked: true
+            text: qsTr("First")
+        }
+        CheckBox {
+            text: qsTr("Second")
+        }
+        CheckBox {
+            checked: true
+            text: qsTr("Third")
+        }
+    }
+    \endcode
+
+    \section1 Structure
+
+    CheckBox consists of three parts, \l {Control::background}{background},
+    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
+    implicit sizes are used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-checkbox-background.png
+
+    CheckBox has no background item by default.
+
+    \section3 Label
+
+    \image qtquickcontrols2-checkbox-label.png
+
+    The following snippet presents the default label item implementation.
+
+    \snippet CheckBox.qml label
+
+    \section3 Indicator
+
+    \image qtquickcontrols2-checkbox-indicator.png
+
+    The following snippet presents the default indicator item implementation.
+
+    \snippet CheckBox.qml indicator
 */
 
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
