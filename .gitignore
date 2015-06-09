@@ -14,9 +14,11 @@
 /tests/auto/controls/tst_controls
 /tests/auto/extras/tst_extras
 /tests/auto/sanity/tst_sanity
+/tests/auto/snippets/tst_snippets
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
 
+/tests/auto/snippets/screenshots/*.png
 /src/controls/doc/qtquickcontrols2.tags
 
 *.so
