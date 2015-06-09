@@ -76,20 +76,17 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-
     \section1 Structure
 
-    Button consists of two delegates, \l {Control::background}{background}
-    and \l {Button::label}{label}. The implicit sizes of both delegates are
-    used to calculate the implicit size of the control.
+    Button consists of two parts, \l {Control::background}{background} and
+    \l {Button::label}{label}. Their implicit sizes are used to calculate
+    the implicit size of the control.
 
     \section3 Background
 
     \image qtquickcontrols2-button-background.png
 
-    If the \l {Control::background}{background} delegate has no explicit size
-    specified, it automatically follows the control's size. The following
-    snippet presents the default background delegate implementation.
+    The following snippet presents the default background item implementation.
 
     \snippet Button.qml background
 
@@ -97,7 +94,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-button-label.png
 
-    The following snippet presents the default label delegate implementation.
+    The following snippet presents the default label item implementation.
 
     \snippet Button.qml label
 
@@ -109,13 +106,13 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuickControls2::Button::pressed()
 
-    This signal is emitted when the button is pressed.
+    This signal is emitted when the button is interactively pressed by the user.
 */
 
 /*!
     \qmlsignal QtQuickControls2::Button::released()
 
-    This signal is emitted when the button is released.
+    This signal is emitted when the button is interactively released by the user.
 */
 
 /*!
@@ -153,10 +150,10 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
 /*!
     \qmlproperty string QtQuickControls2::Button::text
 
-    This property holds the text shown on the button.
+    This property holds a textual description of the button.
 
     \note The text is used for accessibility purposes, so it makes sense to
-          set a textual description even if the label delegate is an image.
+          set a textual description even if the label item is an image.
 
     \sa label
 */
@@ -198,12 +195,9 @@ void QQuickButton::setPressed(bool isPressed)
 /*!
     \qmlproperty Item QtQuickControls2::Button::label
 
-    This property holds the label delegate.
+    This property holds the label item.
 
-    The implicit size of the label delegate is used to calculate
-    the implicit size of the control.
-
-    \sa Structure, text
+    \sa text
 */
 QQuickItem *QQuickButton::label() const
 {
