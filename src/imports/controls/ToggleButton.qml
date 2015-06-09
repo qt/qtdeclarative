@@ -92,8 +92,8 @@ AbstractToggleButton {
     label: Text {
         x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
-        width: parent.width - indicator.width - control.Theme.spacing - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
+        width: control.availableWidth - indicator.width - control.Theme.spacing
+        height: control.availableHeight
 
         text: control.text
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor

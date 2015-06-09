@@ -57,13 +57,13 @@ AbstractGroupBox {
         id: content
         x: control.leftPadding
         y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
+        width: control.availableWidth
+        height: control.availableHeight
     }
 
     label: Text {
         x: control.leftPadding
-        width: parent.width - control.leftPadding - control.rightPadding
+        width: control.availableWidth
 
         text: control.title
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor

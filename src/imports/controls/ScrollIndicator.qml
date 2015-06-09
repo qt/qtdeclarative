@@ -62,8 +62,8 @@ AbstractScrollIndicator {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         x: control.leftPadding + (horizontal ? control.position * control.width : 0)
         y: control.topPadding + (horizontal ? 0 : control.position * control.height)
-        width: horizontal ? control.size * control.width - control.leftPadding - control.rightPadding : implicitWidth
-        height: horizontal ? implicitHeight : control.size * control.height - control.topPadding - control.bottomPadding
+        width: horizontal ? control.size * control.availableWidth : implicitWidth
+        height: horizontal ? implicitHeight : control.size * control.availableHeight
 
         states: State {
             name: "active"

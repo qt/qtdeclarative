@@ -53,8 +53,8 @@ AbstractTextArea {
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
+        width: control.availableWidth
+        height: control.availableHeight
 
         color: control.Theme.textColor
         opacity: control.Theme.disabledOpacity

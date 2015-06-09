@@ -52,8 +52,8 @@ AbstractProgressBar {
     indicator: Item {
         x: control.leftPadding
         y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
+        width: control.availableWidth
+        height: control.availableHeight
 
         scale: control.mirrored ? -1 : 1
 
@@ -92,7 +92,7 @@ AbstractProgressBar {
         implicitHeight: 6
         x: control.leftPadding
         y: (parent.height - height) / 2
-        width: parent.width - control.leftPadding - control.rightPadding
+        width: control.availableWidth
         height: 6
 
         radius: control.Theme.roundness

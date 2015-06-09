@@ -83,8 +83,8 @@ AbstractSlider {
         implicitHeight: horizontal ? 6 : 120
         x: horizontal ? control.leftPadding : (control.width - width) / 2
         y: horizontal ? (control.height - height) / 2 : control.topPadding
-        width: horizontal ? parent.width - control.leftPadding - control.rightPadding : implicitWidth
-        height: horizontal ? implicitHeight : parent.height - control.topPadding - control.bottomPadding
+        width: horizontal ? control.availableWidth : implicitWidth
+        height: horizontal ? implicitHeight : control.availableHeight
 
         radius: control.Theme.roundness
         border.color: control.Theme.frameColor
