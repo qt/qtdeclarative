@@ -44,9 +44,9 @@ QT_BEGIN_NAMESPACE
     \inherits Item
     \instantiates QQuickControl
     \inqmlmodule QtQuick.Controls
-    \brief A basic control type.
+    \brief A user interface control.
 
-    TODO
+    Control is the base type of user interface controls.
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
@@ -142,15 +142,23 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 
 /*!
     \qmlproperty real QtQuickControls2::Control::availableWidth
-    \qmlproperty real QtQuickControls2::Control::availableHeight
 
-    TODO
+    This property holds the width available after deducting horizontal padding.
+
+    \sa padding, leftPadding, rightPadding
 */
 qreal QQuickControl::availableWidth() const
 {
     return width() - leftPadding() - rightPadding();
 }
 
+/*!
+    \qmlproperty real QtQuickControls2::Control::availableHeight
+
+    This property holds the height available after deducting vertical padding.
+
+    \sa padding, topPadding, bottomPadding
+*/
 qreal QQuickControl::availableHeight() const
 {
     return height() - topPadding() - bottomPadding();
@@ -158,12 +166,10 @@ qreal QQuickControl::availableHeight() const
 
 /*!
     \qmlproperty real QtQuickControls2::Control::padding
-    \qmlproperty real QtQuickControls2::Control::topPadding
-    \qmlproperty real QtQuickControls2::Control::leftPadding
-    \qmlproperty real QtQuickControls2::Control::rightPadding
-    \qmlproperty real QtQuickControls2::Control::bottomPadding
 
-    These properties hold the padding.
+    This property holds the default padding.
+
+    \sa availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickControl::padding() const
 {
@@ -198,6 +204,13 @@ void QQuickControl::resetPadding()
     setPadding(0);
 }
 
+/*!
+    \qmlproperty real QtQuickControls2::Control::topPadding
+
+    This property holds the top padding.
+
+    \sa padding, bottomPadding, availableHeight
+*/
 qreal QQuickControl::topPadding() const
 {
     Q_D(const QQuickControl);
@@ -218,6 +231,13 @@ void QQuickControl::resetTopPadding()
     d->setTopPadding(0, true);
 }
 
+/*!
+    \qmlproperty real QtQuickControls2::Control::leftPadding
+
+    This property holds the left padding.
+
+    \sa padding, rightPadding, availableWidth
+*/
 qreal QQuickControl::leftPadding() const
 {
     Q_D(const QQuickControl);
@@ -238,6 +258,13 @@ void QQuickControl::resetLeftPadding()
     d->setLeftPadding(0, true);
 }
 
+/*!
+    \qmlproperty real QtQuickControls2::Control::rightPadding
+
+    This property holds the right padding.
+
+    \sa padding, leftPadding, availableWidth
+*/
 qreal QQuickControl::rightPadding() const
 {
     Q_D(const QQuickControl);
@@ -258,6 +285,13 @@ void QQuickControl::resetRightPadding()
     d->setRightPadding(0, true);
 }
 
+/*!
+    \qmlproperty real QtQuickControls2::Control::bottomPadding
+
+    This property holds the bottom padding.
+
+    \sa padding, topPadding, availableHeight
+*/
 qreal QQuickControl::bottomPadding() const
 {
     Q_D(const QQuickControl);
@@ -281,7 +315,17 @@ void QQuickControl::resetBottomPadding()
 /*!
     \qmlproperty enumeration QtQuickControls2::Control::layoutDirection
 
-    TODO
+    This property holds the layout direction of the control.
+
+    Possible values:
+    \list
+    \li Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
+    the left anchor remains to the left of the row.
+    \li Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
+    the right anchor remains to the right of the row.
+    \endlist
+
+    \sa effectiveLayoutDirection
 */
 Qt::LayoutDirection QQuickControl::layoutDirection() const
 {
@@ -291,8 +335,15 @@ Qt::LayoutDirection QQuickControl::layoutDirection() const
 
 /*!
     \qmlproperty enumeration QtQuickControls2::Control::effectiveLayoutDirection
+    \readonly
 
-    TODO
+    This property holds the effective layout direction of the control.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled}
+    for locale layouts, the visual layout direction of the control will be mirrored. However,
+    the \l layoutDirection property will remain unchanged.
+
+    \sa layoutDirection, {LayoutMirroring}{LayoutMirroring}
 */
 Qt::LayoutDirection QQuickControl::effectiveLayoutDirection() const
 {
@@ -316,7 +367,12 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
     \qmlproperty bool QtQuickControls2::Control::mirrored
     \readonly
 
-    TODO
+    This property holds whether the control is mirrored.
+
+    This property is provided for convenience. A control is considered mirrored
+    when its visual layout direction is right-to-left.
+
+    \sa effectiveLayoutDirection, {LayoutMirroring}{LayoutMirroring}
 */
 bool QQuickControl::isMirrored() const
 {
@@ -327,6 +383,10 @@ bool QQuickControl::isMirrored() const
     \qmlproperty Item QtQuickControls2::Control::background
 
     This property holds the background item.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
 */
 QQuickItem *QQuickControl::background() const
 {
