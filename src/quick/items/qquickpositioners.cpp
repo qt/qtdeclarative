@@ -128,7 +128,6 @@ void QQuickBasePositioner::PositionedItem::updatePadding(qreal lp, qreal tp, qre
     bottomPadding = bp;
 }
 
-
 QQuickBasePositioner::QQuickBasePositioner(PositionerType at, QQuickItem *parent)
     : QQuickImplicitSizeItem(*(new QQuickBasePositionerPrivate), parent)
 {
@@ -515,24 +514,25 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
 qreal QQuickBasePositioner::padding() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->padding;
+    return d->padding();
 }
 
 void QQuickBasePositioner::setPadding(qreal padding)
 {
     Q_D(QQuickBasePositioner);
-    if (qFuzzyCompare(d->padding, padding))
+    if (qFuzzyCompare(d->padding(), padding))
         return;
-    d->padding = padding;
+
+    d->extra.value().padding = padding;
     d->setPositioningDirty();
     emit paddingChanged();
-    if (!d->explicitTopPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitTopPadding)
         emit topPaddingChanged();
-    if (!d->explicitLeftPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitLeftPadding)
         emit leftPaddingChanged();
-    if (!d->explicitRightPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitRightPadding)
         emit rightPaddingChanged();
-    if (!d->explicitBottomPadding)
+    if (!d->extra.isAllocated() || !d->extra->explicitBottomPadding)
         emit bottomPaddingChanged();
 }
 
@@ -544,9 +544,9 @@ void QQuickBasePositioner::resetPadding()
 qreal QQuickBasePositioner::topPadding() const
 {
     Q_D(const QQuickBasePositioner);
-    if (d->explicitTopPadding)
-        return d->topPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitTopPadding)
+        return d->extra->topPadding;
+    return d->padding();
 }
 
 void QQuickBasePositioner::setTopPadding(qreal padding)
@@ -564,9 +564,9 @@ void QQuickBasePositioner::resetTopPadding()
 qreal QQuickBasePositioner::leftPadding() const
 {
     Q_D(const QQuickBasePositioner);
-    if (d->explicitLeftPadding)
-        return d->leftPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitLeftPadding)
+        return d->extra->leftPadding;
+    return d->padding();
 }
 
 void QQuickBasePositioner::setLeftPadding(qreal padding)
@@ -584,9 +584,9 @@ void QQuickBasePositioner::resetLeftPadding()
 qreal QQuickBasePositioner::rightPadding() const
 {
     Q_D(const QQuickBasePositioner);
-    if (d->explicitRightPadding)
-        return d->rightPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitRightPadding)
+        return d->extra->rightPadding;
+    return d->padding();
 }
 
 void QQuickBasePositioner::setRightPadding(qreal padding)
@@ -604,9 +604,9 @@ void QQuickBasePositioner::resetRightPadding()
 qreal QQuickBasePositioner::bottomPadding() const
 {
     Q_D(const QQuickBasePositioner);
-    if (d->explicitBottomPadding)
-        return d->bottomPadding;
-    return d->padding;
+    if (d->extra.isAllocated() && d->extra->explicitBottomPadding)
+        return d->extra->bottomPadding;
+    return d->padding();
 }
 
 void QQuickBasePositioner::setBottomPadding(qreal padding)
@@ -621,13 +621,28 @@ void QQuickBasePositioner::resetBottomPadding()
     d->setBottomPadding(0, true);
 }
 
+QQuickBasePositionerPrivate::ExtraData::ExtraData()
+    : padding(0)
+    , topPadding(0)
+    , leftPadding(0)
+    , rightPadding(0)
+    , bottomPadding(0)
+    , explicitTopPadding(false)
+    , explicitLeftPadding(false)
+    , explicitRightPadding(false)
+    , explicitBottomPadding(false)
+{
+}
+
 void QQuickBasePositionerPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickBasePositioner);
-    qreal tmp = q->topPadding();
-    topPadding = value;
-    explicitTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+    qreal oldPadding = q->topPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().topPadding = value;
+        extra.value().explicitTopPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         setPositioningDirty();
         emit q->topPaddingChanged();
     }
@@ -636,10 +651,12 @@ void QQuickBasePositionerPrivate::setTopPadding(qreal value, bool reset)
 void QQuickBasePositionerPrivate::setLeftPadding(qreal value, bool reset)
 {
     Q_Q(QQuickBasePositioner);
-    qreal tmp = q->leftPadding();
-    leftPadding = value;
-    explicitLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+    qreal oldPadding = q->leftPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().leftPadding = value;
+        extra.value().explicitLeftPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         setPositioningDirty();
         emit q->leftPaddingChanged();
     }
@@ -648,10 +665,12 @@ void QQuickBasePositionerPrivate::setLeftPadding(qreal value, bool reset)
 void QQuickBasePositionerPrivate::setRightPadding(qreal value, bool reset)
 {
     Q_Q(QQuickBasePositioner);
-    qreal tmp = q->rightPadding();
-    rightPadding = value;
-    explicitRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+    qreal oldPadding = q->rightPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().rightPadding = value;
+        extra.value().explicitRightPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         setPositioningDirty();
         emit q->rightPaddingChanged();
     }
@@ -660,10 +679,12 @@ void QQuickBasePositionerPrivate::setRightPadding(qreal value, bool reset)
 void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
 {
     Q_Q(QQuickBasePositioner);
-    qreal tmp = q->bottomPadding();
-    bottomPadding = value;
-    explicitBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(tmp, value)) || (reset && !qFuzzyCompare(tmp, padding))) {
+    qreal oldPadding = q->bottomPadding();
+    if (!reset || extra.isAllocated()) {
+        extra.value().bottomPadding = value;
+        extra.value().explicitBottomPadding = !reset;
+    }
+    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding()))) {
         setPositioningDirty();
         emit q->bottomPaddingChanged();
     }

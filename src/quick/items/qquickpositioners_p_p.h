@@ -51,6 +51,7 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qquicktransitionmanager_p_p.h>
 #include <private/qquickstatechangescript_p.h>
+#include <private/qlazilyallocated_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
@@ -65,19 +66,25 @@ class QQuickBasePositionerPrivate : public QQuickImplicitSizeItemPrivate, public
     Q_DECLARE_PUBLIC(QQuickBasePositioner)
 
 public:
+    struct ExtraData {
+        ExtraData();
+
+        qreal padding;
+        qreal topPadding;
+        qreal leftPadding;
+        qreal rightPadding;
+        qreal bottomPadding;
+        bool explicitTopPadding : 1;
+        bool explicitLeftPadding : 1;
+        bool explicitRightPadding : 1;
+        bool explicitBottomPadding : 1;
+    };
+    QLazilyAllocated<ExtraData> extra;
+
     QQuickBasePositionerPrivate()
         : spacing(0), type(QQuickBasePositioner::None)
         , transitioner(0), positioningDirty(false)
         , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
-        , padding(0)
-        , topPadding(0)
-        , leftPadding(0)
-        , rightPadding(0)
-        , bottomPadding(0)
-        , explicitTopPadding(false)
-        , explicitLeftPadding(false)
-        , explicitRightPadding(false)
-        , explicitBottomPadding(false)
 
     {
     }
@@ -107,16 +114,6 @@ public:
     bool anchorConflict : 1;
 
     Qt::LayoutDirection layoutDirection;
-
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
-    bool explicitTopPadding;
-    bool explicitLeftPadding;
-    bool explicitRightPadding;
-    bool explicitBottomPadding;
 
     void mirrorChange() Q_DECL_OVERRIDE {
         effectiveLayoutDirectionChange();
@@ -170,6 +167,7 @@ public:
     {
     }
 
+    inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
