@@ -55,6 +55,7 @@ AbstractRadioButton {
 
     padding: Theme.padding
 
+    //! [indicator]
     indicator: Rectangle {
         implicitWidth: 20
         implicitHeight: 20
@@ -80,7 +81,9 @@ AbstractRadioButton {
             border.color: control.Theme.frameColor
         }
     }
+    //! [indicator]
 
+    //! [label]
     label: Text {
         x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
@@ -94,4 +97,5 @@ AbstractRadioButton {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 }

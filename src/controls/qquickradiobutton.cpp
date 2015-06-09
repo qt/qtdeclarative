@@ -46,7 +46,67 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A radio button control.
 
-    TODO
+    RadioButton presents an option button that can be toggled on (checked) or
+    off (unchecked). Radio buttons are typically used to select one option
+    from a set of options.
+
+    \table
+    \row \li \image qtquickcontrols2-radiobutton-normal.png
+         \li A radio button in its normal state.
+    \row \li \image qtquickcontrols2-radiobutton-checked.png
+         \li A radio button that is checked.
+    \row \li \image qtquickcontrols2-radiobutton-focused.png
+         \li A radio button that has active focus.
+    \row \li \image qtquickcontrols2-radiobutton-disabled.png
+         \li A radio button that is disabled.
+    \endtable
+
+    \code
+    ColumnLayout {
+        ExclusiveGroup { id: group }
+        RadioButton {
+            checked: true
+            text: qsTr("First")
+            Exclusive.group: group
+        }
+        RadioButton {
+            text: qsTr("Second")
+            Exclusive.group: group
+        }
+        RadioButton {
+            text: qsTr("Third")
+            Exclusive.group: group
+        }
+    }
+    \endcode
+
+    \section1 Structure
+
+    RadioButton consists of three parts, \l {Control::background}{background},
+    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
+    implicit sizes are used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-radiobutton-background.png
+
+    RadioButton has no background item by default.
+
+    \section3 Label
+
+    \image qtquickcontrols2-radiobutton-label.png
+
+    The following snippet presents the default label item implementation.
+
+    \snippet RadioButton.qml label
+
+    \section3 Indicator
+
+    \image qtquickcontrols2-radiobutton-indicator.png
+
+    The following snippet presents the default indicator item implementation.
+
+    \snippet RadioButton.qml indicator
 
     \sa ExclusiveGroup
 */
