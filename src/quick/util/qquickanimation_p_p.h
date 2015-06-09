@@ -164,7 +164,7 @@ private:
     T *m_instance;
 };
 
-class QQuickAbstractAnimationPrivate : public QObjectPrivate, public QAnimationJobChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickAbstractAnimationPrivate : public QObjectPrivate, public QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickAbstractAnimation)
 public:
