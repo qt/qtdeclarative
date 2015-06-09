@@ -54,8 +54,12 @@ QT_BEGIN_NAMESPACE
 
 class Q_QUICKCONTROLS_EXPORT QQuickContainerPrivate : public QQuickControlPrivate
 {
+    Q_DECLARE_PUBLIC(QQuickContainer)
+
 public:
     QQuickContainerPrivate();
+
+    void resizeContent();
 
     qreal contentWidth;
     qreal contentHeight;

@@ -63,11 +63,6 @@ AbstractDayOfWeekRow {
     contentItem: Row {
         id: row
 
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
         Repeater {
             model: control.source
             delegate: control.delegate

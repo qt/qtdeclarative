@@ -64,11 +64,6 @@ AbstractCalendarView {
         rows: 6
         columns: 7
 
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
         Repeater {
             id: repeater
             model: control.source

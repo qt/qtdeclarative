@@ -68,11 +68,6 @@ AbstractTabView {
         Binding { target: control; property: "currentIndex"; value: listView.currentIndex }
         Binding { target: listView; property: "currentIndex"; value: control.currentIndex }
 
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
         orientation: Qt.Horizontal
         snapMode: ListView.SnapOneItem
         boundsBehavior: Flickable.StopAtBounds

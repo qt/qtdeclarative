@@ -130,7 +130,7 @@ void QQuickTabView::setTabBar(QQuickTabBar *bar)
 void QQuickTabView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTabView);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
     if (d->bar) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(d->bar);
         if (!p->widthValid) {

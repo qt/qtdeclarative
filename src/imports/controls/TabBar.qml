@@ -64,11 +64,6 @@ AbstractTabBar {
     contentItem: ListView {
         id: listView
 
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
         spacing: 1
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds

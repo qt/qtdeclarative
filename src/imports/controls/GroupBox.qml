@@ -55,10 +55,6 @@ AbstractGroupBox {
 
     contentItem: Item {
         id: content
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
     }
 
     label: Text {

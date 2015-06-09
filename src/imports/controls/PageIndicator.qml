@@ -66,11 +66,6 @@ AbstractPageIndicator {
     contentItem: Row {
         id: row
 
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
         spacing: control.Theme.spacing
 
         Repeater {

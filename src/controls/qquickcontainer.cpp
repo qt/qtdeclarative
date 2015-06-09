@@ -53,6 +53,15 @@ QQuickContainerPrivate::QQuickContainerPrivate() :
 {
 }
 
+void QQuickContainerPrivate::resizeContent()
+{
+    Q_Q(QQuickContainer);
+    if (contentItem) {
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight()));
+    }
+}
+
 QQuickContainer::QQuickContainer(QQuickItem *parent) :
     QQuickControl(*(new QQuickContainerPrivate), parent)
 {
@@ -120,9 +129,25 @@ void QQuickContainer::setContentItem(QQuickItem *item)
         if (item) {
             if (!item->parentItem())
                 item->setParentItem(this);
+            if (isComponentComplete())
+                d->resizeContent();
         }
         emit contentItemChanged();
     }
+}
+
+void QQuickContainer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickContainer);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    d->resizeContent();
+}
+
+void QQuickContainer::paddingChange()
+{
+    Q_D(QQuickContainer);
+    QQuickControl::paddingChange();
+    d->resizeContent();
 }
 
 void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
