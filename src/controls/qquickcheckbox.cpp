@@ -77,33 +77,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \section1 Structure
-
-    CheckBox consists of three parts, \l {Control::background}{background},
-    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
-    implicit sizes are used to calculate the implicit size of the control.
-
-    \section3 Background
-
-    \image qtquickcontrols2-checkbox-background.png
-
-    CheckBox has no background item by default.
-
-    \section3 Label
-
-    \image qtquickcontrols2-checkbox-label.png
-
-    The following snippet presents the default label item implementation.
-
-    \snippet CheckBox.qml label
-
-    \section3 Indicator
-
-    \image qtquickcontrols2-checkbox-indicator.png
-
-    The following snippet presents the default indicator item implementation.
-
-    \snippet CheckBox.qml indicator
+    \sa {Customizing CheckBox}
 */
 
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :

@@ -76,31 +76,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \section1 Structure
-
-    Button consists of two parts, \l {Control::background}{background} and
-    \l {Button::label}{label}. Their implicit sizes are used to calculate
-    the implicit size of the control.
-
-    \section3 Background
-
-    \image qtquickcontrols2-button-background.png
-
-    The following snippet presents the default background item implementation.
-
-    \snippet Button.qml background
-
-    \section3 Label
-
-    \image qtquickcontrols2-button-label.png
-
-    The following snippet presents the default label item implementation.
-
-    \snippet Button.qml label
-
-    \section1 Theming
-
-    \note ### TODO: Document what is used and how to customize.
+    \sa {Customizing Button}
 */
 
 /*!
