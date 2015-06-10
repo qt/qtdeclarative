@@ -167,9 +167,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     DeleteWatcher watcher(this);
 
     Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    GuardCapture capture(m_context->engine, this, &watcher);
+    QQmlPropertyCapture capture(m_context->engine, this, &watcher);
 
-    QQmlEnginePrivate::PropertyCapture *lastPropertyCapture = ep->propertyCapture;
+    QQmlPropertyCapture *lastPropertyCapture = ep->propertyCapture;
     ep->propertyCapture = notifyOnValueChanged() ? &capture : 0;
 
 
@@ -209,7 +209,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
         capture.errorString = 0;
     }
 
-    while (Guard *g = capture.guards.takeFirst())
+    while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
         g->Delete();
 
     ep->propertyCapture = lastPropertyCapture;
@@ -217,7 +217,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     return result->asReturnedValue();
 }
 
-void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
+void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)
 {
     if (watcher->wasDeleted())
         return;
@@ -227,13 +227,13 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
     while (!guards.isEmpty() && !guards.first()->isConnected(n))
         guards.takeFirst()->Delete();
 
-    Guard *g = 0;
+    QQmlJavaScriptExpressionGuard *g = 0;
     if (!guards.isEmpty()) {
         g = guards.takeFirst();
         g->cancelNotify();
         Q_ASSERT(g->isConnected(n));
     } else {
-        g = Guard::New(expression, engine);
+        g = QQmlJavaScriptExpressionGuard::New(expression, engine);
         g->connect(n);
     }
 
@@ -244,7 +244,7 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QQmlNotifier *n)
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */
-void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, int n)
+void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n)
 {
     if (watcher->wasDeleted())
         return;
@@ -273,13 +273,13 @@ void QQmlJavaScriptExpression::GuardCapture::captureProperty(QObject *o, int c, 
         while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
             guards.takeFirst()->Delete();
 
-        Guard *g = 0;
+        QQmlJavaScriptExpressionGuard *g = 0;
         if (!guards.isEmpty()) {
             g = guards.takeFirst();
             g->cancelNotify();
             Q_ASSERT(g->isConnected(o, n));
         } else {
-            g = Guard::New(expression, engine);
+            g = QQmlJavaScriptExpressionGuard::New(expression, engine);
             g->connect(o, n, engine);
         }
 
@@ -375,7 +375,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
 
 void QQmlJavaScriptExpression::clearGuards()
 {
-    while (Guard *g = activeGuards.takeFirst())
+    while (QQmlJavaScriptExpressionGuard *g = activeGuards.takeFirst())
         g->Delete();
 }
 

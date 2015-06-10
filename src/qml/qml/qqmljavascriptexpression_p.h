@@ -145,27 +145,8 @@ public:
 
 private:
     friend class QQmlContextData;
-    typedef QQmlJavaScriptExpressionGuard Guard;
+    friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
-
-    struct GuardCapture : public QQmlEnginePrivate::PropertyCapture {
-        GuardCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, DeleteWatcher *w)
-        : engine(engine), expression(e), watcher(w), errorString(0) { }
-
-        ~GuardCapture()  {
-            Q_ASSERT(guards.isEmpty());
-            Q_ASSERT(errorString == 0);
-        }
-
-        virtual void captureProperty(QQmlNotifier *);
-        virtual void captureProperty(QObject *, int, int);
-
-        QQmlEngine *engine;
-        QQmlJavaScriptExpression *expression;
-        DeleteWatcher *watcher;
-        QFieldList<Guard, &Guard::next> guards;
-        QStringList *errorString;
-    };
 
     QQmlDelayedError *m_error;
 
@@ -173,7 +154,7 @@ private:
     //    activeGuards:flag1  - notifyOnValueChanged
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
-    QForwardFieldList<Guard, &Guard::next> activeGuards;
+    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
 
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
@@ -181,6 +162,27 @@ private:
 
 protected:
     QV4::PersistentValue m_function;
+};
+
+class QQmlPropertyCapture
+{
+public:
+    QQmlPropertyCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, QQmlJavaScriptExpression::DeleteWatcher *w)
+    : engine(engine), expression(e), watcher(w), errorString(0) { }
+
+    ~QQmlPropertyCapture()  {
+        Q_ASSERT(guards.isEmpty());
+        Q_ASSERT(errorString == 0);
+    }
+
+    void captureProperty(QQmlNotifier *);
+    void captureProperty(QObject *, int, int);
+
+    QQmlEngine *engine;
+    QQmlJavaScriptExpression *expression;
+    QQmlJavaScriptExpression::DeleteWatcher *watcher;
+    QFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
+    QStringList *errorString;
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)

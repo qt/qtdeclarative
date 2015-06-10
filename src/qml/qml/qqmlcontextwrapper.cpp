@@ -45,6 +45,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 #include <private/qjsvalue_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -209,7 +210,8 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
 
                 if (propertyIdx < context->idValueCount) {
 
-                    ep->captureProperty(&context->idValues[propertyIdx].bindings);
+                    if (ep->propertyCapture)
+                        ep->propertyCapture->captureProperty(&context->idValues[propertyIdx].bindings);
                     if (hasProperty)
                         *hasProperty = true;
                     return QV4::QObjectWrapper::wrap(v4, context->idValues[propertyIdx]);
@@ -217,8 +219,8 @@ ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasPr
 
                     QQmlContextPrivate *cp = context->asQQmlContextPrivate();
 
-                    ep->captureProperty(context->asQQmlContext(), -1,
-                                        propertyIdx + cp->notifyIndex);
+                    if (ep->propertyCapture)
+                        ep->propertyCapture->captureProperty(context->asQQmlContext(), -1, propertyIdx + cp->notifyIndex);
 
                     const QVariant &value = cp->propertyValues.at(propertyIdx);
                     if (hasProperty)
@@ -357,7 +359,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
     QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
     if (!ep)
         return;
-    QQmlEnginePrivate::PropertyCapture *capture = ep->propertyCapture;
+    QQmlPropertyCapture *capture = ep->propertyCapture;
     if (!capture)
         return;
 
@@ -451,8 +453,8 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(const Managed *m, uint index, bool 
         *hasProperty = true;
 
     QQmlEnginePrivate *ep = scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : 0;
-    if (ep)
-        ep->captureProperty(&context->idValues[index].bindings);
+    if (ep && ep->propertyCapture)
+        ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
 
     return QObjectWrapper::wrap(This->engine(), context->idValues[index].data());
 }

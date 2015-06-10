@@ -370,18 +370,19 @@ ReturnedValue QObjectWrapper::getProperty(QObject *object, ExecutionContext *ctx
 
         if (captureRequired) {
             if (property->accessors->notifier) {
-                if (n)
-                    ep->captureProperty(n);
+                if (n && ep->propertyCapture)
+                    ep->propertyCapture->captureProperty(n);
             } else {
-                ep->captureProperty(object, property->coreIndex, property->notifyIndex);
+                if (ep->propertyCapture)
+                    ep->propertyCapture->captureProperty(object, property->coreIndex, property->notifyIndex);
             }
         }
 
         return rv->asReturnedValue();
     }
 
-    if (captureRequired && ep && !property->isConstant())
-        ep->captureProperty(object, property->coreIndex, property->notifyIndex);
+    if (captureRequired && ep && ep->propertyCapture && !property->isConstant())
+        ep->propertyCapture->captureProperty(object, property->coreIndex, property->notifyIndex);
 
     if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);

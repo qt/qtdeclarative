@@ -94,6 +94,7 @@ class QQmlObjectCreator;
 class QDir;
 class QQmlIncubator;
 class QQmlProfiler;
+class QQmlPropertyCapture;
 
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h
@@ -122,16 +123,7 @@ public:
     // is just qmlClearTypeRegistrations (which can't be called while an engine exists)
     static bool baseModulesUninitialized;
 
-    class PropertyCapture {
-    public:
-        inline virtual ~PropertyCapture() {}
-        virtual void captureProperty(QQmlNotifier *) = 0;
-        virtual void captureProperty(QObject *, int, int) = 0;
-    };
-
-    PropertyCapture *propertyCapture;
-    inline void captureProperty(QQmlNotifier *);
-    inline void captureProperty(QObject *, int, int);
+    QQmlPropertyCapture *propertyCapture;
 
     QRecyclePool<QQmlJavaScriptExpressionGuard> jsExpressionGuardPool;
 
@@ -411,18 +403,6 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
     if (!qmlEngine)
         return 0;
     return get(qmlEngine);
-}
-
-void QQmlEnginePrivate::captureProperty(QQmlNotifier *n)
-{
-    if (propertyCapture)
-        propertyCapture->captureProperty(n);
-}
-
-void QQmlEnginePrivate::captureProperty(QObject *o, int c, int n)
-{
-    if (propertyCapture)
-        propertyCapture->captureProperty(o, c, n);
 }
 
 void QQmlEnginePrivate::setDebugChangesCache(const QHash<QUrl, QByteArray> &changes)
