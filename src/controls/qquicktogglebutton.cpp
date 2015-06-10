@@ -46,7 +46,33 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A toggle button control.
 
-    TODO
+    ToggleButton is an option button that can be dragged or toggled on
+    (checked) or off (unchecked). ToggleButtons are typically used to
+    select between two states.
+
+    \table
+    \row \li \image qtquickcontrols2-togglebutton-normal.png
+         \li A toggle button in its normal state.
+    \row \li \image qtquickcontrols2-togglebutton-checked.png
+         \li A toggle button that is checked.
+    \row \li \image qtquickcontrols2-togglebutton-focused.png
+         \li A toggle button that has active focus.
+    \row \li \image qtquickcontrols2-togglebutton-disabled.png
+         \li A toggle button that is disabled.
+    \endtable
+
+    \code
+    ColumnLayout {
+        ToggleButton {
+            text: qsTr("Wi-Fi")
+        }
+        ToggleButton {
+            text: qsTr("Bluetooth")
+        }
+    }
+    \endcode
+
+    \sa {Customizing ToggleButton}
 */
 
 QQuickToggleButton::QQuickToggleButton(QQuickItem *parent) :

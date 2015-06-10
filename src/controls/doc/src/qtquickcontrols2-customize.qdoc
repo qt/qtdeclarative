@@ -125,4 +125,28 @@
     \image qtquickcontrols2-switch-indicator.png
 
     \snippet Switch.qml indicator
+
+    \section1 Customizing ToggleButton
+
+    ToggleButton consists of three parts: \l {Control::background}{background},
+    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
+    implicit sizes are used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-togglebutton-background.png
+
+    ToggleButton has no background item by default.
+
+    \section3 Label
+
+    \image qtquickcontrols2-togglebutton-label.png
+
+    \snippet ToggleButton.qml label
+
+    \section3 Indicator
+
+    \image qtquickcontrols2-togglebutton-indicator.png
+
+    \snippet ToggleButton.qml indicator
 */

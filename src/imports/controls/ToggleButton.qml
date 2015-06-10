@@ -56,6 +56,7 @@ AbstractToggleButton {
 
     padding: Theme.padding
 
+    //! [indicator]
     indicator: Rectangle {
         implicitWidth: 36
         implicitHeight: 20
@@ -88,7 +89,9 @@ AbstractToggleButton {
             }
         }
     }
+    //! [indicator]
 
+    //! [label]
     label: Text {
         x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
@@ -102,4 +105,5 @@ AbstractToggleButton {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 }
