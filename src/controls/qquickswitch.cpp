@@ -49,7 +49,32 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A switch control.
 
-    TODO
+    Switch is an option button that can be dragged or toggled on (checked) or
+    off (unchecked). Switches are typically used to select between two states.
+
+    \table
+    \row \li \image qtquickcontrols2-switch-normal.png
+         \li A switch in its normal state.
+    \row \li \image qtquickcontrols2-switch-checked.png
+         \li A switch that is checked.
+    \row \li \image qtquickcontrols2-switch-focused.png
+         \li A switch that has active focus.
+    \row \li \image qtquickcontrols2-switch-disabled.png
+         \li A switch that is disabled.
+    \endtable
+
+    \code
+    ColumnLayout {
+        Switch {
+            text: qsTr("Wi-Fi")
+        }
+        Switch {
+            text: qsTr("Bluetooth")
+        }
+    }
+    \endcode
+
+    \sa {Customizing Switch}
 */
 
 class QQuickSwitchPrivate : public QQuickCheckablePrivate
@@ -81,7 +106,14 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 /*!
     \qmlproperty real QtQuickControls2::Switch::position
 
-    TODO
+    This property holds the logical position of the thumb indicator.
+
+    The position is defined as a percentage of the control's size, scaled to
+    \c 0.0 - \c 1.0. The position can be used for example to determine whether
+    the thumb has been dragged past the halfway. For visualizing a thumb
+    indicator, the right-to-left aware \l visualPosition should be used instead.
+
+    \sa visualPosition
 */
 qreal QQuickSwitch::position() const
 {
@@ -103,7 +135,16 @@ void QQuickSwitch::setPosition(qreal position)
 /*!
     \qmlproperty real QtQuickControls2::Switch::visualPosition
 
-    TODO
+    This property holds the visual position of the thumb indicator.
+
+    The position is defined as a percentage of the control's size, scaled to
+    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
+    \c {1.0 - position}. This makes the value suitable for visualizing the
+    thumb indicator taking right-to-left support into account. In order to
+    for example determine whether the thumb has been dragged past the halfway,
+    the logical \l position should be used instead.
+
+    \sa position
 */
 qreal QQuickSwitch::visualPosition() const
 {

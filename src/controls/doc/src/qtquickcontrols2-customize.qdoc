@@ -101,4 +101,28 @@
     \image qtquickcontrols2-radiobutton-indicator.png
 
     \snippet RadioButton.qml indicator
+
+    \section1 Customizing Switch
+
+    Switch consists of three parts: \l {Control::background}{background},
+    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
+    implicit sizes are used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-switch-background.png
+
+    Switch has no background item by default.
+
+    \section3 Label
+
+    \image qtquickcontrols2-switch-label.png
+
+    \snippet Switch.qml label
+
+    \section3 Indicator
+
+    \image qtquickcontrols2-switch-indicator.png
+
+    \snippet Switch.qml indicator
 */

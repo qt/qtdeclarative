@@ -56,6 +56,7 @@ AbstractSwitch {
 
     padding: Theme.padding
 
+    //! [indicator]
     indicator: Rectangle {
         implicitWidth: 36
         implicitHeight: 20
@@ -89,7 +90,9 @@ AbstractSwitch {
             }
         }
     }
+    //! [indicator]
 
+    //! [label]
     label: Text {
         x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
@@ -103,4 +106,5 @@ AbstractSwitch {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 }
