@@ -49,7 +49,24 @@ QT_BEGIN_NAMESPACE
     \ingroup sliders
     \brief A slider control.
 
-    TODO
+    Slider is used to select a value by sliding a handle along a track.
+
+    \table
+    \row \li \image qtquickcontrols2-slider-normal.png
+         \li A slider in its normal state.
+    \row \li \image qtquickcontrols2-slider-focused.png
+         \li A slider that has active focus.
+    \row \li \image qtquickcontrols2-slider-disabled.png
+         \li A slider that is disabled.
+    \endtable
+
+    \code
+    Slider {
+        value: 0.5
+    }
+    \endcode
+
+    \sa {Customizing Slider}
 */
 
 class QQuickSliderPrivate : public QQuickControlPrivate
@@ -115,7 +132,14 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 /*!
     \qmlproperty real QtQuickControls2::Slider::value
 
-    TODO
+    This property holds the value in the range \c 0.0 - \c 1.0. The default value is \c 0.0.
+
+    The value is defined as a percentage of the control's size, scaled
+    to \c 0.0 - \c 1.0. Unlike the \l position property, the \c value is
+    not updated while the handle is dragged. The value is updated after
+    the value has been chosen and the slider has been released.
+
+    \sa position
 */
 qreal QQuickSlider::value() const
 {
@@ -137,7 +161,14 @@ void QQuickSlider::setValue(qreal value)
 /*!
     \qmlproperty real QtQuickControls2::Slider::position
 
-    TODO
+    This property holds the logical position of the handle.
+
+    The position is defined as a percentage of the control's size, scaled
+    to \c 0.0 - \c 1.0. Unlike the \l value property, the \c position is
+    continuously updated while the handle is dragged. For visualizing a
+    slider, the right-to-left aware \l visualPosition should be used instead.
+
+    \sa value, visualPosition
 */
 qreal QQuickSlider::position() const
 {
@@ -147,8 +178,16 @@ qreal QQuickSlider::position() const
 
 /*!
     \qmlproperty real QtQuickControls2::Slider::visualPosition
+    \readonly
 
-    TODO
+    This property holds the visual position of the handle.
+
+    The position is defined as a percentage of the control's size, scaled to
+    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
+    \c {1.0 - position}. This makes the value suitable for visualizing the
+    slider, taking right-to-left support into account.
+
+    \sa position
 */
 qreal QQuickSlider::visualPosition() const
 {
@@ -172,7 +211,9 @@ void QQuickSlider::setPosition(qreal position)
 /*!
     \qmlproperty real QtQuickControls2::Slider::stepSize
 
-    TODO
+    This property holds the step size. The default value is \c 0.0.
+
+    \sa snapMode, increase(), decrease()
 */
 qreal QQuickSlider::stepSize() const
 {
@@ -192,7 +233,16 @@ void QQuickSlider::setStepSize(qreal step)
 /*!
     \qmlproperty enumeration QtQuickControls2::Slider::snapMode
 
-    TODO
+    This property holds the snap mode.
+
+    Possible values:
+    \list
+    \li \c Slider.NoSnap (default) - The slider does not snap.
+    \li \c Slider.SnapAlways - The slider snaps while the handle is dragged.
+    \li \c Slider.SnapOnRelease - The slider does not snap while being dragged, but only after the handle is released.
+    \endlist
+
+    \sa stepSize
 */
 QQuickSlider::SnapMode QQuickSlider::snapMode() const
 {
@@ -212,7 +262,7 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 /*!
     \qmlproperty bool QtQuickControls2::Slider::pressed
 
-    TODO
+    This property holds whether the slider is pressed.
 */
 bool QQuickSlider::isPressed() const
 {
@@ -232,7 +282,13 @@ void QQuickSlider::setPressed(bool pressed)
 /*!
     \qmlproperty enumeration QtQuickControls2::Slider::orientation
 
-    TODO
+    This property holds the orientation.
+
+    Possible values:
+    \list
+    \li \c Qt.Horizontal (default)
+    \li \c Qt.Vertical
+    \endlist
 */
 Qt::Orientation QQuickSlider::orientation() const
 {
@@ -252,7 +308,9 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
 /*!
     \qmlproperty Item QtQuickControls2::Slider::handle
 
-    TODO
+    This property holds the handle item.
+
+    \sa {Customizing Slider}
 */
 QQuickItem *QQuickSlider::handle() const
 {
@@ -275,7 +333,9 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 /*!
     \qmlproperty Item QtQuickControls2::Slider::track
 
-    TODO
+    This property holds the track item.
+
+    \sa {Customizing Slider}
 */
 QQuickItem *QQuickSlider::track() const
 {
@@ -298,7 +358,9 @@ void QQuickSlider::setTrack(QQuickItem *track)
 /*!
     \qmlmethod void QtQuickControls2::Slider::increase()
 
-    TODO
+    Increases the value by \l stepSize or \c 0.1 if stepSize is not defined.
+
+    \sa stepSize
 */
 void QQuickSlider::increase()
 {
@@ -310,7 +372,9 @@ void QQuickSlider::increase()
 /*!
     \qmlmethod void QtQuickControls2::Slider::decrease()
 
-    TODO
+    Decreases the value by \l stepSize or \c 0.1 if stepSize is not defined.
+
+    \sa stepSize
 */
 void QQuickSlider::decrease()
 {

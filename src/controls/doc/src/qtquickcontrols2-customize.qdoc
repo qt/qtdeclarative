@@ -102,6 +102,30 @@
 
     \snippet RadioButton.qml indicator
 
+    \section1 Customizing Slider
+
+    Slider consists of three parts: \l {Control::background}{background},
+    \l {Slider::track}{track} and \l {Slider::handle}{handle}. Their
+    implicit sizes are used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-slider-background.png
+
+    Slider has no background item by default.
+
+    \section3 Track
+
+    \image qtquickcontrols2-slider-track.png
+
+    \snippet Slider.qml track
+
+    \section3 Handle
+
+    \image qtquickcontrols2-slider-handle.png
+
+    \snippet Slider.qml handle
+
     \section1 Customizing Switch
 
     Switch consists of three parts: \l {Control::background}{background},

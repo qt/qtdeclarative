@@ -52,6 +52,7 @@ AbstractSlider {
 
     padding: Theme.padding
 
+    //! [handle]
     handle: Rectangle {
         implicitWidth: 20
         implicitHeight: 20
@@ -76,7 +77,9 @@ AbstractSlider {
                             control.pressed ? control.Theme.pressColor : "transparent")
         }
     }
+    //! [handle]
 
+    //! [track]
     track: Rectangle {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         implicitWidth: horizontal ? 120 : 6
@@ -101,4 +104,5 @@ AbstractSlider {
             radius: control.Theme.roundness
         }
     }
+    //! [track]
 }
