@@ -61,7 +61,6 @@ Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlCon
     , isNullWrapper(false)
     , context(context)
     , scopeObject(scopeObject)
-    , idObjectsWrapper(Q_NULLPTR)
 {
 }
 
@@ -332,14 +331,6 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     Object::put(m, name, value);
 }
 
-void QmlContextWrapper::markObjects(Heap::Base *m, ExecutionEngine *engine)
-{
-    QmlContextWrapper::Data *This = static_cast<QmlContextWrapper::Data *>(m);
-    if (This->idObjectsWrapper)
-        This->idObjectsWrapper->mark(engine);
-    Object::markObjects(m, engine);
-}
-
 void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const CompiledData::Function *compiledFunction)
 {
     // Let the caller check and avoid the function call :)
@@ -383,15 +374,6 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
 
 }
 
-ReturnedValue QmlContextWrapper::idObjectsArray()
-{
-    if (!d()->idObjectsWrapper) {
-        ExecutionEngine *v4 = engine();
-        d()->idObjectsWrapper = v4->memoryManager->alloc<QQmlIdObjectsArray>(v4, this);
-    }
-    return d()->idObjectsWrapper->asReturnedValue();
-}
-
 ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String *name)
 {
     if (!d()->context->imports)
@@ -413,20 +395,11 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String
     return QJSValuePrivate::convertedToValue(engine(), siinfo->scriptApi(e));
 }
 
-DEFINE_OBJECT_VTABLE(QQmlIdObjectsArray);
-
-Heap::QQmlIdObjectsArray::QQmlIdObjectsArray(ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper)
-    : Heap::Object(engine)
-    , contextWrapper(contextWrapper->d())
+ReturnedValue QmlContextWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
 {
-}
-
-ReturnedValue QQmlIdObjectsArray::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    Scope scope(static_cast<const QV4::QQmlIdObjectsArray*>(m)->engine());
-    Scoped<QQmlIdObjectsArray> This(scope, static_cast<const QV4::QQmlIdObjectsArray*>(m));
-    Scoped<QmlContextWrapper> contextWrapper(scope, This->d()->contextWrapper);
-    QQmlContextData *context = contextWrapper->getContext();
+    const QV4::QmlContextWrapper *This = static_cast<const QV4::QmlContextWrapper *>(m);
+    Scope scope(This->engine());
+    QQmlContextData *context = This->getContext();
     if (!context) {
         if (hasProperty)
             *hasProperty = false;
@@ -446,13 +419,6 @@ ReturnedValue QQmlIdObjectsArray::getIndexed(const Managed *m, uint index, bool 
         ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
 
     return QObjectWrapper::wrap(This->engine(), context->idValues[index].data());
-}
-
-void QQmlIdObjectsArray::markObjects(Heap::Base *that, ExecutionEngine *engine)
-{
-    QQmlIdObjectsArray::Data *This = static_cast<QQmlIdObjectsArray::Data *>(that);
-    This->contextWrapper->mark(engine);
-    Object::markObjects(that, engine);
 }
 
 QT_END_NAMESPACE

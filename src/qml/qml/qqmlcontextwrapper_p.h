@@ -65,8 +65,6 @@ struct QmlContextWrapper;
 
 namespace Heap {
 
-struct QQmlIdObjectsArray;
-
 struct QmlContextWrapper : Object {
     QmlContextWrapper(ExecutionEngine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
@@ -76,12 +74,6 @@ struct QmlContextWrapper : Object {
 
     QQmlGuardedContextData context;
     QPointer<QObject> scopeObject;
-    QQmlIdObjectsArray *idObjectsWrapper;
-};
-
-struct QQmlIdObjectsArray : Object {
-    QQmlIdObjectsArray(QV4::ExecutionEngine *engine, QV4::QmlContextWrapper *contextWrapper);
-    Pointer<QmlContextWrapper> contextWrapper;
 };
 
 }
@@ -107,22 +99,12 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
-    static void markObjects(Heap::Base *m, ExecutionEngine *engine);
 
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
-    ReturnedValue idObjectsArray();
     ReturnedValue qmlSingletonWrapper(ExecutionEngine *e, String *name);
 
-};
-
-struct QQmlIdObjectsArray : public Object
-{
-    V4_OBJECT2(QQmlIdObjectsArray, Object)
-
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static void markObjects(Heap::Base *that, ExecutionEngine *engine);
-
 };
 
 }

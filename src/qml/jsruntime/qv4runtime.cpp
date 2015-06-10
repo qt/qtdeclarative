@@ -1335,9 +1335,7 @@ ReturnedValue Runtime::regexpLiteral(ExecutionEngine *engine, int id)
 ReturnedValue Runtime::getQmlIdArray(NoThrowEngine *engine)
 {
     Q_ASSERT(engine->qmlContextObject());
-    Scope scope(engine);
-    Scoped<QmlContextWrapper> wrapper(scope, engine->qmlContextObject());
-    return wrapper->idObjectsArray();
+    return engine->qmlContextObject()->asReturnedValue();
 }
 
 ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
