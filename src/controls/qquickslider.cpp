@@ -74,13 +74,18 @@ class QQuickSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSlider)
 
 public:
-    QQuickSliderPrivate() : value(0), position(0), stepSize(0), pressed(false),
+    QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), pressed(false),
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
         handle(Q_NULLPTR), track(Q_NULLPTR) { }
 
+    qreal valueAt(qreal position) const;
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPoint &point) const;
+    void setPosition(qreal position);
+    void updatePosition();
 
+    qreal from;
+    qreal to;
     qreal value;
     qreal position;
     qreal stepSize;
@@ -91,6 +96,11 @@ public:
     QQuickItem *handle;
     QQuickItem *track;
 };
+
+qreal QQuickSliderPrivate::valueAt(qreal position) const
+{
+    return from + (to - from) * position;
+}
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
 {
@@ -122,6 +132,25 @@ qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
     return 0;
 }
 
+void QQuickSliderPrivate::setPosition(qreal pos)
+{
+    Q_Q(QQuickSlider);
+    pos = qBound(0.0, pos, 1.0);
+    if (!qFuzzyCompare(position, pos)) {
+        position = pos;
+        emit q->positionChanged();
+        emit q->visualPositionChanged();
+    }
+}
+
+void QQuickSliderPrivate::updatePosition()
+{
+    qreal pos = 0;
+    if (!qFuzzyCompare(from, to))
+        pos = (value - from) / (to - from);
+    setPosition(pos);
+}
+
 QQuickSlider::QQuickSlider(QQuickItem *parent) :
     QQuickControl(*(new QQuickSliderPrivate), parent)
 {
@@ -130,14 +159,65 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 }
 
 /*!
+    \qmlproperty real QtQuickControls2::Slider::from
+
+    This property holds the starting value for the range. The default value is \c 0.0.
+
+    \sa to, value
+*/
+qreal QQuickSlider::from() const
+{
+    Q_D(const QQuickSlider);
+    return d->from;
+}
+
+void QQuickSlider::setFrom(qreal from)
+{
+    Q_D(QQuickSlider);
+    if (!qFuzzyCompare(d->from, from)) {
+        d->from = from;
+        emit fromChanged();
+        if (isComponentComplete()) {
+            setValue(d->value);
+            d->updatePosition();
+        }
+    }
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::Slider::to
+
+    This property holds the end value for the range. The default value is \c 1.0.
+
+    \sa from, value
+*/
+qreal QQuickSlider::to() const
+{
+    Q_D(const QQuickSlider);
+    return d->to;
+}
+
+void QQuickSlider::setTo(qreal to)
+{
+    Q_D(QQuickSlider);
+    if (!qFuzzyCompare(d->to, to)) {
+        d->to = to;
+        emit toChanged();
+        if (isComponentComplete()) {
+            setValue(d->value);
+            d->updatePosition();
+        }
+    }
+}
+
+/*!
     \qmlproperty real QtQuickControls2::Slider::value
 
-    This property holds the value in the range \c 0.0 - \c 1.0. The default value is \c 0.0.
+    This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
-    The value is defined as a percentage of the control's size, scaled
-    to \c 0.0 - \c 1.0. Unlike the \l position property, the \c value is
-    not updated while the handle is dragged. The value is updated after
-    the value has been chosen and the slider has been released.
+    Unlike the \l position property, the \c value is not updated while the
+    handle is dragged. The value is updated after the value has been chosen
+    and the slider has been released.
 
     \sa position
 */
@@ -150,10 +230,12 @@ qreal QQuickSlider::value() const
 void QQuickSlider::setValue(qreal value)
 {
     Q_D(QQuickSlider);
-    value = qBound(0.0, value, 1.0);
+    if (isComponentComplete())
+        value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
+
     if (!qFuzzyCompare(d->value, value)) {
         d->value = value;
-        setPosition(value);
+        d->updatePosition();
         emit valueChanged();
     }
 }
@@ -164,7 +246,7 @@ void QQuickSlider::setValue(qreal value)
     This property holds the logical position of the handle.
 
     The position is defined as a percentage of the control's size, scaled
-    to \c 0.0 - \c 1.0. Unlike the \l value property, the \c position is
+    to \c {0.0 - 1.0}. Unlike the \l value property, the \c position is
     continuously updated while the handle is dragged. For visualizing a
     slider, the right-to-left aware \l visualPosition should be used instead.
 
@@ -183,7 +265,7 @@ qreal QQuickSlider::position() const
     This property holds the visual position of the handle.
 
     The position is defined as a percentage of the control's size, scaled to
-    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
+    \c {0.0 - 1.0}. When the control is \l mirrored, the value is equal to
     \c {1.0 - position}. This makes the value suitable for visualizing the
     slider, taking right-to-left support into account.
 
@@ -195,17 +277,6 @@ qreal QQuickSlider::visualPosition() const
     if (d->orientation == Qt::Vertical || isMirrored())
         return 1.0 - d->position;
     return d->position;
-}
-
-void QQuickSlider::setPosition(qreal position)
-{
-    Q_D(QQuickSlider);
-    position = qBound(0.0, position, 1.0);
-    if (!qFuzzyCompare(d->position, position)) {
-        d->position = position;
-        emit positionChanged();
-        emit visualPositionChanged();
-    }
 }
 
 /*!
@@ -445,7 +516,7 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode == SnapAlways)
             pos = d->snapPosition(pos);
-        setPosition(pos);
+        d->setPosition(pos);
     }
     event->accept();
 }
@@ -459,7 +530,7 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         qreal pos = d->positionAt(event->pos());
         if (d->snapMode != NoSnap)
             pos = d->snapPosition(pos);
-        setValue(pos);
+        setValue(d->valueAt(pos));
         setKeepMouseGrab(false);
     }
     setPressed(false);
@@ -478,6 +549,14 @@ void QQuickSlider::mirrorChange()
 {
     QQuickControl::mirrorChange();
     emit visualPositionChanged();
+}
+
+void QQuickSlider::componentComplete()
+{
+    Q_D(QQuickSlider);
+    QQuickControl::componentComplete();
+    setValue(d->value);
+    d->updatePosition();
 }
 
 QT_END_NAMESPACE

@@ -85,6 +85,84 @@ TestCase {
         control.destroy()
     }
 
+    function test_value() {
+        var control = slider.createObject(testCase, {value: 0.5})
+        compare(control.value, 0.5)
+        control.value = 1.0
+        compare(control.value, 1.0)
+        control.value = -1.0
+        compare(control.value, 0.0)
+        control.value = 2.0
+        compare(control.value, 1.0)
+        control.destroy()
+    }
+
+    function test_range() {
+        var control = slider.createObject(testCase, {from: 0, to: 100, value: 50})
+        compare(control.from, 0)
+        compare(control.to, 100)
+        compare(control.value, 50)
+        compare(control.position, 0.5)
+
+        control.value = 1000
+        compare(control.value, 100)
+        compare(control.position, 1)
+
+        control.value = -1
+        compare(control.value, 0)
+        compare(control.position, 0)
+
+        control.from = 25
+        compare(control.from, 25)
+        compare(control.value, 25)
+        compare(control.position, 0)
+
+        control.to = 75
+        compare(control.to, 75)
+        compare(control.value, 25)
+        compare(control.position, 0)
+
+        control.value = 50
+        compare(control.value, 50)
+        compare(control.position, 0.5)
+
+        control.destroy()
+    }
+
+    function test_inverted() {
+        var control = slider.createObject(testCase, {from: 1.0, to: -1.0})
+        compare(control.from, 1.0)
+        compare(control.to, -1.0)
+        compare(control.value, 0.0)
+        compare(control.position, 0.5)
+
+        control.value = 2.0
+        compare(control.value, 1.0)
+        compare(control.position, 0.0)
+
+        control.value = -2.0
+        compare(control.value, -1.0)
+        compare(control.position, 1.0)
+
+        control.value = 0.0
+        compare(control.value, 0.0)
+        compare(control.position, 0.5)
+
+        control.destroy()
+    }
+
+    function test_position() {
+        var control = slider.createObject(testCase, {value: 0.25})
+        compare(control.value, 0.25)
+        compare(control.position, 0.25)
+
+        control.value = 0.75
+        compare(control.value, 0.75)
+        compare(control.position, 0.75)
+
+        control.destroy()
+    }
+
     function test_visualPosition() {
         var control = slider.createObject(testCase, {value: 0.25})
         compare(control.value, 0.25)

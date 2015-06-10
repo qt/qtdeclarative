@@ -57,6 +57,8 @@ class QQuickSliderPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickSlider : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
@@ -70,12 +72,17 @@ class Q_QUICKCONTROLS_EXPORT QQuickSlider : public QQuickControl
 public:
     explicit QQuickSlider(QQuickItem *parent = Q_NULLPTR);
 
+    qreal from() const;
+    void setFrom(qreal from);
+
+    qreal to() const;
+    void setTo(qreal to);
+
     qreal value() const;
     void setValue(qreal value);
 
     qreal position() const;
     qreal visualPosition() const;
-    void setPosition(qreal position);
 
     qreal stepSize() const;
     void setStepSize(qreal step);
@@ -107,6 +114,8 @@ public Q_SLOTS:
     void decrease();
 
 Q_SIGNALS:
+    void fromChanged();
+    void toChanged();
     void valueChanged();
     void positionChanged();
     void visualPositionChanged();
@@ -125,6 +134,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
     void mirrorChange() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickSlider)
