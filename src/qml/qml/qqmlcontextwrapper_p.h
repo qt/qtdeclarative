@@ -95,7 +95,9 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static ReturnedValue urlScope(ExecutionEngine *v4, const QUrl &);
 
     static QQmlContextData *callingContext(ExecutionEngine *v4);
-    static void takeContextOwnership(const Value &qmlglobal);
+    void takeContextOwnership() {
+        d()->ownsContext = true;
+    }
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return d()->context; }

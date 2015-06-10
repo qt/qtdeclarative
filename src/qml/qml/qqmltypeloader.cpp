@@ -2520,8 +2520,8 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
         return QV4::PersistentValue();
     }
 
-    QV4::ScopedValue qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, 0));
-    QV4::QmlContextWrapper::takeContextOwnership(qmlglobal);
+    QV4::Scoped<QV4::QmlContextWrapper> qmlglobal(scope, QV4::QmlContextWrapper::qmlScope(v4, ctxt, 0));
+    qmlglobal->takeContextOwnership();
 
     m_program->qml.set(scope.engine, qmlglobal);
     m_program->run();

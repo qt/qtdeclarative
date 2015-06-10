@@ -114,17 +114,6 @@ QQmlContextData *QmlContextWrapper::getContext(const Value &value)
     return c ? c->getContext() : 0;
 }
 
-void QmlContextWrapper::takeContextOwnership(const Value &qmlglobal)
-{
-    Q_ASSERT(qmlglobal.isObject());
-
-    QV4::ExecutionEngine *v4 = qmlglobal.as<Object>()->engine();
-    Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, qmlglobal);
-    Q_ASSERT(c);
-    c->d()->ownsContext = true;
-}
-
 
 ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
