@@ -82,39 +82,35 @@ void tst_qquickbehaviors::simpleBehavior()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("simple.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
     QTRY_VERIFY(qobject_cast<QQuickBehavior*>(rect->findChild<QQuickBehavior*>("MyBehavior"))->animation());
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() > 0);
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() < 200);
     //i.e. the behavior has been triggered
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::scriptTriggered()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("scripttrigger.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     rect->setColor(QColor("red"));
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() > 0);
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() < 200);
     //i.e. the behavior has been triggered
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::cppTriggered()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("cpptrigger.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QTRY_VERIFY(innerRect);
@@ -122,60 +118,52 @@ void tst_qquickbehaviors::cppTriggered()
     innerRect->setProperty("x", 200);
     QTRY_VERIFY(innerRect->x() > 0);
     QTRY_VERIFY(innerRect->x() < 200);  //i.e. the behavior has been triggered
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::loop()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("loop.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     //don't crash
-    QQuickItemPrivate::get(rect)->setState("moved");
-
-    delete rect;
+    QQuickItemPrivate::get(rect.data())->setState("moved");
 }
 
 void tst_qquickbehaviors::colorBehavior()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("color.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("red");
+    QQuickItemPrivate::get(rect.data())->setState("red");
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->color() != QColor("red"));
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->color() != QColor("green"));
     //i.e. the behavior has been triggered
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::parentBehavior()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("parent.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("reparented");
+    QQuickItemPrivate::get(rect.data())->setState("reparented");
     QTRY_VERIFY(rect->findChild<QQuickRectangle*>("MyRect")->parentItem() != rect->findChild<QQuickItem*>("NewParent"));
     QTRY_VERIFY(rect->findChild<QQuickRectangle*>("MyRect")->parentItem() == rect->findChild<QQuickItem*>("NewParent"));
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::replaceBinding()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("binding.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QTRY_VERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     QQuickRectangle *innerRect = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"));
     QTRY_VERIFY(innerRect);
     QTRY_VERIFY(innerRect->x() > 0);
@@ -187,7 +175,7 @@ void tst_qquickbehaviors::replaceBinding()
     rect->setProperty("movedx", 210);
     QTRY_COMPARE(innerRect->x(), (qreal)210);
 
-    QQuickItemPrivate::get(rect)->setState("");
+    QQuickItemPrivate::get(rect.data())->setState("");
     QTRY_VERIFY(innerRect->x() > 10);
     QTRY_VERIFY(innerRect->x() < 210);  //i.e. the behavior has been triggered
     QTRY_COMPARE(innerRect->x(), (qreal)10);
@@ -195,8 +183,6 @@ void tst_qquickbehaviors::replaceBinding()
     QTRY_COMPARE(innerRect->x(), (qreal)10);
     rect->setProperty("basex", 20);
     QTRY_COMPARE(innerRect->x(), (qreal)20);
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::group()
@@ -205,32 +191,27 @@ void tst_qquickbehaviors::group()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("groupProperty.qml")));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-        qDebug() << c.errorString();
-        QTRY_VERIFY(rect);
+        QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+        QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-        QQuickItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect.data())->setState("moved");
         //QTest::qWait(200);
         QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() > 0);
         QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() < 200);
         //i.e. the behavior has been triggered
-
-        delete rect;
     }
     */
 
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("groupProperty2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-        QTRY_VERIFY(rect);
+        QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+        QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-        QQuickItemPrivate::get(rect)->setState("moved");
+        QQuickItemPrivate::get(rect.data())->setState("moved");
         QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->border()->width() > 0);
         QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->border()->width() < 4);
         //i.e. the behavior has been triggered
-
-        delete rect;
     }
 }
 
@@ -238,56 +219,48 @@ void tst_qquickbehaviors::valueType()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("valueType.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     //QTBUG-20827
     QCOMPARE(rect->color(), QColor::fromRgb(255,0,255));
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::emptyBehavior()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("empty.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     qreal x = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x();
     QCOMPARE(x, qreal(200));    //should change immediately
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::explicitSelection()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("explicit.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() > 0);
     QTRY_VERIFY(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x() < 200);
     //i.e. the behavior has been triggered
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::nonSelectingBehavior()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("nonSelecting2.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     qreal x = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x();
     QCOMPARE(x, qreal(200));    //should change immediately
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::reassignedAnimation()
@@ -296,27 +269,23 @@ void tst_qquickbehaviors::reassignedAnimation()
     QQmlComponent c(&engine, testFileUrl("reassignedAnimation.qml"));
     QString warning = testFileUrl("reassignedAnimation.qml").toString() + ":9:9: QML Behavior: Cannot change the animation assigned to a Behavior.";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
     QCOMPARE(qobject_cast<QQuickNumberAnimation*>(
                  rect->findChild<QQuickBehavior*>("MyBehavior")->animation())->duration(), 200);
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::disabled()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("disabled.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
     QCOMPARE(rect->findChild<QQuickBehavior*>("MyBehavior")->enabled(), false);
 
-    QQuickItemPrivate::get(rect)->setState("moved");
+    QQuickItemPrivate::get(rect.data())->setState("moved");
     qreal x = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x();
     QCOMPARE(x, qreal(200));    //should change immediately
-
-    delete rect;
 }
 
 void tst_qquickbehaviors::dontStart()
@@ -327,13 +296,12 @@ void tst_qquickbehaviors::dontStart()
 
     QString warning = c.url().toString() + ":13:13: QML NumberAnimation: setRunning() cannot be used on non-root animation nodes.";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
-    QVERIFY(myAnim && !myAnim->qtAnimation());
-
-    delete rect;
+    QVERIFY(myAnim);
+    QVERIFY(!myAnim->qtAnimation());
 }
 
 void tst_qquickbehaviors::startup()
@@ -341,22 +309,20 @@ void tst_qquickbehaviors::startup()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("startup.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-        QVERIFY(rect);
+        QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+        QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *innerRect = rect->findChild<QQuickRectangle*>("innerRect");
         QVERIFY(innerRect);
 
         QCOMPARE(innerRect->x(), qreal(100));    //should be set immediately
-
-        delete rect;
     }
 
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("startup2.qml"));
-        QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-        QVERIFY(rect);
+        QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+        QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *innerRect = rect->findChild<QQuickRectangle*>("innerRect");
         QVERIFY(innerRect);
@@ -365,8 +331,6 @@ void tst_qquickbehaviors::startup()
         QVERIFY(text);
 
         QCOMPARE(innerRect->x(), text->width());    //should be set immediately
-
-        delete rect;
     }
 }
 
@@ -375,10 +339,8 @@ void tst_qquickbehaviors::groupedPropertyCrash()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("groupedPropertyCrash.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);  //don't crash
-
-    delete rect;
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));  //don't crash
 }
 
 //QTBUG-5491
@@ -386,8 +348,8 @@ void tst_qquickbehaviors::runningTrue()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("runningTrue.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickAbstractAnimation *animation = rect->findChild<QQuickAbstractAnimation*>("rotAnim");
     QVERIFY(animation);
@@ -395,8 +357,6 @@ void tst_qquickbehaviors::runningTrue()
     QSignalSpy runningSpy(animation, SIGNAL(runningChanged(bool)));
     rect->setProperty("myValue", 180);
     QTRY_VERIFY(runningSpy.count() > 0);
-
-    delete rect;
 }
 
 //QTBUG-12295
@@ -404,8 +364,8 @@ void tst_qquickbehaviors::sameValue()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("qtbug12295.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickRectangle *target = rect->findChild<QQuickRectangle*>("myRect");
     QVERIFY(target);
@@ -424,8 +384,6 @@ void tst_qquickbehaviors::sameValue()
     //even though we set 0 twice in a row.
     target->setProperty("x", 0);
     QTRY_VERIFY(target->x() != qreal(0) && target->x() != qreal(100));
-
-    delete rect;
 }
 
 //QTBUG-18362
@@ -434,8 +392,8 @@ void tst_qquickbehaviors::delayedRegistration()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("delayedRegistration.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->property("myItem").value<QQuickItem*>();
     QVERIFY(innerRect != 0);
@@ -451,8 +409,8 @@ void tst_qquickbehaviors::startOnCompleted()
     QQmlEngine engine;
 
     QQmlComponent c(&engine, testFileUrl("startOnCompleted.qml"));
-    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->findChild<QQuickRectangle*>();
     QVERIFY(innerRect != 0);
@@ -460,8 +418,6 @@ void tst_qquickbehaviors::startOnCompleted()
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
     QTRY_COMPARE(innerRect->property("x").toInt(), int(100));
-
-    delete rect;
 }
 
 //QTBUG-25139
@@ -471,7 +427,7 @@ void tst_qquickbehaviors::multipleChangesToValueType()
 
     QQmlComponent c(&engine, testFileUrl("multipleChangesToValueType.qml"));
     QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle *>(c.create()));
-    QVERIFY(rect != 0);
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickText *text = rect->findChild<QQuickText *>();
     QVERIFY(text != 0);
@@ -496,8 +452,8 @@ void tst_qquickbehaviors::currentValue()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("qtbug21549.qml"));
-        QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-        QVERIFY(item);
+        QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+        QVERIFY2(!item.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
         QVERIFY(target);
@@ -516,15 +472,13 @@ void tst_qquickbehaviors::currentValue()
         target->setProperty("x", 100);
         QCOMPARE(item->property("behaviorCount").toInt(), 1);
         QCOMPARE(target->x(), qreal(100));
-
-        delete item;
     }
 
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("qtbug21549-2.qml"));
-        QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
-        QVERIFY(item);
+        QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+        QVERIFY2(!item.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *target = item->findChild<QQuickRectangle*>("myRect");
         QVERIFY(target);
@@ -537,9 +491,7 @@ void tst_qquickbehaviors::currentValue()
         // in the QML (which should be between 50 and 80);
         QTRY_COMPARE(item->property("animRunning").toBool(), true);
         QTRY_COMPARE(item->property("animRunning").toBool(), false);
-        QVERIFY(target->x() > qreal(50) && target->x() < qreal(80));
-
-        delete item;
+        QVERIFY2(target->x() > qreal(50) && target->x() < qreal(80), QByteArray::number(target->x()));
     }
 }
 
@@ -548,8 +500,8 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("disabledWriteWhileRunning.qml"));
-        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
-        QVERIFY(root);
+        QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(c.create()));
+        QVERIFY2(!root.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *myRect = qobject_cast<QQuickRectangle*>(root->findChild<QQuickRectangle*>("MyRect"));
         QQuickBehavior *myBehavior = qobject_cast<QQuickBehavior*>(root->findChild<QQuickBehavior*>("MyBehavior"));
@@ -579,16 +531,14 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         QCOMPARE(myRect->x(), qreal(100));
         QTest::qWait(200);
         QCOMPARE(myRect->x(), qreal(100));
-
-        delete root;
     }
 
     //test additional complications with SmoothedAnimation
     {
         QQmlEngine engine;
         QQmlComponent c(&engine, testFileUrl("disabledWriteWhileRunning2.qml"));
-        QQuickItem *root = qobject_cast<QQuickItem*>(c.create());
-        QVERIFY(root);
+        QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(c.create()));
+        QVERIFY2(!root.isNull(), qPrintable(c.errorString()));
 
         QQuickRectangle *myRect = qobject_cast<QQuickRectangle*>(root->findChild<QQuickRectangle*>("MyRect"));
         QQuickBehavior *myBehavior = qobject_cast<QQuickBehavior*>(root->findChild<QQuickBehavior*>("MyBehavior"));
@@ -623,8 +573,6 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         QCOMPARE(myRect->x(), qreal(100));
         QTest::qWait(200);
         QCOMPARE(myRect->x(), qreal(100));
-
-        delete root;
     }
 }
 
