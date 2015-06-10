@@ -68,8 +68,10 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate() : value(0), indeterminate(false), indicator(Q_NULLPTR) { }
+    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(Q_NULLPTR) { }
 
+    qreal from;
+    qreal to;
     qreal value;
     bool indeterminate;
     QQuickItem *indicator;
@@ -81,11 +83,63 @@ QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
 }
 
 /*!
+    \qmlproperty real QtQuickControls2::ProgressBar::from
+
+    This property holds the starting value for the progress. The default value is \c 0.0.
+
+    \sa to, value
+*/
+qreal QQuickProgressBar::from() const
+{
+    Q_D(const QQuickProgressBar);
+    return d->from;
+}
+
+void QQuickProgressBar::setFrom(qreal from)
+{
+    Q_D(QQuickProgressBar);
+    if (!qFuzzyCompare(d->from, from)) {
+        d->from = from;
+        emit fromChanged();
+        emit positionChanged();
+        emit visualPositionChanged();
+        if (isComponentComplete())
+            setValue(d->value);
+    }
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::ProgressBar::to
+
+    This property holds the end value for the progress. The default value is \c 1.0.
+
+    \sa from, value
+*/
+qreal QQuickProgressBar::to() const
+{
+    Q_D(const QQuickProgressBar);
+    return d->to;
+}
+
+void QQuickProgressBar::setTo(qreal to)
+{
+    Q_D(QQuickProgressBar);
+    if (!qFuzzyCompare(d->to, to)) {
+        d->to = to;
+        emit toChanged();
+        emit positionChanged();
+        emit visualPositionChanged();
+        if (isComponentComplete())
+            setValue(d->value);
+    }
+}
+
+/*!
     \qmlproperty real QtQuickControls2::ProgressBar::value
 
-    This property holds the value in the range \c 0.0 - \c 1.0. The default value is \c 0.0.
+    This property holds the progress value. The default value is \c 0.0.
 
-    \sa visualPosition
+    \sa from, to, position
 */
 qreal QQuickProgressBar::value() const
 {
@@ -96,12 +150,35 @@ qreal QQuickProgressBar::value() const
 void QQuickProgressBar::setValue(qreal value)
 {
     Q_D(QQuickProgressBar);
-    value = qBound(0.0, value, 1.0);
+    if (isComponentComplete())
+        value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
+
     if (!qFuzzyCompare(d->value, value)) {
         d->value = value;
         emit valueChanged();
+        emit positionChanged();
         emit visualPositionChanged();
     }
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::ProgressBar::position
+    \readonly
+
+    This property holds the logical position of the progress.
+
+    The position is defined as a percentage of the value, scaled to
+    \c {0.0 - 1.0}. For visualizing the progress, the right-to-left
+    aware \l visualPosition should be used instead.
+
+    \sa value, visualPosition
+*/
+qreal QQuickProgressBar::position() const
+{
+    Q_D(const QQuickProgressBar);
+    if (qFuzzyCompare(d->from, d->to))
+        return 0;
+    return (d->value - d->from) / (d->to - d->from);
 }
 
 /*!
@@ -110,19 +187,19 @@ void QQuickProgressBar::setValue(qreal value)
 
     This property holds the visual position of the progress.
 
-    The position is defined as a percentage of the control's size, scaled to
-    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
-    \c {1.0 - value}. This makes the value suitable for visualizing the
-    progress, taking right-to-left support into account.
+    The position is defined as a percentage of the value, scaled to
+    \c {0.0 - 1.0}. When the control is \l mirrored, \c visuaPosition
+    is equal to \c {1.0 - position}. This makes \c visualPosition
+    suitable for visualizing the progress, taking right-to-left
+    support into account.
 
-    \sa value
+    \sa position, value
 */
 qreal QQuickProgressBar::visualPosition() const
 {
-    Q_D(const QQuickProgressBar);
     if (isMirrored())
-        return 1.0 - d->value;
-    return d->value;
+        return 1.0 - position();
+    return position();
 }
 
 /*!
@@ -173,7 +250,15 @@ void QQuickProgressBar::setIndicator(QQuickItem *indicator)
 void QQuickProgressBar::mirrorChange()
 {
     QQuickControl::mirrorChange();
-    emit visualPositionChanged();
+    if (!qFuzzyCompare(position(), 0.5))
+        emit visualPositionChanged();
+}
+
+void QQuickProgressBar::componentComplete()
+{
+    Q_D(QQuickProgressBar);
+    QQuickControl::componentComplete();
+    setValue(d->value);
 }
 
 QT_END_NAMESPACE

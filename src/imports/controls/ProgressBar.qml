@@ -62,7 +62,7 @@ AbstractProgressBar {
             model: indeterminate ? 2 : 1
 
             Rectangle {
-                property real offset: indeterminate ? 0 : control.value
+                property real offset: indeterminate ? 0 : control.position
 
                 x: 2 + (indeterminate ? offset * parent.width - 4 : 0)
                 y: (parent.height - height) / 2

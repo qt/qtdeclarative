@@ -57,7 +57,10 @@ class QQuickProgressBarPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickProgressBar : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
+    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
@@ -65,9 +68,16 @@ class Q_QUICKCONTROLS_EXPORT QQuickProgressBar : public QQuickControl
 public:
     explicit QQuickProgressBar(QQuickItem *parent = Q_NULLPTR);
 
+    qreal from() const;
+    void setFrom(qreal from);
+
+    qreal to() const;
+    void setTo(qreal to);
+
     qreal value() const;
     void setValue(qreal value);
 
+    qreal position() const;
     qreal visualPosition() const;
 
     bool isIndeterminate() const;
@@ -77,13 +87,17 @@ public:
     void setIndicator(QQuickItem *indicator);
 
 Q_SIGNALS:
+    void fromChanged();
+    void toChanged();
     void valueChanged();
+    void positionChanged();
     void visualPositionChanged();
     void indeterminateChanged();
     void indicatorChanged();
 
 protected:
     void mirrorChange() Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickProgressBar)
