@@ -342,8 +342,8 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     return result->asReturnedValue();
 }
 
-QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
-                                                       const QString &code, const QString &filename, quint16 line)
+void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *qmlScope,
+                                          const QString &code, const QString &filename, quint16 line)
 {
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -367,9 +367,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::qmlBinding(QQmlContextData *ctxt, Q
             error.setUrl(QUrl::fromLocalFile(filename));
         error.setObject(qmlScope);
         ep->warning(error);
-        return QV4::Encode::undefined();
+        result = QV4::Encode::undefined();
     }
-    return result->asReturnedValue();
+    m_function.set(v4, result);
 }
 
 

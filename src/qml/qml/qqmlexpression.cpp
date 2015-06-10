@@ -241,12 +241,8 @@ void QQmlExpression::setExpression(const QString &expression)
 // Must be called with a valid handle scope
 QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
-    Q_Q(QQmlExpression);
-
-    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(q->engine())->v4engine();
-
     if (!expressionFunctionValid) {
-        m_function.set(v4, qmlBinding(context(), scopeObject(), expression, url, line));
+        createQmlBinding(context(), scopeObject(), expression, url, line);
         expressionFunctionValid = true;
     }
 

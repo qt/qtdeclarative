@@ -133,7 +133,6 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
                                                  QQmlContextData::get(context), fileName,
                                                  line, column);
                     newBinding->setTarget(property);
-                    newBinding->setNotifyOnValueChanged(true);
                 }
 
                 state->changeBindingInRevertList(object, propertyName, newBinding);
