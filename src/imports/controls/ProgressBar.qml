@@ -49,6 +49,7 @@ AbstractProgressBar {
 
     padding: Theme.padding
 
+    //! [indicator]
     indicator: Item {
         x: control.leftPadding
         y: control.topPadding
@@ -86,7 +87,9 @@ AbstractProgressBar {
             }
         }
     }
+    //! [indicator]
 
+    //! [background]
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 6
@@ -99,4 +102,5 @@ AbstractProgressBar {
         border.color: control.Theme.frameColor
         color: "transparent"
     }
+    //! [background]
 }

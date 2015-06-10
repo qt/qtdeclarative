@@ -78,6 +78,24 @@
 
     \snippet CheckBox.qml indicator
 
+    \section1 Customizing ProgressBar
+
+    ProgressBar consists of two parts: \l {Control::background}{background}
+    and \l {ProgressBar::indicator}{indicator}. Their implicit sizes are used
+    to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-progressbar-background.png
+
+    \snippet ProgressBar.qml background
+
+    \section3 Indicator
+
+    \image qtquickcontrols2-progressbar-indicator.png
+
+    \snippet ProgressBar.qml indicator
+
     \section1 Customizing RadioButton
 
     RadioButton consists of three parts: \l {Control::background}{background},

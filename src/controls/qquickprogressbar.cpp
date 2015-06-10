@@ -45,9 +45,24 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickProgressBar
     \inqmlmodule QtQuick.Controls
     \ingroup indicators
-    \brief A progress bar.
+    \brief A progress bar control.
 
-    TODO
+    ProgressBar indicates the progress of an operation.
+
+    \table
+    \row \li \image qtquickcontrols2-progressbar-normal.png
+         \li A progress bar in its normal state.
+    \row \li \image qtquickcontrols2-progressbar-disabled.png
+         \li A progress bar that is disabled.
+    \endtable
+
+    \code
+    ProgressBar {
+        value: 0.5
+    }
+    \endcode
+
+    \sa {Customizing ProgressBar}
 */
 
 class QQuickProgressBarPrivate : public QQuickControlPrivate
@@ -68,7 +83,9 @@ QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
 /*!
     \qmlproperty real QtQuickControls2::ProgressBar::value
 
-    TODO
+    This property holds the value in the range \c 0.0 - \c 1.0. The default value is \c 0.0.
+
+    \sa visualPosition
 */
 qreal QQuickProgressBar::value() const
 {
@@ -89,8 +106,16 @@ void QQuickProgressBar::setValue(qreal value)
 
 /*!
     \qmlproperty real QtQuickControls2::ProgressBar::visualPosition
+    \readonly
 
-    TODO
+    This property holds the visual position of the progress.
+
+    The position is defined as a percentage of the control's size, scaled to
+    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
+    \c {1.0 - value}. This makes the value suitable for visualizing the
+    progress, taking right-to-left support into account.
+
+    \sa value
 */
 qreal QQuickProgressBar::visualPosition() const
 {
@@ -103,7 +128,7 @@ qreal QQuickProgressBar::visualPosition() const
 /*!
     \qmlproperty bool QtQuickControls2::ProgressBar::indeterminate
 
-    TODO
+    This property holds whether the progress bar is in an indeterminate mode.
 */
 bool QQuickProgressBar::isIndeterminate() const
 {
@@ -123,7 +148,9 @@ void QQuickProgressBar::setIndeterminate(bool indeterminate)
 /*!
     \qmlproperty Item QtQuickControls2::ProgressBar::indicator
 
-    TODO
+    This property holds the indicator item.
+
+    \sa {Customizing ProgressBar}
 */
 QQuickItem *QQuickProgressBar::indicator() const
 {
