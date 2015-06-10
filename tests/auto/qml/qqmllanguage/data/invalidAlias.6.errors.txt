@@ -1,1 +1,1 @@
-5:23:Invalid alias location
+5:23:Invalid alias target location: foobar
