@@ -498,6 +498,7 @@ void QQuickMouseArea::setEnabled(bool a)
 
 /*!
     \qmlproperty bool QtQuick::MouseArea::scrollGestureEnabled
+    \since 5.5
 
     This property controls whether this MouseArea responds to scroll gestures
     from non-mouse devices, such as the 2-finger flick gesture on a trackpad.
