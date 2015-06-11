@@ -1304,8 +1304,8 @@ void QQuickKeysAttached::setPriority(Priority order)
 
 void QQuickKeysAttached::componentComplete()
 {
-    Q_D(QQuickKeysAttached);
 #ifndef QT_NO_IM
+    Q_D(QQuickKeysAttached);
     if (d->item) {
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QQuickItem *targetItem = d->targets.at(ii);

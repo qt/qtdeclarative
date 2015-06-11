@@ -83,8 +83,8 @@ bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
-    Q_Q(QQuickWindow);
 #ifndef QT_NO_IM
+    Q_Q(QQuickWindow);
     QQuickItem *focus = q->activeFocusItem();
     if (focus && QGuiApplication::focusObject() == focus) {
         QQuickItemPrivate *focusPrivate = QQuickItemPrivate::get(focus);

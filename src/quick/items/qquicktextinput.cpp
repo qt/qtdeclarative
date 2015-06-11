@@ -1697,11 +1697,10 @@ void QQuickTextInput::invalidateFontCaches()
 
 void QQuickTextInput::ensureActiveFocus()
 {
-    Q_D(QQuickTextInput);
-
     bool hadActiveFocus = hasActiveFocus();
     forceActiveFocus();
 #ifndef QT_NO_IM
+    Q_D(QQuickTextInput);
     // re-open input panel on press if already focused
     if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
         qGuiApp->inputMethod()->show();
