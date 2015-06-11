@@ -41,7 +41,7 @@ qhp.projects            = QtQuick2dRenderer
 qhp.QtQuick2dRenderer.file                  = qtquick2drenderer.qhp
 qhp.QtQuick2dRenderer.namespace             = com.digia.qtquick2drenderer.$QT_VERSION_TAG
 qhp.QtQuick2dRenderer.virtualFolder         = qtquick2drenderer
-qhp.QtQuick2dRenderer.indexTitle            = Qt Quick 2D Renderer Documentation
+qhp.QtQuick2dRenderer.indexTitle            = Qt Quick 2D Renderer
 qhp.QtQuick2dRenderer.indexRoot             =
 
 qhp.QtQuick2dRenderer.subprojects           = manual
