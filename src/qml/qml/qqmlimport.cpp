@@ -169,6 +169,7 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
 
 } // namespace
 
+#ifndef QT_NO_LIBRARY
 struct RegisteredPlugin {
     QString uri;
     QPluginLoader* loader;
@@ -193,6 +194,7 @@ void qmlClearEnginePlugins()
 }
 
 typedef QPair<QStaticPlugin, QJsonArray> StaticPluginPair;
+#endif
 
 class QQmlImportNamespace
 {
@@ -292,9 +294,10 @@ public:
                                                       const QString &uri, const QString &url,
                                                       int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
                                                       QList<QQmlError> *errors, bool lowPrecedence = false);
-
+#ifndef QT_NO_LIBRARY
    bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
+#endif
 };
 
 /*!
@@ -826,6 +829,7 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
 }
 
 
+#ifndef QT_NO_LIBRARY
 /*!
     Get all static plugins that are QML plugins and has a meta data URI that begins with \a uri.
     Note that if e.g uri == "a", and different plugins have meta data "a", "a.2.1", "a.b.c", all
@@ -869,6 +873,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
     }
     return true;
 }
+#endif
 
 /*!
 Import an extension defined by a qmldir file.
