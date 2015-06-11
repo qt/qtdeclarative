@@ -44,6 +44,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4profiling_p.h>
 #include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include <private/qqmlcontextwrapper_p.h>
@@ -101,8 +102,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 
     o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
 
-    ScopedContext ctx(s, s.engine->currentContext());
-    o->d()->qmlContext = ctx->newQmlContext(o, qml);
+    o->d()->scope = ScopedContext(s, o->scope())->newQmlContext(qml);
     s.engine->popContext();
 }
 
@@ -117,26 +117,28 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Ob
 
     o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
 
-    ScopedContext ctx(s, s.engine->currentContext());
-    o->d()->qmlContext = ctx->newQmlContext(o, qml);
+    o->d()->scope = ScopedContext(s, o->scope())->newQmlContext(qml);
     s.engine->popContext();
 }
 
-ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *)
+ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *engine = static_cast<const Object *>(that)->engine();
-    CHECK_STACK_LIMITS(engine);
+    ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
+    if (v4->hasException)
+        return Encode::undefined();
+    CHECK_STACK_LIMITS(v4);
 
-    Scope scope(engine);
-    const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
-    if (!This->function())
+    Scope scope(v4);
+    Scoped<QmlBindingWrapper> This(scope, static_cast<const QmlBindingWrapper *>(that));
+    QV4::Function *f = This->function();
+    if (!f)
         return QV4::Encode::undefined();
 
-    Scoped<CallContext> ctx(scope, This->d()->qmlContext);
-    std::fill(ctx->d()->locals, ctx->d()->locals + ctx->d()->function->varCount(), Primitive::undefinedValue());
-    engine->pushContext(ctx);
-    ScopedValue result(scope, This->function()->code(engine, This->function()->codeData));
-    engine->popContext();
+    ScopedContext context(scope, v4->currentContext());
+    Scoped<CallContext> ctx(scope, context->newCallContext(This, callData));
+
+    ExecutionContextSaver ctxSaver(scope, context);
+    ScopedValue result(scope, Q_V4_PROFILE(v4, f));
 
     return result->asReturnedValue();
 }
@@ -147,8 +149,6 @@ void QmlBindingWrapper::markObjects(Heap::Base *m, ExecutionEngine *e)
     if (wrapper->qml)
         wrapper->qml->mark(e);
     FunctionObject::markObjects(m, e);
-    if (wrapper->qmlContext)
-        wrapper->qmlContext->mark(e);
 }
 
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
@@ -166,7 +166,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
     QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine, qmlContext, scopeObject));
     ScopedContext global(valueScope, valueScope.engine->rootContext());
     QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScopeObject));
-    QV4::Scoped<CallContext> wrapperContext(valueScope, wrapper->context());
+    QV4::Scoped<QmlContext> wrapperContext(valueScope, wrapper->context());
 
     if (!signalParameters.isEmpty()) {
         if (error)

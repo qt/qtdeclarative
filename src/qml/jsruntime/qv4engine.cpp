@@ -737,8 +737,8 @@ Heap::Object *ExecutionEngine::qmlContextObject() const
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
-    Q_ASSERT(static_cast<Heap::CallContext *>(ctx)->activation);
-    return static_cast<Heap::CallContext *>(ctx)->activation;
+    Q_ASSERT(static_cast<Heap::QmlContext *>(ctx)->qml);
+    return static_cast<Heap::QmlContext *>(ctx)->qml;
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const

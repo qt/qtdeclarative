@@ -498,7 +498,7 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
 
     Scope scope(m_engine);
     Scoped<CallContext> sctxt(scope, findContext(m_engine->currentContext(), frame));
-    if (!sctxt || sctxt->d()->type < Heap::ExecutionContext::Type_SimpleCallContext)
+    if (!sctxt || sctxt->d()->type < Heap::ExecutionContext::Type_QmlContext)
         return types;
 
     ScopedContext it(scope, sctxt->d());

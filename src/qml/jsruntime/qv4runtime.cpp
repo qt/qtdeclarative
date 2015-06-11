@@ -1240,7 +1240,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
 
 QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->currentContext()->type >= Heap::ExecutionContext::Type_CallContext);
+    Q_ASSERT(engine->currentContext()->type == Heap::ExecutionContext::Type_CallContext);
     Scope scope(engine);
     Scoped<CallContext> c(scope, static_cast<Heap::CallContext *>(engine->currentContext()));
     return (engine->memoryManager->alloc<ArgumentsObject>(c))->asReturnedValue();

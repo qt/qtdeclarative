@@ -457,7 +457,7 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(ctx->d()->engine, f->function()->compiledFunction);
+        QmlContextWrapper::registerQmlDependencies(scope.engine, f->function()->compiledFunction);
 
     return result->asReturnedValue();
 }

@@ -75,9 +75,9 @@ struct ExecutionContext : Base {
         Type_GlobalContext = 0x1,
         Type_CatchContext = 0x2,
         Type_WithContext = 0x3,
-        Type_SimpleCallContext = 0x4,
-        Type_CallContext = 0x5,
-        Type_QmlContext = 0x6
+        Type_QmlContext = 0x4,
+        Type_SimpleCallContext = 0x5,
+        Type_CallContext = 0x6
     };
 
     inline ExecutionContext(ExecutionEngine *engine, ContextType t);
@@ -103,7 +103,6 @@ struct CallContext : ExecutionContext {
         locals = 0;
         activation = 0;
     }
-    CallContext(ExecutionEngine *engine, QV4::Object *qml, QV4::FunctionObject *function);
 
     Pointer<FunctionObject> function;
     Value *locals;
@@ -126,6 +125,10 @@ struct WithContext : ExecutionContext {
     Pointer<Object> withObject;
 };
 
+struct QmlContext : ExecutionContext {
+    QmlContext(QV4::ExecutionContext *outer, QV4::Object *qml);
+    Pointer<Object> qml;
+};
 
 }
 
@@ -143,7 +146,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
-    Heap::CallContext *newQmlContext(FunctionObject *f, Object *qml);
+    Heap::QmlContext *newQmlContext(Object *qml);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -207,6 +210,11 @@ struct CatchContext : public ExecutionContext
 struct WithContext : public ExecutionContext
 {
     V4_MANAGED(WithContext, ExecutionContext)
+};
+
+struct QmlContext : public ExecutionContext
+{
+    V4_MANAGED(QmlContext, ExecutionContext)
 };
 
 inline CallContext *ExecutionContext::asCallContext()
