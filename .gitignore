@@ -6,10 +6,10 @@
 /mkspecs
 
 /examples/quick/calendar/calendar
-/examples/quick/controls/drawer/drawer
 /examples/quick/controls/mirroring/mirroring
 /examples/quick/controls/theme/theme
 /examples/quick/controls/tabs/tabs
+/examples/quick/extras/drawer/drawer
 
 /tests/auto/controls/tst_controls
 /tests/auto/declarative/tst_declarative
