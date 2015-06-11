@@ -735,22 +735,26 @@ QSGDepthStencilBufferManager *QSGRenderContext::depthStencilBufferManager()
     will be called with \a image as argument.
  */
 
-QSGTexture *QSGRenderContext::createTexture(const QImage &image) const
+QSGTexture *QSGRenderContext::createTexture(const QImage &image, uint flags) const
 {
-    if (!openglContext())
-        return 0;
-    QSGTexture *t = m_atlasManager->create(image);
-    if (t)
-        return t;
-    return createTextureNoAtlas(image);
-}
+    bool atlas = flags & CreateTexture_Atlas;
+    bool mipmap = flags & CreateTexture_Mipmap;
+    bool alpha = flags & CreateTexture_Alpha;
 
-QSGTexture *QSGRenderContext::createTextureNoAtlas(const QImage &image) const
-{
-    QSGPlainTexture *t = new QSGPlainTexture();
-    if (!image.isNull())
-        t->setImage(image);
-    return t;
+    // The atlas implementation is only supported from the render thread and
+    // does not support mipmaps.
+    if (!mipmap && atlas && openglContext() && QThread::currentThread() == openglContext()->thread()) {
+        QSGTexture *t = m_atlasManager->create(image, alpha);
+        if (t)
+            return t;
+    }
+
+    QSGPlainTexture *texture = new QSGPlainTexture();
+    texture->setImage(image);
+    if (texture->hasAlphaChannel() && !alpha)
+        texture->setHasAlphaChannel(false);
+
+    return texture;
 }
 
 /*!

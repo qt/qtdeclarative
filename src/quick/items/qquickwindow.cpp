@@ -3372,6 +3372,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     will delete the GL texture when the texture object is deleted.
 
     \value TextureCanUseAtlas The image can be uploaded into a texture atlas.
+
+    \value TextureIsOpaque The texture will return false for
+    QSGTexture::hasAlphaChannel() and will not be blended. This flag was added
+    in Qt 5.6.
+
  */
 
 /*!
@@ -3576,11 +3581,20 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     The caller of the function is responsible for deleting the returned texture.
     The actual GL texture will be deleted when the texture object is deleted.
 
-    When \a options contains TextureCanUseAtlas the engine may put the image
+    When \a options contains TextureCanUseAtlas, the engine may put the image
     into a texture atlas. Textures in an atlas need to rely on
     QSGTexture::normalizedTextureSubRect() for their geometry and will not
     support QSGTexture::Repeat. Other values from CreateTextureOption are
     ignored.
+
+    When \a options contains TextureIsOpaque, the engine will create an RGB
+    texture which returns false for QSGTexture::hasAlphaChannel(). Opaque
+    textures will in most cases be faster to render. When this flag is not set,
+    the texture will have an alpha channel based on the image's format.
+
+    When \a options contains TextureHasMipmaps, the engine will create a
+    texture which can use mipmap filtering. Mipmapped textures can not be in
+    an atlas.
 
     The returned texture will be using \c GL_TEXTURE_2D as texture target and
     \c GL_RGBA as internal format. Reimplement QSGTexture to create textures
@@ -3603,14 +3617,13 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
 {
     Q_D(const QQuickWindow);
-    if (d->context) {
-        if (options & TextureCanUseAtlas)
-            return d->context->createTexture(image);
-        else
-            return d->context->createTextureNoAtlas(image);
-    }
-    else
-        return 0;
+    if (!d->context)
+         return 0;
+    uint flags = 0;
+    if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;
+    if (options & TextureHasMipmaps)      flags |= QSGRenderContext::CreateTexture_Mipmap;
+    if (!(options & TextureIsOpaque))     flags |= QSGRenderContext::CreateTexture_Alpha;
+    return d->context->createTexture(image, flags);
 }
 
 

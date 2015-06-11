@@ -52,7 +52,8 @@ public:
     enum CreateTextureOption {
         TextureHasAlphaChannel  = 0x0001,
         TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008
+        TextureCanUseAtlas      = 0x0008,
+        TextureIsOpaque         = 0x0010
     };
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 

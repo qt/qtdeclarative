@@ -58,7 +58,7 @@ public:
     Manager();
     ~Manager();
 
-    QSGTexture *create(const QImage &image);
+    QSGTexture *create(const QImage &image, bool hasAlphaChannel);
     void invalidate();
 
 private:
@@ -114,6 +114,7 @@ public:
 
     int textureId() const { return m_atlas->textureId(); }
     QSize textureSize() const { return atlasSubRectWithoutPadding().size(); }
+    void setHasAlphaChannel(bool alpha) { m_has_alpha = alpha; }
     bool hasAlphaChannel() const { return m_has_alpha; }
     bool hasMipmaps() const { return false; }
     bool isAtlasTexture() const { return true; }

@@ -104,6 +104,9 @@ private slots:
 
     void hideWithOtherContext();
 
+    void createTextureFromImage_data();
+    void createTextureFromImage();
+
 private:
     bool m_brokenMipmapSupport;
 };
@@ -532,6 +535,34 @@ void tst_SceneGraph::hideWithOtherContext()
     // required to makeCurrent their context again before making any
     // GL calls to a new frame (see QOpenGLContext docs).
     QVERIFY(!renderingOnMainThread || QOpenGLContext::currentContext() != &context);
+}
+
+void tst_SceneGraph::createTextureFromImage_data()
+{
+    QImage rgba(64, 64, QImage::Format_ARGB32_Premultiplied);
+    QImage rgb(64, 64, QImage::Format_RGB32);
+
+    QTest::addColumn<QImage>("image");
+    QTest::addColumn<uint>("flags");
+    QTest::addColumn<bool>("expectedAlpha");
+
+    QTest::newRow("rgb") << rgb << uint(0) << false;
+    QTest::newRow("argb") << rgba << uint(0) << true;
+    QTest::newRow("rgb,alpha") << rgb << uint(QQuickWindow::TextureHasAlphaChannel) << false;
+    QTest::newRow("argb,alpha") << rgba << uint(QQuickWindow::TextureHasAlphaChannel) << true;
+    QTest::newRow("rgb,!alpha") << rgb << uint(QQuickWindow::TextureIsOpaque) << false;
+    QTest::newRow("argb,!alpha") << rgba << uint(QQuickWindow::TextureIsOpaque) << false;
+}
+
+void tst_SceneGraph::createTextureFromImage()
+{
+    QFETCH(QImage, image);
+    QFETCH(uint, flags);
+    QFETCH(bool, expectedAlpha);
+
+    QQuickView view;
+    QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));
+    QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
 }
 
 

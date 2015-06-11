@@ -112,13 +112,15 @@ void Manager::invalidate()
     }
 }
 
-QSGTexture *Manager::create(const QImage &image)
+QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 {
-    QSGTexture *t = 0;
+    Texture *t = 0;
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
             m_atlas = new Atlas(m_atlas_size);
         t = m_atlas->create(image);
+        if (!hasAlphaChannel && t->hasAlphaChannel())
+            t->setHasAlphaChannel(false);
     }
     return t;
 }

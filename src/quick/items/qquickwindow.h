@@ -69,7 +69,8 @@ public:
         TextureHasAlphaChannel  = 0x0001,
         TextureHasMipmaps       = 0x0002,
         TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008
+        TextureCanUseAtlas      = 0x0008,
+        TextureIsOpaque         = 0x0010,
     };
 
     enum RenderStage {

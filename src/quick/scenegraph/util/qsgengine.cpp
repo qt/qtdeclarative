@@ -150,7 +150,7 @@ QSGAbstractRenderer *QSGEngine::createRenderer() const
 /*!
     Creates a texture using the data of \a image
 
-    Valid \a options are TextureCanUseAtlas
+    Valid \a options are TextureCanUseAtlas and TextureIsOpaque.
 
     The caller takes ownership of the texture and the
     texture should only be used with this engine.
@@ -160,13 +160,12 @@ QSGAbstractRenderer *QSGEngine::createRenderer() const
 QSGTexture *QSGEngine::createTextureFromImage(const QImage &image, CreateTextureOptions options) const
 {
     Q_D(const QSGEngine);
-    if (!d->sgRenderContext->isValid())
-        return 0;
-
-    if (options & TextureCanUseAtlas)
-        return d->sgRenderContext->createTexture(image);
-    else
-        return d->sgRenderContext->createTextureNoAtlas(image);
+     if (!d->sgRenderContext->isValid())
+         return 0;
+    uint flags = 0;
+    if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;
+    if (!(options & TextureIsOpaque))     flags |= QSGRenderContext::CreateTexture_Alpha;
+    return d->sgRenderContext->createTexture(image, flags);
 }
 
 /*!

@@ -88,6 +88,12 @@ class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject
 {
     Q_OBJECT
 public:
+    enum CreateTextureFlags {
+        CreateTexture_Alpha       = 0x1,
+        CreateTexture_Atlas       = 0x2,
+        CreateTexture_Mipmap      = 0x4
+    };
+
     QSGRenderContext(QSGContext *context);
     ~QSGRenderContext();
 
@@ -107,8 +113,8 @@ public:
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
     QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 
-    virtual QSGTexture *createTexture(const QImage &image) const;
-    virtual QSGTexture *createTextureNoAtlas(const QImage &image) const;
+    virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const;
+
     virtual QSGRenderer *createRenderer();
 
     virtual void compile(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
