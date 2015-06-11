@@ -42,8 +42,10 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 
+#ifndef QT_NO_LIBRARY
 // print detailed information about loading of plugins
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -140,6 +142,7 @@ void QQmlInspectorService::processMessage(const QByteArray &message)
 
 void QQmlInspectorService::loadInspectorPlugins()
 {
+#ifndef QT_NO_LIBRARY
     QStringList pluginCandidates;
     const QStringList paths = QCoreApplication::libraryPaths();
     foreach (const QString &libPath, paths) {
@@ -176,6 +179,7 @@ void QQmlInspectorService::loadInspectorPlugins()
             loader.unload();
         }
     }
+#endif
 }
 
 QT_END_NAMESPACE
