@@ -1714,6 +1714,8 @@ void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
 #ifndef QT_NO_IM
         if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
             qGuiApp->inputMethod()->show();
+#else
+        Q_UNUSED(hadActiveFocus);
 #endif
     }
     if (!event->isAccepted())

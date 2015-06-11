@@ -1705,6 +1705,8 @@ void QQuickTextInput::ensureActiveFocus()
     // re-open input panel on press if already focused
     if (hasActiveFocus() && hadActiveFocus && !d->m_readOnly)
         qGuiApp->inputMethod()->show();
+#else
+    Q_UNUSED(hadActiveFocus);
 #endif
 }
 

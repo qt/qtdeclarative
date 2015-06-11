@@ -995,6 +995,13 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     }
 
 #else
+    Q_UNUSED(qmldirFilePath);
+    Q_UNUSED(uri);
+    Q_UNUSED(vmaj);
+    Q_UNUSED(vmin);
+    Q_UNUSED(database);
+    Q_UNUSED(qmldir);
+    Q_UNUSED(errors);
     return false;
 #endif // QT_NO_LIBRARY
     return true;
@@ -1931,6 +1938,12 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
 
     return true;
 #else
+    Q_UNUSED(instance);
+    Q_UNUSED(basePath);
+    Q_UNUSED(uri);
+    Q_UNUSED(typeNamespace);
+    Q_UNUSED(vmaj);
+    Q_UNUSED(errors);
     return false;
 #endif
 }
@@ -2011,6 +2024,11 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
 
     return true;
 #else
+    Q_UNUSED(filePath);
+    Q_UNUSED(uri);
+    Q_UNUSED(typeNamespace);
+    Q_UNUSED(vmaj);
+    Q_UNUSED(errors);
     return false;
 #endif
 }
