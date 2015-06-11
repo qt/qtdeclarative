@@ -2,29 +2,6 @@ include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
 include($QT_INSTALL_DOCS/global/qt-cpp-defines.qdocconf)
 include($QT_INSTALL_DOCS/global/fileextensions.qdocconf)
 
-HTML.nobreadcrumbs    = "true"
-
-HTML.footer = \
-    "  <div class=\"ft\">\n" \
-    "    <span></span>\n" \
-    "  </div>\n" \
-    "</div> \n" \
-    "<div class=\"footer\">\n" \
-    "    <p>\n" \
-    "      <acronym title=\"Copyright\">&copy;</acronym> 2014 Digia Plc and/or its\n" \
-    "      subsidiaries.</p>\n" \
-    "    <p>\n" \
-    "       Licensees holding valid Qt Commercial licenses may use this document in\n" \
-    "       accordance with the Qt Commercial License Agreement provided with the\n" \
-    "       Software or, alternatively, in accordance with the terms contained in a\n" \
-    "       written agreement between you and Digia.<\p>\n" \
-    "    <p>\n" \
-    "      Digia, Qt and their respective logos are trademarks of Digia Plc \n" \
-    "      in Finland and/or other countries worldwide. All other trademarks are property\n" \
-    "      of their respective owners. <a title=\"Privacy Policy\"\n" \
-    "      href=\"http://www.qt.io/terms-conditions/#section-3\">Privacy Policy</a></p>\n" \
-    "</div>\n"
-
 naturallanguate             = en_US
 outputencoding              = UTF-8
 sourceencoding              = UTF-8
