@@ -57,7 +57,7 @@ AbstractTabBar {
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem
 
-        model: control.model
+        model: control.contentModel
         currentIndex: control.currentIndex
 
         highlightMoveDuration: 250
