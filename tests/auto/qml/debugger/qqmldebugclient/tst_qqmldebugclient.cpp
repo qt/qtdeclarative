@@ -76,9 +76,8 @@ void tst_QQmlDebugClient::initTestCase()
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
         m_conn->connectToHost("127.0.0.1", PORT);
-        if (m_conn->waitForConnected())
+        if (m_conn->waitForConnected(100))
             break;
-        QTest::qSleep(100);
     }
 
     QVERIFY(m_conn->isConnected());
