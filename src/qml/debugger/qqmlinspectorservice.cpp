@@ -153,12 +153,14 @@ void QQmlInspectorService::loadInspectorPlugins()
     }
 
     foreach (const QString &pluginPath, pluginCandidates) {
-        if (pluginPath.contains(QLatin1String("qmldbg_tcp")))
-            continue;
         if (qmlDebugVerbose())
             qDebug() << "QQmlInspector: Trying to load plugin " << pluginPath << "...";
 
         QPluginLoader loader(pluginPath);
+        if (loader.metaData()[QLatin1String("IID")] !=
+                QLatin1String("org.qt-project.Qt.QQmlInspectorInterface"))
+            continue;
+
         if (!loader.load()) {
             if (qmlDebugVerbose())
                 qDebug() << "QQmlInspector: Error while loading: " << loader.errorString();
