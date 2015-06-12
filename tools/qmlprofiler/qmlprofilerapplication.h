@@ -104,7 +104,6 @@ private:
     QString m_programPath;
     QStringList m_programArguments;
     QProcess *m_process;
-    QString m_tracePrefix;
 
     QString m_hostName;
     quint16 m_port;

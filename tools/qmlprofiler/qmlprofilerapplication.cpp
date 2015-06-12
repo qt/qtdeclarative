@@ -73,13 +73,10 @@ static const char *features[] = {
     "inputevents"
 };
 
-static const char TraceFileExtension[] = ".qtd";
-
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),
     m_runMode(LaunchMode),
     m_process(0),
-    m_tracePrefix(QLatin1String("trace")),
     m_hostName(QLatin1String("127.0.0.1")),
     m_port(3768),
     m_pendingRequest(REQUEST_NONE),
@@ -268,10 +265,8 @@ void QmlProfilerApplication::parseArguments()
         m_verbose = true;
 
     m_programArguments = parser.positionalArguments();
-    if (!m_programArguments.isEmpty()) {
+    if (!m_programArguments.isEmpty())
         m_programPath = m_programArguments.takeFirst();
-        m_tracePrefix = QFileInfo(m_programPath).fileName();
-    }
 
     if (m_runMode == LaunchMode && m_programPath.isEmpty()) {
         logError(tr("You have to specify either --attach or a program to start."));
