@@ -112,12 +112,14 @@ void tst_QQmlInspector::cleanup()
 void tst_QQmlInspector::connect()
 {
     startQmlsceneProcess("qtquick2.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 }
 
 void tst_QQmlInspector::showAppOnTop()
 {
     startQmlsceneProcess("qtquick2.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setShowAppOnTop(true);
@@ -132,6 +134,7 @@ void tst_QQmlInspector::showAppOnTop()
 void tst_QQmlInspector::reloadQml()
 {
     startQmlsceneProcess("qtquick2.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     QByteArray fileContents;
@@ -157,6 +160,7 @@ void tst_QQmlInspector::reloadQml()
 void tst_QQmlInspector::reloadQmlWindow()
 {
     startQmlsceneProcess("window.qml");
+    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     QByteArray fileContents;

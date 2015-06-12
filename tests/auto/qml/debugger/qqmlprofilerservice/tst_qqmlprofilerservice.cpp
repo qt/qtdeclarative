@@ -509,7 +509,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
 
 void tst_QQmlProfilerService::cleanup()
 {
-    if (QTest::currentTestFailed()) {
+    if (m_client && QTest::currentTestFailed()) {
         qDebug() << "QML Messages:" << m_client->qmlMessages.count();
         int i = 0;
         foreach (const QQmlProfilerData &data, m_client->qmlMessages) {
@@ -547,7 +547,7 @@ void tst_QQmlProfilerService::cleanup()
         qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
         qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
         qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
-        qDebug() << "Client State:" << (m_client ? m_client->stateString() : QLatin1String("null"));
+        qDebug() << "Client State:" << m_client->stateString();
     }
     delete m_process;
     m_process = 0;
