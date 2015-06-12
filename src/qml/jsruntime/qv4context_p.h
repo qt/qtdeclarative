@@ -146,7 +146,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     ExecutionEngine *engine() const { return d()->engine; }
 
-    Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
+    Heap::CallContext *newCallContext(const FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
     Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);

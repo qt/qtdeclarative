@@ -121,8 +121,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     Function *function() const { return d()->function; }
 
     ReturnedValue name() const;
-    unsigned int formalParameterCount() { return d()->formalParameterCount(); }
-    unsigned int varCount() { return d()->varCount(); }
+    unsigned int formalParameterCount() const { return d()->formalParameterCount(); }
+    unsigned int varCount() const { return d()->varCount(); }
 
     void init(String *name, bool createProto);
 

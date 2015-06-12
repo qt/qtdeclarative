@@ -52,7 +52,7 @@ DEFINE_MANAGED_VTABLE(CatchContext);
 DEFINE_MANAGED_VTABLE(GlobalContext);
 DEFINE_MANAGED_VTABLE(QmlContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(FunctionObject *function, CallData *callData)
+Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *function, CallData *callData)
 {
     Q_ASSERT(function->function());
 

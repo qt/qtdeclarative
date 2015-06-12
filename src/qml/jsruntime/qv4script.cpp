@@ -98,12 +98,10 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
         function->compilationUnit->addref();
 
     Scope s(scope);
-    Scoped<QV4::QmlBindingWrapper> o(s, this);
+    Scoped<QV4::QmlBindingWrapper> protectThis(s, this);
 
-    o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
-
-    o->d()->scope = ScopedContext(s, o->scope())->newQmlContext(qml);
-    s.engine->popContext();
+    this->scope = scope->newQmlContext(qml);
+    internalClass->engine->popContext();
 }
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml)
@@ -113,23 +111,21 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Qm
     Q_ASSERT(scope->inUse());
 
     Scope s(scope);
-    Scoped<QV4::QmlBindingWrapper> o(s, this);
+    Scoped<QV4::QmlBindingWrapper> protectThis(s, this);
 
-    o->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(1));
-
-    o->d()->scope = ScopedContext(s, o->scope())->newQmlContext(qml);
-    s.engine->popContext();
+    this->scope = scope->newQmlContext(qml);
+    internalClass->engine->popContext();
 }
 
 ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
 {
+    const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
     ExecutionEngine *v4 = static_cast<const Object *>(that)->engine();
     if (v4->hasException)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<QmlBindingWrapper> This(scope, static_cast<const QmlBindingWrapper *>(that));
     QV4::Function *f = This->function();
     if (!f)
         return QV4::Encode::undefined();
