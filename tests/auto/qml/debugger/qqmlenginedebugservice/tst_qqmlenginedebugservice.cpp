@@ -87,6 +87,8 @@ public:
 class tst_QQmlEngineDebugService : public QObject
 {
     Q_OBJECT
+public:
+    tst_QQmlEngineDebugService() : m_conn(0), m_dbg(0), m_engine(0), m_rootItem(0) {}
 
 private:
     QmlDebugObjectReference findRootObject(int context = 0,
