@@ -69,6 +69,6 @@ AbstractTabButton {
     background: Rectangle {
         height: parent.height - 1
         implicitHeight: 26
-        color: Theme.backgroundColor
+        color: control.Theme.backgroundColor
     }
 }
