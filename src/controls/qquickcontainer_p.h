@@ -57,25 +57,15 @@ class QQuickContainerPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
 public:
     explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
 
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
 
 Q_SIGNALS:
-    void contentWidthChanged();
-    void contentHeightChanged();
     void contentItemChanged();
 
 protected:

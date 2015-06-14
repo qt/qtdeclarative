@@ -48,8 +48,7 @@ QT_BEGIN_NAMESPACE
     \internal
 */
 
-QQuickContainerPrivate::QQuickContainerPrivate() :
-    contentWidth(0), contentHeight(0), contentItem(Q_NULLPTR)
+QQuickContainerPrivate::QQuickContainerPrivate() : contentItem(Q_NULLPTR)
 {
 }
 
@@ -70,42 +69,6 @@ QQuickContainer::QQuickContainer(QQuickItem *parent) :
 QQuickContainer::QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent) :
     QQuickControl(dd, parent)
 {
-}
-
-/*!
-    \qmlproperty real QtQuickControls2::Container::contentWidth
-    \qmlproperty real QtQuickControls2::Container::contentHeight
-
-    TODO
-*/
-qreal QQuickContainer::contentWidth() const
-{
-    Q_D(const QQuickContainer);
-    return d->contentWidth;
-}
-
-void QQuickContainer::setContentWidth(qreal width)
-{
-    Q_D(QQuickContainer);
-    if (d->contentWidth != width) {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
-}
-
-qreal QQuickContainer::contentHeight() const
-{
-    Q_D(const QQuickContainer);
-    return d->contentHeight;
-}
-
-void QQuickContainer::setContentHeight(qreal height)
-{
-    Q_D(QQuickContainer);
-    if (d->contentHeight != height) {
-        d->contentHeight = height;
-        emit contentHeightChanged();
-    }
 }
 
 /*!

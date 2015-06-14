@@ -61,8 +61,6 @@ public:
 
     void resizeContent();
 
-    qreal contentWidth;
-    qreal contentHeight;
     QQuickItem *contentItem;
 };
 
