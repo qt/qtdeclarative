@@ -82,7 +82,7 @@ protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
 
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange() Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 

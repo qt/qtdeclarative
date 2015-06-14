@@ -124,8 +124,7 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
     virtual void mirrorChange();
-
-    virtual void paddingChange();
+    virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
 
 private:
     Q_DISABLE_COPY(QQuickControl)

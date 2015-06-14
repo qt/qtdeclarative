@@ -143,10 +143,10 @@ void QQuickContainer::geometryChanged(const QRectF &newGeometry, const QRectF &o
     d->resizeContent();
 }
 
-void QQuickContainer::paddingChange()
+void QQuickContainer::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
     Q_D(QQuickContainer);
-    QQuickControl::paddingChange();
+    QQuickControl::paddingChange(newPadding, oldPadding);
     d->resizeContent();
 }
 

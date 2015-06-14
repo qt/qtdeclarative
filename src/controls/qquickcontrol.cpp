@@ -71,7 +71,8 @@ void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->topPaddingChanged();
         emit q->availableHeightChanged();
-        q->paddingChange();
+        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
+                         QMarginsF(leftPadding, oldPadding, rightPadding, bottomPadding));
     }
 }
 
@@ -84,7 +85,8 @@ void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->leftPaddingChanged();
         emit q->availableWidthChanged();
-        q->paddingChange();
+        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
+                         QMarginsF(oldPadding, topPadding, rightPadding, bottomPadding));
     }
 }
 
@@ -97,7 +99,8 @@ void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->rightPaddingChanged();
         emit q->availableWidthChanged();
-        q->paddingChange();
+        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
+                         QMarginsF(leftPadding, topPadding, oldPadding, bottomPadding));
     }
 }
 
@@ -110,7 +113,8 @@ void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->bottomPaddingChanged();
         emit q->availableHeightChanged();
-        q->paddingChange();
+        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
+                         QMarginsF(leftPadding, topPadding, rightPadding, oldPadding));
     }
 }
 
@@ -182,21 +186,23 @@ void QQuickControl::setPadding(qreal padding)
     Q_D(QQuickControl);
     if (qFuzzyCompare(d->padding, padding))
         return;
+    QMarginsF oldPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
     d->padding = padding;
     emit paddingChanged();
-    if (!d->hasTopPadding)
+    QMarginsF newPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
+    if (!qFuzzyCompare(newPadding.top(), oldPadding.top()))
         emit topPaddingChanged();
-    if (!d->hasLeftPadding)
+    if (!qFuzzyCompare(newPadding.left(), oldPadding.left()))
         emit leftPaddingChanged();
-    if (!d->hasRightPadding)
+    if (!qFuzzyCompare(newPadding.right(), oldPadding.right()))
         emit rightPaddingChanged();
-    if (!d->hasBottomPadding)
+    if (!qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
         emit bottomPaddingChanged();
-    if (!d->hasTopPadding || !d->hasBottomPadding)
+    if (!qFuzzyCompare(newPadding.top(), oldPadding.top()) || !qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
         emit availableHeightChanged();
-    if (!d->hasLeftPadding || !d->hasRightPadding)
+    if (!qFuzzyCompare(newPadding.left(), oldPadding.left()) || !qFuzzyCompare(newPadding.right(), oldPadding.right()))
         emit availableWidthChanged();
-    paddingChange();
+    paddingChange(newPadding, oldPadding);
 }
 
 void QQuickControl::resetPadding()
@@ -428,8 +434,10 @@ void QQuickControl::mirrorChange()
     emit mirroredChanged();
 }
 
-void QQuickControl::paddingChange()
+void QQuickControl::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
+    Q_UNUSED(newPadding);
+    Q_UNUSED(oldPadding);
 }
 
 QT_END_NAMESPACE
