@@ -105,7 +105,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     qmlRegisterUncreatableType<QQuickExclusiveAttached>(uri, 2, 0, "Exclusive", "Exclusive is an attached property");
     qmlRegisterUncreatableType<QQuickStackAttached>(uri, 2, 0, "Stack", "Stack is an attached property");
-    qmlRegisterUncreatableType<QQuickTheme>(uri, 2, 0, "Theme", "Theme is an attached property");
+    qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 2, 0, "Theme", "Theme is an attached property");
 
     qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");

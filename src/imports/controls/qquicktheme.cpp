@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Theme
     \inherits QtObject
-    \instantiates QQuickTheme
+    \instantiates QQuickThemeAttached
     \inqmlmodule QtQuick.Controls
     \ingroup utilities
     \brief A theme interface.
@@ -116,30 +116,30 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtquickcontrols/theme.json")))
 
-static QQuickTheme *themeInstance(QQmlEngine *engine)
+static QQuickThemeAttached *themeInstance(QQmlEngine *engine)
 {
-    static QHash<QQmlEngine *, QQuickTheme *> themes;
-    QHash<QQmlEngine *, QQuickTheme *>::iterator it = themes.find(engine);
+    static QHash<QQmlEngine *, QQuickThemeAttached *> themes;
+    QHash<QQmlEngine *, QQuickThemeAttached *>::iterator it = themes.find(engine);
     if (it == themes.end())
-        it = themes.insert(engine, new QQuickTheme(*globalThemeData(), engine));
+        it = themes.insert(engine, new QQuickThemeAttached(*globalThemeData(), engine));
     return it.value();
 }
 
-static QQuickTheme *attachedTheme(QObject *object)
+static QQuickThemeAttached *attachedTheme(QObject *object)
 {
     if (object)
-        return qobject_cast<QQuickTheme*>(qmlAttachedPropertiesObject<QQuickTheme>(object, false));
+        return qobject_cast<QQuickThemeAttached*>(qmlAttachedPropertiesObject<QQuickThemeAttached>(object, false));
     return Q_NULLPTR;
 }
 
-static QQuickTheme *findParentTheme(QObject *object)
+static QQuickThemeAttached *findParentTheme(QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (item) {
         // lookup parent items
         QQuickItem *parent = item->parentItem();
         while (parent) {
-            QQuickTheme *attached = attachedTheme(parent);
+            QQuickThemeAttached *attached = attachedTheme(parent);
             if (attached)
                 return attached;
             parent = parent->parentItem();
@@ -148,7 +148,7 @@ static QQuickTheme *findParentTheme(QObject *object)
         // fallback to item's window theme
         QQuickWindow *window = item->window();
         if (window) {
-            QQuickTheme *attached = attachedTheme(window);
+            QQuickThemeAttached *attached = attachedTheme(window);
             if (attached)
                 return attached;
         }
@@ -159,7 +159,7 @@ static QQuickTheme *findParentTheme(QObject *object)
     if (window) {
         QQuickWindow *parentWindow = qobject_cast<QQuickWindow *>(window->parent());
         if (parentWindow) {
-            QQuickTheme *attached = attachedTheme(window);
+            QQuickThemeAttached *attached = attachedTheme(window);
             if (attached)
                 return attached;
         }
@@ -175,9 +175,9 @@ static QQuickTheme *findParentTheme(QObject *object)
     return Q_NULLPTR;
 }
 
-static QList<QQuickTheme *> findChildThemes(QObject *object)
+static QList<QQuickThemeAttached *> findChildThemes(QObject *object)
 {
-    QList<QQuickTheme *> themes;
+    QList<QQuickThemeAttached *> themes;
 
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
@@ -188,7 +188,7 @@ static QList<QQuickTheme *> findChildThemes(QObject *object)
             foreach (QObject *child, window->children()) {
                 QQuickWindow *childWindow = qobject_cast<QQuickWindow *>(child);
                 if (childWindow) {
-                    QQuickTheme *theme = attachedTheme(childWindow);
+                    QQuickThemeAttached *theme = attachedTheme(childWindow);
                     if (theme)
                         themes += theme;
                 }
@@ -198,7 +198,7 @@ static QList<QQuickTheme *> findChildThemes(QObject *object)
 
     if (item) {
         foreach (QQuickItem *child, item->childItems()) {
-            QQuickTheme *theme = attachedTheme(child);
+            QQuickThemeAttached *theme = attachedTheme(child);
             if (theme)
                 themes += theme;
             else
@@ -209,12 +209,12 @@ static QList<QQuickTheme *> findChildThemes(QObject *object)
     return themes;
 }
 
-class QQuickThemePrivate : public QObjectPrivate, public QQuickItemChangeListener
+class QQuickThemeAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
-    Q_DECLARE_PUBLIC(QQuickTheme)
+    Q_DECLARE_PUBLIC(QQuickThemeAttached)
 
 public:
-    QQuickThemePrivate(const QQuickThemeData &data) : data(data),
+    QQuickThemeAttachedPrivate(const QQuickThemeData &data) : data(data),
         explicitAccentColor(false),
         explicitBackgroundColor(false),
         explicitBaseColor(false),
@@ -249,7 +249,7 @@ public:
     void setSpacing(qreal spacing, Method method);
     void setDisabledOpacity(qreal opacity, Method method);
 
-    void inherit(QQuickTheme *theme);
+    void inherit(QQuickThemeAttached *theme);
 
     const QQuickThemeData &resolve() const;
 
@@ -257,8 +257,8 @@ public:
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
 
     QQuickThemeData data;
-    QPointer<QQuickTheme> parentTheme;
-    QSet<QQuickTheme *> childThemes;
+    QPointer<QQuickThemeAttached> parentTheme;
+    QSet<QQuickThemeAttached *> childThemes;
 
     bool explicitAccentColor;
     bool explicitBackgroundColor;
@@ -277,237 +277,237 @@ public:
     bool explicitDisabledOpacity;
 };
 
-void QQuickThemePrivate::setAccentColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setAccentColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitAccentColor || method != Inherit) {
         explicitAccentColor = method == Explicit;
         if (data.accentColor() != color) {
             data.setAccentColor(color);
             emit q->accentColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setAccentColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setBackgroundColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setBackgroundColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitBackgroundColor || method != Inherit) {
         explicitBackgroundColor = method == Explicit;
         if (data.backgroundColor() != color) {
             data.setBackgroundColor(color);
             emit q->backgroundColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setBackgroundColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setBaseColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setBaseColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitBaseColor || method != Inherit) {
         explicitBaseColor = method == Explicit;
         if (data.baseColor() != color) {
             data.setBaseColor(color);
             emit q->baseColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setBaseColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setDisabledColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setDisabledColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitDisabledColor || method != Inherit) {
         explicitDisabledColor = method == Explicit;
         if (data.disabledColor() != color) {
             data.setDisabledColor(color);
             emit q->disabledColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setDisabledColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setFocusColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setFocusColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitFocusColor || method != Inherit) {
         explicitFocusColor = method == Explicit;
         if (data.focusColor() != color) {
             data.setFocusColor(color);
             emit q->focusColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setFocusColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setFrameColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setFrameColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitFrameColor || method != Inherit) {
         explicitFrameColor = method == Explicit;
         if (data.frameColor() != color) {
             data.setFrameColor(color);
             emit q->frameColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setFrameColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setPressColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setPressColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitPressColor || method != Inherit) {
         explicitPressColor = method == Explicit;
         if (data.pressColor() != color) {
             data.setPressColor(color);
             emit q->pressColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setPressColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setSelectedTextColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setSelectedTextColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitSelectedTextColor || method != Inherit) {
         explicitSelectedTextColor = method == Explicit;
         if (data.selectedTextColor() != color) {
             data.setSelectedTextColor(color);
             q->selectedTextColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setSelectedTextColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setSelectionColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setSelectionColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitSelectionColor || method != Inherit) {
         explicitSelectionColor = method == Explicit;
         if (data.selectionColor() != color) {
             data.setSelectionColor(color);
             emit q->selectionColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setSelectionColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setShadowColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setShadowColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitShadowColor || method != Inherit) {
         explicitShadowColor = method == Explicit;
         if (data.shadowColor() != color) {
             data.setShadowColor(color);
             emit q->shadowColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setShadowColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setTextColor(const QColor &color, Method method)
+void QQuickThemeAttachedPrivate::setTextColor(const QColor &color, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitTextColor || method != Inherit) {
         explicitTextColor = method == Explicit;
         if (data.textColor() != color) {
             data.setTextColor(color);
             emit q->textColorChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setTextColor(color, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setPadding(qreal padding, Method method)
+void QQuickThemeAttachedPrivate::setPadding(qreal padding, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitPadding || method != Inherit) {
         explicitPadding = method == Explicit;
         if (data.padding() != padding) {
             data.setPadding(padding);
             emit q->paddingChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setPadding(padding, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setRoundness(qreal roundness, Method method)
+void QQuickThemeAttachedPrivate::setRoundness(qreal roundness, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitRoundness || method != Inherit) {
         explicitRoundness = method == Explicit;
         if (data.roundness() != roundness) {
             data.setRoundness(roundness);
             emit q->roundnessChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setRoundness(roundness, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setSpacing(qreal spacing, Method method)
+void QQuickThemeAttachedPrivate::setSpacing(qreal spacing, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitSpacing || method != Inherit) {
         explicitSpacing = method == Explicit;
         if (data.spacing() != spacing) {
             data.setSpacing(spacing);
             emit q->spacingChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setSpacing(spacing, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::setDisabledOpacity(qreal opacity, Method method)
+void QQuickThemeAttachedPrivate::setDisabledOpacity(qreal opacity, Method method)
 {
-    Q_Q(QQuickTheme);
+    Q_Q(QQuickThemeAttached);
     if (!explicitDisabledOpacity || method != Inherit) {
         explicitDisabledOpacity = method == Explicit;
         if (data.disabledOpacity() != opacity) {
             data.setDisabledOpacity(opacity);
             emit q->disabledOpacityChanged();
 
-            foreach (QQuickTheme *child, childThemes)
+            foreach (QQuickThemeAttached *child, childThemes)
                 child->d_func()->setDisabledOpacity(opacity, Inherit);
         }
     }
 }
 
-void QQuickThemePrivate::inherit(QQuickTheme *theme)
+void QQuickThemeAttachedPrivate::inherit(QQuickThemeAttached *theme)
 {
     setAccentColor(theme->accentColor(), Inherit);
     setBackgroundColor(theme->backgroundColor(), Inherit);
-    setBaseColor(theme->baseColor(), QQuickThemePrivate::Inherit);
-    setDisabledColor(theme->disabledColor(), QQuickThemePrivate::Inherit);
+    setBaseColor(theme->baseColor(), QQuickThemeAttachedPrivate::Inherit);
+    setDisabledColor(theme->disabledColor(), QQuickThemeAttachedPrivate::Inherit);
     setFocusColor(theme->focusColor(), Inherit);
     setFrameColor(theme->frameColor(), Inherit);
     setPressColor(theme->pressColor(), Inherit);
@@ -521,35 +521,35 @@ void QQuickThemePrivate::inherit(QQuickTheme *theme)
     setDisabledOpacity(theme->disabledOpacity(), Inherit);
 }
 
-const QQuickThemeData &QQuickThemePrivate::resolve() const
+const QQuickThemeData &QQuickThemeAttachedPrivate::resolve() const
 {
-    Q_Q(const QQuickTheme);
-    QQuickTheme *theme = findParentTheme(const_cast<QQuickTheme *>(q));
+    Q_Q(const QQuickThemeAttached);
+    QQuickThemeAttached *theme = findParentTheme(const_cast<QQuickThemeAttached *>(q));
     return theme ? theme->d_func()->data : *globalThemeData();
 }
 
-void QQuickThemePrivate::itemParentChanged(QQuickItem *item, QQuickItem *)
+void QQuickThemeAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *)
 {
-    QQuickTheme *theme = attachedTheme(item);
+    QQuickThemeAttached *theme = attachedTheme(item);
     if (theme) {
-        QQuickTheme *parent = findParentTheme(theme);
+        QQuickThemeAttached *parent = findParentTheme(theme);
         if (parent)
             theme->setParentTheme(parent);
     }
 }
 
-QQuickTheme::QQuickTheme(const QQuickThemeData &data, QObject *parent) :
-    QObject(*(new QQuickThemePrivate(data)), parent)
+QQuickThemeAttached::QQuickThemeAttached(const QQuickThemeData &data, QObject *parent) :
+    QObject(*(new QQuickThemeAttachedPrivate(data)), parent)
 {
-    Q_D(QQuickTheme);
+    Q_D(QQuickThemeAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item)
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
 }
 
-QQuickTheme::~QQuickTheme()
+QQuickThemeAttached::~QQuickThemeAttached()
 {
-    Q_D(QQuickTheme);
+    Q_D(QQuickThemeAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
@@ -557,32 +557,32 @@ QQuickTheme::~QQuickTheme()
     setParentTheme(Q_NULLPTR);
 }
 
-QQuickTheme *QQuickTheme::qmlAttachedProperties(QObject *object)
+QQuickThemeAttached *QQuickThemeAttached::qmlAttachedProperties(QObject *object)
 {
-    QQuickTheme *theme = Q_NULLPTR;
-    QQuickTheme *parent = findParentTheme(object);
+    QQuickThemeAttached *theme = Q_NULLPTR;
+    QQuickThemeAttached *parent = findParentTheme(object);
     if (parent) {
-        theme = new QQuickTheme(parent->d_func()->data, object);
+        theme = new QQuickThemeAttached(parent->d_func()->data, object);
         theme->setParentTheme(parent);
     } else {
-        theme = new QQuickTheme(*globalThemeData(), object);
+        theme = new QQuickThemeAttached(*globalThemeData(), object);
     }
 
-    QList<QQuickTheme *> childThemes = findChildThemes(object);
-    foreach (QQuickTheme *child, childThemes)
+    QList<QQuickThemeAttached *> childThemes = findChildThemes(object);
+    foreach (QQuickThemeAttached *child, childThemes)
         child->setParentTheme(theme);
     return theme;
 }
 
-QQuickTheme *QQuickTheme::parentTheme() const
+QQuickThemeAttached *QQuickThemeAttached::parentTheme() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->parentTheme;
 }
 
-void QQuickTheme::setParentTheme(QQuickTheme *theme)
+void QQuickThemeAttached::setParentTheme(QQuickThemeAttached *theme)
 {
-    Q_D(QQuickTheme);
+    Q_D(QQuickThemeAttached);
     if (d->parentTheme != theme) {
         if (d->parentTheme)
             d->parentTheme->d_func()->childThemes.remove(this);
@@ -594,274 +594,274 @@ void QQuickTheme::setParentTheme(QQuickTheme *theme)
     }
 }
 
-QColor QQuickTheme::accentColor() const
+QColor QQuickThemeAttached::accentColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.accentColor();
 }
 
-void QQuickTheme::setAccentColor(const QColor &color)
+void QQuickThemeAttached::setAccentColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setAccentColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setAccentColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetAccentColor()
+void QQuickThemeAttached::resetAccentColor()
 {
-    Q_D(QQuickTheme);
-    d->setAccentColor(d->resolve().accentColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setAccentColor(d->resolve().accentColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::backgroundColor() const
+QColor QQuickThemeAttached::backgroundColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.backgroundColor();
 }
 
-void QQuickTheme::setBackgroundColor(const QColor &color)
+void QQuickThemeAttached::setBackgroundColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setBackgroundColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setBackgroundColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetBackgroundColor()
+void QQuickThemeAttached::resetBackgroundColor()
 {
-    Q_D(QQuickTheme);
-    d->setBackgroundColor(d->resolve().backgroundColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setBackgroundColor(d->resolve().backgroundColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::baseColor() const
+QColor QQuickThemeAttached::baseColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.baseColor();
 }
 
-void QQuickTheme::setBaseColor(const QColor &color)
+void QQuickThemeAttached::setBaseColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setBaseColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setBaseColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetBaseColor()
+void QQuickThemeAttached::resetBaseColor()
 {
-    Q_D(QQuickTheme);
-    d->setBaseColor(d->resolve().baseColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setBaseColor(d->resolve().baseColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::disabledColor() const
+QColor QQuickThemeAttached::disabledColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.disabledColor();
 }
 
-void QQuickTheme::setDisabledColor(const QColor &color)
+void QQuickThemeAttached::setDisabledColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setDisabledColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setDisabledColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetDisabledColor()
+void QQuickThemeAttached::resetDisabledColor()
 {
-    Q_D(QQuickTheme);
-    d->setDisabledColor(d->resolve().disabledColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setDisabledColor(d->resolve().disabledColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::focusColor() const
+QColor QQuickThemeAttached::focusColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.focusColor();
 }
 
-void QQuickTheme::setFocusColor(const QColor &color)
+void QQuickThemeAttached::setFocusColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setFocusColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setFocusColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetFocusColor()
+void QQuickThemeAttached::resetFocusColor()
 {
-    Q_D(QQuickTheme);
-    d->setFocusColor(d->resolve().focusColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setFocusColor(d->resolve().focusColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::frameColor() const
+QColor QQuickThemeAttached::frameColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.frameColor();
 }
 
-void QQuickTheme::setFrameColor(const QColor &color)
+void QQuickThemeAttached::setFrameColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setFrameColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setFrameColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetFrameColor()
+void QQuickThemeAttached::resetFrameColor()
 {
-    Q_D(QQuickTheme);
-    d->setFrameColor(d->resolve().frameColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setFrameColor(d->resolve().frameColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::pressColor() const
+QColor QQuickThemeAttached::pressColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.pressColor();
 }
 
-void QQuickTheme::setPressColor(const QColor &color)
+void QQuickThemeAttached::setPressColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setPressColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setPressColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetPressColor()
+void QQuickThemeAttached::resetPressColor()
 {
-    Q_D(QQuickTheme);
-    d->setPressColor(d->resolve().pressColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setPressColor(d->resolve().pressColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::selectedTextColor() const
+QColor QQuickThemeAttached::selectedTextColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.selectedTextColor();
 }
 
-void QQuickTheme::setSelectedTextColor(const QColor &color)
+void QQuickThemeAttached::setSelectedTextColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setSelectedTextColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setSelectedTextColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetSelectedTextColor()
+void QQuickThemeAttached::resetSelectedTextColor()
 {
-    Q_D(QQuickTheme);
-    d->setSelectedTextColor(d->resolve().selectedTextColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setSelectedTextColor(d->resolve().selectedTextColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::selectionColor() const
+QColor QQuickThemeAttached::selectionColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.selectionColor();
 }
 
-void QQuickTheme::setSelectionColor(const QColor &color)
+void QQuickThemeAttached::setSelectionColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setSelectionColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setSelectionColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetSelectionColor()
+void QQuickThemeAttached::resetSelectionColor()
 {
-    Q_D(QQuickTheme);
-    d->setSelectionColor(d->resolve().selectionColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setSelectionColor(d->resolve().selectionColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::shadowColor() const
+QColor QQuickThemeAttached::shadowColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.shadowColor();
 }
 
-void QQuickTheme::setShadowColor(const QColor &color)
+void QQuickThemeAttached::setShadowColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setShadowColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setShadowColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetShadowColor()
+void QQuickThemeAttached::resetShadowColor()
 {
-    Q_D(QQuickTheme);
-    d->setShadowColor(d->resolve().shadowColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setShadowColor(d->resolve().shadowColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-QColor QQuickTheme::textColor() const
+QColor QQuickThemeAttached::textColor() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.textColor();
 }
 
-void QQuickTheme::setTextColor(const QColor &color)
+void QQuickThemeAttached::setTextColor(const QColor &color)
 {
-    Q_D(QQuickTheme);
-    d->setTextColor(color, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setTextColor(color, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetTextColor()
+void QQuickThemeAttached::resetTextColor()
 {
-    Q_D(QQuickTheme);
-    d->setTextColor(d->resolve().textColor(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setTextColor(d->resolve().textColor(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-qreal QQuickTheme::padding() const
+qreal QQuickThemeAttached::padding() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.padding();
 }
 
-void QQuickTheme::setPadding(qreal padding)
+void QQuickThemeAttached::setPadding(qreal padding)
 {
-    Q_D(QQuickTheme);
-    d->setPadding(padding, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setPadding(padding, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetPadding()
+void QQuickThemeAttached::resetPadding()
 {
-    Q_D(QQuickTheme);
-    d->setPadding(d->resolve().padding(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setPadding(d->resolve().padding(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-qreal QQuickTheme::roundness() const
+qreal QQuickThemeAttached::roundness() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.roundness();
 }
 
-void QQuickTheme::setRoundness(qreal roundness)
+void QQuickThemeAttached::setRoundness(qreal roundness)
 {
-    Q_D(QQuickTheme);
-    d->setRoundness(roundness, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setRoundness(roundness, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetRoundness()
+void QQuickThemeAttached::resetRoundness()
 {
-    Q_D(QQuickTheme);
-    d->setRoundness(d->resolve().roundness(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setRoundness(d->resolve().roundness(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-qreal QQuickTheme::spacing() const
+qreal QQuickThemeAttached::spacing() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.spacing();
 }
 
-void QQuickTheme::setSpacing(qreal spacing)
+void QQuickThemeAttached::setSpacing(qreal spacing)
 {
-    Q_D(QQuickTheme);
-    d->setSpacing(spacing, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setSpacing(spacing, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetSpacing()
+void QQuickThemeAttached::resetSpacing()
 {
-    Q_D(QQuickTheme);
-    d->setSpacing(d->resolve().spacing(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setSpacing(d->resolve().spacing(), QQuickThemeAttachedPrivate::Implicit);
 }
 
-qreal QQuickTheme::disabledOpacity() const
+qreal QQuickThemeAttached::disabledOpacity() const
 {
-    Q_D(const QQuickTheme);
+    Q_D(const QQuickThemeAttached);
     return d->data.disabledOpacity();
 }
 
-void QQuickTheme::setDisabledOpacity(qreal opacity)
+void QQuickThemeAttached::setDisabledOpacity(qreal opacity)
 {
-    Q_D(QQuickTheme);
-    d->setDisabledOpacity(opacity, QQuickThemePrivate::Explicit);
+    Q_D(QQuickThemeAttached);
+    d->setDisabledOpacity(opacity, QQuickThemeAttachedPrivate::Explicit);
 }
 
-void QQuickTheme::resetDisabledOpacity()
+void QQuickThemeAttached::resetDisabledOpacity()
 {
-    Q_D(QQuickTheme);
-    d->setDisabledOpacity(d->resolve().disabledOpacity(), QQuickThemePrivate::Implicit);
+    Q_D(QQuickThemeAttached);
+    d->setDisabledOpacity(d->resolve().disabledOpacity(), QQuickThemeAttachedPrivate::Implicit);
 }
 
 QT_END_NAMESPACE
