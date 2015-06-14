@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     controls \
-    declarative \
-    extras
+    extras \
+    sanity

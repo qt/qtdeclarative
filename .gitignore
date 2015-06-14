@@ -12,8 +12,8 @@
 /examples/quick/extras/drawer/drawer
 
 /tests/auto/controls/tst_controls
-/tests/auto/declarative/tst_declarative
 /tests/auto/extras/tst_extras
+/tests/auto/sanity/tst_sanity
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
 

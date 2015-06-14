@@ -36,27 +36,61 @@
 
 #include <QtTest>
 #include <QtQml>
+#include <QtCore/private/qhooks_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 
-class tst_Declarative : public QObject
+Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
+
+extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
+{
+    qt_qobjects->append(object);
+}
+
+extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
+{
+    qt_qobjects->removeAll(object);
+}
+
+class tst_Sanity : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void init();
+    void cleanup();
     void initTestCase();
-    void testFiles();
-    void testFunctions();
-    void testFunctions_data();
-    void testSignalHandlers();
-    void testSignalHandlers_data();
+
+    void jsFiles();
+    void functions();
+    void functions_data();
+    void signalHandlers();
+    void signalHandlers_data();
+    void anchors();
+    void anchors_data();
+    void attachedObjects();
+    void attachedObjects_data();
 
 private:
+    QQmlEngine engine;
     QMap<QString, QString> files;
 };
+
+void tst_Sanity::init()
+{
+    qtHookData[QHooks::AddQObject] = reinterpret_cast<quintptr>(&qt_addQObject);
+    qtHookData[QHooks::RemoveQObject] = reinterpret_cast<quintptr>(&qt_removeQObject);
+}
+
+void tst_Sanity::cleanup()
+{
+    qt_qobjects->clear();
+    qtHookData[QHooks::AddQObject] = 0;
+    qtHookData[QHooks::RemoveQObject] = 0;
+}
 
 class BaseValidator : public QQmlJS::AST::Visitor
 {
@@ -109,7 +143,7 @@ static QMap<QString, QString> listQmlFiles(const QDir &dir)
     return files;
 }
 
-void tst_Declarative::initTestCase()
+void tst_Sanity::initTestCase()
 {
     QQmlEngine engine;
     foreach (const QString &path, engine.importPathList()) {
@@ -119,11 +153,11 @@ void tst_Declarative::initTestCase()
     }
 }
 
-void tst_Declarative::testFiles()
+void tst_Sanity::jsFiles()
 {
     QMap<QString, QString>::const_iterator it;
     for (it = files.begin(); it != files.end(); ++it) {
-        if (QFileInfo(it.value()).suffix() == QString("js"))
+        if (QFileInfo(it.value()).suffix() == QStringLiteral("js"))
             QFAIL(qPrintable(it.value() +  ": JS files are not allowed"));
     }
 }
@@ -138,7 +172,7 @@ protected:
     }
 };
 
-void tst_Declarative::testFunctions()
+void tst_Sanity::functions()
 {
     QFETCH(QString, control);
     QFETCH(QString, filePath);
@@ -148,7 +182,7 @@ void tst_Declarative::testFunctions()
         QFAIL(qPrintable(validator.errors()));
 }
 
-void tst_Declarative::testFunctions_data()
+void tst_Sanity::functions_data()
 {
     QTest::addColumn<QString>("control");
     QTest::addColumn<QString>("filePath");
@@ -175,7 +209,7 @@ protected:
     }
 };
 
-void tst_Declarative::testSignalHandlers()
+void tst_Sanity::signalHandlers()
 {
     QFETCH(QString, control);
     QFETCH(QString, filePath);
@@ -185,7 +219,7 @@ void tst_Declarative::testSignalHandlers()
         QFAIL(qPrintable(validator.errors()));
 }
 
-void tst_Declarative::testSignalHandlers_data()
+void tst_Sanity::signalHandlers_data()
 {
     QTest::addColumn<QString>("control");
     QTest::addColumn<QString>("filePath");
@@ -195,6 +229,59 @@ void tst_Declarative::testSignalHandlers_data()
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
-QTEST_MAIN(tst_Declarative)
+void tst_Sanity::anchors()
+{
+    QFETCH(QString, control);
+    QFETCH(QString, filePath);
 
-#include "tst_declarative.moc"
+    QQmlComponent component(&engine);
+    component.loadUrl(QUrl::fromLocalFile(filePath));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object.data());
+    foreach (QObject *object, *qt_qobjects)
+        QVERIFY2(!object->inherits("QQuickAnchors"), "Anchors are not allowed");
+}
+
+void tst_Sanity::anchors_data()
+{
+    QTest::addColumn<QString>("control");
+    QTest::addColumn<QString>("filePath");
+
+    QMap<QString, QString>::const_iterator it;
+    for (it = files.begin(); it != files.end(); ++it)
+        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
+}
+
+void tst_Sanity::attachedObjects()
+{
+    QFETCH(QString, control);
+    QFETCH(QString, filePath);
+
+    QQmlComponent component(&engine);
+    component.loadUrl(QUrl::fromLocalFile(filePath));
+
+    QSet<QString> classNames;
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object.data());
+    foreach (QObject *object, *qt_qobjects) {
+        QString className = object->metaObject()->className();
+        if (className.endsWith("Attached"))
+            QVERIFY2(!classNames.contains(className), qPrintable(QString("Multiple instances of attached type %1").arg(className)));
+        classNames.insert(className);
+    }
+}
+
+void tst_Sanity::attachedObjects_data()
+{
+    QTest::addColumn<QString>("control");
+    QTest::addColumn<QString>("filePath");
+
+    QMap<QString, QString>::const_iterator it;
+    for (it = files.begin(); it != files.end(); ++it)
+        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
+}
+
+QTEST_MAIN(tst_Sanity)
+
+#include "tst_sanity.moc"
