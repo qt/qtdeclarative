@@ -48,18 +48,17 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickframe_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickGroupBoxPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickGroupBox : public QQuickContainer
+class Q_QUICKCONTROLS_EXPORT QQuickGroupBox : public QQuickFrame
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
-    Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
 
 public:
     explicit QQuickGroupBox(QQuickItem *parent = Q_NULLPTR);
@@ -70,13 +69,9 @@ public:
     QQuickItem *label() const;
     void setLabel(QQuickItem *label);
 
-    QQuickItem *frame() const;
-    void setFrame(QQuickItem *frame);
-
 Q_SIGNALS:
     void titleChanged();
     void labelChanged();
-    void frameChanged();
 
 private:
     Q_DISABLE_COPY(QQuickGroupBox)

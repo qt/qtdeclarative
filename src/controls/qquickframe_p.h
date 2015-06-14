@@ -52,12 +52,28 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickFramePrivate;
+
 class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickContainer
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
 
 public:
     explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
+
+    QQuickItem *frame() const;
+    void setFrame(QQuickItem *frame);
+
+Q_SIGNALS:
+    void frameChanged();
+
+protected:
+    QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent);
+
+private:
+    Q_DISABLE_COPY(QQuickFrame)
+    Q_DECLARE_PRIVATE(QQuickFrame)
 };
 
 QT_END_NAMESPACE

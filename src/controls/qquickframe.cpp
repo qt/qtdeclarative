@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickframe_p.h"
+#include "qquickframe_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -49,9 +50,41 @@ QT_BEGIN_NAMESPACE
     TODO
 */
 
-QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickContainer(parent)
+QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
 {
+}
+
+QQuickFrame::QQuickFrame(QQuickItem *parent) :
+    QQuickContainer(*(new QQuickFramePrivate), parent)
+{
+}
+
+QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
+    QQuickContainer(dd, parent)
+{
+}
+
+/*!
+    \qmlproperty Item QtQuickControls2::Frame::frame
+
+    TODO
+*/
+QQuickItem *QQuickFrame::frame() const
+{
+    Q_D(const QQuickFrame);
+    return d->frame;
+}
+
+void QQuickFrame::setFrame(QQuickItem *frame)
+{
+    Q_D(QQuickFrame);
+    if (d->frame != frame) {
+        delete d->frame;
+        d->frame = frame;
+        if (frame && !frame->parentItem())
+            frame->setParentItem(this);
+        emit frameChanged();
+    }
 }
 
 QT_END_NAMESPACE

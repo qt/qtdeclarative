@@ -56,7 +56,10 @@ AbstractFrame {
         id: content
     }
 
-    background: Rectangle {
+    frame: Rectangle {
+        width: parent.width
+        height: parent.height
+
         color: "transparent"
         radius: control.Theme.roundness
         border.color: control.Theme.frameColor

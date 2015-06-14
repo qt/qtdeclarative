@@ -14,6 +14,7 @@ HEADERS += \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickexclusivegroup_p.h \
     $$PWD/qquickframe_p.h \
+    $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \
     $$PWD/qquicklabel_p.h \
     $$PWD/qquickpageindicator_p.h \

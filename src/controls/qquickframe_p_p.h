@@ -34,77 +34,32 @@
 **
 ****************************************************************************/
 
-#include "qquickgroupbox_p.h"
-#include "qquickframe_p_p.h"
+#ifndef QQUICKFRAME_P_P_H
+#define QQUICKFRAME_P_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickControls/private/qquickcontainer_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype GroupBox
-    \inherits Frame
-    \instantiates QQuickGroupBox
-    \inqmlmodule QtQuick.Controls
-    \ingroup containers
-    \brief A group box control.
-
-    TODO
-*/
-
-class QQuickGroupBoxPrivate : public QQuickFramePrivate
+class Q_QUICKCONTROLS_EXPORT QQuickFramePrivate : public QQuickContainerPrivate
 {
 public:
-    QQuickGroupBoxPrivate() : label(Q_NULLPTR) { }
+    QQuickFramePrivate();
 
-    QString title;
-    QQuickItem *label;
+    QQuickItem *frame;
 };
 
-QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
-    QQuickFrame(*(new QQuickGroupBoxPrivate), parent)
-{
-}
-
-/*!
-    \qmlproperty string QtQuickControls2::GroupBox::title
-
-    TODO
-*/
-QString QQuickGroupBox::title() const
-{
-    Q_D(const QQuickGroupBox);
-    return d->title;
-}
-
-void QQuickGroupBox::setTitle(const QString &title)
-{
-    Q_D(QQuickGroupBox);
-    if (d->title != title) {
-        d->title = title;
-        emit titleChanged();
-    }
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::GroupBox::label
-
-    TODO
-*/
-QQuickItem *QQuickGroupBox::label() const
-{
-    Q_D(const QQuickGroupBox);
-    return d->label;
-}
-
-void QQuickGroupBox::setLabel(QQuickItem *label)
-{
-    Q_D(QQuickGroupBox);
-    if (d->label != label) {
-        delete d->label;
-        d->label = label;
-        if (label && !label->parentItem())
-            label->setParentItem(this);
-        emit labelChanged();
-    }
-}
-
 QT_END_NAMESPACE
+
+#endif // QQUICKFRAME_P_P_H
