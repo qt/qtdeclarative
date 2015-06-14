@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPageIndicatorPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickPageIndicator : public QQuickContainer
+class Q_QUICKCONTROLS_EXPORT QQuickPageIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)

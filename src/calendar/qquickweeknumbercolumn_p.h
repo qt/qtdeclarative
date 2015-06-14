@@ -49,13 +49,13 @@
 //
 
 #include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickWeekNumberColumnPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberColumn : public QQuickContainer
+class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberColumn : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)

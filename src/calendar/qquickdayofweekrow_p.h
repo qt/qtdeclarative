@@ -49,13 +49,13 @@
 //
 
 #include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickDayOfWeekRowPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickContainer
+class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)

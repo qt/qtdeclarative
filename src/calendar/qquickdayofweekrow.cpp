@@ -37,11 +37,11 @@
 #include "qquickdayofweekrow_p.h"
 #include "qquickdayofweekmodel_p.h"
 
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDayOfWeekRowPrivate : public QQuickContainerPrivate
+class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate
 {
 public:
     QVariant source;
@@ -49,7 +49,7 @@ public:
 };
 
 QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickDayOfWeekRowPrivate), parent)
+    QQuickControl(*(new QQuickDayOfWeekRowPrivate), parent)
 {
     Q_D(QQuickDayOfWeekRow);
     d->model = new QQuickDayOfWeekModel(this);

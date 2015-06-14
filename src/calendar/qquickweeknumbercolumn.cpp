@@ -37,11 +37,11 @@
 #include "qquickweeknumbercolumn_p.h"
 #include "qquickweeknumbermodel_p.h"
 
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWeekNumberColumnPrivate : public QQuickContainerPrivate
+class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate
 {
 public:
     QVariant source;
@@ -49,7 +49,7 @@ public:
 };
 
 QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickWeekNumberColumnPrivate), parent)
+    QQuickControl(*(new QQuickWeekNumberColumnPrivate), parent)
 {
     Q_D(QQuickWeekNumberColumn);
     d->model = new QQuickWeekNumberModel(this);

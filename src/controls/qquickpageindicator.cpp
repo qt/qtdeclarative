@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickpageindicator_p.h"
-#include "qquickcontainer_p_p.h"
+#include "qquickcontrol_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     TODO
 */
 
-class QQuickPageIndicatorPrivate : public QQuickContainerPrivate
+class QQuickPageIndicatorPrivate : public QQuickControlPrivate
 {
 public:
     QQuickPageIndicatorPrivate() : count(0), currentIndex(0) { }
@@ -60,7 +60,7 @@ public:
 };
 
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickPageIndicatorPrivate), parent)
+    QQuickControl(*(new QQuickPageIndicatorPrivate), parent)
 {
 }
 

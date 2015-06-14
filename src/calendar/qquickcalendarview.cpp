@@ -39,11 +39,11 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCalendarViewPrivate : public QQuickContainerPrivate
+class QQuickCalendarViewPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickCalendarView)
 
@@ -118,7 +118,7 @@ void QQuickCalendarViewPrivate::setContextProperty(QQuickItem *item, const QStri
 }
 
 QQuickCalendarView::QQuickCalendarView(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickCalendarViewPrivate), parent)
+    QQuickControl(*(new QQuickCalendarViewPrivate), parent)
 {
     Q_D(QQuickCalendarView);
     setFlag(ItemIsFocusScope);
@@ -204,7 +204,7 @@ void QQuickCalendarView::setTitle(const QString &title)
 void QQuickCalendarView::componentComplete()
 {
     Q_D(QQuickCalendarView);
-    QQuickContainer::componentComplete();
+    QQuickControl::componentComplete();
     if (d->contentItem) {
         foreach (QQuickItem *child, d->contentItem->childItems()) {
             if (!child->inherits("QQuickRepeater"))
