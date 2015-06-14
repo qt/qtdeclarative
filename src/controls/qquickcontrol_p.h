@@ -69,6 +69,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
@@ -105,6 +106,9 @@ public:
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
+    QQuickItem *contentItem() const;
+    void setContentItem(QQuickItem *item);
+
 Q_SIGNALS:
     void contentWidthChanged();
     void contentHeightChanged();
@@ -117,6 +121,7 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
     void mirroredChanged();
     void backgroundChanged();
+    void contentItemChanged();
 
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
@@ -125,6 +130,7 @@ protected:
 
     virtual void mirrorChange();
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
+    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 
 private:
     Q_DISABLE_COPY(QQuickControl)

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0),
-    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR)
+    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR)
 {
 }
 
@@ -131,6 +131,15 @@ void QQuickControlPrivate::resizeBackground()
             background->setHeight(q->height());
             p->heightValid = false;
         }
+    }
+}
+
+void QQuickControlPrivate::resizeContent()
+{
+    Q_Q(QQuickControl);
+    if (contentItem) {
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->contentWidth(), q->contentHeight()));
     }
 }
 
@@ -419,11 +428,40 @@ void QQuickControl::setBackground(QQuickItem *background)
     }
 }
 
+/*!
+    \qmlproperty Item QtQuickControls2::Control::contentItem
+
+    TODO
+*/
+QQuickItem *QQuickControl::contentItem() const
+{
+    Q_D(const QQuickControl);
+    return d->contentItem;
+}
+
+void QQuickControl::setContentItem(QQuickItem *item)
+{
+    Q_D(QQuickControl);
+    if (d->contentItem != item) {
+        contentItemChange(item, d->contentItem);
+        delete d->contentItem;
+        d->contentItem = item;
+        if (item) {
+            if (!item->parentItem())
+                item->setParentItem(this);
+            if (isComponentComplete())
+                d->resizeContent();
+        }
+        emit contentItemChanged();
+    }
+}
+
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickControl);
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     d->resizeBackground();
+    d->resizeContent();
     if (newGeometry.width() != oldGeometry.width())
         emit contentWidthChanged();
     if (newGeometry.width() != oldGeometry.height())
@@ -438,8 +476,16 @@ void QQuickControl::mirrorChange()
 
 void QQuickControl::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
+    Q_D(QQuickControl);
     Q_UNUSED(newPadding);
     Q_UNUSED(oldPadding);
+    d->resizeContent();
+}
+
+void QQuickControl::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    Q_UNUSED(newItem);
+    Q_UNUSED(oldItem);
 }
 
 QT_END_NAMESPACE

@@ -67,6 +67,7 @@ public:
     void setBottomPadding(qreal value, bool reset = false);
 
     void resizeBackground();
+    void resizeContent();
 
     bool hasTopPadding;
     bool hasLeftPadding;
@@ -79,6 +80,7 @@ public:
     qreal bottomPadding;
     Qt::LayoutDirection layoutDirection;
     QQuickItem *background;
+    QQuickItem *contentItem;
 };
 
 QT_END_NAMESPACE

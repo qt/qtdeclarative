@@ -57,24 +57,12 @@ class QQuickContainerPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
 public:
     explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-Q_SIGNALS:
-    void contentItemChanged();
-
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
-
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
-
-    virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 
 private:
     Q_DISABLE_COPY(QQuickContainer)

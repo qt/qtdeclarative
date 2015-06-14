@@ -48,19 +48,6 @@ QT_BEGIN_NAMESPACE
     \internal
 */
 
-QQuickContainerPrivate::QQuickContainerPrivate() : contentItem(Q_NULLPTR)
-{
-}
-
-void QQuickContainerPrivate::resizeContent()
-{
-    Q_Q(QQuickContainer);
-    if (contentItem) {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->contentWidth(), q->contentHeight()));
-    }
-}
-
 QQuickContainer::QQuickContainer(QQuickItem *parent) :
     QQuickControl(*(new QQuickContainerPrivate), parent)
 {
@@ -69,54 +56,6 @@ QQuickContainer::QQuickContainer(QQuickItem *parent) :
 QQuickContainer::QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent) :
     QQuickControl(dd, parent)
 {
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::Container::contentItem
-
-    TODO
-*/
-QQuickItem *QQuickContainer::contentItem() const
-{
-    Q_D(const QQuickContainer);
-    return d->contentItem;
-}
-
-void QQuickContainer::setContentItem(QQuickItem *item)
-{
-    Q_D(QQuickContainer);
-    if (d->contentItem != item) {
-        contentItemChange(item, d->contentItem);
-        delete d->contentItem;
-        d->contentItem = item;
-        if (item) {
-            if (!item->parentItem())
-                item->setParentItem(this);
-            if (isComponentComplete())
-                d->resizeContent();
-        }
-        emit contentItemChanged();
-    }
-}
-
-void QQuickContainer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_D(QQuickContainer);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
-    d->resizeContent();
-}
-
-void QQuickContainer::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
-{
-    Q_D(QQuickContainer);
-    QQuickControl::paddingChange(newPadding, oldPadding);
-    d->resizeContent();
-}
-
-void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
-{
-    Q_UNUSED(newItem);
-    Q_UNUSED(oldItem);
 }
 
 QT_END_NAMESPACE
