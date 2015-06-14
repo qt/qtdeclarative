@@ -57,7 +57,7 @@ void QQuickContainerPrivate::resizeContent()
     Q_Q(QQuickContainer);
     if (contentItem) {
         contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight()));
+        contentItem->setSize(QSizeF(q->contentWidth(), q->contentHeight()));
     }
 }
 

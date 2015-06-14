@@ -70,7 +70,7 @@ void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
     hasTopPadding = !reset;
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->topPaddingChanged();
-        emit q->availableHeightChanged();
+        emit q->contentHeightChanged();
         q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
                          QMarginsF(leftPadding, oldPadding, rightPadding, bottomPadding));
     }
@@ -84,7 +84,7 @@ void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
     hasLeftPadding = !reset;
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->leftPaddingChanged();
-        emit q->availableWidthChanged();
+        emit q->contentWidthChanged();
         q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
                          QMarginsF(oldPadding, topPadding, rightPadding, bottomPadding));
     }
@@ -98,7 +98,7 @@ void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
     hasRightPadding = !reset;
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->rightPaddingChanged();
-        emit q->availableWidthChanged();
+        emit q->contentWidthChanged();
         q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
                          QMarginsF(leftPadding, topPadding, oldPadding, bottomPadding));
     }
@@ -112,7 +112,7 @@ void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
     hasBottomPadding = !reset;
     if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
         emit q->bottomPaddingChanged();
-        emit q->availableHeightChanged();
+        emit q->contentHeightChanged();
         q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
                          QMarginsF(leftPadding, topPadding, rightPadding, oldPadding));
     }
@@ -145,25 +145,27 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::availableWidth
+    \qmlproperty real QtQuickControls2::Control::contentWidth
+    \readonly
 
-    This property holds the width available after deducting horizontal padding.
+    This property holds the content width, which equals to \c {width - leftPadding - rightPadding}.
 
     \sa padding, leftPadding, rightPadding
 */
-qreal QQuickControl::availableWidth() const
+qreal QQuickControl::contentWidth() const
 {
     return width() - leftPadding() - rightPadding();
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::availableHeight
+    \qmlproperty real QtQuickControls2::Control::contentHeight
+    \readonly
 
-    This property holds the height available after deducting vertical padding.
+    This property holds the content height, which equals to \c {height - topPadding - bottomPadding}.
 
     \sa padding, topPadding, bottomPadding
 */
-qreal QQuickControl::availableHeight() const
+qreal QQuickControl::contentHeight() const
 {
     return height() - topPadding() - bottomPadding();
 }
@@ -173,7 +175,7 @@ qreal QQuickControl::availableHeight() const
 
     This property holds the default padding.
 
-    \sa availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
+    \sa contentWidth, contentHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickControl::padding() const
 {
@@ -199,9 +201,9 @@ void QQuickControl::setPadding(qreal padding)
     if (!qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
         emit bottomPaddingChanged();
     if (!qFuzzyCompare(newPadding.top(), oldPadding.top()) || !qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
-        emit availableHeightChanged();
+        emit contentHeightChanged();
     if (!qFuzzyCompare(newPadding.left(), oldPadding.left()) || !qFuzzyCompare(newPadding.right(), oldPadding.right()))
-        emit availableWidthChanged();
+        emit contentWidthChanged();
     paddingChange(newPadding, oldPadding);
 }
 
@@ -215,7 +217,7 @@ void QQuickControl::resetPadding()
 
     This property holds the top padding.
 
-    \sa padding, bottomPadding, availableHeight
+    \sa padding, bottomPadding, contentHeight
 */
 qreal QQuickControl::topPadding() const
 {
@@ -242,7 +244,7 @@ void QQuickControl::resetTopPadding()
 
     This property holds the left padding.
 
-    \sa padding, rightPadding, availableWidth
+    \sa padding, rightPadding, contentWidth
 */
 qreal QQuickControl::leftPadding() const
 {
@@ -269,7 +271,7 @@ void QQuickControl::resetLeftPadding()
 
     This property holds the right padding.
 
-    \sa padding, leftPadding, availableWidth
+    \sa padding, leftPadding, contentWidth
 */
 qreal QQuickControl::rightPadding() const
 {
@@ -296,7 +298,7 @@ void QQuickControl::resetRightPadding()
 
     This property holds the bottom padding.
 
-    \sa padding, topPadding, availableHeight
+    \sa padding, topPadding, contentHeight
 */
 qreal QQuickControl::bottomPadding() const
 {
@@ -423,9 +425,9 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     d->resizeBackground();
     if (newGeometry.width() != oldGeometry.width())
-        emit availableWidthChanged();
+        emit contentWidthChanged();
     if (newGeometry.width() != oldGeometry.height())
-        emit availableHeightChanged();
+        emit contentHeightChanged();
 }
 
 void QQuickControl::mirrorChange()

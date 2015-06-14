@@ -57,7 +57,7 @@ AbstractGroupBox {
 
     label: Text {
         x: control.leftPadding
-        width: control.availableWidth
+        width: control.contentWidth
 
         text: control.title
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor

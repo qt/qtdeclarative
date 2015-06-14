@@ -56,8 +56,8 @@ AbstractTextField {
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+        width: control.contentWidth
+        height: control.contentHeight
 
         color: control.Theme.textColor
         opacity: control.Theme.disabledOpacity

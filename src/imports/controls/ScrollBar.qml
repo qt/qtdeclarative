@@ -64,8 +64,8 @@ AbstractScrollBar {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         x: control.leftPadding + (horizontal ? control.position * control.width : 0)
         y: control.topPadding + (horizontal ? 0 : control.position * control.height)
-        width: horizontal ? control.size * control.availableWidth : implicitWidth
-        height: horizontal ? implicitHeight : control.size * control.availableHeight
+        width: horizontal ? control.size * control.contentWidth : implicitWidth
+        height: horizontal ? implicitHeight : control.size * control.contentHeight
 
         states: State {
             name: "active"
