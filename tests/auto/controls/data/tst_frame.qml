@@ -82,15 +82,11 @@ TestCase {
     function test_defaults() {
         var control = frame.createObject(testCase)
         verify(control.contentItem)
-        compare(control.contentWidth, 0)
-        compare(control.contentHeight, 0)
         control.destroy()
     }
 
     function test_oneChild() {
         var control = oneChildFrame.createObject(testCase)
-        compare(control.contentWidth, 100)
-        compare(control.contentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
         control.destroy()
@@ -98,10 +94,8 @@ TestCase {
 
     function test_twoChildren() {
         var control = twoChildrenFrame.createObject(testCase)
-        compare(control.contentWidth, 0)
-        compare(control.contentHeight, 0)
-        verify(control.implicitWidth > 0)
-        verify(control.implicitHeight > 0)
+        verify(control.implicitWidth > 200)
+        verify(control.implicitHeight > 60)
         control.destroy()
     }
 }

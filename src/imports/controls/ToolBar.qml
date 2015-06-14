@@ -43,17 +43,15 @@ AbstractToolBar {
     default property alias data: content.data
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentWidth + leftPadding + rightPadding)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentHeight + topPadding + bottomPadding)
-
-    contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
-    contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     Accessible.role: Accessible.ToolBar
 
-    contentItem: Item {
+    contentItem: Row {
         id: content
+        spacing: control.Theme.spacing
     }
 
     background: Rectangle {

@@ -107,22 +107,19 @@ ApplicationWindow {
                     title: "CheckBox"
                     readonly property real preferredWidth: (flow.width - 12) / 2
                     width: window.width > window.height || implicitWidth > preferredWidth ? flow.width : preferredWidth
-                    ColumnLayout {
+                    CheckBox {
                         width: parent.width
-                        CheckBox {
-                            width: parent.width
-                            text: "E-mail"
-                            checked: true
-                        }
-                        CheckBox {
-                            width: parent.width
-                            text: "Calendar"
-                            checked: true
-                        }
-                        CheckBox {
-                            width: parent.width
-                            text: "Contacts"
-                        }
+                        text: "E-mail"
+                        checked: true
+                    }
+                    CheckBox {
+                        width: parent.width
+                        text: "Calendar"
+                        checked: true
+                    }
+                    CheckBox {
+                        width: parent.width
+                        text: "Contacts"
                     }
                 }
 
@@ -130,25 +127,22 @@ ApplicationWindow {
                     title: "RadioButton"
                     readonly property real preferredWidth: (flow.width - 12) / 2
                     width: window.width > window.height || implicitWidth > preferredWidth ? flow.width : preferredWidth
-                    ColumnLayout {
+                    ExclusiveGroup { id: eg }
+                    RadioButton {
                         width: parent.width
-                        ExclusiveGroup { id: eg }
-                        RadioButton {
-                            width: parent.width
-                            text: "Portrait"
-                            Exclusive.group: eg
-                        }
-                        RadioButton {
-                            width: parent.width
-                            text: "Landscape"
-                            Exclusive.group: eg
-                        }
-                        RadioButton {
-                            width: parent.width
-                            text: "Automatic"
-                            checked: true
-                            Exclusive.group: eg
-                        }
+                        text: "Portrait"
+                        Exclusive.group: eg
+                    }
+                    RadioButton {
+                        width: parent.width
+                        text: "Landscape"
+                        Exclusive.group: eg
+                    }
+                    RadioButton {
+                        width: parent.width
+                        text: "Automatic"
+                        checked: true
+                        Exclusive.group: eg
                     }
                 }
 
@@ -160,7 +154,7 @@ ApplicationWindow {
                         spacing: Theme.spacing
                         readonly property real availableWidth: (flow.width - 12) / 2
                         readonly property real contentWidth: okButton.implicitWidth + cancelButton.implicitWidth + 12
-                        readonly property real buttonWidth: contentWidth > availableWidth ? (width / 2 - spacing) : (width / 2 - 2 * spacing) / 2
+                        readonly property real buttonWidth: implicitWidth > availableWidth ? (width / 2 - spacing) : (width / 2 - 2 * spacing) / 2
                         Button {
                             id: okButton
                             text: "Ok"
@@ -177,54 +171,43 @@ ApplicationWindow {
                 GroupBox {
                     title: "Switch"
                     width: flow.width
-                    Column {
+                    Switch {
                         width: parent.width
-                        Switch {
-                            width: parent.width
-                            text: "Wifi"
-                            checked: true
-                        }
-                        Switch {
-                            width: parent.width
-                            text: "Bluetooth"
-                        }
+                        text: "Wifi"
+                        checked: true
+                    }
+                    Switch {
+                        width: parent.width
+                        text: "Bluetooth"
                     }
                 }
 
                 GroupBox {
                     title: "ProgressBar"
                     width: flow.width
-                    Column {
+                    ProgressBar {
                         width: parent.width
-                        spacing: Theme.spacing
-                        ProgressBar {
-                            width: parent.width
-                            indeterminate: true
-                        }
-                        ProgressBar {
-                            width: parent.width
-                            value: slider.position
-                        }
+                        indeterminate: true
+                    }
+                    ProgressBar {
+                        width: parent.width
+                        value: slider.position
                     }
                 }
 
                 GroupBox {
                     title: "Slider"
                     width: flow.width
-                    Column {
+                    Slider {
+                        id: slider
+                        value: 0.4
                         width: parent.width
-                        spacing: Theme.spacing
-                        Slider {
-                            id: slider
-                            value: 0.4
-                            width: parent.width
-                        }
-                        Slider {
-                            width: parent.width
-                            snapMode: AbstractSlider.SnapAlways
-                            stepSize: 0.2
-                            value: 0.8
-                        }
+                    }
+                    Slider {
+                        width: parent.width
+                        snapMode: AbstractSlider.SnapAlways
+                        stepSize: 0.2
+                        value: 0.8
                     }
                 }
             }

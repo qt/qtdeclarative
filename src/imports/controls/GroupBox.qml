@@ -43,18 +43,16 @@ AbstractGroupBox {
     default property alias data: content.data
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentWidth + leftPadding + rightPadding)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentHeight + topPadding + bottomPadding)
-
-    contentWidth: content.children.length === 1 ? content.children[0].implicitWidth : 0
-    contentHeight: content.children.length === 1 ? content.children[0].implicitHeight : 0
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: Theme.padding
     topPadding: Theme.padding + (label && title ? label.implicitHeight + Theme.spacing : 0)
 
-    contentItem: Item {
+    contentItem: Column {
         id: content
+        spacing: control.Theme.spacing
     }
 
     label: Text {
