@@ -55,11 +55,10 @@ AbstractPageIndicator {
 
     Accessible.role: Accessible.Indicator
 
-    contentWidth: row.implicitWidth
-    contentHeight: row.implicitHeight
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: Theme.padding
 

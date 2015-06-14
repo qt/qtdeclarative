@@ -51,11 +51,10 @@ AbstractWeekNumberColumn {
         verticalAlignment: Text.AlignVCenter
     }
 
-    contentWidth: column.implicitWidth
-    contentHeight: column.implicitHeight
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     leftPadding: Theme.padding
     rightPadding: Theme.padding

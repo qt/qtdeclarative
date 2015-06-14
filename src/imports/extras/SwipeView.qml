@@ -42,11 +42,10 @@ AbstractSwipeView {
 
     property alias spacing: listView.spacing
 
-    contentWidth: listView.implicitWidth
-    contentHeight: listView.contentHeight
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     Accessible.role: Accessible.PageTabList
 

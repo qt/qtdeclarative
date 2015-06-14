@@ -50,11 +50,10 @@ AbstractCalendarView {
         padding: control.Theme.padding
     }
 
-    contentWidth: grid.implicitWidth
-    contentHeight: grid.implicitHeight
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
     Accessible.name: title
 
