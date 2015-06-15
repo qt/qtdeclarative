@@ -49,11 +49,43 @@
 //
 
 #include <QtQuickControls/private/qquickcontrol_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQml/private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS_EXPORT QQuickContainerPrivate : public QQuickControlPrivate
+class Q_QUICKCONTROLS_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
+    Q_DECLARE_PUBLIC(QQuickContainer)
+
+public:
+    QQuickContainerPrivate();
+
+    void init();
+    void cleanup();
+
+    QQuickItem *itemAt(int index) const;
+    virtual void insertItem(int index, QQuickItem *item);
+    virtual void moveItem(int from, int to);
+    virtual void removeItem(int index, QQuickItem *item);
+
+    void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
+    void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
+
+    static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
+    static int contentData_count(QQmlListProperty<QObject> *prop);
+    static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
+    static void contentData_clear(QQmlListProperty<QObject> *prop);
+
+    static void contentChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *obj);
+    static int contentChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
+    static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
+
+    QObjectList contentData;
+    QQmlObjectModel *contentModel;
 };
 
 QT_END_NAMESPACE

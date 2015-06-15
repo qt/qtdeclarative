@@ -49,7 +49,6 @@
 //
 
 #include <QtQuickControls/private/qquickcontainer_p.h>
-#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,45 +57,25 @@ class QQuickTabBarPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
-    Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickTabBar(QQuickItem *parent = Q_NULLPTR);
-    ~QQuickTabBar();
 
-    int count() const;
     int currentIndex() const;
     QQuickItem *currentItem() const;
-
-    QVariant contentModel() const;
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
-
-    Q_INVOKABLE QQuickItem *itemAt(int index) const;
-    Q_INVOKABLE void addItem(QQuickItem *item);
-    Q_INVOKABLE void insertItem(int index, QQuickItem *item);
-    Q_INVOKABLE void moveItem(int from, int to);
-    Q_INVOKABLE void removeItem(int index);
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
 
 Q_SIGNALS:
-    void countChanged();
     void currentIndexChanged();
     void currentItemChanged();
 
 protected:
     void updatePolish() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:

@@ -49,6 +49,7 @@
 //
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,12 +58,35 @@ class QQuickContainerPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickContainer();
+
+    int count() const;
+    Q_INVOKABLE QQuickItem *itemAt(int index) const;
+    Q_INVOKABLE void addItem(QQuickItem *item);
+    Q_INVOKABLE void insertItem(int index, QQuickItem *item);
+    Q_INVOKABLE void moveItem(int from, int to);
+    Q_INVOKABLE void removeItem(int index);
+
+    QVariant contentModel() const;
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
+
+Q_SIGNALS:
+    void countChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
+
+    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickContainer)
