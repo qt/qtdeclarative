@@ -1361,8 +1361,7 @@ ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Valu
         engine->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
-    ScopedContext ctx(scope, engine->currentContext());
-    return QV4::QObjectWrapper::getProperty(wrapper->object(), ctx, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->object(), propertyIndex, captureRequired);
 }
 
 QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex)
@@ -1374,8 +1373,7 @@ QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionEngine *engine, int 
 
     QJSEngine *jsEngine = engine->jsEngine();
     QQmlData::ensurePropertyCache(jsEngine, attachedObject);
-    ScopedContext ctx(scope, engine->currentContext());
-    return QV4::QObjectWrapper::getProperty(attachedObject, ctx, propertyIndex, /*captureRequired*/true);
+    return QV4::QObjectWrapper::getProperty(scope.engine, attachedObject, propertyIndex, /*captureRequired*/true);
 }
 
 ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
@@ -1386,8 +1384,7 @@ ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionEngine *engine, c
         scope.engine->throwTypeError(QStringLiteral("Cannot read property of null"));
         return Encode::undefined();
     }
-    ScopedContext ctx(scope, engine->currentContext());
-    return QV4::QObjectWrapper::getProperty(wrapper->singletonObject(), ctx, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->singletonObject(), propertyIndex, captureRequired);
 }
 
 void Runtime::setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value)
@@ -1398,8 +1395,7 @@ void Runtime::setQmlQObjectProperty(ExecutionEngine *engine, const Value &object
         engine->throwTypeError(QStringLiteral("Cannot write property of null"));
         return;
     }
-    ScopedContext ctx(scope, engine->currentContext());
-    wrapper->setProperty(ctx, propertyIndex, value);
+    wrapper->setProperty(engine, propertyIndex, value);
 }
 
 ReturnedValue Runtime::getQmlImportedScripts(NoThrowEngine *engine)
