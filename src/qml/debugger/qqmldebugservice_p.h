@@ -62,7 +62,6 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
     Q_DISABLE_COPY(QQmlDebugService)
 
 public:
-    explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
     ~QQmlDebugService();
 
     QString name() const;
@@ -88,6 +87,7 @@ public:
     static bool blockingMode();
 
 protected:
+    explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
     QQmlDebugService(QQmlDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
 
     State registerService();

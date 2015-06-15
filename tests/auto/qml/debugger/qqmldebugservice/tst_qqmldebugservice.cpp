@@ -130,7 +130,7 @@ void tst_QQmlDebugService::name()
 {
     QString name = "tst_QQmlDebugService::name()";
 
-    QQmlDebugService service(name, 1);
+    QQmlDebugTestService service(name, 1);
     QCOMPARE(service.name(), name);
 }
 
@@ -138,7 +138,7 @@ void tst_QQmlDebugService::version()
 {
     QString name = "tst_QQmlDebugService::name()";
 
-    QQmlDebugService service(name, 2);
+    QQmlDebugTestService service(name, 2);
     QCOMPARE(service.version(), 2.0f);
 }
 
