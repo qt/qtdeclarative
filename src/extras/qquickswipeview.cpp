@@ -36,10 +36,7 @@
 
 #include "qquickswipeview_p.h"
 
-#include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickControls/private/qquickcontainer_p_p.h>
-#include <QtQml/private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,52 +56,87 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate() : currentIndex(0), model(Q_NULLPTR) { }
+    QQuickSwipeViewPrivate() : currentIndex(-1), updatingCurrent(false) { }
 
+    void resizeItem(QQuickItem *item);
+    void resizeItems();
     void _q_updateCurrent();
 
-    // TODO: implement the whole list property
-    static void contentData_append(QQmlListProperty<QObject> *, QObject *);
+    void insertItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void moveItem(int from, int to) Q_DECL_OVERRIDE;
+    void removeItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
 
     int currentIndex;
-    QQmlObjectModel *model;
+    bool updatingCurrent;
 };
+
+void QQuickSwipeViewPrivate::resizeItems()
+{
+    Q_Q(QQuickSwipeView);
+    const int count = q->count();
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = itemAt(i);
+        if (item)
+            item->setSize(QSizeF(contentItem->width(), contentItem->height()));
+    }
+}
 
 void QQuickSwipeViewPrivate::_q_updateCurrent()
 {
     Q_Q(QQuickSwipeView);
-    q->setCurrentIndex(contentItem ? contentItem->property("currentIndex").toInt() : -1);
+    if (!updatingCurrent)
+        q->setCurrentIndex(contentItem ? contentItem->property("currentIndex").toInt() : -1);
 }
 
-void QQuickSwipeViewPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
+void QQuickSwipeViewPrivate::insertItem(int index, QQuickItem *item)
 {
-    QQuickSwipeView *view = static_cast<QQuickSwipeView *>(prop->object);
-    if (QQuickItem *item = qobject_cast<QQuickItem *>(obj))
-        view->addItem(item);
-    else
-        QQuickItemPrivate::data_append(prop, obj);
+    Q_Q(QQuickSwipeView);
+    if (q->isComponentComplete())
+        item->setSize(QSizeF(contentItem->width(), contentItem->height()));
+
+    QQuickContainerPrivate::insertItem(index, item);
+
+    if (contentModel->count() == 1)
+        q->setCurrentIndex(index);
+}
+
+void QQuickSwipeViewPrivate::moveItem(int from, int to)
+{
+    Q_Q(QQuickSwipeView);
+    QQuickContainerPrivate::moveItem(from, to);
+
+    updatingCurrent = true;
+    if (from == currentIndex)
+        q->setCurrentIndex(to);
+    else if (from < currentIndex && to >= currentIndex)
+        q->setCurrentIndex(currentIndex - 1);
+    else if (from > currentIndex && to <= currentIndex)
+        q->setCurrentIndex(currentIndex + 1);
+    updatingCurrent = false;
+}
+
+void QQuickSwipeViewPrivate::removeItem(int index, QQuickItem *item)
+{
+    Q_Q(QQuickSwipeView);
+    bool currentChanged = false;
+    if (index == currentIndex) {
+        q->setCurrentIndex(currentIndex - 1);
+    } else if (index < currentIndex) {
+        --currentIndex;
+        currentChanged = true;
+    }
+
+    QQuickContainerPrivate::removeItem(index, item);
+
+    if (currentChanged)
+        emit q->currentIndexChanged();
 }
 
 QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
     QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
 {
-    Q_D(QQuickSwipeView);
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
-
-    d->model = new QQmlObjectModel(this);
-    connect(d->model, &QQmlObjectModel::countChanged, this, &QQuickSwipeView::countChanged);
-}
-
-/*!
-    \qmlproperty int QtQuickControls2::SwipeView::count
-
-    TODO
-*/
-int QQuickSwipeView::count() const
-{
-    Q_D(const QQuickSwipeView);
-    return d->model->count();
 }
 
 /*!
@@ -128,114 +160,26 @@ void QQuickSwipeView::setCurrentIndex(int index)
 }
 
 /*!
-    \qmlproperty model QtQuickControls2::SwipeView::model
-    \readonly
+    \qmlproperty Item QtQuickControls2::SwipeView::currentItem
 
     TODO
 */
-QVariant QQuickSwipeView::model() const
+QQuickItem *QQuickSwipeView::currentItem() const
 {
     Q_D(const QQuickSwipeView);
-    return QVariant::fromValue(d->model);
-}
-
-QQmlListProperty<QObject> QQuickSwipeView::contentData()
-{
-    Q_D(QQuickSwipeView);
-    // TODO: implement the whole list property
-    return QQmlListProperty<QObject>(this, d,
-                                     QQuickSwipeViewPrivate::contentData_append,
-                                     QQuickItemPrivate::data_count,
-                                     QQuickItemPrivate::data_at,
-                                     QQuickItemPrivate::data_clear);
-}
-
-/*!
-    \qmlmethod Item QtQuickControls2::SwipeView::itemAt(int index)
-
-    TODO
-*/
-QQuickItem *QQuickSwipeView::itemAt(int index) const
-{
-    Q_D(const QQuickSwipeView);
-    return qobject_cast<QQuickItem *>(d->model->get(index));
-}
-
-/*!
-    \qmlmethod void QtQuickControls2::SwipeView::addItem(Item item)
-
-    TODO
-*/
-void QQuickSwipeView::addItem(QQuickItem *item)
-{
-    Q_D(QQuickSwipeView);
-    d->model->append(item);
-}
-
-/*!
-    \qmlmethod void QtQuickControls2::SwipeView::insertItem(int index, Item item)
-
-    TODO
-*/
-void QQuickSwipeView::insertItem(int index, QQuickItem *item)
-{
-    Q_D(QQuickSwipeView);
-    d->model->insert(index, item);
-}
-
-/*!
-    \qmlmethod void QtQuickControls2::SwipeView::moveItem(int from, int to)
-
-    TODO
-*/
-void QQuickSwipeView::moveItem(int from, int to)
-{
-    Q_D(QQuickSwipeView);
-    d->model->move(from, to);
-}
-
-/*!
-    \qmlmethod void QtQuickControls2::SwipeView::removeItem(int index)
-
-    TODO
-*/
-void QQuickSwipeView::removeItem(int index)
-{
-    Q_D(QQuickSwipeView);
-    d->model->remove(index);
-}
-
-void QQuickSwipeView::componentComplete()
-{
-    Q_D(QQuickSwipeView);
-    QQuickContainer::componentComplete();
-    d->_q_updateCurrent();
+    return itemAt(d->currentIndex);
 }
 
 void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeView);
     QQuickContainer::geometryChanged(newGeometry, oldGeometry);
-
-    const int count = d->model->count();
-    for (int i = 0; i < count; ++i) {
-        QQuickItem *item = qobject_cast<QQuickItem *>(d->model->get(i));
-        if (item) {
-            QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid) {
-                item->setWidth(newGeometry.width());
-                p->widthValid = false;
-            }
-            if (!p->heightValid) {
-                item->setHeight(newGeometry.height());
-                p->widthValid = false;
-            }
-        }
-    }
+    d->resizeItems();
 }
 
 void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
+    QQuickContainer::contentItemChange(newItem, oldItem);
     if (oldItem)
         disconnect(oldItem, SIGNAL(currentIndexChanged()), this, SLOT(_q_updateCurrent()));
     if (newItem)

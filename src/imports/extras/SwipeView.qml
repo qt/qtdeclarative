@@ -53,12 +53,8 @@ AbstractSwipeView {
     contentItem: ListView {
         id: listView
 
+        model: control.contentModel
         currentIndex: control.currentIndex
-
-        x: control.leftPadding
-        y: control.topPadding
-        width: parent.width - control.leftPadding - control.rightPadding
-        height: parent.height - control.topPadding - control.bottomPadding
 
         orientation: Qt.Horizontal
         snapMode: ListView.SnapOneItem
@@ -67,8 +63,6 @@ AbstractSwipeView {
         preferredHighlightBegin: 0
         preferredHighlightEnd: 0
         highlightMoveDuration: 250
-
-        model: control.model
     }
     //! [contentItem]
 }

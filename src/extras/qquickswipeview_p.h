@@ -58,36 +58,23 @@ class QQuickSwipeViewPrivate;
 class Q_QUICKEXTRAS_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
-    Q_PROPERTY(QVariant model READ model CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData)
-    Q_CLASSINFO("DefaultProperty", "contentData")
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = Q_NULLPTR);
 
-    int count() const;
     int currentIndex() const;
-
-    QVariant model() const;
-    QQmlListProperty<QObject> contentData();
-
-    Q_INVOKABLE QQuickItem *itemAt(int index) const;
-    Q_INVOKABLE void addItem(QQuickItem *item);
-    Q_INVOKABLE void insertItem(int index, QQuickItem *item);
-    Q_INVOKABLE void moveItem(int from, int to);
-    Q_INVOKABLE void removeItem(int index);
+    QQuickItem *currentItem() const;
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
 
 Q_SIGNALS:
-    void countChanged();
     void currentIndexChanged();
+    void currentItemChanged();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
