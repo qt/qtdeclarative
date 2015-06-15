@@ -190,8 +190,6 @@ public:
     Deletable *listModelData() { return m_listModelData; }
     void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
 
-    QQmlContextData *callingContext();
-
     void freezeObject(const QV4::Value &value);
 
     // Return the network access manager for this engine.  By default this returns the network

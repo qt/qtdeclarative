@@ -176,7 +176,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
         return QV4::Encode::undefined();
 
     QV4::Scope scope(ctx->engine());
-    QQmlContextData *context = QV4::QmlContextWrapper::callingContext(scope.engine);
+    QQmlContextData *context = scope.engine->callingQmlContext();
 
     if (!context || !context->isJSContext)
         V4THROW_ERROR("Qt.include(): Can only be called from JavaScript files");

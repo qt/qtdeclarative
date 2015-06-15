@@ -100,7 +100,7 @@ static ReturnedValue constructMeObject(const Value &thisObj, ExecutionEngine *v4
     Scope scope(v4);
     ScopedObject meObj(scope, v4->newObject());
     meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ThisObject"))), thisObj);
-    ScopedValue v(scope, QmlContextWrapper::qmlScope(v4, v4->v8Engine->callingContext(), 0));
+    ScopedValue v(scope, QmlContextWrapper::qmlScope(v4, v4->callingQmlContext(), 0));
     meObj->put(ScopedString(scope, v4->newString(QStringLiteral("ActivationObject"))), v);
     return meObj.asReturnedValue();
 }
@@ -1769,7 +1769,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
     QUrl url = QUrl(ctx->args()[1].toQStringNoThrow());
 
     if (url.isRelative())
-        url = scope.engine->v8Engine->callingContext()->resolvedUrl(url);
+        url = scope.engine->callingQmlContext()->resolvedUrl(url);
 
     bool async = true;
     // Argument 2 - async (optional)

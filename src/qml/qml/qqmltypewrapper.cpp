@@ -136,7 +136,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
     if (hasProperty)
         *hasProperty = true;
 
-    QQmlContextData *context = v4->v8Engine->callingContext();
+    QQmlContextData *context = v4->callingQmlContext();
 
     QObject *object = w->d()->object;
 
@@ -240,7 +240,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
         return;
 
     QV4::Scope scope(v4);
-    QQmlContextData *context = v4->v8Engine->callingContext();
+    QQmlContextData *context = v4->callingQmlContext();
 
     QQmlType *type = w->d()->type;
     if (type && !type->isSingleton() && w->d()->object) {

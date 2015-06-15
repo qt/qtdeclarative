@@ -1340,7 +1340,7 @@ ReturnedValue Runtime::getQmlIdArray(NoThrowEngine *engine)
 
 ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
 {
-    QQmlContextData *context = QmlContextWrapper::callingContext(engine);
+    QQmlContextData *context = engine->callingQmlContext();
     if (!context)
         return Encode::undefined();
     return QObjectWrapper::wrap(engine, context->contextObject);
@@ -1348,9 +1348,7 @@ ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
 
 ReturnedValue Runtime::getQmlScopeObject(NoThrowEngine *engine)
 {
-    Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject());
-    return QObjectWrapper::wrap(engine, c->getScopeObject());
+    return QObjectWrapper::wrap(engine, engine->qmlScopeObject());
 }
 
 ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
@@ -1366,14 +1364,12 @@ ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Valu
 
 QV4::ReturnedValue Runtime::getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex)
 {
-    Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> c(scope, engine->qmlContextObject());
-    QObject *scopeObject = c->getScopeObject();
+    QObject *scopeObject = engine->qmlScopeObject();
     QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
 
     QJSEngine *jsEngine = engine->jsEngine();
     QQmlData::ensurePropertyCache(jsEngine, attachedObject);
-    return QV4::QObjectWrapper::getProperty(scope.engine, attachedObject, propertyIndex, /*captureRequired*/true);
+    return QV4::QObjectWrapper::getProperty(engine, attachedObject, propertyIndex, /*captureRequired*/true);
 }
 
 ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
@@ -1400,7 +1396,7 @@ void Runtime::setQmlQObjectProperty(ExecutionEngine *engine, const Value &object
 
 ReturnedValue Runtime::getQmlImportedScripts(NoThrowEngine *engine)
 {
-    QQmlContextData *context = QmlContextWrapper::callingContext(engine);
+    QQmlContextData *context = engine->callingQmlContext();
     if (!context)
         return Encode::undefined();
     return context->importedScripts.value();

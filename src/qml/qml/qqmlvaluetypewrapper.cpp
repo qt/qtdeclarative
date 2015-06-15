@@ -418,7 +418,7 @@ void QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
                 return;
             }
 
-            QQmlContextData *context = QmlContextWrapper::callingContext(v4);
+            QQmlContextData *context = v4->callingQmlContext();
 
             QQmlPropertyData cacheData;
             cacheData.setFlags(QQmlPropertyData::IsWritable |

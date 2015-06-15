@@ -87,9 +87,9 @@ struct ContextStateSaver {
 
 namespace Heap {
 struct QmlBindingWrapper : Heap::FunctionObject {
-    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QmlContextWrapper *qml);
+    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml);
     // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-    QmlBindingWrapper(QV4::ExecutionContext *scope, QmlContextWrapper *qml);
+    QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml);
     Pointer<Object> qml;
 };
 

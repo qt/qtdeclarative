@@ -171,11 +171,6 @@ const QSet<QString> &QV8Engine::illegalNames() const
     return m_illegalNames;
 }
 
-QQmlContextData *QV8Engine::callingContext()
-{
-    return QV4::QmlContextWrapper::callingContext(m_v4Engine);
-}
-
 void QV8Engine::initializeGlobal()
 {
     QV4::Scope scope(m_v4Engine);

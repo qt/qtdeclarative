@@ -720,7 +720,7 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
     return obj->d();
 }
 
-Heap::Object *ExecutionEngine::qmlContextObject() const
+Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
 {
     Heap::ExecutionContext *ctx = currentContext();
 
@@ -739,6 +739,18 @@ Heap::Object *ExecutionEngine::qmlContextObject() const
 
     Q_ASSERT(static_cast<Heap::QmlContext *>(ctx)->qml);
     return static_cast<Heap::QmlContext *>(ctx)->qml;
+}
+
+QObject *ExecutionEngine::qmlScopeObject() const
+{
+    return qmlContextObject()->scopeObject;
+}
+
+QQmlContextData *ExecutionEngine::callingQmlContext() const
+{
+    Heap::QmlContextWrapper *w = qmlContextObject();
+
+    return w ? w->context.contextData() : 0;
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const

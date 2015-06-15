@@ -126,9 +126,11 @@ struct WithContext : ExecutionContext {
     Pointer<Object> withObject;
 };
 
+struct QmlContextWrapper;
+
 struct QmlContext : ExecutionContext {
     QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml);
-    Pointer<Object> qml;
+    Pointer<QmlContextWrapper> qml;
 };
 
 }

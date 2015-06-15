@@ -51,6 +51,7 @@ class QV8Engine;
 class QQmlError;
 class QJSEngine;
 class QQmlEngine;
+class QQmlContextData;
 
 namespace QV4 {
 namespace Debugging {
@@ -386,7 +387,10 @@ public:
 
     Heap::Object *newForEachIteratorObject(Object *o);
 
-    Heap::Object *qmlContextObject() const;
+    QV4::Heap::QmlContextWrapper *qmlContextObject() const;
+    QObject *qmlScopeObject() const;
+    QQmlContextData *callingQmlContext() const;
+
 
     StackTrace stackTrace(int frameLimit = -1) const;
     StackFrame currentStackFrame() const;

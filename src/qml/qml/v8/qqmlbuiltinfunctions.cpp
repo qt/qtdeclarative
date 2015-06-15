@@ -840,21 +840,21 @@ ReturnedValue QtObject::method_openUrlExternally(QV4::CallContext *ctx)
 */
 ReturnedValue QtObject::method_resolvedUrl(QV4::CallContext *ctx)
 {
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
+    ExecutionEngine *v4 = ctx->engine();
 
-    QUrl url = ctx->engine()->toVariant(ctx->args()[0], -1).toUrl();
-    QQmlEngine *e = v8engine->engine();
+    QUrl url = v4->toVariant(ctx->args()[0], -1).toUrl();
+    QQmlEngine *e = v4->qmlEngine();
     QQmlEnginePrivate *p = 0;
     if (e) p = QQmlEnginePrivate::get(e);
     if (p) {
-        QQmlContextData *ctxt = v8engine->callingContext();
+        QQmlContextData *ctxt = v4->callingQmlContext();
         if (ctxt)
-            return ctx->d()->engine->newString(ctxt->resolvedUrl(url).toString())->asReturnedValue();
+            return v4->newString(ctxt->resolvedUrl(url).toString())->asReturnedValue();
         else
-            return ctx->d()->engine->newString(url.toString())->asReturnedValue();
+            return v4->newString(url.toString())->asReturnedValue();
     }
 
-    return ctx->d()->engine->newString(e->baseUrl().resolved(url).toString())->asReturnedValue();
+    return v4->newString(e->baseUrl().resolved(url).toString())->asReturnedValue();
 }
 
 /*!
@@ -984,7 +984,7 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QQmlEngine *engine = v8engine->engine();
 
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);
     QQmlContext *effectiveContext = 0;
     if (context->isPragmaLibraryContext)
@@ -1091,7 +1091,7 @@ ReturnedValue QtObject::method_createComponent(CallContext *ctx)
     QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QQmlEngine *engine = v8engine->engine();
 
-    QQmlContextData *context = v8engine->callingContext();
+    QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);
     QQmlContextData *effectiveContext = context;
     if (context->isPragmaLibraryContext)
@@ -1727,9 +1727,8 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
         V4THROW_ERROR("qsTr(): third argument (n) must be a number");
 
     Scope scope(ctx);
-    QV8Engine *v8engine = ctx->d()->engine->v8Engine;
     QString context;
-    if (QQmlContextData *ctxt = v8engine->callingContext()) {
+    if (QQmlContextData *ctxt = scope.engine->callingQmlContext()) {
         QString path = ctxt->urlString();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         int lastDot = path.lastIndexOf(QLatin1Char('.'));

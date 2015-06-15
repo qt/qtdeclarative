@@ -471,7 +471,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             }
         } else {
             // binding assignment.
-            QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(scope.engine);
+            QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
             bindingFunction->initBindingLocation();
@@ -553,7 +553,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         else
             v = scope.engine->toVariant(value, property->propType);
 
-        QQmlContextData *callingQmlContext = QV4::QmlContextWrapper::callingContext(scope.engine);
+        QQmlContextData *callingQmlContext = scope.engine->callingQmlContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
             const char *valueType = 0;
             if (v.userType() == QVariant::Invalid) valueType = "null";
@@ -693,7 +693,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(that->engine());
+    QQmlContextData *qmlContext = that->engine()->callingQmlContext();
     return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
@@ -705,7 +705,7 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
     if (v4->hasException || QQmlData::wasDeleted(that->d()->object))
         return;
 
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(v4);
+    QQmlContextData *qmlContext = v4->callingQmlContext();
     if (!setQmlProperty(v4, qmlContext, that->d()->object, name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QQmlData *ddata = QQmlData::get(that->d()->object);
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
@@ -724,7 +724,7 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     ExecutionEngine *engine = that->engine();
-    QQmlContextData *qmlContext = QV4::QmlContextWrapper::callingContext(engine);
+    QQmlContextData *qmlContext = engine->callingQmlContext();
     QQmlPropertyData local;
     if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
         || name->equals(engine->id_destroy()) || name->equals(engine->id_toString()))
