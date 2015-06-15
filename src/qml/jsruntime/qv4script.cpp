@@ -87,7 +87,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
-Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::Object *qml)
+Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
     , qml(qml->d())
 {
@@ -106,7 +106,7 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     s.engine->popContext();
 }
 
-Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::Object *qml)
+Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
     , qml(qml->d())
 {
@@ -163,7 +163,7 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
 {
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
-    QV4::ScopedObject qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine, qmlContext, scopeObject));
+    QV4::Scoped<QmlContextWrapper> qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine, qmlContext, scopeObject));
     ScopedContext global(valueScope, valueScope.engine->rootContext());
     QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScopeObject));
     QV4::Scoped<QmlContext> wrapperContext(valueScope, wrapper->context());
@@ -299,7 +299,7 @@ ReturnedValue Script::run()
 
         return vmFunction->code(engine, vmFunction->codeData);
     } else {
-        ScopedObject qmlObj(valueScope, qml.value());
+        Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
         ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
@@ -377,7 +377,7 @@ ReturnedValue Script::qmlBinding()
         parse();
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
-    ScopedObject qmlObj(valueScope, qml.value());
+    Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
     ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
     return v.asReturnedValue();
 }

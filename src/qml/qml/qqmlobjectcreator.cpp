@@ -989,7 +989,7 @@ QV4::Heap::ExecutionContext *QQmlObjectCreator::currentQmlContext()
 {
     if (!_qmlBindingWrapper->objectValue()) {
         QV4::Scope valueScope(v4);
-        QV4::ScopedObject qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
+        QV4::Scoped<QV4::QmlContextWrapper> qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
         QV4::ScopedContext global(valueScope, v4->rootContext());
         *_qmlBindingWrapper = v4->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScope);
     }

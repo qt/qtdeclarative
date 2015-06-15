@@ -45,6 +45,7 @@ struct CompilationUnit;
 struct Function;
 }
 
+struct QmlContextWrapper;
 struct Identifier;
 struct CallContext;
 struct CatchContext;
@@ -126,7 +127,7 @@ struct WithContext : ExecutionContext {
 };
 
 struct QmlContext : ExecutionContext {
-    QmlContext(QV4::ExecutionContext *outer, QV4::Object *qml);
+    QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml);
     Pointer<Object> qml;
 };
 
@@ -146,7 +147,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Heap::CallContext *newCallContext(FunctionObject *f, CallData *callData);
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
-    Heap::QmlContext *newQmlContext(Object *qml);
+    Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);
 
     void createMutableBinding(String *name, bool deletable);
 

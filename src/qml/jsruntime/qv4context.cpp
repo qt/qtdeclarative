@@ -41,6 +41,7 @@
 #include "qv4function_p.h"
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
+#include "private/qqmlcontextwrapper_p.h"
 
 using namespace QV4;
 
@@ -92,7 +93,7 @@ Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, 
     return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
 }
 
-Heap::QmlContext *ExecutionContext::newQmlContext(Object *qml)
+Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
 {
     return d()->engine->memoryManager->alloc<QmlContext>(this, qml);
 }
@@ -165,7 +166,7 @@ Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exception
     this->exceptionValue = exceptionValue;
 }
 
-Heap::QmlContext::QmlContext(QV4::ExecutionContext *outer, QV4::Object *qml)
+Heap::QmlContext::QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml)
     : Heap::ExecutionContext(outer->engine(), Heap::ExecutionContext::Type_QmlContext)
 {
     strictMode = false;
