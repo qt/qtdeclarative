@@ -49,10 +49,28 @@ class QQuickTextFieldPrivate
 public:
     QQuickTextFieldPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
 
+    void resizeBackground();
+
     QQuickItem *background;
     QQuickText *placeholder;
     QQuickTextField *q_ptr;
 };
+
+void QQuickTextFieldPrivate::resizeBackground()
+{
+    Q_Q(QQuickTextField);
+    if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (!p->widthValid && qFuzzyIsNull(background->x())) {
+            background->setWidth(q->width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid && qFuzzyIsNull(background->y())) {
+            background->setHeight(q->height());
+            p->heightValid = false;
+        }
+    }
+}
 
 QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(parent), d_ptr(new QQuickTextFieldPrivate)
@@ -81,6 +99,8 @@ void QQuickTextField::setBackground(QQuickItem *background)
             background->setParentItem(this);
             if (qFuzzyIsNull(background->z()))
                 background->setZ(-1);
+            if (isComponentComplete())
+                d->resizeBackground();
         }
         emit backgroundChanged();
     }
@@ -108,17 +128,7 @@ void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &o
 {
     Q_D(QQuickTextField);
     QQuickTextInput::geometryChanged(newGeometry, oldGeometry);
-    if (d->background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
-        if (!p->widthValid) {
-            d->background->setWidth(newGeometry.width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid) {
-            d->background->setHeight(newGeometry.height());
-            p->heightValid = false;
-        }
-    }
+    d->resizeBackground();
 }
 
 QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
