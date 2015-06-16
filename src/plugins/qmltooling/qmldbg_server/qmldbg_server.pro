@@ -7,10 +7,12 @@ load(qt_plugin)
 
 SOURCES += \
     $$PWD/qqmldebugserver.cpp \
+    $$PWD/../shared/qpacketprotocol.cpp
 
 HEADERS += \
     $$PWD/qqmldebugserverfactory.h \
     $$PWD/../shared/qqmldebugserver.h \
+    $$PWD/../shared/qpacketprotocol.h \
     $$PWD/../shared/qqmldebugserverconnection.h
 
 INCLUDEPATH += $$PWD \

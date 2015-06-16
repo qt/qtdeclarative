@@ -33,6 +33,7 @@
 
 #include "qqmldebugserver.h"
 #include "qqmldebugserverfactory.h"
+#include "qpacketprotocol.h"
 #include "qqmldebugserverconnection.h"
 
 #include <private/qqmldebugservice_p.h>
@@ -101,8 +102,7 @@ public:
     bool removeService(QQmlDebugService *service);
 
     bool open(const QVariantHash &configuration);
-
-    void receiveMessage(const QByteArray &message);
+    void setDevice(QIODevice *socket);
 
     template<class Action>
     bool enable(Action action);
@@ -116,6 +116,8 @@ private slots:
     void sendMessages(const QString &name, const QList<QByteArray> &messages);
     void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
     void removeThread();
+    void receiveMessage();
+    void invalidPacket();
 
 private:
     friend struct StartTcpServerAction;
@@ -139,6 +141,8 @@ private:
 
     bool init(const QString &pluginName, bool block);
 
+    bool canSendMessage(const QString &name);
+    void doSendMessage(const QString &name, const QByteArray &message);
     QQmlDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
 
     QQmlDebugServerConnection *m_connection;
@@ -152,6 +156,7 @@ private:
     QMutex m_helloMutex;
     QWaitCondition m_helloCondition;
     QQmlDebugServerThread *m_thread;
+    QPacketProtocol *m_protocol;
 #ifndef QT_NO_LIBRARY
     QPluginLoader m_loader;
 #endif
@@ -478,14 +483,17 @@ bool QQmlDebugServerImpl::enableFromArguments()
     return false;
 }
 
-void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
+void QQmlDebugServerImpl::receiveMessage()
 {
     typedef QHash<QString, QQmlDebugService*>::const_iterator DebugServiceConstIt;
 
     // to be executed in debugger thread
     Q_ASSERT(QThread::currentThread() == thread());
 
-    QQmlDebugStream in(message);
+    if (!m_protocol)
+        return;
+
+    QQmlDebugStream in(m_protocol->read().data());
 
     QString name;
 
@@ -523,7 +531,10 @@ void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
                 << pluginNames << pluginVersions << QQmlDebugStream::s_dataStreamVersion;
 
-            m_connection->send(QList<QByteArray>() << helloAnswer);
+            QPacket pack;
+            pack.writeRawData(helloAnswer.data(), helloAnswer.length());
+            m_protocol->send(pack);
+            m_connection->flush();
 
             QMutexLocker helloLock(&m_helloMutex);
             m_gotHello = true;
@@ -558,7 +569,7 @@ void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
 
         } else {
             qWarning("QML Debugger: Invalid control message %d.", op);
-            m_connection->disconnect();
+            invalidPacket();
             return;
         }
 
@@ -700,34 +711,39 @@ bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
     return true;
 }
 
+bool QQmlDebugServerImpl::canSendMessage(const QString &name)
+{
+    // to be executed in debugger thread
+    Q_ASSERT(QThread::currentThread() == thread());
+    return m_connection && m_connection->isConnected() && m_protocol &&
+            m_clientPlugins.contains(name);
+}
+
+void QQmlDebugServerImpl::doSendMessage(const QString &name, const QByteArray &message)
+{
+    QByteArray prefixed;
+    QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);
+    out << name << message;
+
+    QPacket pack;
+    pack.writeRawData(prefixed.data(), prefixed.length());
+    m_protocol->send(pack);
+}
+
 void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &message)
 {
-    sendMessages(name, QList<QByteArray>() << message);
+    if (canSendMessage(name)) {
+        doSendMessage(name, message);
+        m_connection->flush();
+    }
 }
 
 void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArray> &messages)
 {
-    // to be executed in debugger thread
-    Q_ASSERT(QThread::currentThread() == thread());
-
-    if (!m_connection)
-        return;
-
-    if (!name.isEmpty()) {
-        if (!m_clientPlugins.contains(name))
-            return;
-        QList<QByteArray> prefixedMessages;
-        prefixedMessages.reserve(messages.count());
-        foreach (const QByteArray &message, messages) {
-            QByteArray prefixed;
-            QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);
-            out << name << message;
-            prefixedMessages << prefixed;
-        }
-
-        m_connection->send(prefixedMessages);
-    } else {
-        m_connection->send(messages);
+    if (canSendMessage(name)) {
+        foreach (const QByteArray &message, messages)
+            doSendMessage(name, message);
+        m_connection->flush();
     }
 }
 
@@ -767,6 +783,25 @@ void QQmlDebugServerImpl::EngineCondition::wake()
     if (--numServices == 0)
         condition->wakeAll();
     Q_ASSERT_X(numServices >=0, Q_FUNC_INFO, "Woken more often than #services.");
+}
+
+void QQmlDebugServerImpl::setDevice(QIODevice *socket)
+{
+    m_protocol = new QPacketProtocol(socket, this);
+    QObject::connect(m_protocol, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
+    QObject::connect(m_protocol, SIGNAL(invalidPacket()), this, SLOT(invalidPacket()));
+
+    if (blockingMode())
+        m_protocol->waitForReadyRead(-1);
+}
+
+void QQmlDebugServerImpl::invalidPacket()
+{
+    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
+    m_connection->disconnect();
+    // protocol might still be processing packages at this point
+    m_protocol->deleteLater();
+    m_protocol = 0;
 }
 
 QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)

@@ -47,14 +47,12 @@ public:
     bool block;
     QString filename;
     QLocalSocket *socket;
-    QPacketProtocol *protocol;
     QQmlDebugServer *debugServer;
 };
 
 QLocalClientConnectionPrivate::QLocalClientConnectionPrivate() :
     block(false),
     socket(0),
-    protocol(0),
     debugServer(0)
 {
 }
@@ -83,21 +81,6 @@ bool QLocalClientConnection::isConnected() const
     return d->socket && d->socket->state() == QLocalSocket::ConnectedState;
 }
 
-void QLocalClientConnection::send(const QList<QByteArray> &messages)
-{
-    Q_D(QLocalClientConnection);
-
-    if (!isConnected() || !d->protocol || !d->socket)
-        return;
-
-    foreach (const QByteArray &message, messages) {
-        QPacket pack;
-        pack.writeRawData(message.data(), message.length());
-        d->protocol->send(pack);
-    }
-    d->socket->flush();
-}
-
 void QLocalClientConnection::disconnect()
 {
     Q_D(QLocalClientConnection);
@@ -105,17 +88,8 @@ void QLocalClientConnection::disconnect()
     while (d->socket && d->socket->bytesToWrite() > 0)
         d->socket->waitForBytesWritten();
 
-    // protocol might still be processing packages at this point
-    d->protocol->deleteLater();
-    d->protocol = 0;
     d->socket->deleteLater();
     d->socket = 0;
-}
-
-bool QLocalClientConnection::waitForMessage()
-{
-    Q_D(QLocalClientConnection);
-    return d->protocol->waitForReadyRead(-1);
 }
 
 bool QLocalClientConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -133,7 +107,7 @@ bool QLocalClientConnection::setFileName(const QString &filename, bool block)
     Q_D(QLocalClientConnection);
     d->filename = filename;
     d->block = block;
-    return connect();
+    return connectToServer();
 }
 
 void QLocalClientConnection::waitForConnection()
@@ -142,7 +116,7 @@ void QLocalClientConnection::waitForConnection()
     d->socket->waitForConnected(-1);
 }
 
-bool QLocalClientConnection::connect()
+bool QLocalClientConnection::connectToServer()
 {
     Q_D(QLocalClientConnection);
 
@@ -155,33 +129,17 @@ bool QLocalClientConnection::connect()
     return true;
 }
 
-void QLocalClientConnection::readyRead()
+void QLocalClientConnection::flush()
 {
     Q_D(QLocalClientConnection);
-    if (!d->protocol)
-        return;
-
-    QPacket packet = d->protocol->read();
-
-    QByteArray content = packet.data();
-    d->debugServer->receiveMessage(content);
+    if (d->socket)
+        d->socket->flush();
 }
 
 void QLocalClientConnection::connectionEstablished()
 {
     Q_D(QLocalClientConnection);
-
-    d->protocol = new QPacketProtocol(d->socket, this);
-    QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    QObject::connect(d->protocol, SIGNAL(invalidPacket()), this, SLOT(invalidPacket()));
-
-    if (d->block)
-        d->protocol->waitForReadyRead(-1);
-}
-
-void QLocalClientConnection::invalidPacket()
-{
-    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
+    d->debugServer->setDevice(d->socket);
 }
 
 QT_END_NAMESPACE

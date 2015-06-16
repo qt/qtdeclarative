@@ -32,7 +32,6 @@
 ****************************************************************************/
 
 #include "qtcpserverconnection.h"
-#include "qpacketprotocol.h"
 #include "qqmldebugserver.h"
 
 #include <QtCore/qplugin.h>
@@ -50,7 +49,6 @@ public:
     bool block;
     QString hostaddress;
     QTcpSocket *socket;
-    QPacketProtocol *protocol;
     QTcpServer *tcpServer;
 
     QQmlDebugServer *debugServer;
@@ -61,7 +59,6 @@ QTcpServerConnectionPrivate::QTcpServerConnectionPrivate() :
     portTo(0),
     block(false),
     socket(0),
-    protocol(0),
     tcpServer(0),
     debugServer(0)
 {
@@ -92,22 +89,6 @@ bool QTcpServerConnection::isConnected() const
     return d->socket && d->socket->state() == QTcpSocket::ConnectedState;
 }
 
-void QTcpServerConnection::send(const QList<QByteArray> &messages)
-{
-    Q_D(QTcpServerConnection);
-
-    if (!isConnected()
-            || !d->protocol || !d->socket)
-        return;
-
-    foreach (const QByteArray &message, messages) {
-        QPacket pack;
-        pack.writeRawData(message.data(), message.length());
-        d->protocol->send(pack);
-    }
-    d->socket->flush();
-}
-
 void QTcpServerConnection::disconnect()
 {
     Q_D(QTcpServerConnection);
@@ -120,17 +101,8 @@ void QTcpServerConnection::disconnect()
         }
     }
 
-    // protocol might still be processing packages at this point
-    d->protocol->deleteLater();
-    d->protocol = 0;
     d->socket->deleteLater();
     d->socket = 0;
-}
-
-bool QTcpServerConnection::waitForMessage()
-{
-    Q_D(QTcpServerConnection);
-    return d->protocol->waitForReadyRead(-1);
 }
 
 bool QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -156,6 +128,13 @@ void QTcpServerConnection::waitForConnection()
 {
     Q_D(QTcpServerConnection);
     d->tcpServer->waitForNewConnection(-1);
+}
+
+void QTcpServerConnection::flush()
+{
+    Q_D(QTcpServerConnection);
+    if (d->socket)
+        d->socket->flush();
 }
 
 bool QTcpServerConnection::listen()
@@ -193,19 +172,6 @@ bool QTcpServerConnection::listen()
     }
 }
 
-
-void QTcpServerConnection::readyRead()
-{
-    Q_D(QTcpServerConnection);
-    if (!d->protocol)
-        return;
-
-    QPacket packet = d->protocol->read();
-
-    QByteArray content = packet.data();
-    d->debugServer->receiveMessage(content);
-}
-
 void QTcpServerConnection::newConnection()
 {
     Q_D(QTcpServerConnection);
@@ -220,18 +186,7 @@ void QTcpServerConnection::newConnection()
     delete d->socket;
     d->socket = d->tcpServer->nextPendingConnection();
     d->socket->setParent(this);
-    d->protocol = new QPacketProtocol(d->socket, this);
-    QObject::connect(d->protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    QObject::connect(d->protocol, SIGNAL(invalidPacket()), this, SLOT(invalidPacket()));
-
-    if (d->block) {
-        d->protocol->waitForReadyRead(-1);
-    }
-}
-
-void QTcpServerConnection::invalidPacket()
-{
-    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
+    d->debugServer->setDevice(d->socket);
 }
 
 QT_END_NAMESPACE

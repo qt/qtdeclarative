@@ -56,19 +56,17 @@ public:
     bool setFileName(const QString &filename, bool block);
 
     bool isConnected() const;
-    void send(const QList<QByteArray> &messages);
     void disconnect();
-    bool waitForMessage();
 
     void waitForConnection();
-    bool connect();
+    void flush();
 
 private Q_SLOTS:
-    void readyRead();
     void connectionEstablished();
-    void invalidPacket();
 
 private:
+    bool connectToServer();
+
     QLocalClientConnectionPrivate *d_ptr;
 };
 

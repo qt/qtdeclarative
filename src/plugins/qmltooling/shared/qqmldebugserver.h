@@ -54,7 +54,7 @@ class QQmlDebugServer : protected QQmlDebugConnector
 {
     Q_OBJECT
 public:
-    virtual void receiveMessage(const QByteArray &message) = 0;
+    virtual void setDevice(QIODevice *socket) = 0;
 };
 
 QT_END_NAMESPACE
