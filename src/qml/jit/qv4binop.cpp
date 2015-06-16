@@ -352,7 +352,9 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         }
     }
 
-    if (op == IR::OpSub) {
+    // Special cases:
+    switch (op) {
+    case IR::OpSub:
         if (rightSource->asTemp() && rightSource->asTemp()->kind == IR::Temp::PhysicalRegister
                 && targetTemp
                 && targetTemp->kind == IR::Temp::PhysicalRegister
@@ -368,11 +370,27 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         }
         as->storeInt32(targetReg, target);
         return true;
+
+    case IR::OpLShift:
+    case IR::OpRShift:
+    case IR::OpURShift:
+        if (IR::Const *c = rightSource->asConst()) {
+            if ((QV4::Primitive::toUInt32(c->value) & 0x1f) == 0) {
+                Assembler::RegisterID r = as->toInt32Register(leftSource, targetReg);
+                as->storeInt32(r, target);
+                return true;
+            }
+        }
+        break;
+
+    default:
+        break;
     }
 
     Assembler::RegisterID l = as->toInt32Register(leftSource, targetReg);
     if (IR::Const *c = rightSource->asConst()) { // All cases of Y = X op Const
         Assembler::TrustedImm32 r(int(c->value));
+        Assembler::TrustedImm32 ur(QV4::Primitive::toUInt32(c->value) & 0x1f);
 
         switch (op) {
         case IR::OpBitAnd: as->and32(r, l, targetReg); break;
@@ -381,9 +399,9 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         case IR::OpAdd:    as->add32(r, l, targetReg); break;
         case IR::OpMul:    as->mul32(r, l, targetReg); break;
 
-        case IR::OpLShift:  r.m_value &= 0x1f; as->lshift32(l, r, targetReg); break;
-        case IR::OpRShift:  r.m_value &= 0x1f; as->rshift32(l, r, targetReg); break;
-        case IR::OpURShift: r.m_value &= 0x1f; as->urshift32(l, r, targetReg);
+        case IR::OpLShift:  as->lshift32(l, ur, targetReg); break;
+        case IR::OpRShift:  as->rshift32(l, ur, targetReg); break;
+        case IR::OpURShift: as->urshift32(l, ur, targetReg);
             as->storeUInt32(targetReg, target); // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
             return true;
 
@@ -415,32 +433,33 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
         case IR::OpAdd:    as->add32(l, r, targetReg); break;
         case IR::OpMul:    as->mul32(l, r, targetReg); break;
 
-#if CPU(ARM) || CPU(X86) || CPU(X86_64) || CPU(MIPS)
-            // The ARM assembler will generate an and with 0x1f for us, MIPS and Intel will do it on the CPU.
-
+#if CPU(X86) || CPU(X86_64)
+        // Intel does the & 0x1f on the CPU, so:
         case IR::OpLShift:  as->lshift32(l, r, targetReg); break;
         case IR::OpRShift:  as->rshift32(l, r, targetReg); break;
         case IR::OpURShift: as->urshift32(l, r, targetReg);
             as->storeUInt32(targetReg, target); // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
             return true;
 #else
-        case IR::OpLShift:
-            as->move(r, Assembler::ScratchRegister);
-            as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
-            as->lshift32(l, Assembler::ScratchRegister, targetReg);
-            break;
-
-        case IR::OpRShift:
-            as->move(r, Assembler::ScratchRegister);
-            as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
-            as->rshift32(l, Assembler::ScratchRegister, targetReg);
-            break;
-
+        // Not all CPUs accept shifts over more than 31 bits, and some CPUs (like ARM) will do
+        // surprising stuff when shifting over 0 bits.
+#define CHECK_RHS(op) { \
+    as->and32(Assembler::TrustedImm32(0x1f), r, Assembler::ScratchRegister); \
+    Assembler::Jump notZero = as->branch32(Assembler::NotEqual, Assembler::ScratchRegister, Assembler::TrustedImm32(0)); \
+    as->move(l, targetReg); \
+    Assembler::Jump done = as->jump(); \
+    notZero.link(as); \
+    op; \
+    done.link(as); \
+}
+        case IR::OpLShift: CHECK_RHS(as->lshift32(l, Assembler::ScratchRegister, targetReg)); break;
+        case IR::OpRShift: CHECK_RHS(as->rshift32(l, Assembler::ScratchRegister, targetReg)); break;
         case IR::OpURShift:
-            as->move(r, Assembler::ScratchRegister);
-            as->and32(Assembler::TrustedImm32(0x1f), Assembler::ScratchRegister);
-            as->storeUInt32(targetReg, target); // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
+            CHECK_RHS(as->urshift32(l, Assembler::ScratchRegister, targetReg));
+            as->storeUInt32(targetReg, target);
+            // IMPORTANT: do NOT do a break here! The stored type of an urshift is different from the other binary operations!
             return true;
+#undef CHECK_RHS
 #endif
 
         case IR::OpSub: // already handled before
