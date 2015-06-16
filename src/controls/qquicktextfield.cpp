@@ -42,6 +42,35 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype TextField
+    \inherits TextInput
+    \instantiates QQuickTextField
+    \inqmlmodule QtQuick.Controls
+    \ingroup editors
+    \brief A single line text input control.
+
+    TextField is a single line text editor. TextField extends TextInput
+    with a \l placeholder text functionality, and adds decoration.
+
+    \table
+    \row \li \image qtquickcontrols2-textfield-normal.png
+         \li A text field in its normal state.
+    \row \li \image qtquickcontrols2-textfield-focused.png
+         \li A text field that has active focus.
+    \row \li \image qtquickcontrols2-textfield-disabled.png
+         \li A text field that is disabled.
+    \endtable
+
+    \code
+    TextField {
+        placeholder.text: qsTr("Enter name")
+    }
+    \endcode
+
+    \sa TextArea, {Customizing TextField}
+*/
+
 class QQuickTextFieldPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextField)
@@ -83,6 +112,17 @@ QQuickTextField::~QQuickTextField()
 {
 }
 
+/*!
+    \qmlproperty Item QtQuickControls2::TextField::background
+
+    This property holds the background item.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
+
+    \sa {Customizing TextField}
+*/
 QQuickItem *QQuickTextField::background() const
 {
     Q_D(const QQuickTextField);
@@ -106,6 +146,13 @@ void QQuickTextField::setBackground(QQuickItem *background)
     }
 }
 
+/*!
+    \qmlproperty Text QtQuickControls2::TextField::placeholder
+
+    This property holds the placeholder text item.
+
+    \sa {Customizing TextField}
+*/
 QQuickText *QQuickTextField::placeholder() const
 {
     Q_D(const QQuickTextField);

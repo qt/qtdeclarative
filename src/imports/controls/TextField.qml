@@ -53,6 +53,7 @@ AbstractTextField {
     selectedTextColor: Theme.selectedTextColor
     verticalAlignment: TextInput.AlignVCenter
 
+    //! [placeholder]
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
@@ -63,11 +64,14 @@ AbstractTextField {
         opacity: control.Theme.disabledOpacity
         visible: !control.displayText
     }
+    //! [placeholder]
 
+    //! [background]
     background: Rectangle {
         implicitWidth: 120 // TODO
         radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
     }
+    //! [background]
 }

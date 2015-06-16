@@ -168,6 +168,24 @@
 
     \snippet Switch.qml indicator
 
+    \section1 Customizing TextField
+
+    TextField consists of two parts: \l {TextField::background}{background}
+    and \l {TextField::placeholder}{placeholder}. Their implicit sizes are
+    used to calculate the implicit size of the control.
+
+    \section3 Background
+
+    \image qtquickcontrols2-textfield-background.png
+
+    \snippet TextField.qml background
+
+    \section3 Placeholder
+
+    \image qtquickcontrols2-textfield-placeholder.png
+
+    \snippet TextField.qml placeholder
+
     \section1 Customizing ToggleButton
 
     ToggleButton consists of three parts: \l {Control::background}{background},
