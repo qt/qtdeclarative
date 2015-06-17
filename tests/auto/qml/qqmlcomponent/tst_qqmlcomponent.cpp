@@ -110,6 +110,7 @@ private slots:
     void qmlCreateParentReference();
     void async();
     void asyncHierarchy();
+    void asyncForceSync();
     void componentUrlCanonicalization();
     void onDestructionLookup();
     void onDestructionCount();
@@ -369,6 +370,35 @@ void tst_qqmlcomponent::asyncHierarchy()
     QVERIFY(root->property("success").toBool());
 
     delete root;
+}
+
+void tst_qqmlcomponent::asyncForceSync()
+{
+    {
+        // 1) make sure that HTTP URLs cannot be completed synchronously
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.serveDirectory(dataDirectory());
+
+        // ensure that the item hierarchy is compiled correctly.
+        QQmlComponent component(&engine);
+        component.loadUrl(server.url("/TestComponent.2.qml"), QQmlComponent::Asynchronous);
+        QCOMPARE(component.status(), QQmlComponent::Loading);
+        QQmlComponent component2(&engine, server.url("/TestComponent.2.qml"), QQmlComponent::PreferSynchronous);
+        QCOMPARE(component2.status(), QQmlComponent::Loading);
+    }
+    {
+        // 2) make sure that file:// URL can be completed synchronously
+
+        // ensure that the item hierarchy is compiled correctly.
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("/TestComponent.2.qml"), QQmlComponent::Asynchronous);
+        QCOMPARE(component.status(), QQmlComponent::Loading);
+        QQmlComponent component2(&engine, testFileUrl("/TestComponent.2.qml"), QQmlComponent::PreferSynchronous);
+        QCOMPARE(component2.status(), QQmlComponent::Ready);
+        QCOMPARE(component.status(), QQmlComponent::Loading);
+        QTRY_COMPARE_WITH_TIMEOUT(component.status(), QQmlComponent::Ready, 0);
+    }
 }
 
 void tst_qqmlcomponent::componentUrlCanonicalization()

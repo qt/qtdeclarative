@@ -1612,6 +1612,20 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         } else {
             QQmlTypeLoader::load(typeData, mode);
         }
+    } else if ((mode == PreferSynchronous) && QQmlFile::isSynchronous(url)) {
+        // this was started Asynchronous, but we need to force Synchronous
+        // completion now (if at all possible with this type of URL).
+
+        if (!m_thread->isThisThread()) {
+            // this only works when called directly from the UI thread, but not
+            // when recursively called on the QML thread via resolveTypes()
+
+            while (!typeData->isCompleteOrError()) {
+                unlock();
+                m_thread->waitForNextMessage();
+                lock();
+            }
+        }
     }
 
     typeData->addref();

@@ -377,4 +377,31 @@ void QQmlThread::internalPostMethodToMain(Message *message)
     d->unlock();
 }
 
+void QQmlThread::waitForNextMessage()
+{
+    Q_ASSERT(!isThisThread());
+    d->lock();
+    Q_ASSERT(d->m_mainThreadWaiting == false);
+
+    d->m_mainThreadWaiting = true;
+
+    if (d->mainSync || !d->threadList.isEmpty()) {
+        if (d->mainSync) {
+            QQmlThread::Message *message = d->mainSync;
+            unlock();
+            message->call(this);
+            delete message;
+            lock();
+            d->mainSync = 0;
+            wakeOne();
+        } else {
+            d->wait();
+        }
+    }
+
+    d->m_mainThreadWaiting = false;
+    d->unlock();
+}
+
+
 QT_END_NAMESPACE

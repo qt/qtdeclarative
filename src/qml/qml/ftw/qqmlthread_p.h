@@ -108,6 +108,8 @@ public:
     template<typename T, typename T2, class V, class V2, class O>
     inline void postMethodToMain(void (O::*Member)(V, V2), const T &, const T2 &);
 
+    void waitForNextMessage();
+
 protected:
     virtual void startupThread();
     virtual void shutdownThread();
