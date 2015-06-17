@@ -59,6 +59,9 @@ contains(DEFINES, WTF_USE_UDIS86=1) {
 SOURCES += $$PWD/disassembler/ARMv7Disassembler.cpp
 SOURCES += $$PWD/disassembler/ARMv7/ARMv7DOpcode.cpp
 HEADERS += $$PWD/disassembler/ARMv7/ARMv7DOpcode.h
+SOURCES += $$PWD/disassembler/Mips32Disassembler.cpp
+SOURCES += $$PWD/disassembler/mips32/Mips32Opcode.cpp
+HEADERS += $$PWD/disassembler/mips32/Mips32Opcode.h
 
 SOURCES += $$PWD/yarr/*.cpp
 HEADERS += $$PWD/yarr/*.h
