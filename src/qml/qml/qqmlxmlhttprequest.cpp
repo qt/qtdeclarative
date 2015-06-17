@@ -1235,7 +1235,8 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     } else if (m_method == QLatin1String("DELETE")) {
         m_network = networkAccessManager()->deleteResource(request);
     } else if ((m_method == QLatin1String("OPTIONS")) ||
-            m_method == QLatin1String("PROPFIND")) {
+               m_method == QLatin1String("PROPFIND") ||
+               m_method == QLatin1String("PATCH")) {
         QBuffer *buffer = new QBuffer;
         buffer->setData(m_data);
         buffer->open(QIODevice::ReadOnly);
@@ -1735,7 +1736,8 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(CallContext *ctx)
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE") &&
         method != QLatin1String("OPTIONS") &&
-        method != QLatin1String("PROPFIND"))
+        method != QLatin1String("PROPFIND") &&
+        method != QLatin1String("PATCH"))
         V4THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
