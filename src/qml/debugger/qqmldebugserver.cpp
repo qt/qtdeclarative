@@ -51,7 +51,7 @@
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
 
-#if defined(QT_STATIC) && ! defined(QT_NO_QML_DEBUGGER)
+#if defined(QT_STATIC) && !defined(QT_NO_QML_DEBUGGER) && !defined(QT_NO_LIBRARY)
 #include "../../plugins/qmltooling/qmldbg_tcp/qtcpserverconnection.h"
 #endif
 
@@ -94,7 +94,9 @@ const int protocolVersion = 1;
 int QQmlDebugServer::s_dataStreamVersion = QDataStream::Qt_4_7;
 
 // print detailed information about loading of plugins
+#ifndef QT_NO_LIBRARY
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
+#endif
 
 class QQmlDebugServerThread;
 
@@ -136,7 +138,9 @@ public:
     QMutex helloMutex;
     QWaitCondition helloCondition;
     QQmlDebugServerThread *thread;
+#ifndef QT_NO_LIBRARY
     QPluginLoader loader;
+#endif
     QAtomicInt changeServiceStateCalls;
 
 private:
@@ -286,6 +290,8 @@ QQmlDebugServerConnection *QQmlDebugServerPrivate::loadConnectionPlugin(
 
         loader.unload();
     }
+#else
+    Q_UNUSED(pluginName);
 #endif
     return 0;
 }
@@ -295,7 +301,7 @@ void QQmlDebugServerThread::run()
     QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
     Q_ASSERT_X(wrapper != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServer *server = &wrapper->m_instance;
-#if defined(QT_STATIC) && ! defined(QT_NO_QML_DEBUGGER)
+#if defined(QT_STATIC) && !defined(QT_NO_QML_DEBUGGER) && !defined(QT_NO_LIBRARY)
     QQmlDebugServerConnection *connection
             = new QTcpServerConnection;
 #else
