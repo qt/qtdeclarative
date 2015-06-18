@@ -77,4 +77,14 @@ TestCase {
         pah.pressAndHoldKeepsSelection(control)
         control.destroy()
     }
+
+    function test_implicitSize() {
+        var control = textField.createObject(testCase)
+        verify(control.implicitWidth > control.leftPadding + control.rightPadding)
+        control.background.implicitWidth = 400
+        control.background.implicitHeight = 200
+        compare(control.implicitWidth, 400)
+        compare(control.implicitHeight, 200)
+        control.destroy()
+    }
 }

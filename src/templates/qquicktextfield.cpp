@@ -104,11 +104,36 @@ void QQuickTextFieldPrivate::resizeBackground()
     }
 }
 
+qreal QQuickTextFieldPrivate::getImplicitWidth() const
+{
+    return QQuickItemPrivate::getImplicitWidth();
+}
+
+qreal QQuickTextFieldPrivate::getImplicitHeight() const
+{
+    return QQuickItemPrivate::getImplicitHeight();
+}
+
+void QQuickTextFieldPrivate::implicitWidthChanged()
+{
+    Q_Q(QQuickTextField);
+    QQuickItemPrivate::implicitWidthChanged();
+    emit q->implicitWidthChanged();
+}
+
+void QQuickTextFieldPrivate::implicitHeightChanged()
+{
+    Q_Q(QQuickTextField);
+    QQuickItemPrivate::implicitHeightChanged();
+    emit q->implicitHeightChanged();
+}
+
 QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
     Q_D(QQuickTextField);
     d->pressAndHoldHelper.control = this;
+    d->setImplicitResizeEnabled(false);
     setActiveFocusOnTab(true);
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged,
                             d, &QQuickTextFieldPrivate::_q_readOnlyChanged);

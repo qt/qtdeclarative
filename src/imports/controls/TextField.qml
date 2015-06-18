@@ -41,6 +41,11 @@ import Qt.labs.templates 1.0 as T
 T.TextField {
     id: control
 
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            placeholder ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             placeholder ? placeholder.implicitHeight + topPadding + bottomPadding : 0)
+
     padding: 6
 
     color: enabled ? Theme.textColor : Theme.disabledColor
