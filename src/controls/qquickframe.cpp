@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     TODO
 */
 
-QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
+QQuickFramePrivate::QQuickFramePrivate() : contentWidth(0), contentHeight(0), frame(Q_NULLPTR)
 {
 }
 
@@ -62,6 +62,46 @@ QQuickFrame::QQuickFrame(QQuickItem *parent) :
 QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
     QQuickControl(dd, parent)
 {
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::Frame::contentWidth
+
+    TODO
+*/
+qreal QQuickFrame::contentWidth() const
+{
+    Q_D(const QQuickFrame);
+    return d->contentWidth;
+}
+
+void QQuickFrame::setContentWidth(qreal width)
+{
+    Q_D(QQuickFrame);
+    if (d->contentWidth != width) {
+        d->contentWidth = width;
+        emit contentWidthChanged();
+    }
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::Frame::contentHeight
+
+    TODO
+*/
+qreal QQuickFrame::contentHeight() const
+{
+    Q_D(const QQuickFrame);
+    return d->contentHeight;
+}
+
+void QQuickFrame::setContentHeight(qreal height)
+{
+    Q_D(QQuickFrame);
+    if (d->contentHeight != height) {
+        d->contentHeight = height;
+        emit contentHeightChanged();
+    }
 }
 
 /*!

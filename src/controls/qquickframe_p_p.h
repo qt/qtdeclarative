@@ -57,6 +57,8 @@ class Q_QUICKCONTROLS_EXPORT QQuickFramePrivate : public QQuickControlPrivate
 public:
     QQuickFramePrivate();
 
+    qreal contentWidth;
+    qreal contentHeight;
     QQuickItem *frame;
 };
 

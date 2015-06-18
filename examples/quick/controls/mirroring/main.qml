@@ -106,43 +106,49 @@ ApplicationWindow {
                 GroupBox {
                     title: "CheckBox"
                     readonly property real preferredWidth: (flow.width - 12) / 2
-                    width: window.width > window.height || implicitWidth > preferredWidth ? flow.width : preferredWidth
-                    CheckBox {
+                    width: window.width > window.height || contentWidth > preferredWidth ? flow.width : preferredWidth
+                    ColumnLayout {
                         width: parent.width
-                        text: "E-mail"
-                        checked: true
-                    }
-                    CheckBox {
-                        width: parent.width
-                        text: "Calendar"
-                        checked: true
-                    }
-                    CheckBox {
-                        width: parent.width
-                        text: "Contacts"
+                        CheckBox {
+                            width: parent.width
+                            text: "E-mail"
+                            checked: true
+                        }
+                        CheckBox {
+                            width: parent.width
+                            text: "Calendar"
+                            checked: true
+                        }
+                        CheckBox {
+                            width: parent.width
+                            text: "Contacts"
+                        }
                     }
                 }
 
                 GroupBox {
                     title: "RadioButton"
                     readonly property real preferredWidth: (flow.width - 12) / 2
-                    width: window.width > window.height || implicitWidth > preferredWidth ? flow.width : preferredWidth
+                    width: window.width > window.height || contentWidth > preferredWidth ? flow.width : preferredWidth
                     ExclusiveGroup { id: eg }
-                    RadioButton {
+                    ColumnLayout {
                         width: parent.width
-                        text: "Portrait"
-                        Exclusive.group: eg
-                    }
-                    RadioButton {
-                        width: parent.width
-                        text: "Landscape"
-                        Exclusive.group: eg
-                    }
-                    RadioButton {
-                        width: parent.width
-                        text: "Automatic"
-                        checked: true
-                        Exclusive.group: eg
+                        RadioButton {
+                            width: parent.width
+                            text: "Portrait"
+                            Exclusive.group: eg
+                        }
+                        RadioButton {
+                            width: parent.width
+                            text: "Landscape"
+                            Exclusive.group: eg
+                        }
+                        RadioButton {
+                            width: parent.width
+                            text: "Automatic"
+                            checked: true
+                            Exclusive.group: eg
+                        }
                     }
                 }
 
@@ -171,43 +177,54 @@ ApplicationWindow {
                 GroupBox {
                     title: "Switch"
                     width: flow.width
-                    Switch {
+                    Column {
                         width: parent.width
-                        text: "Wifi"
-                        checked: true
-                    }
-                    Switch {
-                        width: parent.width
-                        text: "Bluetooth"
+                        Switch {
+                            width: parent.width
+                            text: "Wifi"
+                            checked: true
+                        }
+                        Switch {
+                            width: parent.width
+                            text: "Bluetooth"
+                        }
                     }
                 }
 
                 GroupBox {
                     title: "ProgressBar"
                     width: flow.width
-                    ProgressBar {
+                    Column {
                         width: parent.width
-                        indeterminate: true
-                    }
-                    ProgressBar {
-                        width: parent.width
-                        value: slider.position
+                        spacing: Theme.spacing
+                        ProgressBar {
+                            width: parent.width
+                            indeterminate: true
+                        }
+                        ProgressBar {
+                            width: parent.width
+                            value: slider.position
+                        }
                     }
                 }
 
                 GroupBox {
                     title: "Slider"
                     width: flow.width
-                    Slider {
-                        id: slider
-                        value: 0.4
+                    Column {
                         width: parent.width
-                    }
-                    Slider {
-                        width: parent.width
-                        snapMode: AbstractSlider.SnapAlways
-                        stepSize: 0.2
-                        value: 0.8
+                        spacing: Theme.spacing
+                        Slider {
+                            id: slider
+                            value: 0.4
+                            width: parent.width
+                        }
+                        Slider {
+                            width: parent.width
+                            snapMode: AbstractSlider.SnapAlways
+                            stepSize: 0.2
+                            value: 0.8
+                        }
                     }
                 }
             }

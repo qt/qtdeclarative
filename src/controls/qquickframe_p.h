@@ -57,15 +57,25 @@ class QQuickFramePrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
 
 public:
     explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
 
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
+
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
+
     QQuickItem *frame() const;
     void setFrame(QQuickItem *frame);
 
 Q_SIGNALS:
+    void contentWidthChanged();
+    void contentHeightChanged();
     void frameChanged();
 
 protected:

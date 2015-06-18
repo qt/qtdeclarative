@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ToolBar
-    \inherits Container
+    \inherits Frame
     \instantiates QQuickToolBar
     \inqmlmodule QtQuick.Controls
     \ingroup containers
@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
-    QQuickContainer(parent)
+    QQuickFrame(parent)
 {
 }
 
