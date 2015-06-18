@@ -2115,6 +2115,7 @@ QQuickTextEditPrivate::ExtraData::ExtraData()
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)
+    , explicitImplicitSize(false)
 {
 }
 
@@ -2345,7 +2346,8 @@ void QQuickTextEdit::updateSize()
 
             const bool wasInLayout = d->inLayout;
             d->inLayout = true;
-            setImplicitWidth(naturalWidth + leftPadding() + rightPadding());
+            if (!d->extra.isAllocated() || !d->extra->explicitImplicitSize)
+                setImplicitWidth(naturalWidth + leftPadding() + rightPadding());
             d->inLayout = wasInLayout;
             if (d->inLayout)    // probably the result of a binding loop, but by letting it
                 return;         // get this far we'll get a warning to that effect.
@@ -2364,11 +2366,13 @@ void QQuickTextEdit::updateSize()
     QFontMetricsF fm(d->font);
     qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
 
-    // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
-    if (!widthValid() && !d->requireImplicitWidth)
-        setImplicitSize(newWidth + leftPadding() + rightPadding(), newHeight + topPadding() + bottomPadding());
-    else
-        setImplicitHeight(newHeight + topPadding() + bottomPadding());
+    if (!d->extra.isAllocated() || !d->extra->explicitImplicitSize) {
+        // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
+        if (!widthValid() && !d->requireImplicitWidth)
+            setImplicitSize(newWidth + leftPadding() + rightPadding(), newHeight + topPadding() + bottomPadding());
+        else
+            setImplicitHeight(newHeight + topPadding() + bottomPadding());
+    }
 
     d->xoff = leftPadding() + qMax(qreal(0), QQuickTextUtil::alignedX(d->document->size().width(), width() - leftPadding() - rightPadding(), effectiveHAlign()));
     d->yoff = topPadding() + QQuickTextUtil::alignedY(d->document->size().height(), height() - topPadding() - bottomPadding(), d->vAlign);

@@ -2518,6 +2518,7 @@ QQuickTextInputPrivate::ExtraData::ExtraData()
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)
+    , explicitImplicitSize(false)
 {
 }
 
@@ -2820,7 +2821,8 @@ void QQuickTextInputPrivate::updateLayout()
         line.setLineWidth(INT_MAX);
         const bool wasInLayout = inLayout;
         inLayout = true;
-        q->setImplicitWidth(qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding());
+        if (!extra.isAllocated() || !extra->explicitImplicitSize)
+            q->setImplicitWidth(qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding());
         inLayout = wasInLayout;
         if (inLayout)       // probably the result of a binding loop, but by letting it
             return;         // get this far we'll get a warning to that effect.
@@ -2851,10 +2853,12 @@ void QQuickTextInputPrivate::updateLayout()
     q->polish();
     q->update();
 
-    if (!requireImplicitWidth && !q->widthValid())
-        q->setImplicitSize(width + q->leftPadding() + q->rightPadding(), height + q->topPadding() + q->bottomPadding());
-    else
-        q->setImplicitHeight(height + q->topPadding() + q->bottomPadding());
+    if (!extra.isAllocated() || !extra->explicitImplicitSize) {
+        if (!requireImplicitWidth && !q->widthValid())
+            q->setImplicitSize(width + q->leftPadding() + q->rightPadding(), height + q->topPadding() + q->bottomPadding());
+        else
+            q->setImplicitHeight(height + q->topPadding() + q->bottomPadding());
+    }
 
     updateBaselineOffset();
 
