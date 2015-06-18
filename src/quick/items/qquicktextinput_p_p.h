@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextNode;
 
-class Q_AUTOTEST_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickTextInputPrivate : public QQuickImplicitSizeItemPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTextInput)

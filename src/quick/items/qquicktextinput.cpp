@@ -90,6 +90,13 @@ QQuickTextInput::QQuickTextInput(QQuickItem* parent)
     d->init();
 }
 
+QQuickTextInput::QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent)
+: QQuickImplicitSizeItem(dd, parent)
+{
+    Q_D(QQuickTextInput);
+    d->init();
+}
+
 QQuickTextInput::~QQuickTextInput()
 {
 }

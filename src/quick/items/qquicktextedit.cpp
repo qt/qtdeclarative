@@ -172,6 +172,13 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
     d->init();
 }
 
+QQuickTextEdit::QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent)
+: QQuickImplicitSizeItem(dd, parent)
+{
+    Q_D(QQuickTextEdit);
+    d->init();
+}
+
 QString QQuickTextEdit::text() const
 {
     Q_D(const QQuickTextEdit);

@@ -337,6 +337,8 @@ private:
     void ensureActiveFocus();
 
 protected:
+    QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = 0);
+
     void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 

@@ -60,7 +60,7 @@ class QQuickTextControl;
 class QQuickTextNode;
 class QQuickTextNodeEngine;
 
-class QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTextEdit)

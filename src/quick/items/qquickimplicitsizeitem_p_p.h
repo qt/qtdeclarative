@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImplicitSizeItemPrivate : public QQuickItemPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickImplicitSizeItemPrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickImplicitSizeItem)
 

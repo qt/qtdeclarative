@@ -352,6 +352,8 @@ private:
     void invalidateFontCaches();
 
 protected:
+    QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = 0);
+
     void geometryChanged(const QRectF &newGeometry,
                          const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
