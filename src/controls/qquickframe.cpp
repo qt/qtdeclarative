@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Frame
-    \inherits Container
+    \inherits Control
     \instantiates QQuickFrame
     \inqmlmodule QtQuick.Controls
     \ingroup containers
@@ -55,12 +55,12 @@ QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
 }
 
 QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickFramePrivate), parent)
+    QQuickControl(*(new QQuickFramePrivate), parent)
 {
 }
 
 QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickContainer(dd, parent)
+    QQuickControl(dd, parent)
 {
 }
 

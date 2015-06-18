@@ -48,11 +48,11 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS_EXPORT QQuickFramePrivate : public QQuickContainerPrivate
+class Q_QUICKCONTROLS_EXPORT QQuickFramePrivate : public QQuickControlPrivate
 {
 public:
     QQuickFramePrivate();

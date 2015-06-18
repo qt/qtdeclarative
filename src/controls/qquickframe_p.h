@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickFramePrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickContainer
+class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
