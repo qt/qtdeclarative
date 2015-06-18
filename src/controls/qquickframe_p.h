@@ -49,6 +49,7 @@
 //
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +61,9 @@ class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickControl
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
@@ -72,6 +76,9 @@ public:
 
     QQuickItem *frame() const;
     void setFrame(QQuickItem *frame);
+
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
 
 Q_SIGNALS:
     void contentWidthChanged();

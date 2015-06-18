@@ -40,8 +40,6 @@ import QtQuick.Controls 2.0
 AbstractGroupBox {
     id: control
 
-    default property alias data: content.data
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
@@ -51,9 +49,7 @@ AbstractGroupBox {
     padding: Theme.padding
     topPadding: Theme.padding + (label && title ? label.implicitHeight + Theme.spacing : 0)
 
-    contentItem: Item {
-        id: content
-    }
+    contentItem: Item { }
 
     label: Text {
         x: control.leftPadding

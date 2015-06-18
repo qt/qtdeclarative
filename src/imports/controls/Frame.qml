@@ -40,8 +40,6 @@ import QtQuick.Controls 2.0
 AbstractFrame {
     id: control
 
-    default property alias data: content.data
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
@@ -50,9 +48,7 @@ AbstractFrame {
 
     padding: Theme.padding
 
-    contentItem: Item {
-        id: content
-    }
+    contentItem: Item { }
 
     frame: Rectangle {
         width: parent.width

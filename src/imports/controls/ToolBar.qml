@@ -40,8 +40,6 @@ import QtQuick.Controls 2.0
 AbstractToolBar {
     id: control
 
-    default property alias data: content.data
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
@@ -50,9 +48,7 @@ AbstractToolBar {
 
     Accessible.role: Accessible.ToolBar
 
-    contentItem: Item {
-        id: content
-    }
+    contentItem: Item { }
 
     background: Rectangle {
         implicitHeight: 26

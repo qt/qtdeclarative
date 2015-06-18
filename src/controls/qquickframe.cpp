@@ -127,4 +127,35 @@ void QQuickFrame::setFrame(QQuickItem *frame)
     }
 }
 
+/*!
+    \qmlproperty list<Object> QtQuickControls2::Frame::contentData
+    \default
+
+    TODO
+*/
+QQmlListProperty<QObject> QQuickFrame::contentData()
+{
+    Q_D(QQuickFrame);
+    return QQmlListProperty<QObject>(d->contentItem, Q_NULLPTR,
+                                     QQuickItemPrivate::data_append,
+                                     QQuickItemPrivate::data_count,
+                                     QQuickItemPrivate::data_at,
+                                     QQuickItemPrivate::data_clear);
+}
+
+/*!
+    \qmlproperty list<Item> QtQuickControls2::Frame::contentChildren
+
+    TODO
+*/
+QQmlListProperty<QQuickItem> QQuickFrame::contentChildren()
+{
+    Q_D(QQuickFrame);
+    return QQmlListProperty<QQuickItem>(d->contentItem, Q_NULLPTR,
+                                        QQuickItemPrivate::children_append,
+                                        QQuickItemPrivate::children_count,
+                                        QQuickItemPrivate::children_at,
+                                        QQuickItemPrivate::children_clear);
+}
+
 QT_END_NAMESPACE
