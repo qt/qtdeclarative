@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +58,7 @@ class QQuickStackElement;
 class QQuickStackAttached;
 class QQuickStackViewPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickStackView : public QQuickContainer
+class Q_QUICKCONTROLS_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)

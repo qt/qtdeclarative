@@ -49,7 +49,7 @@
 //
 
 #include <QtQuickControls/private/qquickstackview_p.h>
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4persistent_p.h>
@@ -97,7 +97,7 @@ public:
     QV4::PersistentValue qmlGlobal;
 };
 
-class QQuickStackViewPrivate : public QQuickContainerPrivate, public QQuickItemViewTransitionChangeListener
+class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickStackView)
 

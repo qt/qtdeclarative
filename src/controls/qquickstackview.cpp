@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype StackView
-    \inherits Container
+    \inherits Control
     \instantiates QQuickStackView
     \inqmlmodule QtQuick.Controls
     \ingroup navigation
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent) :
-    QQuickContainer(*(new QQuickStackViewPrivate), parent)
+    QQuickControl(*(new QQuickStackViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
 }
@@ -459,7 +459,7 @@ void QQuickStackView::setPushExit(QQuickTransition *exit)
 
 void QQuickStackView::componentComplete()
 {
-    QQuickContainer::componentComplete();
+    QQuickControl::componentComplete();
 
     Q_D(QQuickStackView);
     QQuickStackElement *element = Q_NULLPTR;
@@ -475,7 +475,7 @@ void QQuickStackView::componentComplete()
 
 void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
 
     Q_D(QQuickStackView);
     foreach (QQuickStackElement *element, d->elements) {
