@@ -86,8 +86,8 @@ AbstractCheckBox {
     label: Text {
         x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
         y: control.topPadding
-        width: control.contentWidth - indicator.width - control.Theme.spacing
-        height: control.contentHeight
+        width: control.availableWidth - indicator.width - control.Theme.spacing
+        height: control.availableHeight
 
         text: control.text
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor

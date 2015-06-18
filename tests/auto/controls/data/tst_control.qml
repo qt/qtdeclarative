@@ -81,8 +81,8 @@ TestCase {
         compare(control.leftPadding, 0)
         compare(control.rightPadding, 0)
         compare(control.bottomPadding, 0)
-        compare(control.contentWidth, 0)
-        compare(control.contentHeight, 0)
+        compare(control.availableWidth, 0)
+        compare(control.availableHeight, 0)
         control.destroy()
     }
 
@@ -142,32 +142,32 @@ TestCase {
 
         control.width = 100
         control.height = 100
-        compare(control.contentWidth, 100)
-        compare(control.contentHeight, 100)
+        compare(control.availableWidth, 100)
+        compare(control.availableHeight, 100)
 
         control.padding = 10
-        compare(control.contentWidth, 80)
-        compare(control.contentHeight, 80)
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 80)
 
         control.topPadding = 20
-        compare(control.contentWidth, 80)
-        compare(control.contentHeight, 70)
+        compare(control.availableWidth, 80)
+        compare(control.availableHeight, 70)
 
         control.leftPadding = 30
-        compare(control.contentWidth, 60)
-        compare(control.contentHeight, 70)
+        compare(control.availableWidth, 60)
+        compare(control.availableHeight, 70)
 
         control.rightPadding = 40
-        compare(control.contentWidth, 30)
-        compare(control.contentHeight, 70)
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 70)
 
         control.bottomPadding = 50
-        compare(control.contentWidth, 30)
-        compare(control.contentHeight, 30)
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
 
         control.padding = 60
-        compare(control.contentWidth, 30)
-        compare(control.contentHeight, 30)
+        compare(control.availableWidth, 30)
+        compare(control.availableHeight, 30)
 
         control.destroy()
     }

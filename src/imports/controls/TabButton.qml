@@ -55,8 +55,8 @@ AbstractTabButton {
     label: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.contentWidth
-        height: control.contentHeight
+        width: control.availableWidth
+        height: control.availableHeight
 
         text: control.text
         font.pointSize: 10

@@ -54,8 +54,8 @@ AbstractButton {
     label: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.contentWidth
-        height: control.contentHeight
+        width: control.availableWidth
+        height: control.availableHeight
 
         text: control.text
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
