@@ -110,12 +110,14 @@ void tst_qquickpixmapcache::initTestCase()
 
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
 
+#ifndef QT_NO_BEARERMANAGEMENT
     // This avoids a race condition/deadlock bug in network config
     // manager when it is accessed by the HTTP server thread before
     // anything else. Bug report can be found at:
     // QTBUG-26355
     QNetworkConfigurationManager cm;
     cm.updateConfigurations();
+#endif
 
     server.serveDirectory(testFile("http"));
 }

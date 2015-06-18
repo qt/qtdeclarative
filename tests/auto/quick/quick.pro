@@ -77,11 +77,6 @@ QUICKTESTS =  \
     touchmouse \
     scenegraph
 
-contains(DEFINES, QT_NO_LIBRARY) {
-    PUBLICTESTS -= qquickpixmapcache
-    QUICKTESTS -= qquicktextinput
-}
-
 SUBDIRS += $$PUBLICTESTS
 
 !contains(QT_CONFIG, accessibility):QUICKTESTS -= qquickaccessible

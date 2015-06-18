@@ -2998,6 +2998,14 @@ void tst_qquicktextinput::cursorRectangle_data()
             << false;
 }
 
+#ifndef QT_NO_IM
+#define COMPARE_INPUT_METHOD_QUERY(type, input, property, method, result) \
+    QCOMPARE((type) input->inputMethodQuery(property).method(), result);
+#else
+#define COMPARE_INPUT_METHOD_QUERY(type, input, property, method, result) \
+    qt_noop()
+#endif
+
 void tst_qquicktextinput::cursorRectangle()
 {
     QFETCH(QString, text);
@@ -3037,7 +3045,7 @@ void tst_qquicktextinput::cursorRectangle()
         r = input.cursorRectangle();
 
         QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3047,7 +3055,7 @@ void tst_qquicktextinput::cursorRectangle()
     for (int i = positionAtWidth + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3060,7 +3068,7 @@ void tst_qquicktextinput::cursorRectangle()
         } else {
             QVERIFY(r.left() <= input.width());
         }
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3073,7 +3081,7 @@ void tst_qquicktextinput::cursorRectangle()
 
         QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
         QCOMPARE(r.top(), 0.);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3085,14 +3093,14 @@ void tst_qquicktextinput::cursorRectangle()
         QCOMPARE(r.left(), input.width());
     }
     QVERIFY(r.top() >= line.height() - 1);
-    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(11), r);
 
     for (int i = wrapPosition + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.top() >= line.height() - 1);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3104,7 +3112,7 @@ void tst_qquicktextinput::cursorRectangle()
 
         QCOMPARE(r.left(), line.cursorToX(i, QTextLine::Leading) - offset);
         QCOMPARE(r.top(), 0.);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3114,7 +3122,7 @@ void tst_qquicktextinput::cursorRectangle()
     for (int i = positionAtWidth + 1; i < wrapPosition && leftToRight; ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3126,14 +3134,14 @@ void tst_qquicktextinput::cursorRectangle()
         QCOMPARE(r.left(), input.width());
     }
     QVERIFY(r.bottom() >= input.height());
-    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(11), r);
 
     for (int i = wrapPosition + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3141,7 +3149,7 @@ void tst_qquicktextinput::cursorRectangle()
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3149,13 +3157,13 @@ void tst_qquicktextinput::cursorRectangle()
     r = input.cursorRectangle();
     QCOMPARE(r.top(), 0.);
     QCOMPARE(r.left(), leftToRight ? input.width() : 0);
-    QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+    COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(10), r);
 
     for (int i = wrapPosition - 2; i >= positionAtWidth + 1; --i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3163,7 +3171,7 @@ void tst_qquicktextinput::cursorRectangle()
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QCOMPARE(r.top(), 0.);
-        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRectF(), r);
+        COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
@@ -3232,7 +3240,7 @@ void tst_qquicktextinput::echoMode()
     //Normal
     ref &= ~Qt::ImhHiddenText;
     ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    COMPARE_INPUT_METHOD_QUERY(Qt::InputMethodHints, input, Qt::ImHints, toInt, ref);
     input->setEchoMode(QQuickTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String(""));
@@ -3240,17 +3248,17 @@ void tst_qquicktextinput::echoMode()
     //NoEcho
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    COMPARE_INPUT_METHOD_QUERY(Qt::InputMethodHints, input, Qt::ImHints, toInt, ref);
     input->setEchoMode(QQuickTextInput::Password);
     //Password
     ref |= Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QString(8, passwordMaskCharacter.at(0)));
-    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    COMPARE_INPUT_METHOD_QUERY(Qt::InputMethodHints, input, Qt::ImHints, toInt, ref);
     // clearing input hints do not clear bits set by echo mode
     input->setInputMethodHints(Qt::ImhNone);
-    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    COMPARE_INPUT_METHOD_QUERY(Qt::InputMethodHints, input, Qt::ImHints, toInt, ref);
     input->setPasswordCharacter(QChar('Q'));
     QCOMPARE(input->passwordCharacter(), QLatin1String("Q"));
     QCOMPARE(input->text(), initial);
@@ -3259,19 +3267,20 @@ void tst_qquicktextinput::echoMode()
     //PasswordEchoOnEdit
     ref &= ~Qt::ImhHiddenText;
     ref |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText | Qt::ImhSensitiveData);
-    QCOMPARE((Qt::InputMethodHints) input->inputMethodQuery(Qt::ImHints).toInt(), ref);
+    COMPARE_INPUT_METHOD_QUERY(Qt::InputMethodHints, input, Qt::ImHints, toInt, ref);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), QLatin1String("QQQQQQQQ"));
-    QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), QLatin1String("QQQQQQQQ"));
+    COMPARE_INPUT_METHOD_QUERY(QString, input, Qt::ImSurroundingText, toString,
+                               QLatin1String("QQQQQQQQ"));
     QTest::keyPress(&window, Qt::Key_A);//Clearing previous entry is part of PasswordEchoOnEdit
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier ,10);
     QCOMPARE(input->text(), QLatin1String("a"));
     QCOMPARE(input->displayText(), QLatin1String("a"));
-    QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), QLatin1String("a"));
+    COMPARE_INPUT_METHOD_QUERY(QString, input, Qt::ImSurroundingText, toString, QLatin1String("a"));
     input->setFocus(false);
     QVERIFY(input->hasActiveFocus() == false);
     QCOMPARE(input->displayText(), QLatin1String("Q"));
-    QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), QLatin1String("Q"));
+    COMPARE_INPUT_METHOD_QUERY(QString, input, Qt::ImSurroundingText, toString, QLatin1String("Q"));
     input->setFocus(true);
     QVERIFY(input->hasActiveFocus());
     QInputMethodEvent inputEvent;
@@ -3279,7 +3288,7 @@ void tst_qquicktextinput::echoMode()
     QGuiApplication::sendEvent(input, &inputEvent);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), initial);
-    QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), initial);
+    COMPARE_INPUT_METHOD_QUERY(QString, input, Qt::ImSurroundingText, toString, initial);
 }
 
 void tst_qquicktextinput::passwordEchoDelay()
