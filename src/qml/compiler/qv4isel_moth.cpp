@@ -565,6 +565,13 @@ void InstructionSelection::loadThisObject(IR::Expr *e)
     addInstruction(load);
 }
 
+void InstructionSelection::loadQmlContext(IR::Expr *e)
+{
+    Instruction::LoadQmlContext load;
+    load.result = getResultParam(e);
+    addInstruction(load);
+}
+
 void InstructionSelection::loadQmlIdArray(IR::Expr *e)
 {
     Instruction::LoadQmlIdArray load;

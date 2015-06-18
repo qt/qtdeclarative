@@ -136,6 +136,7 @@ public: // to implement by subclasses:
     virtual void constructProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr *result) = 0;
     virtual void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result) = 0;
     virtual void loadThisObject(IR::Expr *target) = 0;
+    virtual void loadQmlContext(IR::Expr *target) = 0;
     virtual void loadQmlIdArray(IR::Expr *target) = 0;
     virtual void loadQmlImportedScripts(IR::Expr *target) = 0;
     virtual void loadQmlContextObject(IR::Expr *target) = 0;

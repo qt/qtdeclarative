@@ -387,6 +387,7 @@ public:
 
     Heap::Object *newForEachIteratorObject(Object *o);
 
+    Heap::QmlContext *qmlContext() const;
     QV4::Heap::QmlContextWrapper *qmlContextObject() const;
     QObject *qmlScopeObject() const;
     QQmlContextData *callingQmlContext() const;

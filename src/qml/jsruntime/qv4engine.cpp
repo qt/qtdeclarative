@@ -720,7 +720,7 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
     return obj->d();
 }
 
-Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
+Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
     Heap::ExecutionContext *ctx = currentContext();
 
@@ -737,8 +737,14 @@ Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
         return 0;
 
-    Q_ASSERT(static_cast<Heap::QmlContext *>(ctx)->qml);
-    return static_cast<Heap::QmlContext *>(ctx)->qml;
+    return static_cast<Heap::QmlContext *>(ctx);
+}
+
+Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
+{
+    Heap::QmlContext *ctx = qmlContext();
+    Q_ASSERT(ctx->qml);
+    return ctx->qml;
 }
 
 QObject *ExecutionEngine::qmlScopeObject() const

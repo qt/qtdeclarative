@@ -337,6 +337,7 @@ struct Name: Expr {
         builtin_define_object_literal,
         builtin_setup_argument_object,
         builtin_convert_this_to_object,
+        builtin_qml_context,
         builtin_qml_id_array,
         builtin_qml_imported_scripts_object,
         builtin_qml_context_object,

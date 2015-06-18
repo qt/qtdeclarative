@@ -421,6 +421,12 @@ protected: // IRDecoder
         addDef(temp);
     }
 
+    virtual void loadQmlContext(IR::Expr *temp)
+    {
+        addDef(temp);
+        addCall();
+    }
+
     virtual void loadQmlIdArray(IR::Expr *temp)
     {
         addDef(temp);

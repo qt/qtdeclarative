@@ -574,6 +574,11 @@ void InstructionSelection::loadThisObject(IR::Expr *temp)
 #endif
 }
 
+void InstructionSelection::loadQmlContext(IR::Expr *temp)
+{
+    generateFunctionCall(temp, Runtime::getQmlContext, Assembler::EngineRegister);
+}
+
 void InstructionSelection::loadQmlIdArray(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlIdArray, Assembler::EngineRegister);

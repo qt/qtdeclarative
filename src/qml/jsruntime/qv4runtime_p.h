@@ -207,11 +207,12 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static unsigned doubleToUInt(const double &d);
 
     // qml
-    static ReturnedValue getQmlIdArray(NoThrowEngine *ctx);
-    static ReturnedValue getQmlImportedScripts(NoThrowEngine *ctx);
-    static ReturnedValue getQmlContextObject(NoThrowEngine *ctx);
-    static ReturnedValue getQmlScopeObject(NoThrowEngine *ctx);
-    static ReturnedValue getQmlSingleton(NoThrowEngine *ctx, int nameIndex);
+    static ReturnedValue getQmlContext(NoThrowEngine *engine);
+    static ReturnedValue getQmlIdArray(NoThrowEngine *engine);
+    static ReturnedValue getQmlImportedScripts(NoThrowEngine *engine);
+    static ReturnedValue getQmlContextObject(NoThrowEngine *engine);
+    static ReturnedValue getQmlScopeObject(NoThrowEngine *engine);
+    static ReturnedValue getQmlSingleton(NoThrowEngine *engine, int nameIndex);
     static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
     static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);

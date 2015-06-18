@@ -91,6 +91,8 @@ void IRDecoder::visitMove(IR::Move *s)
         if (IR::Name *n = s->source->asName()) {
             if (n->id && *n->id == QStringLiteral("this")) // TODO: `this' should be a builtin.
                 loadThisObject(s->target);
+            else if (n->builtin == IR::Name::builtin_qml_context)
+                loadQmlContext(s->target);
             else if (n->builtin == IR::Name::builtin_qml_id_array)
                 loadQmlIdArray(s->target);
             else if (n->builtin == IR::Name::builtin_qml_context_object)

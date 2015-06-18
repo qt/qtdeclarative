@@ -865,6 +865,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         VALUE(instr.result) = context->thisObject();
     MOTH_END_INSTR(LoadThis)
 
+    MOTH_BEGIN_INSTR(LoadQmlContext)
+        VALUE(instr.result) = Runtime::getQmlContext(static_cast<QV4::NoThrowEngine*>(engine));
+    MOTH_END_INSTR(LoadQmlContext)
+
     MOTH_BEGIN_INSTR(LoadQmlIdArray)
         VALUE(instr.result) = Runtime::getQmlIdArray(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlIdArray)

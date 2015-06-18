@@ -1456,6 +1456,7 @@ JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR
     , _disableAcceleratedLookups(false)
     , _contextObject(0)
     , _scopeObject(0)
+    , _qmlContextTemp(-1)
     , _contextObjectTemp(-1)
     , _scopeObjectTemp(-1)
     , _importedScriptsTemp(-1)
@@ -1764,13 +1765,17 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
 
 void JSCodeGen::beginFunctionBodyHook()
 {
+    _qmlContextTemp = _block->newTemp();
     _contextObjectTemp = _block->newTemp();
     _scopeObjectTemp = _block->newTemp();
     _importedScriptsTemp = _block->newTemp();
     _idArrayTemp = _block->newTemp();
 
 #ifndef V4_BOOTSTRAP
-    QV4::IR::Temp *temp = _block->TEMP(_contextObjectTemp);
+    QV4::IR::Temp *temp = _block->TEMP(_qmlContextTemp);
+    move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0));
+
+    temp = _block->TEMP(_contextObjectTemp);
     temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
     initMetaObjectResolver(temp->memberResolver, _contextObject);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context_object, 0, 0));

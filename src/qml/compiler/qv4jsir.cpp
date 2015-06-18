@@ -341,6 +341,8 @@ const char *builtin_to_string(Name::Builtin b)
         return "builtin_setup_argument_object";
     case IR::Name::builtin_convert_this_to_object:
         return "builtin_convert_this_to_object";
+    case IR::Name::builtin_qml_context:
+        return "builtin_qml_context";
     case IR::Name::builtin_qml_id_array:
         return "builtin_qml_id_array";
     case IR::Name::builtin_qml_imported_scripts_object:

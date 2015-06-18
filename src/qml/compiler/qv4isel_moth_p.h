@@ -102,6 +102,7 @@ protected:
     virtual void constructProperty(IR::Expr *base, const QString &name, IR::ExprList *args, IR::Expr *result);
     virtual void constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result);
     virtual void loadThisObject(IR::Expr *e);
+    virtual void loadQmlContext(IR::Expr *e);
     virtual void loadQmlIdArray(IR::Expr *e);
     virtual void loadQmlImportedScripts(IR::Expr *e);
     virtual void loadQmlContextObject(IR::Expr *e);

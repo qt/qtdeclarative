@@ -95,6 +95,7 @@ protected:
     virtual void callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args, IR::Expr *result);
     virtual void convertType(IR::Expr *source, IR::Expr *target);
     virtual void loadThisObject(IR::Expr *temp);
+    virtual void loadQmlContext(IR::Expr *target);
     virtual void loadQmlIdArray(IR::Expr *target);
     virtual void loadQmlImportedScripts(IR::Expr *target);
     virtual void loadQmlContextObject(IR::Expr *target);

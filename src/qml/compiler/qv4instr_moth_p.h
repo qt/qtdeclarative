@@ -125,6 +125,7 @@ QT_BEGIN_NAMESPACE
     F(Sub, sub) \
     F(BinopContext, binopContext) \
     F(LoadThis, loadThis) \
+    F(LoadQmlContext, loadQmlContext) \
     F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlContextObject, loadQmlContextObject) \
@@ -684,6 +685,10 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
+    struct instr_loadQmlContext {
+        MOTH_INSTR_HEADER
+        Param result;
+    };
     struct instr_loadQmlIdArray {
         MOTH_INSTR_HEADER
         Param result;
@@ -789,6 +794,7 @@ union Instr
     instr_sub sub;
     instr_binopContext binopContext;
     instr_loadThis loadThis;
+    instr_loadQmlContext loadQmlContext;
     instr_loadQmlIdArray loadQmlIdArray;
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlContextObject loadQmlContextObject;
