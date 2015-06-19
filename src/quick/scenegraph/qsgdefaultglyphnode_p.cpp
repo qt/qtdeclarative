@@ -264,6 +264,30 @@ void QSG24BitTextMaskShader::updateState(const RenderState &state, QSGMaterial *
     }
 }
 
+class QSG32BitColorTextShader : public QSGTextMaskShader
+{
+public:
+    QSG32BitColorTextShader(QFontEngine::GlyphFormat glyphFormat)
+        : QSGTextMaskShader(glyphFormat)
+    {
+        setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/scenegraph/shaders/32bitcolortext.frag"));
+    }
+
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
+};
+
+void QSG32BitColorTextShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+{
+    QSGTextMaskShader::updateState(state, newEffect, oldEffect);
+    QSGTextMaskMaterial *material = static_cast<QSGTextMaskMaterial *>(newEffect);
+    QSGTextMaskMaterial *oldMaterial = static_cast<QSGTextMaskMaterial *>(oldEffect);
+
+    if (oldMaterial == Q_NULLPTR || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
+        float opacity = material->color().w() * state.opacity();
+        program()->setUniformValue(m_color_id, opacity);
+    }
+}
+
 class QSGStyledTextShader : public QSG8BitTextMaskShader
 {
 public:
@@ -492,8 +516,16 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 
 QSGMaterialType *QSGTextMaskMaterial::type() const
 {
-    static QSGMaterialType rgb, gray;
-    return glyphCache()->glyphFormat() == QFontEngine::Format_A32 ? &rgb : &gray;
+    static QSGMaterialType argb, rgb, gray;
+    switch (glyphCache()->glyphFormat()) {
+    case QFontEngine::Format_ARGB:
+        return &argb;
+    case QFontEngine::Format_A32:
+        return &rgb;
+    case QFontEngine::Format_A8:
+    default:
+        return &gray;
+    }
 }
 
 QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
@@ -503,10 +535,15 @@ QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
 
 QSGMaterialShader *QSGTextMaskMaterial::createShader() const
 {
-    QFontEngine::GlyphFormat glyphFormat = glyphCache()->glyphFormat();
-    return glyphFormat == QFontEngine::Format_A32
-           ? (QSGMaterialShader *) new QSG24BitTextMaskShader(glyphFormat)
-           : (QSGMaterialShader *) new QSG8BitTextMaskShader(glyphFormat);
+    switch (QFontEngine::GlyphFormat glyphFormat = glyphCache()->glyphFormat()) {
+    case QFontEngine::Format_ARGB:
+        return new QSG32BitColorTextShader(glyphFormat);
+    case QFontEngine::Format_A32:
+        return new QSG24BitTextMaskShader(glyphFormat);
+    case QFontEngine::Format_A8:
+    default:
+        return new QSG8BitTextMaskShader(glyphFormat);
+    }
 }
 
 static inline int qsg_colorDiff(const QVector4D &a, const QVector4D &b)

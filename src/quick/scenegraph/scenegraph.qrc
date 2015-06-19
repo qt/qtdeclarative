@@ -4,6 +4,7 @@
         <file>shaders/flatcolor.vert</file>
         <file>shaders/8bittextmask.frag</file>
         <file>shaders/24bittextmask.frag</file>
+        <file>shaders/32bitcolortext.frag</file>
         <file>shaders/opaquetexture.frag</file>
         <file>shaders/opaquetexture.vert</file>
         <file>shaders/outlinedtext.frag</file>
@@ -34,6 +35,7 @@
         <file>shaders/stencilclip.vert</file>
         <file>shaders/8bittextmask_core.frag</file>
         <file>shaders/24bittextmask_core.frag</file>
+        <file>shaders/32bitcolortext_core.frag</file>
         <file>shaders/distancefieldoutlinetext_core.frag</file>
         <file>shaders/distancefieldshiftedtext_core.frag</file>
         <file>shaders/distancefieldshiftedtext_core.vert</file>
