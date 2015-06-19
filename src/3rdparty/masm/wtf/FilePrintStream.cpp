@@ -38,7 +38,8 @@ FilePrintStream::~FilePrintStream()
 {
     if (m_adoptionMode == Borrow)
         return;
-    fclose(m_file);
+    if (m_file)
+        fclose(m_file);
 }
 
 PassOwnPtr<FilePrintStream> FilePrintStream::open(const char* filename, const char* mode)
