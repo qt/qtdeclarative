@@ -49,6 +49,7 @@ class Q_QUICK_EXPORT QQuickFramebufferObject : public QQuickItem
     Q_DECLARE_PRIVATE(QQuickFramebufferObject)
 
     Q_PROPERTY(bool textureFollowsItemSize READ textureFollowsItemSize WRITE setTextureFollowsItemSize NOTIFY textureFollowsItemSizeChanged)
+    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged)
 
 public:
 
@@ -73,6 +74,9 @@ public:
     bool textureFollowsItemSize() const;
     void setTextureFollowsItemSize(bool follows);
 
+    bool mirrorVertically() const;
+    void setMirrorVertically(bool enable);
+
     virtual Renderer *createRenderer() const = 0;
 
     bool isTextureProvider() const Q_DECL_OVERRIDE;
@@ -87,6 +91,7 @@ protected:
 
 Q_SIGNALS:
     void textureFollowsItemSizeChanged(bool);
+    void mirrorVerticallyChanged(bool);
 
 private Q_SLOTS:
     void invalidateSceneGraph();

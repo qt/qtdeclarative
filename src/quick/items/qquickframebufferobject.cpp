@@ -47,11 +47,13 @@ class QQuickFramebufferObjectPrivate : public QQuickItemPrivate
 public:
     QQuickFramebufferObjectPrivate()
         : followsItemSize(true)
+        , mirrorVertically(false)
         , node(0)
     {
     }
 
     bool followsItemSize;
+    bool mirrorVertically;
     mutable QSGFramebufferObjectNode *node;
 };
 
@@ -135,6 +137,34 @@ bool QQuickFramebufferObject::textureFollowsItemSize() const
 {
     Q_D(const QQuickFramebufferObject);
     return d->followsItemSize;
+}
+
+/*!
+ * \property QQuickFramebufferObject::mirrorVertically
+ *
+ * This property controls if the size of the FBO's contents should be mirrored
+ * vertically when drawing. This allows easy integration of third-party
+ * rendering code that does not follow the standard expectations.
+ *
+ * The default value is \c {false}.
+ *
+ * \since 5.6
+ */
+
+void QQuickFramebufferObject::setMirrorVertically(bool enable)
+{
+    Q_D(QQuickFramebufferObject);
+    if (d->mirrorVertically == enable)
+        return;
+    d->mirrorVertically = enable;
+    emit mirrorVerticallyChanged(d->mirrorVertically);
+    update();
+}
+
+bool QQuickFramebufferObject::mirrorVertically() const
+{
+    Q_D(const QQuickFramebufferObject);
+    return d->mirrorVertically;
 }
 
 /*!
@@ -290,6 +320,7 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
                                                     QQuickWindow::TextureHasAlphaChannel));
     }
 
+    n->setTextureCoordinatesTransform(d->mirrorVertically ? QSGSimpleTextureNode::MirrorVertically : QSGSimpleTextureNode::NoTransform);
     n->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
     n->setRect(0, 0, width(), height());
 
