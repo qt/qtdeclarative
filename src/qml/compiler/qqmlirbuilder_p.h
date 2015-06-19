@@ -497,7 +497,6 @@ private:
     QQmlPropertyCache *_scopeObject;
     int _qmlContextTemp;
     int _contextObjectTemp;
-    int _scopeObjectTemp;
     int _importedScriptsTemp;
     int _idArrayTemp;
 };

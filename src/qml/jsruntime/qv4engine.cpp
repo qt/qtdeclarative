@@ -743,6 +743,8 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
 Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
+    if (!ctx)
+        return 0;
     Q_ASSERT(ctx->qml);
     return ctx->qml;
 }

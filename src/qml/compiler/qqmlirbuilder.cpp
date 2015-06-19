@@ -1458,7 +1458,6 @@ JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR
     , _scopeObject(0)
     , _qmlContextTemp(-1)
     , _contextObjectTemp(-1)
-    , _scopeObjectTemp(-1)
     , _importedScriptsTemp(-1)
     , _idArrayTemp(-1)
 {
@@ -1767,7 +1766,6 @@ void JSCodeGen::beginFunctionBodyHook()
 {
     _qmlContextTemp = _block->newTemp();
     _contextObjectTemp = _block->newTemp();
-    _scopeObjectTemp = _block->newTemp();
     _importedScriptsTemp = _block->newTemp();
     _idArrayTemp = _block->newTemp();
 
@@ -1779,11 +1777,6 @@ void JSCodeGen::beginFunctionBodyHook()
     temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
     initMetaObjectResolver(temp->memberResolver, _contextObject);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context_object, 0, 0));
-
-    temp = _block->TEMP(_scopeObjectTemp);
-    temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-    initMetaObjectResolver(temp->memberResolver, _scopeObject);
-    move(temp, _block->NAME(QV4::IR::Name::builtin_qml_scope_object, 0, 0));
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
     move(_block->TEMP(_idArrayTemp), _block->NAME(QV4::IR::Name::builtin_qml_id_array, 0, 0));
@@ -1862,7 +1855,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         if (propertyExistsButForceNameLookup)
             return 0;
         if (pd) {
-            QV4::IR::Temp *base = _block->TEMP(_scopeObjectTemp);
+            QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
             base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
             initMetaObjectResolver(base->memberResolver, _scopeObject);
             return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlScopeObject);

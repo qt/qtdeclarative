@@ -115,6 +115,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     using Object::get;
 
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, bool captureRequired);
+    static void setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value);
     void setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value);
 
 protected:

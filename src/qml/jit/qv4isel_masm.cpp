@@ -594,11 +594,6 @@ void InstructionSelection::loadQmlContextObject(IR::Expr *temp)
     generateFunctionCall(temp, Runtime::getQmlContextObject, Assembler::EngineRegister);
 }
 
-void InstructionSelection::loadQmlScopeObject(IR::Expr *temp)
-{
-    generateFunctionCall(temp, Runtime::getQmlScopeObject, Assembler::EngineRegister);
-}
-
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlSingleton, Assembler::EngineRegister, Assembler::StringToIndex(name));
@@ -685,6 +680,14 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
     }
 }
 
+void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, IR::Expr *target)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject)
+        generateFunctionCall(target, Runtime::getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+    else
+        Q_ASSERT(false);
+}
+
 void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
@@ -711,6 +714,15 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
                              Assembler::PointerToValue(targetBase), Assembler::StringToIndex(targetName),
                              Assembler::PointerToValue(source));
     }
+}
+
+void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject)
+        generateFunctionCall(Assembler::Void, Runtime::setQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
+                             Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+    else
+        Q_ASSERT(false);
 }
 
 void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
@@ -904,6 +916,19 @@ void InstructionSelection::binop(IR::AluOp oper, IR::Expr *leftSource, IR::Expr 
 {
     QV4::JIT::Binop binop(_as, oper);
     binop.generate(leftSource, rightSource, target);
+}
+
+void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int propertyIndex, IR::ExprList *args, IR::Expr *result)
+{
+    prepareCallData(args, base);
+
+    if (kind == IR::Member::MemberOfQmlScopeObject)
+        generateFunctionCall(result, Runtime::callQmlScopeObjectProperty,
+                             Assembler::EngineRegister,
+                             Assembler::TrustedImm32(propertyIndex),
+                             baseAddressForCallData());
+    else
+        Q_ASSERT(false);
 }
 
 void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,

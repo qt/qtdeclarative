@@ -657,9 +657,14 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
 {
-    if (QQmlData::wasDeleted(d()->object))
+    setProperty(engine, d()->object, propertyIndex, value);
+}
+
+void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value)
+{
+    if (QQmlData::wasDeleted(object))
         return;
-    QQmlData *ddata = QQmlData::get(d()->object, /*create*/false);
+    QQmlData *ddata = QQmlData::get(object, /*create*/false);
     if (!ddata)
         return;
 
@@ -667,7 +672,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, con
     Q_ASSERT(cache);
     QQmlPropertyData *property = cache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
-    return setProperty(engine, d()->object, property, value);
+    return setProperty(engine, object, property, value);
 }
 
 bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)

@@ -64,12 +64,15 @@ QT_BEGIN_NAMESPACE
     F(SetLookup, setLookup) \
     F(StoreQObjectProperty, storeQObjectProperty) \
     F(LoadQObjectProperty, loadQObjectProperty) \
+    F(StoreScopeObjectProperty, storeScopeObjectProperty) \
+    F(LoadScopeObjectProperty, loadScopeObjectProperty) \
     F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
     F(LoadSingletonQObjectProperty, loadQObjectProperty) \
     F(Push, push) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallPropertyLookup, callPropertyLookup) \
+    F(CallScopeObjectProperty, callScopeObjectProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
     F(CallGlobalLookup, callGlobalLookup) \
@@ -129,7 +132,6 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlContextObject, loadQmlContextObject) \
-    F(LoadQmlScopeObject, loadQmlScopeObject) \
     F(LoadQmlSingleton, loadQmlSingleton)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
@@ -294,6 +296,12 @@ union Instr
         Param base;
         Param result;
     };
+    struct instr_loadScopeObjectProperty {
+        MOTH_INSTR_HEADER
+        int propertyIndex;
+        Param base;
+        Param result;
+    };
     struct instr_loadQObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
@@ -317,6 +325,12 @@ union Instr
         MOTH_INSTR_HEADER
         int index;
         Param base;
+        Param source;
+    };
+    struct instr_storeScopeObjectProperty {
+        MOTH_INSTR_HEADER
+        Param base;
+        int propertyIndex;
         Param source;
     };
     struct instr_storeQObjectProperty {
@@ -373,6 +387,14 @@ union Instr
     struct instr_callPropertyLookup {
         MOTH_INSTR_HEADER
         int lookupIndex;
+        quint32 argc;
+        quint32 callData;
+        Param base;
+        Param result;
+    };
+    struct instr_callScopeObjectProperty {
+        MOTH_INSTR_HEADER
+        int index;
         quint32 argc;
         quint32 callData;
         Param base;
@@ -701,10 +723,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_loadQmlScopeObject {
-        MOTH_INSTR_HEADER
-        Param result;
-    };
     struct instr_loadQmlSingleton {
         MOTH_INSTR_HEADER
         Param result;
@@ -730,15 +748,18 @@ union Instr
     instr_storeElementLookup storeElementLookup;
     instr_loadProperty loadProperty;
     instr_getLookup getLookup;
+    instr_loadScopeObjectProperty loadScopeObjectProperty;
     instr_loadQObjectProperty loadQObjectProperty;
     instr_loadAttachedQObjectProperty loadAttachedQObjectProperty;
     instr_storeProperty storeProperty;
     instr_setLookup setLookup;
+    instr_storeScopeObjectProperty storeScopeObjectProperty;
     instr_storeQObjectProperty storeQObjectProperty;
     instr_push push;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callPropertyLookup callPropertyLookup;
+    instr_callScopeObjectProperty callScopeObjectProperty;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
     instr_callGlobalLookup callGlobalLookup;
@@ -798,7 +819,6 @@ union Instr
     instr_loadQmlIdArray loadQmlIdArray;
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlContextObject loadQmlContextObject;
-    instr_loadQmlScopeObject loadQmlScopeObject;
     instr_loadQmlSingleton loadQmlSingleton;
 
     static int size(Type type);

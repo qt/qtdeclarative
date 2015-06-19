@@ -347,8 +347,6 @@ const char *builtin_to_string(Name::Builtin b)
         return "builtin_qml_id_array";
     case IR::Name::builtin_qml_imported_scripts_object:
         return "builtin_qml_imported_scripts_object";
-    case IR::Name::builtin_qml_scope_object:
-        return "builtin_qml_scope_object";
     case IR::Name::builtin_qml_context_object:
         return "builtin_qml_context_object";
     }

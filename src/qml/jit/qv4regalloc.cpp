@@ -299,6 +299,16 @@ protected: // IRDecoder
         addCall();
     }
 
+    virtual void callQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int propertyIndex, IR::ExprList *args, IR::Expr *result)
+    {
+        Q_UNUSED(propertyIndex)
+
+        addDef(result);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
+        addUses(args, Use::CouldHaveRegister);
+        addCall();
+    }
+
     virtual void callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
                               IR::Expr *result)
     {
@@ -445,14 +455,6 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadQmlScopeObject(Expr *temp)
-    {
-        Q_UNUSED(temp);
-
-        addDef(temp);
-        addCall();
-    }
-
     virtual void loadQmlSingleton(const QString &/*name*/, Expr *temp)
     {
         Q_UNUSED(temp);
@@ -517,10 +519,24 @@ protected: // IRDecoder
         addCall();
     }
 
+    virtual void setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind /*kind*/, int /*propertyIndex*/)
+    {
+        addUses(source->asTemp(), Use::CouldHaveRegister);
+        addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
     virtual void setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int /*propertyIndex*/)
     {
         addUses(source->asTemp(), Use::CouldHaveRegister);
         addUses(targetBase->asTemp(), Use::CouldHaveRegister);
+        addCall();
+    }
+
+    virtual void getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind /*kind*/, int /*index*/, IR::Expr *target)
+    {
+        addDef(target);
+        addUses(base->asTemp(), Use::CouldHaveRegister);
         addCall();
     }
 

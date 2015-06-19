@@ -461,6 +461,21 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
     addInstruction(call);
 }
 
+void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int propertyIndex, IR::ExprList *args, IR::Expr *result)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        Instruction::CallScopeObjectProperty call;
+        call.base = getParam(base);
+        call.index = propertyIndex;
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
+    } else {
+        Q_ASSERT(false);
+    }
+}
+
 void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR::ExprList *args,
                                         IR::Expr *result)
 {
@@ -593,13 +608,6 @@ void InstructionSelection::loadQmlContextObject(IR::Expr *e)
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlScopeObject(IR::Expr *e)
-{
-    Instruction::LoadQmlScopeObject load;
-    load.result = getResultParam(e);
-    addInstruction(load);
-}
-
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *e)
 {
     Instruction::LoadQmlSingleton load;
@@ -701,6 +709,19 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
     addInstruction(store);
 }
 
+void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        Instruction::StoreScopeObjectProperty store;
+        store.base = getParam(targetBase);
+        store.propertyIndex = propertyIndex;
+        store.source = getParam(source);
+        addInstruction(store);
+    } else {
+        Q_ASSERT(false);
+    }
+}
+
 void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
 {
     Instruction::StoreQObjectProperty store;
@@ -708,6 +729,19 @@ void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *target
     store.propertyIndex = propertyIndex;
     store.source = getParam(source);
     addInstruction(store);
+}
+
+void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, IR::Expr *target)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        Instruction::LoadScopeObjectProperty load;
+        load.base = getParam(source);
+        load.propertyIndex = index;
+        load.result = getResultParam(target);
+        addInstruction(load);
+    } else {
+        Q_ASSERT(false);
+    }
 }
 
 void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
