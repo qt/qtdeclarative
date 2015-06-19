@@ -512,8 +512,8 @@ public:
 
     ShaderManager(QSGRenderContext *ctx) : blitProgram(0), visualizeProgram(0), context(ctx) { }
     ~ShaderManager() {
-        qDeleteAll(rewrittenShaders.values());
-        qDeleteAll(stockShaders.values());
+        qDeleteAll(rewrittenShaders);
+        qDeleteAll(stockShaders);
     }
 
 public Q_SLOTS:

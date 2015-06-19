@@ -644,7 +644,7 @@ void QSGRenderContext::invalidate()
     qDeleteAll(m_texturesToDelete);
     m_texturesToDelete.clear();
 
-    qDeleteAll(m_textures.values());
+    qDeleteAll(m_textures);
     m_textures.clear();
 
     /* The cleanup of the atlas textures is a bit intriguing.

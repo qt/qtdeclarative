@@ -177,11 +177,11 @@ QmlProfilerData::~QmlProfilerData()
 
 void QmlProfilerData::clear()
 {
-    qDeleteAll(d->eventDescriptions.values());
+    qDeleteAll(d->eventDescriptions);
     d->eventDescriptions.clear();
     d->startInstanceList.clear();
 
-    qDeleteAll(d->v8EventHash.values());
+    qDeleteAll(d->v8EventHash);
     d->v8EventHash.clear();
     d->v8parents.clear();
     d->clearV8RootEvent();

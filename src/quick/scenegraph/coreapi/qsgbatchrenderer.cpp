@@ -198,9 +198,9 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
 void ShaderManager::invalidated()
 {
-    qDeleteAll(stockShaders.values());
+    qDeleteAll(stockShaders);
     stockShaders.clear();
-    qDeleteAll(rewrittenShaders.values());
+    qDeleteAll(rewrittenShaders);
     rewrittenShaders.clear();
     delete blitProgram;
     blitProgram = 0;

@@ -356,7 +356,7 @@ class QV4DebugServicePrivate : public QQmlConfigurableDebugServicePrivate
 
 public:
     QV4DebugServicePrivate();
-    ~QV4DebugServicePrivate() { qDeleteAll(handlers.values()); }
+    ~QV4DebugServicePrivate() { qDeleteAll(handlers); }
 
     static QByteArray packMessage(const QByteArray &command, const QByteArray &message = QByteArray())
     {
