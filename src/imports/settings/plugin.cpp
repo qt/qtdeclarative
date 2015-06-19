@@ -36,6 +36,13 @@
 
 #include "qqmlsettings_p.h"
 
+static void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_settings);
+#endif
+}
+
 QT_BEGIN_NAMESPACE
 
 class QmlSettingsPlugin : public QQmlExtensionPlugin
@@ -44,6 +51,7 @@ class QmlSettingsPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 
 public:
+    QmlSettingsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.settings"));

@@ -36,6 +36,13 @@
 
 #include "qquickfolderlistmodel.h"
 
+static void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_Qt_labs_folderlistmodel);
+#endif
+}
+
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -45,6 +52,7 @@ class QmlFolderListModelPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 
 public:
+    QmlFolderListModelPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));

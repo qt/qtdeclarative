@@ -35,6 +35,13 @@
 
 #include <private/qqmlmodelsmodule_p.h>
 
+static void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_QtQml_Models_2);
+#endif
+}
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -64,6 +71,7 @@ class QtQmlModelsPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 public:
+    QtQmlModelsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     virtual void registerTypes(const char *uri)
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
