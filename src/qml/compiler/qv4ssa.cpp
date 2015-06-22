@@ -4020,14 +4020,14 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                 if (Member *member = m->source->asMember()) {
                     if (member->kind == Member::MemberOfEnum) {
                         Const *c = function->New<Const>();
-                        const int enumValue = member->attachedPropertiesIdOrEnumValue;
+                        const int enumValue = member->enumValue;
                         c->init(SInt32Type, enumValue);
                         replaceUses(targetTemp, c, W);
                         defUses.removeDef(*targetTemp);
                         W.remove(s);
                         defUses.removeUse(s, *member->base->asTemp());
                         continue;
-                    } else if (member->attachedPropertiesIdOrEnumValue != 0 && member->property && member->base->asTemp()) {
+                    } else if (member->kind != IR::Member::MemberOfIdObjectsArray && member->attachedPropertiesId != 0 && member->property && member->base->asTemp()) {
                         // Attached properties have no dependency on their base. Isel doesn't
                         // need it and we can eliminate the temp used to initialize it.
                         defUses.removeUse(s, *member->base->asTemp());

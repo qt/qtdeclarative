@@ -47,6 +47,8 @@
 #include "qv4scopedvalue_p.h"
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include <private/qv8engine_p.h>
 #endif
@@ -1361,12 +1363,6 @@ ReturnedValue Runtime::regexpLiteral(ExecutionEngine *engine, int id)
     return engine->currentContext()->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue Runtime::getQmlIdArray(NoThrowEngine *engine)
-{
-    Q_ASSERT(engine->qmlContextObject());
-    return engine->qmlContextObject()->asReturnedValue();
-}
-
 ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
 {
     Scope scope(engine);
@@ -1409,6 +1405,21 @@ ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionEngine *engine, c
         return Encode::undefined();
     }
     return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->singletonObject(), propertyIndex, captureRequired);
+}
+
+ReturnedValue Runtime::getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
+{
+    Scope scope(engine);
+    const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
+    QQmlContextData *context = qmlContext.d()->qml->context;
+    if (!context || index >= (uint)context->idValueCount)
+        return Encode::undefined();
+
+    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+    if (ep && ep->propertyCapture)
+        ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
+
+    return QObjectWrapper::wrap(engine, context->idValues[index].data());
 }
 
 void Runtime::setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)

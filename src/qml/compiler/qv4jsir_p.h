@@ -338,7 +338,6 @@ struct Name: Expr {
         builtin_setup_argument_object,
         builtin_convert_this_to_object,
         builtin_qml_context,
-        builtin_qml_id_array,
         builtin_qml_imported_scripts_object
     };
 
@@ -557,13 +556,18 @@ struct Member: Expr {
         MemberOfEnum,
         MemberOfQmlScopeObject,
         MemberOfQmlContextObject,
-        MemberOfSingletonObject
+        MemberOfIdObjectsArray,
+        MemberOfSingletonObject,
     };
 
     Expr *base;
     const QString *name;
     QQmlPropertyData *property;
-    int attachedPropertiesIdOrEnumValue; // depending on kind
+    union {  // depending on kind
+        int attachedPropertiesId;
+        int enumValue;
+        int idIndex;
+    };
     uchar freeOfSideEffects : 1;
 
     // This is set for example for for QObject properties. All sorts of extra behavior
@@ -576,20 +580,20 @@ struct Member: Expr {
 
     void setEnumValue(int value) {
         kind = MemberOfEnum;
-        attachedPropertiesIdOrEnumValue = value;
+        enumValue = value;
     }
 
     void setAttachedPropertiesId(int id) {
-        Q_ASSERT(kind != MemberOfEnum);
-        attachedPropertiesIdOrEnumValue = id;
+        Q_ASSERT(kind != MemberOfEnum && kind != MemberOfIdObjectsArray);
+        attachedPropertiesId = id;
     }
 
-    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, uchar kind = UnspecifiedMember, int attachedPropertiesIdOrEnumValue = 0)
+    void init(Expr *base, const QString *name, QQmlPropertyData *property = 0, uchar kind = UnspecifiedMember, int index = 0)
     {
         this->base = base;
         this->name = name;
         this->property = property;
-        this->attachedPropertiesIdOrEnumValue = attachedPropertiesIdOrEnumValue;
+        this->idIndex = index;
         this->freeOfSideEffects = false;
         this->inhibitTypeConversionOnWrite = property != 0;
         this->kind = kind;

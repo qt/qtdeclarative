@@ -437,12 +437,6 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadQmlIdArray(IR::Expr *temp)
-    {
-        addDef(temp);
-        addCall();
-    }
-
     virtual void loadQmlImportedScripts(IR::Expr *temp)
     {
         addDef(temp);

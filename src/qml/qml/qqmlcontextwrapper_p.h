@@ -102,8 +102,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
     static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
 
     ReturnedValue qmlSingletonWrapper(ExecutionEngine *e, String *name);
-
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
 }

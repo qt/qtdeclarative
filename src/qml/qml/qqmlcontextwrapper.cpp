@@ -387,30 +387,4 @@ ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String
     return QJSValuePrivate::convertedToValue(engine(), siinfo->scriptApi(e));
 }
 
-ReturnedValue QmlContextWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    const QV4::QmlContextWrapper *This = static_cast<const QV4::QmlContextWrapper *>(m);
-    Scope scope(This->engine());
-    QQmlContextData *context = This->getContext();
-    if (!context) {
-        if (hasProperty)
-            *hasProperty = false;
-        return Encode::undefined();
-    }
-    if (index >= (uint)context->idValueCount) {
-        if (hasProperty)
-            *hasProperty = false;
-        return Encode::undefined();
-    }
-
-    if (hasProperty)
-        *hasProperty = true;
-
-    QQmlEnginePrivate *ep = scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : 0;
-    if (ep && ep->propertyCapture)
-        ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
-
-    return QObjectWrapper::wrap(This->engine(), context->idValues[index].data());
-}
-
 QT_END_NAMESPACE
