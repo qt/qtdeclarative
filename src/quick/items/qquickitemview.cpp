@@ -1344,7 +1344,7 @@ void QQuickItemView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 {
     Q_D(QQuickItemView);
     d->markExtentsDirty();
-    if (isComponentComplete() && d->isValid())
+    if (isComponentComplete() && (d->isValid() || !d->visibleItems.isEmpty()))
         d->forceLayoutPolish();
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
 }
@@ -1808,7 +1808,7 @@ void QQuickItemViewPrivate::updateViewport()
 {
     Q_Q(QQuickItemView);
     qreal extra = headerSize() + footerSize();
-    qreal contentSize = isValid() ? (endPosition() - startPosition()) : 0.0;
+    qreal contentSize = isValid() || !visibleItems.isEmpty() ? (endPosition() - startPosition()) : 0.0;
     if (layoutOrientation() == Qt::Vertical)
         q->setContentHeight(contentSize + extra);
     else
@@ -1826,6 +1826,7 @@ void QQuickItemViewPrivate::layout()
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartOffset());
+        updateViewport();
         if (transitioner)
             transitioner->setPopulateTransitionEnabled(false);
         inLayout = false;

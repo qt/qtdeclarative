@@ -267,9 +267,13 @@ qreal QQuickGridViewPrivate::originPosition() const
 qreal QQuickGridViewPrivate::lastPosition() const
 {
     qreal pos = 0;
-    if (model && model->count()) {
-        // get end position of last item
-        pos = (rowPosAt(model->count() - 1) + rowSize());
+    if (model && (model->count() || !visibleItems.isEmpty())) {
+        qreal lastRowPos = model->count() ? rowPosAt(model->count() - 1) : 0;
+        if (!visibleItems.isEmpty()) {
+            // If there are items in delayRemove state, they may be after any items linked to the model
+            lastRowPos = qMax(lastRowPos, static_cast<FxGridItemSG*>(visibleItems.last())->rowPos());
+        }
+        pos = lastRowPos + rowSize();
     }
     return pos;
 }

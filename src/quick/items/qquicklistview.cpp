@@ -427,14 +427,24 @@ qreal QQuickListViewPrivate::lastPosition() const
 {
     qreal pos = 0;
     if (!visibleItems.isEmpty()) {
-        int invisibleCount = visibleItems.count() - visibleIndex;
+        int invisibleCount = INT_MIN;
+        int delayRemovedCount = 0;
         for (int i = visibleItems.count()-1; i >= 0; --i) {
             if (visibleItems.at(i)->index != -1) {
-                invisibleCount = model->count() - visibleItems.at(i)->index - 1;
+                // Find the invisible count after the last visible item with known index
+                invisibleCount = model->count() - (visibleItems.at(i)->index + 1 + delayRemovedCount);
                 break;
+            } else if (visibleItems.at(i)->attached->delayRemove()) {
+                ++delayRemovedCount;
             }
         }
-        pos = (*(--visibleItems.constEnd()))->endPosition() + invisibleCount * (averageSize + spacing);
+        if (invisibleCount == INT_MIN) {
+            // All visible items are in delayRemove state
+            invisibleCount = model->count();
+        }
+        pos = (*(--visibleItems.constEnd()))->endPosition();
+        if (invisibleCount > 0)
+            pos += invisibleCount * (averageSize + spacing);
     } else if (model && model->count()) {
         pos = (model->count() * averageSize + (model->count()-1) * spacing);
     }

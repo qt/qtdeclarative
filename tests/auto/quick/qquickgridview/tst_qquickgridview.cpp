@@ -206,6 +206,9 @@ private slots:
 
     void jsArrayChange();
 
+    void contentHeightWithDelayRemove_data();
+    void contentHeightWithDelayRemove();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -6469,6 +6472,74 @@ void tst_QQuickGridView::jsArrayChange()
     // no change
     view->setModel(QVariant::fromValue(array2));
     QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQuickGridView::contentHeightWithDelayRemove_data()
+{
+    QTest::addColumn<bool>("useDelayRemove");
+    QTest::addColumn<QByteArray>("removeFunc");
+    QTest::addColumn<int>("countDelta");
+    QTest::addColumn<qreal>("contentHeightDelta");
+
+    QTest::newRow("remove without delayRemove")
+            << false
+            << QByteArray("takeOne")
+            << -1
+            << qreal(-1 * 100.0);
+
+    QTest::newRow("remove with delayRemove")
+            << true
+            << QByteArray("takeOne")
+            << -1
+            << qreal(-1 * 100.0);
+
+    QTest::newRow("remove with multiple delayRemove")
+            << true
+            << QByteArray("takeThree")
+            << -3
+            << qreal(-2 * 100.0);
+
+    QTest::newRow("clear with delayRemove")
+            << true
+            << QByteArray("takeAll")
+            << -5
+            << qreal(-3 * 100.0);
+}
+
+void tst_QQuickGridView::contentHeightWithDelayRemove()
+{
+    QFETCH(bool, useDelayRemove);
+    QFETCH(QByteArray, removeFunc);
+    QFETCH(int, countDelta);
+    QFETCH(qreal, contentHeightDelta);
+
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("contentHeightWithDelayRemove.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickGridView *gridview = window->rootObject()->findChild<QQuickGridView*>();
+    QTRY_VERIFY(gridview != 0);
+
+    const int initialCount(gridview->count());
+    const int eventualCount(initialCount + countDelta);
+
+    const qreal initialContentHeight(gridview->contentHeight());
+    const int eventualContentHeight(qRound(initialContentHeight + contentHeightDelta));
+
+    gridview->setProperty("useDelayRemove", useDelayRemove);
+    QMetaObject::invokeMethod(window->rootObject(), removeFunc.constData());
+    QTest::qWait(50);
+    QCOMPARE(gridview->count(), eventualCount);
+
+    if (useDelayRemove) {
+        QCOMPARE(qRound(gridview->contentHeight()), qRound(initialContentHeight));
+        QTRY_COMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
+    } else {
+        QCOMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
+    }
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickGridView)

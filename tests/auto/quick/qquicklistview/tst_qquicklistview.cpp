@@ -242,6 +242,9 @@ private slots:
     void jsArrayChange();
     void objectModel();
 
+    void contentHeightWithDelayRemove();
+    void contentHeightWithDelayRemove_data();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8061,6 +8064,74 @@ void tst_QQuickListView::objectModel()
     QCOMPARE(listview->count(), 0);
 
     delete listview;
+}
+
+void tst_QQuickListView::contentHeightWithDelayRemove_data()
+{
+    QTest::addColumn<bool>("useDelayRemove");
+    QTest::addColumn<QByteArray>("removeFunc");
+    QTest::addColumn<int>("countDelta");
+    QTest::addColumn<qreal>("contentHeightDelta");
+
+    QTest::newRow("remove without delayRemove")
+            << false
+            << QByteArray("takeOne")
+            << -1
+            << qreal(-1 * 100.0);
+
+    QTest::newRow("remove with delayRemove")
+            << true
+            << QByteArray("takeOne")
+            << -1
+            << qreal(-1 * 100.0);
+
+    QTest::newRow("remove with multiple delayRemove")
+            << true
+            << QByteArray("takeThree")
+            << -3
+            << qreal(-3 * 100.0);
+
+    QTest::newRow("clear with delayRemove")
+            << true
+            << QByteArray("takeAll")
+            << -5
+            << qreal(-5 * 100.0);
+}
+
+void tst_QQuickListView::contentHeightWithDelayRemove()
+{
+    QFETCH(bool, useDelayRemove);
+    QFETCH(QByteArray, removeFunc);
+    QFETCH(int, countDelta);
+    QFETCH(qreal, contentHeightDelta);
+
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("contentHeightWithDelayRemove.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
+    QTRY_VERIFY(listview != 0);
+
+    const int initialCount(listview->count());
+    const int eventualCount(initialCount + countDelta);
+
+    const qreal initialContentHeight(listview->contentHeight());
+    const int eventualContentHeight(qRound(initialContentHeight + contentHeightDelta));
+
+    listview->setProperty("useDelayRemove", useDelayRemove);
+    QMetaObject::invokeMethod(window->rootObject(), removeFunc.constData());
+    QTest::qWait(50);
+    QCOMPARE(listview->count(), eventualCount);
+
+    if (useDelayRemove) {
+        QCOMPARE(qRound(listview->contentHeight()), qRound(initialContentHeight));
+        QTRY_COMPARE(qRound(listview->contentHeight()), eventualContentHeight);
+    } else {
+        QCOMPARE(qRound(listview->contentHeight()), eventualContentHeight);
+    }
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickListView)
