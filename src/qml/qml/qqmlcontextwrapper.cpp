@@ -336,8 +336,8 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         return;
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QmlContextWrapper> contextWrapper(scope, engine->qmlContextObject());
-    QQmlContextData *qmlContext = contextWrapper->getContext();
+    QV4::Scoped<QmlContext> context(scope, engine->qmlContext());
+    QQmlContextData *qmlContext = context->qmlContext();
 
     const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
@@ -355,7 +355,7 @@ void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const C
         capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex);
     }
 
-    QObject *scopeObject = contextWrapper->getScopeObject();
+    QObject *scopeObject = context->qmlScope();
     const quint32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
     const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {

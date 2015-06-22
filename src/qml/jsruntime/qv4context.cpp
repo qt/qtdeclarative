@@ -549,3 +549,14 @@ Heap::FunctionObject *ExecutionContext::getFunctionObject() const
 
     return 0;
 }
+
+
+QObject *QmlContext::qmlScope() const
+{
+    return d()->qml->scopeObject;
+}
+
+QQmlContextData *QmlContext::qmlContext() const
+{
+    return d()->qml->context;
+}

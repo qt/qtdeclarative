@@ -38,6 +38,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlContextData;
+class QObject;
+
 namespace QV4 {
 
 namespace CompiledData {
@@ -218,6 +221,9 @@ struct WithContext : public ExecutionContext
 struct QmlContext : public ExecutionContext
 {
     V4_MANAGED(QmlContext, ExecutionContext)
+
+    QObject *qmlScope() const;
+    QQmlContextData *qmlContext() const;
 };
 
 inline CallContext *ExecutionContext::asCallContext()
