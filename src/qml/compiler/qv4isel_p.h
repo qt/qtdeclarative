@@ -140,7 +140,6 @@ public: // to implement by subclasses:
     virtual void loadQmlContext(IR::Expr *target) = 0;
     virtual void loadQmlIdArray(IR::Expr *target) = 0;
     virtual void loadQmlImportedScripts(IR::Expr *target) = 0;
-    virtual void loadQmlContextObject(IR::Expr *target) = 0;
     virtual void loadQmlSingleton(const QString &name, IR::Expr *target) = 0;
     virtual void loadConst(IR::Const *sourceConst, IR::Expr *target) = 0;
     virtual void loadString(const QString &str, IR::Expr *target) = 0;

@@ -471,6 +471,14 @@ void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::Me
         call.callData = callDataStart();
         call.result = getResultParam(result);
         addInstruction(call);
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        Instruction::CallContextObjectProperty call;
+        call.base = getParam(base);
+        call.index = propertyIndex;
+        prepareCallArgs(args, call.argc);
+        call.callData = callDataStart();
+        call.result = getResultParam(result);
+        addInstruction(call);
     } else {
         Q_ASSERT(false);
     }
@@ -601,13 +609,6 @@ void InstructionSelection::loadQmlImportedScripts(IR::Expr *e)
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlContextObject(IR::Expr *e)
-{
-    Instruction::LoadQmlContextObject load;
-    load.result = getResultParam(e);
-    addInstruction(load);
-}
-
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *e)
 {
     Instruction::LoadQmlSingleton load;
@@ -717,6 +718,12 @@ void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *tar
         store.propertyIndex = propertyIndex;
         store.source = getParam(source);
         addInstruction(store);
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        Instruction::StoreContextObjectProperty store;
+        store.base = getParam(targetBase);
+        store.propertyIndex = propertyIndex;
+        store.source = getParam(source);
+        addInstruction(store);
     } else {
         Q_ASSERT(false);
     }
@@ -735,6 +742,12 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::M
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
         Instruction::LoadScopeObjectProperty load;
+        load.base = getParam(source);
+        load.propertyIndex = index;
+        load.result = getResultParam(target);
+        addInstruction(load);
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        Instruction::LoadContextObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
         load.result = getResultParam(target);

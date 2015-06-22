@@ -960,6 +960,18 @@ ReturnedValue Runtime::callQmlScopeObjectProperty(ExecutionEngine *engine, int p
     return o->call(callData);
 }
 
+ReturnedValue Runtime::callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
+{
+    Scope scope(engine);
+    ScopedFunctionObject o(scope, getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex));
+    if (!o) {
+        QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(propertyIndex).arg(callData->thisObject.toQStringNoThrow());
+        return engine->throwTypeError(error);
+    }
+
+    return o->call(callData);
+}
+
 ReturnedValue Runtime::callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
     Scope scope(engine);
@@ -1355,14 +1367,6 @@ ReturnedValue Runtime::getQmlIdArray(NoThrowEngine *engine)
     return engine->qmlContextObject()->asReturnedValue();
 }
 
-ReturnedValue Runtime::getQmlContextObject(NoThrowEngine *engine)
-{
-    QQmlContextData *context = engine->callingQmlContext();
-    if (!context)
-        return Encode::undefined();
-    return QObjectWrapper::wrap(engine, context->contextObject);
-}
-
 ReturnedValue Runtime::getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
 {
     Scope scope(engine);
@@ -1390,6 +1394,12 @@ ReturnedValue Runtime::getQmlScopeObjectProperty(ExecutionEngine *engine, const 
     return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, false);
 }
 
+ReturnedValue Runtime::getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
+{
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->context->contextObject, propertyIndex, false);
+}
+
 ReturnedValue Runtime::getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
 {
     Scope scope(engine);
@@ -1405,6 +1415,12 @@ void Runtime::setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &co
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::setProperty(engine, c.d()->qml->scopeObject, propertyIndex, value);
+}
+
+void Runtime::setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
+{
+    const QmlContext &c = static_cast<const QmlContext &>(context);
+    return QV4::QObjectWrapper::setProperty(engine, c.d()->qml->context->contextObject, propertyIndex, value);
 }
 
 void Runtime::setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value)

@@ -92,6 +92,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
     static ReturnedValue callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
     static ReturnedValue callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
+    static ReturnedValue callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
     static ReturnedValue callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
     static ReturnedValue callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
     static ReturnedValue callElement(ExecutionEngine *engine, const Value &index, CallData *callData);
@@ -211,13 +212,14 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue getQmlContext(NoThrowEngine *engine);
     static ReturnedValue getQmlIdArray(NoThrowEngine *engine);
     static ReturnedValue getQmlImportedScripts(NoThrowEngine *engine);
-    static ReturnedValue getQmlContextObject(NoThrowEngine *engine);
     static ReturnedValue getQmlSingleton(NoThrowEngine *engine, int nameIndex);
     static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
     static ReturnedValue getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
+    static ReturnedValue getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
     static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
     static void setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
+    static void setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
     static void setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value);
 };
 

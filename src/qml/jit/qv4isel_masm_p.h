@@ -99,7 +99,6 @@ protected:
     virtual void loadQmlContext(IR::Expr *target);
     virtual void loadQmlIdArray(IR::Expr *target);
     virtual void loadQmlImportedScripts(IR::Expr *target);
-    virtual void loadQmlContextObject(IR::Expr *target);
     virtual void loadQmlSingleton(const QString &name, IR::Expr *target);
     virtual void loadConst(IR::Const *sourceConst, IR::Expr *target);
     virtual void loadString(const QString &str, IR::Expr *target);

@@ -95,8 +95,6 @@ void IRDecoder::visitMove(IR::Move *s)
                 loadQmlContext(s->target);
             else if (n->builtin == IR::Name::builtin_qml_id_array)
                 loadQmlIdArray(s->target);
-            else if (n->builtin == IR::Name::builtin_qml_context_object)
-                loadQmlContextObject(s->target);
             else if (n->builtin == IR::Name::builtin_qml_imported_scripts_object)
                 loadQmlImportedScripts(s->target);
             else if (n->qmlSingleton)
@@ -153,7 +151,7 @@ void IRDecoder::visitMove(IR::Move *s)
                         captureRequired = false;
                     }
                 }
-                if (m->kind == IR::Member::MemberOfQmlScopeObject) {
+                if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
                     getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex, s->target);
                     return;
                 }
@@ -179,7 +177,7 @@ void IRDecoder::visitMove(IR::Move *s)
                 return;
             } else if (Member *member = c->base->asMember()) {
 #ifndef V4_BOOTSTRAP
-                if (member->kind == IR::Member::MemberOfQmlScopeObject) {
+                if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
                     callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, s->target);
                     return;
                 }
@@ -207,7 +205,7 @@ void IRDecoder::visitMove(IR::Move *s)
 #ifdef V4_BOOTSTRAP
                     Q_UNIMPLEMENTED();
 #else
-                    if (m->kind == IR::Member::MemberOfQmlScopeObject) {
+                    if (m->kind == IR::Member::MemberOfQmlScopeObject || m->kind == IR::Member::MemberOfQmlContextObject) {
                         setQmlContextProperty(s->source, m->base, (IR::Member::MemberKind)m->kind, m->property->coreIndex);
                         return;
                     }
@@ -253,7 +251,7 @@ void IRDecoder::visitExp(IR::Exp *s)
         } else if (Member *member = c->base->asMember()) {
             Q_ASSERT(member->base->asTemp() || member->base->asArgLocal());
 #ifndef V4_BOOTSTRAP
-            if (member->kind == IR::Member::MemberOfQmlScopeObject) {
+            if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
                 callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, 0);
                 return;
             }

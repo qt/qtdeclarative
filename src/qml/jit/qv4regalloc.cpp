@@ -449,12 +449,6 @@ protected: // IRDecoder
         addCall();
     }
 
-    virtual void loadQmlContextObject(Expr *temp)
-    {
-        addDef(temp);
-        addCall();
-    }
-
     virtual void loadQmlSingleton(const QString &/*name*/, Expr *temp)
     {
         Q_UNUSED(temp);

@@ -522,6 +522,15 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         STOREVALUE(instr.result, Runtime::getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadScopeObjectProperty)
 
+    MOTH_BEGIN_INSTR(StoreContextObjectProperty)
+        Runtime::setQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(StoreContextObjectProperty)
+
+    MOTH_BEGIN_INSTR(LoadContextObjectProperty)
+        STOREVALUE(instr.result, Runtime::getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
+    MOTH_END_INSTR(LoadContextObjectProperty)
+
     MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
         STOREVALUE(instr.result, Runtime::getQmlAttachedProperty(engine, instr.attachedPropertiesId, instr.propertyIndex));
     MOTH_END_INSTR(LoadAttachedQObjectProperty)
@@ -584,6 +593,16 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         callData->thisObject = VALUE(instr.base);
         STOREVALUE(instr.result, Runtime::callQmlScopeObjectProperty(engine, instr.index, callData));
     MOTH_END_INSTR(CallScopeObjectProperty)
+
+    MOTH_BEGIN_INSTR(CallContextObjectProperty)
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
+        callData->tag = QV4::Value::Integer_Type;
+        callData->argc = instr.argc;
+        callData->thisObject = VALUE(instr.base);
+        STOREVALUE(instr.result, Runtime::callQmlContextObjectProperty(engine, instr.index, callData));
+    MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
         Q_ASSERT(instr.callData + instr.argc + qOffsetOf(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
@@ -895,10 +914,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
         VALUE(instr.result) = Runtime::getQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlImportedScripts)
-
-    MOTH_BEGIN_INSTR(LoadQmlContextObject)
-        VALUE(instr.result) = Runtime::getQmlContextObject(static_cast<QV4::NoThrowEngine*>(engine));
-    MOTH_END_INSTR(LoadContextObject)
 
     MOTH_BEGIN_INSTR(LoadQmlSingleton)
         VALUE(instr.result) = Runtime::getQmlSingleton(static_cast<QV4::NoThrowEngine*>(engine), instr.name);

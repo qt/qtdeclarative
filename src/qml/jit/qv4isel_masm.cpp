@@ -589,11 +589,6 @@ void InstructionSelection::loadQmlImportedScripts(IR::Expr *temp)
     generateFunctionCall(temp, Runtime::getQmlImportedScripts, Assembler::EngineRegister);
 }
 
-void InstructionSelection::loadQmlContextObject(IR::Expr *temp)
-{
-    generateFunctionCall(temp, Runtime::getQmlContextObject, Assembler::EngineRegister);
-}
-
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlSingleton, Assembler::EngineRegister, Assembler::StringToIndex(name));
@@ -684,6 +679,8 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::Mem
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
         generateFunctionCall(target, Runtime::getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+    else if (kind == IR::Member::MemberOfQmlContextObject)
+        generateFunctionCall(target, Runtime::getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
@@ -720,6 +717,9 @@ void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *tar
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
         generateFunctionCall(Assembler::Void, Runtime::setQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
+                             Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
+    else if (kind == IR::Member::MemberOfQmlContextObject)
+        generateFunctionCall(Assembler::Void, Runtime::setQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
                              Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
     else
         Q_ASSERT(false);
@@ -924,6 +924,11 @@ void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::Me
 
     if (kind == IR::Member::MemberOfQmlScopeObject)
         generateFunctionCall(result, Runtime::callQmlScopeObjectProperty,
+                             Assembler::EngineRegister,
+                             Assembler::TrustedImm32(propertyIndex),
+                             baseAddressForCallData());
+    else if (kind == IR::Member::MemberOfQmlContextObject)
+        generateFunctionCall(result, Runtime::callQmlContextObjectProperty,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(propertyIndex),
                              baseAddressForCallData());

@@ -339,8 +339,7 @@ struct Name: Expr {
         builtin_convert_this_to_object,
         builtin_qml_context,
         builtin_qml_id_array,
-        builtin_qml_imported_scripts_object,
-        builtin_qml_context_object
+        builtin_qml_imported_scripts_object
     };
 
     const QString *id;

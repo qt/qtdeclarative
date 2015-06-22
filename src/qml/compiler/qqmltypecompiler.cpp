@@ -2625,8 +2625,7 @@ void QQmlJavaScriptBindingExpressionSimplificationPass::visitMove(QV4::IR::Move 
     if (QV4::IR::Name *n = move->source->asName()) {
         if (n->builtin == QV4::IR::Name::builtin_qml_context
             || n->builtin == QV4::IR::Name::builtin_qml_id_array
-            || n->builtin == QV4::IR::Name::builtin_qml_imported_scripts_object
-            || n->builtin == QV4::IR::Name::builtin_qml_context_object) {
+            || n->builtin == QV4::IR::Name::builtin_qml_imported_scripts_object) {
             // these are free of side-effects
             return;
         }
