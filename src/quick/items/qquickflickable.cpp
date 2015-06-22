@@ -1434,6 +1434,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->lastPosTime = currentTimestamp;
         d->accumulatedWheelPixelDelta += QVector2D(event->pixelDelta());
         d->drag(currentTimestamp, event->type(), event->posF(), d->accumulatedWheelPixelDelta, true, !d->scrollingPhase, velocity);
+        event->accept();
     }
 
     if (!event->isAccepted())
