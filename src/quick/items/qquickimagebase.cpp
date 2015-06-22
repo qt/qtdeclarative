@@ -380,7 +380,7 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
 
     // Look for an @2x version
     QString localFile2x = image2xPath(localFile);
-    if (!QFile(localFile2x).exists())
+    if (!QFile::exists(localFile2x))
         return;
 
     // @2x file found found: Change url and devicePixelRatio
