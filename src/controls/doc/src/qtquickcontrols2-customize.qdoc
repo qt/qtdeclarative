@@ -36,177 +36,339 @@
     implementations of various items. These can be used as a starting point
     to implement custom look'n'feel.
 
+
+    \section1 Customizing BusyIndicator
+
+        BusyIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {BusyIndicator::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-busyindicator-background.png
+
+            BusyIndicator has no background item by default.
+
+        \section3 Indicator
+
+            \image qtquickcontrols2-busyindicator-indicator.png
+
+            \snippet BusyIndicator.qml indicator
+
+
     \section1 Customizing Button
 
-    Button consists of two parts: \l {Control::background}{background} and
-    \l {Button::label}{label}. Their implicit sizes are used to calculate
-    the implicit size of the control.
+        Button consists of two visual items: \l {Control::background}{background}
+        and \l {Button::label}{label}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-button-background.png
+            \image qtquickcontrols2-button-background.png
 
-    \snippet Button.qml background
+            \snippet Button.qml background
 
-    \section3 Label
+        \section3 Label
 
-    \image qtquickcontrols2-button-label.png
+            \image qtquickcontrols2-button-label.png
 
-    \snippet Button.qml label
+            \snippet Button.qml label
+
 
     \section1 Customizing CheckBox
 
-    CheckBox consists of three parts: \l {Control::background}{background},
-    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
-    implicit sizes are used to calculate the implicit size of the control.
+        CheckBox consists of three visual items: \l {Control::background}{background},
+        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-checkbox-background.png
+            \image qtquickcontrols2-checkbox-background.png
 
-    CheckBox has no background item by default.
+            CheckBox has no background item by default.
 
-    \section3 Label
+        \section3 Label
 
-    \image qtquickcontrols2-checkbox-label.png
+            \image qtquickcontrols2-checkbox-label.png
 
-    \snippet CheckBox.qml label
+            \snippet CheckBox.qml label
 
-    \section3 Indicator
+        \section3 Indicator
 
-    \image qtquickcontrols2-checkbox-indicator.png
+            \image qtquickcontrols2-checkbox-indicator.png
 
-    \snippet CheckBox.qml indicator
+            \snippet CheckBox.qml indicator
+
+
+    \section1 Customizing Frame
+
+        Frame consists of two visual items: \l {Control::background}{background}
+        and \l {Frame::frame}{frame}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-frame-background.png
+
+            Frame has no background item by default.
+
+        \section3 Frame
+
+            \image qtquickcontrols2-frame-frame.png
+
+            \snippet Frame.qml frame
+
+
+    \section1 Customizing GroupBox
+
+        GroupBox consists of three visual items: \l {Control::background}{background},
+        \l {Frame::frame}{frame} and \l {GroupBox::label}{label}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-groupbox-background.png
+
+            GroupBox has no background item by default.
+
+        \section3 Frame
+
+            \image qtquickcontrols2-groupbox-frame.png
+
+            \snippet GroupBox.qml frame
+
+        \section3 Label
+
+            \image qtquickcontrols2-groupbox-label.png
+
+            \snippet GroupBox.qml label
+
+
+    \section1 Customizing Label
+
+        TODO
+
+
+    \section1 Customizing PageIndicator
+
+        TODO
+
 
     \section1 Customizing ProgressBar
 
-    ProgressBar consists of two parts: \l {Control::background}{background}
-    and \l {ProgressBar::indicator}{indicator}. Their implicit sizes are used
-    to calculate the implicit size of the control.
+        ProgressBar consists of two visual items: \l {Control::background}{background}
+        and \l {ProgressBar::indicator}{indicator}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-progressbar-background.png
+            \image qtquickcontrols2-progressbar-background.png
 
-    \snippet ProgressBar.qml background
+            \snippet ProgressBar.qml background
 
-    \section3 Indicator
+        \section3 Indicator
 
-    \image qtquickcontrols2-progressbar-indicator.png
+            \image qtquickcontrols2-progressbar-indicator.png
 
-    \snippet ProgressBar.qml indicator
+            \snippet ProgressBar.qml indicator
+
 
     \section1 Customizing RadioButton
 
-    RadioButton consists of three parts: \l {Control::background}{background},
-    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
-    implicit sizes are used to calculate the implicit size of the control.
+        RadioButton consists of three visual items: \l {Control::background}{background},
+        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-radiobutton-background.png
+            \image qtquickcontrols2-radiobutton-background.png
 
-    RadioButton has no background item by default.
+            RadioButton has no background item by default.
 
-    \section3 Label
+        \section3 Label
 
-    \image qtquickcontrols2-radiobutton-label.png
+            \image qtquickcontrols2-radiobutton-label.png
 
-    \snippet RadioButton.qml label
+            \snippet RadioButton.qml label
 
-    \section3 Indicator
+        \section3 Indicator
 
-    \image qtquickcontrols2-radiobutton-indicator.png
+            \image qtquickcontrols2-radiobutton-indicator.png
 
-    \snippet RadioButton.qml indicator
+            \snippet RadioButton.qml indicator
+
+
+    \section1 Customizing ScrollBar
+
+        ScrollBar consists of two visual items: \l {Control::background}{background}
+        and \l {ScrollBar::handle}{handle}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-scrollbar-background.png
+
+            ScrollBar has no background item by default.
+
+        \section3 Handle
+
+            \image qtquickcontrols2-scrollbar-handle.png
+
+            \snippet ScrollBar.qml handle
+
+
+    \section1 Customizing ScrollIndicator
+
+        ScrollIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {ScrollIndicator::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-scrollindicator-background.png
+
+            ScrollIndicator has no background item by default.
+
+        \section3 Indicator
+
+            \image qtquickcontrols2-scrollindicator-indicator.png
+
+            \snippet ScrollIndicator.qml indicator
+
 
     \section1 Customizing Slider
 
-    Slider consists of three parts: \l {Control::background}{background},
-    \l {Slider::track}{track} and \l {Slider::handle}{handle}. Their
-    implicit sizes are used to calculate the implicit size of the control.
+        Slider consists of three visual items: \l {Control::background}{background},
+        \l {Slider::track}{track} and \l {Slider::handle}{handle}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-slider-background.png
+            \image qtquickcontrols2-slider-background.png
 
-    Slider has no background item by default.
+            Slider has no background item by default.
 
-    \section3 Track
+        \section3 Track
 
-    \image qtquickcontrols2-slider-track.png
+            \image qtquickcontrols2-slider-track.png
 
-    \snippet Slider.qml track
+            \snippet Slider.qml track
 
-    \section3 Handle
+        \section3 Handle
 
-    \image qtquickcontrols2-slider-handle.png
+            \image qtquickcontrols2-slider-handle.png
 
-    \snippet Slider.qml handle
+            \snippet Slider.qml handle
+
+
+    \section1 Customizing StackView
+
+        TODO
+
 
     \section1 Customizing Switch
 
-    Switch consists of three parts: \l {Control::background}{background},
-    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
-    implicit sizes are used to calculate the implicit size of the control.
+        Switch consists of three visual items: \l {Control::background}{background},
+        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-switch-background.png
+            \image qtquickcontrols2-switch-background.png
 
-    Switch has no background item by default.
+            Switch has no background item by default.
 
-    \section3 Label
+        \section3 Label
 
-    \image qtquickcontrols2-switch-label.png
+            \image qtquickcontrols2-switch-label.png
 
-    \snippet Switch.qml label
+            \snippet Switch.qml label
 
-    \section3 Indicator
+        \section3 Indicator
 
-    \image qtquickcontrols2-switch-indicator.png
+            \image qtquickcontrols2-switch-indicator.png
 
-    \snippet Switch.qml indicator
+            \snippet Switch.qml indicator
+
+
+    \section1 Customizing TabBar
+
+        TODO
+
+
+    \section1 Customizing TabButton
+
+        TODO
+
+
+    \section1 Customizing TextArea
+
+        TODO
+
 
     \section1 Customizing TextField
 
-    TextField consists of two parts: \l {TextField::background}{background}
-    and \l {TextField::placeholder}{placeholder}. Their implicit sizes are
-    used to calculate the implicit size of the control.
+        TextField consists of two visual items: \l {TextField::background}{background}
+        and \l {TextField::placeholder}{placeholder}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-textfield-background.png
+            \image qtquickcontrols2-textfield-background.png
 
-    \snippet TextField.qml background
+            \snippet TextField.qml background
 
-    \section3 Placeholder
+        \section3 Placeholder
 
-    \image qtquickcontrols2-textfield-placeholder.png
+            \image qtquickcontrols2-textfield-placeholder.png
 
-    \snippet TextField.qml placeholder
+            \snippet TextField.qml placeholder
+
 
     \section1 Customizing ToggleButton
 
-    ToggleButton consists of three parts: \l {Control::background}{background},
-    \l {Button::label}{label} and \l {Checkable::indicator}{indicator}. Their
-    implicit sizes are used to calculate the implicit size of the control.
+        ToggleButton consists of three visual items: \l {Control::background}{background},
+        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
 
-    \section3 Background
+        \section3 Background
 
-    \image qtquickcontrols2-togglebutton-background.png
+            \image qtquickcontrols2-togglebutton-background.png
 
-    ToggleButton has no background item by default.
+            ToggleButton has no background item by default.
 
-    \section3 Label
+        \section3 Label
 
-    \image qtquickcontrols2-togglebutton-label.png
+            \image qtquickcontrols2-togglebutton-label.png
 
-    \snippet ToggleButton.qml label
+            \snippet ToggleButton.qml label
 
-    \section3 Indicator
+        \section3 Indicator
 
-    \image qtquickcontrols2-togglebutton-indicator.png
+            \image qtquickcontrols2-togglebutton-indicator.png
 
-    \snippet ToggleButton.qml indicator
+            \snippet ToggleButton.qml indicator
+
+
+    \section1 Customizing ToolBar
+
+        ToolBar consists of two visual items: \l {Control::background}{background} and
+        \l {Frame::frame}{frame}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-toolbar-background.png
+
+            \snippet ToolBar.qml background
+
+        \section3 Frame
+
+            \image qtquickcontrols2-toolbar-frame.png
+
+            ToggleButton has no frame item by default.
+
+
+    \section1 Customizing ToolButton
+
+        ToolButton consists of two visual items: \l {Control::background}{background}
+        and \l {ToolButton::label}{label}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-toolbutton-background.png
+
+            \snippet ToolButton.qml background
+
+        \section3 Label
+
+            \image qtquickcontrols2-toolbutton-label.png
+
+            \snippet ToolButton.qml label
 */

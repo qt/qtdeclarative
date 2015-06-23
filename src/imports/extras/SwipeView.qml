@@ -49,6 +49,7 @@ AbstractSwipeView {
 
     Accessible.role: Accessible.PageTabList
 
+    //! [contentItem]
     contentItem: ListView {
         id: listView
 
@@ -69,4 +70,5 @@ AbstractSwipeView {
 
         model: control.model
     }
+    //! [contentItem]
 }

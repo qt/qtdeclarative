@@ -50,6 +50,7 @@ AbstractTextArea {
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor
 
+    //! [placeholder]
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
@@ -60,4 +61,5 @@ AbstractTextArea {
         opacity: control.Theme.disabledOpacity
         visible: !control.length
     }
+    //! [placeholder]
 }

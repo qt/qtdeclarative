@@ -50,6 +50,7 @@ AbstractScrollBar {
 
     padding: 2
 
+    //! [handle]
     handle: Rectangle {
         id: handle
 
@@ -81,4 +82,5 @@ AbstractScrollBar {
             }
         }
     }
+    //! [handle]
 }

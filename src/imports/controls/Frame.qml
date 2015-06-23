@@ -48,8 +48,11 @@ AbstractFrame {
 
     padding: Theme.padding
 
+    //! [contentItem]
     contentItem: Item { }
+    //! [contentItem]
 
+    //! [frame]
     frame: Rectangle {
         width: parent.width
         height: parent.height
@@ -58,4 +61,5 @@ AbstractFrame {
         radius: control.Theme.roundness
         border.color: control.Theme.frameColor
     }
+    //! [frame]
 }

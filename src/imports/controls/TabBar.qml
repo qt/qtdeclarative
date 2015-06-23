@@ -49,6 +49,7 @@ AbstractTabBar {
 
     Accessible.role: Accessible.PageTabList
 
+    //! [contentItem]
     contentItem: ListView {
         id: listView
 
@@ -73,7 +74,9 @@ AbstractTabBar {
             }
         }
     }
+    //! [contentItem]
 
+    //! [background]
     background: Rectangle {
         implicitWidth: 26
         implicitHeight: 26
@@ -89,4 +92,5 @@ AbstractTabBar {
             color: control.Theme.frameColor
         }
     }
+    //! [background]
 }

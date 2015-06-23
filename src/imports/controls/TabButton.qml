@@ -52,6 +52,7 @@ AbstractTabButton {
 
     padding: Theme.padding
 
+    //! [label]
     label: Text {
         x: control.leftPadding
         y: control.topPadding
@@ -65,10 +66,13 @@ AbstractTabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 
+    //! [background]
     background: Rectangle {
         height: parent.height - 1
         implicitHeight: 26
         color: control.Theme.backgroundColor
     }
+    //! [background]
 }

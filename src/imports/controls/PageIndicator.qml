@@ -62,6 +62,7 @@ AbstractPageIndicator {
 
     padding: Theme.padding
 
+    //! [contentItem]
     contentItem: Row {
         id: row
 
@@ -72,4 +73,5 @@ AbstractPageIndicator {
             delegate: control.delegate
         }
     }
+    //! [contentItem]
 }

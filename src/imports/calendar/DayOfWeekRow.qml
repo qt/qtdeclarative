@@ -59,6 +59,7 @@ AbstractDayOfWeekRow {
     topPadding: Theme.padding
     bottomPadding: Theme.padding
 
+    //! [contentItem]
     contentItem: Row {
         id: row
 
@@ -67,4 +68,5 @@ AbstractDayOfWeekRow {
             delegate: control.delegate
         }
     }
+    //! [contentItem]
 }

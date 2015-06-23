@@ -47,6 +47,7 @@ AbstractBusyIndicator {
 
     padding: Theme.padding
 
+    //! [indicator]
     indicator: Item {
         id: delegate
         implicitWidth: 48
@@ -77,4 +78,5 @@ AbstractBusyIndicator {
             }
         }
     }
+    //! [indicator]
 }

@@ -49,8 +49,11 @@ AbstractGroupBox {
     padding: Theme.padding
     topPadding: Theme.padding + (label && title ? label.implicitHeight + Theme.spacing : 0)
 
+    //! [contentItem]
     contentItem: Item { }
+    //! [contentItem]
 
+    //! [label]
     label: Text {
         x: control.leftPadding
         width: control.availableWidth
@@ -61,7 +64,9 @@ AbstractGroupBox {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 
+    //! [frame]
     frame: Rectangle {
         y: control.topPadding - control.Theme.padding
         width: parent.width
@@ -71,4 +76,5 @@ AbstractGroupBox {
         radius: control.Theme.roundness
         border.color: control.Theme.frameColor
     }
+    //! [frame]
 }

@@ -49,6 +49,7 @@ AbstractScrollIndicator {
 
     padding: 2
 
+    //! [indicator]
     indicator: Rectangle {
         id: indicator
 
@@ -81,4 +82,5 @@ AbstractScrollIndicator {
             }
         ]
     }
+    //! [indicator]
 }

@@ -57,6 +57,7 @@ AbstractCalendarView {
 
     Accessible.name: title
 
+    //! [contentItem]
     contentItem: Grid {
         id: grid
 
@@ -69,4 +70,5 @@ AbstractCalendarView {
             delegate: control.delegate
         }
     }
+    //! [contentItem]
 }

@@ -59,6 +59,7 @@ AbstractWeekNumberColumn {
     leftPadding: Theme.padding
     rightPadding: Theme.padding
 
+    //! [contentItem]
     contentItem: Column {
         id: column
 
@@ -67,4 +68,5 @@ AbstractWeekNumberColumn {
             delegate: control.delegate
         }
     }
+    //! [contentItem]
 }

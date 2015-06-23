@@ -40,19 +40,27 @@ import QtQuick.Controls 2.0
 AbstractStackView {
     id: root
 
+    //! [popEnter]
     popEnter: Transition {
         NumberAnimation { property: "x"; from: -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
+    //! [popEnter]
 
+    //! [popExit]
     popExit: Transition {
         NumberAnimation { property: "x"; from: 0; to: root.width; duration: 400; easing.type: Easing.OutCubic }
     }
+    //! [popExit]
 
+    //! [pushEnter]
     pushEnter: Transition {
         NumberAnimation { property: "x"; from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
+    //! [pushEnter]
 
+    //! [pushExit]
     pushExit: Transition {
         NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
+    //! [pushExit]
 }

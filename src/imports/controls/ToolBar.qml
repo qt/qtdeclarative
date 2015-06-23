@@ -48,10 +48,14 @@ AbstractToolBar {
 
     Accessible.role: Accessible.ToolBar
 
+    //! [contentItem]
     contentItem: Item { }
+    //! [contentItem]
 
+    //! [background]
     background: Rectangle {
         implicitHeight: 26
         color: control.Theme.baseColor
     }
+    //! [background]
 }

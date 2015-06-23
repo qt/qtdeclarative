@@ -44,10 +44,12 @@ AbstractDrawer {
     width: parent.width // TODO: Window.width
     height: parent.height // TODO: Window.height
 
+    //! [background]
     background: Rectangle {
         color: control.Theme.shadowColor
         opacity: position * control.Theme.disabledOpacity
     }
+    //! [background]
 
     // TODO: make this a proper transition
     animation: SmoothedAnimation {

@@ -51,6 +51,7 @@ AbstractButton {
 
     padding: Theme.padding
 
+    //! [label]
     label: Text {
         x: control.leftPadding
         y: control.topPadding
@@ -63,7 +64,9 @@ AbstractButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
+    //! [label]
 
+    //! [background]
     background: Rectangle {
         implicitWidth: 26
         implicitHeight: 26
@@ -72,4 +75,5 @@ AbstractButton {
         color: control.Theme.frameColor
         visible: control.pressed
     }
+    //! [background]
 }
