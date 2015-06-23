@@ -49,9 +49,13 @@ AbstractCalendarView {
     Accessible.name: title
 
     //! [delegate]
-    delegate: CalendarDelegate {
-        width: grid.width ? grid.width / 7 : implicitWidth
-        height: grid.height ? grid.height / 6 : implicitHeight
+    delegate: Text {
+        width: grid.width ? grid.width / 7 : implicitWidth * 3
+        height: grid.height ? grid.height / 6 : implicitHeight * 3
+        minimumPointSize: 8
+        fontSizeMode: Text.Fit
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
         opacity: model.month === control.month ? 1 : 0
         color: model.today ? control.Theme.accentColor : control.Theme.textColor
         text: model.day

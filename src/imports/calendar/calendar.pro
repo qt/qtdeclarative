@@ -9,7 +9,6 @@ OTHER_FILES += \
     qmldir
 
 QML_FILES = \
-    CalendarDelegate.qml \
     CalendarView.qml \
     DayOfWeekRow.qml \
     WeekNumberColumn.qml
