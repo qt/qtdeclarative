@@ -227,12 +227,16 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
 QQuickTabBar::~QQuickTabBar()
 {
     Q_D(QQuickTabBar);
+    delete d->contentItem;
     const int count = d->contentModel->count();
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = itemAt(i);
-        if (item)
+        if (item) {
             QQuickItemPrivate::get(item)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+            delete item;
+        }
     }
+    delete d->contentModel;
 }
 
 /*!
