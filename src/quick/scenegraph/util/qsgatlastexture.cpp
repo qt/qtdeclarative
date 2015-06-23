@@ -146,7 +146,14 @@ Atlas::Atlas(const QSize &size)
                                                         || deviceName->compare(QStringLiteral("samsung SM-T215"), Qt::CaseInsensitive) == 0);
 #else
     static bool wrongfullyReportsBgra8888Support = false;
+    // The Raspberry Pi (both 1 and 2) GPU refuses framebuffers with BGRA color attachments.
+    const GLubyte *renderer = QOpenGLContext::currentContext()->functions()->glGetString(GL_RENDERER);
+    if (renderer && strstr((const char *) renderer, "VideoCore IV"))
+        wrongfullyReportsBgra8888Support = true;
 #endif // ANDROID
+
+    if (qEnvironmentVariableIsSet("QSG_ATLAS_NO_BGRA_WORKAROUNDS"))
+        wrongfullyReportsBgra8888Support = false;
 
     const char *ext = (const char *) QOpenGLContext::currentContext()->functions()->glGetString(GL_EXTENSIONS);
     if (!wrongfullyReportsBgra8888Support
@@ -482,7 +489,11 @@ QSGTexture *Texture::removedFromAtlas() const
         f->glBindTexture(GL_TEXTURE_2D, texture);
         QRect r = atlasSubRectWithoutPadding();
         // and copy atlas into our texture.
+        while (f->glGetError() != GL_NO_ERROR) ;
         f->glCopyTexImage2D(GL_TEXTURE_2D, 0, m_atlas->internalFormat(), r.x(), r.y(), r.width(), r.height(), 0);
+        // BGRA may have been rejected by some GLES implementations
+        if (f->glGetError() != GL_NO_ERROR)
+            f->glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, r.x(), r.y(), r.width(), r.height(), 0);
 
         m_nonatlas_texture = new QSGPlainTexture();
         m_nonatlas_texture->setTextureId(texture);
