@@ -18,6 +18,7 @@ PRIVATETESTS += \
     qquickapplication \
     qquickbehaviors \
     qquickfontloader \
+    qquickfontloader_static \
     qquickfontmetrics \
     qquickimageprovider \
     qquickpath \
