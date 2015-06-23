@@ -149,6 +149,7 @@ ApplicationWindow {
                             width: parent.width - 2 * Theme.padding
                             spacing: Theme.spacing
                             Label {
+                                id: discoverCreator
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
@@ -158,12 +159,15 @@ ApplicationWindow {
                             Label {
                                 text: model.pubDate
                                 height: parent.height
+                                elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                                 opacity: Theme.disabledOpacity
                                 font.pointSize: 8
+                                Layout.preferredWidth: parent.width - discoverCreator.width - discoverMore.width - 2 * parent.spacing
+                                visible: Layout.preferredWidth > 0
                             }
-                            Item { Layout.fillWidth: true }
                             Button {
+                                id: discoverMore
                                 text: "Read more..."
                                 onClicked: Qt.openUrlExternally(model.link)
                             }
@@ -237,6 +241,7 @@ ApplicationWindow {
                             width: parent.width - 2 * Theme.padding
                             spacing: Theme.spacing
                             Label {
+                                id: activityCreator
                                 text: model.creator
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
@@ -246,12 +251,15 @@ ApplicationWindow {
                             Label {
                                 text: model.pubDate
                                 height: parent.height
+                                elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                                 opacity: Theme.disabledOpacity
                                 font.pointSize: 8
+                                Layout.preferredWidth: parent.width - activityCreator.width - activityMore.width - 2 * parent.spacing
+                                visible: Layout.preferredWidth > 0
                             }
-                            Item { Layout.fillWidth: true }
                             Button {
+                                id: activityMore
                                 text: "Read more..."
                                 onClicked: Qt.openUrlExternally(model.link)
                             }
