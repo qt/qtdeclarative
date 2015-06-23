@@ -39,6 +39,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
+#include <QtQuick/private/qquicktextedit_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,7 +63,7 @@ QT_BEGIN_NAMESPACE
     \sa TextField, {Customizing TextArea}
 */
 
-class QQuickTextAreaPrivate
+class QQuickTextAreaPrivate : public QQuickTextEditPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextArea)
 
@@ -73,7 +74,6 @@ public:
 
     QQuickItem *background;
     QQuickText *placeholder;
-    QQuickTextArea *q_ptr;
 };
 
 void QQuickTextAreaPrivate::resizeBackground()
@@ -93,10 +93,8 @@ void QQuickTextAreaPrivate::resizeBackground()
 }
 
 QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
-    QQuickTextEdit(parent), d_ptr(new QQuickTextAreaPrivate)
+    QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
-    Q_D(QQuickTextArea);
-    d->q_ptr = this;
 }
 
 QQuickTextArea::~QQuickTextArea()

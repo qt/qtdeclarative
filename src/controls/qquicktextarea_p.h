@@ -83,7 +83,6 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickTextArea)
     Q_DECLARE_PRIVATE(QQuickTextArea)
-    QScopedPointer<QQuickTextAreaPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE
