@@ -53,6 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQuickWeekNumberColumnPrivate;
 
 class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberColumn : public QQuickControl
@@ -62,6 +63,7 @@ class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberColumn : public QQuickControl
     Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
     explicit QQuickWeekNumberColumn(QQuickItem *parent = Q_NULLPTR);
@@ -78,11 +80,15 @@ public:
     QVariant source() const;
     void setSource(const QVariant &source);
 
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
+
 Q_SIGNALS:
     void monthChanged();
     void yearChanged();
     void localeChanged();
     void sourceChanged();
+    void delegateChanged();
 
 private:
     Q_DISABLE_COPY(QQuickWeekNumberColumn)

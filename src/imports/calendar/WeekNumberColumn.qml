@@ -41,7 +41,16 @@ import QtQuick.Calendar 2.0
 AbstractWeekNumberColumn {
     id: control
 
-    property Component delegate: Text {
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+
+    leftPadding: Theme.padding
+    rightPadding: Theme.padding
+
+    //! [delegate]
+    delegate: Text {
         text: model.weekNumber
         font.bold: true
         color: control.Theme.textColor
@@ -50,14 +59,7 @@ AbstractWeekNumberColumn {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-
-    leftPadding: Theme.padding
-    rightPadding: Theme.padding
+    //! [delegate]
 
     //! [contentItem]
     contentItem: Column {

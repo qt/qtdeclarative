@@ -53,6 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQuickDayOfWeekRowPrivate;
 
 class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickControl
@@ -60,6 +61,7 @@ class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
     explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
@@ -70,9 +72,13 @@ public:
     QVariant source() const;
     void setSource(const QVariant &source);
 
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
+
 Q_SIGNALS:
     void localeChanged();
     void sourceChanged();
+    void delegateChanged();
 
 private:
     Q_DISABLE_COPY(QQuickDayOfWeekRow)

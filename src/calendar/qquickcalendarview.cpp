@@ -48,7 +48,7 @@ class QQuickCalendarViewPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickCalendarView)
 
 public:
-    QQuickCalendarViewPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR) { }
+    QQuickCalendarViewPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR), delegate(Q_NULLPTR) { }
 
     QQuickItem *cellAt(const QPoint &pos) const;
     QDate dateOf(QQuickItem *cell) const;
@@ -64,6 +64,7 @@ public:
     int pressTimer;
     QQuickItem *pressedItem;
     QQuickMonthModel *model;
+    QQmlComponent *delegate;
 };
 
 QQuickItem *QQuickCalendarViewPrivate::cellAt(const QPoint &pos) const
@@ -198,6 +199,21 @@ void QQuickCalendarView::setTitle(const QString &title)
     if (d->title != title) {
         d->title = title;
         emit titleChanged();
+    }
+}
+
+QQmlComponent *QQuickCalendarView::delegate() const
+{
+    Q_D(const QQuickCalendarView);
+    return d->delegate;
+}
+
+void QQuickCalendarView::setDelegate(QQmlComponent *delegate)
+{
+    Q_D(QQuickCalendarView);
+    if (d->delegate != delegate) {
+        d->delegate = delegate;
+        emit delegateChanged();
     }
 }
 

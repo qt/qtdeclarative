@@ -41,7 +41,15 @@ import QtQuick.Calendar 2.0
 AbstractCalendarView {
     id: control
 
-    property Component delegate: CalendarDelegate {
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+
+    Accessible.name: title
+
+    //! [delegate]
+    delegate: CalendarDelegate {
         width: grid.width ? grid.width / 7 : implicitWidth
         height: grid.height ? grid.height / 6 : implicitHeight
         opacity: model.month === control.month ? 1 : 0
@@ -49,13 +57,7 @@ AbstractCalendarView {
         text: model.day
         padding: control.Theme.padding
     }
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-
-    Accessible.name: title
+    //! [delegate]
 
     //! [contentItem]
     contentItem: Grid {

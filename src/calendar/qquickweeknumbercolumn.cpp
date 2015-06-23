@@ -44,7 +44,10 @@ QT_BEGIN_NAMESPACE
 class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate
 {
 public:
+    QQuickWeekNumberColumnPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
+
     QVariant source;
+    QQmlComponent *delegate;
     QQuickWeekNumberModel *model;
 };
 
@@ -107,6 +110,21 @@ void QQuickWeekNumberColumn::setSource(const QVariant &source)
     if (d->source != source) {
         d->source = source;
         emit sourceChanged();
+    }
+}
+
+QQmlComponent *QQuickWeekNumberColumn::delegate() const
+{
+    Q_D(const QQuickWeekNumberColumn);
+    return d->delegate;
+}
+
+void QQuickWeekNumberColumn::setDelegate(QQmlComponent *delegate)
+{
+    Q_D(QQuickWeekNumberColumn);
+    if (d->delegate != delegate) {
+        d->delegate = delegate;
+        emit delegateChanged();
     }
 }
 

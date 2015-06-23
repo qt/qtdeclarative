@@ -44,7 +44,10 @@ QT_BEGIN_NAMESPACE
 class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate
 {
 public:
+    QQuickDayOfWeekRowPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
+
     QVariant source;
+    QQmlComponent *delegate;
     QQuickDayOfWeekModel *model;
 };
 
@@ -81,6 +84,21 @@ void QQuickDayOfWeekRow::setSource(const QVariant &source)
     if (d->source != source) {
         d->source = source;
         emit sourceChanged();
+    }
+}
+
+QQmlComponent *QQuickDayOfWeekRow::delegate() const
+{
+    Q_D(const QQuickDayOfWeekRow);
+    return d->delegate;
+}
+
+void QQuickDayOfWeekRow::setDelegate(QQmlComponent *delegate)
+{
+    Q_D(QQuickDayOfWeekRow);
+    if (d->delegate != delegate) {
+        d->delegate = delegate;
+        emit delegateChanged();
     }
 }
 

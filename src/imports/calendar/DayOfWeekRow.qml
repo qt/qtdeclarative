@@ -41,7 +41,16 @@ import QtQuick.Calendar 2.0
 AbstractDayOfWeekRow {
     id: control
 
-    property Component delegate: Text {
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+
+    topPadding: Theme.padding
+    bottomPadding: Theme.padding
+
+    //! [delegate]
+    delegate: Text {
         text: model.shortName
         font.bold: true
         color: control.Theme.textColor
@@ -50,14 +59,7 @@ AbstractDayOfWeekRow {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-
-    topPadding: Theme.padding
-    bottomPadding: Theme.padding
+    //! [delegate]
 
     //! [contentItem]
     contentItem: Row {
