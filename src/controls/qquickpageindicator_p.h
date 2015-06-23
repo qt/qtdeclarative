@@ -52,6 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQuickPageIndicatorPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickPageIndicator : public QQuickControl
@@ -59,6 +60,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickPageIndicator : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
     explicit QQuickPageIndicator(QQuickItem *parent = Q_NULLPTR);
@@ -69,9 +71,13 @@ public:
     int currentIndex() const;
     void setCurrentIndex(int index);
 
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
+
 Q_SIGNALS:
     void countChanged();
     void currentIndexChanged();
+    void delegateChanged();
 
 private:
     Q_DISABLE_COPY(QQuickPageIndicator)

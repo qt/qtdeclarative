@@ -53,10 +53,11 @@ QT_BEGIN_NAMESPACE
 class QQuickPageIndicatorPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickPageIndicatorPrivate() : count(0), currentIndex(0) { }
+    QQuickPageIndicatorPrivate() : count(0), currentIndex(0), delegate(Q_NULLPTR) { }
 
     int count;
     int currentIndex;
+    QQmlComponent *delegate;
 };
 
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
@@ -101,6 +102,26 @@ void QQuickPageIndicator::setCurrentIndex(int index)
     if (d->currentIndex != index) {
         d->currentIndex = index;
         emit currentIndexChanged();
+    }
+}
+
+/*!
+    \qmlproperty Component QtQuickControls2::PageIndicator::delegate
+
+    TODO
+*/
+QQmlComponent *QQuickPageIndicator::delegate() const
+{
+    Q_D(const QQuickPageIndicator);
+    return d->delegate;
+}
+
+void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
+{
+    Q_D(QQuickPageIndicator);
+    if (d->delegate != delegate) {
+        d->delegate = delegate;
+        emit delegateChanged();
     }
 }
 

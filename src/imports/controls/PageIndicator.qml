@@ -42,7 +42,17 @@ AbstractPageIndicator {
 
     property alias spacing: row.spacing
 
-    property Component delegate: Rectangle {
+    Accessible.role: Accessible.Indicator
+
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
+
+    padding: Theme.padding
+
+    //! [delegate]
+    delegate: Rectangle {
         implicitWidth: 8
         implicitHeight: 8
 
@@ -52,15 +62,7 @@ AbstractPageIndicator {
         opacity: index === currentIndex ? 0.75 : 0.25
         Behavior on opacity { OpacityAnimator { duration: 100 } }
     }
-
-    Accessible.role: Accessible.Indicator
-
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
-
-    padding: Theme.padding
+    //! [delegate]
 
     //! [contentItem]
     contentItem: Row {
