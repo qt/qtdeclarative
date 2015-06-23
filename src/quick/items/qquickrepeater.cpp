@@ -361,8 +361,8 @@ void QQuickRepeater::clear()
             if (QQuickItem *item = d->deletables.at(i)) {
                 if (complete)
                     emit itemRemoved(i, item);
-                item->setParentItem(0);
                 d->model->release(item);
+                item->setParentItem(0);
             }
         }
     }
@@ -466,8 +466,8 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             d->deletables.remove(index);
             emit itemRemoved(index, item);
             if (item) {
-                item->setParentItem(0);
                 d->model->release(item);
+                item->setParentItem(0);
             }
             --d->itemCount;
         }

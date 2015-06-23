@@ -68,6 +68,7 @@ private slots:
     void resetModel();
     void modelChanged();
     void modelReset();
+    void modelCleared();
     void properties();
     void asynchronous();
     void initParent();
@@ -632,6 +633,26 @@ void tst_QQuickRepeater::modelReset()
     QCOMPARE(countSpy.count(), 1);
     QCOMPARE(removedSpy.count(), 5);
     QCOMPARE(addedSpy.count(), 0);
+}
+
+// QTBUG-46828
+void tst_QQuickRepeater::modelCleared()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("modelCleared.qml"));
+
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(rootObject);
+
+    QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
+    QVERIFY(repeater);
+
+    // verify no error messages when the model is cleared and the items are destroyed
+    QQmlTestMessageHandler messageHandler;
+    repeater->setModel(0);
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
+
+    delete rootObject;
 }
 
 void tst_QQuickRepeater::properties()
