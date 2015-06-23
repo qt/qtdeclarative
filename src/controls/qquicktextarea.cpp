@@ -42,6 +42,15 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype TextArea
+    \inherits TextEdit
+    \instantiates QQuickTextArea
+    \inqmlmodule QtQuick.Controls
+    \ingroup editors
+    \brief A multi line text input control.
+*/
+
 class QQuickTextAreaPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextArea)

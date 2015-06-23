@@ -139,7 +139,7 @@ void QQuickExclusiveGroup::removeCheckable(QObject *object)
 /*!
     \qmltype Exclusive
     \inherits QtObject
-    \instantiates QQuickExclusive
+    \instantiates QQuickExclusiveAttached
     \inqmlmodule QtQuick.Controls
     \ingroup utilities
     \brief TODO

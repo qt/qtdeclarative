@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuickControls2::Button::canceled()
 
     This signal is emitted when the button loses mouse grab
-    while being pressed, or when it would emit the \l release
+    while being pressed, or when it would emit the \l released
     signal but the mouse cursor is not inside the button.
 */
 

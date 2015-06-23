@@ -187,11 +187,10 @@ qreal QQuickProgressBar::position() const
 
     This property holds the visual position of the progress.
 
-    The position is defined as a percentage of the value, scaled to
-    \c {0.0 - 1.0}. When the control is \l mirrored, \c visuaPosition
-    is equal to \c {1.0 - position}. This makes \c visualPosition
-    suitable for visualizing the progress, taking right-to-left
-    support into account.
+    The position is defined as a percentage of the value, scaled to \c {0.0 - 1.0}.
+    When the control is \l {Control::mirrored}{mirrored}, \c visuaPosition is equal
+    to \c {1.0 - position}. This makes \c visualPosition suitable for visualizing
+    the progress, taking right-to-left support into account.
 
     \sa position, value
 */

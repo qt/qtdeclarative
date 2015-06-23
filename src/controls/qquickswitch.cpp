@@ -138,11 +138,11 @@ void QQuickSwitch::setPosition(qreal position)
     This property holds the visual position of the thumb indicator.
 
     The position is defined as a percentage of the control's size, scaled to
-    \c 0.0 - \c 1.0. When the control is \l mirrored, the value is equal to
-    \c {1.0 - position}. This makes the value suitable for visualizing the
-    thumb indicator taking right-to-left support into account. In order to
-    for example determine whether the thumb has been dragged past the halfway,
-    the logical \l position should be used instead.
+    \c 0.0 - \c 1.0. When the control is \l {Control::mirrored}{mirrored}, the
+    value is equal to \c {1.0 - position}. This makes the value suitable for
+    visualizing the thumb indicator taking right-to-left support into account.
+    In order to for example determine whether the thumb has been dragged past
+    the halfway, the logical \l position should be used instead.
 
     \sa position
 */
