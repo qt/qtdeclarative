@@ -49,6 +49,17 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \ingroup editors
     \brief A multi line text input control.
+
+    TextArea is a multi line text editor. TextArea extends TextEdit
+    with a \l placeholder text functionality, and adds decoration.
+
+    \code
+    TextArea {
+        placeholder.text: qsTr("Enter description")
+    }
+    \endcode
+
+    \sa TextField, {Customizing TextArea}
 */
 
 class QQuickTextAreaPrivate
@@ -92,6 +103,17 @@ QQuickTextArea::~QQuickTextArea()
 {
 }
 
+/*!
+    \qmlproperty Item QtQuickControls2::TextArea::background
+
+    This property holds the background item.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
+
+    \sa {Customizing TextArea}
+*/
 QQuickItem *QQuickTextArea::background() const
 {
     Q_D(const QQuickTextArea);
@@ -115,6 +137,13 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     }
 }
 
+/*!
+    \qmlproperty Text QtQuickControls2::TextArea::placeholder
+
+    This property holds the placeholder text item.
+
+    \sa {Customizing TextArea}
+*/
 QQuickText *QQuickTextArea::placeholder() const
 {
     Q_D(const QQuickTextArea);
