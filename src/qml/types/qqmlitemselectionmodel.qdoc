@@ -50,19 +50,28 @@
 
 /*!
     \qmlproperty bool ItemSelectionModel::hasSelection
+    \readonly
 
-    Read-only property. It will trigger property binding updates every time
-    \l selectionChanged() is emitted, even though its value hasn't changed.
+    It will trigger property binding updates every time \l selectionChanged()
+    is emitted, even though its value hasn't changed.
 
     \sa selection(), selectedIndexes(), select(), selectionChanged()
 */
 
 /*!
     \qmlproperty QModelIndex ItemSelectionModel::currentIndex
+    \readonly
 
-    Read-only property. Use \l setCurrentIndex() to set its value.
+    Use \l setCurrentIndex() to set its value.
 
     \sa setCurrentIndex(), currentChanged()
+*/
+
+/*!
+    \qmlproperty QModelIndexList ItemSelectionModel::selectedIndexes
+    \readonly
+
+    Contains the list of all the indexes in the selection model.
 */
 
 /*!
@@ -83,10 +92,6 @@
 
 /*!
     \qmlmethod bool ItemSelectionModel::columnIntersectsSelection(int column, QModelIndex parent)
-*/
-
-/*!
-    \qmlmethod QModelIndexList ItemSelectionModel::selectedIndexes()
 */
 
 /*!
