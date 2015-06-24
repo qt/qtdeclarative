@@ -34,12 +34,6 @@
 #include <qtest.h>
 #include <QJSEngine>
 #include <QJSValue>
-#include <private/v8.h>
-
-QT_BEGIN_NAMESPACE
-extern Q_QML_EXPORT v8::Local<v8::Context> qt_QJSEngineV8Context(QJSEngine *);
-extern Q_QML_EXPORT v8::Local<v8::Value> qt_QJSValueV8Value(const QJSValue &);
-QT_END_NAMESPACE
 
 class tst_QJSValue : public QObject
 {
@@ -49,16 +43,12 @@ public:
 
 private slots:
     void fillArray();
-    void fillArray_V8();
 
     void property();
-    void property_V8();
 
     void setProperty();
-    void setProperty_V8();
 
     void call();
-    void call_V8();
 };
 
 void tst_QJSValue::fillArray()
@@ -69,20 +59,6 @@ void tst_QJSValue::fillArray()
     QBENCHMARK {
         for (int i = 0; i < ArrayLength; ++i)
             array.setProperty(i, i);
-    }
-}
-
-void tst_QJSValue::fillArray_V8()
-{
-    QJSEngine eng;
-    static const int ArrayLength = 10000;
-    QJSValue array = eng.newArray(ArrayLength);
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Array> v8array = qt_QJSValueV8Value(array).As<v8::Array>();
-    QBENCHMARK {
-        for (int i = 0; i < ArrayLength; ++i)
-            v8array->Set(i, v8::Number::New(i));
     }
 }
 
@@ -98,23 +74,6 @@ void tst_QJSValue::property()
     }
 }
 
-void tst_QJSValue::property_V8()
-{
-    QJSEngine eng;
-    QJSValue object = eng.newObject();
-    QString propertyName = QString::fromLatin1("foo");
-    object.setProperty(propertyName, 123);
-    QVERIFY(object.property(propertyName).isNumber());
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Object> v8object = qt_QJSValueV8Value(object).As<v8::Object>();
-    v8::Local<v8::String> v8propertyName = v8::String::New("foo");
-    QVERIFY(v8object->Get(v8propertyName)->IsNumber());
-    QBENCHMARK {
-        v8object->Get(v8propertyName);
-    }
-}
-
 void tst_QJSValue::setProperty()
 {
     QJSEngine eng;
@@ -123,24 +82,6 @@ void tst_QJSValue::setProperty()
     QJSValue value(123);
     QBENCHMARK {
         object.setProperty(propertyName, value);
-    }
-}
-
-void tst_QJSValue::setProperty_V8()
-{
-    QJSEngine eng;
-    QJSValue object = eng.newObject();
-
-    v8::HandleScope handleScope;
-    // A context scope is needed for v8::Object::Set(), otherwise we crash.
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    v8::Local<v8::Object> v8object = qt_QJSValueV8Value(object).As<v8::Object>();
-    v8::Local<v8::String> v8propertyName = v8::String::New("foo");
-    v8::Local<v8::Value> v8value = v8::Number::New(123);
-    QBENCHMARK {
-        v8object->Set(v8propertyName, v8value);
     }
 }
 
@@ -155,24 +96,6 @@ void tst_QJSValue::call()
     QVERIFY(fun.call(args).isNumber());
     QBENCHMARK {
         fun.call(args);
-    }
-}
-
-void tst_QJSValue::call_V8()
-{
-    QJSEngine eng;
-    QJSValue fun = eng.evaluate(TEST_FUNCTION_SOURCE);
-    QVERIFY(fun.isCallable());
-
-    v8::HandleScope handleScope;
-    v8::Local<v8::Context> context = qt_QJSEngineV8Context(&eng);
-    v8::Context::Scope contextScope(context);
-
-    v8::Local<v8::Function> v8fun = qt_QJSValueV8Value(fun).As<v8::Function>();
-    v8::Local<v8::Object> v8thisObject = v8::Object::New();
-    QVERIFY(v8fun->Call(v8thisObject, /*argc=*/0, /*argv=*/0)->IsNumber());
-    QBENCHMARK {
-        v8fun->Call(v8thisObject, /*argc=*/0, /*argv=*/0);
     }
 }
 
