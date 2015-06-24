@@ -499,7 +499,6 @@ void QQuickSlider::mousePressEvent(QMouseEvent *event)
     QQuickControl::mousePressEvent(event);
     d->pressPoint = event->pos();
     setPressed(true);
-    event->accept();
 }
 
 void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
@@ -518,7 +517,6 @@ void QQuickSlider::mouseMoveEvent(QMouseEvent *event)
             pos = d->snapPosition(pos);
         d->setPosition(pos);
     }
-    event->accept();
 }
 
 void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
@@ -534,7 +532,6 @@ void QQuickSlider::mouseReleaseEvent(QMouseEvent *event)
         setKeepMouseGrab(false);
     }
     setPressed(false);
-    event->accept();
 }
 
 void QQuickSlider::mouseUngrabEvent()

@@ -454,6 +454,21 @@ void QQuickControl::setContentItem(QQuickItem *item)
     }
 }
 
+void QQuickControl::mousePressEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickControl::mouseMoveEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
+void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
+{
+    event->accept();
+}
+
 void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickControl);

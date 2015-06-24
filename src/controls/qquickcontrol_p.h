@@ -126,6 +126,9 @@ Q_SIGNALS:
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
     virtual void mirrorChange();

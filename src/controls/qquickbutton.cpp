@@ -229,14 +229,12 @@ void QQuickButton::mousePressEvent(QMouseEvent *event)
     QQuickControl::mousePressEvent(event);
     setPressed(true);
     emit pressed();
-    event->accept();
 }
 
 void QQuickButton::mouseMoveEvent(QMouseEvent *event)
 {
     QQuickControl::mouseMoveEvent(event);
     setPressed(contains(event->pos()));
-    event->accept();
 }
 
 void QQuickButton::mouseReleaseEvent(QMouseEvent *event)
@@ -251,7 +249,6 @@ void QQuickButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
-    event->accept();
 }
 
 void QQuickButton::mouseUngrabEvent()

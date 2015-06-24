@@ -262,7 +262,6 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
     if (d->offset < 0 || d->offset > d->size)
         d->offset = d->size / 2;
     setPressed(true);
-    event->accept();
 }
 
 void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
@@ -270,7 +269,6 @@ void QQuickScrollBar::mouseMoveEvent(QMouseEvent *event)
     Q_D(QQuickScrollBar);
     QQuickControl::mouseMoveEvent(event);
     setPosition(qBound(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
-    event->accept();
 }
 
 void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
@@ -280,7 +278,6 @@ void QQuickScrollBar::mouseReleaseEvent(QMouseEvent *event)
     setPosition(qBound(0.0, positionAt(event->pos()) - d->offset, 1.0 - d->size));
     d->offset = 0.0;
     setPressed(false);
-    event->accept();
 }
 
 qreal QQuickScrollBar::positionAt(const QPoint &point) const
