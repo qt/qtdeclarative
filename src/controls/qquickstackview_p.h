@@ -137,6 +137,7 @@ Q_SIGNALS:
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *, QEvent *) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickStackView)

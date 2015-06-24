@@ -497,6 +497,12 @@ void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     }
 }
 
+bool QQuickStackView::childMouseEventFilter(QQuickItem *, QEvent *)
+{
+    // busy should be true if this function gets called
+    return true;
+}
+
 void QQuickStackAttachedPrivate::init()
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);

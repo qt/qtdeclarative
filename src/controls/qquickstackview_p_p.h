@@ -127,6 +127,7 @@ public:
     void completeTransition(QQuickStackElement *element, QQuickTransition *transition);
 
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) Q_DECL_OVERRIDE;
+    void setBusy(bool busy);
 
     QVariant initialItem;
     QQuickItem *currentItem;
