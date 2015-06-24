@@ -47,7 +47,6 @@
 
 #include "qquicktextedit_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
-#include "qquicktextcontrol_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
