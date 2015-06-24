@@ -133,6 +133,7 @@ private slots:
     void sectionsDelegate_headerVisibility();
     void sectionPropertyChange();
     void sectionDelegateChange();
+    void sectionsItemInsertion();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
     void positionViewAtIndex();
@@ -2538,6 +2539,67 @@ void tst_QQuickListView::sectionDelegateChange()
     }
 
     delete window;
+}
+
+// QTBUG-43873
+void tst_QQuickListView::sectionsItemInsertion()
+{
+    QQuickView *window = createView();
+
+    QaimModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i/5));
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    window->setSource(testFileUrl("listview-sections_delegate.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    for (int i = 0; i < 3; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "sect_" + QString::number(i));
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(i*20*6));
+    }
+
+    QQuickItem *topItem = findVisibleChild(contentItem, "sect_0"); // section header
+    QVERIFY(topItem);
+    QCOMPARE(topItem->y(), 0.);
+
+    // Insert a full screen of items at the beginning.
+    for (int i = 0; i < 10; i++)
+        model.insertItem(i, "Item" + QString::number(i), QLatin1String("A"));
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    QVERIFY(itemCount > 10);
+
+    // Verify that the new items are postioned correctly, and have the correct attached section properties
+    for (int i = 0; i < 10 && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), 20+i*20.0);
+        QCOMPARE(item->property("section").toString(), QLatin1String("A"));
+        QCOMPARE(item->property("nextSection").toString(), i < 9 ? QLatin1String("A") : QLatin1String("0"));
+        QCOMPARE(item->property("prevSection").toString(), i > 0 ? QLatin1String("A") : QLatin1String(""));
+    }
+    // Verify that the exiting items are postioned correctly, and have the correct attached section properties
+    for (int i = 10; i < 15 && i < itemCount; ++i) {
+        QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), 40+i*20.0);
+        QCOMPARE(item->property("section").toString(), QLatin1String("0"));
+        QCOMPARE(item->property("nextSection").toString(), i < 14 ? QLatin1String("0") : QLatin1String("1"));
+        QCOMPARE(item->property("prevSection").toString(), i > 10 ? QLatin1String("0") : QLatin1String("A"));
+    }
 }
 
 void tst_QQuickListView::currentIndex_delayedItemCreation()

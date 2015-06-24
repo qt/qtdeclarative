@@ -12,6 +12,9 @@ Rectangle {
             Item {
                 id: wrapper
                 objectName: "wrapper"
+                property string section: ListView.section
+                property string nextSection: ListView.nextSection
+                property string prevSection: ListView.previousSection
                 height: 20;
                 width: 240
                 Rectangle {
