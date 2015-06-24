@@ -49,9 +49,33 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \ingroup indicators
     \ingroup sliders
-    \brief A scroll bar.
+    \brief An interactive scroll bar control.
 
-    TODO
+    ScrollBar is an interactive bar that can be used to scroll to a specific
+    position. A scroll bar can be either \l vertical or \l horizontal, and can
+    be attached to any \l Flickable, such as \l ListView and \l GridView.
+
+    ### TODO: screenshot
+
+    \code
+    ListView {
+        model: 200
+        delegate: Text { text: index }
+        ScrollBar.vertical: ScrollBar { }
+    }
+    \endcode
+
+    \note When ScrollBar is attached \l {ScrollBar::vertical}{vertically} or
+    \l {ScrollBar::horizontal}{horizontally} to a Flickable, its geometry and
+    the following properties are automatically set and updated as appropriate:
+    \list
+    \li \l orientation
+    \li \l position
+    \li \l size
+    \li \l active
+    \endlist
+
+    \sa ScrollIndicator, {Customizing ScrollBar}
 */
 
 class QQuickScrollBarPrivate : public QQuickControlPrivate
@@ -96,7 +120,9 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
 /*!
     \qmlproperty real QtQuickControls2::ScrollBar::size
 
-    TODO
+    This property holds the size of the scroll bar, scaled to \c {0.0 - 1.0}.
+
+    \sa {Flickable::visibleArea.heightRatio}{Flickable::visibleArea}
 */
 qreal QQuickScrollBar::size() const
 {
@@ -116,7 +142,9 @@ void QQuickScrollBar::setSize(qreal size)
 /*!
     \qmlproperty real QtQuickControls2::ScrollBar::position
 
-    TODO
+    This property holds the position of the scroll bar, scaled to \c {0.0 - 1.0}.
+
+    \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
 */
 qreal QQuickScrollBar::position() const
 {
@@ -136,7 +164,8 @@ void QQuickScrollBar::setPosition(qreal position)
 /*!
     \qmlproperty bool QtQuickControls2::ScrollBar::active
 
-    TODO
+    This property holds whether the scroll bar is active ie. when its \l pressed
+    or the attached Flickable is \l {Flickable::moving}{moving}.
 */
 bool QQuickScrollBar::isActive() const
 {
@@ -156,7 +185,7 @@ void QQuickScrollBar::setActive(bool active)
 /*!
     \qmlproperty bool QtQuickControls2::ScrollBar::pressed
 
-    TODO
+    This property holds whether the scroll bar is pressed.
 */
 bool QQuickScrollBar::isPressed() const
 {
@@ -177,7 +206,13 @@ void QQuickScrollBar::setPressed(bool pressed)
 /*!
     \qmlproperty enumeration QtQuickControls2::ScrollBar::orientation
 
-    TODO
+    This property holds the orientation of the scroll bar.
+
+    Possible values:
+    \list
+    \li \c Qt.Horizontal
+    \li \c Qt.Vertical (default)
+    \endlist
 */
 Qt::Orientation QQuickScrollBar::orientation() const
 {
@@ -197,7 +232,9 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
 /*!
     \qmlproperty Item QtQuickControls2::ScrollBar::handle
 
-    TODO
+    This property holds the handle item.
+
+    \sa {Customizing ScrollBar}
 */
 QQuickItem *QQuickScrollBar::handle() const
 {
@@ -346,6 +383,18 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QQuickFlickable *flickable) :
     p->addItemChangeListener(d, QQuickItemPrivate::Geometry);
 }
 
+/*!
+    \qmlattachedproperty ScrollBar QtQuickControls2::ScrollBar::horizontal
+
+    This property attaches a horizontal scroll bar to a \l Flickable.
+
+    \code
+    Flickable {
+        contentWidth: 2000
+        ScrollBar.horizontal: ScrollBar { }
+    }
+    \endcode
+*/
 QQuickScrollBar *QQuickScrollBarAttached::horizontal() const
 {
     Q_D(const QQuickScrollBarAttached);
@@ -388,6 +437,18 @@ void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
     }
 }
 
+/*!
+    \qmlattachedproperty ScrollBar QtQuickControls2::ScrollBar::vertical
+
+    This property attaches a vertical scroll bar to a \l Flickable.
+
+    \code
+    Flickable {
+        contentHeight: 2000
+        ScrollBar.vertical: ScrollBar { }
+    }
+    \endcode
+*/
 QQuickScrollBar *QQuickScrollBarAttached::vertical() const
 {
     Q_D(const QQuickScrollBarAttached);
