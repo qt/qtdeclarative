@@ -48,9 +48,33 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickScrollIndicator
     \inqmlmodule QtQuick.Controls
     \ingroup indicators
-    \brief A scroll indicator.
+    \brief A non-interactive scroll indicator control.
 
-    TODO
+    ScrollIndicator is a non-interactive indicator that indicates the current scroll
+    position. A scroll indicator can be either \l vertical or \l horizontal, and can
+    be attached to any \l Flickable, such as \l ListView and \l GridView.
+
+    ### TODO: screenshot
+
+    \code
+    ListView {
+        model: 200
+        delegate: Text { text: index }
+        ScrollIndicator.vertical: ScrollIndicator { }
+    }
+    \endcode
+
+    \note When ScrollIndicator is attached \l {ScrollIndicator::vertical}{vertically}
+    or \l {ScrollIndicator::horizontal}{horizontally} to a Flickable, its geometry and
+    the following properties are automatically set and updated as appropriate:
+    \list
+    \li \l orientation
+    \li \l position
+    \li \l size
+    \li \l active
+    \endlist
+
+    \sa ScrollBar, {Customizing ScrollIndicator}
 */
 
 class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
@@ -84,7 +108,9 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
 /*!
     \qmlproperty real QtQuickControls2::ScrollIndicator::size
 
-    TODO
+    This property holds the size of the indicator, scaled to \c {0.0 - 1.0}.
+
+    \sa {Flickable::visibleArea.heightRatio}{Flickable::visibleArea}
 */
 qreal QQuickScrollIndicator::size() const
 {
@@ -104,7 +130,9 @@ void QQuickScrollIndicator::setSize(qreal size)
 /*!
     \qmlproperty real QtQuickControls2::ScrollIndicator::position
 
-    TODO
+    This property holds the position of the indicator, scaled to \c {0.0 - 1.0}.
+
+    \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
 */
 qreal QQuickScrollIndicator::position() const
 {
@@ -124,7 +152,8 @@ void QQuickScrollIndicator::setPosition(qreal position)
 /*!
     \qmlproperty bool QtQuickControls2::ScrollIndicator::active
 
-    TODO
+    This property holds whether the indicator is active ie. when the attached
+    Flickable is \l {Flickable::moving}{moving}.
 */
 bool QQuickScrollIndicator::isActive() const
 {
@@ -144,7 +173,13 @@ void QQuickScrollIndicator::setActive(bool active)
 /*!
     \qmlproperty enumeration QtQuickControls2::ScrollIndicator::orientation
 
-    TODO
+    This property holds the orientation of the indicator.
+
+    Possible values:
+    \list
+    \li \c Qt.Horizontal
+    \li \c Qt.Vertical (default)
+    \endlist
 */
 Qt::Orientation QQuickScrollIndicator::orientation() const
 {
@@ -164,7 +199,9 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
 /*!
     \qmlproperty Item QtQuickControls2::ScrollIndicator::indicator
 
-    TODO
+    This property holds the indicator item.
+
+    \sa {Customizing ScrollIndicator}
 */
 QQuickItem *QQuickScrollIndicator::indicator() const
 {
@@ -241,6 +278,18 @@ QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QQuickFlickable *fl
     p->addItemChangeListener(d, QQuickItemPrivate::Geometry);
 }
 
+/*!
+    \qmlattachedproperty ScrollIndicator QtQuickControls2::ScrollIndicator::horizontal
+
+    This property attaches a horizontal scroll indicator to a \l Flickable.
+
+    \code
+    Flickable {
+        contentWidth: 2000
+        ScrollIndicator.horizontal: ScrollIndicator { }
+    }
+    \endcode
+*/
 QQuickScrollIndicator *QQuickScrollIndicatorAttached::horizontal() const
 {
     Q_D(const QQuickScrollIndicatorAttached);
@@ -281,6 +330,18 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
     }
 }
 
+/*!
+    \qmlattachedproperty ScrollIndicator QtQuickControls2::ScrollIndicator::vertical
+
+    This property attaches a vertical scroll indicator to a \l Flickable.
+
+    \code
+    Flickable {
+        contentHeight: 2000
+        ScrollIndicator.vertical: ScrollIndicator { }
+    }
+    \endcode
+*/
 QQuickScrollIndicator *QQuickScrollIndicatorAttached::vertical() const
 {
     Q_D(const QQuickScrollIndicatorAttached);
