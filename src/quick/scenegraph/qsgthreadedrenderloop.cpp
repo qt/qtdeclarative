@@ -1015,20 +1015,20 @@ void QSGThreadedRenderLoop::maybeUpdate(Window *w)
     if (!QCoreApplication::instance())
         return;
 
+    if (!w || !w->thread->isRunning())
+        return;
+
     QThread *current = QThread::currentThread();
     if (current != QCoreApplication::instance()->thread() && (current != w->thread || !m_lockedForSync)) {
         qWarning() << "Updates can only be scheduled from GUI thread or from QQuickItem::updatePaintNode()";
         return;
     }
 
-    if (!w || !w->thread->isRunning()) {
-        return;
-    }
     qCDebug(QSG_LOG_RENDERLOOP) << "update from item" << w->window;
 
     // Call this function from the Gui thread later as startTimer cannot be
     // called from the render thread.
-    if (QThread::currentThread() == w->thread) {
+    if (current == w->thread) {
         qCDebug(QSG_LOG_RENDERLOOP) << "- on render thread";
         w->updateDuringSync = true;
         return;
