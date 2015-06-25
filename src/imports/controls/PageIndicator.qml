@@ -40,8 +40,6 @@ import QtQuick.Controls 2.0
 AbstractPageIndicator {
     id: control
 
-    property alias spacing: row.spacing
-
     Accessible.role: Accessible.Indicator
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -66,8 +64,6 @@ AbstractPageIndicator {
 
     //! [contentItem]
     contentItem: Row {
-        id: row
-
         spacing: control.Theme.spacing
 
         Repeater {
