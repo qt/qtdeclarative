@@ -667,7 +667,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     while (modelIndex < model->count() && pos <= fillTo) {
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
             break;
-        qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << item->item->objectName();
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos, true);
         if (item->item)
@@ -684,7 +684,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos > fillFrom) {
         if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, doBuffer))))
             break;
-        qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer << "item" << item->item->objectName();
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
         --visibleIndex;
         visiblePos -= item->size() + spacing;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
@@ -721,7 +721,7 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
                     visibleIndex++;
                 visibleItems.removeAt(index);
                 if (item->transitionScheduledOrRunning()) {
-                    qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << item->item->objectName();
+                    qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << (QObject *)(item->item);
                     item->releaseAfterTransition = true;
                     releasePendingTransition.append(item);
                 } else {
@@ -740,10 +740,10 @@ bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal buffer
     while (visibleItems.count() > 1 && (item = visibleItems.last()) && item->position() > bufferTo) {
         if (item->attached->delayRemove())
             break;
-        qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position() << item->item->objectName();
+        qCDebug(lcItemViewDelegateLifecycle) << "refill: remove last" << visibleIndex+visibleItems.count()-1 << item->position() << (QObject *)(item->item);
         visibleItems.removeLast();
         if (item->transitionScheduledOrRunning()) {
-            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << item->item->objectName();
+            qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << (QObject *)(item->item);
             item->releaseAfterTransition = true;
             releasePendingTransition.append(item);
         } else {
