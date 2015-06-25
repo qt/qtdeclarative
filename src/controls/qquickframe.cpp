@@ -47,7 +47,29 @@ QT_BEGIN_NAMESPACE
     \ingroup containers
     \brief A frame control.
 
-    TODO
+    Frame is used to layout a logical group of controls together, within a
+    visual frame. Frame does not provide a layout of its own, but requires
+    you to position its contents, for instance by creating a \l RowLayout
+    or a \l ColumnLayout.
+
+    If only a single item is used within a Frame, it will resize to fit the
+    implicit size of its contained item. This makes it particularly suitable
+    for use together with layouts.
+
+    ### TODO: screenshot
+
+    \code
+    Frame {
+        ColumnLayout {
+            anchors.fill: parent
+            CheckBox { text: qsTr("E-mail") }
+            CheckBox { text: qsTr("Calendar") }
+            CheckBox { text: qsTr("Contacts") }
+        }
+    }
+    \endcode
+
+    \sa {Customizing Frame}
 */
 
 QQuickFramePrivate::QQuickFramePrivate() : contentWidth(0), contentHeight(0), frame(Q_NULLPTR)
@@ -67,7 +89,11 @@ QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
 /*!
     \qmlproperty real QtQuickControls2::Frame::contentWidth
 
-    TODO
+    This property holds the content width. It is used for calculating the
+    total implicit width of the frame.
+
+    \note If only a single item is used within the frame, the implicit width
+          of its contained item is used as the content width.
 */
 qreal QQuickFrame::contentWidth() const
 {
@@ -87,7 +113,11 @@ void QQuickFrame::setContentWidth(qreal width)
 /*!
     \qmlproperty real QtQuickControls2::Frame::contentHeight
 
-    TODO
+    This property holds the content height. It is used for calculating the
+    total implicit height of the frame.
+
+    \note If only a single item is used within the frame, the implicit height
+          of its contained item is used as the content height.
 */
 qreal QQuickFrame::contentHeight() const
 {
@@ -107,7 +137,9 @@ void QQuickFrame::setContentHeight(qreal height)
 /*!
     \qmlproperty Item QtQuickControls2::Frame::frame
 
-    TODO
+    This property holds the visual frame item.
+
+    \sa {Customizing Frame}
 */
 QQuickItem *QQuickFrame::frame() const
 {
@@ -131,7 +163,9 @@ void QQuickFrame::setFrame(QQuickItem *frame)
     \qmlproperty list<Object> QtQuickControls2::Frame::contentData
     \default
 
-    TODO
+    This property holds the list of content data.
+
+    \sa Item::data
 */
 QQmlListProperty<QObject> QQuickFrame::contentData()
 {
@@ -146,7 +180,9 @@ QQmlListProperty<QObject> QQuickFrame::contentData()
 /*!
     \qmlproperty list<Item> QtQuickControls2::Frame::contentChildren
 
-    TODO
+    This property holds the list of content children.
+
+    \sa Item::children
 */
 QQmlListProperty<QQuickItem> QQuickFrame::contentChildren()
 {
