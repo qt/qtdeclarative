@@ -48,7 +48,47 @@ QT_BEGIN_NAMESPACE
     \ingroup tabs
     \brief A tab bar control.
 
-    TODO
+    TabBar provides a tab-based navigation model. TabBar is populated with
+    TabButton controls, and can be used together with any layout or container
+    control that provides \c currentIndex -property, such as \l StackLayout
+    or \l SwipeView
+
+    ### TODO: screenshot
+
+    \code
+    ApplicationWindow {
+        visible:true
+
+        header: TabBar {
+            id: bar
+            TabButton {
+                text: qsTr("Home")
+            }
+            TabButton {
+                text: qsTr("Discover")
+            }
+            TabButton {
+                text: qsTr("Activity")
+            }
+        }
+
+        StackLayout {
+            anchors.fill: parent
+            currentIndex: bar.currentIndex
+            Item {
+                id: homeTab
+            }
+            Item {
+                id: discoverTab
+            }
+            Item {
+                id: activityTab
+            }
+        }
+    }
+    \endcode
+
+    \sa TabButton, {Customizing TabBar}
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate
@@ -147,7 +187,7 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
 /*!
     \qmlproperty int QtQuickControls2::TabBar::currentIndex
 
-    TODO
+    This property holds the current index.
 */
 int QQuickTabBar::currentIndex() const
 {
@@ -168,8 +208,9 @@ void QQuickTabBar::setCurrentIndex(int index)
 
 /*!
     \qmlproperty Item QtQuickControls2::TabBar::currentItem
+    \readonly
 
-    TODO
+    This property holds the current item.
 */
 QQuickItem *QQuickTabBar::currentItem() const
 {

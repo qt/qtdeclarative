@@ -46,7 +46,19 @@ QT_BEGIN_NAMESPACE
     \ingroup tabs
     \brief A tab button control.
 
-    TODO
+    TabButton is used in conjunction with a \l TabBar.
+
+    ### TODO: screenshot
+
+    \code
+    TabBar {
+        TabButton { text: qsTr("Home") }
+        TabButton { text: qsTr("Discover") }
+        TabButton { text: qsTr("Activity") }
+    }
+    \endcode
+
+    \sa TabBar, {Customizing TabButton}
 */
 
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
