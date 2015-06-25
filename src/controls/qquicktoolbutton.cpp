@@ -34,46 +34,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
+#include "qquicktoolbutton_p.h"
 
-AbstractToolButton {
-    id: control
+QT_BEGIN_NAMESPACE
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
+/*!
+    \qmltype ToolButton
+    \inherits Button
+    \instantiates QQuickToolButton
+    \inqmlmodule QtQuick.Controls
+    \ingroup buttons
+    \brief A tool button control.
 
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Button
+    TODO
+*/
 
-    padding: Theme.padding
-
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
-        text: control.text
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [label]
-
-    //! [background]
-    background: Rectangle {
-        implicitWidth: 26
-        implicitHeight: 26
-
-        opacity: control.Theme.disabledOpacity
-        color: control.Theme.frameColor
-        visible: control.pressed
-    }
-    //! [background]
+QQuickToolButton::QQuickToolButton(QQuickItem *parent) :
+    QQuickButton(parent)
+{
 }
+
+QT_END_NAMESPACE

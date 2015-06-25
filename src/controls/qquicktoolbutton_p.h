@@ -34,46 +34,32 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
+#ifndef QQUICKTOOLBUTTON_P_H
+#define QQUICKTOOLBUTTON_P_H
 
-AbstractToolButton {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
+#include <QtQuickControls/private/qquickbutton_p.h>
 
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Button
+QT_BEGIN_NAMESPACE
 
-    padding: Theme.padding
+class Q_QUICKCONTROLS_EXPORT QQuickToolButton : public QQuickButton
+{
+    Q_OBJECT
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+public:
+    explicit QQuickToolButton(QQuickItem *parent = Q_NULLPTR);
+};
 
-        text: control.text
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [label]
+QT_END_NAMESPACE
 
-    //! [background]
-    background: Rectangle {
-        implicitWidth: 26
-        implicitHeight: 26
-
-        opacity: control.Theme.disabledOpacity
-        color: control.Theme.frameColor
-        visible: control.pressed
-    }
-    //! [background]
-}
+#endif // QQUICKTOOLBUTTON_P_H

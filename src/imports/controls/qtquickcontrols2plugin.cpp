@@ -58,6 +58,7 @@
 #include <QtQuickControls/private/qquicktextfield_p.h>
 #include <QtQuickControls/private/qquicktogglebutton_p.h>
 #include <QtQuickControls/private/qquicktoolbar_p.h>
+#include <QtQuickControls/private/qquicktoolbutton_p.h>
 
 #include <QtQuickControls/private/qquickcontrol_p.h>
 #include <QtQuickControls/private/qquickexclusivegroup_p.h>
@@ -102,6 +103,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "AbstractTextField");
     qmlRegisterType<QQuickToggleButton>(uri, 2, 0, "AbstractToggleButton");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "AbstractToolBar");
+    qmlRegisterType<QQuickToolButton>(uri, 2, 0, "AbstractToolButton");
 
     qmlRegisterUncreatableType<QQuickExclusiveAttached>(uri, 2, 0, "Exclusive", "Exclusive is an attached property");
     qmlRegisterUncreatableType<QQuickStackAttached>(uri, 2, 0, "Stack", "Stack is an attached property");
