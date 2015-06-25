@@ -211,10 +211,10 @@ QQuickContainer::~QQuickContainer()
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::TabBar::count
+    \qmlproperty int QtQuickControls2::Container::count
     \readonly
 
-    TODO
+    This property holds the number of items.
 */
 int QQuickContainer::count() const
 {
@@ -223,9 +223,9 @@ int QQuickContainer::count() const
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::TabBar::itemAt(int index)
+    \qmlmethod Item QtQuickControls2::Container::itemAt(int index)
 
-    TODO
+    Returns the item at \a index, or \c null if it does not exist.
 */
 QQuickItem *QQuickContainer::itemAt(int index) const
 {
@@ -234,9 +234,9 @@ QQuickItem *QQuickContainer::itemAt(int index) const
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::TabBar::addItem(Item item)
+    \qmlmethod void QtQuickControls2::Container::addItem(Item item)
 
-    TODO
+    Adds an \a item.
 */
 void QQuickContainer::addItem(QQuickItem *item)
 {
@@ -245,9 +245,9 @@ void QQuickContainer::addItem(QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::TabBar::insertItem(int index, Item item)
+    \qmlmethod void QtQuickControls2::Container::insertItem(int index, Item item)
 
-    TODO
+    Inserts an \a item at \a index.
 */
 void QQuickContainer::insertItem(int index, QQuickItem *item)
 {
@@ -270,9 +270,9 @@ void QQuickContainer::insertItem(int index, QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::TabBar::moveItem(int from, int to)
+    \qmlmethod void QtQuickControls2::Container::moveItem(int from, int to)
 
-    TODO
+    Moves an item \a from one index \a to another.
 */
 void QQuickContainer::moveItem(int from, int to)
 {
@@ -288,9 +288,11 @@ void QQuickContainer::moveItem(int from, int to)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::TabBar::removeItem(int index)
+    \qmlmethod void QtQuickControls2::Container::removeItem(int index)
 
-    TODO
+    Removes an item at \a index.
+
+    \note The ownership of the item is transferred to the caller.
 */
 void QQuickContainer::removeItem(int index)
 {
@@ -305,10 +307,10 @@ void QQuickContainer::removeItem(int index)
 }
 
 /*!
-    \qmlproperty model QtQuickControls2::TabBar::contentModel
+    \qmlproperty model QtQuickControls2::Container::contentModel
     \readonly
 
-    TODO
+    This property holds the content model of items.
 */
 QVariant QQuickContainer::contentModel() const
 {
@@ -317,10 +319,12 @@ QVariant QQuickContainer::contentModel() const
 }
 
 /*!
-    \qmlproperty list<Object> QtQuickControls2::TabBar::contentData
+    \qmlproperty list<Object> QtQuickControls2::Container::contentData
     \default
 
-    TODO
+    This property holds the list of content data.
+
+    \sa Item::data
 */
 QQmlListProperty<QObject> QQuickContainer::contentData()
 {
@@ -333,9 +337,11 @@ QQmlListProperty<QObject> QQuickContainer::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> QtQuickControls2::TabBar::contentChildren
+    \qmlproperty list<Item> QtQuickControls2::Container::contentChildren
 
-    TODO
+    This property holds the list of content children.
+
+    \sa Item::children
 */
 QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 {
