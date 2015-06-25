@@ -194,4 +194,14 @@ QQmlListProperty<QQuickItem> QQuickFrame::contentChildren()
                                         QQuickItemPrivate::children_clear);
 }
 
+void QQuickFrame::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
+{
+    QQuickControl::contentItemChange(newItem, oldItem);
+    if (oldItem)
+        disconnect(oldItem, &QQuickItem::childrenChanged, this, &QQuickFrame::contentChildrenChanged);
+    if (newItem)
+        connect(newItem, &QQuickItem::childrenChanged, this, &QQuickFrame::contentChildrenChanged);
+    emit contentChildrenChanged();
+}
+
 QT_END_NAMESPACE

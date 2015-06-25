@@ -62,7 +62,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickFrame : public QQuickControl
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -83,10 +83,13 @@ public:
 Q_SIGNALS:
     void contentWidthChanged();
     void contentHeightChanged();
+    void contentChildrenChanged();
     void frameChanged();
 
 protected:
     QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent);
+
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickFrame)
