@@ -71,19 +71,19 @@ FxViewItem::~FxViewItem()
 
 qreal FxViewItem::itemX() const
 {
-    return transitionableItem ? transitionableItem->itemX() : item->x();
+    return transitionableItem ? transitionableItem->itemX() : (item ? item->x() : 0);
 }
 
 qreal FxViewItem::itemY() const
 {
-    return transitionableItem ? transitionableItem->itemY() : item->y();
+    return transitionableItem ? transitionableItem->itemY() : (item ? item->y() : 0);
 }
 
 void FxViewItem::moveTo(const QPointF &pos, bool immediate)
 {
     if (transitionableItem)
         transitionableItem->moveTo(pos, immediate);
-    else
+    else if (item)
         item->setPosition(pos);
 }
 
@@ -91,21 +91,26 @@ void FxViewItem::setVisible(bool visible)
 {
     if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
         return;
-    QQuickItemPrivate::get(item)->setCulled(!visible);
+    if (item)
+        QQuickItemPrivate::get(item)->setCulled(!visible);
 }
 
 void FxViewItem::trackGeometry(bool track)
 {
     if (track) {
         if (!trackGeom) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            if (item) {
+                QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            }
             trackGeom = true;
         }
     } else {
         if (trackGeom) {
-            QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-            itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            if (item) {
+                QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
+            }
             trackGeom = false;
         }
     }
@@ -2044,8 +2049,9 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     currentChanges.removedItems.clear();
 
     if (currentChanges.currentChanged) {
-        if (currentChanges.currentRemoved && currentItem && currentItem->attached) {
-            currentItem->attached->setIsCurrentItem(false);
+        if (currentChanges.currentRemoved && currentItem) {
+            if (currentItem->item && currentItem->attached)
+                currentItem->attached->setIsCurrentItem(false);
             releaseItem(currentItem);
             currentItem = 0;
         }
@@ -2097,10 +2103,10 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Change &remo
         } else {
             // removed item
             visibleAffected = true;
-            if (!removal.isMove() && item->attached)
+            if (!removal.isMove() && item->item && item->attached)
                 item->attached->emitRemove();
 
-            if (item->attached && item->attached->delayRemove() && !removal.isMove()) {
+            if (item->item && item->attached && item->attached->delayRemove() && !removal.isMove()) {
                 item->index = -1;
                 QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
                 ++it;
@@ -2357,12 +2363,14 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item)
     item->trackGeometry(false);
 
     QQmlInstanceModel::ReleaseFlags flags = model->release(item->item);
-    if (flags == 0) {
-        // item was not destroyed, and we no longer reference it.
-        QQuickItemPrivate::get(item->item)->setCulled(true);
-        unrequestedItems.insert(item->item, model->indexOf(item->item, q));
-    } else if (flags & QQmlInstanceModel::Destroyed) {
-        item->item->setParentItem(0);
+    if (item->item) {
+        if (flags == 0) {
+            // item was not destroyed, and we no longer reference it.
+            QQuickItemPrivate::get(item->item)->setCulled(true);
+            unrequestedItems.insert(item->item, model->indexOf(item->item, q));
+        } else if (flags & QQmlInstanceModel::Destroyed) {
+            item->item->setParentItem(0);
+        }
     }
     delete item;
     return flags != QQmlInstanceModel::Referenced;

@@ -53,6 +53,8 @@ public:
 
     qreal itemX() const;
     qreal itemY() const;
+    inline qreal itemWidth() const { return item ? item->width() : 0; }
+    inline qreal itemHeight() const { return item ? item->height() : 0; }
 
     void moveTo(const QPointF &pos, bool immediate);
     void setVisible(bool visible);
@@ -75,7 +77,7 @@ public:
 
     virtual bool contains(qreal x, qreal y) const = 0;
 
-    QQuickItem *item;
+    QPointer<QQuickItem> item;
     QQuickItemView *view;
     QQuickItemViewTransitionableItem *transitionableItem;
     QQuickItemViewAttached *attached;

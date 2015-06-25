@@ -267,18 +267,18 @@ public:
     }
     qreal itemPosition() const {
         if (view->orientation() == QQuickListView::Vertical)
-            return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -item->height()-itemY() : itemY());
+            return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -itemHeight()-itemY() : itemY());
         else
-            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
+            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -itemWidth()-itemX() : itemX());
     }
     qreal size() const {
         if (section())
-            return (view->orientation() == QQuickListView::Vertical ? item->height()+section()->height() : item->width()+section()->width());
+            return (view->orientation() == QQuickListView::Vertical ? itemHeight()+section()->height() : itemWidth()+section()->width());
         else
-            return (view->orientation() == QQuickListView::Vertical ? item->height() : item->width());
+            return (view->orientation() == QQuickListView::Vertical ? itemHeight() : itemWidth());
     }
     qreal itemSize() const {
-        return (view->orientation() == QQuickListView::Vertical ? item->height() : item->width());
+        return (view->orientation() == QQuickListView::Vertical ? itemHeight() : itemWidth());
     }
     qreal sectionSize() const {
         if (section())
@@ -289,11 +289,11 @@ public:
         if (view->orientation() == QQuickListView::Vertical) {
             return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop
                     ? -itemY()
-                    : itemY() + item->height());
+                    : itemY() + itemHeight());
         } else {
             return (view->effectiveLayoutDirection() == Qt::RightToLeft
                     ? -itemX()
-                    : itemX() + item->width());
+                    : itemX() + itemWidth());
         }
     }
     void setPosition(qreal pos, bool immediate = false) {
@@ -320,8 +320,8 @@ public:
             item->setWidth(size);
     }
     bool contains(qreal x, qreal y) const Q_DECL_OVERRIDE {
-        return (x >= itemX() && x < itemX() + item->width() &&
-                y >= itemY() && y < itemY() + item->height());
+        return (x >= itemX() && x < itemX() + itemWidth() &&
+                y >= itemY() && y < itemY() + itemHeight());
     }
 
     QQuickListView *view;
@@ -332,7 +332,7 @@ private:
             if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop) {
                 if (section())
                     pos += section()->height();
-                return QPointF(itemX(), -item->height() - pos);
+                return QPointF(itemX(), -itemHeight() - pos);
             } else {
                 if (section())
                     pos += section()->height();
@@ -342,7 +342,7 @@ private:
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 if (section())
                     pos += section()->width();
-                return QPointF(-item->width() - pos, itemY());
+                return QPointF(-itemWidth() - pos, itemY());
             } else {
                 if (section())
                     pos += section()->width();
@@ -612,7 +612,7 @@ bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
     QQuickListViewAttached *att = static_cast<QQuickListViewAttached*>(item->attached);
 
     bool released = QQuickItemViewPrivate::releaseItem(item);
-    if (released && att && att->m_sectionItem) {
+    if (released && item->item && att && att->m_sectionItem) {
         // We hold no more references to this item
         int i = 0;
         do {
@@ -670,7 +670,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << item->item->objectName();
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(pos, true);
-        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
+        if (item->item)
+            QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         pos += item->size() + spacing;
         visibleItems.append(item);
         ++modelIndex;
@@ -688,7 +689,8 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         visiblePos -= item->size() + spacing;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(visiblePos, true);
-        QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
+        if (item->item)
+            QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.prepend(item);
         changed = true;
     }
@@ -2851,7 +2853,8 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
     for (int i = 0; i < d->visibleItems.count(); ++i) {
         FxViewItem *item = static_cast<FxListItemSG*>(d->visibleItems.at(i));
-        QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
+        if (item->item)
+            QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
     }
     if (d->currentItem)
         QQuickItemPrivate::get(d->currentItem->item)->setCulled(d->currentItem->endPosition() < from || d->currentItem->position() > to);
