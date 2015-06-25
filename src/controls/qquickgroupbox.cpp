@@ -47,7 +47,30 @@ QT_BEGIN_NAMESPACE
     \ingroup containers
     \brief A group box control.
 
-    TODO
+    GroupBox is used to layout a logical group of controls together, within
+    a titled visual frame. GroupBox does not provide a layout of its own, but
+    requires you to position its contents, for instance by creating a \l RowLayout
+    or a \l ColumnLayout.
+
+    If only a single item is used within a GroupBox, it will resize to fit the
+    implicit size of its contained item. This makes it particularly suitable
+    for use together with layouts.
+
+    ### TODO: screenshot
+
+    \code
+    GroupBox {
+        title: qsTr("Synchronize")
+        ColumnLayout {
+            anchors.fill: parent
+            CheckBox { text: qsTr("E-mail") }
+            CheckBox { text: qsTr("Calendar") }
+            CheckBox { text: qsTr("Contacts") }
+        }
+    }
+    \endcode
+
+    \sa {Customizing GroupBox}
 */
 
 class QQuickGroupBoxPrivate : public QQuickFramePrivate
@@ -67,7 +90,7 @@ QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
 /*!
     \qmlproperty string QtQuickControls2::GroupBox::title
 
-    TODO
+    This property holds the title.
 */
 QString QQuickGroupBox::title() const
 {
@@ -87,7 +110,9 @@ void QQuickGroupBox::setTitle(const QString &title)
 /*!
     \qmlproperty Item QtQuickControls2::GroupBox::label
 
-    TODO
+    This property holds the label item that visualizes \l title.
+
+    \sa {Customizing GroupBox}
 */
 QQuickItem *QQuickGroupBox::label() const
 {
