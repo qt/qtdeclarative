@@ -46,7 +46,47 @@ QT_BEGIN_NAMESPACE
     \ingroup containers
     \brief A tool bar control.
 
-    TODO
+    ToolBar is a container of application-wide and context sensitive
+    actions and controls, such as navigation buttons and search fields.
+    ToolBar is commonly used as a \l {ApplicationWindow::header}{header}
+    or a \l {ApplicationWindow::footer}{footer} of an \l ApplicationWindow.
+
+    ToolBar does not provide a layout of its own, but requires you to
+    position its contents, for instance by creating a \l RowLayout. If only
+    a single item is used within the ToolBar, it will resize to fit the
+    implicit size of its contained item. This makes it particularly suitable
+    for use together with layouts.
+
+    ### TODO: screenshot
+
+    \code
+    ApplicationWindow {
+        visible:true
+
+        header: ToolBar {
+            RowLayout {
+                anchors.fill: parent
+                ToolButton {
+                    text: qsTr("< %1").arg(Qt.application.name)
+                    enabled: stack.depth > 1
+                    onClicked: stack.pop()
+                }
+                Item { Layout.fillWidth: true }
+                Switch {
+                    checked: true
+                    text: qsTr("Notifications")
+                }
+            }
+        }
+
+        StackView {
+            id: stack
+            anchors.fill: parent
+        }
+    }
+    \endcode
+
+    \sa ApplicationWindow, ToolButton, {Customizing ToolBar}
 */
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :

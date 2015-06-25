@@ -46,7 +46,31 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A tool button control.
 
-    TODO
+    ToolButton is functionally similar to \l Button, but provides a look that
+    is more suitable within a \l ToolBar.
+
+    ### TODO: screenshot
+
+    \code
+    ToolBar {
+        RowLayout {
+            anchors.fill: parent
+            ToolButton {
+                text: qsTr("< %1").arg(Qt.application.name)
+                enabled: stack.depth > 1
+                onClicked: stack.pop()
+            }
+            Item { Layout.fillWidth: true }
+            ToolButton {
+                text: qsTr("< %1").arg(Qt.application.name)
+                enabled: stack.depth > 1
+                onClicked: stack.pop()
+            }
+        }
+    }
+    \endcode
+
+    \sa ToolBar, {Customizing ToolButton}
 */
 
 QQuickToolButton::QQuickToolButton(QQuickItem *parent) :

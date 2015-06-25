@@ -358,7 +358,7 @@
     \section1 Customizing ToolButton
 
         ToolButton consists of two visual items: \l {Control::background}{background}
-        and \l {ToolButton::label}{label}.
+        and \l {Button::label}{label}.
 
         \section3 Background
 
