@@ -222,7 +222,7 @@ void QQuickImageBase::load()
             if (loadUrl.scheme() == QStringLiteral("image")) {
                 setDevicePixelRatio = true;
             } else {
-                QString stringUrl = loadUrl.toString();
+                QString stringUrl = loadUrl.path(QUrl::PrettyDecoded);
                 if (stringUrl.endsWith(QLatin1String("svg")) ||
                     stringUrl.endsWith(QLatin1String("svgz"))) {
                     setDevicePixelRatio = true;
