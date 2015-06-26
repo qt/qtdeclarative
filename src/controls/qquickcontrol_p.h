@@ -65,6 +65,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged FINAL)
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
@@ -97,6 +98,10 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    qreal spacing() const;
+    void setSpacing(qreal spacing);
+    void resetSpacing();
+
     Qt::LayoutDirection layoutDirection() const;
     Qt::LayoutDirection effectiveLayoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection direction);
@@ -117,6 +122,7 @@ Q_SIGNALS:
     void leftPaddingChanged();
     void rightPaddingChanged();
     void bottomPaddingChanged();
+    void spacingChanged();
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
     void mirroredChanged();

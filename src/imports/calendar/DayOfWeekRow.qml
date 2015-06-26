@@ -63,6 +63,7 @@ AbstractDayOfWeekRow {
 
     //! [contentItem]
     contentItem: Row {
+        spacing: control.spacing
         Repeater {
             model: control.source
             delegate: control.delegate

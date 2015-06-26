@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR)
 {
 }
@@ -325,6 +325,31 @@ void QQuickControl::resetBottomPadding()
 {
     Q_D(QQuickControl);
     d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlproperty real QtQuickControls2::Control::spacing
+
+    This property holds the spacing.
+*/
+qreal QQuickControl::spacing() const
+{
+    Q_D(const QQuickControl);
+    return d->spacing;
+}
+
+void QQuickControl::setSpacing(qreal spacing)
+{
+    Q_D(QQuickControl);
+    if (!qFuzzyCompare(d->spacing, spacing)) {
+        d->spacing = spacing;
+        emit spacingChanged();
+    }
+}
+
+void QQuickControl::resetSpacing()
+{
+    setSpacing(0);
 }
 
 /*!

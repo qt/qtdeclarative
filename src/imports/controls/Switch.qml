@@ -43,7 +43,7 @@ AbstractSwitch {
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             (label ? label.implicitWidth : 0) +
                             (indicator ? indicator.implicitWidth : 0) +
-                            (label && indicator ? Theme.spacing : 0) + leftPadding + rightPadding)
+                            (label && indicator ? spacing : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
@@ -55,6 +55,7 @@ AbstractSwitch {
     Accessible.role: Accessible.Button // TODO: Switch?
 
     padding: Theme.padding
+    spacing: Theme.spacing
 
     //! [indicator]
     indicator: Rectangle {
@@ -94,9 +95,9 @@ AbstractSwitch {
 
     //! [label]
     label: Text {
-        x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.Theme.spacing)
+        x: control.mirrored ? control.leftPadding : (indicator.x + indicator.width + control.spacing)
         y: control.topPadding
-        width: control.availableWidth - indicator.width - control.Theme.spacing
+        width: control.availableWidth - indicator.width - control.spacing
         height: control.availableHeight
 
         text: control.text

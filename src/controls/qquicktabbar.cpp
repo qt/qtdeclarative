@@ -114,7 +114,6 @@ void QQuickTabBarPrivate::updateLayout()
     Q_Q(QQuickTabBar);
     const int count = contentModel->count();
     if (count > 0 && contentItem) {
-        const qreal spacing = contentItem->property("spacing").toReal();
         const qreal itemWidth = (contentItem->width() - qMax(0, count - 1) * spacing) / count;
 
         for (int i = 0; i < count; ++i) {

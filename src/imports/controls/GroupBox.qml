@@ -46,8 +46,9 @@ AbstractGroupBox {
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
+    spacing: Theme.spacing
     padding: Theme.padding
-    topPadding: Theme.padding + (label && title ? label.implicitHeight + Theme.spacing : 0)
+    topPadding: Theme.padding + (label && title ? label.implicitHeight + spacing : 0)
 
     //! [contentItem]
     contentItem: Item { }

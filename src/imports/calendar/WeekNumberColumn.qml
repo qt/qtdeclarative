@@ -63,6 +63,7 @@ AbstractWeekNumberColumn {
 
     //! [contentItem]
     contentItem: Column {
+        spacing: control.spacing
         Repeater {
             model: control.source
             delegate: control.delegate

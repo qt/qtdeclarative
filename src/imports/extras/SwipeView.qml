@@ -40,8 +40,6 @@ import QtQuick.Extras 2.0
 AbstractSwipeView {
     id: control
 
-    property alias spacing: listView.spacing
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
@@ -56,6 +54,7 @@ AbstractSwipeView {
         model: control.contentModel
         currentIndex: control.currentIndex
 
+        spacing: control.spacing
         orientation: Qt.Horizontal
         snapMode: ListView.SnapOneItem
         boundsBehavior: Flickable.StopAtBounds

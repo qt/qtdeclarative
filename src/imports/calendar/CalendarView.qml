@@ -67,6 +67,8 @@ AbstractCalendarView {
     contentItem: Grid {
         rows: 6
         columns: 7
+        rowSpacing: control.spacing
+        columnSpacing: control.spacing
 
         Repeater {
             model: control.source

@@ -49,11 +49,13 @@ AbstractTabBar {
 
     Accessible.role: Accessible.PageTabList
 
+    spacing: 1
+
     //! [contentItem]
     contentItem: ListView {
         id: listView
 
-        spacing: 1
+        spacing: control.spacing
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem

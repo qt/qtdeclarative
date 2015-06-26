@@ -48,6 +48,7 @@ AbstractPageIndicator {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: Theme.padding
+    spacing: Theme.spacing
 
     //! [delegate]
     delegate: Rectangle {
@@ -64,7 +65,7 @@ AbstractPageIndicator {
 
     //! [contentItem]
     contentItem: Row {
-        spacing: control.Theme.spacing
+        spacing: control.spacing
 
         Repeater {
             model: control.count
