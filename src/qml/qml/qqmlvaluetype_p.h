@@ -153,6 +153,10 @@ struct QQmlRectFValueType
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
     Q_PROPERTY(qreal height READ height WRITE setHeight FINAL)
+    Q_PROPERTY(qreal left READ left DESIGNABLE false FINAL)
+    Q_PROPERTY(qreal right READ right DESIGNABLE false FINAL)
+    Q_PROPERTY(qreal top READ top DESIGNABLE false FINAL)
+    Q_PROPERTY(qreal bottom READ bottom DESIGNABLE false FINAL)
     Q_GADGET
 public:
     Q_INVOKABLE QString toString() const;
@@ -165,6 +169,11 @@ public:
     qreal height() const;
     void setWidth(qreal);
     void setHeight(qreal);
+
+    qreal left() const;
+    qreal right() const;
+    qreal top() const;
+    qreal bottom() const;
 };
 
 struct QQmlRectValueType
@@ -174,6 +183,10 @@ struct QQmlRectValueType
     Q_PROPERTY(int y READ y WRITE setY FINAL)
     Q_PROPERTY(int width READ width WRITE setWidth FINAL)
     Q_PROPERTY(int height READ height WRITE setHeight FINAL)
+    Q_PROPERTY(int left READ left DESIGNABLE false FINAL)
+    Q_PROPERTY(int right READ right DESIGNABLE false FINAL)
+    Q_PROPERTY(int top READ top DESIGNABLE false FINAL)
+    Q_PROPERTY(int bottom READ bottom DESIGNABLE false FINAL)
     Q_GADGET
 public:
     int x() const;
@@ -185,6 +198,11 @@ public:
     int height() const;
     void setWidth(int);
     void setHeight(int);
+
+    int left() const;
+    int right() const;
+    int top() const;
+    int bottom() const;
 };
 
 struct QQmlEasingValueType

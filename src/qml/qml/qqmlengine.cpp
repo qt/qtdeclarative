@@ -1491,18 +1491,29 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 }
 
 /*!
+ * \enum QQmlDebuggingEnabler::StartMode
+ *
+ * Defines the debug server's start behavior. You can interrupt QML engines starting while a debug
+ * client is connecting, in order to set breakpoints in or profile startup code.
+ *
+ * \value DoNotWaitForClient Run any QML engines as usual while the debug services are connecting.
+ * \value WaitForClient      If a QML engine starts while the debug services are connecting,
+ *                           interrupt it until they are done.
+ */
+
+/*!
  * Enables debugging for QML engines created after calling this function. The debug server will
  * listen on \a port at \a hostName and block the QML engine until it receives a connection if
- * \a block is true. If \a block is not specified it won't block and if \a hostName isn't specified
- * it will listen on all available interfaces. You can only start one debug server at a time. A
- * debug server may have already been started if the -qmljsdebugger= command line argument was
- * given. This method returns \c true if a new debug server was successfully started, or \c false
- * otherwise.
+ * \a mode is \c WaitForClient. If \a mode is not specified it won't block and if \a hostName is not
+ * specified it will listen on all available interfaces. You can only start one debug server at a
+ * time. A debug server may have already been started if the -qmljsdebugger= command line argument
+ * was given. This method returns \c true if a new debug server was successfully started, or
+ * \c false otherwise.
  */
-bool QQmlDebuggingEnabler::startTcpDebugServer(int port, bool block, const QString &hostName)
+bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const QString &hostName)
 {
 #ifndef QQML_NO_DEBUG_PROTOCOL
-    return QQmlDebugServer::enable(port, port, block, hostName);
+    return QQmlDebugServer::enable(port, port, mode == WaitForClient, hostName);
 #else
     Q_UNUSED(port);
     Q_UNUSED(block);

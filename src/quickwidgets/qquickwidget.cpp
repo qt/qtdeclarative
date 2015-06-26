@@ -202,7 +202,12 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
 
 void QQuickWidgetPrivate::render(bool needsSync)
 {
-    context->makeCurrent(offscreenSurface);
+    if (!context->makeCurrent(offscreenSurface)) {
+        qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
+        return;
+    }
+
+    QOpenGLContextPrivate::get(context)->defaultFboRedirect = fbo->handle();
 
     if (needsSync) {
         renderControl->polishItems();
@@ -217,6 +222,8 @@ void QQuickWidgetPrivate::render(bool needsSync)
     }
 
     static_cast<QOpenGLExtensions *>(context->functions())->flushShared();
+
+    QOpenGLContextPrivate::get(context)->defaultFboRedirect = 0;
 }
 
 void QQuickWidgetPrivate::renderSceneGraph()
