@@ -1004,7 +1004,8 @@ void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPoin
 }
 
 void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,
-                                  const QVector2D &deltas, bool overThreshold, bool momentum, const QVector2D &velocity)
+                                  const QVector2D &deltas, bool overThreshold, bool momentum,
+                                  bool velocitySensitiveOverBounds, const QVector2D &velocity)
 {
     Q_Q(QQuickFlickable);
     bool rejectY = false;
@@ -1061,9 +1062,13 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         }
                         return;
                     }
-                    qreal overshoot = (newY - minY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
-                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
-                    newY = minY + overshoot;
+                    if (velocitySensitiveOverBounds) {
+                        qreal overshoot = (newY - minY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                        newY = minY + overshoot;
+                    } else {
+                        newY = minY + (newY - minY) / 2;
+                    }
                 } else if (newY < maxY && maxY - minY <= 0) {
                     // Overshoot beyond the bottom.  But don't wait for momentum phase to end before returning to bounds.
                     if (momentum && vData.atEnd) {
@@ -1073,9 +1078,13 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         }
                         return;
                     }
-                    qreal overshoot = (newY - maxY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
-                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
-                    newY = maxY - overshoot;
+                    if (velocitySensitiveOverBounds) {
+                        qreal overshoot = (newY - maxY) * vData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                        newY = maxY - overshoot;
+                    } else {
+                        newY = maxY + (newY - maxY) / 2;
+                    }
                 }
             }
             if (!rejectY && stealMouse && dy != 0.0 && dy != vData.previousDragDelta) {
@@ -1126,9 +1135,13 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         }
                         return;
                     }
-                    qreal overshoot = (newX - minX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
-                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
-                    newX = minX + overshoot;
+                    if (velocitySensitiveOverBounds) {
+                        qreal overshoot = (newX - minX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                        newX = minX + overshoot;
+                    } else {
+                        newX = minX + (newX - minX) / 2;
+                    }
                 } else if (newX < maxX && maxX - minX <= 0) {
                     // Overshoot beyond the right.  But don't wait for momentum phase to end before returning to bounds.
                     if (momentum && hData.atEnd) {
@@ -1138,9 +1151,13 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                         }
                         return;
                     }
-                    qreal overshoot = (newX - maxX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
-                    overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
-                    newX = maxX - overshoot;
+                    if (velocitySensitiveOverBounds) {
+                        qreal overshoot = (newX - maxX) * hData.velocity / QML_FLICK_DEFAULTMAXVELOCITY / QML_FLICK_OVERSHOOTFRICTION;
+                        overshoot = QML_FLICK_OVERSHOOT * devicePixelRatio() * EaseOvershoot(overshoot / QML_FLICK_OVERSHOOT / devicePixelRatio());
+                        newX = maxX - overshoot;
+                    } else {
+                        newX = maxX + (newX - maxX) / 2;
+                    }
                 }
             }
 
@@ -1210,7 +1227,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (q->xflick())
         overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, event);
 
-    drag(currentTimestamp, event->type(), event->localPos(), deltas, overThreshold, false, velocity);
+    drag(currentTimestamp, event->type(), event->localPos(), deltas, overThreshold, false, false, velocity);
 }
 
 void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
@@ -1433,7 +1450,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         QVector2D velocity(xDelta / elapsed, yDelta / elapsed);
         d->lastPosTime = currentTimestamp;
         d->accumulatedWheelPixelDelta += QVector2D(event->pixelDelta());
-        d->drag(currentTimestamp, event->type(), event->posF(), d->accumulatedWheelPixelDelta, true, !d->scrollingPhase, velocity);
+        d->drag(currentTimestamp, event->type(), event->posF(), d->accumulatedWheelPixelDelta, true, !d->scrollingPhase, true, velocity);
     }
 
     if (!event->isAccepted())

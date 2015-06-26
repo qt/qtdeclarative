@@ -250,7 +250,8 @@ public:
 
     void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn);
     void drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,
-              const QVector2D &deltas, bool overThreshold, bool momentum, const QVector2D &velocity);
+              const QVector2D &deltas, bool overThreshold, bool momentum,
+              bool velocitySensitiveOverBounds, const QVector2D &velocity);
 
     qint64 computeCurrentTime(QInputEvent *event);
     qreal devicePixelRatio();
