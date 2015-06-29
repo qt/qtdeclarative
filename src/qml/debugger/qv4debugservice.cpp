@@ -46,17 +46,10 @@
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonValue>
 
-const char *V4_CONNECT = "connect";
-const char *V4_DISCONNECT = "disconnect";
-const char *V4_BREAK_ON_SIGNAL = "breakonsignal";
-const char *V4_ADD_BREAKPOINT = "addBreakpoint";
-const char *V4_REMOVE_BREAKPOINT = "removeBreakpoint";
-const char *V4_PAUSE = "interrupt";
-const char *V4_ALL = "all";
-const char *V4_BREAK = "break";
-
-const char *V4_FILENAME = "filename";
-const char *V4_LINENUMBER = "linenumber";
+const char *const V4_CONNECT = "connect";
+const char *const V4_DISCONNECT = "disconnect";
+const char *const V4_BREAK_ON_SIGNAL = "breakonsignal";
+const char *const V4_PAUSE = "interrupt";
 
 #define NO_PROTOCOL_TRACING
 #ifdef NO_PROTOCOL_TRACING
