@@ -88,29 +88,22 @@ TestCase {
         clickedSpy.clear()
     }
 
-    function test_defaults() {
-        var control = swtch.createObject(testCase)
-        verify(control)
-        verify(control.label)
-        verify(control.indicator)
-        compare(control.text, "")
-        compare(control.pressed, false)
-        compare(control.checked, false)
-        control.destroy()
-    }
-
     function test_text() {
         var control = swtch.createObject(testCase)
+        verify(control)
+
         compare(control.text, "")
         control.text = "Switch"
         compare(control.text, "Switch")
         control.text = ""
         compare(control.text, "")
+
         control.destroy()
     }
 
     function test_checked() {
         var control = swtch.createObject(testCase)
+        verify(control)
 
         checkedSpy.target = control
         verify(checkedSpy.valid)
@@ -131,6 +124,7 @@ TestCase {
 
     function test_mouse() {
         var control = swtch.createObject(testCase)
+        verify(control)
 
         checkedSpy.target = control
         pressedSpy.target = control
@@ -203,6 +197,7 @@ TestCase {
 
     function test_keys() {
         var control = swtch.createObject(testCase)
+        verify(control)
 
         checkedSpy.target = control
         clickedSpy.target = control
@@ -246,6 +241,7 @@ TestCase {
 
     function test_binding() {
         var container = twoSwitches.createObject(testCase)
+        verify(container)
 
         compare(container.sw1.checked, false)
         compare(container.sw2.checked, false)

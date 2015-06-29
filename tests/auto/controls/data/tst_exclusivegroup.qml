@@ -70,15 +70,9 @@ TestCase {
         currentSpy.clear()
     }
 
-    function test_defaults() {
-        var group = exclusiveGroup.createObject(testCase)
-        verify(group)
-        verify(!group.current)
-        group.destroy()
-    }
-
     function test_null() {
         var group = exclusiveGroup.createObject(testCase)
+        verify(group)
 
         group.addCheckable(null)
         group.removeCheckable(null)
@@ -93,9 +87,11 @@ TestCase {
 
     function test_current() {
         var group = exclusiveGroup.createObject(testCase)
+        verify(group)
 
         currentSpy.target = group
         verify(currentSpy.valid)
+        verify(!group.current)
 
         var checkable1 = checkable.createObject(testCase, {checked: true})
         var checkable2 = checkable.createObject(testCase, {checked: false})
@@ -211,6 +207,7 @@ TestCase {
 
     function test_controls(data) {
         var container = data.component.createObject(testCase)
+        verify(container)
 
         verify(!container.group.current)
 

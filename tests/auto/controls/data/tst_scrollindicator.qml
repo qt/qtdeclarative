@@ -67,23 +67,18 @@ TestCase {
         }
     }
 
-    function test_defaults() {
-        var control = scrollIndicator.createObject(testCase)
-        verify(control)
-        verify(control.indicator)
-        compare(control.size, 0.0)
-        compare(control.position, 0.0)
-        compare(control.active, false)
-        compare(control.orientation, Qt.Vertical)
-        control.destroy()
-    }
-
     function test_attach() {
         var container = flickable.createObject(testCase)
+        verify(container)
         waitForRendering(container)
 
         var vertical = scrollIndicator.createObject()
         verify(!vertical.parent)
+        compare(vertical.size, 0.0)
+        compare(vertical.position, 0.0)
+        compare(vertical.active, false)
+        compare(vertical.orientation, Qt.Vertical)
+
         container.AbstractScrollIndicator.vertical = vertical
         compare(vertical.parent, container)
         compare(vertical.orientation, Qt.Vertical)
@@ -92,6 +87,11 @@ TestCase {
 
         var horizontal = scrollIndicator.createObject()
         verify(!horizontal.parent)
+        compare(horizontal.size, 0.0)
+        compare(horizontal.position, 0.0)
+        compare(horizontal.active, false)
+        compare(horizontal.orientation, Qt.Vertical)
+
         container.AbstractScrollIndicator.horizontal = horizontal
         compare(horizontal.parent, container)
         compare(horizontal.orientation, Qt.Horizontal)

@@ -70,12 +70,10 @@ TestCase {
         signalName: "mirroredChanged"
     }
 
-    function test_defaults() {
+    function test_padding() {
         var control = component.createObject(testCase)
         verify(control)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-        compare(control.mirrored, false)
+
         compare(control.padding, 0)
         compare(control.topPadding, 0)
         compare(control.leftPadding, 0)
@@ -83,11 +81,6 @@ TestCase {
         compare(control.bottomPadding, 0)
         compare(control.availableWidth, 0)
         compare(control.availableHeight, 0)
-        control.destroy()
-    }
-
-    function test_padding() {
-        var control = component.createObject(testCase)
 
         control.width = 100
         control.height = 100
@@ -139,6 +132,7 @@ TestCase {
 
     function test_availableSize() {
         var control = component.createObject(testCase)
+        verify(control)
 
         control.width = 100
         control.height = 100
@@ -174,6 +168,7 @@ TestCase {
 
     function test_layoutDirection() {
         var control = component.createObject(testCase)
+        verify(control)
 
         layoutDirectionSpy.target = control
         effectiveLayoutDirectionSpy.target = control
@@ -225,6 +220,7 @@ TestCase {
 
     function test_background() {
         var control = component.createObject(testCase)
+        verify(control)
 
         control.background = component.createObject(control)
 

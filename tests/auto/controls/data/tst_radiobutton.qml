@@ -62,35 +62,22 @@ TestCase {
         }
     }
 
-    function init() {
-    }
-
-    function cleanup() {
-    }
-
-    function test_defaults() {
-        var control = radioButton.createObject(testCase)
-        verify(control)
-        verify(control.label)
-        verify(control.indicator)
-        compare(control.text, "")
-        compare(control.pressed, false)
-        compare(control.checked, false)
-        control.destroy()
-    }
-
     function test_text() {
         var control = radioButton.createObject(testCase)
+        verify(control)
+
         compare(control.text, "")
         control.text = "RadioButton"
         compare(control.text, "RadioButton")
         control.text = ""
         compare(control.text, "")
+
         control.destroy()
     }
 
     function test_checked() {
         var control = radioButton.createObject(testCase)
+        verify(control)
 
         control.spy.expectedSequence = [] // No change expected
         compare(control.checked, false)
@@ -111,6 +98,7 @@ TestCase {
 
     function test_mouse() {
         var control = radioButton.createObject(testCase)
+        verify(control)
 
         // check
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
@@ -171,6 +159,7 @@ TestCase {
 
     function test_keys() {
         var control = radioButton.createObject(testCase)
+        verify(control)
 
         control.spy.expectedSequence = []
         control.forceActiveFocus()
@@ -221,6 +210,7 @@ TestCase {
 
     function test_binding() {
         var container = twoRadioButtones.createObject(testCase)
+        verify(container)
 
         compare(container.rb1.checked, false)
         compare(container.rb2.checked, false)

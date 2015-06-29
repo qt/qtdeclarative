@@ -60,15 +60,6 @@ TestCase {
         Text { }
     }
 
-    function test_defaults() {
-        var control = swipeView.createObject(testCase)
-        verify(control)
-        compare(control.count, 0)
-        compare(control.currentIndex, -1)
-        compare(control.currentItem, null)
-        control.destroy()
-    }
-
     function test_current() {
         var control = swipeView.createObject(testCase)
 

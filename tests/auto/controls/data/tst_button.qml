@@ -62,33 +62,22 @@ TestCase {
         }
     }
 
-    function init() {
-    }
-
-    function cleanup() {
-    }
-
-    function test_defaults() {
-        var control = button.createObject(testCase)
-        verify(control)
-        verify(control.label)
-        compare(control.text, "")
-        compare(control.pressed, false)
-        control.destroy()
-    }
-
     function test_text() {
         var control = button.createObject(testCase)
+        verify(control)
+
         compare(control.text, "")
         control.text = "Button"
         compare(control.text, "Button")
         control.text = ""
         compare(control.text, "")
+
         control.destroy()
     }
 
     function test_mouse() {
         var control = button.createObject(testCase)
+        verify(control)
 
         // click
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true }], "pressed"]
@@ -133,6 +122,7 @@ TestCase {
 
     function test_keys() {
         var control = button.createObject(testCase)
+        verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)

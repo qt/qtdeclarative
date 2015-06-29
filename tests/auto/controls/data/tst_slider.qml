@@ -73,20 +73,20 @@ TestCase {
     function test_defaults() {
         var control = slider.createObject(testCase)
         verify(control)
-        verify(control.handle)
-        verify(control.track)
-        compare(control.value, 0)
-        compare(control.position, 0)
-        compare(control.visualPosition, 0)
+
         compare(control.stepSize, 0)
         compare(control.snapMode, AbstractSlider.NoSnap)
-        compare(control.pressed, false)
         compare(control.orientation, Qt.Horizontal)
+
         control.destroy()
     }
 
     function test_value() {
-        var control = slider.createObject(testCase, {value: 0.5})
+        var control = slider.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0.0)
+        control.value = 0.5
         compare(control.value, 0.5)
         control.value = 1.0
         compare(control.value, 1.0)
@@ -94,11 +94,14 @@ TestCase {
         compare(control.value, 0.0)
         control.value = 2.0
         compare(control.value, 1.0)
+
         control.destroy()
     }
 
     function test_range() {
         var control = slider.createObject(testCase, {from: 0, to: 100, value: 50})
+        verify(control)
+
         compare(control.from, 0)
         compare(control.to, 100)
         compare(control.value, 50)
@@ -131,6 +134,8 @@ TestCase {
 
     function test_inverted() {
         var control = slider.createObject(testCase, {from: 1.0, to: -1.0})
+        verify(control)
+
         compare(control.from, 1.0)
         compare(control.to, -1.0)
         compare(control.value, 0.0)
@@ -152,7 +157,13 @@ TestCase {
     }
 
     function test_position() {
-        var control = slider.createObject(testCase, {value: 0.25})
+        var control = slider.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        control.value = 0.25
         compare(control.value, 0.25)
         compare(control.position, 0.25)
 
@@ -164,7 +175,13 @@ TestCase {
     }
 
     function test_visualPosition() {
-        var control = slider.createObject(testCase, {value: 0.25})
+        var control = slider.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0.0)
+        compare(control.visualPosition, 0.0)
+
+        control.value = 0.25
         compare(control.value, 0.25)
         compare(control.visualPosition, 0.25)
 
@@ -185,11 +202,14 @@ TestCase {
 
     function test_orientation() {
         var control = slider.createObject(testCase)
+        verify(control)
+
         compare(control.orientation, Qt.Horizontal)
         verify(control.width > control.height)
         control.orientation = Qt.Vertical
         compare(control.orientation, Qt.Vertical)
         verify(control.width < control.height)
+
         control.destroy()
     }
 
@@ -202,6 +222,7 @@ TestCase {
 
     function test_mouse(data) {
         var control = slider.createObject(testCase, {orientation: data.orientation})
+        verify(control)
 
         pressedSpy.target = control
         verify(pressedSpy.valid)
@@ -269,6 +290,7 @@ TestCase {
 
     function test_keys(data) {
         var control = slider.createObject(testCase, {orientation: data.orientation})
+        verify(control)
 
         var pressedCount = 0
 

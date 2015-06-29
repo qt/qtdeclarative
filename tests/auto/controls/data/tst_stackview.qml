@@ -59,28 +59,21 @@ TestCase {
         StackView { }
     }
 
-    function test_defaults() {
-        var control = stackView.createObject(testCase)
-        verify(control)
-        verify(control.pushEnter)
-        verify(control.pushExit)
-        verify(control.popEnter)
-        verify(control.popExit)
-        compare(control.depth, 0)
-        compare(control.busy, false)
-        compare(control.currentItem, null)
-        compare(control.initialItem, undefined)
-        control.destroy()
-    }
-
     function test_initialItem() {
-        var control1 = stackView.createObject(testCase, {initialItem: item})
-        compare(control1.currentItem, item)
+        var control1 = stackView.createObject(testCase)
+        verify(control1)
+        compare(control1.currentItem, null)
         control1.destroy()
 
-        var control2 = stackView.createObject(testCase, {initialItem: component})
-        verify(control2.currentItem)
+        var control2 = stackView.createObject(testCase, {initialItem: item})
+        verify(control2)
+        compare(control2.currentItem, item)
         control2.destroy()
+
+        var control3 = stackView.createObject(testCase, {initialItem: component})
+        verify(control3)
+        verify(control3.currentItem)
+        control3.destroy()
     }
 
     function test_currentItem() {

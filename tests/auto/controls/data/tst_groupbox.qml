@@ -79,30 +79,38 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function test_empty() {
         var control = groupBox.createObject(testCase)
+        verify(control)
+
         verify(control.contentItem)
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-        compare(control.title, "")
+
         control.destroy()
     }
 
     function test_oneChild() {
         var control = oneChildBox.createObject(testCase)
+        verify(control)
+
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
+
         control.destroy()
     }
 
     function test_twoChildren() {
         var control = twoChildrenBox.createObject(testCase)
+        verify(control)
+
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
+
         control.destroy()
     }
 }

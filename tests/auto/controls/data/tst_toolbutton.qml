@@ -79,27 +79,22 @@ TestCase {
         clickedSpy.clear()
     }
 
-    function test_defaults() {
-        var control = toolButton.createObject(testCase)
-        verify(control)
-        verify(control.label)
-        compare(control.text, "")
-        compare(control.pressed, false)
-        control.destroy()
-    }
-
     function test_text() {
         var control = toolButton.createObject(testCase)
+        verify(control)
+
         compare(control.text, "")
         control.text = "ToolButton"
         compare(control.text, "ToolButton")
         control.text = ""
         compare(control.text, "")
+
         control.destroy()
     }
 
     function test_mouse() {
         var control = toolButton.createObject(testCase)
+        verify(control)
 
         pressedSpy.target = control
         clickedSpy.target = control
@@ -149,6 +144,7 @@ TestCase {
 
     function test_keys() {
         var control = toolButton.createObject(testCase)
+        verify(control)
 
         clickedSpy.target = control
         verify(clickedSpy.valid)

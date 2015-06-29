@@ -62,35 +62,22 @@ TestCase {
         }
     }
 
-    function init() {
-    }
-
-    function cleanup() {
-    }
-
-    function test_defaults() {
-        var control = checkBox.createObject(testCase)
-        verify(control)
-        verify(control.label)
-        verify(control.indicator)
-        compare(control.text, "")
-        compare(control.pressed, false)
-        compare(control.checked, false)
-        control.destroy()
-    }
-
     function test_text() {
         var control = checkBox.createObject(testCase)
+        verify(control)
+
         compare(control.text, "")
         control.text = "CheckBox"
         compare(control.text, "CheckBox")
         control.text = ""
         compare(control.text, "")
+
         control.destroy()
     }
 
     function test_checked() {
         var control = checkBox.createObject(testCase)
+        verify(control)
 
         control.spy.expectedSequence = []
         compare(control.checked, false)
@@ -111,6 +98,7 @@ TestCase {
 
     function test_mouse() {
         var control = checkBox.createObject(testCase)
+        verify(control)
 
         // check
         control.spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
@@ -173,6 +161,7 @@ TestCase {
 
     function test_keys() {
         var control = checkBox.createObject(testCase)
+        verify(control)
 
         control.spy.expectedSequence = []
         control.forceActiveFocus()
@@ -224,6 +213,7 @@ TestCase {
 
     function test_binding() {
         var container = twoCheckBoxes.createObject(testCase)
+        verify(container)
 
         compare(container.cb1.checked, false)
         compare(container.cb2.checked, false)

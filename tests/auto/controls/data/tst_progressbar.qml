@@ -55,16 +55,12 @@ TestCase {
         ProgressBar { }
     }
 
-    function test_defaults() {
-        var control = progressBar.createObject(testCase)
-        compare(control.value, 0)
-        compare(control.visualPosition, 0)
-        compare(control.indeterminate, false)
-        control.destroy()
-    }
-
     function test_value() {
-        var control = progressBar.createObject(testCase, {value: 0.5})
+        var control = progressBar.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0.0)
+        control.value = 0.5
         compare(control.value, 0.5)
         control.value = 1.0
         compare(control.value, 1.0)
@@ -72,11 +68,14 @@ TestCase {
         compare(control.value, 0.0)
         control.value = 2.0
         compare(control.value, 1.0)
+
         control.destroy()
     }
 
     function test_range() {
         var control = progressBar.createObject(testCase, {from: 0, to: 100, value: 50})
+        verify(control)
+
         compare(control.from, 0)
         compare(control.to, 100)
         compare(control.value, 50)
@@ -109,6 +108,8 @@ TestCase {
 
     function test_inverted() {
         var control = progressBar.createObject(testCase, {from: 1.0, to: -1.0})
+        verify(control)
+
         compare(control.from, 1.0)
         compare(control.to, -1.0)
         compare(control.value, 0.0)
@@ -130,7 +131,13 @@ TestCase {
     }
 
     function test_position() {
-        var control = progressBar.createObject(testCase, {value: 0.25})
+        var control = progressBar.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0)
+        compare(control.position, 0)
+
+        control.value = 0.25
         compare(control.value, 0.25)
         compare(control.position, 0.25)
 
@@ -142,7 +149,13 @@ TestCase {
     }
 
     function test_visualPosition() {
-        var control = progressBar.createObject(testCase, {value: 0.25})
+        var control = progressBar.createObject(testCase)
+        verify(control)
+
+        compare(control.value, 0)
+        compare(control.visualPosition, 0)
+
+        control.value = 0.25
         compare(control.value, 0.25)
         compare(control.visualPosition, 0.25)
 
