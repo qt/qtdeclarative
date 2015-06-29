@@ -54,8 +54,8 @@ AbstractWeekNumberColumn {
         text: model.weekNumber
         font.bold: true
         color: control.Theme.textColor
-        width: column.width ? column.width : implicitWidth
-        height: column.height ? column.height / 6 : implicitHeight
+        width: contentItem.width ? contentItem.width : implicitWidth
+        height: contentItem.height ? contentItem.height / 6 : implicitHeight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -63,8 +63,6 @@ AbstractWeekNumberColumn {
 
     //! [contentItem]
     contentItem: Column {
-        id: column
-
         Repeater {
             model: control.source
             delegate: control.delegate

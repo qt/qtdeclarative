@@ -54,8 +54,8 @@ AbstractDayOfWeekRow {
         text: model.shortName
         font.bold: true
         color: control.Theme.textColor
-        width: row.width ? row.width / 7 : implicitWidth
-        height: row.height ? row.height : implicitHeight
+        width: contentItem.width ? contentItem.width / 7 : implicitWidth
+        height: contentItem.height ? contentItem.height : implicitHeight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -63,8 +63,6 @@ AbstractDayOfWeekRow {
 
     //! [contentItem]
     contentItem: Row {
-        id: row
-
         Repeater {
             model: control.source
             delegate: control.delegate

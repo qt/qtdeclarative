@@ -50,8 +50,8 @@ AbstractCalendarView {
 
     //! [delegate]
     delegate: Text {
-        width: grid.width ? grid.width / 7 : implicitWidth * 3
-        height: grid.height ? grid.height / 6 : implicitHeight * 3
+        width: contentItem.width ? contentItem.width / 7 : implicitWidth * 3
+        height: contentItem.height ? contentItem.height / 6 : implicitHeight * 3
         minimumPointSize: 8
         fontSizeMode: Text.Fit
         horizontalAlignment: Text.AlignHCenter
@@ -65,13 +65,10 @@ AbstractCalendarView {
 
     //! [contentItem]
     contentItem: Grid {
-        id: grid
-
         rows: 6
         columns: 7
 
         Repeater {
-            id: repeater
             model: control.source
             delegate: control.delegate
         }
