@@ -40,8 +40,6 @@ import QtQuick.Controls 2.0
 AbstractTabBar {
     id: control
 
-    property alias highlight: listView.highlight
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
@@ -53,15 +51,13 @@ AbstractTabBar {
 
     //! [contentItem]
     contentItem: ListView {
-        id: listView
+        model: control.contentModel
+        currentIndex: control.currentIndex
 
         spacing: control.spacing
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
         snapMode: ListView.SnapToItem
-
-        model: control.contentModel
-        currentIndex: control.currentIndex
 
         highlightMoveDuration: 250
         highlightResizeDuration: 0
