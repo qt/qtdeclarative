@@ -55,7 +55,8 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickExclusiveGroupPrivate;
-class QQuickExclusiveAttachedPrivate;
+class QQuickExclusiveGroupAttached;
+class QQuickExclusiveGroupAttachedPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickExclusiveGroup : public QObject
 {
@@ -64,6 +65,8 @@ class Q_QUICKCONTROLS_EXPORT QQuickExclusiveGroup : public QObject
 
 public:
     explicit QQuickExclusiveGroup(QObject *parent = Q_NULLPTR);
+
+    static QQuickExclusiveGroupAttached *qmlAttachedProperties(QObject *object);
 
     QObject *current() const;
     void setCurrent(QObject *current);
@@ -82,15 +85,13 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-class Q_QUICKCONTROLS_EXPORT QQuickExclusiveAttached : public QObject
+class Q_QUICKCONTROLS_EXPORT QQuickExclusiveGroupAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickExclusiveGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
 
 public:
-    explicit QQuickExclusiveAttached(QObject *parent = Q_NULLPTR);
-
-    static QQuickExclusiveAttached *qmlAttachedProperties(QObject *object);
+    explicit QQuickExclusiveGroupAttached(QObject *parent = Q_NULLPTR);
 
     QQuickExclusiveGroup *group() const;
     void setGroup(QQuickExclusiveGroup *group);
@@ -99,12 +100,12 @@ Q_SIGNALS:
     void groupChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickExclusiveAttached)
-    Q_DECLARE_PRIVATE(QQuickExclusiveAttached)
+    Q_DISABLE_COPY(QQuickExclusiveGroupAttached)
+    Q_DECLARE_PRIVATE(QQuickExclusiveGroupAttached)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickExclusiveAttached, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(QQuickExclusiveGroup, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKEXCLUSIVEGROUP_H

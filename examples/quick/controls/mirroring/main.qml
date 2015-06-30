@@ -136,18 +136,18 @@ ApplicationWindow {
                         RadioButton {
                             width: parent.width
                             text: "Portrait"
-                            Exclusive.group: eg
+                            ExclusiveGroup.group: eg
                         }
                         RadioButton {
                             width: parent.width
                             text: "Landscape"
-                            Exclusive.group: eg
+                            ExclusiveGroup.group: eg
                         }
                         RadioButton {
                             width: parent.width
                             text: "Automatic"
                             checked: true
-                            Exclusive.group: eg
+                            ExclusiveGroup.group: eg
                         }
                     }
                 }

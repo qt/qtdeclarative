@@ -67,15 +67,15 @@ QT_BEGIN_NAMESPACE
         RadioButton {
             checked: true
             text: qsTr("First")
-            Exclusive.group: group
+            ExclusiveGroup.group: group
         }
         RadioButton {
             text: qsTr("Second")
-            Exclusive.group: group
+            ExclusiveGroup.group: group
         }
         RadioButton {
             text: qsTr("Third")
-            Exclusive.group: group
+            ExclusiveGroup.group: group
         }
     }
     \endcode

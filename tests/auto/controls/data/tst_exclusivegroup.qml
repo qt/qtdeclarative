@@ -95,7 +95,7 @@ TestCase {
 
         var checkable1 = checkable.createObject(testCase, {checked: true})
         var checkable2 = checkable.createObject(testCase, {checked: false})
-        var checkable3 = checkable.createObject(testCase, {checked: true})
+        var checkable3 = checkable.createObject(testCase, {checked: true, objectName: "3"})
 
         // add checked
         group.addCheckable(checkable1)
@@ -160,9 +160,9 @@ TestCase {
         id: checkBoxes
         Item {
             property ExclusiveGroup group: ExclusiveGroup { id: group }
-            property CheckBox control1: CheckBox { Exclusive.group: group }
-            property CheckBox control2: CheckBox { Exclusive.group: group }
-            property CheckBox control3: CheckBox { Exclusive.group: group }
+            property CheckBox control1: CheckBox { ExclusiveGroup.group: group }
+            property CheckBox control2: CheckBox { ExclusiveGroup.group: group }
+            property CheckBox control3: CheckBox { ExclusiveGroup.group: group }
         }
     }
 
@@ -170,9 +170,9 @@ TestCase {
         id: radioButtons
         Item {
             property ExclusiveGroup group: ExclusiveGroup { id: group }
-            property RadioButton control1: RadioButton { Exclusive.group: group }
-            property RadioButton control2: RadioButton { Exclusive.group: group }
-            property RadioButton control3: RadioButton { Exclusive.group: group }
+            property RadioButton control1: RadioButton { ExclusiveGroup.group: group }
+            property RadioButton control2: RadioButton { ExclusiveGroup.group: group }
+            property RadioButton control3: RadioButton { ExclusiveGroup.group: group }
         }
     }
 
@@ -180,9 +180,9 @@ TestCase {
         id: switches
         Item {
             property ExclusiveGroup group: ExclusiveGroup { id: group }
-            property Switch control1: Switch { Exclusive.group: group }
-            property Switch control2: Switch { Exclusive.group: group }
-            property Switch control3: Switch { Exclusive.group: group }
+            property Switch control1: Switch { ExclusiveGroup.group: group }
+            property Switch control2: Switch { ExclusiveGroup.group: group }
+            property Switch control3: Switch { ExclusiveGroup.group: group }
         }
     }
 
@@ -190,9 +190,9 @@ TestCase {
         id: toggleButtons
         Item {
             property ExclusiveGroup group: ExclusiveGroup { id: group }
-            property ToggleButton control1: ToggleButton { Exclusive.group: group }
-            property ToggleButton control2: ToggleButton { Exclusive.group: group }
-            property ToggleButton control3: ToggleButton { Exclusive.group: group }
+            property ToggleButton control1: ToggleButton { ExclusiveGroup.group: group }
+            property ToggleButton control2: ToggleButton { ExclusiveGroup.group: group }
+            property ToggleButton control3: ToggleButton { ExclusiveGroup.group: group }
         }
     }
 

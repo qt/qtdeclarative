@@ -36,7 +36,9 @@
 
 #include "qquickexclusivegroup_p.h"
 #include <QtCore/private/qobject_p.h>
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qvariant.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,6 +53,34 @@ QT_BEGIN_NAMESPACE
     TODO
 */
 
+#define CHECKED_PROPERTY "checked"
+
+static const char *checkableSignals[] = {
+    CHECKED_PROPERTY"Changed()",
+    "toggled(bool)",
+    "toggled()",
+    0
+};
+
+static QMetaMethod checkableSignal(QObject *object)
+{
+    const QMetaObject *mo = object->metaObject();
+    for (const char **signal = checkableSignals; *signal; ++signal) {
+        int index = mo->indexOfSignal(*signal);
+        if (index != -1)
+            return mo->method(index);
+    }
+    return QMetaMethod();
+}
+
+static bool isChecked(const QObject *object)
+{
+    if (!object)
+        return false;
+    QVariant checked = object->property(CHECKED_PROPERTY);
+    return checked.isValid() && checked.toBool();
+}
+
 class QQuickExclusiveGroupPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickExclusiveGroup)
@@ -61,19 +91,28 @@ public:
     void _q_updateCurrent();
 
     QObject *current;
+    QMetaMethod updateCurrentMethod;
 };
 
 void QQuickExclusiveGroupPrivate::_q_updateCurrent()
 {
     Q_Q(QQuickExclusiveGroup);
     QObject *object = q->sender();
-    if (object->property("checked").toBool())
+    if (isChecked(object))
         q->setCurrent(object);
 }
 
 QQuickExclusiveGroup::QQuickExclusiveGroup(QObject *parent)
     : QObject(*(new QQuickExclusiveGroupPrivate), parent)
 {
+    Q_D(QQuickExclusiveGroup);
+    int index = metaObject()->indexOfMethod("_q_updateCurrent()");
+    d->updateCurrentMethod = metaObject()->method(index);
+}
+
+QQuickExclusiveGroupAttached *QQuickExclusiveGroup::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickExclusiveGroupAttached(object);
 }
 
 /*!
@@ -92,10 +131,10 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
     Q_D(QQuickExclusiveGroup);
     if (d->current != current) {
         if (d->current)
-            d->current->setProperty("checked", false);
+            d->current->setProperty(CHECKED_PROPERTY, false);
         d->current = current;
         if (current)
-            current->setProperty("checked", true);
+            current->setProperty(CHECKED_PROPERTY, true);
         emit currentChanged();
     }
 }
@@ -107,14 +146,20 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
 */
 void QQuickExclusiveGroup::addCheckable(QObject *object)
 {
+    Q_D(QQuickExclusiveGroup);
     if (!object)
         return;
 
-    connect(object, SIGNAL(checkedChanged()), this, SLOT(_q_updateCurrent()), Qt::UniqueConnection);
-    connect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)), Qt::UniqueConnection);
+    QMetaMethod signal = checkableSignal(object);
+    if (signal.isValid()) {
+        connect(object, signal, this, d->updateCurrentMethod, Qt::UniqueConnection);
+        connect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)), Qt::UniqueConnection);
 
-    if (object->property("checked").toBool())
-        setCurrent(object);
+        if (isChecked(object))
+            setCurrent(object);
+    } else {
+        qmlInfo(this) << "The object has no checkedChanged() or toggled() signal.";
+    }
 }
 
 /*!
@@ -128,57 +173,43 @@ void QQuickExclusiveGroup::removeCheckable(QObject *object)
     if (!object)
         return;
 
-    if (object->metaObject()->indexOfProperty("checked") != -1)
-        disconnect(object, SIGNAL(checkedChanged()), this, SLOT(_q_updateCurrent()));
-    disconnect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)));
+    QMetaMethod signal = checkableSignal(object);
+    if (signal.isValid()) {
+        if (disconnect(object, signal, this, d->updateCurrentMethod))
+            disconnect(object, SIGNAL(destroyed(QObject*)), this, SLOT(removeCheckable(QObject*)));
+    }
 
     if (d->current == object)
         setCurrent(Q_NULLPTR);
 }
 
-/*!
-    \qmltype Exclusive
-    \inherits QtObject
-    \instantiates QQuickExclusiveAttached
-    \inqmlmodule QtQuick.Controls
-    \ingroup utilities
-    \brief TODO
-
-    TODO
-*/
-
-class QQuickExclusiveAttachedPrivate : public QObjectPrivate
+class QQuickExclusiveGroupAttachedPrivate : public QObjectPrivate
 {
 public:
-    QQuickExclusiveAttachedPrivate() : group(Q_NULLPTR) { }
+    QQuickExclusiveGroupAttachedPrivate() : group(Q_NULLPTR) { }
 
     QQuickExclusiveGroup *group;
 };
 
-QQuickExclusiveAttached::QQuickExclusiveAttached(QObject *parent) :
-    QObject(*(new QQuickExclusiveAttachedPrivate), parent)
+QQuickExclusiveGroupAttached::QQuickExclusiveGroupAttached(QObject *parent) :
+    QObject(*(new QQuickExclusiveGroupAttachedPrivate), parent)
 {
-}
-
-QQuickExclusiveAttached *QQuickExclusiveAttached::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickExclusiveAttached(object);
 }
 
 /*!
-    \qmlattachedproperty ExclusiveGroup QtQuickControls2::Exclusive::group
+    \qmlattachedproperty ExclusiveGroup QtQuickControls2::ExclusiveGroup::group
 
     TODO
 */
-QQuickExclusiveGroup *QQuickExclusiveAttached::group() const
+QQuickExclusiveGroup *QQuickExclusiveGroupAttached::group() const
 {
-    Q_D(const QQuickExclusiveAttached);
+    Q_D(const QQuickExclusiveGroupAttached);
     return d->group;
 }
 
-void QQuickExclusiveAttached::setGroup(QQuickExclusiveGroup *group)
+void QQuickExclusiveGroupAttached::setGroup(QQuickExclusiveGroup *group)
 {
-    Q_D(QQuickExclusiveAttached);
+    Q_D(QQuickExclusiveGroupAttached);
     if (d->group != group) {
         if (d->group)
             d->group->removeCheckable(parent());

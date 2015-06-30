@@ -146,14 +146,14 @@ ApplicationWindow {
                             width: parent.width
                             checked: true
                             layoutDirection: Qt.RightToLeft
-                            Exclusive.group: themeGroup
+                            ExclusiveGroup.group: themeGroup
                         }
                         RadioButton {
                             id: darkButton
                             text: "Dark"
                             width: parent.width
                             layoutDirection: Qt.RightToLeft
-                            Exclusive.group: themeGroup
+                            ExclusiveGroup.group: themeGroup
                         }
                     }
 
