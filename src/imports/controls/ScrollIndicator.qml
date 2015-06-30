@@ -69,7 +69,7 @@ AbstractScrollIndicator {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: indicator; opacity: 1.0 - control.Theme.disabledOpacity }
+            PropertyChanges { target: indicator; opacity: 0.75 }
         }
 
         transitions: [

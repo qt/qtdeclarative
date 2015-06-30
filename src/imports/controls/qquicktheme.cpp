@@ -110,10 +110,6 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty real QtQuickControls2::Theme::spacing
 */
 
-/*!
-    \qmlattachedproperty real QtQuickControls2::Theme::disabledOpacity
-*/
-
 Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtquickcontrols/theme.json")))
 
 static QQuickThemeAttached *themeInstance(QQmlEngine *engine)
@@ -228,8 +224,7 @@ public:
         explicitTextColor(false),
         explicitPadding(false),
         explicitSpacing(false),
-        explicitRoundness(false),
-        explicitDisabledOpacity(false) { }
+        explicitRoundness(false) { }
 
     enum Method { Implicit, Explicit, Inherit };
 
@@ -247,7 +242,6 @@ public:
     void setPadding(qreal padding, Method method);
     void setRoundness(qreal roundness, Method method);
     void setSpacing(qreal spacing, Method method);
-    void setDisabledOpacity(qreal opacity, Method method);
 
     void inherit(QQuickThemeAttached *theme);
 
@@ -274,7 +268,6 @@ public:
     bool explicitPadding;
     bool explicitSpacing;
     bool explicitRoundness;
-    bool explicitDisabledOpacity;
 };
 
 void QQuickThemeAttachedPrivate::setAccentColor(const QColor &color, Method method)
@@ -487,21 +480,6 @@ void QQuickThemeAttachedPrivate::setSpacing(qreal spacing, Method method)
     }
 }
 
-void QQuickThemeAttachedPrivate::setDisabledOpacity(qreal opacity, Method method)
-{
-    Q_Q(QQuickThemeAttached);
-    if (!explicitDisabledOpacity || method != Inherit) {
-        explicitDisabledOpacity = method == Explicit;
-        if (data.disabledOpacity() != opacity) {
-            data.setDisabledOpacity(opacity);
-            emit q->disabledOpacityChanged();
-
-            foreach (QQuickThemeAttached *child, childThemes)
-                child->d_func()->setDisabledOpacity(opacity, Inherit);
-        }
-    }
-}
-
 void QQuickThemeAttachedPrivate::inherit(QQuickThemeAttached *theme)
 {
     setAccentColor(theme->accentColor(), Inherit);
@@ -518,7 +496,6 @@ void QQuickThemeAttachedPrivate::inherit(QQuickThemeAttached *theme)
     setPadding(theme->padding(), Inherit);
     setRoundness(theme->roundness(), Inherit);
     setSpacing(theme->spacing(), Inherit);
-    setDisabledOpacity(theme->disabledOpacity(), Inherit);
 }
 
 const QQuickThemeData &QQuickThemeAttachedPrivate::resolve() const
@@ -844,24 +821,6 @@ void QQuickThemeAttached::resetSpacing()
 {
     Q_D(QQuickThemeAttached);
     d->setSpacing(d->resolve().spacing(), QQuickThemeAttachedPrivate::Implicit);
-}
-
-qreal QQuickThemeAttached::disabledOpacity() const
-{
-    Q_D(const QQuickThemeAttached);
-    return d->data.disabledOpacity();
-}
-
-void QQuickThemeAttached::setDisabledOpacity(qreal opacity)
-{
-    Q_D(QQuickThemeAttached);
-    d->setDisabledOpacity(opacity, QQuickThemeAttachedPrivate::Explicit);
-}
-
-void QQuickThemeAttached::resetDisabledOpacity()
-{
-    Q_D(QQuickThemeAttached);
-    d->setDisabledOpacity(d->resolve().disabledOpacity(), QQuickThemeAttachedPrivate::Implicit);
 }
 
 QT_END_NAMESPACE

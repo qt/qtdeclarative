@@ -72,7 +72,6 @@ TestCase {
             Theme.padding: 111
             Theme.roundness: 222
             Theme.spacing: 333
-            Theme.disabledOpacity: 0.123
         }
     }
 
@@ -97,7 +96,6 @@ TestCase {
             Theme.padding: 111
             Theme.roundness: 222
             Theme.spacing: 333
-            Theme.disabledOpacity: 0.123
         }
     }
 
@@ -126,7 +124,6 @@ TestCase {
         verify(control.Theme.padding !== undefined)
         verify(control.Theme.roundness !== undefined)
         verify(control.Theme.spacing !== undefined)
-        verify(control.Theme.disabledOpacity !== undefined)
         control.destroy()
     }
 
@@ -146,7 +143,6 @@ TestCase {
         control.Theme.padding = 111
         control.Theme.roundness = 222
         control.Theme.spacing = 333
-        control.Theme.disabledOpacity = 0.123
         compare(control.Theme.accentColor, "#111111")
         compare(control.Theme.backgroundColor, "#222222")
         compare(control.Theme.baseColor, "#333333")
@@ -160,7 +156,6 @@ TestCase {
         compare(control.Theme.padding, 111)
         compare(control.Theme.roundness, 222)
         compare(control.Theme.spacing, 333)
-        compare(control.Theme.disabledOpacity, 0.123)
         control.destroy()
     }
 
@@ -180,7 +175,6 @@ TestCase {
         compare(control.Theme.padding, 111)
         compare(control.Theme.roundness, 222)
         compare(control.Theme.spacing, 333)
-        compare(control.Theme.disabledOpacity, 0.123)
         control.Theme.accentColor = undefined
         control.Theme.backgroundColor = undefined
         control.Theme.baseColor = undefined
@@ -194,7 +188,6 @@ TestCase {
         control.Theme.padding = undefined
         control.Theme.roundness = undefined
         control.Theme.spacing = undefined
-        control.Theme.disabledOpacity = undefined
         compare(control.Theme.accentColor, testCase.Theme.accentColor)
         compare(control.Theme.backgroundColor, testCase.Theme.backgroundColor)
         compare(control.Theme.baseColor, testCase.Theme.baseColor)
@@ -208,7 +201,6 @@ TestCase {
         compare(control.Theme.padding, testCase.Theme.padding)
         compare(control.Theme.roundness, testCase.Theme.roundness)
         compare(control.Theme.spacing, testCase.Theme.spacing)
-        compare(control.Theme.disabledOpacity, testCase.Theme.disabledOpacity)
         control.destroy()
     }
 
@@ -226,8 +218,7 @@ TestCase {
             { tag: "textColor", value1: "#999999", value2: "#909090" },
             { tag: "padding", value1: 11, value2: 10 },
             { tag: "roundness", value1: 22, value2: 20 },
-            { tag: "spacing", value1: 33, value2: 30 },
-            { tag: "disabledOpacity", value1: 0.123, value2: 0.345 }
+            { tag: "spacing", value1: 33, value2: 30 }
         ]
     }
 

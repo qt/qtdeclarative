@@ -71,7 +71,7 @@ AbstractScrollBar {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: handle; opacity: 1.0 - control.Theme.disabledOpacity }
+            PropertyChanges { target: handle; opacity: 0.75 }
         }
 
         transitions: Transition {

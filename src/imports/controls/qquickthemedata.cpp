@@ -95,7 +95,6 @@ bool QQuickThemeData::load(const QString &filePath)
     d->padding = readNumberValue(theme.value(QStringLiteral("padding")), 6);
     d->roundness = readNumberValue(theme.value(QStringLiteral("roundness")), 3);
     d->spacing = readNumberValue(theme.value(QStringLiteral("spacing")), 6);
-    d->disabledOpacity = readNumberValue(theme.value(QStringLiteral("disabledOpacity")), 0.3);
     return true;
 }
 

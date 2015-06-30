@@ -103,9 +103,6 @@ public:
     qreal spacing() const { return d->spacing; }
     void setSpacing(qreal spacing) { d->spacing = spacing; }
 
-    qreal disabledOpacity() const { return d->disabledOpacity; }
-    void setDisabledOpacity(qreal opacity) { d->disabledOpacity = opacity; }
-
 private:
     struct Data : public QSharedData {
         QColor accentColor;
@@ -122,7 +119,6 @@ private:
         qreal padding;
         qreal spacing;
         qreal roundness;
-        qreal disabledOpacity;
     };
     QSharedDataPointer<Data> d;
 };

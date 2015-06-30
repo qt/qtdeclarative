@@ -57,8 +57,7 @@ AbstractTextArea {
         width: control.availableWidth
         height: control.availableHeight
 
-        color: control.Theme.textColor
-        opacity: control.Theme.disabledOpacity
+        color: control.Theme.disabledColor
         visible: !control.length
     }
     //! [placeholder]

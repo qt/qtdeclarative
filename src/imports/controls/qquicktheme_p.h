@@ -74,7 +74,6 @@ class QQuickThemeAttached : public QObject
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
     Q_PROPERTY(qreal roundness READ roundness WRITE setRoundness RESET resetRoundness NOTIFY roundnessChanged FINAL)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
-    Q_PROPERTY(qreal disabledOpacity READ disabledOpacity WRITE setDisabledOpacity RESET resetDisabledOpacity NOTIFY disabledOpacityChanged FINAL)
 
 public:
     explicit QQuickThemeAttached(const QQuickThemeData &data, QObject *parent = Q_NULLPTR);
@@ -141,10 +140,6 @@ public:
     void setSpacing(qreal spacing);
     void resetSpacing();
 
-    qreal disabledOpacity() const;
-    void setDisabledOpacity(qreal opacity);
-    void resetDisabledOpacity();
-
 Q_SIGNALS:
     void accentColorChanged();
     void backgroundColorChanged();
@@ -160,7 +155,6 @@ Q_SIGNALS:
     void paddingChanged();
     void roundnessChanged();
     void spacingChanged();
-    void disabledOpacityChanged();
 
 private:
     Q_DISABLE_COPY(QQuickThemeAttached)

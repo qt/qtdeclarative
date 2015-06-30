@@ -47,7 +47,7 @@ AbstractDrawer {
     //! [background]
     background: Rectangle {
         color: control.Theme.shadowColor
-        opacity: position * control.Theme.disabledOpacity
+        opacity: position * 0.75
     }
     //! [background]
 

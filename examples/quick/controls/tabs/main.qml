@@ -161,7 +161,7 @@ ApplicationWindow {
                                 height: parent.height
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: Theme.disabledOpacity
+                                color: Theme.disabledColor
                                 font.pointSize: 8
                                 Layout.preferredWidth: parent.width - discoverCreator.width - discoverMore.width - 2 * parent.spacing
                                 visible: Layout.preferredWidth > 0
@@ -253,7 +253,7 @@ ApplicationWindow {
                                 height: parent.height
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
-                                opacity: Theme.disabledOpacity
+                                color: Theme.disabledColor
                                 font.pointSize: 8
                                 Layout.preferredWidth: parent.width - activityCreator.width - activityMore.width - 2 * parent.spacing
                                 visible: Layout.preferredWidth > 0

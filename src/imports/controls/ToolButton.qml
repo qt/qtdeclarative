@@ -71,8 +71,8 @@ AbstractToolButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        opacity: control.Theme.disabledOpacity
-        color: control.Theme.frameColor
+        opacity: 0.25
+        color: control.Theme.pressColor
         visible: control.pressed
     }
     //! [background]
