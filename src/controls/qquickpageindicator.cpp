@@ -45,9 +45,24 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPageIndicator
     \inqmlmodule QtQuick.Controls
     \ingroup indicators
-    \brief A page indicator.
+    \brief A page indicator control.
 
-    TODO
+    PageIndicator is used to indicate the currently active page
+    in a container of multiple pages. PageIndicator consists of
+    delegate items that present pages.
+
+    ### TODO: screenshot
+
+    \code
+    PageIndicator {
+        count: view.count
+        currentIndex: view.currentIndex
+        anchors.bottom: view.bottom
+        anchors.horizontalCenter: view.horizontalCenter
+    }
+    \endcode
+
+    \sa SwipeView, {Customizing PageIndicator}
 */
 
 class QQuickPageIndicatorPrivate : public QQuickControlPrivate
@@ -68,7 +83,7 @@ QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
 /*!
     \qmlproperty int QtQuickControls2::PageIndicator::count
 
-    TODO
+    This property holds the number of pages.
 */
 int QQuickPageIndicator::count() const
 {
@@ -88,7 +103,7 @@ void QQuickPageIndicator::setCount(int count)
 /*!
     \qmlproperty int QtQuickControls2::PageIndicator::currentIndex
 
-    TODO
+    This property holds the index of the current page.
 */
 int QQuickPageIndicator::currentIndex() const
 {
@@ -108,7 +123,7 @@ void QQuickPageIndicator::setCurrentIndex(int index)
 /*!
     \qmlproperty Component QtQuickControls2::PageIndicator::delegate
 
-    TODO
+    This property holds a delegate that presents a page.
 */
 QQmlComponent *QQuickPageIndicator::delegate() const
 {
