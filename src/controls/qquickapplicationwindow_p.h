@@ -86,6 +86,8 @@ Q_SIGNALS:
     void contentHeightChanged();
 
 protected:
+    bool isComponentComplete() const;
+    void componentComplete() Q_DECL_OVERRIDE;
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 
 private:

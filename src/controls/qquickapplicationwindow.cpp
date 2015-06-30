@@ -60,13 +60,14 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
-    QQuickApplicationWindowPrivate() : contentWidth(0), contentHeight(0), header(Q_NULLPTR), footer(Q_NULLPTR) { }
+    QQuickApplicationWindowPrivate() : complete(false), contentWidth(0), contentHeight(0), header(Q_NULLPTR), footer(Q_NULLPTR) { }
 
     void relayout();
 
     void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
 
+    bool complete;
     qreal contentWidth;
     qreal contentHeight;
     QQuickItem *header;
@@ -84,10 +85,23 @@ void QQuickApplicationWindowPrivate::relayout()
     content->setY(hh);
     content->setHeight(q->height() - hh - fh);
 
-    if (header)
+    if (header) {
         header->setY(-hh);
-    if (footer)
+        QQuickItemPrivate *p = QQuickItemPrivate::get(header);
+        if (!p->widthValid) {
+            header->setWidth(q->width());
+            p->widthValid = false;
+        }
+    }
+
+    if (footer) {
         footer->setY(content->height());
+        QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
+        if (!p->widthValid) {
+            footer->setWidth(q->width());
+            p->widthValid = false;
+        }
+    }
 }
 
 void QQuickApplicationWindowPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -143,6 +157,8 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(header->z()))
                 header->setZ(1);
+            if (isComponentComplete())
+                d->relayout();
         }
         emit headerChanged();
     }
@@ -174,6 +190,8 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
             p->addItemChangeListener(d, QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
             if (qFuzzyIsNull(footer->z()))
                 footer->setZ(1);
+            if (isComponentComplete())
+                d->relayout();
         }
         emit footerChanged();
     }
@@ -227,25 +245,23 @@ void QQuickApplicationWindow::setContentHeight(qreal height)
     }
 }
 
+bool QQuickApplicationWindow::isComponentComplete() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->complete;
+}
+
+void QQuickApplicationWindow::componentComplete()
+{
+    Q_D(QQuickApplicationWindow);
+    d->complete = true;
+    QQuickWindowQmlImpl::componentComplete();
+}
+
 void QQuickApplicationWindow::resizeEvent(QResizeEvent *event)
 {
-    QQuickWindowQmlImpl::resizeEvent(event);
-
     Q_D(QQuickApplicationWindow);
-    if (d->header) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->header);
-        if (!p->widthValid) {
-            d->header->setWidth(width());
-            p->widthValid = false;
-        }
-    }
-    if (d->footer) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->footer);
-        if (!p->widthValid) {
-            d->footer->setWidth(width());
-            p->widthValid = false;
-        }
-    }
+    QQuickWindowQmlImpl::resizeEvent(event);
     d->relayout();
 }
 
