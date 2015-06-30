@@ -520,12 +520,15 @@ void QQuickStackAttachedPrivate::reset()
 {
     Q_Q(QQuickStackAttached);
     int oldIndex = element ? element->index : -1;
+    QQuickStackView *oldView = element ? element->view : Q_NULLPTR;
     QQuickStackView::Status oldStatus = element ? element->status : QQuickStackView::Inactive;
 
     element = Q_NULLPTR;
 
     if (oldIndex != -1)
         emit q->indexChanged();
+    if (oldView)
+        emit q->viewChanged();
     if (oldStatus != QQuickStackView::Inactive)
         emit q->statusChanged();
 }
@@ -546,6 +549,19 @@ int QQuickStackAttached::index() const
     if (!d->initialized)
         const_cast<QQuickStackAttachedPrivate *>(d)->init();
     return d->element ? d->element->index : -1;
+}
+
+/*!
+    \qmlattachedproperty StackView QtQuickControls2::StackView::view
+
+    TODO
+*/
+QQuickStackView *QQuickStackAttached::view() const
+{
+    Q_D(const QQuickStackAttached);
+    if (!d->initialized)
+        const_cast<QQuickStackAttachedPrivate *>(d)->init();
+    return d->element ? d->element->view : Q_NULLPTR;
 }
 
 /*!

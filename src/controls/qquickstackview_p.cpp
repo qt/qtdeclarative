@@ -124,7 +124,7 @@ QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackV
 
 bool QQuickStackElement::load(QQuickStackView *parent)
 {
-    view = parent;
+    setView(parent);
     if (!item) {
         ownItem = true;
 
@@ -183,6 +183,16 @@ void QQuickStackElement::setIndex(int value)
         QQuickStackAttached *attached = attachedStackObject(item);
         if (attached)
             emit attached->indexChanged();
+    }
+}
+
+void QQuickStackElement::setView(QQuickStackView *value)
+{
+    if (view != value) {
+        view = value;
+        QQuickStackAttached *attached = attachedStackObject(item);
+        if (attached)
+            emit attached->viewChanged();
     }
 }
 

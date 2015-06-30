@@ -146,6 +146,27 @@ TestCase {
         control.destroy()
     }
 
+    function test_view() {
+        var control = stackView.createObject(testCase)
+
+        var item1 = component.createObject(control)
+        compare(item1.AbstractStackView.view, null)
+        control.push(item1, AbstractStackView.Immediate)
+        compare(item1.AbstractStackView.view, control)
+
+        var item2 = component.createObject(control)
+        compare(item2.AbstractStackView.view, null)
+        control.push(item2, AbstractStackView.Immediate)
+        compare(item2.AbstractStackView.view, control)
+        compare(item1.AbstractStackView.view, control)
+
+        control.pop(AbstractStackView.Immediate)
+        compare(item2.AbstractStackView.view, null)
+        compare(item1.AbstractStackView.view, control)
+
+        control.destroy()
+    }
+
     function test_depth() {
         var control = stackView.createObject(testCase)
         compare(control.depth, 0)

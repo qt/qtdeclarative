@@ -150,16 +150,19 @@ class Q_QUICKCONTROLS_EXPORT QQuickStackAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(QQuickStackView *view READ view NOTIFY viewChanged FINAL)
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
 
 public:
     explicit QQuickStackAttached(QQuickItem *parent = Q_NULLPTR);
 
     int index() const;
+    QQuickStackView *view() const;
     QQuickStackView::Status status() const;
 
 Q_SIGNALS:
     void indexChanged();
+    void viewChanged();
     void statusChanged();
 
 private:

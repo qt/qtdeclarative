@@ -75,6 +75,7 @@ public:
     void initProperties();
 
     void setIndex(int index);
+    void setView(QQuickStackView *view);
     void setStatus(QQuickStackView::Status status);
 
     void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
