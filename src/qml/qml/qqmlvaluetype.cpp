@@ -388,6 +388,26 @@ void QQmlRectFValueType::setHeight(qreal h)
     v.setHeight(h);
 }
 
+qreal QQmlRectFValueType::left() const
+{
+    return v.left();
+}
+
+qreal QQmlRectFValueType::right() const
+{
+    return v.right();
+}
+
+qreal QQmlRectFValueType::top() const
+{
+    return v.top();
+}
+
+qreal QQmlRectFValueType::bottom() const
+{
+    return v.bottom();
+}
+
 int QQmlRectValueType::x() const
 {
     return v.x();
@@ -428,6 +448,25 @@ void QQmlRectValueType::setHeight(int h)
     v.setHeight(h);
 }
 
+int QQmlRectValueType::left() const
+{
+    return v.left();
+}
+
+int QQmlRectValueType::right() const
+{
+    return v.right();
+}
+
+int QQmlRectValueType::top() const
+{
+    return v.top();
+}
+
+int QQmlRectValueType::bottom() const
+{
+    return v.bottom();
+}
 
 QQmlEasingValueType::Type QQmlEasingValueType::type() const
 {

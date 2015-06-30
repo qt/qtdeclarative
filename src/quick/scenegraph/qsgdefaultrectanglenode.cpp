@@ -323,11 +323,11 @@ void QSGDefaultRectangleNode::updateGeometry()
     const QGradientStops &stops = m_gradient_stops;
 
     int nextGradientStop = 0;
-    float gradientPos = 0.5f * penWidth / height;
+    float gradientPos = penWidth / height;
     while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
         ++nextGradientStop;
     int lastGradientStop = stops.size() - 1;
-    float lastGradientPos = 1.0f - 0.5f * penWidth / height;
+    float lastGradientPos = 1.0f - penWidth / height;
     while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
         --lastGradientStop;
     int gradientIntersections = (lastGradientStop - nextGradientStop + 1);
@@ -643,11 +643,11 @@ void QSGDefaultRectangleNode::updateGeometry()
         for (int part = -1; part <= 1; part += 2) {
             float y = (part == 1 ? innerRect.bottom() : innerRect.top());
             float Y = (part == 1 ? outerRect.bottom() : outerRect.top());
-            gradientPos = (y - innerRect.top() + 0.5f * penWidth) / height;
+            gradientPos = (y - innerRect.top() + penWidth) / height;
 
             while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                 // Insert vertices at gradient stops.
-                float gy = (innerRect.top() - 0.5f * penWidth) + stops.at(nextGradientStop).first * height;
+                float gy = (innerRect.top() - penWidth) + stops.at(nextGradientStop).first * height;
 
                 fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
 

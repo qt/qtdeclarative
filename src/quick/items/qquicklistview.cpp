@@ -1157,9 +1157,11 @@ void QQuickListViewPrivate::updateSections()
         if (visibleIndex > 0)
             prevSection = sectionAt(visibleIndex-1);
         QQuickListViewAttached *prevAtt = 0;
+        int prevIdx = -1;
         int idx = -1;
         for (int i = 0; i < visibleItems.count(); ++i) {
-            QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(visibleItems.at(i)->attached);
+            FxViewItem *item = visibleItems.at(i);
+            QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(item->attached);
             attached->setPrevSection(prevSection);
             if (visibleItems.at(i)->index != -1) {
                 QString propValue = model->stringValue(visibleItems.at(i)->index, sectionCriteria->property());
@@ -1168,9 +1170,10 @@ void QQuickListViewPrivate::updateSections()
             }
             updateInlineSection(static_cast<FxListItemSG*>(visibleItems.at(i)));
             if (prevAtt)
-                prevAtt->setNextSection(attached->section());
+                prevAtt->setNextSection(sectionAt(prevIdx+1));
             prevSection = attached->section();
             prevAtt = attached;
+            prevIdx = item->index;
         }
         if (prevAtt) {
             if (idx > 0 && idx < model->count()-1)
@@ -3088,6 +3091,18 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                                                 : visibleItems.last()->endPosition()+spacing;
     }
 
+    // Update the indexes of the following visible items.
+    for (int i = 0; i < visibleItems.count(); ++i) {
+        FxViewItem *item = visibleItems.at(i);
+        if (item->index != -1 && item->index >= modelIndex) {
+            item->index += count;
+            if (change.isMove())
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
+            else
+                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
+        }
+    }
+
     int prevVisibleCount = visibleItems.count();
     if (insertResult->visiblePos.isValid() && pos < insertResult->visiblePos) {
         // Insert items before the visible item.
@@ -3150,17 +3165,6 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
             pos += item->size() + spacing;
             ++index;
-        }
-    }
-
-    for (; index < visibleItems.count(); ++index) {
-        FxViewItem *item = visibleItems.at(index);
-        if (item->index != -1) {
-            item->index += count;
-            if (change.isMove())
-                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
-            else
-                item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
         }
     }
 

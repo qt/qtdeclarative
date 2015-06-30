@@ -246,9 +246,9 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \table
     \row
     \li MyItem.qml
-    \li main.qml
-    \row
     \li \snippet qml/component/MyItem.qml 0
+    \row
+    \li main.qml
     \li \snippet qml/component/main.qml 0
     \endtable
 */

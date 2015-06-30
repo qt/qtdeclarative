@@ -92,7 +92,11 @@ Rectangle {
         color: "red"
 
         // this is a standalone animation, it's not running by default
-        PropertyAnimation { id: animation; target: theRect; property: "width"; to: 30; duration: 500 }
+        PropertyAnimation { id: animation;
+                            target: theRect;
+                            property: "width";
+                            to: 30;
+                            duration: 500 }
 
         MouseArea { anchors.fill: parent; onClicked: animation.running = true }
     }

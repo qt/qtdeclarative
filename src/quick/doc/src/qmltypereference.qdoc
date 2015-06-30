@@ -252,7 +252,7 @@ available when you import \c QtQuick.
 
     The vector2d type has the following idempotent functions which can be
     invoked in QML:
-    \table
+    \table 60%
         \header
         \li Function Signature
         \li Description
@@ -430,9 +430,11 @@ console.log(c); // 32
             the 4x4 \c matrix with the matrix applied post-vector
         \li \code
 var a = Qt.vector3d(1,2,3);
-var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
+var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,
+                     12,13,14,15,16,17,18,19);
 var c = a.times(b);
-console.log(c.toString()); // QVector3D(0.774194, 0.849462, 0.924731)
+console.log(c.toString());
+// QVector3D(0.774194, 0.849462, 0.924731)
             \endcode
 
         \row
@@ -481,7 +483,8 @@ console.log(c.toString()); // QVector3D(-3, -3, -3)
         \li \code
 var a = Qt.vector3d(1,2,3);
 var b = a.normalized();
-console.log(b.toString()); // QVector3D(0.267261, 0.534522, 0.801784)
+console.log(b.toString());
+// QVector3D(0.267261, 0.534522, 0.801784)
             \endcode
 
         \row
@@ -515,7 +518,8 @@ console.log(b.toString()); // QVector4D(1, 2, 3, 0)
         \li bool fuzzyEquals(vector3d other, real epsilon)
         \li Returns true if \c this vector3d is approximately equal to the \c other vector3d.
             The approximation will be true if each attribute of \c this is within \c epsilon
-            of \c other.  Note that \c epsilon is an optional argument, the default \c epsilon
+            of \c other.
+            Note that \c epsilon is an optional argument, the default \c epsilon
             is 0.00001.
         \li \code
 var a = Qt.vector3d(1,2,3);
@@ -591,7 +595,8 @@ console.log(c.toString()); // QVector4D(5, 12, 21, 32)
 var a = Qt.vector4d(1,2,3,4);
 var b = 4.48;
 var c = a.times(b);
-console.log(c.toString()); // QVector3D(4.48, 8.96, 13.44, 17.92)
+console.log(c.toString()); // QVector3D(4.48, 8.96,
+                                        13.44, 17.92)
             \endcode
 
         \row
@@ -620,7 +625,8 @@ console.log(c.toString()); // QVector4D(-4, -4, -4, -4)
         \li \code
 var a = Qt.vector4d(1,2,3,4);
 var b = a.normalized();
-console.log(b.toString()); // QVector4D(0.182574, 0.365148, 0.547723, 0.730297)
+console.log(b.toString());
+// QVector4D(0.182574, 0.365148, 0.547723, 0.730297)
             \endcode
 
         \row
@@ -701,7 +707,7 @@ console.log(c + " " + d); // false true
 
     The matrix4x4 type has the following idempotent functions which can be
     invoked in QML:
-    \table
+    \table 70 %
         \header
         \li Function Signature
         \li Description
@@ -715,7 +721,9 @@ console.log(c + " " + d); // false true
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = Qt.matrix4x4(4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19);
 var c = a.times(b);
-console.log(c.toString()); // QMatrix4x4(120, 130, 140, 150, 280, 306, 332, 358, 440, 482, 524, 566, 600, 658, 716, 774)
+console.log(c.toString());
+// QMatrix4x4(120, 130, 140, 150, 280, 306, 332, 358, 440, 482,
+//524, 566, 600, 658, 716, 774)
             \endcode
 
         \row
@@ -749,7 +757,9 @@ console.log(c.toString()); // QVector3D(0.155556, 0.437037, 0.718518)
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = 4.48;
 var c = a.times(b);
-console.log(c.toString()); // QMatrix4x4(4.48, 8.96, 13.44, 17.92, 22.4, 26.88, 31.36, 35.84, 40.32, 44.8, 49.28, 53.76, 58.24, 62.72, 67.2, 71.68)
+console.log(c.toString());
+// QMatrix4x4(4.48, 8.96, 13.44, 17.92, 22.4, 26.88, 31.36, 35.84,
+// 40.32, 44.8, 49.28, 53.76, 58.24, 62.72, 67.2, 71.68)
             \endcode
 
         \row
@@ -759,7 +769,9 @@ console.log(c.toString()); // QMatrix4x4(4.48, 8.96, 13.44, 17.92, 22.4, 26.88, 
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = Qt.matrix4x4(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
 var c = a.plus(b);
-console.log(c.toString()); // QMatrix4x4(6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36)
+console.log(c.toString());
+// QMatrix4x4(6, 8, 10, 12, 14, 16, 18, 20, 22,
+// 24, 26, 28, 30, 32, 34, 36)
             \endcode
 
         \row
@@ -769,7 +781,9 @@ console.log(c.toString()); // QMatrix4x4(6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 2
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = Qt.matrix4x4(5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
 var c = a.minus(b);
-console.log(c.toString()); // QMatrix4x4(-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4)
+console.log(c.toString());
+// QMatrix4x4(-4, -4, -4, -4, -4, -4, -4, -4, -4,
+// -4, -4, -4, -4, -4, -4, -4)
             \endcode
 
         \row
@@ -780,7 +794,8 @@ console.log(c.toString()); // QMatrix4x4(-4, -4, -4, -4, -4, -4, -4, -4, -4, -4,
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = Qt.vector4d(a.m21, a.m22, a.m23, a.m24);
 var c = a.row(2); // zero based access!  so not equal to b
-console.log(b.toString() + " " + c.toString()); // QVector4D(5, 6, 7, 8) QVector4D(9, 10, 11, 12)
+console.log(b.toString() + " " + c.toString());
+// QVector4D(5, 6, 7, 8) QVector4D(9, 10, 11, 12)
             \endcode
 
         \row
@@ -791,7 +806,8 @@ console.log(b.toString() + " " + c.toString()); // QVector4D(5, 6, 7, 8) QVector
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
 var b = Qt.vector4d(a.m12, a.m22, a.m32, a.m42);
 var c = a.column(2); // zero based access!  so not equal to b
-console.log(b.toString() + " " + c.toString()); // QVector4D(2, 6, 10, 14) QVector4D(3, 7, 11, 15)
+console.log(b.toString() + " " + c.toString());
+// QVector4D(2, 6, 10, 14) QVector4D(3, 7, 11, 15)
             \endcode
 
         \row
@@ -809,7 +825,9 @@ console.log(b); // 6
         \li \code
 var a = Qt.matrix4x4(1,0,0,0,0,2,0,0,0,0,3,0,100,200,300,1);
 var b = a.inverted();
-console.log(b.toString()); // QMatrix4x4(1, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.333333, 0, -100, -100, -100, 1)
+console.log(b.toString());
+// QMatrix4x4(1, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.333333, 0, -100,
+// -100, -100, 1)
             \endcode
 
         \row
@@ -818,7 +836,8 @@ console.log(b.toString()); // QMatrix4x4(1, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0.33333
         \li \code
 var a = Qt.matrix4x4(1,0,0,0,0,2,0,0,0,0,3,0,100,200,300,1);
 var b = a.transposed();
-console.log(b.toString()); // QMatrix4x4(1, 0, 0, 100, 0, 2, 0, 200, 0, 0, 3, 300, 0, 0, 0, 1)
+console.log(b.toString());
+// QMatrix4x4(1, 0, 0, 100, 0, 2, 0, 200, 0, 0, 3, 300, 0, 0, 0, 1)
             \endcode
 
         \row
@@ -829,7 +848,10 @@ console.log(b.toString()); // QMatrix4x4(1, 0, 0, 100, 0, 2, 0, 200, 0, 0, 3, 30
             argument, the default \c epsilon is 0.00001.
         \li \code
 var a = Qt.matrix4x4(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
-var b = Qt.matrix4x4(1.0001,2.0001,3.0002,4.0003,5.0001,6.0002,7.0002,8.0004,9.0001,10.0003,11.0003,12.0004,13.0001,14.0002,15.0003,16.0004);
+var b = Qt.matrix4x4(1.0001,2.0001,3.0002,4.0003,5.0001,6.0002,
+                     7.0002,8.0004, 9.0001,10.0003,
+                     11.0003,12.0004,13.0001,
+                     14.0002,15.0003,16.0004);
 var c = a.fuzzyEquals(b);        // default epsilon
 var d = a.fuzzyEquals(b, 0.005); // supplied epsilon
 console.log(c + " " + d); // false true

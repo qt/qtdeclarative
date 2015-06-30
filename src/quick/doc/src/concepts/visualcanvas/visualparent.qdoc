@@ -63,7 +63,9 @@ import QtQuick 2.0
 Item {
     width: 100; height: 100
 
-    Rectangle { width: 50; height: 50; color: "red" }
+    Rectangle { width: 50;
+                height: 50;
+                color: "red" }
 }
 \endcode
 
@@ -75,7 +77,9 @@ Item {
     width: 100; height: 100
 
     data: [
-        Rectangle { width: 50; height: 50; color: "red" }
+        Rectangle { width: 50;
+                    height: 50;
+                    color: "red" }
     ]
 }
 \endcode

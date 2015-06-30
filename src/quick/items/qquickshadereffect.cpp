@@ -601,7 +601,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \l blending is enabled, source-over blending is used. However, additive
     blending can be achieved by outputting zero in the alpha channel.
 
-    \table
+    \table 70%
     \row
     \li \image declarative-shadereffectitem.png
     \li \qml
@@ -610,7 +610,8 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
         Rectangle {
             width: 200; height: 100
             Row {
-                Image { id: img; sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                Image { id: img;
+                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
                 ShaderEffect {
                     width: 100; height: 100
                     property variant src: img
@@ -629,7 +630,9 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
                         uniform lowp float qt_Opacity;
                         void main() {
                             lowp vec4 tex = texture2D(src, coord);
-                            gl_FragColor = vec4(vec3(dot(tex.rgb, vec3(0.344, 0.5, 0.156))), tex.a) * qt_Opacity;
+                            gl_FragColor = vec4(vec3(dot(tex.rgb,
+                                                vec3(0.344, 0.5, 0.156))),
+                                                     tex.a) * qt_Opacity;
                         }"
                 }
             }
@@ -649,6 +652,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \row
       \li \b {Layer with effect disabled} \inlineimage qml-shadereffect-nolayereffect.png
       \li \b {Layer with effect enabled} \inlineimage qml-shadereffect-layereffect.png
+    \row
       \li \snippet qml/layerwitheffect.qml 1
     \endtable
 
@@ -657,6 +661,7 @@ void QQuickShaderEffectCommon::propertyChanged(QQuickItem *item, int mappedId,
     \table
     \row
       \li \inlineimage qml-shadereffect-opacitymask.png
+    \row
       \li \snippet qml/opacitymask.qml 1
     \endtable
 

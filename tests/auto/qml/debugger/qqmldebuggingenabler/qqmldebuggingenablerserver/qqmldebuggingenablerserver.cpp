@@ -36,7 +36,7 @@
 
 int main(int argc, char *argv[])
 {
-      bool block = false;
+      QQmlDebuggingEnabler::StartMode block = QQmlDebuggingEnabler::DoNotWaitForClient;
       int portFrom = 0;
       int portTo = 0;
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
       arguments.removeFirst();
 
       if (arguments.size() && arguments.first() == QLatin1String("-block")) {
-          block = true;
+          block = QQmlDebuggingEnabler::WaitForClient;
           arguments.removeFirst();
       }
 

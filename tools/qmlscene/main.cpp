@@ -40,6 +40,7 @@
 #include <QtCore/qtextstream.h>
 
 #include <QtGui/QGuiApplication>
+#include <QtGui/QOpenGLFunctions>
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
@@ -148,8 +149,11 @@ struct Options
         , quitImmediately(false)
         , resizeViewToRootItem(false)
         , multisample(false)
-        , contextSharing(true)
+        , verbose(false)
     {
+        // QtWebEngine needs a shared context in order for the GPU thread to
+        // upload textures.
+        applicationAttributes.append(Qt::AA_ShareOpenGLContexts);
     }
 
     QUrl file;
@@ -164,7 +168,8 @@ struct Options
     bool quitImmediately;
     bool resizeViewToRootItem;
     bool multisample;
-    bool contextSharing;
+    bool verbose;
+    QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
 };
 
@@ -340,21 +345,75 @@ static void usage()
     puts("Usage: qmlscene [options] <filename>");
     puts(" ");
     puts(" Options:");
-    puts("  --maximized ............................... Run maximized");
-    puts("  --fullscreen .............................. Run fullscreen");
-    puts("  --transparent ............................. Make the window transparent");
-    puts("  --multisample ............................. Enable multisampling (OpenGL anti-aliasing)");
-    puts("  --no-version-detection .................... Do not try to detect the version of the .qml file");
-    puts("  --slow-animations ......................... Run all animations in slow motion");
-    puts("  --resize-to-root .......................... Resize the window to the size of the root item");
-    puts("  --quit .................................... Quit immediately after starting");
-    puts("  --disable-context-sharing ................. Disable the use of a shared GL context for QtQuick Windows");
-    puts("  -I <path> ................................. Add <path> to the list of import paths");
-    puts("  -P <path> ................................. Add <path> to the list of plugin paths");
-    puts("  -translation <translationfile> ............ Set the language to run in");
+    puts("  --maximized ...................... Run maximized");
+    puts("  --fullscreen ..................... Run fullscreen");
+    puts("  --transparent .................... Make the window transparent");
+    puts("  --multisample .................... Enable multisampling (OpenGL anti-aliasing)");
+    puts("  --no-version-detection ........... Do not try to detect the version of the .qml file");
+    puts("  --slow-animations ................ Run all animations in slow motion");
+    puts("  --resize-to-root ................. Resize the window to the size of the root item");
+    puts("  --quit ........................... Quit immediately after starting");
+    puts("  --disable-context-sharing ........ Disable the use of a shared GL context for QtQuick Windows\n"
+         "                            .........(remove AA_ShareOpenGLContexts)");
+    puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
+    puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
+    puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
+    puts("  -I <path> ........................ Add <path> to the list of import paths");
+    puts("  -P <path> ........................ Add <path> to the list of plugin paths");
+    puts("  -translation <translationfile> ... Set the language to run in");
 
     puts(" ");
     exit(1);
+}
+
+// Listen on GL context creation of the QQuickWindow in order to print diagnostic output.
+class DiagnosticGlContextCreationListener : public QObject {
+    Q_OBJECT
+public:
+    explicit DiagnosticGlContextCreationListener(QQuickWindow *window) : QObject(window)
+    {
+        connect(window, &QQuickWindow::openglContextCreated,
+                this, &DiagnosticGlContextCreationListener::onOpenGlContextCreated);
+    }
+
+private slots:
+    void onOpenGlContextCreated(QOpenGLContext *context)
+    {
+        context->makeCurrent(qobject_cast<QQuickWindow *>(parent()));
+        QOpenGLFunctions functions(context);
+        QByteArray output = "Vendor  : ";
+        output += reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR));
+        output += "\nRenderer: ";
+        output += reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER));
+        output += "\nVersion : ";
+        output += reinterpret_cast<const char *>(functions.glGetString(GL_VERSION));
+        output += "\nLanguage: ";
+        output += reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION));
+        puts(output.constData());
+        context->doneCurrent();
+        deleteLater();
+    }
+};
+
+static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *window)
+{
+    const QString oldTitle = window->title();
+    QString newTitle = oldTitle;
+    if (newTitle.isEmpty()) {
+        newTitle = QLatin1String("qmlscene");
+        if (!qobject_cast<const QWindow *>(topLevel) && !topLevel->objectName().isEmpty())
+            newTitle += QLatin1String(": ") + topLevel->objectName();
+    }
+    if (verbose) {
+        newTitle += QLatin1String(" [Qt ") + QLatin1String(QT_VERSION_STR) + QLatin1Char(' ')
+            + QGuiApplication::platformName() + QLatin1Char(' ');
+        newTitle += QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
+            ? QLatin1String("GL") : QLatin1String("GLES");
+        newTitle += QLatin1Char(']');
+    }
+    if (oldTitle != newTitle)
+        window->setTitle(newTitle);
 }
 
 int main(int argc, char ** argv)
@@ -389,7 +448,15 @@ int main(int argc, char ** argv)
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
             else if (lowerArgument == QLatin1String("--disable-context-sharing"))
-                options.contextSharing = false;
+                options.applicationAttributes.removeAll(Qt::AA_ShareOpenGLContexts);
+            else if (lowerArgument == QLatin1String("--gles"))
+                options.applicationAttributes.append(Qt::AA_UseOpenGLES);
+            else if (lowerArgument == QLatin1String("--software"))
+                options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
+            else if (lowerArgument == QLatin1String("--desktop"))
+                options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
+            else if (lowerArgument == QLatin1String("--verbose"))
+                options.verbose = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
                 imports.append(QString::fromLatin1(argv[++i]));
             else if (lowerArgument == QLatin1String("-p") && i + 1 < argc)
@@ -402,9 +469,8 @@ int main(int argc, char ** argv)
         }
     }
 
-    // QtWebEngine needs a shared context in order for the GPU thread to
-    // upload textures.
-    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts, options.contextSharing);
+    foreach (Qt::ApplicationAttribute a, options.applicationAttributes)
+        QCoreApplication::setAttribute(a);
 #ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);
 #else
@@ -444,6 +510,9 @@ int main(int argc, char ** argv)
 #endif
 
     int exitCode = 0;
+
+    if (options.verbose)
+        puts(QLibraryInfo::build());
 
     if (!options.file.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.file)) {
@@ -487,8 +556,6 @@ int main(int argc, char ** argv)
                     QQuickView* qxView = new QQuickView(&engine, NULL);
                     window.reset(qxView);
                     // Set window default properties; the qml can still override them
-                    QString oname = contentItem->objectName();
-                    window->setTitle(oname.isEmpty() ? QString::fromLatin1("qmlscene") : QString::fromLatin1("qmlscene: ") + oname);
                     if (options.resizeViewToRootItem)
                         qxView->setResizeMode(QQuickView::SizeViewToRootObject);
                     else
@@ -498,6 +565,9 @@ int main(int argc, char ** argv)
             }
 
             if (window) {
+                setWindowTitle(options.verbose, topLevel, window.data());
+                if (options.verbose)
+                    new DiagnosticGlContextCreationListener(window.data());
                 QSurfaceFormat surfaceFormat = window->requestedFormat();
                 if (options.multisample)
                     surfaceFormat.setSamples(16);
@@ -539,3 +609,5 @@ int main(int argc, char ** argv)
 
     return exitCode;
 }
+
+#include "main.moc"

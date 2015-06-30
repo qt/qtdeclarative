@@ -260,6 +260,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickPinchArea, 1>(uri, 2, 5,"PinchArea");
     qmlRegisterType<QQuickImage, 2>(uri, 2, 5,"Image");
+    qmlRegisterType<QQuickMouseArea, 2>(uri, 2, 5, "MouseArea");
 
     qmlRegisterType<QQuickText, 6>(uri, 2, 6, "Text");
     qmlRegisterType<QQuickTextEdit, 6>(uri, 2, 6, "TextEdit");

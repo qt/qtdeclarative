@@ -81,15 +81,128 @@ static void showMeTheCode(IR::Function *function, const char *marker)
     }
 }
 
+#if !defined(BROKEN_STD_VECTOR_BOOL_OR_BROKEN_STD_FIND)
+// Sanity:
+class BitVector
+{
+    std::vector<bool> bits;
+
+public:
+    BitVector(int size = 0, bool value = false)
+        : bits(size, value)
+    {}
+
+    void reserve(int size)
+    { bits.reserve(size); }
+
+    int size() const
+    {
+        Q_ASSERT(bits.size() < INT_MAX);
+        return static_cast<int>(bits.size());
+    }
+
+    void resize(int newSize)
+    { bits.resize(newSize); }
+
+    void assign(int newSize, bool value)
+    { bits.assign(newSize, value); }
+
+    int findNext(int start, bool value, bool wrapAround) const
+    {
+        // The ++operator of std::vector<bool>::iterator in libc++ has a bug when using it on an
+        // iterator pointing to the last element. It will not be set to ::end(), but beyond
+        // that. (It will be set to the first multiple of the native word size that is bigger
+        // than size().)
+        //
+        // See http://llvm.org/bugs/show_bug.cgi?id=19663
+        //
+        // The work-around is to calculate the distance, and compare it to the size() to see if it's
+        // beyond the end, or take the minimum of the distance and the size.
+
+        size_t pos = std::distance(bits.begin(),
+                                   std::find(bits.begin() + start, bits.end(), value));
+        if (wrapAround && pos >= static_cast<size_t>(size()))
+            pos = std::distance(bits.begin(),
+                                std::find(bits.begin(), bits.begin() + start, value));
+
+        pos = qMin(pos, static_cast<size_t>(size()));
+
+        Q_ASSERT(pos <= static_cast<size_t>(size()));
+        Q_ASSERT(pos < INT_MAX);
+
+        return static_cast<int>(pos);
+    }
+
+    bool at(int idx) const
+    { return bits.at(idx); }
+
+    void setBit(int idx)
+    { bits[idx] = true; }
+
+    void clearBit(int idx)
+    { bits[idx] = false; }
+};
+#else // Insanity:
+class BitVector
+{
+    QBitArray bits;
+
+public:
+    BitVector(int size = 0, bool value = false)
+        : bits(size, value)
+    {}
+
+    void reserve(int size)
+    { Q_UNUSED(size); }
+
+    int size() const
+    { return bits.size(); }
+
+    void resize(int newSize)
+    { bits.resize(newSize); }
+
+    void assign(int newSize, bool value)
+    {
+        bits.resize(newSize);
+        bits.fill(value);
+    }
+
+    int findNext(int start, bool value, bool wrapAround) const
+    {
+        for (int i = start, ei = size(); i < ei; ++i) {
+            if (at(i) == value)
+                return i;
+        }
+
+        if (wrapAround) {
+            for (int i = 0, ei = start; i < ei; ++i) {
+                if (at(i) == value)
+                    return i;
+            }
+        }
+
+        return size();
+    }
+
+    bool at(int idx) const
+    { return bits.at(idx); }
+
+    void setBit(int idx)
+    { bits[idx] = true; }
+
+    void clearBit(int idx)
+    { bits[idx] = false; }
+};
+#endif
+
 class ProcessedBlocks
 {
-    QBitArray processed;
+    BitVector processed;
 
 public:
     ProcessedBlocks(IR::Function *function)
-    {
-        processed = QBitArray(function->basicBlockCount(), false);
-    }
+        : processed(function->basicBlockCount(), false)
+    {}
 
     bool alreadyProcessed(BasicBlock *bb) const
     {
@@ -106,7 +219,7 @@ public:
 
 class BasicBlockSet
 {
-    typedef std::vector<bool> Flags;
+    typedef BitVector Flags;
 
     QVarLengthArray<int, 8> blockNumbers;
     Flags *blockFlags;
@@ -119,7 +232,7 @@ public:
         const BasicBlockSet &set;
         // ### These two members could go into a union, but clang won't compile (https://codereview.qt-project.org/#change,74259)
         QVarLengthArray<int, 8>::const_iterator numberIt;
-        size_t flagIt;
+        int flagIt;
 
         friend class BasicBlockSet;
         const_iterator(const BasicBlockSet &set, bool end)
@@ -138,24 +251,9 @@ public:
             }
         }
 
-        void findNextWithFlags(size_t start)
+        void findNextWithFlags(int start)
         {
-            flagIt = std::distance(set.blockFlags->begin(),
-                                   std::find(set.blockFlags->begin() + start,
-                                             set.blockFlags->end(),
-                                             true));
-
-            // The ++operator of std::vector<bool>::iterator in libc++ has a bug when using it on an
-            // iterator pointing to the last element. It will not be set to ::end(), but beyond
-            // that. (It will be set to the first multiple of the native word size that is bigger
-            // than size().)
-            //
-            // See http://llvm.org/bugs/show_bug.cgi?id=19663
-            //
-            // As we use the size to for our end() iterator, take the minimum of the size and the
-            // distance for the flagIt:
-            flagIt = qMin(flagIt, set.blockFlags->size());
-
+            flagIt = set.blockFlags->findNext(start, true, /*wrapAround = */false);
             Q_ASSERT(flagIt <= set.blockFlags->size());
         }
 
@@ -165,8 +263,8 @@ public:
             if (!set.blockFlags) {
                 return set.function->basicBlock(*numberIt);
             } else {
-                Q_ASSERT(flagIt <= static_cast<size_t>(set.function->basicBlockCount()));
-                return set.function->basicBlock(static_cast<int>(flagIt));
+                Q_ASSERT(flagIt <= set.function->basicBlockCount());
+                return set.function->basicBlock(flagIt);
             }
         }
 
@@ -256,7 +354,7 @@ public:
         Q_ASSERT(function);
 
         if (blockFlags) {
-            (*blockFlags)[bb->index()] = true;
+            blockFlags->setBit(bb->index());
             return;
         }
 
@@ -268,10 +366,10 @@ public:
         if (blockNumbers.size() == MaxVectorCapacity) {
             blockFlags = new Flags(function->basicBlockCount(), false);
             for (int i = 0; i < blockNumbers.size(); ++i) {
-                blockFlags->operator[](blockNumbers[i]) = true;
+                blockFlags->setBit(blockNumbers[i]);
             }
             blockNumbers.clear();
-            blockFlags->operator[](bb->index()) = true;
+            blockFlags->setBit(bb->index());
         } else {
             blockNumbers.append(bb->index());
         }
@@ -282,7 +380,7 @@ public:
         Q_ASSERT(function);
 
         if (blockFlags) {
-            (*blockFlags)[bb->index()] = false;
+            blockFlags->clearBit(bb->index());
             return;
         }
 
@@ -310,7 +408,7 @@ public:
         Q_ASSERT(function);
 
         if (blockFlags)
-            return (*blockFlags)[bb->index()];
+            return blockFlags->at(bb->index());
 
         for (int i = 0; i < blockNumbers.size(); ++i) {
             if (blockNumbers[i] == bb->index())
@@ -539,12 +637,12 @@ public:
             np.todo = children[nodeIndex];
         }
 
-        std::vector<bool> DF_done(function->basicBlockCount(), false);
+        BitVector DF_done(function->basicBlockCount(), false);
 
         while (!worklist.empty()) {
             BasicBlockIndex node = worklist.back();
 
-            if (DF_done[node]) {
+            if (DF_done.at(node)) {
                 worklist.pop_back();
                 continue;
             }
@@ -552,7 +650,7 @@ public:
             NodeProgress &np = nodeStatus[node];
             std::vector<BasicBlockIndex>::iterator it = np.todo.begin();
             while (it != np.todo.end()) {
-                if (DF_done[*it]) {
+                if (DF_done.at(*it)) {
                     it = np.todo.erase(it);
                 } else {
                     worklist.push_back(*it);
@@ -575,7 +673,7 @@ public:
                             S.insert(w);
                     }
                 }
-                DF_done[node] = true;
+                DF_done.setBit(node);
                 worklist.pop_back();
             }
         }
@@ -914,8 +1012,8 @@ class VariableCollector: public StmtVisitor, ExprVisitor {
     std::vector<Temp> _allTemps;
     std::vector<BasicBlockSet> _defsites;
     std::vector<std::vector<int> > A_orig;
-    std::vector<bool> nonLocals;
-    std::vector<bool> killed;
+    BitVector nonLocals;
+    BitVector killed;
 
     BasicBlock *currentBB;
     bool isCollectable(Temp *t) const
@@ -979,8 +1077,8 @@ public:
     bool isNonLocal(const Temp &var) const
     {
         Q_ASSERT(!var.isInvalid());
-        Q_ASSERT(var.index < nonLocals.size());
-        return nonLocals[var.index];
+        Q_ASSERT(static_cast<int>(var.index) < nonLocals.size());
+        return nonLocals.at(var.index);
     }
 
 protected:
@@ -1025,7 +1123,7 @@ protected:
                 addDefInCurrentBlock(t);
 
                 // For semi-pruned SSA:
-                killed[t->index] = true;
+                killed.setBit(t->index);
             }
         } else {
             s->target->accept(this);
@@ -1037,8 +1135,8 @@ protected:
         addTemp(t);
 
         if (isCollectable(t))
-            if (!killed[t->index])
-                nonLocals[t->index] = true;
+            if (!killed.at(t->index))
+                nonLocals.setBit(t->index);
     }
 };
 
@@ -1619,7 +1717,7 @@ void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defU
     VariableCollector variables(function);
 
     // Prepare for phi node insertion:
-    std::vector<std::vector<bool> > A_phi;
+    std::vector<BitVector > A_phi;
     const size_t ei = function->basicBlockCount();
     A_phi.resize(ei);
     for (size_t i = 0; i != ei; ++i)
@@ -1646,7 +1744,7 @@ void convertToSSA(IR::Function *function, const DominatorTree &df, DefUses &defU
                 BasicBlock *y = *it;
                 if (!A_phi.at(y->index()).at(a.index)) {
                     insertPhiNode(a, y, function);
-                    A_phi[y->index()].at(a.index) = true;
+                    A_phi[y->index()].setBit(a.index);
                     const std::vector<int> &varsInBlockY = variables.inBlock(y);
                     if (std::find(varsInBlockY.begin(), varsInBlockY.end(), a.index) == varsInBlockY.end())
                         W.push_back(y);
@@ -1723,10 +1821,10 @@ class StatementWorklist
 {
     IR::Function *theFunction;
     std::vector<Stmt *> stmts;
-    std::vector<bool> worklist;
+    BitVector worklist;
     unsigned worklistSize;
     std::vector<int> replaced;
-    std::vector<bool> removed;
+    BitVector removed;
 
     Q_DISABLE_COPY(StatementWorklist)
 
@@ -1750,7 +1848,7 @@ public:
                     continue;
 
                 stmts[s->id()] = s;
-                worklist[s->id()] = true;
+                worklist.setBit(s->id());
                 ++worklistSize;
             }
         }
@@ -1765,7 +1863,7 @@ public:
             if (!s)
                 continue;
 
-            worklist[s->id()] = true;
+            worklist.setBit(s->id());
             ++worklistSize;
         }
 
@@ -1776,10 +1874,9 @@ public:
     void remove(Stmt *stmt)
     {
         replaced[stmt->id()] = Stmt::InvalidId;
-        removed[stmt->id()] = true;
-        std::vector<bool>::reference inWorklist = worklist[stmt->id()];
-        if (inWorklist) {
-            inWorklist = false;
+        removed.setBit(stmt->id());
+        if (worklist.at(stmt->id())) {
+            worklist.clearBit(stmt->id());
             Q_ASSERT(worklistSize > 0);
             --worklistSize;
         }
@@ -1789,15 +1886,15 @@ public:
     {
         Q_ASSERT(oldStmt);
         Q_ASSERT(replaced[oldStmt->id()] == Stmt::InvalidId);
-        Q_ASSERT(removed[oldStmt->id()] == false);
+        Q_ASSERT(removed.at(oldStmt->id()) == false);
 
         Q_ASSERT(newStmt);
         registerNewStatement(newStmt);
         Q_ASSERT(replaced[newStmt->id()] == Stmt::InvalidId);
-        Q_ASSERT(removed[newStmt->id()] == false);
+        Q_ASSERT(removed.at(newStmt->id()) == false);
 
         replaced[oldStmt->id()] = newStmt->id();
-        worklist[oldStmt->id()] = false;
+        worklist.clearBit(oldStmt->id());
     }
 
     void applyToFunction()
@@ -1818,7 +1915,7 @@ public:
                 Q_ASSERT(id != Stmt::InvalidId);
                 Q_ASSERT(static_cast<unsigned>(stmt->id()) < stmts.size());
 
-                if (removed[id]) {
+                if (removed.at(id)) {
                     bb->removeStatement(i);
                 } else {
                     if (id != stmt->id())
@@ -1847,10 +1944,10 @@ public:
             return *this;
 
         Q_ASSERT(s->id() >= 0);
-        Q_ASSERT(static_cast<unsigned>(s->id()) < worklist.size());
+        Q_ASSERT(s->id() < worklist.size());
 
-        if (!worklist[s->id()]) {
-            worklist[s->id()] = true;
+        if (!worklist.at(s->id())) {
+            worklist.setBit(s->id());
             ++worklistSize;
         }
 
@@ -1860,11 +1957,10 @@ public:
     StatementWorklist &operator-=(Stmt *s)
     {
         Q_ASSERT(s->id() >= 0);
-        Q_ASSERT(static_cast<unsigned>(s->id()) < worklist.size());
+        Q_ASSERT(s->id() < worklist.size());
 
-        std::vector<bool>::reference inWorklist = worklist[s->id()];
-        if (inWorklist) {
-            inWorklist = false;
+        if (worklist.at(s->id())) {
+            worklist.clearBit(s->id());
             Q_ASSERT(worklistSize > 0);
             --worklistSize;
         }
@@ -1884,18 +1980,13 @@ public:
 
         const int startAt = last ? last->id() + 1 : 0;
         Q_ASSERT(startAt >= 0);
-        Q_ASSERT(static_cast<unsigned>(startAt) <= worklist.size());
+        Q_ASSERT(startAt <= worklist.size());
 
-        Q_ASSERT(worklist.size() == stmts.size());
+        Q_ASSERT(static_cast<size_t>(worklist.size()) == stmts.size());
 
-        // Do not compare the result of find with the end iterator, because some libc++ versions
-        // have a bug where the result of the ++operator is past-the-end of the vector, but unequal
-        // to end().
-        size_t pos = std::find(worklist.begin() + startAt, worklist.end(), true) - worklist.begin();
-        if (pos >= worklist.size())
-            pos = std::find(worklist.begin(), worklist.begin() + startAt, true) - worklist.begin();
+        int pos = worklist.findNext(startAt, true, /*wrapAround = */true);
 
-        worklist[pos] = false;
+        worklist.clearBit(pos);
         Q_ASSERT(worklistSize > 0);
         --worklistSize;
         Stmt *s = stmts.at(pos);
@@ -1917,9 +2008,9 @@ public:
 
             int newSize = s->id() + 1;
             stmts.resize(newSize, 0);
-            worklist.resize(newSize, false);
+            worklist.resize(newSize);
             replaced.resize(newSize, Stmt::InvalidId);
-            removed.resize(newSize, false);
+            removed.resize(newSize);
         }
 
         stmts[s->id()] = s;
@@ -1928,7 +2019,8 @@ public:
 private:
     void grow()
     {
-        size_t newCapacity = ((stmts.capacity() + 1) * 3) / 2;
+        Q_ASSERT(stmts.capacity() < INT_MAX / 2);
+        int newCapacity = ((static_cast<int>(stmts.capacity()) + 1) * 3) / 2;
         stmts.reserve(newCapacity);
         worklist.reserve(newCapacity);
         replaced.reserve(newCapacity);

@@ -143,6 +143,15 @@ If the string of QML imports files using relative paths, the path should be
 relative to the file in which the parent object (the second argument to the
 method) is defined.
 
+\important When building static QML applications, which is enforced on platforms like iOS,
+QML files are scanned to detect import dependencies. That way, all
+necessary plugins and resources are resolved at compile time.
+However, only explicit import statements are considered (those found at
+the top of a QML file), and not import statements enclosed within string literals.
+To support static builds, you therefore need to ensure that QML files
+using \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()},
+explicitly contain all necessary imports at the top of the file in addition
+to inside the string literals.
 
 \section1 Maintaining Dynamically Created Objects
 
@@ -191,10 +200,10 @@ destroy itself:
 \table
 \row
 \li \c application.qml
-\li \c SelfDestroyingRect.qml
+\li \snippet qml/dynamicObjects-destroy.qml 0
 
 \row
-\li \snippet qml/dynamicObjects-destroy.qml 0
+\li \c SelfDestroyingRect.qml
 \li \snippet qml/SelfDestroyingRect.qml 0
 
 \endtable

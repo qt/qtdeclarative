@@ -1622,7 +1622,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
 
                 QQmlPropertyData *targetProperty = resolver.property(property.toString());
                 if (!targetProperty || targetProperty->coreIndex > 0x0000FFFF) {
-                    recordError(p->aliasLocation, tr("Invalid alias location"));
+                    recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(property.toString()));
                     return false;
                 }
 
@@ -1636,7 +1636,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                 if (!subProperty.isEmpty()) {
                     const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(type);
                     if (!valueTypeMetaObject) {
-                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         return false;
                     }
 
@@ -1645,7 +1645,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases()
                     int valueTypeIndex =
                         valueTypeMetaObject->indexOfProperty(subProperty.toString().toUtf8().constData());
                     if (valueTypeIndex == -1) {
-                        recordError(p->aliasLocation, tr("Invalid alias location"));
+                        recordError(p->aliasLocation, tr("Invalid alias target location: %1").arg(subProperty.toString()));
                         return false;
                     }
                     Q_ASSERT(valueTypeIndex <= 0x0000FFFF);

@@ -35,6 +35,7 @@
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/qquickview.h>
 #include <private/qquickrectangle_p.h>
 
 #include "../../shared/util.h"
@@ -47,6 +48,7 @@ public:
 
 private slots:
     void gradient();
+    void gradient_border();
     void antialiasing();
 
 private:
@@ -86,6 +88,15 @@ void tst_qquickrectangle::gradient()
     QVERIFY(!grad);
 
     delete rect;
+}
+
+void tst_qquickrectangle::gradient_border()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("gradient-border.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 }
 
 void tst_qquickrectangle::antialiasing()

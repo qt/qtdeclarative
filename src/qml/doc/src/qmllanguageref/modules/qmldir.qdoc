@@ -46,7 +46,7 @@ documentation about
 A \c qmldir file is a plain-text file that contains
 the following commands:
 
-\table
+\table 70%
     \header
         \li Syntax
         \li Usage

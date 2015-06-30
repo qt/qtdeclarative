@@ -83,6 +83,10 @@ public:
 
     void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
+    // Use a virtual rather than a signal->signal to avoid the huge
+    // connect/conneciton overhead for this rare case.
+    virtual void emitAutoTransformBaseChanged() { }
+
 Q_SIGNALS:
     void sourceChanged(const QUrl &);
     void sourceSizeChanged();
@@ -91,7 +95,6 @@ Q_SIGNALS:
     void asynchronousChanged();
     void cacheChanged();
     void mirrorChanged();
-    void autoTransformBaseChanged();
 
 protected:
     virtual void load();

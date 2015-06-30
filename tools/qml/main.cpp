@@ -39,6 +39,8 @@
 #include <QGuiApplication>
 #include <QWindow>
 #include <QFileOpenEvent>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
 #endif // QT_WIDGETS_LIB
@@ -56,6 +58,7 @@
 #include <QStandardPaths>
 #include <QTranslator>
 #include <QtGlobal>
+#include <QLibraryInfo>
 #include <qqml.h>
 #include <qqmldebug.h>
 #include <private/qabstractanimation_p.h>
@@ -73,6 +76,7 @@
 static Config *conf = 0;
 static QQmlApplicationEngine *qae = 0;
 static int exitTimerId = -1;
+bool verboseMode = false;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -101,6 +105,7 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
     }
 
     if (!quiet) {
+        printf("qml: %s\n", QLibraryInfo::build());
         if (builtIn)
             printf("qml: Using built-in configuration.\n");
         else
@@ -119,20 +124,6 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
         printf("qml: Error loading configuration file: %s\n", qPrintable(c2.errorString()));
         exit(1);
     }
-}
-
-void contain(QObject *o, const QUrl &containPath)
-{
-    QQmlComponent c(qae, containPath);
-    QObject *o2 = c.create();
-    if (!o2)
-        return;
-    bool success = false;
-    int idx;
-    if ((idx = o2->metaObject()->indexOfProperty("containedObject")) != -1)
-        success = o2->metaObject()->property(idx).write(o2, QVariant::fromValue<QObject*>(o));
-    if (!success)
-        o->setParent(o2); //Set QObject parent, and assume container will react as needed
 }
 
 #ifdef QT_GUI_LIB
@@ -188,6 +179,9 @@ public:
     bool earlyExit;
 
 private:
+    void contain(QObject *o, const QUrl &containPath);
+    void checkForWindow(QObject *o);
+
     int expect;
     bool haveOne;
 
@@ -195,6 +189,7 @@ public Q_SLOTS:
     void checkFinished(QObject *o)
     {
         if (o) {
+            checkForWindow(o);
             haveOne = true;
             if (conf && qae)
                 foreach (PartialScene *ps, conf->completers)
@@ -214,7 +209,55 @@ public Q_SLOTS:
         //Will be checked before calling exec()
         earlyExit = true;
     }
+#ifdef QT_GUI_LIB
+    void onOpenGlContextCreated(QOpenGLContext *context);
+#endif
 };
+
+void LoadWatcher::contain(QObject *o, const QUrl &containPath)
+{
+    QQmlComponent c(qae, containPath);
+    QObject *o2 = c.create();
+    if (!o2)
+        return;
+    checkForWindow(o2);
+    bool success = false;
+    int idx;
+    if ((idx = o2->metaObject()->indexOfProperty("containedObject")) != -1)
+        success = o2->metaObject()->property(idx).write(o2, QVariant::fromValue<QObject*>(o));
+    if (!success)
+        o->setParent(o2); //Set QObject parent, and assume container will react as needed
+}
+
+void LoadWatcher::checkForWindow(QObject *o)
+{
+#ifdef QT_GUI_LIB
+    if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
+        connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
+                this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
+    }
+#else
+    Q_UNUSED(o)
+#endif // QT_GUI_LIB
+}
+
+#ifdef QT_GUI_LIB
+void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
+{
+    context->makeCurrent(qobject_cast<QWindow *>(sender()));
+    QOpenGLFunctions functions(context);
+    QByteArray output = "Vendor  : ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR));
+    output += "\nRenderer: ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER));
+    output += "\nVersion : ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_VERSION));
+    output += "\nLanguage: ";
+    output += reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION));
+    puts(output.constData());
+    context->doneCurrent();
+}
+#endif // QT_GUI_LIB
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
@@ -251,7 +294,6 @@ QmlApplicationType applicationType = QmlApplicationTypeCore;
 QmlApplicationType applicationType = QmlApplicationTypeGui;
 #endif // QT_GUI_LIB
 bool quietMode = false;
-bool verboseMode = false;
 void printVersion()
 {
     printf("qml binary version ");
@@ -286,6 +328,10 @@ void printUsage()
     printf("\t-f [file] .................... Load the given file as a QML file.\n");
     printf("\t-config [file] ............... Load the given file as the configuration file.\n");
     printf("\t-- ........................... Arguments after this one are ignored by the launcher, but may be used within the QML application.\n");
+    printf("\tGL options:\n");
+    printf("\t-desktop.......................Force use of desktop GL (AA_UseDesktopOpenGL)\n");
+    printf("\t-gles..........................Force use of GLES (AA_UseOpenGLES)\n");
+    printf("\t-software......................Force use of software rendering (AA_UseOpenGLES)\n");
     printf("\tDebugging options:\n");
     printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
     printf("\t-translation [file] .......... Load the given file as the translations file.\n");
@@ -451,6 +497,12 @@ int main(int argc, char *argv[])
                 continue;//Invalid usage, but just ignore it
             dummyDir = argList[i+1];
             i++;
+        } else if (arg == QLatin1String("-gles")) {
+            QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+        } else if (arg == QLatin1String("-software")) {
+            QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+        } else if (arg == QLatin1String("-desktop")) {
+            QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
         } else {
             files << arg;
         }

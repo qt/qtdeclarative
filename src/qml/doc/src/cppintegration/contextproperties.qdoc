@@ -65,10 +65,13 @@ QML code invokes a method on the object instance:
 
 \table
 \row
+\li C++
 \li
 \snippet qml/qtbinding/context-advanced/applicationdata.h 0
 \codeline
 \snippet qml/qtbinding/context-advanced/main.cpp 0
+\row
+\li QML
 \li
 \snippet qml/qtbinding/context-advanced/MyItem.qml 0
 \endtable
