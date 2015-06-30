@@ -193,8 +193,9 @@ void QQuickImageResponse::cancel()
 /*!
     \fn QQuickTextureFactory *QQuickImageResponse::textureFactory() const
 
-    Returns the texture factory the job. You can use QQuickTextureFactory::textureFactoryForImage
-    if your provider works with QImage
+    Returns the texture factory for the job. You can use QQuickTextureFactory::textureFactoryForImage
+    if your provider works with QImage. This method is only called when the error string is not empty and the
+    engine takes ownership of the returned QQuickTextureFactory.
  */
 
 
