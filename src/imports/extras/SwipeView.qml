@@ -49,8 +49,6 @@ AbstractSwipeView {
 
     //! [contentItem]
     contentItem: ListView {
-        id: listView
-
         model: control.contentModel
         currentIndex: control.currentIndex
 
@@ -58,6 +56,7 @@ AbstractSwipeView {
         orientation: Qt.Horizontal
         snapMode: ListView.SnapOneItem
         boundsBehavior: Flickable.StopAtBounds
+
         highlightRangeMode: ListView.StrictlyEnforceRange
         preferredHighlightBegin: 0
         preferredHighlightEnd: 0
