@@ -3530,7 +3530,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for afterRendering() leaves the GL
+    \warning Make very sure that a signal handler for sceneGraphAboutToStop() leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
 
