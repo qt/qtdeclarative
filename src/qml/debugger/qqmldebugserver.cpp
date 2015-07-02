@@ -869,15 +869,16 @@ bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const Q
 /*!
  * Enables debugging for QML engines created after calling this function. The debug server will
  * connect to a debugger waiting on a local socket at the given \a socketFileName and block the QML
- * engine until the connection is established if \a block is true. If \a block is not specified it
- * won't block. You can only start one debug server at a time. A debug server may have already been
- * started if the -qmljsdebugger= command line argument was given. This method returns \c true if a
- * new debug server was successfully started, or \c false otherwise.
+ * engine until the connection is established if \a mode is \c WaitForClient. If \a mode is not
+ * specified it will not block. You can only start one debug server at a time. A debug server may
+ * have already been started if the -qmljsdebugger= command line argument was given. This method
+ * returns \c true if a new debug server was successfully started, or \c false otherwise.
  */
-bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName, bool block)
+bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName, StartMode mode)
 {
 #ifndef QQML_NO_DEBUG_PROTOCOL
-    return QQmlDebugServerPrivate::enable(ConnectToLocalAction(socketFileName, block));
+    return QQmlDebugServerPrivate::enable(ConnectToLocalAction(socketFileName,
+                                                               mode == WaitForClient));
 #else
     Q_UNUSED(fileName);
     Q_UNUSED(block);

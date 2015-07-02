@@ -50,7 +50,8 @@ struct Q_QML_EXPORT QQmlDebuggingEnabler
     QQmlDebuggingEnabler(bool printWarning = true);
     static bool startTcpDebugServer(int port, StartMode mode = DoNotWaitForClient,
                                     const QString &hostName = QString());
-    static bool connectToLocalDebugger(const QString &socketFileName, bool block = false);
+    static bool connectToLocalDebugger(const QString &socketFileName,
+                                       StartMode mode = DoNotWaitForClient);
 };
 
 // Execute code in constructor before first QQmlEngine is instantiated
