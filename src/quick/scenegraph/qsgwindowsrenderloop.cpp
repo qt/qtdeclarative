@@ -32,7 +32,6 @@
 ****************************************************************************/
 
 #include "qsgwindowsrenderloop_p.h"
-
 #include <QtCore/QCoreApplication>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QThread>
@@ -47,8 +46,8 @@
 #include <QtQuick/QQuickWindow>
 
 #include <private/qquickprofiler_p.h>
-
 #include <private/qquickshadereffectnode_p.h>
+#include <private/qquickanimatorcontroller_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -219,6 +218,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     hide(window);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+
     bool current = false;
     QScopedPointer<QOffscreenSurface> offscreenSurface;
     if (m_gl) {
@@ -245,6 +245,8 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     } else if (m_gl && current) {
         m_gl->doneCurrent();
     }
+
+    delete d->animationController;
 }
 
 bool QSGWindowsRenderLoop::anyoneShowing() const

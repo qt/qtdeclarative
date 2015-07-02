@@ -34,6 +34,7 @@
 #include "qsgrenderloop_p.h"
 #include "qsgthreadedrenderloop_p.h"
 #include "qsgwindowsrenderloop_p.h"
+#include <private/qquickanimatorcontroller_p.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTime>
@@ -305,6 +306,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     } else if (gl && window == gl->surface() && current) {
         gl->doneCurrent();
     }
+
+    delete d->animationController;
 }
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)

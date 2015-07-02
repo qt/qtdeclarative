@@ -1112,7 +1112,6 @@ QQuickWindow::~QQuickWindow()
 {
     Q_D(QQuickWindow);
 
-    d->animationController->deleteLater();
     if (d->renderControl) {
         QQuickRenderControlPrivate::get(d->renderControl)->windowDestroyed();
     } else if (d->windowManager) {

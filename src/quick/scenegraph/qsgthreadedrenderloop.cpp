@@ -451,11 +451,12 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- cleanup without an OpenGL context";
     }
 
+    QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
+
     QQuickShaderEffectMaterial::cleanupMaterialCache();
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {
-        QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
         dd->cleanupNodesOnShutdown();
     } else {
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- persistent SG, avoiding cleanup";
@@ -467,6 +468,8 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     sgrc->invalidate();
     QCoreApplication::processEvents();
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    if (inDestructor)
+        delete dd->animationController;
     if (current)
         gl->doneCurrent();
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- invalidating scene graph";
