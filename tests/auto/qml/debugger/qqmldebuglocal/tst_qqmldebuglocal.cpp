@@ -143,7 +143,7 @@ void tst_QQmlDebugLocal::sendMessage()
 
 int main(int argc, char *argv[])
 {
-    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(time(0));
+    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(0));
 
     int _argc = argc + 1;
     char **_argv = new char*[_argc];
