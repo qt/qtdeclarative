@@ -57,11 +57,6 @@ static QColor readColorValue(const QJsonValue &value, const QColor &defaultValue
     return QColor::fromRgba(value.toInt(defaultValue.rgba()));
 }
 
-static double readNumberValue(const QJsonValue &value, double defaultValue)
-{
-    return value.toDouble(defaultValue);
-}
-
 bool QQuickThemeData::load(const QString &filePath)
 {
     QJsonDocument doc;
@@ -92,9 +87,6 @@ bool QQuickThemeData::load(const QString &filePath)
     d->selectionColor = readColorValue(theme.value(QStringLiteral("selectionColor")), QColor("#45a7d7"));
     d->shadowColor = readColorValue(theme.value(QStringLiteral("shadowColor")), QColor("#28282a"));
     d->textColor = readColorValue(theme.value(QStringLiteral("textColor")), QColor("#26282a"));
-    d->padding = readNumberValue(theme.value(QStringLiteral("padding")), 6);
-    d->roundness = readNumberValue(theme.value(QStringLiteral("roundness")), 3);
-    d->spacing = readNumberValue(theme.value(QStringLiteral("spacing")), 6);
     return true;
 }
 

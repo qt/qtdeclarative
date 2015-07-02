@@ -46,7 +46,7 @@ AbstractTextField {
     Accessible.description: placeholder ? placeholder.text : ""
     Accessible.passwordEdit: echoMode === TextInput.Password || echoMode === TextInput.PasswordEchoOnEdit
 
-    padding: Theme.padding
+    padding: 6
 
     color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
@@ -68,9 +68,9 @@ AbstractTextField {
     //! [background]
     background: Rectangle {
         implicitWidth: 120 // TODO
-        radius: control.Theme.roundness
         border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        radius: 3
     }
     //! [background]
 }

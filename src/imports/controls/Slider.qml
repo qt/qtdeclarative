@@ -50,7 +50,7 @@ AbstractSlider {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Slider
 
-    padding: Theme.padding
+    padding: 6
 
     //! [handle]
     handle: Rectangle {
@@ -89,7 +89,7 @@ AbstractSlider {
         width: horizontal ? control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.availableHeight
 
-        radius: control.Theme.roundness
+        radius: 3
         border.color: control.Theme.frameColor
         color: control.Theme.backgroundColor
         scale: horizontal && control.mirrored ? -1 : 1
@@ -100,8 +100,8 @@ AbstractSlider {
             width: parent.horizontal ? control.position * parent.width - 4 : 2
             height: parent.horizontal ? 2 : control.position * parent.height - 4
 
+            radius: 3
             color: control.enabled ? control.Theme.accentColor : control.Theme.disabledColor
-            radius: control.Theme.roundness
         }
     }
     //! [track]

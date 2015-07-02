@@ -53,8 +53,8 @@ AbstractRadioButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.RadioButton
 
-    padding: Theme.padding
-    spacing: Theme.spacing
+    padding: 6
+    spacing: 6
 
     //! [indicator]
     indicator: Rectangle {

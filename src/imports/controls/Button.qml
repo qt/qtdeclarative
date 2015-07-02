@@ -49,7 +49,7 @@ AbstractButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding: Theme.padding
+    padding: 6
 
     //! [label]
     label: Text {
@@ -71,7 +71,7 @@ AbstractButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        radius: control.Theme.roundness
+        radius: 3
         color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
                         control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
                         control.pressed ? control.Theme.pressColor : "transparent")

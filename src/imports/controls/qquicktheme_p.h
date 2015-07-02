@@ -71,9 +71,6 @@ class QQuickThemeAttached : public QObject
     Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor RESET resetSelectionColor NOTIFY selectionColorChanged FINAL)
     Q_PROPERTY(QColor shadowColor READ shadowColor WRITE setShadowColor RESET resetShadowColor NOTIFY shadowColorChanged FINAL)
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor RESET resetTextColor NOTIFY textColorChanged FINAL)
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
-    Q_PROPERTY(qreal roundness READ roundness WRITE setRoundness RESET resetRoundness NOTIFY roundnessChanged FINAL)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
 
 public:
     explicit QQuickThemeAttached(const QQuickThemeData &data, QObject *parent = Q_NULLPTR);
@@ -128,18 +125,6 @@ public:
     void setTextColor(const QColor &color);
     void resetTextColor();
 
-    qreal padding() const;
-    void setPadding(qreal padding);
-    void resetPadding();
-
-    qreal roundness() const;
-    void setRoundness(qreal roundness);
-    void resetRoundness();
-
-    qreal spacing() const;
-    void setSpacing(qreal spacing);
-    void resetSpacing();
-
 Q_SIGNALS:
     void accentColorChanged();
     void backgroundColorChanged();
@@ -152,9 +137,6 @@ Q_SIGNALS:
     void selectionColorChanged();
     void shadowColorChanged();
     void textColorChanged();
-    void paddingChanged();
-    void roundnessChanged();
-    void spacingChanged();
 
 private:
     Q_DISABLE_COPY(QQuickThemeAttached)

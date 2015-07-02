@@ -73,7 +73,6 @@ ApplicationWindow {
         id: pageComponent
         Control {
             id: page
-            Theme.roundness: roundedToggle.checked ? 3 : 0
             Theme.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
             Theme.backgroundColor: darkButton.checked ? "#444" : "#fff"
             Theme.frameColor: darkButton.checked ? "#666" : "#ccc"
@@ -155,20 +154,6 @@ ApplicationWindow {
                             layoutDirection: Qt.RightToLeft
                             ExclusiveGroup.group: themeGroup
                         }
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: Theme.frameColor
-                    }
-
-                    ToggleButton {
-                        id: roundedToggle
-                        width: parent.width
-                        text: "Rounded corners"
-                        layoutDirection: Qt.RightToLeft
-                        checked: true
                     }
 
                     Rectangle {

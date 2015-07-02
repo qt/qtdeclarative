@@ -46,7 +46,7 @@ AbstractFrame {
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
-    padding: Theme.padding
+    padding: 6
 
     //! [contentItem]
     contentItem: Item { }
@@ -57,8 +57,8 @@ AbstractFrame {
         width: parent.width
         height: parent.height
 
+        radius: 3
         color: "transparent"
-        radius: control.Theme.roundness
         border.color: control.Theme.frameColor
     }
     //! [frame]

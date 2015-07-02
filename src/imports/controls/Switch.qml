@@ -54,8 +54,8 @@ AbstractSwitch {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button // TODO: Switch?
 
-    padding: Theme.padding
-    spacing: Theme.spacing
+    padding: 6
+    spacing: 6
 
     //! [indicator]
     indicator: Rectangle {

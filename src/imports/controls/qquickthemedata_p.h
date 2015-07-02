@@ -94,15 +94,6 @@ public:
     QColor textColor() const { return d->textColor; }
     void setTextColor(const QColor &color) { d->textColor = color; }
 
-    qreal padding() const { return d->padding; }
-    void setPadding(qreal padding) { d->padding = padding; }
-
-    qreal roundness() const { return d->roundness; }
-    void setRoundness(qreal roundness) { d->roundness = roundness; }
-
-    qreal spacing() const { return d->spacing; }
-    void setSpacing(qreal spacing) { d->spacing = spacing; }
-
 private:
     struct Data : public QSharedData {
         QColor accentColor;
@@ -116,9 +107,6 @@ private:
         QColor selectionColor;
         QColor shadowColor;
         QColor textColor;
-        qreal padding;
-        qreal spacing;
-        qreal roundness;
     };
     QSharedDataPointer<Data> d;
 };

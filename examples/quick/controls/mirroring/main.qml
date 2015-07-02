@@ -157,7 +157,7 @@ ApplicationWindow {
                     width: flow.width
                     Row {
                         width: parent.width
-                        spacing: Theme.spacing
+                        spacing: 6
                         readonly property real availableWidth: (flow.width - 12) / 2
                         readonly property real contentWidth: okButton.implicitWidth + cancelButton.implicitWidth + 12
                         readonly property real buttonWidth: implicitWidth > availableWidth ? (width / 2 - spacing) : (width / 2 - 2 * spacing) / 2
@@ -196,7 +196,7 @@ ApplicationWindow {
                     width: flow.width
                     Column {
                         width: parent.width
-                        spacing: Theme.spacing
+                        spacing: 6
                         ProgressBar {
                             width: parent.width
                             indeterminate: true
@@ -213,7 +213,7 @@ ApplicationWindow {
                     width: flow.width
                     Column {
                         width: parent.width
-                        spacing: Theme.spacing
+                        spacing: 6
                         Slider {
                             id: slider
                             value: 0.4

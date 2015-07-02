@@ -46,9 +46,9 @@ AbstractGroupBox {
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
-    spacing: Theme.spacing
-    padding: Theme.padding
-    topPadding: Theme.padding + (label && title ? label.implicitHeight + spacing : 0)
+    spacing: 6
+    padding: 6
+    topPadding: 6 + (label && title ? label.implicitHeight + spacing : 0)
 
     //! [contentItem]
     contentItem: Item { }
@@ -69,12 +69,12 @@ AbstractGroupBox {
 
     //! [frame]
     frame: Rectangle {
-        y: control.topPadding - control.Theme.padding
+        y: control.topPadding - control.padding
         width: parent.width
-        height: parent.height - control.topPadding + control.Theme.padding
+        height: parent.height - control.topPadding + control.padding
 
+        radius: 3
         color: "transparent"
-        radius: control.Theme.roundness
         border.color: control.Theme.frameColor
     }
     //! [frame]

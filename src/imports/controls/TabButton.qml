@@ -50,7 +50,7 @@ AbstractTabButton {
     Accessible.selected: checked
     Accessible.role: Accessible.PageTab
 
-    padding: Theme.padding
+    padding: 6
 
     //! [label]
     label: Text {

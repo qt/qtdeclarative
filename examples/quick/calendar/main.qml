@@ -99,7 +99,7 @@ ApplicationWindow {
                     id: title
                     x: delegate.contentItem.x
                     width: delegate.contentItem.width
-                    spacing: Theme.spacing
+                    spacing: 6
                     Text {
                         width: parent.width
                         height: implicitHeight * 2

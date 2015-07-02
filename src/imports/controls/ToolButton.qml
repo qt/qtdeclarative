@@ -49,7 +49,7 @@ AbstractToolButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding: Theme.padding
+    padding: 6
 
     //! [label]
     label: Text {

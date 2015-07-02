@@ -47,8 +47,8 @@ AbstractPageIndicator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    padding: Theme.padding
-    spacing: Theme.spacing
+    padding: 6
+    spacing: 6
 
     //! [delegate]
     delegate: Rectangle {

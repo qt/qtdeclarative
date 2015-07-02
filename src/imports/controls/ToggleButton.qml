@@ -54,8 +54,8 @@ AbstractToggleButton {
     Accessible.pressed: pressed
     Accessible.role: Accessible.Button
 
-    padding: Theme.padding
-    spacing: Theme.spacing
+    padding: 6
+    spacing: 6
 
     //! [indicator]
     indicator: Rectangle {
@@ -64,7 +64,7 @@ AbstractToggleButton {
         x: text ? (control.mirrored ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
         y: (parent.height - height) / 2
 
-        radius: control.Theme.roundness
+        radius: 3
         border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
         color: control.Theme.backgroundColor

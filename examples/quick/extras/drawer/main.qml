@@ -98,8 +98,8 @@ ApplicationWindow {
             model: VisualItemModel {
                 Label {
                     text: "Settings"
-                    x: Theme.padding
-                    width: parent.width - Theme.padding * 2
+                    x: 6
+                    width: parent.width - 12
                     lineHeight: 2.0
                     color: Theme.accentColor
                     verticalAlignment: Text.AlignVCenter

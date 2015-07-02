@@ -69,9 +69,6 @@ TestCase {
             Theme.selectedTextColor: "#777777"
             Theme.selectionColor: "#888888"
             Theme.textColor: "#999999"
-            Theme.padding: 111
-            Theme.roundness: 222
-            Theme.spacing: 333
         }
     }
 
@@ -93,9 +90,6 @@ TestCase {
             Theme.selectedTextColor: "#777777"
             Theme.selectionColor: "#888888"
             Theme.textColor: "#999999"
-            Theme.padding: 111
-            Theme.roundness: 222
-            Theme.spacing: 333
         }
     }
 
@@ -121,9 +115,6 @@ TestCase {
         verify(control.Theme.selectedTextColor !== undefined)
         verify(control.Theme.selectionColor !== undefined)
         verify(control.Theme.textColor !== undefined)
-        verify(control.Theme.padding !== undefined)
-        verify(control.Theme.roundness !== undefined)
-        verify(control.Theme.spacing !== undefined)
         control.destroy()
     }
 
@@ -140,9 +131,6 @@ TestCase {
         control.Theme.selectedTextColor = "#777777"
         control.Theme.selectionColor = "#888888"
         control.Theme.textColor = "#999999"
-        control.Theme.padding = 111
-        control.Theme.roundness = 222
-        control.Theme.spacing = 333
         compare(control.Theme.accentColor, "#111111")
         compare(control.Theme.backgroundColor, "#222222")
         compare(control.Theme.baseColor, "#333333")
@@ -153,9 +141,6 @@ TestCase {
         compare(control.Theme.selectedTextColor, "#777777")
         compare(control.Theme.selectionColor, "#888888")
         compare(control.Theme.textColor, "#999999")
-        compare(control.Theme.padding, 111)
-        compare(control.Theme.roundness, 222)
-        compare(control.Theme.spacing, 333)
         control.destroy()
     }
 
@@ -172,9 +157,6 @@ TestCase {
         compare(control.Theme.selectedTextColor, "#777777")
         compare(control.Theme.selectionColor, "#888888")
         compare(control.Theme.textColor, "#999999")
-        compare(control.Theme.padding, 111)
-        compare(control.Theme.roundness, 222)
-        compare(control.Theme.spacing, 333)
         control.Theme.accentColor = undefined
         control.Theme.backgroundColor = undefined
         control.Theme.baseColor = undefined
@@ -185,9 +167,6 @@ TestCase {
         control.Theme.selectedTextColor = undefined
         control.Theme.selectionColor = undefined
         control.Theme.textColor = undefined
-        control.Theme.padding = undefined
-        control.Theme.roundness = undefined
-        control.Theme.spacing = undefined
         compare(control.Theme.accentColor, testCase.Theme.accentColor)
         compare(control.Theme.backgroundColor, testCase.Theme.backgroundColor)
         compare(control.Theme.baseColor, testCase.Theme.baseColor)
@@ -198,9 +177,6 @@ TestCase {
         compare(control.Theme.selectedTextColor, testCase.Theme.selectedTextColor)
         compare(control.Theme.selectionColor, testCase.Theme.selectionColor)
         compare(control.Theme.textColor, testCase.Theme.textColor)
-        compare(control.Theme.padding, testCase.Theme.padding)
-        compare(control.Theme.roundness, testCase.Theme.roundness)
-        compare(control.Theme.spacing, testCase.Theme.spacing)
         control.destroy()
     }
 
@@ -215,10 +191,7 @@ TestCase {
             { tag: "pressColor", value1: "#666666", value2: "#606060" },
             { tag: "selectedTextColor", value1: "#777777", value2: "#707070" },
             { tag: "selectionColor", value1: "#888888", value2: "#808080" },
-            { tag: "textColor", value1: "#999999", value2: "#909090" },
-            { tag: "padding", value1: 11, value2: 10 },
-            { tag: "roundness", value1: 22, value2: 20 },
-            { tag: "spacing", value1: 33, value2: 30 }
+            { tag: "textColor", value1: "#999999", value2: "#909090" }
         ]
     }
 

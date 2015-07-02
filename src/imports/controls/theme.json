@@ -9,8 +9,5 @@
     "selectedTextColor": "#ffffff",
     "selectionColor": "#45a7d7",
     "shadowColor": "#28282a",
-    "textColor": "#26282a",
-    "padding": 6,
-    "roundness": 3,
-    "spacing": 6
+    "textColor": "#26282a"
 }

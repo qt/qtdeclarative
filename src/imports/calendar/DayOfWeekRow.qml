@@ -46,8 +46,8 @@ AbstractDayOfWeekRow {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    topPadding: Theme.padding
-    bottomPadding: Theme.padding
+    topPadding: 6
+    bottomPadding: 6
 
     //! [delegate]
     delegate: Text {

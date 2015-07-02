@@ -46,8 +46,8 @@ AbstractWeekNumberColumn {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    leftPadding: Theme.padding
-    rightPadding: Theme.padding
+    leftPadding: 6
+    rightPadding: 6
 
     //! [delegate]
     delegate: Text {

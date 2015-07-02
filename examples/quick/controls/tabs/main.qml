@@ -120,18 +120,18 @@ ApplicationWindow {
                     Column {
                         id: feedItem
                         width: parent.width
-                        spacing: Theme.spacing
+                        spacing: 6
                         Rectangle {
                             width: parent.width
                             height: 1
                             color: Theme.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: Theme.spacing }
+                        Item { width: 1; height: 6 }
                         Label {
                             text: model.title
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
+                            x: 6
+                            width: parent.width - 12
                             elide: Text.ElideRight
                             color: Theme.accentColor
                             font.pointSize: 20
@@ -140,14 +140,14 @@ ApplicationWindow {
                         Label {
                             text: model.description
                             textFormat: Text.StyledText
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
+                            x: 6
+                            width: parent.width - 12
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
-                            spacing: Theme.spacing
+                            x: 6
+                            width: parent.width - 12
+                            spacing: 6
                             Label {
                                 id: discoverCreator
                                 text: model.creator
@@ -211,35 +211,35 @@ ApplicationWindow {
                     Column {
                         id: commentItem
                         width: parent.width
-                        spacing: Theme.spacing
+                        spacing: 6
                         Rectangle {
                             width: parent.width
                             height: 1
                             color: Theme.frameColor
                             visible: index == 0
                         }
-                        Item { width: 1; height: Theme.spacing }
+                        Item { width: 1; height: 6 }
                         Label {
                             text: model.title
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
+                            x: 6
+                            width: parent.width - 12
                             elide: Text.ElideRight
                             color: Theme.accentColor
                             font.pointSize: 14
                             lineHeight: 0.75
                         }
-                        Item { width: 1; height: Theme.spacing }
+                        Item { width: 1; height: 6 }
                         Label {
                             text: model.description
                             textFormat: Text.StyledText
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
+                            x: 6
+                            width: parent.width - 12
                             wrapMode: Text.WordWrap
                         }
                         RowLayout {
-                            x: Theme.padding
-                            width: parent.width - 2 * Theme.padding
-                            spacing: Theme.spacing
+                            x: 6
+                            width: parent.width - 12
+                            spacing: 6
                             Label {
                                 id: activityCreator
                                 text: model.creator
