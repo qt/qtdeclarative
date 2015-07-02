@@ -1,3 +1,5 @@
+contains(QT_CONFIG, no-qml-debug):DEFINES += QT_NO_QML_DEBUGGER
+
 SOURCES += \
     $$PWD/qqmldebugservice.cpp \
     $$PWD/qqmlprofilerservice.cpp \

@@ -71,7 +71,7 @@ qtHaveModule(widgets) {
 
 SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS
-!winrt: SUBDIRS += debugger # no QProcess on winrt
+!winrt:!contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger # no QProcess on winrt
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
