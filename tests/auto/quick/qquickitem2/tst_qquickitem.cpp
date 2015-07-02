@@ -73,6 +73,8 @@ private slots:
     void nextItemInFocusChain2();
     void nextItemInFocusChain3();
 
+    void tabFence();
+
     void keys();
     void standardKeys_data();
     void standardKeys();
@@ -289,6 +291,20 @@ private:
 
 QML_DECLARE_TYPE(HollowTestItem);
 
+class TabFenceItem : public QQuickItem
+{
+    Q_OBJECT
+
+public:
+    TabFenceItem(QQuickItem *parent = Q_NULLPTR)
+        : QQuickItem(parent)
+    {
+        QQuickItemPrivate *d = QQuickItemPrivate::get(this);
+        d->isTabFence = true;
+    }
+};
+
+QML_DECLARE_TYPE(TabFenceItem);
 
 tst_QQuickItem::tst_QQuickItem()
 {
@@ -299,6 +315,7 @@ void tst_QQuickItem::initTestCase()
     QQmlDataTest::initTestCase();
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
     qmlRegisterType<HollowTestItem>("Test", 1, 0, "HollowTestItem");
+    qmlRegisterType<TabFenceItem>("Test", 1, 0, "TabFence");
 }
 
 void tst_QQuickItem::cleanup()
@@ -1118,6 +1135,61 @@ void tst_QQuickItem::nextItemInFocusChain3()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(QGuiApplication::focusWindow(), window);
+}
+
+void verifyTabFocusChain(QQuickView *window, const char **focusChain, bool forward)
+{
+    int idx = 0;
+    for (const char **objectName = focusChain; *objectName; ++objectName, ++idx) {
+        const QString &descrStr = QString("idx=%1 objectName=\"%2\"").arg(idx).arg(*objectName);
+        const char *descr = descrStr.toLocal8Bit().data();
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, forward ? Qt::NoModifier : Qt::ShiftModifier);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY2(key.isAccepted(), descr);
+
+        QQuickItem *item = findItem<QQuickItem>(window->rootObject(), *objectName);
+        QVERIFY2(item, descr);
+        QVERIFY2(item->hasActiveFocus(), descr);
+    }
+}
+
+void tst_QQuickItem::tabFence()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(800,600));
+
+    window->setSource(testFileUrl("tabFence.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    QVERIFY(window->rootObject()->hasActiveFocus());
+
+    const char *rootTabFocusChain[] = {
+          "input1", "input2", "input3", "input1", Q_NULLPTR
+    };
+    verifyTabFocusChain(window, rootTabFocusChain, true /* forward */);
+
+    const char *rootBacktabFocusChain[] = {
+          "input3", "input2", "input1", "input3", Q_NULLPTR
+    };
+    verifyTabFocusChain(window, rootBacktabFocusChain, false /* forward */);
+
+    // Give focus to input11 in fence1
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "input11");
+    item->setFocus(true);
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    const char *fence1TabFocusChain[] = {
+          "input12", "input13", "input11", "input12", Q_NULLPTR
+    };
+    verifyTabFocusChain(window, fence1TabFocusChain, true /* forward */);
+
+    const char *fence1BacktabFocusChain[] = {
+          "input11", "input13", "input12", "input11", Q_NULLPTR
+    };
+    verifyTabFocusChain(window, fence1BacktabFocusChain, false /* forward */);
 }
 
 void tst_QQuickItem::keys()

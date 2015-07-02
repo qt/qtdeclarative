@@ -427,6 +427,12 @@ public:
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
+    // isTabFence: When true, the item acts as a fence within the tab focus chain.
+    // This means that the item and its children will be skipped from the tab focus
+    // chain when navigating from its parent or any of its siblings. Similarly,
+    // when any of the item's descendants gets focus, the item constrains the tab
+    // focus chain and prevents tabbing outside.
+    bool isTabFence:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -498,6 +504,8 @@ public:
     void itemToParentTransform(QTransform &) const;
 
     static bool focusNextPrev(QQuickItem *item, bool forward);
+    static QQuickItem *nextTabChildItem(const QQuickItem *item, int start);
+    static QQuickItem *prevTabChildItem(const QQuickItem *item, int start);
     static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
 
     static bool canAcceptTabFocus(QQuickItem *item);
