@@ -126,8 +126,6 @@ ApplicationWindow {
 
                 delegate: Text {
                     text: model.day
-                    width: delegate.contentItem.width / 7
-                    height: delegate.contentItem.height / 6
                     opacity: model.month === delegate.month ? 1 : 0
                     color: model.today ? Theme.accentColor : Theme.textColor
                     minimumPointSize: 8

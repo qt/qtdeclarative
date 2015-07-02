@@ -47,19 +47,15 @@ AbstractCalendarView {
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     Accessible.name: title
+    spacing: 6
 
     //! [delegate]
     delegate: Text {
-        width: contentItem.width ? contentItem.width / 7 : implicitWidth * 3
-        height: contentItem.height ? contentItem.height / 6 : implicitHeight * 3
-        minimumPointSize: 8
-        fontSizeMode: Text.Fit
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         opacity: model.month === control.month ? 1 : 0
         color: model.today ? control.Theme.accentColor : control.Theme.textColor
         text: model.day
-        padding: control.padding
     }
     //! [delegate]
 

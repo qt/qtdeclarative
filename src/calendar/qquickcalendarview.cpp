@@ -50,6 +50,8 @@ class QQuickCalendarViewPrivate : public QQuickControlPrivate
 public:
     QQuickCalendarViewPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR), delegate(Q_NULLPTR) { }
 
+    void resizeItems();
+
     QQuickItem *cellAt(const QPoint &pos) const;
     QDate dateOf(QQuickItem *cell) const;
 
@@ -66,6 +68,19 @@ public:
     QQuickMonthModel *model;
     QQmlComponent *delegate;
 };
+
+void QQuickCalendarViewPrivate::resizeItems()
+{
+    if (!contentItem)
+        return;
+
+    QSizeF itemSize;
+    itemSize.setWidth((contentItem->width() - 6 * spacing) / 7);
+    itemSize.setHeight((contentItem->height() - 5 * spacing) / 6);
+
+    foreach (QQuickItem *item, contentItem->childItems())
+        item->setSize(itemSize);
+}
 
 QQuickItem *QQuickCalendarViewPrivate::cellAt(const QPoint &pos) const
 {
@@ -223,10 +238,34 @@ void QQuickCalendarView::componentComplete()
     QQuickControl::componentComplete();
     if (d->contentItem) {
         foreach (QQuickItem *child, d->contentItem->childItems()) {
-            if (!child->inherits("QQuickRepeater"))
+            if (!QQuickItemPrivate::get(child)->isTransparentForPositioner())
                 d->setContextProperty(child, QStringLiteral("pressed"), false);
         }
     }
+    d->resizeItems();
+}
+
+void QQuickCalendarView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickCalendarView);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    if (isComponentComplete())
+        d->resizeItems();
+}
+
+void QQuickCalendarView::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
+{
+    Q_D(QQuickCalendarView);
+    QQuickControl::paddingChange(newPadding, oldPadding);
+    if (isComponentComplete())
+        d->resizeItems();
+}
+
+void QQuickCalendarView::updatePolish()
+{
+    Q_D(QQuickCalendarView);
+    QQuickControl::updatePolish();
+    d->resizeItems();
 }
 
 void QQuickCalendarView::mousePressEvent(QMouseEvent *event)

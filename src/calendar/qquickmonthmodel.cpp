@@ -53,9 +53,9 @@ class QQuickMonthModelPrivate : public QAbstractItemModelPrivate
 public:
     QQuickMonthModelPrivate() : dates(daysOnACalendarMonth)
     {
-        QDate date = QDate::currentDate();
-        month = date.month();
-        year = date.year();
+        today = QDate::currentDate();
+        month = today.month();
+        year = today.year();
     }
 
     bool populate(int month, int year, const QLocale &locale, bool force = false);
@@ -65,6 +65,7 @@ public:
     QString title;
     QLocale locale;
     QVector<QDate> dates;
+    QDate today;
 };
 
 bool QQuickMonthModelPrivate::populate(int m, int y, const QLocale &l, bool force)
@@ -82,6 +83,7 @@ bool QQuickMonthModelPrivate::populate(int m, int y, const QLocale &l, bool forc
         difference += 7;
     QDate firstDateToDisplay = firstDayOfMonthDate.addDays(-difference);
 
+    today = QDate::currentDate();
     for (int i = 0; i < daysOnACalendarMonth; ++i)
         dates[i] = firstDateToDisplay.addDays(i);
 
@@ -188,7 +190,7 @@ QVariant QQuickMonthModel::data(const QModelIndex &index, int role) const
         case DayRole:
             return date.day();
         case TodayRole:
-            return date == QDate::currentDate();
+            return date == d->today;
         case WeekNumberRole:
             return date.weekNumber();
         case MonthRole:

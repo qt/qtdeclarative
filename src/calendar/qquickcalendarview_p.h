@@ -102,6 +102,10 @@ Q_SIGNALS:
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    void updatePolish() Q_DECL_OVERRIDE;
+
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
