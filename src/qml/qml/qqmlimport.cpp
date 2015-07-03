@@ -1000,13 +1000,21 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     }
 
 #else
-    Q_UNUSED(qmldirFilePath);
-    Q_UNUSED(uri);
     Q_UNUSED(vmaj);
     Q_UNUSED(vmin);
     Q_UNUSED(database);
     Q_UNUSED(qmldir);
-    Q_UNUSED(errors);
+
+    if (errors) {
+        QQmlError error;
+        error.setDescription(
+                    QQmlImportDatabase::tr(
+                        "plugin cannot be loaded for module \"%1\": library loading is disabled")
+                    .arg(uri));
+        error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
+        errors->prepend(error);
+    }
+
     return false;
 #endif // QT_NO_LIBRARY
     return true;
