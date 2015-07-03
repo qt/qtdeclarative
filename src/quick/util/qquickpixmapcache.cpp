@@ -513,6 +513,8 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
         mutex.lock();
         if (!cancelled.contains(job))
             job->postReply(error, errorString, t ? t->textureSize() : QSize(), t);
+        else
+            delete t;
         mutex.unlock();
     }
     response->deleteLater();
