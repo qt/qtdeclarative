@@ -95,6 +95,8 @@ struct MemoryManager::Data
     uint maxShift;
     std::size_t maxChunkSize;
     QVector<PageAllocation> heapChunks;
+    std::size_t unmanagedHeapSize; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
+    std::size_t unmanagedHeapSizeGCLimit;
 
     struct LargeItem {
         LargeItem *next;
@@ -123,6 +125,8 @@ struct MemoryManager::Data
         , totalAlloc(0)
         , maxShift(6)
         , maxChunkSize(32*1024)
+        , unmanagedHeapSize(0)
+        , unmanagedHeapSizeGCLimit(64 * 1024)
         , largeItems(0)
         , totalLargeItemsAllocated(0)
         , deletable(0)
@@ -157,8 +161,10 @@ struct MemoryManager::Data
 
 namespace {
 
-bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine)
+bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, ExecutionEngine *engine, std::size_t *unmanagedHeapSize)
 {
+    Q_ASSERT(unmanagedHeapSize);
+
     bool isEmpty = true;
     Heap::Base *tail = &header->freeItems;
 //    qDebug("chunkStart @ %p, size=%x, pos=%x", header->itemStart, header->itemSize, header->itemSize>>4);
@@ -167,8 +173,8 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 #endif
     for (char *item = header->itemStart; item <= header->itemEnd; item += header->itemSize) {
         Heap::Base *m = reinterpret_cast<Heap::Base *>(item);
-//        qDebug("chunk @ %p, size = %lu, in use: %s, mark bit: %s",
-//               item, m->size, (m->inUse ? "yes" : "no"), (m->markBit ? "true" : "false"));
+//        qDebug("chunk @ %p, in use: %s, mark bit: %s",
+//               item, (m->inUse() ? "yes" : "no"), (m->isMarked() ? "true" : "false"));
 
         Q_ASSERT((qintptr) item % 16 == 0);
 
@@ -183,6 +189,13 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
+                if (std::size_t(header->itemSize) == MemoryManager::align(sizeof(Heap::String)) && m->gcGetVtable()->isString) {
+                    std::size_t heapBytes = static_cast<Heap::String *>(m)->retainedTextSize();
+                    Q_ASSERT(*unmanagedHeapSize >= heapBytes);
+//                    qDebug() << "-- it's a string holding on to" << heapBytes << "bytes";
+                    *unmanagedHeapSize -= heapBytes;
+                }
+
                 if (m->gcGetVtable()->destroy)
                     m->gcGetVtable()->destroy(m);
 
@@ -219,7 +232,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     m_d->engine = engine;
 }
 
-Heap::Base *MemoryManager::allocData(std::size_t size)
+Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize)
 {
     if (m_d->aggressiveGC)
         runGC();
@@ -230,11 +243,27 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     Q_ASSERT(size >= 16);
     Q_ASSERT(size % 16 == 0);
 
+//    qDebug() << "unmanagedHeapSize:" << m_d->unmanagedHeapSize << "limit:" << m_d->unmanagedHeapSizeGCLimit << "unmanagedSize:" << unmanagedSize;
+    m_d->unmanagedHeapSize += unmanagedSize;
+    bool didGCRun = false;
+    if (m_d->unmanagedHeapSize > m_d->unmanagedHeapSizeGCLimit) {
+        runGC();
+
+        if (m_d->unmanagedHeapSizeGCLimit <= m_d->unmanagedHeapSize)
+            m_d->unmanagedHeapSizeGCLimit = std::max(m_d->unmanagedHeapSizeGCLimit, m_d->unmanagedHeapSize) * 2;
+        else if (m_d->unmanagedHeapSize * 4 <= m_d->unmanagedHeapSizeGCLimit)
+            m_d->unmanagedHeapSizeGCLimit /= 2;
+        else if (m_d->unmanagedHeapSizeGCLimit - m_d->unmanagedHeapSize < 5 * unmanagedSize)
+            // try preventing running the GC all the time when we're just below the threshold limit and manage to collect just enough to do this one allocation
+            m_d->unmanagedHeapSizeGCLimit += std::max(std::size_t(8 * 1024), 5 * unmanagedSize);
+        didGCRun = true;
+    }
+
     size_t pos = size >> 4;
 
     // doesn't fit into a small bucket
     if (size >= MemoryManager::Data::MaxItemSize) {
-        if (m_d->totalLargeItemsAllocated > 8 * 1024 * 1024)
+        if (!didGCRun && m_d->totalLargeItemsAllocated > 8 * 1024 * 1024)
             runGC();
 
         // we use malloc for this
@@ -257,7 +286,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
     }
 
     // try to free up space, otherwise allocate
-    if (m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
+    if (!didGCRun && m_d->allocCount[pos] > (m_d->availableItems[pos] >> 1) && m_d->totalAlloc > (m_d->totalItems >> 1) && !m_d->aggressiveGC) {
         runGC();
         header = m_d->nonFullChunks[pos];
         if (header) {
@@ -404,7 +433,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (int i = 0; i < m_d->heapChunks.size(); ++i) {
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(m_d->heapChunks[i].base());
-        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], m_d->engine);
+        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], m_d->engine, &m_d->unmanagedHeapSize);
     }
 
     QVector<PageAllocation>::iterator chunkIter = m_d->heapChunks.begin();
@@ -551,6 +580,11 @@ size_t MemoryManager::getLargeItemsMem() const
     for (const Data::LargeItem *i = m_d->largeItems; i != 0; i = i->next)
         total += i->size;
     return total;
+}
+
+void MemoryManager::growUnmanagedHeapSizeUsage(size_t delta)
+{
+    m_d->unmanagedHeapSize += delta;
 }
 
 MemoryManager::~MemoryManager()

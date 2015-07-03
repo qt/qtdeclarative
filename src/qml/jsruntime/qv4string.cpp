@@ -117,7 +117,8 @@ bool String::isEqualTo(Managed *t, Managed *o)
 }
 
 
-Heap::String::String(const QString &t)
+Heap::String::String(MemoryManager *mm, const QString &t)
+    : mm(mm)
 {
     subtype = String::StringType_Unknown;
 
@@ -129,7 +130,8 @@ Heap::String::String(const QString &t)
     len = text->size;
 }
 
-Heap::String::String(String *l, String *r)
+Heap::String::String(MemoryManager *mm, String *l, String *r)
+    : mm(mm)
 {
     subtype = String::StringType_Unknown;
 
@@ -187,6 +189,7 @@ void Heap::String::simplifyString() const
     text->ref.ref();
     identifier = 0;
     largestSubLength = 0;
+    mm->growUnmanagedHeapSizeUsage(size_t(text->size) * sizeof(QChar));
 }
 
 void Heap::String::createHashValue() const

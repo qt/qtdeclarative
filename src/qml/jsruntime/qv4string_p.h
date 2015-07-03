@@ -53,8 +53,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         StringType_ArrayIndex
     };
 
-    String(const QString &text);
-    String(String *l, String *n);
+    String(MemoryManager *mm, const QString &text);
+    String(MemoryManager *mm, String *l, String *n);
     ~String() {
         if (!largestSubLength && !text->ref.deref())
             QStringData::deallocate(text);
@@ -65,6 +65,9 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
                   (len == left->len + right->len)) ||
                  len == (uint)text->size);
         return len;
+    }
+    std::size_t retainedTextSize() const {
+        return largestSubLength ? 0 : (std::size_t(text->size) * sizeof(QChar));
     }
     void createHashValue() const;
     inline unsigned hashValue() const {
@@ -107,6 +110,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     mutable uint stringHash;
     mutable uint largestSubLength;
     uint len;
+    MemoryManager *mm;
 private:
     static void append(const String *data, QChar *ch);
 };

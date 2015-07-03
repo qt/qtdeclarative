@@ -83,10 +83,10 @@ public:
     { return (size + 15) & ~0xf; }
 
     template<typename ManagedType>
-    inline typename ManagedType::Data *allocManaged(std::size_t size)
+    inline typename ManagedType::Data *allocManaged(std::size_t size, std::size_t unmanagedSize = 0)
     {
         size = align(size);
-        Heap::Base *o = allocData(size);
+        Heap::Base *o = allocData(size, unmanagedSize);
         o->vtable = ManagedType::staticVTable();
         return static_cast<typename ManagedType::Data *>(o);
     }
@@ -106,6 +106,15 @@ public:
         Scope scope(engine());
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1);
+        return t->d();
+    }
+
+    template <typename ManagedType, typename Arg1>
+    typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
+    {
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
+        (void)new (t->d()) typename ManagedType::Data(this, arg1);
         return t->d();
     }
 
@@ -159,10 +168,12 @@ public:
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
+    void growUnmanagedHeapSizeUsage(size_t delta); // called when a JS object grows itself. Specifically: Heap::String::append
+
 protected:
     /// expects size to be aligned
     // TODO: try to inline
-    Heap::Base *allocData(std::size_t size);
+    Heap::Base *allocData(std::size_t size, std::size_t unmanagedSize);
 
 #ifdef DETAILED_MM_STATS
     void willAllocate(std::size_t size);
