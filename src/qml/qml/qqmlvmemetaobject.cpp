@@ -104,13 +104,11 @@ public:
     inline double asDouble();
     inline const QString &asQString();
     inline const QUrl &asQUrl();
-    inline const QTime &asQTime();
     inline const QDate &asQDate();
     inline const QDateTime &asQDateTime();
     inline const QRectF &asQRectF();
     inline const QPointF &asQPointF();
     inline const QSizeF &asQSizeF();
-    inline const QJSValue &asQJSValue();
 
     inline void setValue(QObject *v, QQmlVMEMetaObject *target, int index);
     inline void setValue(const QVariant &);
@@ -127,7 +125,6 @@ public:
     inline void setValue(const QSizeF &);
     inline void setValue(const QJSValue &);
 
-    inline void setDataType(int t);
 
     inline void ensureValueType(int);
 
@@ -282,14 +279,6 @@ const QUrl &QQmlVMEVariant::asQUrl()
     return *(QUrl *)(dataPtr());
 }
 
-const QTime &QQmlVMEVariant::asQTime()
-{
-    if (type != QMetaType::QTime)
-        setValue(QTime());
-
-    return *(QTime *)(dataPtr());
-}
-
 const QDate &QQmlVMEVariant::asQDate()
 {
     if (type != QMetaType::QDate)
@@ -328,14 +317,6 @@ const QPointF &QQmlVMEVariant::asQPointF()
         setValue(QPointF());
 
     return *(QPointF *)(dataPtr());
-}
-
-const QJSValue &QQmlVMEVariant::asQJSValue()
-{
-    if (type != qMetaTypeId<QJSValue>())
-        setValue(QJSValue());
-
-    return *(QJSValue *)(dataPtr());
 }
 
 void QQmlVMEVariant::setValue(QObject *v, QQmlVMEMetaObject *target, int index)
@@ -483,11 +464,6 @@ void QQmlVMEVariant::setValue(const QJSValue &v)
     } else {
         *(QJSValue *)(dataPtr()) = v;
     }
-}
-
-void QQmlVMEVariant::setDataType(int t)
-{
-    type = t;
 }
 
 void QQmlVMEVariant::ensureValueType(int t)
