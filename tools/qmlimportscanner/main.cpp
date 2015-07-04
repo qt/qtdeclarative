@@ -199,7 +199,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                 import[QStringLiteral("classname")] = classnames;
             if (plugininfo.contains(QStringLiteral("dependencies"))) {
                 QStringList dependencies = plugininfo.value(QStringLiteral("dependencies")).toStringList();
-                foreach (QString line, dependencies) {
+                foreach (const QString &line, dependencies) {
                     QList<QString> dep = line.split(QStringLiteral(" "));
                     QVariantMap depImport;
                     depImport[QStringLiteral("type")] = QStringLiteral("module");

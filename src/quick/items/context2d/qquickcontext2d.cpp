@@ -300,7 +300,7 @@ static QStringList qExtractFontFamiliesFromString(const QString &fontFamiliesStr
 */
 static bool qSetFontFamilyFromTokens(QFont &font, const QStringList &fontFamilyTokens)
 {
-    foreach (QString fontFamilyToken, fontFamilyTokens) {
+    foreach (const QString &fontFamilyToken, fontFamilyTokens) {
         QFontDatabase fontDatabase;
         if (fontDatabase.hasFamily(fontFamilyToken)) {
             font.setFamily(fontFamilyToken);
@@ -411,7 +411,7 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
 
     int usedTokens = NoTokens;
     // Optional properties can be in any order, but font-size and font-family must be last.
-    foreach (const QString token, tokens) {
+    foreach (const QString &token, tokens) {
         if (token.compare(QLatin1String("normal")) == 0) {
             if (!(usedTokens & FontStyle) || !(usedTokens & FontVariant) || !(usedTokens & FontWeight)) {
                 // Could be font-style, font-variant or font-weight.

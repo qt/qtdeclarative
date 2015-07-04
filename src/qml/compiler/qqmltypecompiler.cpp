@@ -2017,7 +2017,7 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
         customParserBindingsPerObject->insert(objectIndex, customParserBindings);
         const QList<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty()) {
-            foreach (QQmlError error, parserErrors)
+            foreach (const QQmlError &error, parserErrors)
                 compiler->recordError(error);
             return false;
         }

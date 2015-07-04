@@ -813,7 +813,7 @@ public:
         QJsonArray handles = arguments.value(QStringLiteral("handles")).toArray();
 
         QJsonObject body;
-        foreach (QJsonValue handle, handles)
+        foreach (const QJsonValue &handle, handles)
             body[QString::number(handle.toInt())] = debugServicePrivate->lookup(handle.toInt());
 
         // response:
@@ -1221,7 +1221,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger, QV4::D
 void QV4DebuggerAgent::sourcesCollected(QV4::Debugging::Debugger *debugger, QStringList sources, int requestSequenceNr)
 {
     QJsonArray body;
-    foreach (const QString source, sources) {
+    foreach (const QString &source, sources) {
         QJsonObject src;
         src[QLatin1String("name")] = source;
         src[QLatin1String("scriptType")] = 4;
