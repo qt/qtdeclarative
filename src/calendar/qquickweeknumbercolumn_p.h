@@ -90,6 +90,11 @@ Q_SIGNALS:
     void sourceChanged();
     void delegateChanged();
 
+protected:
+    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickWeekNumberColumn)
     Q_DECLARE_PRIVATE(QQuickWeekNumberColumn)

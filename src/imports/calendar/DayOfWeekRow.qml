@@ -46,6 +46,7 @@ AbstractDayOfWeekRow {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
+    spacing: 6
     topPadding: 6
     bottomPadding: 6
 
@@ -54,8 +55,6 @@ AbstractDayOfWeekRow {
         text: model.shortName
         font.bold: true
         color: control.Theme.textColor
-        width: contentItem.width ? contentItem.width / 7 : implicitWidth
-        height: contentItem.height ? contentItem.height : implicitHeight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

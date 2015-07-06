@@ -46,10 +46,25 @@ class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate
 public:
     QQuickWeekNumberColumnPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
 
+    void resizeItems();
+
     QVariant source;
     QQmlComponent *delegate;
     QQuickWeekNumberModel *model;
 };
+
+void QQuickWeekNumberColumnPrivate::resizeItems()
+{
+    if (!contentItem)
+        return;
+
+    QSizeF itemSize;
+    itemSize.setWidth(contentItem->width());
+    itemSize.setHeight((contentItem->height() - 5 * spacing) / 6);
+
+    foreach (QQuickItem *item, contentItem->childItems())
+        item->setSize(itemSize);
+}
 
 QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
     QQuickControl(*(new QQuickWeekNumberColumnPrivate), parent)
@@ -126,6 +141,29 @@ void QQuickWeekNumberColumn::setDelegate(QQmlComponent *delegate)
         d->delegate = delegate;
         emit delegateChanged();
     }
+}
+
+void QQuickWeekNumberColumn::componentComplete()
+{
+    Q_D(QQuickWeekNumberColumn);
+    QQuickControl::componentComplete();
+    d->resizeItems();
+}
+
+void QQuickWeekNumberColumn::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickWeekNumberColumn);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    if (isComponentComplete())
+        d->resizeItems();
+}
+
+void QQuickWeekNumberColumn::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
+{
+    Q_D(QQuickWeekNumberColumn);
+    QQuickControl::paddingChange(newPadding, oldPadding);
+    if (isComponentComplete())
+        d->resizeItems();
 }
 
 QT_END_NAMESPACE

@@ -46,6 +46,7 @@ AbstractWeekNumberColumn {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
+    spacing: 6
     leftPadding: 6
     rightPadding: 6
 
@@ -54,8 +55,6 @@ AbstractWeekNumberColumn {
         text: model.weekNumber
         font.bold: true
         color: control.Theme.textColor
-        width: contentItem.width ? contentItem.width : implicitWidth
-        height: contentItem.height ? contentItem.height / 6 : implicitHeight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

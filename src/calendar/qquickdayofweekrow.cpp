@@ -46,10 +46,25 @@ class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate
 public:
     QQuickDayOfWeekRowPrivate() : delegate(Q_NULLPTR), model(Q_NULLPTR) { }
 
+    void resizeItems();
+
     QVariant source;
     QQmlComponent *delegate;
     QQuickDayOfWeekModel *model;
 };
+
+void QQuickDayOfWeekRowPrivate::resizeItems()
+{
+    if (!contentItem)
+        return;
+
+    QSizeF itemSize;
+    itemSize.setWidth((contentItem->width() - 6 * spacing) / 7);
+    itemSize.setHeight(contentItem->height());
+
+    foreach (QQuickItem *item, contentItem->childItems())
+        item->setSize(itemSize);
+}
 
 QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
     QQuickControl(*(new QQuickDayOfWeekRowPrivate), parent)
@@ -100,6 +115,29 @@ void QQuickDayOfWeekRow::setDelegate(QQmlComponent *delegate)
         d->delegate = delegate;
         emit delegateChanged();
     }
+}
+
+void QQuickDayOfWeekRow::componentComplete()
+{
+    Q_D(QQuickDayOfWeekRow);
+    QQuickControl::componentComplete();
+    d->resizeItems();
+}
+
+void QQuickDayOfWeekRow::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickDayOfWeekRow);
+    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    if (isComponentComplete())
+        d->resizeItems();
+}
+
+void QQuickDayOfWeekRow::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
+{
+    Q_D(QQuickDayOfWeekRow);
+    QQuickControl::paddingChange(newPadding, oldPadding);
+    if (isComponentComplete())
+        d->resizeItems();
 }
 
 QT_END_NAMESPACE
