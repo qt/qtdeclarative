@@ -261,10 +261,12 @@ TestCase {
     function test_push() {
         var control = stackView.createObject(testCase)
 
-        // missing arguments ### TODO: TestCase.ignoreWarning()
+        // missing arguments
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: push: missing arguments")
         compare(control.push(), null)
 
-        // nothing to push ### TODO: TestCase.ignoreWarning()
+        // nothing to push
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: push: nothing to push")
         compare(control.push(AbstractStackView.Immediate), null)
 
         // push(item)
@@ -317,7 +319,7 @@ TestCase {
 
         control.push(items, AbstractStackView.Immediate)
 
-        // too many arguments ### TODO: TestCase.ignoreWarning()
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: pop: too many arguments")
         compare(control.pop(1, 2, 3), null)
 
         // pop the top most item
@@ -336,6 +338,7 @@ TestCase {
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: pop: unknown argument: " + testCase)
         compare(control.pop(testCase, AbstractStackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
@@ -351,10 +354,12 @@ TestCase {
     function test_replace() {
         var control = stackView.createObject(testCase)
 
-        // missing arguments ### TODO: TestCase.ignoreWarning()
+        // missing arguments
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: replace: missing arguments")
         compare(control.replace(), null)
 
-        // nothing to push ### TODO: TestCase.ignoreWarning()
+        // nothing to push
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: replace: nothing to push")
         compare(control.replace(AbstractStackView.Immediate), null)
 
         // replace(item)
