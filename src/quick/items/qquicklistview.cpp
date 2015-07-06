@@ -609,10 +609,11 @@ bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
     if (!item || !model)
         return true;
 
+    QPointer<QQuickItem> it = item->item;
     QQuickListViewAttached *att = static_cast<QQuickListViewAttached*>(item->attached);
 
     bool released = QQuickItemViewPrivate::releaseItem(item);
-    if (released && item->item && att && att->m_sectionItem) {
+    if (released && it && att && att->m_sectionItem) {
         // We hold no more references to this item
         int i = 0;
         do {
