@@ -47,5 +47,7 @@ RESOURCES += \
 OTHER_FILES += \
     $$PWD/theme.json
 
+include(designer/designer.pri)
+
 CONFIG += no_cxx_module
 load(qml_plugin)
