@@ -41,8 +41,8 @@ import QtQuick.Extras 2.0
 AbstractDrawer {
     id: control
 
-    width: parent.width // TODO: Window.width
-    height: parent.height // TODO: Window.height
+    width: parent ? parent.width : 0 // TODO: Window.width
+    height: parent ? parent.height : 0 // TODO: Window.height
 
     //! [background]
     background: Rectangle {
