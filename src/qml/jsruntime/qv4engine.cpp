@@ -108,6 +108,9 @@ static ReturnedValue throwTypeError(CallContext *ctx)
 
 const int MinimumStackSize = 256; // in kbytes
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_MSVC(4172) // MSVC 2015: warning C4172: returning address of local variable or temporary: dummy
+
 quintptr getStackLimit()
 {
     quintptr stackLimit;
@@ -172,6 +175,7 @@ quintptr getStackLimit()
     int dummy;
     // this is inexact, as part of the stack is used when being called here,
     // but let's simply default to 1MB from where the stack is right now
+    // (Note: triggers warning C4172 as of MSVC 2015, returning address of local variable)
     stackLimit = reinterpret_cast<qintptr>(&dummy) - 1024*1024;
 #endif
 
@@ -179,6 +183,7 @@ quintptr getStackLimit()
     return stackLimit + MinimumStackSize*1024;
 }
 
+QT_WARNING_POP
 
 QJSEngine *ExecutionEngine::jsEngine() const
 {
