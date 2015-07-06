@@ -37,122 +37,109 @@
 #include <QtQml>
 #include <QtTest>
 
-//#define QT_QUICK_CONTROLS_V1
-
 class tst_CreationTime : public QObject
 {
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void init();
 
-    void testControls();
-    void testControls_data();
+    void controls();
+    void controls_data();
 
-    void testCalendar();
-    void testCalendar_data();
+    void calendar();
+    void calendar_data();
+
+    void extras();
+    void extras_data();
 
 private:
     QQmlEngine engine;
 };
 
-void tst_CreationTime::initTestCase()
+void tst_CreationTime::init()
 {
     engine.clearComponentCache();
 }
 
-void tst_CreationTime::testControls()
+static QStringList listControls(const QDir &dir)
+{
+    QStringList controls;
+    foreach (const QFileInfo &entry, dir.entryInfoList(QStringList("*.qml"), QDir::Files))
+        controls += entry.baseName();
+    return controls;
+}
+
+static void addTestRows(const QStringList &importPaths, const QString &importPath)
+{
+    QStringList controls;
+    foreach (const QString &path, importPaths) {
+        QDir dir(path);
+        if (dir.cd(importPath)) {
+            foreach (const QString &control, listControls(dir)) {
+                if (!controls.contains(control))
+                    controls += control;
+            }
+        }
+    }
+
+    foreach (const QString &control, controls)
+        QTest::newRow(qPrintable(control)) << control.toUtf8();
+}
+
+static void doBenchmark(QQmlComponent *component)
+{
+    QObjectList objects;
+    objects.reserve(4096);
+    QBENCHMARK {
+        QObject *object = component->create();
+        if (!object)
+            qFatal("%s", qPrintable(component->errorString()));
+        objects += object;
+    }
+    qDeleteAll(objects);
+}
+
+void tst_CreationTime::controls()
 {
     QFETCH(QByteArray, control);
-
     QQmlComponent component(&engine);
-#ifdef QT_QUICK_CONTROLS_V1
-    component.setData("import QtQuick.Controls 1.3;" + control + "{}", QUrl());
-#else
     component.setData("import QtQuick.Controls 2.0;" + control + "{}", QUrl());
-#endif
-
-    QObjectList objects;
-    QBENCHMARK {
-        QObject *object = component.create();
-        if (!object)
-            qFatal("%s", qPrintable(component.errorString()));
-        objects += object;
-    }
-    qDeleteAll(objects);
-    engine.clearComponentCache();
+    doBenchmark(&component);
 }
 
-void tst_CreationTime::testControls_data()
+void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QByteArray>("control");
-
-    QTest::newRow("ApplicationWindow") << QByteArray("ApplicationWindow");
-    QTest::newRow("BusyIndicator") << QByteArray("BusyIndicator");
-    QTest::newRow("Button") << QByteArray("Button");
-    QTest::newRow("CheckBox") << QByteArray("CheckBox");
-#ifndef QT_QUICK_CONTROLS_V1
-    QTest::newRow("Frame") << QByteArray("Frame");
-#endif
-    QTest::newRow("GroupBox") << QByteArray("GroupBox");
-    QTest::newRow("Label") << QByteArray("Label");
-    QTest::newRow("ProgressBar") << QByteArray("ProgressBar");
-    QTest::newRow("RadioButton") << QByteArray("RadioButton");
-#ifdef QT_QUICK_CONTROLS_V1
-    QTest::newRow("ScrollView") << QByteArray("ScrollView");
-#else
-    QTest::newRow("ScrollBar") << QByteArray("ScrollBar");
-    QTest::newRow("ScrollIndicator") << QByteArray("ScrollIndicator");
-#endif
-    QTest::newRow("Slider") << QByteArray("Slider");
-    QTest::newRow("StackView") << QByteArray("StackView");
-    QTest::newRow("Switch") << QByteArray("Switch");
-#ifndef QT_QUICK_CONTROLS_V1
-    QTest::newRow("TabBar") << QByteArray("TabBar");
-    QTest::newRow("TabButton") << QByteArray("TabButton");
-#else
-    QTest::newRow("TabView") << QByteArray("TabView");
-#endif
-    QTest::newRow("TextArea") << QByteArray("TextArea");
-    QTest::newRow("TextField") << QByteArray("TextField");
-    QTest::newRow("ToolBar") << QByteArray("ToolBar");
-    QTest::newRow("ToolButton") << QByteArray("ToolButton");
+    addTestRows(engine.importPathList(), "QtQuick/Controls.2");
 }
 
-void tst_CreationTime::testCalendar()
+void tst_CreationTime::calendar()
 {
     QFETCH(QByteArray, control);
-
     QQmlComponent component(&engine);
-#ifdef QT_QUICK_CONTROLS_V1
-    component.setData("import QtQuick.Controls 1.3;" + control + "{}", QUrl());
-#else
     component.setData("import QtQuick.Calendar 2.0;" + control + "{}", QUrl());
-#endif
-
-    QObjectList objects;
-    QBENCHMARK {
-        QObject *object = component.create();
-        if (!object)
-            qFatal("%s", qPrintable(component.errorString()));
-        objects += object;
-    }
-    qDeleteAll(objects);
-    engine.clearComponentCache();
+    doBenchmark(&component);
 }
 
-void tst_CreationTime::testCalendar_data()
+void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QByteArray>("control");
+    addTestRows(engine.importPathList(), "QtQuick/Calendar.2");
+}
 
-#ifdef QT_QUICK_CONTROLS_V1
-    QTest::newRow("Calendar") << QByteArray("Calendar");
-#else
-    QTest::newRow("CalendarModel") << QByteArray("CalendarModel");
-    QTest::newRow("CalendarView") << QByteArray("CalendarView");
-    QTest::newRow("DayOfWeekRow") << QByteArray("DayOfWeekRow");
-    QTest::newRow("WeekNumberColumn") << QByteArray("WeekNumberColumn");
-#endif
+void tst_CreationTime::extras()
+{
+    QFETCH(QByteArray, control);
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Extras 2.0;" + control + "{}", QUrl());
+    doBenchmark(&component);
+}
+
+void tst_CreationTime::extras_data()
+{
+    QTest::addColumn<QByteArray>("control");
+    addTestRows(engine.importPathList(), "QtQuick/Extras.2");
 }
 
 QTEST_MAIN(tst_CreationTime)
