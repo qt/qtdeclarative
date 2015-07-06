@@ -70,7 +70,7 @@ public:
         TextureHasMipmaps       = 0x0002,
         TextureOwnsGLTexture    = 0x0004,
         TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010,
+        TextureIsOpaque         = 0x0010
     };
 
     enum RenderStage {
