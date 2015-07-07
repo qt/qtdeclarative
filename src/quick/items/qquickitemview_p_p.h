@@ -200,6 +200,8 @@ public:
 
     qreal minExtentForAxis(const AxisData &axisData, bool forXAxis) const;
     qreal maxExtentForAxis(const AxisData &axisData, bool forXAxis) const;
+    qreal calculatedMinExtent() const;
+    qreal calculatedMaxExtent() const;
 
     void applyPendingChanges();
     bool applyModelChanges(ChangeResult *insertionResult, ChangeResult *removalResult);

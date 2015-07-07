@@ -910,11 +910,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
 
     qreal pos = isContentFlowReversed() ? -position() - size() : position();
     FxViewItem *item = visibleItem(idx);
-    qreal maxExtent;
-    if (layoutOrientation() == Qt::Vertical)
-        maxExtent = isContentFlowReversed() ? q->minYExtent()-size(): -q->maxYExtent();
-    else
-        maxExtent = isContentFlowReversed() ? q->minXExtent()-size(): -q->maxXExtent();
+    qreal maxExtent = calculatedMaxExtent();
     if (!item) {
         qreal itemPos = positionAt(idx);
         changedVisibleIndex(idx);
@@ -960,11 +956,7 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
             break;
         }
         pos = qMin(pos, maxExtent);
-        qreal minExtent;
-        if (layoutOrientation() == Qt::Vertical)
-            minExtent = isContentFlowReversed() ? q->maxYExtent()-size(): -q->minYExtent();
-        else
-            minExtent = isContentFlowReversed() ? q->maxXExtent()-size(): -q->minXExtent();
+        qreal minExtent = calculatedMinExtent();
         pos = qMax(pos, minExtent);
         moveReason = QQuickItemViewPrivate::Other;
         q->cancelFlick();
@@ -1135,6 +1127,29 @@ qreal QQuickItemViewPrivate::maxExtentForAxis(const AxisData &axisData, bool for
     return extent;
 }
 
+qreal QQuickItemViewPrivate::calculatedMinExtent() const
+{
+    Q_Q(const QQuickItemView);
+    qreal minExtent;
+    if (layoutOrientation() == Qt::Vertical)
+        minExtent = isContentFlowReversed() ? q->maxYExtent() - size(): -q->minYExtent();
+    else
+        minExtent = isContentFlowReversed() ? q->maxXExtent() - size(): -q->minXExtent();
+    return minExtent;
+
+}
+
+qreal QQuickItemViewPrivate::calculatedMaxExtent() const
+{
+    Q_Q(const QQuickItemView);
+    qreal maxExtent;
+    if (layoutOrientation() == Qt::Vertical)
+        maxExtent = isContentFlowReversed() ? q->minYExtent() - size(): -q->maxYExtent();
+    else
+        maxExtent = isContentFlowReversed() ? q->minXExtent() - size(): -q->maxXExtent();
+    return maxExtent;
+}
+
 // for debugging only
 void QQuickItemViewPrivate::checkVisible() const
 {
@@ -1282,10 +1297,12 @@ void QQuickItemView::trackedPositionChanged()
             if (trackedPos < pos + d->highlightRangeStart)
                 pos = trackedPos - d->highlightRangeStart;
             if (d->highlightRange != StrictlyEnforceRange) {
-                if (pos > d->endPosition() - d->size())
-                    pos = d->endPosition() - d->size();
-                if (pos < d->startPosition())
-                    pos = d->startPosition();
+                qreal maxExtent = d->calculatedMaxExtent();
+                if (pos > maxExtent)
+                    pos = maxExtent;
+                qreal minExtent = d->calculatedMinExtent();
+                if (pos < minExtent)
+                    pos = minExtent;
             }
         } else {
             if (d->trackedItem != d->currentItem) {

@@ -209,6 +209,8 @@ private slots:
     void contentHeightWithDelayRemove_data();
     void contentHeightWithDelayRemove();
 
+    void QTBUG_45640();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -6538,6 +6540,25 @@ void tst_QQuickGridView::contentHeightWithDelayRemove()
     } else {
         QCOMPARE(qRound(gridview->contentHeight()), eventualContentHeight);
     }
+
+    delete window;
+}
+
+void tst_QQuickGridView::QTBUG_45640()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("qtbug45640.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickGridView *gridview = qobject_cast<QQuickGridView*>(window->rootObject());
+    QVERIFY(gridview != 0);
+
+    QCOMPARE(gridview->contentY(), qreal(-50.0));
+
+    gridview->moveCurrentIndexDown();
+
+    QTRY_VERIFY(gridview->contentY() > qreal(-50.0) && gridview->contentY() < qreal(0.0));
 
     delete window;
 }
