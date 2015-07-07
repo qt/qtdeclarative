@@ -38,6 +38,14 @@
 #include <QtCore/QString>
 #include "qv4global_p.h"
 
+/* We cannot rely on QT_POINTER_SIZE to be set correctly on host builds. In qmldevtools the Value objects
+   are only used to store primitives, never object pointers. So we can use the 64-bit encoding. */
+#ifdef V4_BOOTSTRAP
+#define QV4_USE_64_BIT_VALUE_ENCODING
+#elif QT_POINTER_SIZE == 8
+#define QV4_USE_64_BIT_VALUE_ENCODING
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -119,7 +127,7 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     union {
         quint64 val;
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         Heap::Base *m;
 #else
         double dbl;
@@ -131,7 +139,7 @@ struct Q_QML_PRIVATE_EXPORT Value
             union {
                 uint uint_32;
                 int int_32;
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
                 Heap::Base *m;
 #endif
             };
@@ -141,7 +149,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         };
     };
 
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
     enum Masks {
         SilentNaNBit           =                  0x00040000,
         NaN_Mask               =                  0x7ff80000,
@@ -221,7 +229,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool isUndefined() const { return tag == Undefined_Type; }
     inline bool isNull() const { return tag == _Null_Type; }
     inline bool isBoolean() const { return tag == _Boolean_Type; }
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     inline bool isInteger() const { return (val >> IsNumber_Shift) == 1; }
     inline bool isDouble() const { return (val >> IsDouble_Shift); }
     inline bool isNumber() const { return (val >> IsNumber_Shift); }
@@ -320,7 +328,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     {
         Value v;
         v.m = m;
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         v.tag = Managed_Type;
 #endif
         return v;
@@ -386,7 +394,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     Value &operator=(Heap::Base *o) {
         m = o;
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         tag = Managed_Type;
 #endif
         return *this;
@@ -428,7 +436,7 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     v.val = quint64(Undefined_Type) << Tag_Shift;
 #else
     v.tag = Undefined_Type;
@@ -451,7 +459,7 @@ struct TypedValue : public Value
     template<typename X>
     TypedValue &operator =(X *x) {
         m = x;
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         tag = Managed_Type;
 #endif
         return *this;

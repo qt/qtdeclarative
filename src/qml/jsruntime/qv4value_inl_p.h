@@ -82,7 +82,7 @@ inline void Value::mark(ExecutionEngine *e) const
 inline Primitive Primitive::nullValue()
 {
     Primitive v;
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     v.val = quint64(_Null_Type) << Tag_Shift;
 #else
     v.tag = _Null_Type;
@@ -181,7 +181,7 @@ inline bool Value::toBoolean() const
 #ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     if (!isNumber())
         return UINT_MAX;
     if (isInteger())
