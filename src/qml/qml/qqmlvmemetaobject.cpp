@@ -123,8 +123,6 @@ public:
     inline void setValue(const QRectF &);
     inline void setValue(const QPointF &);
     inline void setValue(const QSizeF &);
-    inline void setValue(const QJSValue &);
-
 
     inline void ensureValueType(int);
 
@@ -192,9 +190,6 @@ void QQmlVMEVariant::cleanup()
         type = QVariant::Invalid;
     } else if (type == qMetaTypeId<QVariant>()) {
         ((QVariant *)dataPtr())->~QVariant();
-        type = QVariant::Invalid;
-    } else if (type == qMetaTypeId<QJSValue>()) {
-        ((QJSValue *)dataPtr())->~QJSValue();
         type = QVariant::Invalid;
     } else {
         if (QQml_valueTypeProvider()->destroyValueType(type, dataPtr(), dataSize())) {
@@ -452,17 +447,6 @@ void QQmlVMEVariant::setValue(const QSizeF &v)
         new (dataPtr()) QSizeF(v);
     } else {
         *(QSizeF *)(dataPtr()) = v;
-    }
-}
-
-void QQmlVMEVariant::setValue(const QJSValue &v)
-{
-    if (type != qMetaTypeId<QJSValue>()) {
-        cleanup();
-        type = qMetaTypeId<QJSValue>();
-        new (dataPtr()) QJSValue(v);
-    } else {
-        *(QJSValue *)(dataPtr()) = v;
     }
 }
 
