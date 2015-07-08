@@ -97,26 +97,26 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_connection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(connectionError(QAbstractSocket::SocketError)));
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
-    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
-            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerService::RangeType,QQmlProfilerService::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
+    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
+            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
     connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
     connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), this, SLOT(notifyTraceStarted()));
     connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int,int)));
-    connect(&m_qmlProfilerClient, SIGNAL(sceneGraphFrame(QQmlProfilerService::SceneGraphFrameType,
+    connect(&m_qmlProfilerClient, SIGNAL(sceneGraphFrame(QQmlProfilerDefinitions::SceneGraphFrameType,
                                          qint64,qint64,qint64,qint64,qint64,qint64)),
-            &m_profilerData, SLOT(addSceneGraphFrameEvent(QQmlProfilerService::SceneGraphFrameType,
+            &m_profilerData, SLOT(addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType,
                                   qint64,qint64,qint64,qint64,qint64,qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(pixmapCache(QQmlProfilerService::PixmapEventType,qint64,
+    connect(&m_qmlProfilerClient, SIGNAL(pixmapCache(QQmlProfilerDefinitions::PixmapEventType,qint64,
                                                      QmlEventLocation,int,int,int)),
-            &m_profilerData, SLOT(addPixmapCacheEvent(QQmlProfilerService::PixmapEventType,qint64,
+            &m_profilerData, SLOT(addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType,qint64,
                                                       QmlEventLocation,int,int,int)));
-    connect(&m_qmlProfilerClient, SIGNAL(memoryAllocation(QQmlProfilerService::MemoryType,qint64,
+    connect(&m_qmlProfilerClient, SIGNAL(memoryAllocation(QQmlProfilerDefinitions::MemoryType,qint64,
                                                           qint64)),
-            &m_profilerData, SLOT(addMemoryEvent(QQmlProfilerService::MemoryType,qint64,
+            &m_profilerData, SLOT(addMemoryEvent(QQmlProfilerDefinitions::MemoryType,qint64,
                                                  qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerService::EventType,qint64)),
-            &m_profilerData, SLOT(addInputEvent(QQmlProfilerService::EventType,qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerDefinitions::EventType,qint64)),
+            &m_profilerData, SLOT(addInputEvent(QQmlProfilerDefinitions::EventType,qint64)));
 
     connect(&m_qmlProfilerClient, SIGNAL(complete()), this, SLOT(qmlComplete()));
 
@@ -184,7 +184,7 @@ void QmlProfilerApplication::parseArguments()
     parser.addOption(record);
 
     QStringList featureList;
-    for (int i = 0; i < QQmlProfilerService::MaximumProfileFeature; ++i)
+    for (int i = 0; i < QQmlProfilerDefinitions::MaximumProfileFeature; ++i)
         featureList << QLatin1String(features[i]);
 
     QCommandLineOption include(QLatin1String("include"),

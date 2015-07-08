@@ -35,8 +35,8 @@
 #define QMLPROFILERCLIENT_H
 
 #include "qqmldebugclient.h"
-#include <QtQml/private/qqmlprofilerservice_p.h>
 #include "qmlprofilereventlocation.h"
+#include <QtQml/private/qqmlprofilerdefinitions_p.h>
 
 class ProfilerClientPrivate;
 class ProfilerClient : public QQmlDebugClient
@@ -83,19 +83,19 @@ public slots:
 signals:
     void traceFinished( qint64 time );
     void traceStarted( qint64 time );
-    void range(QQmlProfilerService::RangeType type,
-               QQmlProfilerService::BindingType bindingType,
+    void range(QQmlProfilerDefinitions::RangeType type,
+               QQmlProfilerDefinitions::BindingType bindingType,
                qint64 startTime, qint64 length,
                const QStringList &data,
                const QmlEventLocation &location);
     void frame(qint64 time, int frameRate, int animationCount, int threadId);
-    void sceneGraphFrame(QQmlProfilerService::SceneGraphFrameType type, qint64 time,
+    void sceneGraphFrame(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                          qint64 numericData1, qint64 numericData2, qint64 numericData3,
                          qint64 numericData4, qint64 numericData5);
-    void pixmapCache(QQmlProfilerService::PixmapEventType, qint64 time,
+    void pixmapCache(QQmlProfilerDefinitions::PixmapEventType, qint64 time,
                      const QmlEventLocation &location, int width, int height, int refCount);
-    void memoryAllocation(QQmlProfilerService::MemoryType type, qint64 time, qint64 amount);
-    void inputEvent(QQmlProfilerService::EventType, qint64 time);
+    void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
+    void inputEvent(QQmlProfilerDefinitions::EventType, qint64 time);
 
 protected:
     virtual void messageReceived(const QByteArray &);

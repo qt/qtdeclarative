@@ -34,9 +34,9 @@
 #ifndef QMLPROFILERDATA_H
 #define QMLPROFILERDATA_H
 
-#include <QtQml/private/qqmlprofilerservice_p.h>
 #include "qmlprofilereventlocation.h"
 
+#include <QtQml/private/qqmlprofilerdefinitions_p.h>
 #include <QObject>
 
 class QmlProfilerDataPrivate;
@@ -56,8 +56,8 @@ public:
 
     static QString getHashStringForQmlEvent(const QmlEventLocation &location, int eventType);
     static QString getHashStringForV8Event(const QString &displayName, const QString &function);
-    static QString qmlRangeTypeAsString(QQmlProfilerService::RangeType type);
-    static QString qmlMessageAsString(QQmlProfilerService::Message type);
+    static QString qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type);
+    static QString qmlMessageAsString(QQmlProfilerDefinitions::Message type);
     static QString rootEventName();
     static QString rootEventDescription();
 
@@ -75,20 +75,20 @@ public slots:
     void clear();
     void setTraceEndTime(qint64 time);
     void setTraceStartTime(qint64 time);
-    void addQmlEvent(QQmlProfilerService::RangeType type,
-                     QQmlProfilerService::BindingType bindingType,
+    void addQmlEvent(QQmlProfilerDefinitions::RangeType type,
+                     QQmlProfilerDefinitions::BindingType bindingType,
                      qint64 startTime, qint64 duration, const QStringList &data,
                      const QmlEventLocation &location);
     void addV8Event(int depth, const QString &function, const QString &filename,
                     int lineNumber, double totalTime, double selfTime);
     void addFrameEvent(qint64 time, int framerate, int animationcount, int threadId);
-    void addSceneGraphFrameEvent(QQmlProfilerService::SceneGraphFrameType type, qint64 time,
+    void addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                                  qint64 numericData1, qint64 numericData2, qint64 numericData3,
                                  qint64 numericData4, qint64 numericData5);
-    void addPixmapCacheEvent(QQmlProfilerService::PixmapEventType type, qint64 time,
+    void addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
                              const QmlEventLocation &location, int width, int height, int refcount);
-    void addMemoryEvent(QQmlProfilerService::MemoryType type, qint64 time, qint64 size);
-    void addInputEvent(QQmlProfilerService::EventType type, qint64 time);
+    void addMemoryEvent(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 size);
+    void addInputEvent(QQmlProfilerDefinitions::EventType type, qint64 time);
 
     void complete();
     bool save(const QString &filename);
