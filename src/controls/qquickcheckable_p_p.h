@@ -48,11 +48,11 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickbutton_p_p.h>
+#include <QtQuickControls/private/qquickabstractbutton_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCheckablePrivate : public QQuickButtonPrivate
+class QQuickCheckablePrivate : public QQuickAbstractButtonPrivate
 {
 public:
     QQuickCheckablePrivate();

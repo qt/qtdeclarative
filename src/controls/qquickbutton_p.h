@@ -48,50 +48,18 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtQuickControls/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickButtonPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickButton : public QQuickControl
+class Q_QUICKCONTROLS_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
 public:
     explicit QQuickButton(QQuickItem *parent = Q_NULLPTR);
-
-    QString text() const;
-    void setText(const QString &text);
-
-    bool isPressed() const;
-    void setPressed(bool pressed);
-
-    QQuickItem *label() const;
-    void setLabel(QQuickItem *label);
-
-Q_SIGNALS:
-    void pressed();
-    void released();
-    void canceled();
-    void clicked();
-    void textChanged();
-    void pressedChanged();
-    void labelChanged();
-
-protected:
-    QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
-
-    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickButton)

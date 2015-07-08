@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCHECKABLE_P_H
-#define QQUICKCHECKABLE_P_H
+#ifndef QQUICKABSTRACTBUTTON_P_P_H
+#define QQUICKABSTRACTBUTTON_P_P_H
 
 //
 //  W A R N I N G
@@ -48,48 +48,22 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickabstractbutton_p.h>
+#include <QtQuickControls/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCheckablePrivate;
-
-class Q_QUICKCONTROLS_EXPORT QQuickCheckable : public QQuickAbstractButton
+class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
-    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickAbstractButton)
 
 public:
-    explicit QQuickCheckable(QQuickItem *parent = Q_NULLPTR);
+    QQuickAbstractButtonPrivate();
 
-    bool isChecked() const;
-    void setChecked(bool checked);
-
-    bool isExclusive() const;
-    void setExclusive(bool exclusive);
-
-    QQuickItem *indicator() const;
-    void setIndicator(QQuickItem *indicator);
-
-public Q_SLOTS:
-    void toggle();
-
-Q_SIGNALS:
-    void checkedChanged();
-    void indicatorChanged();
-
-protected:
-    QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent);
-
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickCheckable)
-    Q_DECLARE_PRIVATE(QQuickCheckable)
+    QString text;
+    bool pressed;
+    QQuickItem *label;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCHECKABLE_P_H
+#endif // QQUICKABSTRACTBUTTON_P_P_H

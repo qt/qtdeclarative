@@ -58,7 +58,7 @@
     \section1 Customizing Button
 
         Button consists of two visual items: \l {Control::background}{background}
-        and \l {Button::label}{label}.
+        and \l {AbstractButton::label}{label}.
 
         \section3 Background
 
@@ -76,7 +76,7 @@
     \section1 Customizing CheckBox
 
         CheckBox consists of three visual items: \l {Control::background}{background},
-        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
+        \l {AbstractButton::label}{label} and \l {Checkable::indicator}{indicator}.
 
         \section3 Background
 
@@ -170,7 +170,7 @@
     \section1 Customizing RadioButton
 
         RadioButton consists of three visual items: \l {Control::background}{background},
-        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
+        \l {AbstractButton::label}{label} and \l {Checkable::indicator}{indicator}.
 
         \section3 Background
 
@@ -259,7 +259,7 @@
     \section1 Customizing Switch
 
         Switch consists of three visual items: \l {Control::background}{background},
-        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
+        \l {AbstractButton::label}{label} and \l {Checkable::indicator}{indicator}.
 
         \section3 Background
 
@@ -316,7 +316,7 @@
     \section1 Customizing ToggleButton
 
         ToggleButton consists of three visual items: \l {Control::background}{background},
-        \l {Button::label}{label} and \l {Checkable::indicator}{indicator}.
+        \l {AbstractButton::label}{label} and \l {Checkable::indicator}{indicator}.
 
         \section3 Background
 
@@ -358,7 +358,7 @@
     \section1 Customizing ToolButton
 
         ToolButton consists of two visual items: \l {Control::background}{background}
-        and \l {Button::label}{label}.
+        and \l {AbstractButton::label}{label}.
 
         \section3 Background
 

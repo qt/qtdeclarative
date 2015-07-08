@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Checkable
-    \inherits Button
+    \inherits AbstractButton
     \instantiates QQuickCheckable
     \inqmlmodule QtQuick.Controls
     \qmlabstract
@@ -54,12 +54,12 @@ QQuickCheckablePrivate::QQuickCheckablePrivate() :
 }
 
 QQuickCheckable::QQuickCheckable(QQuickItem *parent) :
-    QQuickButton(*(new QQuickCheckablePrivate), parent)
+    QQuickAbstractButton(*(new QQuickCheckablePrivate), parent)
 {
 }
 
 QQuickCheckable::QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent) :
-    QQuickButton(dd, parent)
+    QQuickAbstractButton(dd, parent)
 {
 }
 
@@ -135,7 +135,7 @@ void QQuickCheckable::toggle()
 void QQuickCheckable::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickCheckable);
-    QQuickButton::keyReleaseEvent(event);
+    QQuickAbstractButton::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space)
         setChecked(d->exclusive || !d->checked);
 }
@@ -143,7 +143,7 @@ void QQuickCheckable::keyReleaseEvent(QKeyEvent *event)
 void QQuickCheckable::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickCheckable);
-    QQuickButton::mouseReleaseEvent(event);
+    QQuickAbstractButton::mouseReleaseEvent(event);
     if (contains(event->pos()))
         setChecked(d->exclusive || !d->checked);
 }

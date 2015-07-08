@@ -35,13 +35,13 @@
 ****************************************************************************/
 
 #include "qquickbutton_p.h"
-#include "qquickbutton_p_p.h"
+#include "qquickabstractbutton_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Button
-    \inherits Control
+    \inherits AbstractButton
     \instantiates QQuickButton
     \inqmlmodule QtQuick.Controls
     \ingroup buttons
@@ -79,186 +79,13 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Button}
 */
 
-/*!
-    \qmlsignal QtQuickControls2::Button::pressed()
-
-    This signal is emitted when the button is interactively pressed by the user.
-*/
-
-/*!
-    \qmlsignal QtQuickControls2::Button::released()
-
-    This signal is emitted when the button is interactively released by the user.
-*/
-
-/*!
-    \qmlsignal QtQuickControls2::Button::canceled()
-
-    This signal is emitted when the button loses mouse grab
-    while being pressed, or when it would emit the \l released
-    signal but the mouse cursor is not inside the button.
-*/
-
-/*!
-    \qmlsignal QtQuickControls2::Button::clicked()
-
-    This signal is emitted when the button is clicked.
-*/
-
-QQuickButtonPrivate::QQuickButtonPrivate() : pressed(false), label(Q_NULLPTR)
+class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
 {
-}
+};
 
 QQuickButton::QQuickButton(QQuickItem *parent) :
-    QQuickControl(*(new QQuickButtonPrivate), parent)
+    QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
 {
-    setActiveFocusOnTab(true);
-    setAcceptedMouseButtons(Qt::LeftButton);
-}
-
-QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent) :
-    QQuickControl(dd, parent)
-{
-    setActiveFocusOnTab(true);
-    setAcceptedMouseButtons(Qt::LeftButton);
-}
-
-/*!
-    \qmlproperty string QtQuickControls2::Button::text
-
-    This property holds a textual description of the button.
-
-    \note The text is used for accessibility purposes, so it makes sense to
-          set a textual description even if the label item is an image.
-
-    \sa label
-*/
-QString QQuickButton::text() const
-{
-    Q_D(const QQuickButton);
-    return d->text;
-}
-
-void QQuickButton::setText(const QString &text)
-{
-    Q_D(QQuickButton);
-    if (d->text != text) {
-        d->text = text;
-        emit textChanged();
-    }
-}
-
-/*!
-    \qmlproperty bool QtQuickControls2::Button::pressed
-
-    This property holds whether the button is pressed.
-*/
-bool QQuickButton::isPressed() const
-{
-    Q_D(const QQuickButton);
-    return d->pressed;
-}
-
-void QQuickButton::setPressed(bool isPressed)
-{
-    Q_D(QQuickButton);
-    if (d->pressed != isPressed) {
-        d->pressed = isPressed;
-        emit pressedChanged();
-    }
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::Button::label
-
-    This property holds the label item.
-
-    \sa text
-*/
-QQuickItem *QQuickButton::label() const
-{
-    Q_D(const QQuickButton);
-    return d->label;
-}
-
-void QQuickButton::setLabel(QQuickItem *label)
-{
-    Q_D(QQuickButton);
-    if (d->label != label) {
-        delete d->label;
-        d->label = label;
-        if (label && !label->parentItem())
-            label->setParentItem(this);
-        emit labelChanged();
-    }
-}
-
-void QQuickButton::focusOutEvent(QFocusEvent *event)
-{
-    Q_D(QQuickButton);
-    QQuickControl::focusOutEvent(event);
-    if (d->pressed) {
-        setPressed(false);
-        emit canceled();
-    }
-}
-
-void QQuickButton::keyPressEvent(QKeyEvent *event)
-{
-    QQuickControl::keyPressEvent(event);
-    if (event->key() == Qt::Key_Space) {
-        setPressed(true);
-        emit pressed();
-        event->accept();
-    }
-}
-
-void QQuickButton::keyReleaseEvent(QKeyEvent *event)
-{
-    QQuickControl::keyReleaseEvent(event);
-    if (event->key() == Qt::Key_Space) {
-        setPressed(false);
-        emit released();
-        emit clicked();
-        event->accept();
-    }
-}
-
-void QQuickButton::mousePressEvent(QMouseEvent *event)
-{
-    QQuickControl::mousePressEvent(event);
-    setPressed(true);
-    emit pressed();
-}
-
-void QQuickButton::mouseMoveEvent(QMouseEvent *event)
-{
-    QQuickControl::mouseMoveEvent(event);
-    setPressed(contains(event->pos()));
-}
-
-void QQuickButton::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickButton);
-    QQuickControl::mouseReleaseEvent(event);
-    bool wasPressed = d->pressed;
-    setPressed(false);
-    if (wasPressed) {
-        emit released();
-        emit clicked();
-    } else {
-        emit canceled();
-    }
-}
-
-void QQuickButton::mouseUngrabEvent()
-{
-    Q_D(QQuickButton);
-    QQuickControl::mouseUngrabEvent();
-    if (d->pressed) {
-        setPressed(false);
-        emit canceled();
-    }
 }
 
 QT_END_NAMESPACE

@@ -1,10 +1,11 @@
 INCLUDEPATH += $$PWD
 
 HEADERS += \
+    $$PWD/qquickabstractbutton_p.h \
+    $$PWD/qquickabstractbutton_p_p.h \
     $$PWD/qquickapplicationwindow_p.h \
     $$PWD/qquickbusyindicator_p.h \
     $$PWD/qquickbutton_p.h \
-    $$PWD/qquickbutton_p_p.h \
     $$PWD/qquickcheckable_p.h \
     $$PWD/qquickcheckable_p_p.h \
     $$PWD/qquickcheckbox_p.h \
@@ -35,6 +36,7 @@ HEADERS += \
     $$PWD/qquicktoolbutton_p.h
 
 SOURCES += \
+    $$PWD/qquickabstractbutton.cpp \
     $$PWD/qquickapplicationwindow.cpp \
     $$PWD/qquickbusyindicator.cpp \
     $$PWD/qquickbutton.cpp \
