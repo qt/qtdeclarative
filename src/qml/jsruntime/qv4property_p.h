@@ -88,8 +88,8 @@ struct Property {
         set = reinterpret_cast<Managed *>(setter);
     }
     Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
-        value.m = reinterpret_cast<Heap::Base *>(getter);
-        set.m = reinterpret_cast<Heap::Base *>(setter);
+        value.setM(reinterpret_cast<Heap::Base *>(getter));
+        set.setM(reinterpret_cast<Heap::Base *>(setter));
     }
     Property &operator=(Value v) { value = v; return *this; }
 private:

@@ -107,7 +107,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = 0;
+        ptr->setRawValue(0);
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -125,9 +125,9 @@ struct ScopedValue
     ScopedValue(const Scope &scope, Heap::Base *o)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->m = o;
+        ptr->setM(o);
 #if QT_POINTER_SIZE == 4
-        ptr->tag = QV4::Value::Managed_Type;
+        ptr->setTag(QV4::Value::Managed_Type);
 #endif
 #ifndef QT_NO_DEBUG
         ++scope.size;
@@ -137,7 +137,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope, Managed *m)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = m->asReturnedValue();
+        ptr->setRawValue(m->asReturnedValue());
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -146,7 +146,7 @@ struct ScopedValue
     ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = v;
+        ptr->setRawValue(v);
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -158,9 +158,9 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(Heap::Base *o) {
-        ptr->m = o;
+        ptr->setM(o);
 #if QT_POINTER_SIZE == 4
-        ptr->tag = QV4::Value::Managed_Type;
+        ptr->setTag(QV4::Value::Managed_Type);
 #endif
         return *this;
     }
@@ -171,7 +171,7 @@ struct ScopedValue
     }
 
     ScopedValue &operator=(const ReturnedValue &v) {
-        ptr->val = v;
+        ptr->setRawValue(v);
         return *this;
     }
 
@@ -200,18 +200,18 @@ struct Scoped
     enum _Convert { Convert };
 
     inline void setPointer(const Managed *p) {
-        ptr->m = p ? p->m : 0;
+        ptr->setM(p ? p->m() : 0);
 #if QT_POINTER_SIZE == 4
-        ptr->tag = QV4::Value::Managed_Type;
+        ptr->setTag(QV4::Value::Managed_Type);
 #endif
     }
 
     Scoped(const Scope &scope)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->m = 0;
+        ptr->setM(0);
 #if QT_POINTER_SIZE == 4
-        ptr->tag = QV4::Value::Managed_Type;
+        ptr->setTag(QV4::Value::Managed_Type);
 #endif
 #ifndef QT_NO_DEBUG
         ++scope.size;
@@ -248,7 +248,7 @@ struct Scoped
     Scoped(const Scope &scope, const Value &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine, v);
+        ptr->setRawValue(value_convert<T>(scope.engine, v));
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -291,7 +291,7 @@ struct Scoped
     Scoped(const Scope &scope, const ReturnedValue &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
-        ptr->val = value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v));
+        ptr->setRawValue(value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));
 #ifndef QT_NO_DEBUG
         ++scope.size;
 #endif
@@ -341,21 +341,21 @@ struct Scoped
     }
 
     bool operator!() const {
-        return !ptr->m;
+        return !ptr->m();
     }
     operator void *() const {
-        return ptr->m;
+        return ptr->m();
     }
 
     T *getPointer() {
         return ptr->cast<T>();
     }
-    typename T::Data **getRef() {
-        return reinterpret_cast<typename T::Data **>(&ptr->m);
+    Value *getRef() {
+        return ptr;
     }
 
     ReturnedValue asReturnedValue() const {
-        return ptr->m ? ptr->val : Encode::undefined();
+        return ptr->m() ? ptr->rawValue() : Encode::undefined();
     }
 
     Value *ptr;
@@ -384,14 +384,14 @@ struct ScopedCallData {
 
 inline Value &Value::operator =(const ScopedValue &v)
 {
-    val = v.ptr->val;
+    _val = v.ptr->val();
     return *this;
 }
 
 template<typename T>
 inline Value &Value::operator=(const Scoped<T> &t)
 {
-    val = t.ptr->val;
+    _val = t.ptr->val();
     return *this;
 }
 
@@ -420,18 +420,18 @@ struct ExecutionContextSaver
         : engine(context->d()->engine)
         , savedContext(scope.alloc(1))
     {
-        savedContext->m = context->d();
+        savedContext->setM(context->d());
 #if QT_POINTER_SIZE == 4
-        savedContext->tag = QV4::Value::Managed_Type;
+        savedContext->setTag(QV4::Value::Managed_Type);
 #endif
     }
     ExecutionContextSaver(Scope &scope, Heap::ExecutionContext *context)
         : engine(context->engine)
         , savedContext(scope.alloc(1))
     {
-        savedContext->m = context;
+        savedContext->setM(context);
 #if QT_POINTER_SIZE == 4
-        savedContext->tag = QV4::Value::Managed_Type;
+        savedContext->setTag(QV4::Value::Managed_Type);
 #endif
     }
     ~ExecutionContextSaver()

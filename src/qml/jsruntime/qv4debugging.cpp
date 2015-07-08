@@ -800,7 +800,7 @@ void Debugger::Collector::collect(const QString &name, const ScopedValue &value)
             addObject(name, value);
         break;
     case Value::Integer_Type:
-        addInteger(name, value->int_32);
+        addInteger(name, value->int_32());
         break;
     default: // double
         addDouble(name, value->doubleValue());

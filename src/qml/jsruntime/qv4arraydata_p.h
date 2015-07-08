@@ -49,8 +49,8 @@ namespace QV4 {
         static const QV4::ArrayVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        const Data *d() const { return static_cast<const Data *>(m); } \
-        Data *d() { return static_cast<Data *>(m); }
+        const Data *d() const { return static_cast<const Data *>(m()); } \
+        Data *d() { return static_cast<Data *>(m()); }
 
 
 struct ArrayData;
@@ -86,7 +86,7 @@ struct ArrayData : public Base {
     PropertyAttributes *attrs;
     union {
         uint len;
-        uint freeList;
+        ReturnedValue freeList;
     };
     union {
         uint offset;
@@ -239,8 +239,8 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     V4_ARRAYDATA(SparseArrayData)
     V4_NEEDS_DESTROY
 
-    uint &freeList() { return d()->freeList; }
-    uint freeList() const { return d()->freeList; }
+    ReturnedValue &freeList() { return d()->freeList; }
+    ReturnedValue freeList() const { return d()->freeList; }
     SparseArray *sparse() const { return d()->sparse; }
     void setSparse(SparseArray *s) { d()->sparse = s; }
 

@@ -77,7 +77,7 @@ bool Value::toBoolean() const
         return false;
     case Value::Boolean_Type:
     case Value::Integer_Type:
-        return (bool)int_32;
+        return (bool)int_32();
     case Value::Managed_Type:
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
@@ -94,7 +94,7 @@ bool Value::toBoolean() const
 double Value::toInteger() const
 {
     if (integerCompatible())
-        return int_32;
+        return int_32();
 
     return Primitive::toInteger(toNumber());
 }
@@ -122,7 +122,7 @@ double Value::toNumberImpl() const
     case QV4::Value::Null_Type:
     case QV4::Value::Boolean_Type:
     case QV4::Value::Integer_Type:
-        return int_32;
+        return int_32();
     default: // double
         Q_UNREACHABLE();
     }
@@ -171,7 +171,7 @@ QString Value::toQStringNoThrow() const
         }
     case Value::Integer_Type: {
         QString str;
-        RuntimeHelpers::numberToString(&str, (double)int_32, 10);
+        RuntimeHelpers::numberToString(&str, (double)int_32(), 10);
         return str;
     }
     default: { // double
@@ -207,7 +207,7 @@ QString Value::toQString() const
         }
     case Value::Integer_Type: {
         QString str;
-        RuntimeHelpers::numberToString(&str, (double)int_32, 10);
+        RuntimeHelpers::numberToString(&str, (double)int_32(), 10);
         return str;
     }
     default: { // double
@@ -220,14 +220,14 @@ QString Value::toQString() const
 #endif // V4_BOOTSTRAP
 
 bool Value::sameValue(Value other) const {
-    if (val == other.val)
+    if (_val == other._val)
         return true;
     if (isString() && other.isString())
         return stringValue()->isEqualTo(other.stringValue());
     if (isInteger() && other.isDouble())
-        return int_32 ? (double(int_32) == other.doubleValue()) : (other.val == 0);
+        return int_32() ? (double(int_32()) == other.doubleValue()) : (other._val == 0);
     if (isDouble() && other.isInteger())
-        return other.int_32 ? (doubleValue() == double(other.int_32)) : (val == 0);
+        return other.int_32() ? (doubleValue() == double(other.int_32())) : (_val == 0);
     return false;
 }
 
@@ -308,8 +308,8 @@ uint Value::asArrayLength(bool *ok) const
 {
     *ok = true;
     if (isInteger()) {
-        if (int_32 >= 0) {
-            return (uint)int_32;
+        if (int_32() >= 0) {
+            return (uint)int_32();
         } else {
             *ok = false;
             return UINT_MAX;

@@ -263,7 +263,7 @@ inline ReturnedValue Runtime::uPlus(const Value &value)
     if (value.isNumber())
         return value.asReturnedValue();
     if (value.integerCompatible())
-        return Encode(value.int_32);
+        return Encode(value.int_32());
 
     double n = value.toNumberImpl();
     return Encode(n);

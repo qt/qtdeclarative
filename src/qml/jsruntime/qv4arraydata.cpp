@@ -91,6 +91,13 @@ const ArrayVTable SparseArrayData::static_vtbl =
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SimpleArrayData));
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SparseArrayData));
 
+static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
+{
+    Value v = Value::fromReturnedValue(*target);
+    v.setValue(value);
+    *target = v.asReturnedValue();
+}
+
 void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAttributes)
 {
     Scope scope(o->engine());
@@ -166,7 +173,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
     Heap::SparseArrayData *sparse = static_cast<Heap::SparseArrayData *>(newData->d());
 
-    uint *lastFree;
+    ReturnedValue *lastFree;
     if (d && d->type() == Heap::ArrayData::Sparse) {
         Heap::SparseArrayData *old = static_cast<Heap::SparseArrayData *>(d->d());
         sparse->sparse = old->sparse;
@@ -181,20 +188,20 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
                 SparseArrayNode *n = sparse->sparse->insert(i);
                 n->value = i;
             } else {
-                *lastFree = i;
-                sparse->arrayData[i].tag = Value::Empty_Type;
-                lastFree = &sparse->arrayData[i].uint_32;
+                storeValue(lastFree, i);
+                sparse->arrayData[i].setTag(Value::Empty_Type);
+                lastFree = &sparse->arrayData[i].rawValueRef();
             }
         }
     }
 
     if (toCopy < sparse->alloc) {
         for (uint i = toCopy; i < sparse->alloc; ++i) {
-            *lastFree = i;
-            sparse->arrayData[i].tag = Value::Empty_Type;
-            lastFree = &sparse->arrayData[i].uint_32;
+            storeValue(lastFree, i);
+            sparse->arrayData[i].setTag(Value::Empty_Type);
+            lastFree = &sparse->arrayData[i].rawValueRef();
         }
-        *lastFree = UINT_MAX;
+        storeValue(lastFree, UINT_MAX);
     }
     // ### Could explicitly free the old data
 }
@@ -338,13 +345,10 @@ void SparseArrayData::free(Heap::ArrayData *d, uint idx)
     Value *v = d->arrayData + idx;
     if (d->attrs && d->attrs[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
-        v[1].tag = Value::Empty_Type;
-        v[1].uint_32 = d->freeList;
-        v[0].tag = Value::Empty_Type;
-        v[0].uint_32 = idx + 1;
+        v[1].setTagValue(Value::Empty_Type, Value::fromReturnedValue(d->freeList).value());
+        v[0].setTagValue(Value::Empty_Type, idx + 1);
     } else {
-        v->tag = Value::Empty_Type;
-        v->uint_32 = d->freeList;
+        v->setTagValue(Value::Empty_Type, Value::fromReturnedValue(d->freeList).value());
     }
     d->freeList = idx;
     if (d->attrs)
@@ -372,33 +376,35 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
     Q_ASSERT(o->d()->arrayData->type == Heap::ArrayData::Sparse);
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     if (doubleSlot) {
-        uint *last = &dd->freeList;
+        ReturnedValue *last = &dd->freeList;
         while (1) {
-            if (*last == UINT_MAX) {
+            if (Value::fromReturnedValue(*last).value() == UINT_MAX) {
                 reallocate(o, dd->alloc + 2, true);
                 dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
                 last = &dd->freeList;
-                Q_ASSERT(*last != UINT_MAX);
+                Q_ASSERT(Value::fromReturnedValue(*last).value() != UINT_MAX);
             }
 
-            Q_ASSERT(dd->arrayData[*last].uint_32 != *last);
-            if (dd->arrayData[*last].uint_32 == (*last + 1)) {
+            Q_ASSERT(dd->arrayData[Value::fromReturnedValue(*last).value()].value() != Value::fromReturnedValue(*last).value());
+            if (dd->arrayData[Value::fromReturnedValue(*last).value()].value() == (Value::fromReturnedValue(*last).value() + 1)) {
                 // found two slots in a row
-                uint idx = *last;
-                *last = dd->arrayData[*last + 1].uint_32;
+                uint idx = Value::fromReturnedValue(*last).uint_32();
+                Value lastV = Value::fromReturnedValue(*last);
+                lastV.setValue(dd->arrayData[lastV.value() + 1].value());
+                *last = lastV.rawValue();
                 dd->attrs[idx] = Attr_Accessor;
                 return idx;
             }
-            last = &dd->arrayData[*last].uint_32;
+            last = &dd->arrayData[Value::fromReturnedValue(*last).value()].rawValueRef();
         }
     } else {
-        if (dd->freeList == UINT_MAX) {
+        if (Value::fromReturnedValue(dd->freeList).value() == UINT_MAX) {
             reallocate(o, dd->alloc + 1, false);
             dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
         }
-        uint idx = dd->freeList;
+        uint idx = Value::fromReturnedValue(dd->freeList).value();
         Q_ASSERT(idx != UINT_MAX);
-        dd->freeList = dd->arrayData[idx].uint_32;
+        dd->freeList = dd->arrayData[idx].uint_32();
         if (dd->attrs)
             dd->attrs[idx] = Attr_Data;
         return idx;
@@ -453,13 +459,10 @@ bool SparseArrayData::del(Object *o, uint index)
 
     if (isAccessor) {
         // free up both indices
-        dd->arrayData[pidx + 1].tag = Value::Empty_Type;
-        dd->arrayData[pidx + 1].uint_32 = dd->freeList;
-        dd->arrayData[pidx].tag = Value::Undefined_Type;
-        dd->arrayData[pidx].uint_32 = pidx + 1;
+        dd->arrayData[pidx + 1].setTagValue(Value::Empty_Type, Value::fromReturnedValue(dd->freeList).value());
+        dd->arrayData[pidx].setTagValue(Value::Undefined_Type, pidx + 1);
     } else {
-        dd->arrayData[pidx].tag = Value::Empty_Type;
-        dd->arrayData[pidx].uint_32 = dd->freeList;
+        dd->arrayData[pidx].setTagValue(Value::Empty_Type, Value::fromReturnedValue(dd->freeList).value());
     }
 
     dd->freeList = pidx;

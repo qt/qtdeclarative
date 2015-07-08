@@ -478,7 +478,7 @@ public:
             load64(addr, dest);
         } else {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.val), dest);
+            move(TrustedImm64(undefined.rawValue()), dest);
         }
     }
 
@@ -491,7 +491,7 @@ public:
             load64(addr, dest);
         } else {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.val), dest);
+            move(TrustedImm64(undefined.rawValue()), dest);
         }
     }
 
@@ -500,7 +500,7 @@ public:
         Q_UNUSED(argumentNumber);
 
         QV4::Value v = convertToValue(c);
-        move(TrustedImm64(v.val), dest);
+        move(TrustedImm64(v.rawValue()), dest);
     }
 
     void loadArgumentInRegister(IR::Expr* expr, RegisterID dest, int argumentNumber)
@@ -509,7 +509,7 @@ public:
 
         if (!expr) {
             QV4::Value undefined = QV4::Primitive::undefinedValue();
-            move(TrustedImm64(undefined.val), dest);
+            move(TrustedImm64(undefined.rawValue()), dest);
         } else if (IR::Temp *t = expr->asTemp()){
             loadArgumentInRegister(t, dest, argumentNumber);
         } else if (IR::ArgLocal *al = expr->asArgLocal()) {
@@ -791,11 +791,11 @@ public:
     void storeValue(QV4::Primitive value, Address destination)
     {
 #ifdef VALUE_FITS_IN_REGISTER
-        store64(TrustedImm64(value.val), destination);
+        store64(TrustedImm64(value.rawValue()), destination);
 #else
-        store32(TrustedImm32(value.int_32), destination);
+        store32(TrustedImm32(value.int_32()), destination);
         destination.offset += 4;
-        store32(TrustedImm32(value.tag), destination);
+        store32(TrustedImm32(value.tag()), destination);
 #endif
     }
 
@@ -957,8 +957,8 @@ public:
             tagAddr.offset += 4;
 
             QV4::Primitive v = convertToValue(c);
-            store32(TrustedImm32(v.int_32), addr);
-            store32(TrustedImm32(v.tag), tagAddr);
+            store32(TrustedImm32(v.int_32()), addr);
+            store32(TrustedImm32(v.tag()), tagAddr);
             return Pointer(addr);
         }
 
@@ -973,7 +973,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag), addr);
+        store32(TrustedImm32(QV4::Primitive::fromBoolean(0).tag()), addr);
     }
 
     void storeBool(RegisterID src, RegisterID dest)
@@ -1017,7 +1017,7 @@ public:
     {
         store32(reg, addr);
         addr.offset += 4;
-        store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag), addr);
+        store32(TrustedImm32(QV4::Primitive::fromInt32(0).tag()), addr);
     }
 
     void storeInt32(RegisterID reg, IR::Expr *target)
@@ -1096,7 +1096,7 @@ public:
     RegisterID toInt32Register(IR::Expr *e, RegisterID scratchReg)
     {
         if (IR::Const *c = e->asConst()) {
-            move(TrustedImm32(convertToValue(c).int_32), scratchReg);
+            move(TrustedImm32(convertToValue(c).int_32()), scratchReg);
             return scratchReg;
         }
 

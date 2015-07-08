@@ -68,7 +68,7 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        Data *d() const { return static_cast<Data *>(m); }
+        Data *d() const { return static_cast<Data *>(m()); }
 
 #define V4_OBJECT2(DataClass, superClass) \
     public: \
@@ -78,7 +78,7 @@ struct Object : Base {
         static const QV4::ObjectVTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
 
 struct ObjectVTable
 {
@@ -96,7 +96,7 @@ struct ObjectVTable
     ReturnedValue (*getLookup)(const Managed *m, Lookup *l);
     void (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
+    void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
 #define DEFINE_OBJECT_VTABLE(classname) \
@@ -291,7 +291,7 @@ public:
     { return vtable()->getLookup(this, l); }
     void setLookup(Lookup *l, const Value &v)
     { vtable()->setLookup(this, l, v); }
-    void advanceIterator(ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes)
+    void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
 
@@ -313,7 +313,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(const Managed *m, Lookup *l);
     static void setLookup(Managed *m, Lookup *l, const Value &v);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
 private:
@@ -332,7 +332,7 @@ namespace Heap {
 
 inline Object::Object(ExecutionEngine *engine)
     : internalClass(engine->emptyClass),
-      prototype(static_cast<Object *>(engine->objectPrototype()->m))
+      prototype(static_cast<Object *>(engine->objectPrototype()->m()))
 {
 }
 
@@ -462,7 +462,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m && m->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
+    return isManaged() && m() && m()->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
 }
 
 #ifndef V4_BOOTSTRAP

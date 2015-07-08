@@ -905,11 +905,11 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
                     *v = RuntimeHelpers::toString(scope.engine, *v);
                 if (!v->isString()) {
-                    v->m = 0;
+                    v->setM(0);
                 } else {
                     for (uint j = 0; j <i; ++j) {
-                        if (stringify.propertyList[j].m == v->m) {
-                            v->m = 0;
+                        if (stringify.propertyList[j].m() == v->m()) {
+                            v->setM(0);
                             break;
                         }
                     }

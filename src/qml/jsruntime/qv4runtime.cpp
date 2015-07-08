@@ -468,7 +468,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
             return RuntimeHelpers::convertToString(engine, prim);
         }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(engine, value.int_32);
+        return RuntimeHelpers::stringFromNumber(engine, value.int_32());
     default: // double
         return RuntimeHelpers::stringFromNumber(engine, value.doubleValue());
     } // switch
@@ -499,7 +499,7 @@ static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value 
             return RuntimeHelpers::convertToString(engine, prim);
         }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(engine, value.int_32);
+        return RuntimeHelpers::stringFromNumber(engine, value.int_32());
     default: // double
         return RuntimeHelpers::stringFromNumber(engine, value.doubleValue());
     } // switch

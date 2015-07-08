@@ -614,7 +614,7 @@ void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
                 _as->toUInt32Register(sourceConst, (Assembler::RegisterID) targetTemp->index);
             } else if (targetTemp->type == IR::BoolType) {
                 Q_ASSERT(sourceConst->type == IR::BoolType);
-                _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32),
+                _as->move(Assembler::TrustedImm32(convertToValue(sourceConst).int_32()),
                           (Assembler::RegisterID) targetTemp->index);
             } else {
                 Q_UNREACHABLE();
@@ -1297,11 +1297,11 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         } else {
             Address temp = _as->loadAddress(Assembler::ScratchRegister, s->cond);
             Address tag = temp;
-            tag.offset += qOffsetOf(QV4::Value, tag);
+            tag.offset += QV4::Value::tagOffset();
             Assembler::Jump booleanConversion = _as->branch32(Assembler::NotEqual, tag, Assembler::TrustedImm32(QV4::Value::Boolean_Type));
 
             Address data = temp;
-            data.offset += qOffsetOf(QV4::Value, int_32);
+            data.offset += QV4::Value::valueOffset();
             _as->load32(data, Assembler::ReturnValueRegister);
             Assembler::Jump testBoolean = _as->jump();
 
@@ -1475,16 +1475,16 @@ void InstructionSelection::visitRet(IR::Ret *s)
     } else if (IR::Const *c = s->expr->asConst()) {
         QV4::Primitive retVal = convertToValue(c);
 #if CPU(X86)
-        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
-        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
+        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
+        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
 #elif CPU(ARM)
-        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
-        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
+        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
+        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
 #elif CPU(MIPS)
-        _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::MIPSRegisters::v0);
-        _as->move(Assembler::TrustedImm32(retVal.tag), JSC::MIPSRegisters::v1);
+        _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
+        _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
 #else
-        _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
+        _as->move(Assembler::TrustedImm64(retVal.rawValue()), Assembler::ReturnValueRegister);
 #endif
     } else {
         Q_UNREACHABLE();
@@ -1505,16 +1505,16 @@ void InstructionSelection::visitRet(IR::Ret *s)
     _as->exceptionReturnLabel = _as->label();
     QV4::Primitive retVal = Primitive::undefinedValue();
 #if CPU(X86)
-    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::X86Registers::eax);
-    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::X86Registers::edx);
+    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::X86Registers::eax);
+    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::X86Registers::edx);
 #elif CPU(ARM)
-    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::ARMRegisters::r0);
-    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::ARMRegisters::r1);
+    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::ARMRegisters::r0);
+    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::ARMRegisters::r1);
 #elif CPU(MIPS)
-    _as->move(Assembler::TrustedImm32(retVal.int_32), JSC::MIPSRegisters::v0);
-    _as->move(Assembler::TrustedImm32(retVal.tag), JSC::MIPSRegisters::v1);
+    _as->move(Assembler::TrustedImm32(retVal.int_32()), JSC::MIPSRegisters::v0);
+    _as->move(Assembler::TrustedImm32(retVal.tag()), JSC::MIPSRegisters::v1);
 #else
-    _as->move(Assembler::TrustedImm64(retVal.val), Assembler::ReturnValueRegister);
+    _as->move(Assembler::TrustedImm64(retVal.rawValue()), Assembler::ReturnValueRegister);
 #endif
     _as->jump(leaveStackFrame);
 }

@@ -131,7 +131,7 @@ private:
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
     static void destroy(Heap::Base *that);
 

@@ -133,7 +133,7 @@ private:
                    const QV4::Value &global, QQmlContextData *c, QV4::ExecutionEngine *e)
         : callData(callData), retVal(retVal), ctx(c), e(e)
     {
-        callData->thisObject.val = global.asReturnedValue();
+        callData->thisObject = QV4::Value::fromReturnedValue(global.asReturnedValue());
     }
 
     QV4::CallData *callData;

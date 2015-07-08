@@ -258,7 +258,7 @@ ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
             TypedArrayWrite write =array->d()->type->write;
             for (uint i = 0; i < l; ++i) {
                 Primitive val;
-                val.val = read(src, i*srcElementSize);
+                val.setRawValue(read(src, i*srcElementSize));
                 write(scope.engine, dest, i*destElementSize, val);
             }
         }
@@ -524,7 +524,7 @@ ReturnedValue TypedArrayPrototype::method_set(CallContext *ctx)
     TypedArrayWrite write = a->d()->type->write;
     for (uint i = 0; i < l; ++i) {
         Primitive val;
-        val.val = read(src, i*srcElementSize);
+        val.setRawValue(read(src, i*srcElementSize));
         write(scope.engine, dest, i*elementSize, val);
     }
 

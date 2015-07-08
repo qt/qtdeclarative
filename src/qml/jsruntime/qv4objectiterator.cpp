@@ -65,12 +65,12 @@ ObjectIterator::ObjectIterator(Scope &scope, const Object *o, uint flags)
 
 void ObjectIterator::init(const Object *o)
 {
-    object->m = o ? o->m : 0;
-    current->m = o ? o->m : 0;
+    object->setM(o ? o->m() : 0);
+    current->setM(o ? o->m() : 0);
 
 #if QT_POINTER_SIZE == 4
-    object->tag = QV4::Value::Managed_Type;
-    current->tag = QV4::Value::Managed_Type;
+    object->setTag(QV4::Value::Managed_Type);
+    current->setTag(QV4::Value::Managed_Type);
 #endif
 
     if (object->as<ArgumentsObject>()) {
@@ -79,9 +79,9 @@ void ObjectIterator::init(const Object *o)
     }
 }
 
-void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, PropertyAttributes *attrs)
+void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
-    *name = 0;
+    name->setM(0);
     *index = UINT_MAX;
 
     if (!object->as<Object>()) {
@@ -120,9 +120,9 @@ void ObjectIterator::next(Heap::String **name, uint *index, Property *pd, Proper
         }
 
         if (flags & WithProtoChain)
-            current->m = current->objectValue()->prototype();
+            current->setM(current->objectValue()->prototype());
         else
-            current->m = (Heap::Base *)0;
+            current->setM(0);
 
         arrayIndex = 0;
         memberIndex = 0;

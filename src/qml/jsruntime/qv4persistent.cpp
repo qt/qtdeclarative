@@ -78,11 +78,11 @@ Page *allocatePage(PersistentValueStorage *storage)
     if (p->header.next)
         p->header.next->header.prev = &p->header.next;
     for (int i = 0; i < kEntriesPerPage - 1; ++i) {
-        p->values[i].tag = QV4::Value::Empty_Type;
-        p->values[i].int_32 = i + 1;
+        p->values[i].setTag(QV4::Value::Empty_Type);
+        p->values[i].setInt_32(i + 1);
     }
-    p->values[kEntriesPerPage - 1].tag = QV4::Value::Empty_Type;
-    p->values[kEntriesPerPage - 1].int_32 = -1;
+    p->values[kEntriesPerPage - 1].setTag(QV4::Value::Empty_Type);
+    p->values[kEntriesPerPage - 1].setInt_32(-1);
 
     storage->firstPage = p;
 
@@ -97,7 +97,7 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
     while (p) {
         while (index < kEntriesPerPage - 1) {
             ++index;
-            if (static_cast<Page *>(p)->values[index].tag != QV4::Value::Empty_Type)
+            if (static_cast<Page *>(p)->values[index].tag() != QV4::Value::Empty_Type)
                 return *this;
         }
         index = -1;
@@ -147,10 +147,10 @@ Value *PersistentValueStorage::allocate()
         p = allocatePage(this);
 
     Value *v = p->values + p->header.freeList;
-    p->header.freeList = v->int_32;
+    p->header.freeList = v->int_32();
     ++p->header.refCount;
 
-    v->val = Encode::undefined();
+    v->setRawValue(Encode::undefined());
 
     return v;
 }
@@ -162,8 +162,8 @@ void PersistentValueStorage::free(Value *v)
 
     Page *p = getPage(v);
 
-    v->tag = QV4::Value::Empty_Type;
-    v->int_32 = p->header.freeList;
+    v->setTag(QV4::Value::Empty_Type);
+    v->setInt_32(p->header.freeList);
     p->header.freeList = v - p->values;
     if (!--p->header.refCount) {
         if (p->header.prev)

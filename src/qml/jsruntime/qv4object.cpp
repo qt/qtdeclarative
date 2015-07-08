@@ -514,10 +514,10 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
     l->setter = Lookup::setterGeneric;
 }
 
-void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *pd, PropertyAttributes *attrs)
+void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
-    *name = 0;
+    name->setM(0);
     *index = UINT_MAX;
 
     if (o->arrayData()) {
@@ -572,7 +572,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            *name = o->engine()->newString(n->string);
+            name->setM(o->engine()->newString(n->string));
             *attrs = a;
             pd->copy(p, a);
             return;
@@ -1028,9 +1028,9 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     } else { // clause 10
         Q_ASSERT(cattrs.isAccessor() && attrs.isAccessor());
         if (!cattrs.isConfigurable()) {
-            if (!p->value.isEmpty() && current->value.val != p->value.val)
+            if (!p->value.isEmpty() && current->value.rawValue() != p->value.rawValue())
                 goto reject;
-            if (!p->set.isEmpty() && current->set.val != p->set.val)
+            if (!p->set.isEmpty() && current->set.rawValue() != p->set.rawValue())
                 goto reject;
         }
     }

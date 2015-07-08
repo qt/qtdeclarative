@@ -63,7 +63,7 @@ struct ContextStateSaver {
         , compilationUnit(context->d()->compilationUnit)
         , lineNumber(context->d()->lineNumber)
     {
-        savedContext->m = context->d();
+        savedContext->setM(context->d());
     }
     ContextStateSaver(Scope &scope, Heap::ExecutionContext *context)
         : savedContext(scope.alloc(1))
@@ -72,12 +72,12 @@ struct ContextStateSaver {
         , compilationUnit(context->compilationUnit)
         , lineNumber(context->lineNumber)
     {
-        savedContext->m = context;
+        savedContext->setM(context);
     }
 
     ~ContextStateSaver()
     {
-        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m);
+        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
         ctx->strictMode = strictMode;
         ctx->lookups = lookups;
         ctx->compilationUnit = compilationUnit;

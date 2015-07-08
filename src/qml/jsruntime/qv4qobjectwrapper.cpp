@@ -733,14 +733,14 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
         return QV4::Object::query(m, name);
 }
 
-void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::String **name, uint *index, Property *p, PropertyAttributes *attributes)
+void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
 
-    *name = (Heap::String *)0;
+    name->setM(0);
     *index = UINT_MAX;
 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
@@ -753,7 +753,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::Strin
         if (it->arrayIndex < static_cast<uint>(propertyCount)) {
             Scope scope(that->engine());
             ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
-            *name = propName->d();
+            name->setM(propName->d());
             ++it->arrayIndex;
             *attributes = QV4::Attr_Data;
             p->value = that->get(propName);
@@ -768,7 +768,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Heap::Strin
                 continue;
             Scope scope(that->engine());
             ScopedString methodName(scope, that->engine()->newString(QString::fromUtf8(method.name())));
-            *name = methodName->d();
+            name->setM(methodName->d());
             *attributes = QV4::Attr_Data;
             p->value = that->get(methodName);
             return;

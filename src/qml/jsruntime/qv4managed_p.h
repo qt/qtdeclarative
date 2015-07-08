@@ -68,7 +68,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static const QV4::VTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m); }
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
 
 #define Q_MANAGED_TYPE(type) \
     public: \
@@ -180,7 +180,7 @@ inline const Managed *Value::as() const {
 
 template<>
 inline const Object *Value::as() const {
-    return isManaged() && m && m->vtable->isObject ? objectValue() : 0;
+    return isManaged() && m() && m()->vtable->isObject ? objectValue() : 0;
 }
 
 }

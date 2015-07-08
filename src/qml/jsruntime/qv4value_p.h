@@ -39,6 +39,14 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 
+#if defined(Q_CC_GNU)
+#  define Q_ALWAYS_INLINE inline __attribute__((always_inline))
+#elif defined(Q_CC_MSVC)
+#  define Q_ALWAYS_INLINE __forceinline
+#else
+#  define Q_ALWAYS_INLINE inline
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -73,30 +81,38 @@ struct Q_QML_PRIVATE_EXPORT Value
         Bit 15-17 is then used to encode other immediates.
     */
 
+    quint64 _val;
 
-    union {
-        quint64 val;
-#if QT_POINTER_SIZE == 8
-        Heap::Base *m;
-#else
-        double dbl;
-#endif
-        struct {
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-            uint tag;
-#endif
-            union {
-                uint uint_32;
-                int int_32;
-#if QT_POINTER_SIZE == 4
-                Heap::Base *m;
-#endif
-            };
+    Q_ALWAYS_INLINE quint64 val() const { return _val; }
+    Q_ALWAYS_INLINE void setVal(quint64 v) { _val = v; }
+    Q_ALWAYS_INLINE void setValue(quint32 v) { setTagValue(tag(), v); }
+    Q_ALWAYS_INLINE void setTag(quint32 t) { setTagValue(t, value()); }
+
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-            uint tag;
+    static inline int valueOffset() { return 0; }
+    static inline int tagOffset() { return 4; }
+    Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    Q_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
+    Q_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
+#else // !Q_LITTLE_ENDIAN
+    static inline int valueOffset() { return 4; }
+    static inline int tagOffset() { return 0; }
+    Q_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(value) << 32 | tag; }
+    Q_ALWAYS_INLINE quint32 tag() const { return _val & quint64(~quint32(0)); }
+    Q_ALWAYS_INLINE quint32 value() const { return _val >> 32; }
 #endif
-        };
-    };
+
+#if QT_POINTER_SIZE == 8
+    Q_ALWAYS_INLINE Heap::Base *m() const { Heap::Base *b; memcpy(&b, &_val, 8); return b; }
+    Q_ALWAYS_INLINE void setM(Heap::Base *b) { memcpy(&_val, &b, 8); }
+#else // QT_POINTER_SIZE == 4
+    Q_ALWAYS_INLINE Heap::Base *m() const { Heap::Base *b; quint32 v = value(); memcpy(&b, &v, 4); return b; }
+    Q_ALWAYS_INLINE void setM(Heap::Base *b) { quint32 v; memcpy(&v, &b, 4); setValue(v); }
+#endif
+
+    Q_ALWAYS_INLINE int int_32() const { int i; quint32 v = value(); memcpy(&i, &v, 4); return i; }
+    Q_ALWAYS_INLINE void setInt_32(int i) { quint32 u; memcpy(&u, &i, 4); setValue(u); }
+    Q_ALWAYS_INLINE uint uint_32() const { return value(); }
 
 #if QT_POINTER_SIZE == 4
     enum Masks {
@@ -169,116 +185,118 @@ struct Q_QML_PRIVATE_EXPORT Value
 #endif
 
     inline unsigned type() const {
-        return tag & Type_Mask;
+        return tag() & Type_Mask;
     }
 
     // used internally in property
-    inline bool isEmpty() const { return tag == Empty_Type; }
+    inline bool isEmpty() const { return tag() == Empty_Type; }
 
-    inline bool isUndefined() const { return tag == Undefined_Type; }
-    inline bool isNull() const { return tag == _Null_Type; }
-    inline bool isBoolean() const { return tag == _Boolean_Type; }
+    inline bool isUndefined() const { return tag() == Undefined_Type; }
+    inline bool isNull() const { return tag() == _Null_Type; }
+    inline bool isBoolean() const { return tag ()== _Boolean_Type; }
 #if QT_POINTER_SIZE == 8
-    inline bool isInteger() const { return (val >> IsNumber_Shift) == 1; }
-    inline bool isDouble() const { return (val >> IsDouble_Shift); }
-    inline bool isNumber() const { return (val >> IsNumber_Shift); }
-    inline bool isManaged() const { return !(val >> IsManaged_Shift); }
-    inline bool isNullOrUndefined() const { return ((val >> IsManaged_Shift) & ~2) == 1; }
-    inline bool integerCompatible() const { return ((val >> IsConvertibleToInt_Shift) & ~2) == 1; }
+    inline bool isInteger() const { return (_val >> IsNumber_Shift) == 1; }
+    inline bool isDouble() const { return (_val >> IsDouble_Shift); }
+    inline bool isNumber() const { return (_val >> IsNumber_Shift); }
+    inline bool isManaged() const { return !(_val >> IsManaged_Shift); }
+    inline bool isNullOrUndefined() const { return ((_val >> IsManaged_Shift) & ~2) == 1; }
+    inline bool integerCompatible() const { return ((_val >> IsConvertibleToInt_Shift) & ~2) == 1; }
     static inline bool integerCompatible(Value a, Value b) {
         return a.integerCompatible() && b.integerCompatible();
     }
     static inline bool bothDouble(Value a, Value b) {
         return a.isDouble() && b.isDouble();
     }
-    double doubleValue() const {
-        Q_ASSERT(isDouble());
-        union {
-            quint64 i;
-            double d;
-        } v;
-        v.i = val ^ NaNEncodeMask;
-        return v.d;
-    }
-    void setDouble(double d) {
-        union {
-            quint64 i;
-            double d;
-        } v;
-        v.d = d;
-        val = v.i ^ NaNEncodeMask;
-        Q_ASSERT(isDouble());
-    }
-    inline bool isNaN() const { return (tag & 0x7fff8000) == 0x00078000; }
+    inline bool isNaN() const { return (tag() & 0x7fff8000) == 0x00078000; }
 #else
-    inline bool isInteger() const { return tag == _Integer_Type; }
-    inline bool isDouble() const { return (tag & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isNumber() const { return tag == _Integer_Type || (tag & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isManaged() const { return tag == Managed_Type; }
-    inline bool isNullOrUndefined() const { return (tag & IsNullOrUndefined_Mask) == Undefined_Type; }
-    inline bool integerCompatible() const { return (tag & ConvertibleToInt) == ConvertibleToInt; }
+    inline bool isInteger() const { return tag() == _Integer_Type; }
+    inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
+    inline bool isNumber() const { return tag() == _Integer_Type || (tag() & NotDouble_Mask) != NotDouble_Mask; }
+    inline bool isManaged() const { return tag() == Managed_Type; }
+    inline bool isNullOrUndefined() const { return (tag() & IsNullOrUndefined_Mask) == Undefined_Type; }
+    inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
     static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag & b.tag) & ConvertibleToInt) == ConvertibleToInt;
+        return ((a.tag() & b.tag()) & ConvertibleToInt) == ConvertibleToInt;
     }
     static inline bool bothDouble(Value a, Value b) {
-        return ((a.tag | b.tag) & NotDouble_Mask) != NotDouble_Mask;
+        return ((a.tag() | b.tag()) & NotDouble_Mask) != NotDouble_Mask;
     }
-    double doubleValue() const { Q_ASSERT(isDouble()); return dbl; }
-    void setDouble(double d) { dbl = d; Q_ASSERT(isDouble()); }
-    inline bool isNaN() const { return (tag & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
+    inline bool isNaN() const { return (tag() & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
 #endif
+    Q_ALWAYS_INLINE double doubleValue() const {
+        Q_ASSERT(isDouble());
+        double d;
+        quint64 v = _val;
+#if QT_POINTER_SIZE == 8
+        v ^= NaNEncodeMask;
+#endif
+        memcpy(&d, &v, 8);
+        return d;
+    }
+    Q_ALWAYS_INLINE void setDouble(double d) {
+        memcpy(&_val, &d, 8);
+#if QT_POINTER_SIZE == 8
+        _val ^= NaNEncodeMask;
+#endif
+        Q_ASSERT(isDouble());
+    }
     inline bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
-        if (tag == _Integer_Type)
+        if (tag() == _Integer_Type)
             return true;
         if (isDouble()) {
             double d = doubleValue();
             int i = (int)d;
             if (i == d) {
-                int_32 = i;
-                tag = _Integer_Type;
+                setInt_32(i);
+                setTag(_Integer_Type);
                 return true;
             }
         }
         return false;
     }
     double asDouble() const {
-        if (tag == _Integer_Type)
-            return int_32;
+        if (tag() == _Integer_Type)
+            return int_32();
         return doubleValue();
     }
 
     bool booleanValue() const {
-        return int_32;
+        return int_32();
     }
     int integerValue() const {
-        return int_32;
+        return int_32();
     }
 
-    String *stringValue() const {
-        return m ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
+    Q_ALWAYS_INLINE String *stringValue() const {
+        return m() ? reinterpret_cast<String*>(const_cast<Value *>(this)) : 0;
     }
-    Object *objectValue() const {
-        return m ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
+    Q_ALWAYS_INLINE Object *objectValue() const {
+        return m() ? reinterpret_cast<Object*>(const_cast<Value *>(this)) : 0;
     }
-    Managed *managed() const {
-        return m ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
+    Q_ALWAYS_INLINE Managed *managed() const {
+        return m() ? reinterpret_cast<Managed*>(const_cast<Value *>(this)) : 0;
     }
-    Heap::Base *heapObject() const {
-        return m;
+    Q_ALWAYS_INLINE Heap::Base *heapObject() const {
+        return m();
     }
 
-    quint64 rawValue() const {
-        return val;
+    Q_ALWAYS_INLINE quint64 &rawValueRef() {
+        return _val;
     }
+    Q_ALWAYS_INLINE quint64 rawValue() const {
+        return _val;
+    }
+    Q_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
 
     static inline Value fromHeapObject(Heap::Base *m)
     {
         Value v;
-        v.m = m;
+        v.setRawValue(0);
+        v.setM(m);
 #if QT_POINTER_SIZE == 4
-        v.tag = Managed_Type;
+        v.setTag(Managed_Type);
 #endif
         return v;
     }
@@ -300,20 +318,20 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool tryIntegerConversion() {
         bool b = integerCompatible();
         if (b)
-            tag = _Integer_Type;
+            setTag(_Integer_Type);
         return b;
     }
 
     template <typename T>
     const T *as() const {
-        if (!m || !isManaged())
+        if (!m() || !isManaged())
             return 0;
 
-        Q_ASSERT(m->vtable);
+        Q_ASSERT(m()->vtable);
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<const T *>(this)->qt_check_for_QMANAGED_macro(static_cast<const T *>(this));
 #endif
-        const VTable *vt = m->vtable;
+        const VTable *vt = m()->vtable;
         while (vt) {
             if (vt == T::staticVTable())
                 return static_cast<const T *>(this);
@@ -338,8 +356,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     uint asArrayLength(bool *ok) const;
 #endif
 
-    ReturnedValue asReturnedValue() const { return val; }
-    static Value fromReturnedValue(ReturnedValue val) { Value v; v.val = val; return v; }
+    ReturnedValue asReturnedValue() const { return _val; }
+    static Value fromReturnedValue(ReturnedValue val) { Value v; v._val = val; return v; }
 
     // Section 9.12
     bool sameValue(Value other) const;
@@ -347,20 +365,19 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline void mark(ExecutionEngine *e);
 
     Value &operator =(const ScopedValue &v);
-    Value &operator=(ReturnedValue v) { val = v; return *this; }
+    Value &operator=(ReturnedValue v) { _val = v; return *this; }
     Value &operator=(Managed *m) {
         if (!m) {
-            tag = Undefined_Type;
-            uint_32 = 0;
+            setTagValue(Undefined_Type, 0);
         } else {
-            val = reinterpret_cast<Value *>(m)->val;
+            _val = reinterpret_cast<Value *>(m)->_val;
         }
         return *this;
     }
     Value &operator=(Heap::Base *o) {
-        m = o;
+        setM(o);
 #if QT_POINTER_SIZE == 4
-        tag = Managed_Type;
+        setTag(Managed_Type);
 #endif
         return *this;
     }
@@ -368,7 +385,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     template<typename T>
     Value &operator=(const Scoped<T> &t);
     Value &operator=(const Value &v) {
-        val = v.val;
+        _val = v._val;
         return *this;
     }
 };
@@ -377,13 +394,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return m && m->vtable->isString;
+    return m() && m()->vtable->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return m && m->vtable->isObject;
+    return m() && m()->vtable->isObject;
 }
 
 inline bool Value::isPrimitive() const
@@ -394,7 +411,7 @@ inline bool Value::isPrimitive() const
 inline double Value::toNumber() const
 {
     if (isInteger())
-        return int_32;
+        return int_32();
     if (isDouble())
         return doubleValue();
     return toNumberImpl();
@@ -408,10 +425,10 @@ inline uint Value::asArrayIndex() const
     if (!isNumber())
         return UINT_MAX;
     if (isInteger())
-        return int_32 >= 0 ? (uint)int_32 : UINT_MAX;
+        return int_32() >= 0 ? (uint)int_32() : UINT_MAX;
 #else
-    if (isInteger() && int_32 >= 0)
-        return (uint)int_32;
+    if (isInteger() && int_32() >= 0)
+        return (uint)int_32();
     if (!isDouble())
         return UINT_MAX;
 #endif
@@ -453,10 +470,11 @@ inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
 #if QT_POINTER_SIZE == 8
-    v.val = quint64(Undefined_Type) << Tag_Shift;
+    v.setRawValue(quint64(Undefined_Type) << Tag_Shift);
 #else
-    v.tag = Undefined_Type;
-    v.int_32 = 0;
+    v.setRawValue(0);
+    v.setTag(Undefined_Type);
+    v.setValue(0);
 #endif
     return v;
 }
@@ -464,8 +482,7 @@ inline Primitive Primitive::undefinedValue()
 inline Primitive Primitive::emptyValue()
 {
     Primitive v;
-    v.tag = Value::Empty_Type;
-    v.uint_32 = 0;
+    v.setTagValue(Value::Empty_Type, 0);
     return v;
 }
 
@@ -473,10 +490,9 @@ inline Primitive Primitive::nullValue()
 {
     Primitive v;
 #if QT_POINTER_SIZE == 8
-    v.val = quint64(_Null_Type) << Tag_Shift;
+    v.setRawValue(quint64(_Null_Type) << Tag_Shift);
 #else
-    v.tag = _Null_Type;
-    v.int_32 = 0;
+    v.setTagValue(_Null_Type, 0);
 #endif
     return v;
 }
@@ -484,8 +500,7 @@ inline Primitive Primitive::nullValue()
 inline Primitive Primitive::fromBoolean(bool b)
 {
     Primitive v;
-    v.tag = _Boolean_Type;
-    v.int_32 = (bool)b;
+    v.setTagValue(_Boolean_Type, b);
     return v;
 }
 
@@ -499,8 +514,8 @@ inline Primitive Primitive::fromDouble(double d)
 inline Primitive Primitive::fromInt32(int i)
 {
     Primitive v;
-    v.tag = _Integer_Type;
-    v.int_32 = i;
+    v.setTagValue(_Integer_Type, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
+    v.setInt_32(i);
     return v;
 }
 
@@ -508,8 +523,8 @@ inline Primitive Primitive::fromUInt32(uint i)
 {
     Primitive v;
     if (i < INT_MAX) {
-        v.tag = _Integer_Type;
-        v.int_32 = (int)i;
+        v.setTagValue(_Integer_Type, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
+        v.setInt_32((int)i);
     } else {
         v.setDouble(i);
     }
@@ -530,7 +545,7 @@ struct Encode {
     Encode(double d) {
         Value v;
         v.setDouble(d);
-        val = v.val;
+        val = v.rawValue();
     }
     Encode(int i) {
         val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | (uint)i;
@@ -541,7 +556,7 @@ struct Encode {
         } else {
             Value v;
             v.setDouble(i);
-            val = v.val;
+            val = v.rawValue();
         }
     }
     Encode(ReturnedValue v) {
@@ -567,7 +582,7 @@ ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 inline int Value::toInt32() const
 {
     if (isInteger())
-        return int_32;
+        return int_32();
     double d = isNumber() ? doubleValue() : toNumberImpl();
 
     const double D32 = 4294967296.0;
