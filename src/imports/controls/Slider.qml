@@ -62,8 +62,8 @@ AbstractSlider {
         color: control.Theme.backgroundColor
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-        x: horizontal ? control.visualPosition * (control.width - width) : (control.width - width) / 2
-        y: horizontal ? (control.height - height) / 2 : control.visualPosition * (control.height - height)
+        x: control.leftPadding + (horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
+        y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
 
         Rectangle {
             x: (parent.width - width) / 2
@@ -84,8 +84,8 @@ AbstractSlider {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
         implicitWidth: horizontal ? 120 : 6
         implicitHeight: horizontal ? 6 : 120
-        x: horizontal ? control.leftPadding : (control.width - width) / 2
-        y: horizontal ? (control.height - height) / 2 : control.topPadding
+        x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
+        y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
         width: horizontal ? control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.availableHeight
 
