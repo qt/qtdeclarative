@@ -49,6 +49,7 @@ AbstractPageIndicator {
 
     padding: 6
     spacing: 6
+    color: Theme.shadowColor // TODO
 
     //! [delegate]
     delegate: Rectangle {
@@ -56,9 +57,9 @@ AbstractPageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: control.Theme.shadowColor // TODO
+        color: control.color
 
-        opacity: index === currentIndex ? 0.75 : 0.25
+        opacity: index === currentIndex ? 0.95 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }
     }
     //! [delegate]

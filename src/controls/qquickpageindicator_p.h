@@ -61,6 +61,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickPageIndicator : public QQuickControl
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
 public:
     explicit QQuickPageIndicator(QQuickItem *parent = Q_NULLPTR);
@@ -74,10 +75,14 @@ public:
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
+    QColor color() const;
+    void setColor(const QColor &color);
+
 Q_SIGNALS:
     void countChanged();
     void currentIndexChanged();
     void delegateChanged();
+    void colorChanged();
 
 private:
     Q_DISABLE_COPY(QQuickPageIndicator)

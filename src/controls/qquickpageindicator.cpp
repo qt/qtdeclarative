@@ -73,6 +73,7 @@ public:
     int count;
     int currentIndex;
     QQmlComponent *delegate;
+    QColor color;
 };
 
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
@@ -124,6 +125,8 @@ void QQuickPageIndicator::setCurrentIndex(int index)
     \qmlproperty Component QtQuickControls2::PageIndicator::delegate
 
     This property holds a delegate that presents a page.
+
+    \sa color
 */
 QQmlComponent *QQuickPageIndicator::delegate() const
 {
@@ -137,6 +140,28 @@ void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
     if (d->delegate != delegate) {
         d->delegate = delegate;
         emit delegateChanged();
+    }
+}
+
+/*!
+    \qmlproperty color QtQuickControls2::PageIndicator::color
+
+    This property holds the color of the indicator.
+
+    \sa delegate
+*/
+QColor QQuickPageIndicator::color() const
+{
+    Q_D(const QQuickPageIndicator);
+    return d->color;
+}
+
+void QQuickPageIndicator::setColor(const QColor &color)
+{
+    Q_D(QQuickPageIndicator);
+    if (d->color != color) {
+        d->color = color;
+        emit colorChanged();
     }
 }
 
