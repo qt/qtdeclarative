@@ -94,7 +94,7 @@ AbstractProgressBar {
         implicitWidth: 120
         implicitHeight: 6
         x: control.leftPadding
-        y: (parent.height - height) / 2
+        y: control.topPadding + (control.availableHeight - height) / 2
         width: control.availableWidth
         height: 6
 
