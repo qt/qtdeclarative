@@ -1114,4 +1114,6 @@ QImage ThreadedRenderLoop::grab(QQuickWindow *window)
     return result;
 }
 
+QT_END_NAMESPACE
+
 #include "threadedrenderloop.moc"

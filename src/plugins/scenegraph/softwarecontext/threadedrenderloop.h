@@ -23,6 +23,8 @@
 
 #include <private/qsgrenderloop_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class RenderThread;
 
 class ThreadedRenderLoop : public QSGRenderLoop
@@ -93,5 +95,7 @@ private:
 
     bool m_lockedForSync;
 };
+
+QT_END_NAMESPACE
 
 #endif // THREADEDRENDERLOOP_H
