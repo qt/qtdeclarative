@@ -52,10 +52,10 @@ AbstractBusyIndicator {
         id: delegate
         implicitWidth: 48
         implicitHeight: 48
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
-        width: parent.width
-        height: parent.height
+        x: control.leftPadding + (control.availableWidth - width) / 2
+        y: control.topPadding + (control.availableHeight - height) / 2
+        width: control.availableWidth
+        height: control.availableHeight
 
         opacity: control.running ? 1 : 0
         Behavior on opacity { OpacityAnimator { duration: 250 } }

@@ -61,8 +61,8 @@ AbstractSwitch {
     indicator: Rectangle {
         implicitWidth: 36
         implicitHeight: 20
-        x: text ? (control.mirrored ? parent.width - width - control.rightPadding : control.leftPadding) : (parent.width - width) / 2
-        y: (parent.height - height) / 2
+        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        y: control.topPadding + (control.availableHeight - height) / 2
 
         radius: 10
         border.width: control.activeFocus ? 2 : 1
