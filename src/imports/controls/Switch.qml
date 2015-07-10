@@ -70,9 +70,9 @@ AbstractSwitch {
         color: control.Theme.backgroundColor
 
         Rectangle {
-            width: 12
-            height: 12
-            radius: 6
+            width: 20
+            height: 20
+            radius: 10
 
             color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
                            control.checked && control.activeFocus ? control.Theme.focusColor :
@@ -81,7 +81,7 @@ AbstractSwitch {
             border.width: control.checked || control.pressed ? 0 : 1
             border.color: control.Theme.frameColor
 
-            x: Math.max(4, Math.min(parent.width - width - 4,
+            x: Math.max(0, Math.min(parent.width - width,
                                     control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
 

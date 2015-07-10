@@ -82,8 +82,9 @@ AbstractSlider {
     //! [track]
     track: Rectangle {
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-        implicitWidth: horizontal ? 120 : 6
-        implicitHeight: horizontal ? 6 : 120
+
+        implicitWidth: horizontal ? 200 : 6
+        implicitHeight: horizontal ? 6 : 200
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
         width: horizontal ? control.availableWidth : implicitWidth

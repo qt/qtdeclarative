@@ -183,8 +183,8 @@ TestCase {
         // Flick in some direction.
         var pos = Qt.point(tumblerXCenter(), tumbler.topPadding);
         mouseDrag(tumbler, pos.x, pos.y, 0, tumbler.height - tumbler.bottomPadding,
-            Qt.LeftButton, Qt.NoModifier, 300);
-        tryCompare(tumbler.contentItem, "offset", 4.0);
+            Qt.LeftButton, Qt.NoModifier, 400);
+        tryCompare(tumbler.contentItem, "offset", 3.0);
 
         tumbler.height += 100;
         compare(tumbler.contentItem.delegateHeight,

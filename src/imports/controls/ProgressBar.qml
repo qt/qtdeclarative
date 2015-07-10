@@ -91,7 +91,7 @@ AbstractProgressBar {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 120
+        implicitWidth: 200
         implicitHeight: 6
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2

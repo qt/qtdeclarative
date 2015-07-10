@@ -40,8 +40,8 @@ import QtQuick.Extras 2.0
 
 AbstractTumbler {
     id: control
-    width: 60
-    height: 200
+    implicitWidth: 60
+    implicitHeight: 200
 
     delegate: Text {
         id: label

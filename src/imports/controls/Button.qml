@@ -50,6 +50,8 @@ AbstractButton {
     Accessible.role: Accessible.Button
 
     padding: 6
+    leftPadding: 8
+    rightPadding: 8
 
     //! [label]
     label: Text {
@@ -68,8 +70,8 @@ AbstractButton {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 26
-        implicitHeight: 26
+        implicitWidth: 36
+        implicitHeight: 36
 
         radius: 3
         color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
