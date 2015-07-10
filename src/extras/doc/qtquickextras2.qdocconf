@@ -28,7 +28,7 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquick
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Examples will be installed under quick/extras - 'extras' subdirectory
 # is given as part of \example commands
-exampledirs += ../../../examples/quick/extras
+exampledirs += ../../../examples/quick/extras ../../imports/extras
 examplesinstallpath = quick/extras2
 
 headerdirs += ../

@@ -9,6 +9,7 @@ OTHER_FILES += \
     qmldir
 
 QML_FILES = \
+    Dial.qml \
     Drawer.qml \
     SwipeView.qml \
     Tumbler.qml

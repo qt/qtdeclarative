@@ -34,33 +34,50 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+import QtQuick 2.6
+import QtQuick.Controls 2.0
+import QtQuick.Extras 2.0
 
-#include <QtQuickExtras/private/qquickdial_p.h>
-#include <QtQuickExtras/private/qquickdrawer_p.h>
-#include <QtQuickExtras/private/qquickswipeview_p.h>
-#include <QtQuickExtras/private/qquicktumbler_p.h>
+AbstractDial {
+    id: control
 
-QT_BEGIN_NAMESPACE
+    implicitWidth: 100
+    implicitHeight: 100
 
-class QtQuickExtras2Plugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+    Accessible.pressed: pressed
+    Accessible.role: Accessible.Dial
 
-public:
-    void registerTypes(const char *uri);
-};
+    //! [background]
+    background: Rectangle {
+        color: control.Theme.backgroundColor
+        radius: width / 2
 
-void QtQuickExtras2Plugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickDial>(uri, 2, 0, "AbstractDial");
-    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "AbstractDrawer");
-    qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "AbstractSwipeView");
-    qmlRegisterType<QQuickTumbler>(uri, 2, 0, "AbstractTumbler");
-    qmlRegisterType<QQuickTumblerAttached>();
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+    }
+    //! [background]
+
+    //! [handle]
+    handle: Rectangle {
+        id: handleItem
+
+        x: background.width / 2 - handle.width / 2
+        y: background.height / 2 - handle.height / 2
+        transform: [
+            Translate {
+                y: -background.height * 0.35
+            },
+            Rotation {
+                angle: control.angle
+                origin.x: handle.width / 2
+                origin.y: handle.height / 2
+            }
+        ]
+        implicitWidth: 20
+        implicitHeight: 20
+        radius: width / 2
+        border.width: control.activeFocus ? 2 : 1
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        color: control.Theme.baseColor
+    }
+    //! [handle]
 }
-
-QT_END_NAMESPACE
-
-#include "qtquickextras2plugin.moc"

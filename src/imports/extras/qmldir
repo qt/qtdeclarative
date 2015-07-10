@@ -1,6 +1,7 @@
 module QtQuick.Extras
 plugin qtquickextras2plugin
 classname QtQuickExtras2Plugin
+Dial 2.0 Dial.qml
 Drawer 2.0 Drawer.qml
 SwipeView 2.0 SwipeView.qml
 Tumbler 2.0 Tumbler.qml
