@@ -330,14 +330,14 @@ private:
         refsToInclude.append(value);
     }
 
-    void cacheObjectRef(QV4::Object *obj, int ref)
+    void cacheObjectRef(QV4::Value obj, int ref)
     {
-        objectRefs.insert(obj, ref);
+        objectRefs.insert(obj.val, ref);
     }
 
-    int cachedObjectRef(QV4::Object *obj) const
+    int cachedObjectRef(QV4::Value obj) const
     {
-        return objectRefs.value(obj, -1);
+        return objectRefs.value(obj.val, -1);
     }
 
 private:
@@ -347,7 +347,7 @@ private:
     QJsonArray *destination;
     QSet<int> usedRefs;
     QHash<int, QSet<int> > refsByHandle;
-    QHash<QV4::Object *, int> objectRefs;
+    QHash<quint64, int> objectRefs;
 };
 
 class QV4DebugServicePrivate : public QQmlConfigurableDebugServicePrivate
