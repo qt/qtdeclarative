@@ -179,6 +179,7 @@ private slots:
     void creationContext();
     void snapToItem_data();
     void snapToItem();
+    void snapOneItemResize_QTBUG_43555();
     void snapOneItem_data();
     void snapOneItem();
 
@@ -5201,6 +5202,37 @@ void tst_QQuickListView::snapToItem()
         QCOMPARE(listview->contentX(), startExtent);
 
     releaseView(window);
+}
+
+void tst_QQuickListView::snapOneItemResize_QTBUG_43555()
+{
+    QQuickView *window = createView();
+    window->resize(QSize(100, 320));
+    window->setResizeMode(QQuickView::SizeRootObjectToView);
+    QQuickViewTestUtil::moveMouseAway(window);
+
+    window->setSource(testFileUrl("snapOneItemResize.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listview != 0);
+
+    QSignalSpy currentIndexSpy(listview, SIGNAL(currentIndexChanged()));
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(listview->currentIndex(), 5);
+    currentIndexSpy.clear();
+
+    window->resize(QSize(400, 320));
+
+    QTRY_COMPARE(int(listview->width()), 400);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QTRY_COMPARE(listview->currentIndex(), 5);
+    QCOMPARE(currentIndexSpy.count(), 0);
+
+    delete window;
 }
 
 void tst_QQuickListView::qAbstractItemModel_package_items()
