@@ -42,8 +42,6 @@ Q_GLOBAL_STATIC(QQmlEngineControlService, qmlEngineControlService)
 QQmlEngineControlService::QQmlEngineControlService() :
     QQmlDebugService(QStringLiteral("EngineControl"), 1)
 {
-    QMutexLocker lock(&dataMutex);
-    registerService();
 }
 
 QQmlEngineControlService *QQmlEngineControlService::instance()

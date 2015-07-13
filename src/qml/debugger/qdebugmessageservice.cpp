@@ -67,7 +67,6 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
 
     // don't execute stateChanged() in parallel
     QMutexLocker lock(&d->initMutex);
-    registerService();
     if (state() == Enabled) {
         d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
         d->prevState = Enabled;

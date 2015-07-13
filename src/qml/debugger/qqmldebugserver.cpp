@@ -701,6 +701,9 @@ QQmlDebugService *QQmlDebugServerImpl::service(const QString &name) const
 
 void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
 {
+    // to be executed outside of debugger thread
+    Q_ASSERT(QThread::currentThread() != m_thread);
+
     QWriteLocker lock(&m_pluginsLock);
 
     foreach (QQmlDebugService *service, m_plugins)
@@ -714,6 +717,9 @@ void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
 
 void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
 {
+    // to be executed outside of debugger thread
+    Q_ASSERT(QThread::currentThread() != m_thread);
+
     QWriteLocker lock(&m_pluginsLock);
 
     foreach (QQmlDebugService *service, m_plugins)
@@ -727,8 +733,8 @@ void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
 
 bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
 {
-    // to be executed outside of debugger thread
-    Q_ASSERT(!m_thread || QThread::currentThread() != thread());
+    // to be executed before thread starts
+    Q_ASSERT(!m_thread);
 
     connect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
             this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
@@ -750,8 +756,8 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
 
 bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
 {
-    // to be executed outside of debugger thread
-    Q_ASSERT(!m_thread || QThread::currentThread() != thread());
+    // to be executed after thread ends
+    Q_ASSERT(!m_thread);
 
     QWriteLocker lock(&m_pluginsLock);
     QQmlDebugService::State newState = QQmlDebugService::NotConnected;
@@ -816,9 +822,6 @@ void QQmlDebugServerImpl::wakeEngine(QQmlEngine *engine)
 
 bool QQmlDebugServerImpl::EngineCondition::waitForServices(QReadWriteLock *locked, int num)
 {
-    // to be executed outside of debugger thread
-    Q_ASSERT(QThread::currentThread() != QQmlDebugServer::instance()->thread());
-
     Q_ASSERT_X(numServices == 0, Q_FUNC_INFO, "Request to wait again before previous wait finished");
     numServices = num;
     return numServices > 0 ? condition->wait(locked) : true;

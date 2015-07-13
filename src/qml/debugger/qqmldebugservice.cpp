@@ -51,12 +51,13 @@ QQmlDebugServicePrivate::QQmlDebugServicePrivate(const QString &name, float vers
 QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QQmlDebugServicePrivate(name, version)), parent)
 {
-    QQmlDebugConnector::instance(); // create it when it isn't there yet.
+    registerService();
 }
 
 QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
+    registerService();
 }
 
 /**
@@ -81,8 +82,16 @@ QQmlDebugService::State QQmlDebugService::registerService()
 
 QQmlDebugService::~QQmlDebugService()
 {
-    if (QQmlDebugConnector *inst = QQmlDebugConnector::instance())
-        inst->removeService(this);
+    Q_D(QQmlDebugService);
+    QQmlDebugConnector *server = QQmlDebugConnector::instance();
+
+    if (!server)
+        return;
+
+    if (server->service(d->name) != this)
+        qWarning() << "QQmlDebugService: Plugin" << d->name << "is not registered.";
+    else
+        server->removeService(this);
 }
 
 const QString &QQmlDebugService::name() const

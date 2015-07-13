@@ -67,8 +67,6 @@ QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
 {
     QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
                      this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
-
-    registerService();
 }
 
 QQmlEngineDebugService::~QQmlEngineDebugService()

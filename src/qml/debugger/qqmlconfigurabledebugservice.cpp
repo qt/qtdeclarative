@@ -41,7 +41,6 @@ QQmlConfigurableDebugService::QQmlConfigurableDebugService(const QString &name, 
                                                            QObject *parent) :
     QQmlDebugService((*new QQmlConfigurableDebugServicePrivate(name, version)), parent)
 {
-    registerService();
     init();
 }
 
@@ -49,7 +48,6 @@ QQmlConfigurableDebugService::QQmlConfigurableDebugService(QQmlDebugServicePriva
                                                            QObject *parent) :
     QQmlDebugService(dd, parent)
 {
-    registerService();
     init();
 }
 

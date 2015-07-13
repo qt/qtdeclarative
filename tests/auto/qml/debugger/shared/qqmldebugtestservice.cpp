@@ -37,7 +37,6 @@
 QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObject *parent)
     : QQmlDebugService(s, version, parent)
 {
-    registerService();
 }
 
 void QQmlDebugTestService::messageReceived(const QByteArray &ba)

@@ -51,11 +51,6 @@ QQmlProfilerService::QQmlProfilerService()
     : QQmlConfigurableDebugService(QStringLiteral("CanvasFrameRate"), 1)
 {
     m_timer.start();
-
-    QMutexLocker lock(configMutex());
-    // If there is no debug server it doesn't matter as we'll never get enabled anyway.
-    if (QQmlDebugConnector::instance() != 0)
-        moveToThread(QQmlDebugConnector::instance()->thread());
 }
 
 QQmlProfilerService::~QQmlProfilerService()

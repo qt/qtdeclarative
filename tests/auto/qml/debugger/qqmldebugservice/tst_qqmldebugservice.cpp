@@ -44,6 +44,7 @@
 #include "debugutil_p.h"
 #include "qqmldebugclient.h"
 #include "qqmldebugtestservice.h"
+#include <private/qqmldebugconnector_p.h>
 
 #define PORT 3769
 #define STR_PORT "3769"
@@ -53,7 +54,7 @@ class tst_QQmlDebugService : public QQmlDataTest
     Q_OBJECT
 private:
     QQmlDebugConnection *m_conn;
-
+    QQmlDebugTestService *m_service;
 
 private slots:
 
@@ -72,8 +73,15 @@ private slots:
 void tst_QQmlDebugService::initTestCase()
 {
     QQmlDataTest::initTestCase();
+    QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QML debugger: Cannot set plugin key after loading the plugin.");
+    m_service = new QQmlDebugTestService("tst_QQmlDebugService", 2);
+
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
+    QQmlDebuggingEnabler::startTcpDebugServer(PORT);
+
     new QQmlEngine(this);
 
     m_conn = new QQmlDebugConnection(this);
@@ -125,67 +133,64 @@ void tst_QQmlDebugService::checkPortRange()
 
 void tst_QQmlDebugService::name()
 {
-    QString name = "tst_QQmlDebugService::name()";
-
-    QQmlDebugTestService service(name, 1);
-    QCOMPARE(service.name(), name);
+    QCOMPARE(m_service->name(), QLatin1String("tst_QQmlDebugService"));
 }
 
 void tst_QQmlDebugService::version()
 {
-    QString name = "tst_QQmlDebugService::name()";
-
-    QQmlDebugTestService service(name, 2);
-    QCOMPARE(service.version(), 2.0f);
+    QCOMPARE(m_service->version(), 2.0f);
 }
 
 void tst_QQmlDebugService::state()
 {
-    QQmlDebugTestService service("tst_QQmlDebugService::state()");
-    QCOMPARE(service.state(), QQmlDebugService::Unavailable);
+    QCOMPARE(m_service->state(), QQmlDebugService::Unavailable);
 
     {
-        QQmlDebugTestClient client("tst_QQmlDebugService::state()", m_conn);
+        QQmlDebugTestClient client("tst_QQmlDebugService", m_conn);
         QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
-        QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+        QTRY_COMPARE(m_service->state(), QQmlDebugService::Enabled);
     }
 
+    QTRY_COMPARE(m_service->state(), QQmlDebugService::Unavailable);
 
-    QTRY_COMPARE(service.state(), QQmlDebugService::Unavailable);
-
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::state()\"");
-    QQmlDebugTestService duplicate("tst_QQmlDebugService::state()");
+    // We can do this because it will never addService()
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService\"");
+    QQmlDebugTestService duplicate("tst_QQmlDebugService");
     QCOMPARE(duplicate.state(), QQmlDebugService::NotConnected);
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QQmlDebugService: Plugin \"tst_QQmlDebugService\" is not registered.");
 }
 
 void tst_QQmlDebugService::sendMessage()
 {
-    QQmlDebugTestService service("tst_QQmlDebugService::sendMessage()");
-    QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage()", m_conn);
+    QQmlDebugTestClient client("tst_QQmlDebugService", m_conn);
 
     QByteArray msg = "hello!";
 
     QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
-    QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+    QTRY_COMPARE(m_service->state(), QQmlDebugService::Enabled);
 
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
     QCOMPARE(resp, msg);
 
-    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService::sendMessage()\"");
-    QQmlDebugTestService duplicate("tst_QQmlDebugService::sendMessage()");
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService\"");
+    QQmlDebugTestService duplicate("tst_QQmlDebugService");
     duplicate.sendMessage("msg");
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QQmlDebugService: Plugin \"tst_QQmlDebugService\" is not registered.");
 }
 
 void tst_QQmlDebugService::checkSupportForDataStreamVersion()
 {
-    QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
-    QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
+    QQmlDebugTestClient client("tst_QQmlDebugService", m_conn);
 
     QByteArray msg = "hello!";
 
     QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
-    QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+    QTRY_COMPARE(m_service->state(), QQmlDebugService::Enabled);
 
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
@@ -243,13 +248,12 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     }
     QVERIFY(m_conn->isConnected());
 
-    QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
-    QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
+    QQmlDebugTestClient client("tst_QQmlDebugService", m_conn);
 
     QByteArray msg = "hello!";
 
     QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
-    QTRY_COMPARE(service.state(), QQmlDebugService::Enabled);
+    QTRY_COMPARE(m_service->state(), QQmlDebugService::Enabled);
 
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
@@ -257,20 +261,6 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     QCOMPARE(m_conn->dataStreamVersion(), int(QDataStream::Qt_4_7));
 }
 
-
-int main(int argc, char *argv[])
-{
-    int _argc = argc + 1;
-    char **_argv = new char*[_argc];
-    for (int i = 0; i < argc; ++i)
-        _argv[i] = argv[i];
-    char arg[] = "-qmljsdebugger=port:" STR_PORT ",host:127.0.0.1";
-    _argv[_argc - 1] = arg;
-
-    QGuiApplication app(_argc, _argv);
-    tst_QQmlDebugService tc;
-    return QTest::qExec(&tc, _argc, _argv);
-    delete _argv;
-}
+QTEST_MAIN(tst_QQmlDebugService)
 
 #include "tst_qqmldebugservice.moc"

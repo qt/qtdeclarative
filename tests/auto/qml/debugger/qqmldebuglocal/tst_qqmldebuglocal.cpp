@@ -42,6 +42,8 @@
 #include "debugutil_p.h"
 #include "qqmldebugtestservice.h"
 
+#include <private/qqmldebugconnector_p.h>
+
 QString fileName;
 
 class tst_QQmlDebugLocal : public QObject
@@ -50,6 +52,7 @@ class tst_QQmlDebugLocal : public QObject
 
 private:
     QQmlDebugConnection *m_conn;
+    QQmlDebugTestService *m_service;
 
     bool connect();
 
@@ -67,16 +70,23 @@ private slots:
 
 void tst_QQmlDebugLocal::initTestCase()
 {
+    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(0));
+    QQmlDebugConnector::setPluginKey("QQmlDebugServer");
+    QTest::ignoreMessage(QtWarningMsg,
+                         "QML debugger: Cannot set plugin key after loading the plugin.");
+    m_service = new QQmlDebugTestService("tst_QQmlDebugLocal::handshake()");
+
     const QString waitingMsg = QString("QML Debugger: Connecting to socket %1...").arg(fileName);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
 
     m_conn = new QQmlDebugConnection(this);
     m_conn->startLocalServer(fileName);
 
+    QQmlDebuggingEnabler::connectToLocalDebugger(fileName);
+
     new QQmlEngine(this);
 
     QQmlDebugTestClient client("tst_QQmlDebugLocal::handshake()", m_conn);
-    QQmlDebugTestService service("tst_QQmlDebugLocal::handshake()");
 
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
@@ -109,14 +119,6 @@ void tst_QQmlDebugLocal::state()
     QQmlDebugTestClient client("tst_QQmlDebugLocal::state()", m_conn);
     QCOMPARE(client.state(), QQmlDebugClient::Unavailable);
 
-    {
-        QQmlDebugTestService service("tst_QQmlDebugLocal::state()", 2);
-        QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
-        QCOMPARE(client.serviceVersion(), 2.0f);
-    }
-
-    QTRY_COMPARE(client.state(), QQmlDebugClient::Unavailable);
-
     // duplicate plugin name
     QTest::ignoreMessage(QtWarningMsg, "QQmlDebugClient: Conflicting plugin name \"tst_QQmlDebugLocal::state()\"");
     QQmlDebugClient client2("tst_QQmlDebugLocal::state()", m_conn);
@@ -128,8 +130,7 @@ void tst_QQmlDebugLocal::state()
 
 void tst_QQmlDebugLocal::sendMessage()
 {
-    QQmlDebugTestService service("tst_QQmlDebugLocal::sendMessage()");
-    QQmlDebugTestClient client("tst_QQmlDebugLocal::sendMessage()", m_conn);
+    QQmlDebugTestClient client("tst_QQmlDebugLocal::handshake()", m_conn);
 
     QByteArray msg = "hello!";
 
@@ -140,21 +141,6 @@ void tst_QQmlDebugLocal::sendMessage()
     QCOMPARE(resp, msg);
 }
 
-int main(int argc, char *argv[])
-{
-    fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(0));
-
-    int _argc = argc + 1;
-    char **_argv = new char*[_argc];
-    for (int i = 0; i < argc; ++i)
-        _argv[i] = argv[i];
-    char *arg = strdup((QString::fromLatin1("-qmljsdebugger=file:") + fileName).toLatin1().data());
-    _argv[_argc - 1] = arg;
-
-    QGuiApplication app(_argc, _argv);
-    tst_QQmlDebugLocal tc;
-    return QTest::qExec(&tc, _argc, _argv);
-    delete _argv;
-}
+QTEST_MAIN(tst_QQmlDebugLocal)
 
 #include "tst_qqmldebuglocal.moc"

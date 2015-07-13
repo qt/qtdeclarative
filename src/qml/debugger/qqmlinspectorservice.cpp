@@ -54,7 +54,6 @@ QQmlInspectorService::QQmlInspectorService()
     : QQmlDebugService(QStringLiteral("QmlInspector"), 1)
     , m_currentInspectorPlugin(0)
 {
-    registerService();
 }
 
 QQmlInspectorService *QQmlInspectorService::instance()
