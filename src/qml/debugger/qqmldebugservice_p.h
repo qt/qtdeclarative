@@ -36,6 +36,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qdatastream.h>
+#include <QtCore/qhash.h>
 
 #include <private/qtqmlglobal_p.h>
 
@@ -73,12 +74,9 @@ public:
     void sendMessage(const QByteArray &);
     void sendMessages(const QList<QByteArray> &);
 
+    static const QHash<int, QObject *> &objectsForIds();
     static int idForObject(QObject *);
-    static QObject *objectForId(int);
-    static QList<QObject*> objectForLocationInfo(const QString &filename,
-                                          int lineNumber, int columnNumber);
-    static void removeInvalidObjectsFromHash();
-    static void clearObjectsFromHash();
+    static QObject *objectForId(int id) { return objectsForIds().value(id); }
 
     static QString objectToString(QObject *obj);
 

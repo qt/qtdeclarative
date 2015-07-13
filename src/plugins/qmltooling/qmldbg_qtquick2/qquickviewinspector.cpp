@@ -315,8 +315,6 @@ void QQuickViewInspector::reloadQmlFile(const QHash<QString, QByteArray> &change
     // Reset the selection since we are reloading the main qml
     setSelectedItems(QList<QQuickItem *>());
 
-    QQmlDebugService::clearObjectsFromHash();
-
     QHash<QUrl, QByteArray> debugCache;
 
     foreach (const QString &str, changesHash.keys())

@@ -104,26 +104,31 @@ QQmlDebugService::State QQmlDebugService::state() const
 }
 
 namespace {
-
-struct ObjectReference
+class ObjectReferenceHash : public QObject
 {
-    QPointer<QObject> object;
-    int id;
-};
-
-struct ObjectReferenceHash
-{
+    Q_OBJECT
+public:
     ObjectReferenceHash() : nextId(0) {}
 
-    QHash<QObject *, ObjectReference> objects;
+    QHash<QObject *, int> objects;
     QHash<int, QObject *> ids;
 
     int nextId;
-};
 
+private slots:
+    void remove(QObject *obj);
+};
 }
 Q_GLOBAL_STATIC(ObjectReferenceHash, objectReferenceHash)
 
+void ObjectReferenceHash::remove(QObject *obj)
+{
+    QHash<QObject *, int>::Iterator iter = objects.find(obj);
+    if (iter != objects.end()) {
+        ids.remove(iter.value());
+        objects.erase(iter);
+    }
+}
 
 /*!
     Returns a unique id for \a object.  Calling this method multiple times
@@ -135,112 +140,23 @@ int QQmlDebugService::idForObject(QObject *object)
         return -1;
 
     ObjectReferenceHash *hash = objectReferenceHash();
-    QHash<QObject *, ObjectReference>::Iterator iter =
-            hash->objects.find(object);
+    QHash<QObject *, int>::Iterator iter = hash->objects.find(object);
 
     if (iter == hash->objects.end()) {
         int id = hash->nextId++;
-
         hash->ids.insert(id, object);
-        iter = hash->objects.insert(object, ObjectReference());
-        iter->object = object;
-        iter->id = id;
-    } else if (iter->object != object) {
-        int id = hash->nextId++;
-
-        hash->ids.remove(iter->id);
-
-        hash->ids.insert(id, object);
-        iter->object = object;
-        iter->id = id;
+        iter = hash->objects.insert(object, id);
+        connect(object, SIGNAL(destroyed(QObject*)), hash, SLOT(remove(QObject*)));
     }
-    return iter->id;
+    return iter.value();
 }
 
 /*!
-    Returns the object for unique \a id.  If the object has not previously been
-    assigned an id, through idForObject(), then 0 is returned.  If the object
-    has been destroyed, 0 is returned.
+    Returns the mapping of objects to unique \a ids, created through calls to idForObject().
 */
-QObject *QQmlDebugService::objectForId(int id)
+const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
 {
-    ObjectReferenceHash *hash = objectReferenceHash();
-
-    QHash<int, QObject *>::Iterator iter = hash->ids.find(id);
-    if (iter == hash->ids.end())
-        return 0;
-
-
-    QHash<QObject *, ObjectReference>::Iterator objIter =
-            hash->objects.find(*iter);
-    Q_ASSERT(objIter != hash->objects.end());
-
-    if (objIter->object == 0) {
-        hash->ids.erase(iter);
-        hash->objects.erase(objIter);
-        // run a loop to remove other invalid objects
-        removeInvalidObjectsFromHash();
-        return 0;
-    } else {
-        return *iter;
-    }
-}
-
-/*!
-    Returns a list of objects matching the given filename, line and column.
-*/
-QList<QObject*> QQmlDebugService::objectForLocationInfo(const QString &filename,
-                                                 int lineNumber, int columnNumber)
-{
-    ObjectReferenceHash *hash = objectReferenceHash();
-    QList<QObject*> objects;
-    QHash<int, QObject *>::Iterator iter = hash->ids.begin();
-    while (iter != hash->ids.end()) {
-        QHash<QObject *, ObjectReference>::Iterator objIter =
-                hash->objects.find(*iter);
-        Q_ASSERT(objIter != hash->objects.end());
-
-        if (objIter->object == 0) {
-            iter = hash->ids.erase(iter);
-            hash->objects.erase(objIter);
-        } else {
-            QQmlData *ddata = QQmlData::get(iter.value());
-            if (ddata && ddata->outerContext) {
-                if (QFileInfo(ddata->outerContext->urlString()).fileName() == filename &&
-                    ddata->lineNumber == lineNumber &&
-                    ddata->columnNumber >= columnNumber) {
-                    objects << *iter;
-                }
-            }
-            ++iter;
-        }
-    }
-    return objects;
-}
-
-void QQmlDebugService::removeInvalidObjectsFromHash()
-{
-    ObjectReferenceHash *hash = objectReferenceHash();
-    QHash<int, QObject *>::Iterator iter = hash->ids.begin();
-    while (iter != hash->ids.end()) {
-        QHash<QObject *, ObjectReference>::Iterator objIter =
-                hash->objects.find(*iter);
-        Q_ASSERT(objIter != hash->objects.end());
-
-        if (objIter->object == 0) {
-            iter = hash->ids.erase(iter);
-            hash->objects.erase(objIter);
-        } else {
-            ++iter;
-        }
-    }
-}
-
-void QQmlDebugService::clearObjectsFromHash()
-{
-    ObjectReferenceHash *hash = objectReferenceHash();
-    hash->ids.clear();
-    hash->objects.clear();
+    return objectReferenceHash()->ids;
 }
 
 bool QQmlDebugService::isDebuggingEnabled()
@@ -344,3 +260,5 @@ QQmlDebugStream::QQmlDebugStream(const QByteArray &ba)
 }
 
 QT_END_NAMESPACE
+
+#include "qqmldebugservice.moc"

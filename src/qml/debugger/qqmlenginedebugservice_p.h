@@ -116,6 +116,8 @@ private:
     bool resetBinding(int objectId, const QString &propertyName);
     bool setMethodBody(int objectId, const QString &method, const QString &body);
     void storeObjectIds(QObject *co);
+    QList<QObject *> objectForLocationInfo(const QString &filename, int lineNumber,
+                                           int columnNumber);
 
     QList<QQmlEngine *> m_engines;
     QQmlWatcher *m_watch;

@@ -260,7 +260,6 @@ void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
         return;
 
     QPair<int, int> ids = m_hashObjectsTobeDestroyed.take(object);
-    QQmlDebugService::removeInvalidObjectsFromHash();
 
     QByteArray response;
 

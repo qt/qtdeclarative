@@ -48,6 +48,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qfileinfo.h>
 #include <private/qmetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -427,6 +428,27 @@ void QQmlEngineDebugService::messageReceived(const QByteArray &message)
     QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
 }
 
+/*!
+    Returns a list of objects matching the given filename, line and column.
+*/
+QList<QObject*> QQmlEngineDebugService::objectForLocationInfo(const QString &filename,
+                                                              int lineNumber, int columnNumber)
+{
+    QList<QObject *> objects;
+    const QHash<int, QObject *> &hash = objectsForIds();
+    for (QHash<int, QObject *>::ConstIterator i = hash.constBegin(); i != hash.constEnd(); ++i) {
+        QQmlData *ddata = QQmlData::get(i.value());
+        if (ddata && ddata->outerContext) {
+            if (QFileInfo(ddata->outerContext->urlString()).fileName() == filename &&
+                ddata->lineNumber == lineNumber &&
+                ddata->columnNumber >= columnNumber) {
+                objects << i.value();
+            }
+        }
+    }
+    return objects;
+}
+
 void QQmlEngineDebugService::processMessage(const QByteArray &message)
 {
     QQmlDebugStream ds(message);
@@ -500,8 +522,7 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
 
         ds >> file >> lineNumber >> columnNumber >> recurse >> dumpProperties;
 
-        QList<QObject*> objects = QQmlDebugService::objectForLocationInfo(
-                                file, lineNumber, columnNumber);
+        QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
            << objects.count();
