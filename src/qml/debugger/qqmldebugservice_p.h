@@ -70,6 +70,16 @@ public:
 
     enum State { NotConnected, Unavailable, Enabled };
     State state() const;
+    void setState(State newState);
+
+    virtual void stateAboutToBeChanged(State);
+    virtual void stateChanged(State);
+    virtual void messageReceived(const QByteArray &);
+
+    virtual void engineAboutToBeAdded(QQmlEngine *);
+    virtual void engineAboutToBeRemoved(QQmlEngine *);
+    virtual void engineAdded(QQmlEngine *);
+    virtual void engineRemoved(QQmlEngine *);
 
     void sendMessage(const QByteArray &);
     void sendMessages(const QList<QByteArray> &);
@@ -86,22 +96,9 @@ protected:
 
     State registerService();
 
-    virtual void stateAboutToBeChanged(State);
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
-
-    virtual void engineAboutToBeAdded(QQmlEngine *);
-    virtual void engineAboutToBeRemoved(QQmlEngine *);
-    virtual void engineAdded(QQmlEngine *);
-    virtual void engineRemoved(QQmlEngine *);
-
 signals:
     void attachedToEngine(QQmlEngine *);
     void detachedFromEngine(QQmlEngine *);
-
-private:
-    friend class QQmlDebugServer;
-    friend class QQmlDebugServerPrivate;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugStream : public QDataStream

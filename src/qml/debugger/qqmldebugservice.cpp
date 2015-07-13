@@ -103,6 +103,12 @@ QQmlDebugService::State QQmlDebugService::state() const
     return d->state;
 }
 
+void QQmlDebugService::setState(QQmlDebugService::State newState)
+{
+    Q_D(QQmlDebugService);
+    d->state = newState;
+}
+
 namespace {
 class ObjectReferenceHash : public QObject
 {

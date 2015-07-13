@@ -608,9 +608,9 @@ void QQmlDebugServerPrivate::_q_changeServiceState(const QString &serviceName,
         service = plugins.value(serviceName);
     }
 
-    if (service && (service->d_func()->state != newState)) {
+    if (service && service->state() != newState) {
         service->stateAboutToBeChanged(newState);
-        service->d_func()->state = newState;
+        service->setState(newState);
         service->stateChanged(newState);
     }
 
@@ -707,7 +707,7 @@ bool QQmlDebugServer::addService(QQmlDebugService *service)
     QQmlDebugService::State newState = QQmlDebugService::Unavailable;
     if (d->clientPlugins.contains(service->name()))
         newState = QQmlDebugService::Enabled;
-    service->d_func()->state = newState;
+    service->setState(newState);
     return true;
 }
 
