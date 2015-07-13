@@ -94,7 +94,7 @@ QQmlDebugService::~QQmlDebugService()
         inst->removeService(this);
 }
 
-QString QQmlDebugService::name() const
+const QString &QQmlDebugService::name() const
 {
     Q_D(const QQmlDebugService);
     return d->name;

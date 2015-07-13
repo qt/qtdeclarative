@@ -64,7 +64,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
 public:
     ~QQmlDebugService();
 
-    QString name() const;
+    const QString &name() const;
     float version() const;
 
     enum State { NotConnected, Unavailable, Enabled };
