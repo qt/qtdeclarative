@@ -91,7 +91,6 @@ Q_GLOBAL_STATIC(QQmlDebugServerInstanceWrapper, debugServerInstance)
   */
 
 const int protocolVersion = 1;
-int QQmlDebugServer::s_dataStreamVersion = QDataStream::Qt_4_7;
 
 // print detailed information about loading of plugins
 #ifndef QT_NO_LIBRARY
@@ -530,9 +529,9 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
 
             //Get the supported QDataStream version
             if (!in.atEnd()) {
-                in >> s_dataStreamVersion;
-                if (s_dataStreamVersion > QDataStream().version())
-                    s_dataStreamVersion = QDataStream().version();
+                in >> QQmlDebugStream::s_dataStreamVersion;
+                if (QQmlDebugStream::s_dataStreamVersion > QDataStream().version())
+                    QQmlDebugStream::s_dataStreamVersion = QDataStream().version();
             }
 
             // Send the hello answer immediately, since it needs to arrive before
@@ -552,7 +551,7 @@ void QQmlDebugServer::receiveMessage(const QByteArray &message)
             }
 
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
-                << pluginNames << pluginVersions << s_dataStreamVersion;
+                << pluginNames << pluginVersions << QQmlDebugStream::s_dataStreamVersion;
 
             d->connection->send(QList<QByteArray>() << helloAnswer);
 

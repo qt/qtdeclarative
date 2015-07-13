@@ -111,6 +111,8 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlDebugStream : public QDataStream
 {
 public:
+    static int s_dataStreamVersion;
+
     QQmlDebugStream();
     explicit QQmlDebugStream(QIODevice *d);
     QQmlDebugStream(QByteArray *ba, QIODevice::OpenMode flags);

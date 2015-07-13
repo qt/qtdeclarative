@@ -93,9 +93,6 @@ private:
                                                         QQmlDebugService::State state))
     Q_PRIVATE_SLOT(d_func(), void _q_sendMessages(QList<QByteArray>))
     Q_PRIVATE_SLOT(d_func(), void _q_removeThread())
-
-public:
-    static int s_dataStreamVersion;
 };
 
 QT_END_NAMESPACE
