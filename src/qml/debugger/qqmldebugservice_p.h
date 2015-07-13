@@ -88,8 +88,6 @@ public:
     static int idForObject(QObject *);
     static QObject *objectForId(int id) { return objectsForIds().value(id); }
 
-    static QString objectToString(QObject *obj);
-
 protected:
     explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
     QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent = 0);

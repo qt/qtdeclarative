@@ -66,7 +66,6 @@ private slots:
     void sendMessage();
     void idForObject();
     void objectForId();
-    void objectToString();
     void checkSupportForDataStreamVersion();
     void checkSupportForOldDataStreamVersion();
 };
@@ -228,18 +227,6 @@ void tst_QQmlDebugService::objectForId()
 
     delete obj;
     QCOMPARE(QQmlDebugService::objectForId(id), static_cast<QObject*>(0));
-}
-
-void tst_QQmlDebugService::objectToString()
-{
-    QCOMPARE(QQmlDebugService::objectToString(0), QString("NULL"));
-
-    QObject *obj = new QObject;
-    QCOMPARE(QQmlDebugService::objectToString(obj), QString("QObject: <unnamed>"));
-
-    obj->setObjectName("Hello");
-    QCOMPARE(QQmlDebugService::objectToString(obj), QString("QObject: Hello"));
-    delete obj;
 }
 
 void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()

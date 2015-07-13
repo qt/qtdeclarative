@@ -165,21 +165,6 @@ const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
     return objectReferenceHash()->ids;
 }
 
-QString QQmlDebugService::objectToString(QObject *obj)
-{
-    if(!obj)
-        return QStringLiteral("NULL");
-
-    QString objectName = obj->objectName();
-    if(objectName.isEmpty())
-        objectName = QStringLiteral("<unnamed>");
-
-    QString rv = QString::fromUtf8(obj->metaObject()->className()) +
-            QLatin1String(": ") + objectName;
-
-    return rv;
-}
-
 void QQmlDebugService::sendMessage(const QByteArray &message)
 {
     sendMessages(QList<QByteArray>() << message);
