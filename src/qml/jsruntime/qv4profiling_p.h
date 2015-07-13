@@ -155,14 +155,14 @@ public slots:
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
-    void dataReady(const QList<QV4::Profiling::FunctionCallProperties> &,
-                   const QList<QV4::Profiling::MemoryAllocationProperties> &);
+    void dataReady(const QVector<QV4::Profiling::FunctionCallProperties> &,
+                   const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
     QV4::ExecutionEngine *m_engine;
     QElapsedTimer m_timer;
     QVector<FunctionCall> m_data;
-    QList<MemoryAllocationProperties> m_memory_data;
+    QVector<MemoryAllocationProperties> m_memory_data;
 
     friend class FunctionCallProfiler;
 };
@@ -202,7 +202,7 @@ Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
-Q_DECLARE_METATYPE(QList<QV4::Profiling::FunctionCallProperties>)
-Q_DECLARE_METATYPE(QList<QV4::Profiling::MemoryAllocationProperties>)
+Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
+Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
 
 #endif // QV4PROFILING_H

@@ -56,10 +56,10 @@ FunctionCallProperties FunctionCall::resolve() const
 
 Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(engine)
 {
-    static int metatype = qRegisterMetaType<QList<QV4::Profiling::FunctionCallProperties> >();
-    static int metatype2 = qRegisterMetaType<QList<QV4::Profiling::MemoryAllocationProperties> >();
-    Q_UNUSED(metatype);
-    Q_UNUSED(metatype2);
+    static int meta = qRegisterMetaType<QVector<QV4::Profiling::FunctionCallProperties> >();
+    static int meta2 = qRegisterMetaType<QVector<QV4::Profiling::MemoryAllocationProperties> >();
+    Q_UNUSED(meta);
+    Q_UNUSED(meta2);
     m_timer.start();
 }
 
@@ -76,7 +76,7 @@ void Profiler::stopProfiling()
 
 void Profiler::reportData()
 {
-    QList<FunctionCallProperties> resolved;
+    QVector<FunctionCallProperties> resolved;
     resolved.reserve(m_data.size());
     FunctionCallComparator comp;
     foreach (const FunctionCall &call, m_data) {

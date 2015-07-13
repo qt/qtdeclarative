@@ -51,10 +51,10 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QList<QV4::Profiling::FunctionCallProperties>,
-                                               QList<QV4::Profiling::MemoryAllocationProperties>)),
-            this, SLOT(receiveData(QList<QV4::Profiling::FunctionCallProperties>,
-                                   QList<QV4::Profiling::MemoryAllocationProperties>)));
+    connect(engine->profiler, SIGNAL(dataReady(QVector<QV4::Profiling::FunctionCallProperties>,
+                                               QVector<QV4::Profiling::MemoryAllocationProperties>)),
+            this, SLOT(receiveData(QVector<QV4::Profiling::FunctionCallProperties>,
+                                   QVector<QV4::Profiling::MemoryAllocationProperties>)));
 }
 
 qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages)
@@ -113,8 +113,9 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
     }
 }
 
-void QV4ProfilerAdapter::receiveData(const QList<QV4::Profiling::FunctionCallProperties> &new_data,
-        const QList<QV4::Profiling::MemoryAllocationProperties> &new_memory_data)
+void QV4ProfilerAdapter::receiveData(
+        const QVector<QV4::Profiling::FunctionCallProperties> &new_data,
+        const QVector<QV4::Profiling::MemoryAllocationProperties> &new_memory_data)
 {
     data = new_data;
     memory_data = new_memory_data;

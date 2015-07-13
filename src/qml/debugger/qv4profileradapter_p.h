@@ -63,12 +63,12 @@ public:
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
 public slots:
-    void receiveData(const QList<QV4::Profiling::FunctionCallProperties> &,
-                     const QList<QV4::Profiling::MemoryAllocationProperties> &);
+    void receiveData(const QVector<QV4::Profiling::FunctionCallProperties> &,
+                     const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
-    QList<QV4::Profiling::FunctionCallProperties> data;
-    QList<QV4::Profiling::MemoryAllocationProperties> memory_data;
+    QVector<QV4::Profiling::FunctionCallProperties> data;
+    QVector<QV4::Profiling::MemoryAllocationProperties> memory_data;
     QStack<qint64> stack;
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
 };
