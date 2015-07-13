@@ -159,23 +159,6 @@ const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
     return objectReferenceHash()->ids;
 }
 
-bool QQmlDebugService::isDebuggingEnabled()
-{
-    return QQmlDebugServer::instance() != 0;
-}
-
-bool QQmlDebugService::hasDebuggingClient()
-{
-    return QQmlDebugServer::instance() != 0
-            && QQmlDebugServer::instance()->hasDebuggingClient();
-}
-
-bool QQmlDebugService::blockingMode()
-{
-    return QQmlDebugServer::instance() != 0
-            && QQmlDebugServer::instance()->blockingMode();
-}
-
 QString QQmlDebugService::objectToString(QObject *obj)
 {
     if(!obj)

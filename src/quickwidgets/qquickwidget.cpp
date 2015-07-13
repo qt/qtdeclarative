@@ -39,6 +39,7 @@
 #include "private/qquickitemchangelistener_p.h"
 #include "private/qquickrendercontrol_p.h"
 
+#include <private/qqmldebugserver_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmlinspectorservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
@@ -95,7 +96,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
-    if (QQmlDebugService::isDebuggingEnabled())
+    if (QQmlDebugServer::instance())
         QQmlInspectorService::instance()->addView(q);
 
 #ifndef QT_NO_DRAGANDDROP
@@ -147,7 +148,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
-    if (QQmlDebugService::isDebuggingEnabled())
+    if (QQmlDebugServer::instance())
         QQmlInspectorService::instance()->removeView(q_func());
 
     invalidateRenderControl();

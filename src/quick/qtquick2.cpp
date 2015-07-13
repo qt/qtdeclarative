@@ -39,6 +39,7 @@
 #include <private/qquickaccessiblefactory_p.h>
 
 #include <private/qqmlenginedebugservice_p.h>
+#include <private/qqmldebugserver_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
@@ -186,7 +187,7 @@ void QQmlQtQuick2Module::defineModule()
     QAccessible::installFactory(&qQuickAccessibleFactory);
 #endif
 
-    if (QQmlDebugService::isDebuggingEnabled()) {
+    if (QQmlDebugServer::instance()) {
         QQmlEngineDebugService::instance()->setStatesDelegate(
                     new QQmlQtQuick2DebugStatesDelegate);
         QQuickProfiler::initialize();

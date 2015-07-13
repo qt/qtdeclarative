@@ -39,6 +39,7 @@
 #include <QLibraryInfo>
 
 #include <QtQml/qqmlengine.h>
+#include <private/qqmldebugserver_p.h>
 
 #include "../../../shared/util.h"
 #include "debugutil_p.h"
@@ -88,7 +89,7 @@ void tst_QQmlDebugService::initTestCase()
     }
     QVERIFY(m_conn->isConnected());
 
-    QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
 }
 
 void tst_QQmlDebugService::checkPortRange()
@@ -258,7 +259,7 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     }
     QVERIFY(m_conn->isConnected());
 
-    QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
     QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
     QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
 

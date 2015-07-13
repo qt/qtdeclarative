@@ -48,6 +48,7 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugserver_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlproperty_p.h>
 
@@ -351,7 +352,7 @@ void tst_QQmlEngineDebugService::initTestCase()
 
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
-    QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
     m_dbg = new QQmlEngineDebugClient(m_conn);
     QTRY_COMPARE(m_dbg->state(), QQmlEngineDebugClient::Enabled);
 }

@@ -861,8 +861,7 @@ void QQmlEnginePrivate::init()
 
     rootContext = new QQmlContext(q,true);
 
-    if (QCoreApplication::instance()->thread() == q->thread() &&
-        QQmlEngineDebugService::isDebuggingEnabled()) {
+    if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugServer::instance()) {
         isDebugging = true;
         QQmlEngineDebugService::instance();
         QV4DebugService::instance();

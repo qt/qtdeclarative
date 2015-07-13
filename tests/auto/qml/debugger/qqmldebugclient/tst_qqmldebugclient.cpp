@@ -39,6 +39,8 @@
 
 #include <QtQml/qqmlengine.h>
 
+#include <private/qqmldebugserver_p.h>
+
 #include "debugutil_p.h"
 #include "qqmldebugtestservice.h"
 
@@ -82,7 +84,7 @@ void tst_QQmlDebugClient::initTestCase()
 
     QVERIFY(m_conn->isConnected());
 
-    QTRY_VERIFY(QQmlDebugService::hasDebuggingClient());
+    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
     QTRY_COMPARE(client.state(), QQmlDebugClient::Enabled);
 }
 

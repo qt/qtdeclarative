@@ -80,10 +80,6 @@ public:
 
     static QString objectToString(QObject *obj);
 
-    static bool isDebuggingEnabled();
-    static bool hasDebuggingClient();
-    static bool blockingMode();
-
 protected:
     explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
     QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent = 0);

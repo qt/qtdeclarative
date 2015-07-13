@@ -33,6 +33,7 @@
 
 #include "qqmlconfigurabledebugservice_p.h"
 #include "qqmlconfigurabledebugservice_p_p.h"
+#include "qqmldebugserver_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -55,7 +56,8 @@ void QQmlConfigurableDebugService::init()
     Q_D(QQmlConfigurableDebugService);
     QMutexLocker lock(&d->configMutex);
     // If we're not enabled or not blocking, don't wait for configuration
-    d->waitingForConfiguration = (registerService() == Enabled && blockingMode());
+    d->waitingForConfiguration = (registerService() == Enabled &&
+                                  QQmlDebugServer::instance()->blockingMode());
 }
 
 void QQmlConfigurableDebugService::stopWaiting()
