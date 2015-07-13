@@ -78,7 +78,7 @@ ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
     QV4::Scoped<DataView> v(scope, ctx->argument(0));
     if (!!v)
         return Encode(true);
-    return Encode(true);
+    return Encode(false);
 }
 
 

@@ -67,6 +67,15 @@ function assertArrayEquals(a, b)
         assertEquals(a[i], b[i])
 }
 
+function TestIsViewFalse() {
+  assertTrue(!ArrayBuffer.isView());
+  assertTrue(!ArrayBuffer.isView(42));
+  assertTrue(!ArrayBuffer.isView('foo'));
+  assertTrue(!ArrayBuffer.isView(new ArrayBuffer()));
+}
+
+TestIsViewFalse();
+
 function TestByteLength(param, expectedByteLength) {
   var ab = new ArrayBuffer(param);
   assertSame(expectedByteLength, ab.byteLength);
