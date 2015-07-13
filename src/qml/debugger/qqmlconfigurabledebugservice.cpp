@@ -38,12 +38,11 @@ QT_BEGIN_NAMESPACE
 
 QQmlConfigurableDebugService::QQmlConfigurableDebugService(const QString &name, float version,
                                                            QObject *parent) :
-    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate), name, version, parent) { init(); }
+    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate(name, version)), parent) { init(); }
 
 QQmlConfigurableDebugService::QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd,
-                                                           const QString &name, float version,
                                                            QObject *parent) :
-    QQmlDebugService(dd, name, version, parent) { init(); }
+    QQmlDebugService(dd, parent) { init(); }
 
 QMutex *QQmlConfigurableDebugService::configMutex()
 {

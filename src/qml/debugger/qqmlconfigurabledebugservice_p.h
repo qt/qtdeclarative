@@ -59,7 +59,7 @@ public:
     QQmlConfigurableDebugService(const QString &name, float version, QObject *parent = 0);
 
 protected:
-    QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
+    QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd, QObject *parent = 0);
 
     QMutex *configMutex();
     void stopWaiting();

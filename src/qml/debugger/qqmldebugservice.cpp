@@ -43,29 +43,20 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlDebugServicePrivate::QQmlDebugServicePrivate()
+QQmlDebugServicePrivate::QQmlDebugServicePrivate(const QString &name, float version) :
+    name(name), version(version), state(QQmlDebugService::NotConnected)
 {
 }
 
 QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *parent)
-    : QObject(*(new QQmlDebugServicePrivate), parent)
+    : QObject(*(new QQmlDebugServicePrivate(name, version)), parent)
 {
     QQmlDebugServer::instance(); // create it when it isn't there yet.
-
-    Q_D(QQmlDebugService);
-    d->name = name;
-    d->version = version;
-    d->state = QQmlDebugService::NotConnected;
 }
 
-QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd,
-                                                   const QString &name, float version, QObject *parent)
+QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
-    Q_D(QQmlDebugService);
-    d->name = name;
-    d->version = version;
-    d->state = QQmlDebugService::NotConnected;
 }
 
 /**

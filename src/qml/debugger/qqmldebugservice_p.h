@@ -88,7 +88,7 @@ public:
 
 protected:
     explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
-    QQmlDebugService(QQmlDebugServicePrivate &dd, const QString &name, float version, QObject *parent = 0);
+    QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent = 0);
 
     State registerService();
 

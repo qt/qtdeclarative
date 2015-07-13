@@ -58,7 +58,8 @@ class QQmlConfigurableDebugServicePrivate : public QQmlDebugServicePrivate
 {
     Q_DECLARE_PUBLIC(QQmlConfigurableDebugService)
 public:
-    QQmlConfigurableDebugServicePrivate() : configMutex(QMutex::Recursive) {}
+    QQmlConfigurableDebugServicePrivate(const QString &name, float version) :
+        QQmlDebugServicePrivate(name, version), configMutex(QMutex::Recursive) {}
 
     QMutex configMutex;
     QList<QQmlEngine *> waitingEngines;

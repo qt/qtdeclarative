@@ -50,9 +50,8 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
 class QDebugMessageServicePrivate : public QQmlDebugServicePrivate
 {
 public:
-    QDebugMessageServicePrivate()
-        : oldMsgHandler(0)
-        , prevState(QQmlDebugService::NotConnected)
+    QDebugMessageServicePrivate() : QQmlDebugServicePrivate(QStringLiteral("DebugMessages"), 2),
+        oldMsgHandler(0), prevState(QQmlDebugService::NotConnected)
     {
     }
 
@@ -62,8 +61,7 @@ public:
 };
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
-    QQmlDebugService(*(new QDebugMessageServicePrivate()),
-                                   QStringLiteral("DebugMessages"), 2, parent)
+    QQmlDebugService(*(new QDebugMessageServicePrivate), parent)
 {
     Q_D(QDebugMessageService);
 

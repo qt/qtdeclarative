@@ -45,6 +45,7 @@
 // We mean it.
 //
 
+#include "qqmldebugservice_p.h"
 #include <QtCore/qglobal.h>
 #include <private/qobject_p.h>
 
@@ -57,10 +58,10 @@ class QQmlDebugServicePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlDebugService)
 public:
-    QQmlDebugServicePrivate();
+    QQmlDebugServicePrivate(const QString &name, float version);
 
-    QString name;
-    float version;
+    const QString name;
+    const float version;
     QQmlDebugService::State state;
 };
 

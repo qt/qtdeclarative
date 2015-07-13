@@ -1012,11 +1012,9 @@ public:
 };
 } // anonymous namespace
 
-QV4DebugServicePrivate::QV4DebugServicePrivate()
-    : debuggerAgent(this)
-    , version(1)
-    , theSelectedFrame(0)
-    , unknownV8CommandHandler(new UnknownV8CommandHandler)
+QV4DebugServicePrivate::QV4DebugServicePrivate() :
+    QQmlConfigurableDebugServicePrivate(QStringLiteral("V8Debugger"), 1), debuggerAgent(this),
+    version(1), theSelectedFrame(0), unknownV8CommandHandler(new UnknownV8CommandHandler)
 {
     addHandler(new V8VersionRequest);
     addHandler(new V8SetBreakPointRequest);
@@ -1047,8 +1045,7 @@ V8CommandHandler *QV4DebugServicePrivate::v8CommandHandler(const QString &comman
 }
 
 QV4DebugService::QV4DebugService(QObject *parent)
-    : QQmlConfigurableDebugService(*(new QV4DebugServicePrivate()),
-                       QStringLiteral("V8Debugger"), 1, parent)
+    : QQmlConfigurableDebugService(*(new QV4DebugServicePrivate()), parent)
 {}
 
 QV4DebugService::~QV4DebugService()
