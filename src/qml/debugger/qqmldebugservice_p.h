@@ -35,7 +35,7 @@
 #define QQMLDEBUGSERVICE_H
 
 #include <QtCore/qobject.h>
-#include <QtCore/QDataStream>
+#include <QtCore/qdatastream.h>
 
 #include <private/qtqmlglobal_p.h>
 
