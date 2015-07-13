@@ -1540,16 +1540,28 @@ QQmlDataExtended::~QQmlDataExtended()
 
 void QQmlData::NotifyList::layout(QQmlNotifierEndpoint *endpoint)
 {
-    if (endpoint->next)
-        layout(endpoint->next);
+    // Add a temporary sentinel at beginning of list. This will be overwritten
+    // when the end point is inserted into the notifies further down.
+    endpoint->prev = 0;
 
-    int index = endpoint->sourceSignal;
-    index = qMin(index, 0xFFFF - 1);
+    while (endpoint->next) {
+        Q_ASSERT(reinterpret_cast<QQmlNotifierEndpoint *>(endpoint->next->prev) == endpoint);
+        endpoint = endpoint->next;
+    }
 
-    endpoint->next = notifies[index];
-    if (endpoint->next) endpoint->next->prev = &endpoint->next;
-    endpoint->prev = &notifies[index];
-    notifies[index] = endpoint;
+    while (endpoint) {
+        QQmlNotifierEndpoint *ep = (QQmlNotifierEndpoint *) endpoint->prev;
+
+        int index = endpoint->sourceSignal;
+        index = qMin(index, 0xFFFF - 1);
+
+        endpoint->next = notifies[index];
+        if (endpoint->next) endpoint->next->prev = &endpoint->next;
+        endpoint->prev = &notifies[index];
+        notifies[index] = endpoint;
+
+        endpoint = ep;
+    }
 }
 
 void QQmlData::NotifyList::layout()

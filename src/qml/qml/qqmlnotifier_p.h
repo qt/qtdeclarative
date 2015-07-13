@@ -60,6 +60,8 @@ private:
 class QQmlEngine;
 class QQmlNotifierEndpoint
 {
+    QQmlNotifierEndpoint  *next;
+    QQmlNotifierEndpoint **prev;
 public:
     inline QQmlNotifierEndpoint();
     inline ~QQmlNotifierEndpoint();
@@ -103,9 +105,6 @@ private:
     // The index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
     signed int sourceSignal:28;
-
-    QQmlNotifierEndpoint  *next;
-    QQmlNotifierEndpoint **prev;
 };
 
 QQmlNotifier::QQmlNotifier()
@@ -137,7 +136,7 @@ void QQmlNotifier::notify()
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint()
-: senderPtr(0), callback(None), sourceSignal(-1), next(0), prev(0)
+: next(0), prev(0), senderPtr(0), callback(None), sourceSignal(-1)
 {
 }
 

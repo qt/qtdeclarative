@@ -165,6 +165,7 @@ private slots:
     void readProperty();
     void propertyChange();
     void disconnectOnDestroy();
+    void lotsOfBindings();
 
 private:
     void createObjects();
@@ -310,6 +311,39 @@ void tst_qqmlnotifier::disconnectOnDestroy()
     root = 0;
     QCOMPARE(exportedObject->cppObjectPropConnections, 0);
     exportedObject->verifyReceiverCount();
+}
+
+class TestObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int a READ a NOTIFY aChanged)
+
+public:
+    int a() const { return 0; }
+
+signals:
+    void aChanged();
+};
+
+void tst_qqmlnotifier::lotsOfBindings()
+{
+    TestObject o;
+    QQmlEngine *e = new QQmlEngine;
+
+    e->rootContext()->setContextProperty(QStringLiteral("test"), &o);
+
+    QList<QQmlComponent *> components;
+    for (int i = 0; i < 20000; ++i) {
+        QQmlComponent *component = new QQmlComponent(e);
+        component->setData("import QtQuick 2.0; Item { width: test.a; }", QUrl());
+        component->create(e->rootContext());
+        components.append(component);
+    }
+
+    o.aChanged();
+
+    qDeleteAll(components);
+    delete e;
 }
 
 QTEST_MAIN(tst_qqmlnotifier)
