@@ -266,7 +266,7 @@ void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(RESPONSE) << ids.first << true << ids.second;
 
-    m_debugService->sendMessage(response);
+    emit m_debugService->messageToClient(m_debugService->name(), response);
 }
 
 void AbstractViewInspector::handleMessage(const QByteArray &message)
@@ -360,7 +360,7 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
     QByteArray response;
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(RESPONSE) << requestId << success;
-    m_debugService->sendMessage(response);
+    emit m_debugService->messageToClient(m_debugService->name(), response);
 }
 
 void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
@@ -376,7 +376,7 @@ void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
         debugIds << QQmlDebugService::idForObject(object);
     ds << debugIds;
 
-    m_debugService->sendMessage(message);
+    emit m_debugService->messageToClient(m_debugService->name(), message);
 }
 
 void AbstractViewInspector::sendQmlFileReloaded(bool success)
@@ -389,7 +389,7 @@ void AbstractViewInspector::sendQmlFileReloaded(bool success)
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(RESPONSE) << m_reloadEventId << success;
 
-    m_debugService->sendMessage(response);
+    emit m_debugService->messageToClient(m_debugService->name(), response);
 }
 
 QString AbstractViewInspector::idStringForObject(QObject *obj) const

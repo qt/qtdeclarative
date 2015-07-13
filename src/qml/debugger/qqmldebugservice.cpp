@@ -174,20 +174,6 @@ const QHash<int, QObject *> &QQmlDebugService::objectsForIds()
     return objectReferenceHash()->ids;
 }
 
-void QQmlDebugService::sendMessage(const QByteArray &message)
-{
-    sendMessages(QList<QByteArray>() << message);
-}
-
-void QQmlDebugService::sendMessages(const QList<QByteArray> &messages)
-{
-    if (state() != Enabled)
-        return;
-
-    if (QQmlDebugConnector *inst = QQmlDebugConnector::instance())
-        inst->sendMessages(this, messages);
-}
-
 void QQmlDebugService::stateAboutToBeChanged(State)
 {
 }

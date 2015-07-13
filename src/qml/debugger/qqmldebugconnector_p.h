@@ -70,7 +70,6 @@ public:
     virtual bool addService(QQmlDebugService *service) = 0;
     virtual bool removeService(QQmlDebugService *service) = 0;
 
-    virtual void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages) = 0;
     virtual bool open(const QVariantHash &configuration = QVariantHash()) = 0;
 };
 

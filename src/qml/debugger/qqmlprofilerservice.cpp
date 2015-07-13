@@ -245,7 +245,7 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine, quint64 features)
         }
     }
 
-    QQmlDebugService::sendMessage(message);
+    emit messageToClient(name(), message);
 }
 
 /*!
@@ -334,7 +334,7 @@ void QQmlProfilerService::sendMessages()
     ds << (qint64)-1 << (int)Complete;
     messages << data;
 
-    QQmlDebugService::sendMessages(messages);
+    emit messagesToClient(name(), messages);
 }
 
 void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)

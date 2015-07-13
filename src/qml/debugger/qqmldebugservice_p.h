@@ -81,9 +81,6 @@ public:
     virtual void engineAdded(QQmlEngine *);
     virtual void engineRemoved(QQmlEngine *);
 
-    void sendMessage(const QByteArray &);
-    void sendMessages(const QList<QByteArray> &);
-
     static const QHash<int, QObject *> &objectsForIds();
     static int idForObject(QObject *);
     static QObject *objectForId(int id) { return objectsForIds().value(id); }
@@ -97,6 +94,9 @@ protected:
 signals:
     void attachedToEngine(QQmlEngine *);
     void detachedFromEngine(QQmlEngine *);
+
+    void messageToClient(const QString &name, const QByteArray &message);
+    void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugStream : public QDataStream

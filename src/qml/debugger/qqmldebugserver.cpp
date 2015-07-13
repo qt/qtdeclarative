@@ -102,7 +102,6 @@ public:
     bool open(const QVariantHash &configuration);
 
     void receiveMessage(const QByteArray &message);
-    void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
 
     template<class Action>
     bool enable(Action action);
@@ -110,7 +109,8 @@ public:
 
 private slots:
     void wakeEngine(QQmlEngine *engine);
-    void sendMessages(const QList<QByteArray> &messages);
+    void sendMessage(const QString &name, const QByteArray &message);
+    void sendMessages(const QString &name, const QList<QByteArray> &messages);
     void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
     void removeThread();
 
@@ -623,15 +623,6 @@ void QQmlDebugServerImpl::changeServiceState(const QString &serviceName,
     m_changeServiceStateCalls.deref();
 }
 
-void QQmlDebugServerImpl::sendMessages(const QList<QByteArray> &messages)
-{
-    // to be executed in debugger thread
-    Q_ASSERT(QThread::currentThread() == thread());
-
-    if (m_connection)
-        m_connection->send(messages);
-}
-
 void QQmlDebugServerImpl::removeThread()
 {
     Q_ASSERT(m_thread->isFinished());
@@ -690,6 +681,11 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
     // to be executed before thread starts
     Q_ASSERT(!m_thread);
 
+    connect(service, SIGNAL(messageToClient(QString,QByteArray)),
+            this, SLOT(sendMessage(QString,QByteArray)));
+    connect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
+            this, SLOT(sendMessages(QString,QList<QByteArray>)));
+
     connect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
             this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
     connect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
@@ -720,24 +716,46 @@ bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
 
     if (!service || !m_plugins.contains(service->name()))
         return false;
+
+    disconnect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
+               this, SLOT(sendMessages(QString,QList<QByteArray>)));
+    disconnect(service, SIGNAL(messageToClient(QString,QByteArray)),
+               this, SLOT(sendMessage(QString,QByteArray)));
+
     m_plugins.remove(service->name());
 
     return true;
 }
 
-void QQmlDebugServerImpl::sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages)
+void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &message)
 {
-    QList<QByteArray> prefixedMessages;
-    prefixedMessages.reserve(messages.count());
-    foreach (const QByteArray &message, messages) {
-        QByteArray prefixed;
-        QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);
-        out << service->name() << message;
-        prefixedMessages << prefixed;
-    }
+    sendMessages(name, QList<QByteArray>() << message);
+}
 
-    QMetaObject::invokeMethod(this, "sendMessages", Qt::QueuedConnection,
-                              Q_ARG(QList<QByteArray>, prefixedMessages));
+void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArray> &messages)
+{
+    // to be executed in debugger thread
+    Q_ASSERT(QThread::currentThread() == thread());
+
+    if (!m_connection)
+        return;
+
+    if (!name.isEmpty()) {
+        if (!m_clientPlugins.contains(name))
+            return;
+        QList<QByteArray> prefixedMessages;
+        prefixedMessages.reserve(messages.count());
+        foreach (const QByteArray &message, messages) {
+            QByteArray prefixed;
+            QQmlDebugStream out(&prefixed, QIODevice::WriteOnly);
+            out << name << message;
+            prefixedMessages << prefixed;
+        }
+
+        m_connection->send(prefixedMessages);
+    } else {
+        m_connection->send(messages);
+    }
 }
 
 template<class Action>

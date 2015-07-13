@@ -93,7 +93,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
     ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
-    sendMessage(message);
+    emit messageToClient(name(), message);
     if (d->oldMsgHandler)
         (*d->oldMsgHandler)(type, ctxt, buf);
 }

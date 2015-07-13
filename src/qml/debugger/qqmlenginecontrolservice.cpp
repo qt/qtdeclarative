@@ -117,7 +117,7 @@ void QQmlEngineControlService::sendMessage(QQmlEngineControlService::MessageType
     QByteArray message;
     QQmlDebugStream d(&message, QIODevice::WriteOnly);
     d << type << idForObject(engine);
-    QQmlDebugService::sendMessage(message);
+    emit messageToClient(name(), message);
 }
 
 void QQmlEngineControlService::stateChanged(State)

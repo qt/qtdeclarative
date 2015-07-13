@@ -373,7 +373,7 @@ public:
 
         TRACE_PROTOCOL(qDebug() << "sending response for:" << responseData.constData() << endl);
 
-        q_func()->sendMessage(packMessage("v8message", responseData));
+        emit q_func()->messageToClient(name, packMessage("v8message", responseData));
     }
 
     void processCommand(const QByteArray &command, const QByteArray &data);
@@ -1136,7 +1136,7 @@ void QV4DebugService::messageReceived(const QByteArray &message)
         TRACE_PROTOCOL(qDebug() << "... type:" << type);
 
         if (type == V4_CONNECT) {
-            sendMessage(d->packMessage(type));
+            emit messageToClient(name(), d->packMessage(type));
             stopWaiting();
         } else if (type == V4_PAUSE) {
             d->debuggerAgent.pauseAll();
@@ -1170,7 +1170,7 @@ void QV4DebugService::sendSomethingToSomebody(const char *type, int magicNumber)
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(type)
        << QByteArray::number(d->version) << QByteArray::number(magicNumber);
-    sendMessage(d->packMessage(type, response));
+    emit messageToClient(name(), d->packMessage(type, response));
 }
 
 void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger, QV4::Debugging::PauseReason reason)

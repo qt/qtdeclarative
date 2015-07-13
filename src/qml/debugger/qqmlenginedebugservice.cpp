@@ -626,7 +626,7 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
         rs << QByteArray("SET_METHOD_BODY_R") << queryId << ok;
 
     }
-    sendMessage(reply);
+    emit messageToClient(name(), reply);
 }
 
 bool QQmlEngineDebugService::setBinding(int objectId,
@@ -783,7 +783,7 @@ void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaPr
 
     rs << QByteArray("UPDATE_WATCH") << id << objectId << QByteArray(property.name()) << valueContents(value);
 
-    sendMessage(reply);
+    emit messageToClient(name(), reply);
 }
 
 void QQmlEngineDebugService::engineAboutToBeAdded(QQmlEngine *engine)
@@ -818,7 +818,7 @@ void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
 
     //unique queryId -1
     rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId << parentId;
-    sendMessage(reply);
+    emit messageToClient(name(), reply);
 }
 
 void QQmlEngineDebugService::setStatesDelegate(QQmlDebugStatesDelegate *delegate)

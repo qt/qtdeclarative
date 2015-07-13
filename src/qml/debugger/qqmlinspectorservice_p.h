@@ -66,8 +66,6 @@ public:
     void addView(QObject *);
     void removeView(QObject *);
 
-    void sendMessage(const QByteArray &message);
-
 protected:
     virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &);

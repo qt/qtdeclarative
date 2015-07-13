@@ -73,14 +73,6 @@ void QQmlInspectorService::removeView(QObject *view)
     updateState();
 }
 
-void QQmlInspectorService::sendMessage(const QByteArray &message)
-{
-    if (state() != Enabled)
-        return;
-
-    QQmlDebugService::sendMessage(message);
-}
-
 void QQmlInspectorService::stateChanged(State /*state*/)
 {
     QMetaObject::invokeMethod(this, "updateState", Qt::QueuedConnection);

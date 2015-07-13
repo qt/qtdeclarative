@@ -178,7 +178,7 @@ void tst_QQmlDebugService::sendMessage()
     QTest::ignoreMessage(QtWarningMsg,
                          "QQmlDebugService: Conflicting plugin name \"tst_QQmlDebugService\"");
     QQmlDebugTestService duplicate("tst_QQmlDebugService");
-    duplicate.sendMessage("msg");
+    emit duplicate.messageToClient(duplicate.name(), "msg");
     QTest::ignoreMessage(QtWarningMsg,
                          "QQmlDebugService: Plugin \"tst_QQmlDebugService\" is not registered.");
 }

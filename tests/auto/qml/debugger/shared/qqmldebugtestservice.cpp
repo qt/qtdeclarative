@@ -42,7 +42,7 @@ QQmlDebugTestService::QQmlDebugTestService(const QString &s, float version, QObj
 void QQmlDebugTestService::messageReceived(const QByteArray &ba)
 {
     Q_ASSERT(QThread::currentThread() != thread());
-    QMetaObject::invokeMethod(this, "_sendMessage", Qt::QueuedConnection, Q_ARG(QByteArray, ba));
+    emit messageToClient(name(), ba);
 }
 
 void QQmlDebugTestService::stateAboutToBeChanged(QQmlDebugService::State)
@@ -54,9 +54,4 @@ void QQmlDebugTestService::stateChanged(State)
 {
     Q_ASSERT(QThread::currentThread() != thread());
     emit stateHasChanged();
-}
-
-void QQmlDebugTestService::_sendMessage(const QByteArray &msg)
-{
-    QQmlDebugService::sendMessage(msg);
 }
