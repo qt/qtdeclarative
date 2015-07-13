@@ -45,7 +45,6 @@
 // We mean it.
 //
 
-
 #include <QtQuick/qtquickglobal.h>
 #include <QtCore/QtGlobal>
 #include <QtCore/QHash>
@@ -62,9 +61,13 @@ class QQuickView;
 class QObject;
 class QQuickWindow;
 
-class Q_QUICK_EXPORT DesignerSupport
+class Q_QUICK_EXPORT QQuickDesignerSupport
 {
 public:
+    typedef QByteArray PropertyName;
+    typedef QList<PropertyName> PropertyNameList;
+    typedef QByteArray TypeName;
+
     enum DirtyType {
         TransformOrigin         = 0x00000001,
         Transform               = 0x00000002,
@@ -95,8 +98,8 @@ public:
     };
 
 
-    DesignerSupport();
-    ~DesignerSupport();
+    QQuickDesignerSupport();
+    ~QQuickDesignerSupport();
 
     void refFromEffectItem(QQuickItem *referencedItem, bool hide = true);
     void derefFromEffectItem(QQuickItem *referencedItem, bool unhide = true);
@@ -118,7 +121,6 @@ public:
     static QPair<QString, QObject*> anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context);
     static void resetAnchor(QQuickItem *item, const QString &name);
     static void emitComponentCompleteSignalForAttachedProperty(QQuickItem *item);
-
 
     static QList<QObject*> statesForItem(QQuickItem *item);
 
@@ -148,6 +150,16 @@ public:
 private:
     QHash<QQuickItem*, QSGLayer*> m_itemTextureHash;
 };
+
+class Q_QUICK_EXPORT ComponentCompleteDisabler
+{
+public:
+    ComponentCompleteDisabler();
+
+    ~ComponentCompleteDisabler();
+};
+
+typedef QQuickDesignerSupport DesignerSupport;
 
 QT_END_NAMESPACE
 

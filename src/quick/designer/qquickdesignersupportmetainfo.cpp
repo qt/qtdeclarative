@@ -31,77 +31,38 @@
 **
 ****************************************************************************/
 
-#include "designerwindowmanager_p.h"
-#include "private/qquickwindow_p.h"
-#include <QtGui/QOpenGLContext>
+#include "qquickdesignersupportmetainfo_p.h"
+#include "qqmldesignermetaobject_p.h"
 
-#include <QtQuick/QQuickWindow>
-
+#include <private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
-DesignerWindowManager::DesignerWindowManager()
-    : m_sgContext(QSGContext::createDefaultContext())
+bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArray &superTypeName)
 {
-    m_renderContext.reset(new QSGRenderContext(m_sgContext.data()));
-}
+    if (object == 0)
+        return false;
 
-void DesignerWindowManager::show(QQuickWindow *window)
-{
-    makeOpenGLContext(window);
-}
+    const QMetaObject *metaObject = object->metaObject();
 
-void DesignerWindowManager::hide(QQuickWindow *)
-{
-}
+    while (metaObject) {
+         QQmlType *qmlType =  QQmlMetaType::qmlType(metaObject);
+         if (qmlType && qmlType->qmlTypeName() == superTypeName) // ignore version numbers
+             return true;
 
-void DesignerWindowManager::windowDestroyed(QQuickWindow *)
-{
-}
+         if (metaObject->className() == superTypeName)
+             return true;
 
-void DesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
-{
-    if (!m_openGlContext) {
-        m_openGlContext.reset(new QOpenGLContext());
-        m_openGlContext->setFormat(window->requestedFormat());
-        m_openGlContext->create();
-        if (!m_openGlContext->makeCurrent(window))
-            qWarning("QQuickWindow: makeCurrent() failed...");
-        m_renderContext->initialize(m_openGlContext.data());
-    } else {
-        m_openGlContext->makeCurrent(window);
+         metaObject = metaObject->superClass();
     }
+
+    return false;
 }
 
-void DesignerWindowManager::exposureChanged(QQuickWindow *)
+void QQuickDesignerSupportMetaInfo::registerNotifyPropertyChangeCallBack(void (*callback)(QObject *, const QQuickDesignerSupport::PropertyName &))
 {
-}
-
-QImage DesignerWindowManager::grab(QQuickWindow *)
-{
-    return QImage();
-}
-
-void DesignerWindowManager::maybeUpdate(QQuickWindow *)
-{
-}
-
-QSGContext *DesignerWindowManager::sceneGraphContext() const
-{
-    return m_sgContext.data();
-}
-
-void DesignerWindowManager::createOpenGLContext(QQuickWindow *window)
-{
-    window->create();
-    window->update();
-}
-
-void DesignerWindowManager::update(QQuickWindow *window)
-{
-    makeOpenGLContext(window);
+    QQmlDesignerMetaObject::registerNotifyPropertyChangeCallBack(callback);
 }
 
 QT_END_NAMESPACE
-
 

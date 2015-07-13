@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef DESIGNERWINDOWMANAGER_P_H
-#define DESIGNERWINDOWMANAGER_P_H
+#ifndef DESIGNERSUPPORTPROPERTYCHANGES_H
+#define DESIGNERSUPPORTPROPERTYCHANGES_H
 
 //
 //  W A R N I N G
@@ -45,54 +45,26 @@
 // We mean it.
 //
 
-#include <QtCore/QScopedPointer>
+#include "qquickdesignersupport_p.h"
 
-#include <private/qsgrenderloop_p.h>
-#include <private/qtquickglobal_p.h>
-#include <QtQuick/private/qsgcontext_p.h>
-
+#include <QVariant>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
-class QSGContext;
-class QSGRenderContext;
-class QAnimationDriver;
-class QOpenGLContext;
-
-class DesignerWindowManager : public QSGRenderLoop
+class Q_QUICK_EXPORT QQuickDesignerSupportPropertyChanges
 {
-    Q_OBJECT
 public:
-    DesignerWindowManager();
-
-    void show(QQuickWindow *window);
-    void hide(QQuickWindow *window);
-
-    void windowDestroyed(QQuickWindow *window);
-
-    void makeOpenGLContext(QQuickWindow *window);
-    void exposureChanged(QQuickWindow *window);
-    QImage grab(QQuickWindow *window);
-
-    void maybeUpdate(QQuickWindow *window);
-    void update(QQuickWindow *window); // identical for this implementation.
-
-    void releaseResources(QQuickWindow *) { }
-
-    QAnimationDriver *animationDriver() const { return 0; }
-
-    QSGContext *sceneGraphContext() const;
-    QSGRenderContext *createRenderContext(QSGContext *) const { return m_renderContext.data(); }
-
-    static void createOpenGLContext(QQuickWindow *window);
-
-private:
-    QScopedPointer<QOpenGLContext> m_openGlContext;
-    QScopedPointer<QSGContext> m_sgContext;
-    QScopedPointer<QSGRenderContext> m_renderContext;
+    static void detachFromState(QObject *propertyChanges);
+    static void attachToState(QObject *propertyChanges);
+    static QObject *targetObject(QObject *propertyChanges);
+    static void removeProperty(QObject *propertyChanges, const QQuickDesignerSupport::PropertyName &propertyName);
+    static QVariant getProperty(QObject *propertyChanges, const QQuickDesignerSupport::PropertyName &propertyName);
+    static void changeValue(QObject *propertyChanges, const QQuickDesignerSupport::PropertyName &propertyName, const QVariant &value);
+    static void changeExpression(QObject *propertyChanges, const QQuickDesignerSupport::PropertyName &propertyName, const QString &expression);
+    static QObject *stateObject(QObject *propertyChanges);
+    static bool isNormalProperty(const QQuickDesignerSupport::PropertyName &propertyName);
 };
 
 QT_END_NAMESPACE
 
-#endif // DESIGNERWINDOWMANAGER_P_H
+#endif // DESIGNERSUPPORTPROPERTYCHANGES_H

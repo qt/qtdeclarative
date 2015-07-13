@@ -125,7 +125,7 @@ private:
 };
 
 class QQuickRectanglePrivate;
-class Q_AUTOTEST_EXPORT QQuickRectangle : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
 {
     Q_OBJECT
 

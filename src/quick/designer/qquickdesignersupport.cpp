@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-#include "designersupport.h"
+#include "qquickdesignersupport_p.h"
 #include <private/qquickitem_p.h>
 
 #include <QtQuick/private/qquickshadereffectsource_p.h>
@@ -46,16 +46,16 @@
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qqmldata_p.h>
 
-#include "designerwindowmanager_p.h"
+#include "qquickdesignerwindowmanager_p.h"
 
 
 QT_BEGIN_NAMESPACE
 
-DesignerSupport::DesignerSupport()
+QQuickDesignerSupport::QQuickDesignerSupport()
 {
 }
 
-DesignerSupport::~DesignerSupport()
+QQuickDesignerSupport::~QQuickDesignerSupport()
 {
     typedef QHash<QQuickItem*, QSGLayer*>::iterator ItemTextureHashIt;
 
@@ -67,7 +67,7 @@ DesignerSupport::~DesignerSupport()
     }
 }
 
-void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
+void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
 {
     if (referencedItem == 0)
         return;
@@ -100,7 +100,7 @@ void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
     }
 }
 
-void DesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool unhide)
+void QQuickDesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool unhide)
 {
     if (referencedItem == 0)
         return;
@@ -109,7 +109,7 @@ void DesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool unhid
     QQuickItemPrivate::get(referencedItem)->derefFromEffectItem(unhide);
 }
 
-QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
+QImage QQuickDesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
 {
     if (referencedItem == 0 || referencedItem->parentItem() == 0) {
         qDebug() << __FILE__ << __LINE__ << "Warning: Item can be rendered.";
@@ -136,7 +136,7 @@ QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRe
     return renderImage;
 }
 
-bool DesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
+bool QQuickDesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
 {
     if (referencedItem == 0)
         return false;
@@ -144,7 +144,7 @@ bool DesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
     return QQuickItemPrivate::get(referencedItem)->dirtyAttributes & dirtyType;
 }
 
-void DesignerSupport::addDirty(QQuickItem *referencedItem, DesignerSupport::DirtyType dirtyType)
+void QQuickDesignerSupport::addDirty(QQuickItem *referencedItem, QQuickDesignerSupport::DirtyType dirtyType)
 {
     if (referencedItem == 0)
         return;
@@ -152,7 +152,7 @@ void DesignerSupport::addDirty(QQuickItem *referencedItem, DesignerSupport::Dirt
     QQuickItemPrivate::get(referencedItem)->dirtyAttributes |= dirtyType;
 }
 
-void DesignerSupport::resetDirty(QQuickItem *referencedItem)
+void QQuickDesignerSupport::resetDirty(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return;
@@ -161,7 +161,7 @@ void DesignerSupport::resetDirty(QQuickItem *referencedItem)
     QQuickItemPrivate::get(referencedItem)->removeFromDirtyList();
 }
 
-QTransform DesignerSupport::windowTransform(QQuickItem *referencedItem)
+QTransform QQuickDesignerSupport::windowTransform(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return QTransform();
@@ -169,7 +169,7 @@ QTransform DesignerSupport::windowTransform(QQuickItem *referencedItem)
     return QQuickItemPrivate::get(referencedItem)->itemToWindowTransform();
 }
 
-QTransform DesignerSupport::parentTransform(QQuickItem *referencedItem)
+QTransform QQuickDesignerSupport::parentTransform(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return QTransform();
@@ -211,7 +211,7 @@ bool isValidAnchorName(const QString &name)
     return anchorNameList.contains(name);
 }
 
-bool DesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
+bool QQuickDesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
     QQuickItemPrivate *fromItemPrivate = QQuickItemPrivate::get(fromItem);
     QQuickAnchors *anchors = fromItemPrivate->anchors();
@@ -226,9 +226,9 @@ bool DesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
             || anchors->baseline().item == toItem;
 }
 
-bool DesignerSupport::areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
+bool QQuickDesignerSupport::areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
-    foreach (QQuickItem *childItem, fromItem->childItems()) {
+    Q_FOREACH (QQuickItem *childItem, fromItem->childItems()) {
         if (childItem) {
             if (isAnchoredTo(childItem, toItem))
                 return true;
@@ -275,7 +275,7 @@ QQuickAnchors::Anchor anchorLineFlagForName(const QString &name)
     return QQuickAnchors::LeftAnchor;
 }
 
-bool DesignerSupport::hasAnchor(QQuickItem *item, const QString &name)
+bool QQuickDesignerSupport::hasAnchor(QQuickItem *item, const QString &name)
 {
     if (!isValidAnchorName(name))
         return false;
@@ -310,19 +310,19 @@ bool DesignerSupport::hasAnchor(QQuickItem *item, const QString &name)
     return anchors(item)->usedAnchors().testFlag(anchorLineFlagForName(name));
 }
 
-QQuickItem *DesignerSupport::anchorFillTargetItem(QQuickItem *item)
+QQuickItem *QQuickDesignerSupport::anchorFillTargetItem(QQuickItem *item)
 {
     return anchors(item)->fill();
 }
 
-QQuickItem *DesignerSupport::anchorCenterInTargetItem(QQuickItem *item)
+QQuickItem *QQuickDesignerSupport::anchorCenterInTargetItem(QQuickItem *item)
 {
     return anchors(item)->centerIn();
 }
 
 
 
-QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context)
+QPair<QString, QObject*> QQuickDesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QQmlContext *context)
 {
     QObject *targetObject = 0;
     QString targetName;
@@ -347,7 +347,7 @@ QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, con
     return QPair<QString, QObject*>(targetName, targetObject);
 }
 
-void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
+void QQuickDesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
 {
     if (name == QLatin1String("anchors.fill")) {
         anchors(item)->resetFill();
@@ -370,7 +370,7 @@ void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
     }
 }
 
-void DesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
+void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
 {
     QQmlData *data = QQmlData::get(item);
     if (data && data->context) {
@@ -381,24 +381,24 @@ void DesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem 
     }
 }
 
-QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
+QList<QObject*> QQuickDesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
     QList<QQuickState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
 
     objectList.reserve(stateList.size());
-    foreach (QQuickState* state, stateList)
+    Q_FOREACH (QQuickState* state, stateList)
         objectList.append(state);
 
     return objectList;
 }
 
-bool DesignerSupport::isComponentComplete(QQuickItem *item)
+bool QQuickDesignerSupport::isComponentComplete(QQuickItem *item)
 {
     return QQuickItemPrivate::get(item)->componentComplete;
 }
 
-int DesignerSupport::borderWidth(QQuickItem *item)
+int QQuickDesignerSupport::borderWidth(QQuickItem *item)
 {
     QQuickRectangle *rectangle = qobject_cast<QQuickRectangle*>(item);
     if (rectangle)
@@ -407,60 +407,71 @@ int DesignerSupport::borderWidth(QQuickItem *item)
     return 0;
 }
 
-void DesignerSupport::refreshExpressions(QQmlContext *context)
+void QQuickDesignerSupport::refreshExpressions(QQmlContext *context)
 {
     QQmlContextPrivate::get(context)->data->refreshExpressions();
 }
 
-void DesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)
+void QQuickDesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)
 {
     QQuickViewPrivate::get(view)->setRootObject(item);
 }
 
-bool DesignerSupport::isValidWidth(QQuickItem *item)
+bool QQuickDesignerSupport::isValidWidth(QQuickItem *item)
 {
     return QQuickItemPrivate::get(item)->heightValid;
 }
 
-bool DesignerSupport::isValidHeight(QQuickItem *item)
+bool QQuickDesignerSupport::isValidHeight(QQuickItem *item)
 {
     return QQuickItemPrivate::get(item)->widthValid;
 }
 
-void DesignerSupport::updateDirtyNode(QQuickItem *item)
+void QQuickDesignerSupport::updateDirtyNode(QQuickItem *item)
 {
     if (item->window())
         QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
 }
 
-void DesignerSupport::activateDesignerWindowManager()
+void QQuickDesignerSupport::activateDesignerWindowManager()
 {
-    QSGRenderLoop::setInstance(new DesignerWindowManager);
+    QSGRenderLoop::setInstance(new QQuickDesignerWindowManager);
 }
 
-void DesignerSupport::activateDesignerMode()
+void QQuickDesignerSupport::activateDesignerMode()
 {
     QQmlEnginePrivate::activateDesignerMode();
 }
 
-void DesignerSupport::disableComponentComplete()
+void QQuickDesignerSupport::disableComponentComplete()
 {
     QQmlVME::disableComponentComplete();
 }
 
-void DesignerSupport::enableComponentComplete()
+void QQuickDesignerSupport::enableComponentComplete()
 {
     QQmlVME::enableComponentComplete();
 }
 
-void DesignerSupport::createOpenGLContext(QQuickWindow *window)
+void QQuickDesignerSupport::createOpenGLContext(QQuickWindow *window)
 {
-    DesignerWindowManager::createOpenGLContext(window);
+    QQuickDesignerWindowManager::createOpenGLContext(window);
 }
 
-void DesignerSupport::polishItems(QQuickWindow *window)
+void QQuickDesignerSupport::polishItems(QQuickWindow *window)
 {
     QQuickWindowPrivate::get(window)->polishItems();
 }
+
+ComponentCompleteDisabler::ComponentCompleteDisabler()
+{
+    QQuickDesignerSupport::disableComponentComplete();
+}
+
+ComponentCompleteDisabler::~ComponentCompleteDisabler()
+{
+    QQuickDesignerSupport::enableComponentComplete();
+}
+
 
 QT_END_NAMESPACE
