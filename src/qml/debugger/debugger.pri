@@ -15,6 +15,7 @@ SOURCES += \
     $$PWD/qqmlprofiler.cpp
 
 HEADERS += \
+    $$PWD/qqmldebugpluginmanager_p.h \
     $$PWD/qqmldebugservice_p.h \
     $$PWD/qqmldebugservice_p_p.h \
     $$PWD/qqmlprofilerservice_p.h \
