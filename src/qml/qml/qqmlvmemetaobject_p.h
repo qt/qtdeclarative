@@ -204,6 +204,26 @@ public:
     inline void allocateVarPropertiesArray();
     inline bool ensureVarPropertiesAllocated();
 
+    // temporary solution so I can experiment with storing
+    // properties in a JS array. Should be switched over to also
+    // use the 'varProperties' in the end.
+    QV4::WeakValue properties;
+    bool propertiesInitialized;
+    inline void allocatePropertiesArray();
+    inline bool ensurePropertiesAllocated();
+
+    int readPropertyAsInt(int id);
+    bool readPropertyAsBool(int id);
+    double readPropertyAsDouble(int id);
+    QString readPropertyAsString(int id);
+    QSizeF readPropertyAsSizeF(int id);
+
+    void writeProperty(int id, int v);
+    void writeProperty(int id, bool v);
+    void writeProperty(int id, double v);
+    void writeProperty(int id, const QString& v);
+    void writeProperty(int id, const QSizeF& v);
+
     void ensureQObjectWrapper();
 
     void mark(QV4::ExecutionEngine *e);

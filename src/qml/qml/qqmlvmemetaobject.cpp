@@ -516,7 +516,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 : object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
   hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
-  varPropertiesInitialized(false), interceptors(0), v8methods(0)
+  varPropertiesInitialized(false), propertiesInitialized(false), interceptors(0), v8methods(0)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
@@ -581,6 +581,134 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     delete [] v8methods;
 
     qDeleteAll(varObjectGuards);
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, int v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    vp->putIndexed(id, QV4::Primitive::fromInt32(v));
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, bool v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    vp->putIndexed(id, QV4::Primitive::fromBoolean(v));
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, double v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    vp->putIndexed(id, QV4::Primitive::fromDouble(v));
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue s(scope, properties.engine()->newString(v));
+    vp->putIndexed(id, s);
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
+int QQmlVMEMetaObject::readPropertyAsInt(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return 0;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    if (!sv->isInt32()) {
+        writeProperty(id, int(0));
+        return 0;
+    }
+    return sv->integerValue();
+}
+
+bool QQmlVMEMetaObject::readPropertyAsBool(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return false;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    if (!sv->isBoolean()) {
+        writeProperty(id, false);
+        return false;
+    }
+    return sv->booleanValue();
+}
+
+double QQmlVMEMetaObject::readPropertyAsDouble(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return 0.0;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    if (!sv->isDouble()) {
+        writeProperty(id, 0.0);
+        return 0.0;
+    }
+    return sv->doubleValue();
+}
+
+QString QQmlVMEMetaObject::readPropertyAsString(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QString();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    if (!sv->isString()) {
+        writeProperty(id, QString());
+        return QString();
+    }
+    return sv->stringValue()->toQString();
+}
+
+QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QSizeF();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::SizeF) {
+        writeProperty(id, QSizeF());
+        return QSizeF();
+    }
+    return v->d()->data.value<QSizeF>();
 }
 
 int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
@@ -689,16 +817,16 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                     if (c == QMetaObject::ReadProperty) {
                         switch(t) {
                         case QVariant::Int:
-                            *reinterpret_cast<int *>(a[0]) = data[id].asInt();
+                            *reinterpret_cast<int *>(a[0]) = readPropertyAsInt(id);
                             break;
                         case QVariant::Bool:
-                            *reinterpret_cast<bool *>(a[0]) = data[id].asBool();
+                            *reinterpret_cast<bool *>(a[0]) = readPropertyAsBool(id);
                             break;
                         case QVariant::Double:
-                            *reinterpret_cast<double *>(a[0]) = data[id].asDouble();
+                            *reinterpret_cast<double *>(a[0]) = readPropertyAsDouble(id);
                             break;
                         case QVariant::String:
-                            *reinterpret_cast<QString *>(a[0]) = data[id].asQString();
+                            *reinterpret_cast<QString *>(a[0]) = readPropertyAsString(id);
                             break;
                         case QVariant::Url:
                             *reinterpret_cast<QUrl *>(a[0]) = data[id].asQUrl();
@@ -713,7 +841,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QRectF *>(a[0]) = data[id].asQRectF();
                             break;
                         case QVariant::SizeF:
-                            *reinterpret_cast<QSizeF *>(a[0]) = data[id].asQSizeF();
+                            *reinterpret_cast<QSizeF *>(a[0]) = readPropertyAsSizeF(id);
                             break;
                         case QVariant::PointF:
                             *reinterpret_cast<QPointF *>(a[0]) = data[id].asQPointF();
@@ -741,20 +869,20 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 
                         switch(t) {
                         case QVariant::Int:
-                            needActivate = *reinterpret_cast<int *>(a[0]) != data[id].asInt();
-                            data[id].setValue(*reinterpret_cast<int *>(a[0]));
+                            needActivate = *reinterpret_cast<int *>(a[0]) != readPropertyAsInt(id);
+                            writeProperty(id, *reinterpret_cast<int *>(a[0]));
                             break;
                         case QVariant::Bool:
-                            needActivate = *reinterpret_cast<bool *>(a[0]) != data[id].asBool();
-                            data[id].setValue(*reinterpret_cast<bool *>(a[0]));
+                            needActivate = *reinterpret_cast<bool *>(a[0]) != readPropertyAsBool(id);
+                            writeProperty(id, *reinterpret_cast<bool *>(a[0]));
                             break;
                         case QVariant::Double:
-                            needActivate = *reinterpret_cast<double *>(a[0]) != data[id].asDouble();
-                            data[id].setValue(*reinterpret_cast<double *>(a[0]));
+                            needActivate = *reinterpret_cast<double *>(a[0]) != readPropertyAsDouble(id);
+                            writeProperty(id, *reinterpret_cast<double *>(a[0]));
                             break;
                         case QVariant::String:
-                            needActivate = *reinterpret_cast<QString *>(a[0]) != data[id].asQString();
-                            data[id].setValue(*reinterpret_cast<QString *>(a[0]));
+                            needActivate = *reinterpret_cast<QString *>(a[0]) != readPropertyAsString(id);
+                            writeProperty(id, *reinterpret_cast<QString *>(a[0]));
                             break;
                         case QVariant::Url:
                             needActivate = *reinterpret_cast<QUrl *>(a[0]) != data[id].asQUrl();
@@ -773,8 +901,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             data[id].setValue(*reinterpret_cast<QRectF *>(a[0]));
                             break;
                         case QVariant::SizeF:
-                            needActivate = *reinterpret_cast<QSizeF *>(a[0]) != data[id].asQSizeF();
-                            data[id].setValue(*reinterpret_cast<QSizeF *>(a[0]));
+                            needActivate = *reinterpret_cast<QSizeF *>(a[0]) != readPropertyAsSizeF(id);
+                            writeProperty(id, *reinterpret_cast<QSizeF *>(a[0]));
                             break;
                         case QVariant::PointF:
                             needActivate = *reinterpret_cast<QPointF *>(a[0]) != data[id].asQPointF();
@@ -1176,6 +1304,19 @@ bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
     return !varProperties.isUndefined();
 }
 
+bool QQmlVMEMetaObject::ensurePropertiesAllocated()
+{
+    if (!propertiesInitialized)
+        allocatePropertiesArray();
+
+    // in some situations, the QObject's v8object (and associated v8 data,
+    // such as the varProperties array) will have been cleaned up, but the
+    // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
+    // In this situation, the varProperties handle will be (and should remain)
+    // empty.
+    return !properties.isUndefined();
+}
+
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     Q_ASSERT(ctxt && ctxt->engine);
@@ -1192,6 +1333,7 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
         return;
 
     varProperties.markOnce(e);
+    properties.markOnce(e);
 
     // add references created by VMEVariant properties
     int maxDataIdx = metaData->propertyCount - metaData->varPropertyCount;
@@ -1216,6 +1358,17 @@ void QQmlVMEMetaObject::allocateVarPropertiesArray()
     varProperties.set(scope.engine, v4->newArrayObject(metaData->varPropertyCount));
     varPropertiesInitialized = true;
 }
+
+void QQmlVMEMetaObject::allocatePropertiesArray()
+{
+    QQmlEngine *qml = qmlEngine(object);
+    Q_ASSERT(qml);
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
+    QV4::Scope scope(v4);
+    properties.set(scope.engine, v4->newArrayObject(metaData->propertyCount - metaData->varPropertyCount));
+    propertiesInitialized = true;
+}
+
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {
