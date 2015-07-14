@@ -48,7 +48,7 @@
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
 
-#if defined(QT_STATIC) && !defined(QT_NO_QML_DEBUGGER) && !defined(QT_NO_LIBRARY)
+#if defined(QT_STATIC) && !defined(QT_NO_LIBRARY)
 #include "../../plugins/qmltooling/qmldbg_tcp/qtcpserverconnection.h"
 #endif
 
@@ -309,7 +309,7 @@ QQmlDebugServerConnection *QQmlDebugServerImpl::loadConnectionPlugin(const QStri
 void QQmlDebugServerThread::run()
 {
     Q_ASSERT_X(m_server != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
-#if defined(QT_STATIC) && !defined(QT_NO_QML_DEBUGGER) && !defined(QT_NO_LIBRARY)
+#if defined(QT_STATIC) && !defined(QT_NO_LIBRARY)
     QQmlDebugServerConnection *connection
             = new QTcpServerConnection;
 #else
@@ -420,7 +420,6 @@ bool QQmlDebugServerImpl::enableFromArguments()
 {
     // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
     const QString args = commandLineArguments();
-#ifndef QT_NO_QML_DEBUGGER
     if (args.isEmpty())
         return false; // Manual initialization, through QQmlDebugServer::open()
 
@@ -476,13 +475,6 @@ bool QQmlDebugServerImpl::enableFromArguments()
                                           "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
                                           "<ip address>][,block]").arg(args);
     }
-#else
-    if (!args.isEmpty()) {
-        qWarning() << QString(QLatin1String(
-                     "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                     "QtQml is not configured for debugging.")).arg(args);
-    }
-#endif
     return false;
 }
 
@@ -742,7 +734,6 @@ void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArr
 template<class Action>
 bool QQmlDebugServerImpl::enable(Action action)
 {
-#ifndef QT_NO_QML_DEBUGGER
     if (m_thread)
         return false;
     if (!action(this))
@@ -753,10 +744,6 @@ bool QQmlDebugServerImpl::enable(Action action)
     if (m_blockingMode && !m_gotHello)
         m_helloCondition.wait(&m_helloMutex); // wait for hello
     return true;
-#else
-    Q_UNUSED(action);
-    return false;
-#endif
 }
 
 void QQmlDebugServerImpl::wakeEngine(QQmlEngine *engine)
