@@ -91,7 +91,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     m_timer.setSingleShot(true);
     m_timer.setInterval(5000);
     connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
-    connect(&m_process, SIGNAL(error(QProcess::ProcessError)),
+    connect(&m_process, SIGNAL(errorOccurred(QProcess::ProcessError)),
             this, SLOT(processError(QProcess::ProcessError)));
     connect(&m_timer, SIGNAL(timeout()), SLOT(timeout()));
 }
