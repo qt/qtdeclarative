@@ -88,8 +88,6 @@ void tst_QQmlDebugService::initTestCase()
         QTest::qSleep(100);
     }
     QVERIFY(m_conn->isConnected());
-
-    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
 }
 
 void tst_QQmlDebugService::checkPortRange()
@@ -259,7 +257,6 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     }
     QVERIFY(m_conn->isConnected());
 
-    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
     QQmlDebugTestService service("tst_QQmlDebugService::sendMessage2()");
     QQmlDebugTestClient client("tst_QQmlDebugService::sendMessage2()", m_conn);
 

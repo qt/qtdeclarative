@@ -352,7 +352,6 @@ void tst_QQmlEngineDebugService::initTestCase()
 
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
-    QTRY_VERIFY(QQmlDebugServer::instance() && QQmlDebugServer::instance()->hasDebuggingClient());
     m_dbg = new QQmlEngineDebugClient(m_conn);
     QTRY_COMPARE(m_dbg->state(), QQmlEngineDebugClient::Enabled);
 }

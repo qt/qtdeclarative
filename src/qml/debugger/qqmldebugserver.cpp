@@ -347,26 +347,6 @@ void QQmlDebugServerThread::run()
     eventLoop.processEvents(QEventLoop::AllEvents);
 }
 
-bool QQmlDebugServer::hasDebuggingClient() const
-{
-    Q_D(const QQmlDebugServer);
-    return d->connection
-            && d->connection->isConnected()
-            && d->gotHello;
-}
-
-bool QQmlDebugServer::hasThread() const
-{
-    Q_D(const QQmlDebugServer);
-    return d->thread != 0;
-}
-
-bool QQmlDebugServer::hasConnection() const
-{
-    Q_D(const QQmlDebugServer);
-    return d->connection != 0;
-}
-
 bool QQmlDebugServer::blockingMode() const
 {
     Q_D(const QQmlDebugServer);
@@ -819,8 +799,8 @@ bool QQmlDebugServerPrivate::enable(Action action)
         return false;
     if (!action(d))
         return false;
-    while (!wrapper->m_instance.hasConnection()) {
-        if (!wrapper->m_instance.hasThread())
+    while (!d->connection) {
+        if (!d->thread)
             return false;
     }
     return true;

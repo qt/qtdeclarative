@@ -62,9 +62,6 @@ public:
 
     static QQmlDebugServer *instance();
 
-    bool hasThread() const;
-    bool hasConnection() const;
-    bool hasDebuggingClient() const;
     bool blockingMode() const;
 
     QList<QQmlDebugService*> services() const;
