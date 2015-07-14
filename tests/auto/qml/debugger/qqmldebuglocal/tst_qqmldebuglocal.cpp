@@ -39,8 +39,6 @@
 #include <QThread>
 #include <ctime>
 
-#include <private/qqmldebugserver_p.h>
-
 #include "debugutil_p.h"
 #include "qqmldebugtestservice.h"
 

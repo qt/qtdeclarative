@@ -33,7 +33,7 @@
 
 #include "qqmldebugservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include "qqmldebugserver_p.h"
+#include "qqmldebugconnector_p.h"
 #include <private/qqmldata_p.h>
 #include <private/qqmlcontext_p.h>
 
@@ -51,7 +51,7 @@ QQmlDebugServicePrivate::QQmlDebugServicePrivate(const QString &name, float vers
 QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QQmlDebugServicePrivate(name, version)), parent)
 {
-    QQmlDebugServer::instance(); // create it when it isn't there yet.
+    QQmlDebugConnector::instance(); // create it when it isn't there yet.
 }
 
 QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent)
@@ -66,7 +66,7 @@ QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent)
 QQmlDebugService::State QQmlDebugService::registerService()
 {
     Q_D(QQmlDebugService);
-    QQmlDebugServer *server = QQmlDebugServer::instance();
+    QQmlDebugConnector *server = QQmlDebugConnector::instance();
 
     if (!server)
         return NotConnected;
@@ -81,7 +81,7 @@ QQmlDebugService::State QQmlDebugService::registerService()
 
 QQmlDebugService::~QQmlDebugService()
 {
-    if (QQmlDebugServer *inst = QQmlDebugServer::instance())
+    if (QQmlDebugConnector *inst = QQmlDebugConnector::instance())
         inst->removeService(this);
 }
 
@@ -175,7 +175,7 @@ void QQmlDebugService::sendMessages(const QList<QByteArray> &messages)
     if (state() != Enabled)
         return;
 
-    if (QQmlDebugServer *inst = QQmlDebugServer::instance())
+    if (QQmlDebugConnector *inst = QQmlDebugConnector::instance())
         inst->sendMessages(this, messages);
 }
 

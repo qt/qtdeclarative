@@ -32,9 +32,9 @@
 ****************************************************************************/
 
 #include "qqmlprofilerservice_p.h"
-#include "qqmldebugserver_p.h"
 #include "qv4profileradapter_p.h"
 #include "qqmlprofiler_p.h"
+#include "qqmldebugconnector_p.h"
 #include <private/qqmlengine_p.h>
 
 #include <QtCore/qdatastream.h>
@@ -54,8 +54,8 @@ QQmlProfilerService::QQmlProfilerService()
 
     QMutexLocker lock(configMutex());
     // If there is no debug server it doesn't matter as we'll never get enabled anyway.
-    if (QQmlDebugServer::instance() != 0)
-        moveToThread(QQmlDebugServer::instance()->thread());
+    if (QQmlDebugConnector::instance() != 0)
+        moveToThread(QQmlDebugConnector::instance()->thread());
 }
 
 QQmlProfilerService::~QQmlProfilerService()

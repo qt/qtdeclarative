@@ -54,7 +54,7 @@
 #include "qqmllist_p.h"
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
-#include <private/qqmldebugserver_p.h>
+#include <private/qqmldebugconnector_p.h>
 #include <private/qqmlprofilerservice_p.h>
 #include <private/qv4debugservice_p.h>
 #include <private/qdebugmessageservice_p.h>
@@ -861,14 +861,14 @@ void QQmlEnginePrivate::init()
 
     rootContext = new QQmlContext(q,true);
 
-    if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugServer::instance()) {
+    if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugConnector::instance()) {
         isDebugging = true;
         QQmlEngineDebugService::instance();
         QV4DebugService::instance();
         QQmlProfilerService::instance();
         QDebugMessageService::instance();
         QQmlEngineControlService::instance();
-        QQmlDebugServer::instance()->addEngine(q);
+        QQmlDebugConnector::instance()->addEngine(q);
     }
 }
 
@@ -946,7 +946,7 @@ QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
     if (d->isDebugging)
-        QQmlDebugServer::instance()->removeEngine(this);
+        QQmlDebugConnector::instance()->removeEngine(this);
 
     d->typeLoader.invalidate();
 

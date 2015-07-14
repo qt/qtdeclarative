@@ -38,7 +38,7 @@
 #include "qquickitem_p.h"
 #include "qquickitemchangelistener_p.h"
 
-#include <private/qqmldebugserver_p.h>
+#include <private/qqmldebugconnector_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qqmlinspectorservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
@@ -87,7 +87,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
         rootItemMarker.set(v4, v);
     }
 
-    if (QQmlDebugServer::instance())
+    if (QQmlDebugConnector::instance())
         QQmlInspectorService::instance()->addView(q);
 }
 
@@ -98,7 +98,7 @@ QQuickViewPrivate::QQuickViewPrivate()
 
 QQuickViewPrivate::~QQuickViewPrivate()
 {
-    if (QQmlDebugServer::instance())
+    if (QQmlDebugConnector::instance())
         QQmlInspectorService::instance()->removeView(q_func());
 }
 

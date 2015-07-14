@@ -48,7 +48,6 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmldebugservice_p.h>
-#include <private/qqmldebugserver_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlproperty_p.h>
 

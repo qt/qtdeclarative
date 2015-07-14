@@ -44,7 +44,7 @@
 #include "qqmlglobal_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qv4debugservice_p.h>
-#include <private/qqmldebugserver_p.h>
+#include <private/qqmldebugconnector_p.h>
 #include <private/qqmlcompiler_p.h>
 #include "qqmlinfo.h"
 
@@ -320,7 +320,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
     if (!s->m_expression)
         return;
 
-    if (QQmlDebugServer::instance())
+    if (QQmlDebugConnector::instance())
         QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->signalIndex()).methodSignature()));
 
     QQmlEngine *engine;

@@ -37,7 +37,7 @@
 #include "qv4debugging_p.h"
 #include "qv4engine_p.h"
 #include "qv4function_p.h"
-#include "qqmldebugserver_p.h"
+#include "qqmldebugconnector_p.h"
 
 #include <private/qv8engine_p.h>
 
@@ -1063,7 +1063,7 @@ void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
     QMutexLocker lock(configMutex());
     if (engine) {
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
-        if (QQmlDebugServer *server = QQmlDebugServer::instance()) {
+        if (QQmlDebugConnector *server = QQmlDebugConnector::instance()) {
             if (ee) {
                 ee->enableDebugger();
                 QV4::Debugging::Debugger *debugger = ee->debugger;

@@ -31,11 +31,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_P_H
-#define QQMLDEBUGSERVER_P_H
+#ifndef QQMLDEBUGCONNECTOR_H
+#define QQMLDEBUGCONNECTOR_H
 
-#include <private/qqmldebugconnector_p.h>
-#include <private/qtqmlglobal_p.h>
+#include <QtQml/qtqmlglobal.h>
+#include <QtCore/QVariantList>
+
+#include <private/qqmldebugservice_p.h>
 
 //
 //  W A R N I N G
@@ -50,13 +52,26 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : protected QQmlDebugConnector
+class QQmlDebugService;
+class Q_QML_PRIVATE_EXPORT QQmlDebugConnector : public QObject
 {
     Q_OBJECT
 public:
-    virtual void receiveMessage(const QByteArray &message) = 0;
+    static QQmlDebugConnector *instance();
+
+    virtual bool blockingMode() const = 0;
+
+    virtual QQmlDebugService *service(const QString &name) const = 0;
+
+    virtual void addEngine(QQmlEngine *engine) = 0;
+    virtual void removeEngine(QQmlEngine *engine) = 0;
+
+    virtual bool addService(QQmlDebugService *service) = 0;
+    virtual bool removeService(QQmlDebugService *service) = 0;
+
+    virtual void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages) = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVER_P_H
+#endif // QQMLDEBUGCONNECTOR_H
