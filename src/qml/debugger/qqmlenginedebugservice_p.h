@@ -46,6 +46,7 @@
 //
 
 #include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
@@ -59,12 +60,12 @@ class QQmlWatcher;
 class QDataStream;
 class QQmlDebugStatesDelegate;
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : public QQmlDebugService
+class Q_QML_PRIVATE_EXPORT QQmlEngineDebugServiceImpl : public QQmlEngineDebugService
 {
     Q_OBJECT
 public:
-    QQmlEngineDebugService(QObject * = 0);
-    ~QQmlEngineDebugService();
+    QQmlEngineDebugServiceImpl(QObject * = 0);
+    ~QQmlEngineDebugServiceImpl();
 
     struct QQmlObjectData {
         QUrl url;
@@ -94,7 +95,7 @@ public:
 
     void setStatesDelegate(QQmlDebugStatesDelegate *);
 
-    static QQmlEngineDebugService *instance();
+    static QQmlEngineDebugServiceImpl *instance();
 
 protected:
     virtual void messageReceived(const QByteArray &);
@@ -123,10 +124,10 @@ private:
     QQmlWatcher *m_watch;
     QQmlDebugStatesDelegate *m_statesDelegate;
 };
-Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugService::QQmlObjectData &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugService::QQmlObjectData &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugService::QQmlObjectProperty &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugService::QQmlObjectProperty &);
+Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectData &);
+Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectData &);
+Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
+Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
 
 QT_END_NAMESPACE
 

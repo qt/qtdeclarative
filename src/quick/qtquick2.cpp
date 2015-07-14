@@ -188,7 +188,7 @@ void QQmlQtQuick2Module::defineModule()
 #endif
 
     if (QQmlDebugConnector::instance()) {
-        QQmlEngineDebugService::instance()->setStatesDelegate(
+        QQmlEngineDebugServiceImpl::instance()->setStatesDelegate(
                     new QQmlQtQuick2DebugStatesDelegate);
         QQuickProfiler::initialize();
     }

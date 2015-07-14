@@ -40,7 +40,7 @@
 
 QT_BEGIN_NAMESPACE
 class QQmlEngine;
-class QQmlInspectorService;
+class QQmlDebugService;
 class QKeyEvent;
 class QMouseEvent;
 class QWheelEvent;
@@ -111,7 +111,7 @@ private:
 
     bool m_enabled;
 
-    QQmlInspectorService *m_debugService;
+    QQmlDebugService *m_debugService;
     QList<AbstractTool *> m_tools;
     int m_eventId;
     int m_reloadEventId;

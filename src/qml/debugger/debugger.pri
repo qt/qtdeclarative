@@ -4,6 +4,7 @@ SOURCES += \
     $$PWD/qqmldebug.cpp \
     $$PWD/qqmldebugconnector.cpp \
     $$PWD/qqmldebugservice.cpp \
+    $$PWD/qqmldebugserviceinterfaces.cpp \
     $$PWD/qqmlprofilerservice.cpp \
     $$PWD/qqmldebugserver.cpp \
     $$PWD/qqmlinspectorservice.cpp \
@@ -22,6 +23,7 @@ HEADERS += \
     $$PWD/qqmlprofilerservice_p.h \
     $$PWD/qqmldebugserver_p.h \
     $$PWD/qqmldebugserverconnection_p.h \
+    $$PWD/qqmldebugserviceinterfaces_p.h \
     $$PWD/qqmldebugstatesdelegate_p.h \
     $$PWD/qqmlinspectorservice_p.h \
     $$PWD/qqmlinspectorinterface_p.h \

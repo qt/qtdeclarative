@@ -97,7 +97,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
     if (QQmlDebugConnector::instance())
-        QQmlInspectorService::instance()->addView(q);
+        QQmlInspectorServiceImpl::instance()->addView(q);
 
 #ifndef QT_NO_DRAGANDDROP
     q->setAcceptDrops(true);
@@ -150,7 +150,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
     if (QQmlDebugConnector::instance())
-        QQmlInspectorService::instance()->removeView(q_func());
+        QQmlInspectorServiceImpl::instance()->removeView(q_func());
 
     invalidateRenderControl();
 

@@ -53,29 +53,27 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlEngineDebugService, qmlEngineDebugService)
+Q_GLOBAL_STATIC(QQmlEngineDebugServiceImpl, qmlEngineDebugService)
 
-QQmlEngineDebugService *QQmlEngineDebugService::instance()
+QQmlEngineDebugServiceImpl *QQmlEngineDebugServiceImpl::instance()
 {
     return qmlEngineDebugService();
 }
 
-QQmlEngineDebugService::QQmlEngineDebugService(QObject *parent)
-    : QQmlDebugService(QStringLiteral("QmlDebugger"), 2, parent),
-      m_watch(new QQmlWatcher(this)),
-      m_statesDelegate(0)
+QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
+    QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(0)
 {
     QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
                      this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
 }
 
-QQmlEngineDebugService::~QQmlEngineDebugService()
+QQmlEngineDebugServiceImpl::~QQmlEngineDebugServiceImpl()
 {
     delete m_statesDelegate;
 }
 
 QDataStream &operator<<(QDataStream &ds,
-                        const QQmlEngineDebugService::QQmlObjectData &data)
+                        const QQmlEngineDebugServiceImpl::QQmlObjectData &data)
 {
     ds << data.url << data.lineNumber << data.columnNumber << data.idString
        << data.objectName << data.objectType << data.objectId << data.contextId
@@ -84,7 +82,7 @@ QDataStream &operator<<(QDataStream &ds,
 }
 
 QDataStream &operator>>(QDataStream &ds,
-                        QQmlEngineDebugService::QQmlObjectData &data)
+                        QQmlEngineDebugServiceImpl::QQmlObjectData &data)
 {
     ds >> data.url >> data.lineNumber >> data.columnNumber >> data.idString
        >> data.objectName >> data.objectType >> data.objectId >> data.contextId
@@ -93,7 +91,7 @@ QDataStream &operator>>(QDataStream &ds,
 }
 
 QDataStream &operator<<(QDataStream &ds,
-                        const QQmlEngineDebugService::QQmlObjectProperty &data)
+                        const QQmlEngineDebugServiceImpl::QQmlObjectProperty &data)
 {
     ds << (int)data.type << data.name;
     // check first whether the data can be saved
@@ -109,12 +107,12 @@ QDataStream &operator<<(QDataStream &ds,
 }
 
 QDataStream &operator>>(QDataStream &ds,
-                        QQmlEngineDebugService::QQmlObjectProperty &data)
+                        QQmlEngineDebugServiceImpl::QQmlObjectProperty &data)
 {
     int type;
     ds >> type >> data.name >> data.value >> data.valueTypeName
        >> data.binding >> data.hasNotifySignal;
-    data.type = (QQmlEngineDebugService::QQmlObjectProperty::Type)type;
+    data.type = (QQmlEngineDebugServiceImpl::QQmlObjectProperty::Type)type;
     return ds;
 }
 
@@ -141,8 +139,8 @@ static bool hasValidSignal(QObject *object, const QString &propertyName)
     return true;
 }
 
-QQmlEngineDebugService::QQmlObjectProperty
-QQmlEngineDebugService::propertyData(QObject *obj, int propIdx)
+QQmlEngineDebugServiceImpl::QQmlObjectProperty
+QQmlEngineDebugServiceImpl::propertyData(QObject *obj, int propIdx)
 {
     QQmlObjectProperty rv;
 
@@ -176,7 +174,7 @@ QQmlEngineDebugService::propertyData(QObject *obj, int propIdx)
     return rv;
 }
 
-QVariant QQmlEngineDebugService::valueContents(QVariant value) const
+QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
 {
     // We can't send JS objects across the wire, so transform them to variant
     // maps for serialization.
@@ -237,7 +235,7 @@ QVariant QQmlEngineDebugService::valueContents(QVariant value) const
     return QString(QStringLiteral("<unknown value>"));
 }
 
-void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
+void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
                                                      QObject *object, bool recur, bool dumpProperties)
 {
     message << objectData(object);
@@ -297,7 +295,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
             }
             fakeProperties << prop;
 
-            signalHandler = signalHandler->m_nextSignal;
+            signalHandler = nextSignal(signalHandler);
         }
     }
 
@@ -310,7 +308,7 @@ void QQmlEngineDebugService::buildObjectDump(QDataStream &message,
         message << fakeProperties[ii];
 }
 
-void QQmlEngineDebugService::prepareDeferredObjects(QObject *obj)
+void QQmlEngineDebugServiceImpl::prepareDeferredObjects(QObject *obj)
 {
     qmlExecuteDeferred(obj);
 
@@ -322,7 +320,7 @@ void QQmlEngineDebugService::prepareDeferredObjects(QObject *obj)
 
 }
 
-void QQmlEngineDebugService::storeObjectIds(QObject *co)
+void QQmlEngineDebugServiceImpl::storeObjectIds(QObject *co)
 {
     QQmlDebugService::idForObject(co);
     QObjectList children = co->children();
@@ -330,7 +328,7 @@ void QQmlEngineDebugService::storeObjectIds(QObject *co)
         storeObjectIds(children.at(ii));
 }
 
-void QQmlEngineDebugService::buildObjectList(QDataStream &message,
+void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
                                              QQmlContext *ctxt,
                                              const QList<QPointer<QObject> > &instances)
 {
@@ -374,15 +372,15 @@ void QQmlEngineDebugService::buildObjectList(QDataStream &message,
     }
 }
 
-void QQmlEngineDebugService::buildStatesList(bool cleanList,
+void QQmlEngineDebugServiceImpl::buildStatesList(bool cleanList,
                                              const QList<QPointer<QObject> > &instances)
 {
     if (m_statesDelegate)
         m_statesDelegate->buildStatesList(cleanList, instances);
 }
 
-QQmlEngineDebugService::QQmlObjectData
-QQmlEngineDebugService::objectData(QObject *object)
+QQmlEngineDebugServiceImpl::QQmlObjectData
+QQmlEngineDebugServiceImpl::objectData(QObject *object)
 {
     QQmlData *ddata = QQmlData::get(object);
     QQmlObjectData rv;
@@ -421,7 +419,7 @@ QQmlEngineDebugService::objectData(QObject *object)
     return rv;
 }
 
-void QQmlEngineDebugService::messageReceived(const QByteArray &message)
+void QQmlEngineDebugServiceImpl::messageReceived(const QByteArray &message)
 {
     QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
 }
@@ -429,7 +427,7 @@ void QQmlEngineDebugService::messageReceived(const QByteArray &message)
 /*!
     Returns a list of objects matching the given filename, line and column.
 */
-QList<QObject*> QQmlEngineDebugService::objectForLocationInfo(const QString &filename,
+QList<QObject*> QQmlEngineDebugServiceImpl::objectForLocationInfo(const QString &filename,
                                                               int lineNumber, int columnNumber)
 {
     QList<QObject *> objects;
@@ -447,7 +445,7 @@ QList<QObject*> QQmlEngineDebugService::objectForLocationInfo(const QString &fil
     return objects;
 }
 
-void QQmlEngineDebugService::processMessage(const QByteArray &message)
+void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 {
     QQmlDebugStream ds(message);
 
@@ -629,7 +627,7 @@ void QQmlEngineDebugService::processMessage(const QByteArray &message)
     emit messageToClient(name(), reply);
 }
 
-bool QQmlEngineDebugService::setBinding(int objectId,
+bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
                                                 const QString &propertyName,
                                                 const QVariant &expression,
                                                 bool isLiteralValue,
@@ -681,7 +679,7 @@ bool QQmlEngineDebugService::setBinding(int objectId,
     return ok;
 }
 
-bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyName)
+bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &propertyName)
 {
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
@@ -734,7 +732,7 @@ bool QQmlEngineDebugService::resetBinding(int objectId, const QString &propertyN
     return false;
 }
 
-bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, const QString &body)
+bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &method, const QString &body)
 {
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
@@ -776,7 +774,7 @@ bool QQmlEngineDebugService::setMethodBody(int objectId, const QString &method, 
     return true;
 }
 
-void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
+void QQmlEngineDebugServiceImpl::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
 {
     QByteArray reply;
     QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
@@ -786,7 +784,7 @@ void QQmlEngineDebugService::propertyChanged(int id, int objectId, const QMetaPr
     emit messageToClient(name(), reply);
 }
 
-void QQmlEngineDebugService::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlEngineDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(!m_engines.contains(engine));
@@ -795,7 +793,7 @@ void QQmlEngineDebugService::engineAboutToBeAdded(QQmlEngine *engine)
     emit attachedToEngine(engine);
 }
 
-void QQmlEngineDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlEngineDebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(m_engines.contains(engine));
@@ -804,7 +802,7 @@ void QQmlEngineDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
     emit detachedFromEngine(engine);
 }
 
-void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
+void QQmlEngineDebugServiceImpl::objectCreated(QQmlEngine *engine, QObject *object)
 {
     Q_ASSERT(engine);
     Q_ASSERT(m_engines.contains(engine));
@@ -821,7 +819,7 @@ void QQmlEngineDebugService::objectCreated(QQmlEngine *engine, QObject *object)
     emit messageToClient(name(), reply);
 }
 
-void QQmlEngineDebugService::setStatesDelegate(QQmlDebugStatesDelegate *delegate)
+void QQmlEngineDebugServiceImpl::setStatesDelegate(QQmlDebugStatesDelegate *delegate)
 {
     m_statesDelegate = delegate;
 }

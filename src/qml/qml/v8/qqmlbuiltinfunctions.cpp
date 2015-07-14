@@ -1451,7 +1451,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     if (!QQmlDebugConnector::instance()) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
     } else {
-        QQmlProfilerService::instance()->startProfiling(v4->qmlEngine());
+        QQmlProfilerServiceImpl::instance()->startProfiling(v4->qmlEngine());
         logger.debug("Profiling started.");
     }
 
@@ -1470,7 +1470,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     if (!QQmlDebugConnector::instance()) {
         logger.warning("Ignoring console.profileEnd(): the debug service is disabled.");
     } else {
-        QQmlProfilerService::instance()->stopProfiling(v4->qmlEngine());
+        QQmlProfilerServiceImpl::instance()->stopProfiling(v4->qmlEngine());
         logger.debug("Profiling ended.");
     }
 

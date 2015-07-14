@@ -88,7 +88,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
     }
 
     if (QQmlDebugConnector::instance())
-        QQmlInspectorService::instance()->addView(q);
+        QQmlInspectorServiceImpl::instance()->addView(q);
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
@@ -99,7 +99,7 @@ QQuickViewPrivate::QQuickViewPrivate()
 QQuickViewPrivate::~QQuickViewPrivate()
 {
     if (QQmlDebugConnector::instance())
-        QQmlInspectorService::instance()->removeView(q_func());
+        QQmlInspectorServiceImpl::instance()->removeView(q_func());
 }
 
 void QQuickViewPrivate::execute()

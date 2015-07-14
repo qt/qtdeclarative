@@ -58,7 +58,7 @@ const char *const V4_PAUSE = "interrupt";
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QV4DebugService, v4ServiceInstance)
+Q_GLOBAL_STATIC(QV4DebugServiceImpl, v4ServiceInstance)
 
 class V8CommandHandler;
 class UnknownV8CommandHandler;
@@ -305,8 +305,8 @@ private:
     QHash<QV4::Object *, int> objectRefs;
 };
 
-int QV4DebugService::debuggerIndex = 0;
-int QV4DebugService::sequence = 0;
+int QV4DebugServiceImpl::debuggerIndex = 0;
+int QV4DebugServiceImpl::sequence = 0;
 
 class V8CommandHandler
 {
@@ -320,7 +320,7 @@ public:
 
     QString command() const { return cmd; }
 
-    void handle(const QJsonObject &request, QV4DebugService *s)
+    void handle(const QJsonObject &request, QV4DebugServiceImpl *s)
     {
         TRACE_PROTOCOL(qDebug() << "handling command" << command() << "...");
 
@@ -378,7 +378,7 @@ protected:
     QString cmd;
     QJsonObject req;
     QJsonValue seq;
-    QV4DebugService *debugService;
+    QV4DebugServiceImpl *debugService;
     QJsonObject response;
 };
 
@@ -817,12 +817,12 @@ public:
 };
 } // anonymous namespace
 
-void QV4DebugService::addHandler(V8CommandHandler* handler)
+void QV4DebugServiceImpl::addHandler(V8CommandHandler* handler)
 {
     handlers[handler->command()] = handler;
 }
 
-V8CommandHandler *QV4DebugService::v8CommandHandler(const QString &command) const
+V8CommandHandler *QV4DebugServiceImpl::v8CommandHandler(const QString &command) const
 {
     V8CommandHandler *handler = handlers.value(command, 0);
     if (handler)
@@ -831,8 +831,8 @@ V8CommandHandler *QV4DebugService::v8CommandHandler(const QString &command) cons
         return unknownV8CommandHandler.data();
 }
 
-QV4DebugService::QV4DebugService(QObject *parent) :
-    QQmlConfigurableDebugService<QQmlDebugService>(QStringLiteral("V8Debugger"), 1, parent),
+QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
+    QQmlConfigurableDebugService<QV4DebugService>(1, parent),
     debuggerAgent(this), version(1), theSelectedFrame(0),
     unknownV8CommandHandler(new UnknownV8CommandHandler)
 {
@@ -850,17 +850,17 @@ QV4DebugService::QV4DebugService(QObject *parent) :
     addHandler(new V8EvaluateRequest);
 }
 
-QV4DebugService::~QV4DebugService()
+QV4DebugServiceImpl::~QV4DebugServiceImpl()
 {
     qDeleteAll(handlers);
 }
 
-QV4DebugService *QV4DebugService::instance()
+QV4DebugServiceImpl *QV4DebugServiceImpl::instance()
 {
     return v4ServiceInstance();
 }
 
-void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
+void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine) {
@@ -876,10 +876,10 @@ void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
             }
         }
     }
-    QQmlConfigurableDebugService<QQmlDebugService>::engineAboutToBeAdded(engine);
+    QQmlConfigurableDebugService<QV4DebugService>::engineAboutToBeAdded(engine);
 }
 
-void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
+void QV4DebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine){
@@ -897,10 +897,10 @@ void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
             debuggerAgent.removeDebugger(debugger);
         }
     }
-    QQmlConfigurableDebugService<QQmlDebugService>::engineAboutToBeRemoved(engine);
+    QQmlConfigurableDebugService<QV4DebugService>::engineAboutToBeRemoved(engine);
 }
 
-void QV4DebugService::signalEmitted(const QString &signal)
+void QV4DebugServiceImpl::signalEmitted(const QString &signal)
 {
     //This function is only called by QQmlBoundSignal
     //only if there is a slot connected to the signal. Hence, there
@@ -918,7 +918,7 @@ void QV4DebugService::signalEmitted(const QString &signal)
     }
 }
 
-void QV4DebugService::messageReceived(const QByteArray &message)
+void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&m_configMutex);
 
@@ -961,7 +961,7 @@ void QV4DebugService::messageReceived(const QByteArray &message)
     }
 }
 
-void QV4DebugService::sendSomethingToSomebody(const char *type, int magicNumber)
+void QV4DebugServiceImpl::sendSomethingToSomebody(const char *type, int magicNumber)
 {
     QByteArray response;
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
@@ -970,7 +970,7 @@ void QV4DebugService::sendSomethingToSomebody(const char *type, int magicNumber)
     emit messageToClient(name(), packMessage(type, response));
 }
 
-QV4DebuggerAgent::QV4DebuggerAgent(QV4DebugService *debugService)
+QV4DebuggerAgent::QV4DebuggerAgent(QV4DebugServiceImpl *debugService)
     : debugService(debugService)
 {}
 
@@ -1054,7 +1054,7 @@ void QV4DebuggerAgent::sourcesCollected(QV4::Debugging::Debugger *debugger, QStr
     debugService->send(response);
 }
 
-void QV4DebugService::handleV8Request(const QByteArray &payload)
+void QV4DebugServiceImpl::handleV8Request(const QByteArray &payload)
 {
     TRACE_PROTOCOL(qDebug() << "v8request, payload:" << payload.constData());
 
@@ -1069,7 +1069,7 @@ void QV4DebugService::handleV8Request(const QByteArray &payload)
     }
 }
 
-QByteArray QV4DebugService::packMessage(const QByteArray &command, const QByteArray &message)
+QByteArray QV4DebugServiceImpl::packMessage(const QByteArray &command, const QByteArray &message)
 {
     QByteArray reply;
     QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
@@ -1078,7 +1078,7 @@ QByteArray QV4DebugService::packMessage(const QByteArray &command, const QByteAr
     return reply;
 }
 
-void QV4DebugService::send(QJsonObject v8Payload)
+void QV4DebugServiceImpl::send(QJsonObject v8Payload)
 {
     v8Payload[QLatin1String("seq")] = sequence++;
     QJsonDocument doc;
@@ -1094,12 +1094,12 @@ void QV4DebugService::send(QJsonObject v8Payload)
     emit messageToClient(name(), packMessage("v8message", responseData));
 }
 
-void QV4DebugService::clearHandles(QV4::ExecutionEngine *engine)
+void QV4DebugServiceImpl::clearHandles(QV4::ExecutionEngine *engine)
 {
     theCollector.reset(new VariableCollector(engine));
 }
 
-QJsonObject QV4DebugService::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
+QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                                         QV4::Debugging::Debugger *debugger)
 {
     QJsonObject frame;
@@ -1137,7 +1137,7 @@ QJsonObject QV4DebugService::buildFrame(const QV4::StackFrame &stackFrame, int f
     return frame;
 }
 
-int QV4DebugService::encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType)
+int QV4DebugServiceImpl::encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType)
 {
     switch (scopeType) {
     case QV4::Heap::ExecutionContext::Type_GlobalContext:
@@ -1159,7 +1159,7 @@ int QV4DebugService::encodeScopeType(QV4::Heap::ExecutionContext::ContextType sc
     }
 }
 
-QJsonObject QV4DebugService::buildScope(int frameNr, int scopeNr,
+QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr,
                                         QV4::Debugging::Debugger *debugger)
 {
     QJsonObject scope;
@@ -1179,27 +1179,27 @@ QJsonObject QV4DebugService::buildScope(int frameNr, int scopeNr,
     return scope;
 }
 
-QJsonValue QV4DebugService::lookup(int refId) const
+QJsonValue QV4DebugServiceImpl::lookup(int refId) const
 {
     return theCollector->lookup(refId);
 }
 
-QJsonArray QV4DebugService::buildRefs()
+QJsonArray QV4DebugServiceImpl::buildRefs()
 {
     return theCollector->retrieveRefsToInclude();
 }
 
-VariableCollector *QV4DebugService::collector() const
+VariableCollector *QV4DebugServiceImpl::collector() const
 {
     return theCollector.data();
 }
 
-void QV4DebugService::selectFrame(int frameNr)
+void QV4DebugServiceImpl::selectFrame(int frameNr)
 {
     theSelectedFrame = frameNr;
 }
 
-int QV4DebugService::selectedFrame() const
+int QV4DebugServiceImpl::selectedFrame() const
 {
     return theSelectedFrame;
 }

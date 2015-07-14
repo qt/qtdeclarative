@@ -321,7 +321,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
         return;
 
     if (QQmlDebugConnector::instance())
-        QV4DebugService::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->signalIndex()).methodSignature()));
+        QV4DebugServiceImpl::instance()->signalEmitted(QString::fromLatin1(QMetaObjectPrivate::signal(s->m_expression->target()->metaObject(), s->signalIndex()).methodSignature()));
 
     QQmlEngine *engine;
     if (s->m_expression && (engine = s->m_expression->engine())) {

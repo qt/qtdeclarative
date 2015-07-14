@@ -46,6 +46,7 @@
 //
 
 #include "qqmlconfigurabledebugservice_p.h"
+#include "qqmldebugserviceinterfaces_p.h"
 #include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
 
@@ -67,14 +68,14 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService :
-        public QQmlConfigurableDebugService<QQmlDebugService>,
+class Q_QML_PRIVATE_EXPORT QQmlProfilerServiceImpl :
+        public QQmlConfigurableDebugService<QQmlProfilerService>,
         public QQmlProfilerDefinitions
 {
     Q_OBJECT
 public:
 
-    static QQmlProfilerService *instance();
+    static QQmlProfilerServiceImpl *instance();
     void engineAboutToBeAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
     void engineAdded(QQmlEngine *engine);
@@ -86,8 +87,8 @@ public:
     void startProfiling(QQmlEngine *engine, quint64 features = std::numeric_limits<quint64>::max());
     void stopProfiling(QQmlEngine *engine);
 
-    QQmlProfilerService();
-    ~QQmlProfilerService();
+    QQmlProfilerServiceImpl();
+    ~QQmlProfilerServiceImpl();
 
     void dataReady(QQmlAbstractProfilerAdapter *profiler);
 

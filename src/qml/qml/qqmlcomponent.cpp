@@ -898,7 +898,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     if (enginePriv->isDebugging && rv) {
         if (!context->isInternal)
             context->asQQmlContextPrivate()->instances.append(rv);
-        QQmlEngineDebugService::instance()->objectCreated(engine, rv);
+        QQmlEngineDebugServiceImpl::instance()->objectCreated(engine, rv);
     }
 
     return rv;

@@ -83,7 +83,7 @@ namespace QmlJSDebugger {
 AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     QObject(parent),
     m_enabled(false),
-    m_debugService(QQmlInspectorService::instance()),
+    m_debugService(QQmlInspectorServiceImpl::instance()),
     m_eventId(0),
     m_reloadEventId(-1)
 {

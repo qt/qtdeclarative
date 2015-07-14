@@ -127,9 +127,9 @@ qint64 QQuickProfiler::sendMessages(qint64 until, QList<QByteArray> &messages)
 void QQuickProfiler::initialize()
 {
     Q_ASSERT(s_instance == 0);
-    QQmlProfilerService *service = QQmlProfilerService::instance();
+    QQmlProfilerServiceImpl *service = QQmlProfilerServiceImpl::instance();
     s_instance = new QQuickProfiler(service);
-    QQmlProfilerService::instance()->addGlobalProfiler(s_instance);
+    QQmlProfilerServiceImpl::instance()->addGlobalProfiler(s_instance);
 }
 
 void animationTimerCallback(qint64 delta)

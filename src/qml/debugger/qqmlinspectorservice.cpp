@@ -48,37 +48,36 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlInspectorService, serviceInstance)
+Q_GLOBAL_STATIC(QQmlInspectorServiceImpl, serviceInstance)
 
-QQmlInspectorService::QQmlInspectorService()
-    : QQmlDebugService(QStringLiteral("QmlInspector"), 1)
-    , m_currentInspectorPlugin(0)
+QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(): QQmlInspectorService(1),
+    m_currentInspectorPlugin(0)
 {
 }
 
-QQmlInspectorService *QQmlInspectorService::instance()
+QQmlInspectorServiceImpl *QQmlInspectorServiceImpl::instance()
 {
     return serviceInstance();
 }
 
-void QQmlInspectorService::addView(QObject *view)
+void QQmlInspectorServiceImpl::addView(QObject *view)
 {
     m_views.append(view);
     updateState();
 }
 
-void QQmlInspectorService::removeView(QObject *view)
+void QQmlInspectorServiceImpl::removeView(QObject *view)
 {
     m_views.removeAll(view);
     updateState();
 }
 
-void QQmlInspectorService::stateChanged(State /*state*/)
+void QQmlInspectorServiceImpl::stateChanged(State /*state*/)
 {
     QMetaObject::invokeMethod(this, "updateState", Qt::QueuedConnection);
 }
 
-void QQmlInspectorService::updateState()
+void QQmlInspectorServiceImpl::updateState()
 {
     if (m_views.isEmpty()) {
         if (m_currentInspectorPlugin) {
@@ -118,18 +117,18 @@ void QQmlInspectorService::updateState()
     }
 }
 
-void QQmlInspectorService::messageReceived(const QByteArray &message)
+void QQmlInspectorServiceImpl::messageReceived(const QByteArray &message)
 {
     QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
 }
 
-void QQmlInspectorService::processMessage(const QByteArray &message)
+void QQmlInspectorServiceImpl::processMessage(const QByteArray &message)
 {
     if (m_currentInspectorPlugin)
         m_currentInspectorPlugin->clientMessage(message);
 }
 
-void QQmlInspectorService::loadInspectorPlugins()
+void QQmlInspectorServiceImpl::loadInspectorPlugins()
 {
 #ifndef QT_NO_LIBRARY
     QStringList pluginCandidates;

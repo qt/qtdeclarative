@@ -31,60 +31,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLINSPECTORSERVICE_H
-#define QQMLINSPECTORSERVICE_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmldebugservice_p.h"
 #include "qqmldebugserviceinterfaces_p.h"
-
-#include <QtQml/qtqmlglobal.h>
-#include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE
 
-namespace QmlJSDebugger { class AbstractViewInspector; }
-
-class QQmlInspectorInterface;
-
-class Q_QML_PRIVATE_EXPORT QQmlInspectorServiceImpl : public QQmlInspectorService
-{
-    Q_OBJECT
-
-public:
-    QQmlInspectorServiceImpl();
-    static QQmlInspectorServiceImpl *instance();
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &);
-
-private Q_SLOTS:
-    void processMessage(const QByteArray &message);
-    void updateState();
-
-private:
-    friend class QmlJSDebugger::AbstractViewInspector;
-    void loadInspectorPlugins();
-
-    QList<QObject*> m_views;
-    QQmlInspectorInterface *m_currentInspectorPlugin;
-    QList<QQmlInspectorInterface*> m_inspectorPlugins;
-};
+const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
+const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
+const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
+const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
 
 QT_END_NAMESPACE
-
-#endif // QQMLINSPECTORSERVICE_H

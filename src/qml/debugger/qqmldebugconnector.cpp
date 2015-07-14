@@ -105,12 +105,12 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
         }
         params->instance = loadQQmlDebugConnector(QLatin1String("QQmlDebugServer"));
         if (params->instance) {
-            QQmlEngineDebugService::instance();
-            QV4DebugService::instance();
-            QQmlProfilerService::instance();
+            QQmlEngineDebugServiceImpl::instance();
+            QV4DebugServiceImpl::instance();
+            QQmlProfilerServiceImpl::instance();
             QDebugMessageService::instance();
             QQmlEngineControlService::instance();
-            QQmlInspectorService::instance();
+            QQmlInspectorServiceImpl::instance();
         }
     }
 

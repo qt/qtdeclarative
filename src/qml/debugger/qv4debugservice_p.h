@@ -46,6 +46,7 @@
 //
 
 #include "qqmlconfigurabledebugservice_p.h"
+#include "qqmldebugserviceinterfaces_p.h"
 #include <private/qv4debugging_p.h>
 
 #include <QtCore/QJsonValue>
@@ -58,13 +59,13 @@ class QQmlEngine;
 class VariableCollector;
 class V8CommandHandler;
 class UnknownV8CommandHandler;
-class QV4DebugService;
+class QV4DebugServiceImpl;
 
 class QV4DebuggerAgent : public QV4::Debugging::DebuggerAgent
 {
     Q_OBJECT
 public:
-    QV4DebuggerAgent(QV4DebugService *debugService);
+    QV4DebuggerAgent(QV4DebugServiceImpl *debugService);
     QV4::Debugging::Debugger *firstDebugger() const;
     bool isRunning() const;
 
@@ -75,17 +76,17 @@ public slots:
                                   int requestSequenceNr);
 
 private:
-    QV4DebugService *debugService;
+    QV4DebugServiceImpl *debugService;
 };
 
-class QV4DebugService : public QQmlConfigurableDebugService<QQmlDebugService>
+class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
 {
     Q_OBJECT
 public:
-    explicit QV4DebugService(QObject *parent = 0);
-    ~QV4DebugService();
+    explicit QV4DebugServiceImpl(QObject *parent = 0);
+    ~QV4DebugServiceImpl();
 
-    static QV4DebugService *instance();
+    static QV4DebugServiceImpl *instance();
     void engineAboutToBeAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
 
