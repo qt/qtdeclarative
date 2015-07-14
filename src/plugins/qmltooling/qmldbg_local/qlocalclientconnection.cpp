@@ -33,11 +33,10 @@
 
 #include "qlocalclientconnection.h"
 #include "qpacketprotocol.h"
+#include "qqmldebugserver.h"
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qlocalsocket.h>
-
-#include <private/qqmldebugserver_p.h>
 
 QT_BEGIN_NAMESPACE
 

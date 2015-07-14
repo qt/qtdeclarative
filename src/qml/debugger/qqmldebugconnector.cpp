@@ -49,7 +49,9 @@
 
 QT_BEGIN_NAMESPACE
 
-extern QQmlDebugConnector *loadQQmlDebugConnector(const QString &key);
+// We could add more plugins here, and distinguish by arguments to instance()
+Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugConnector)
+Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebugServerFactory)
 
 struct QQmlDebugConnectorParams {
     QString pluginKey;
@@ -123,6 +125,16 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
     }
 
     return params->instance;
+}
+
+QQmlDebugConnectorFactory::~QQmlDebugConnectorFactory()
+{
+    // This is triggered when the plugin is unloaded.
+    QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
+    if (params && params->instance) {
+        delete params->instance;
+        params->instance = 0;
+    }
 }
 
 QT_END_NAMESPACE

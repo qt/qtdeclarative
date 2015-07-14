@@ -11,6 +11,8 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qlocalclientconnection.h \
+    $$PWD/../shared/qqmldebugserver.h \
+    $$PWD/../shared/qqmldebugserverconnection.h \
     $$PWD/../shared/qpacketprotocol.h
 
 INCLUDEPATH += $$PWD \

@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_P_H
-#define QQMLDEBUGSERVER_P_H
+#ifndef QQMLDEBUGSERVER_H
+#define QQMLDEBUGSERVER_H
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qtqmlglobal_p.h>
@@ -50,7 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : protected QQmlDebugConnector
+class QQmlDebugServer : protected QQmlDebugConnector
 {
     Q_OBJECT
 public:
@@ -59,4 +59,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVER_P_H
+#endif // QQMLDEBUGSERVER_H

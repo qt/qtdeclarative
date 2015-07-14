@@ -31,10 +31,11 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserver_p.h"
-#include "qqmldebugserverconnection_p.h"
-#include "qqmldebugservice_p.h"
+#include "qqmldebugserver.h"
+#include "qqmldebugserverfactory.h"
+#include "qqmldebugserverconnection.h"
 
+#include <private/qqmldebugservice_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 
@@ -120,7 +121,7 @@ private:
     friend struct StartTcpServerAction;
     friend struct ConnectToLocalAction;
     friend class QQmlDebugServerThread;
-    friend QQmlDebugConnector *loadQQmlDebugConnector(const QString &key);
+    friend class QQmlDebugServerFactory;
 
     class EngineCondition {
     public:
@@ -156,8 +157,6 @@ private:
 #endif
     QAtomicInt m_changeServiceStateCalls;
 };
-
-Q_GLOBAL_STATIC(QQmlDebugServerImpl, debugServerInstance)
 
 class QQmlDebugServerThread : public QThread
 {
@@ -356,17 +355,11 @@ bool QQmlDebugServerImpl::blockingMode() const
     return m_blockingMode;
 }
 
-QQmlDebugConnector *loadQQmlDebugConnector(const QString &key)
-{
-    if (key == QLatin1String("QQmlDebugServer")) {
-        return debugServerInstance();
-    } else {
-        return 0;
-    }
-}
-
 static void cleanupOnShutdown()
 {
+    // We cannot do this in the destructor as the connection plugin will get unloaded before the
+    // server plugin and we need the connection to send any remaining data. This function is
+    // triggered before any plugins are unloaded.
     QQmlDebugServerImpl::cleanup();
 }
 
@@ -787,6 +780,12 @@ void QQmlDebugServerImpl::EngineCondition::wake()
     if (--numServices == 0)
         condition->wakeAll();
     Q_ASSERT_X(numServices >=0, Q_FUNC_INFO, "Woken more often than #services.");
+}
+
+QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)
+{
+    // Cannot parent it to this because it gets moved to another thread
+    return (key == QLatin1String("QQmlDebugServer") ? new QQmlDebugServerImpl : 0);
 }
 
 QT_END_NAMESPACE

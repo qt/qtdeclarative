@@ -34,11 +34,10 @@
 #ifndef QLOCALCLIENTCONNECTION_H
 #define QLOCALCLIENTCONNECTION_H
 
-#include <private/qqmldebugserverconnection_p.h>
+#include "qqmldebugserverconnection.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlDebugServer;
 class QLocalClientConnectionPrivate;
 class QLocalClientConnection : public QObject, public QQmlDebugServerConnection
 {

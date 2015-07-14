@@ -83,6 +83,15 @@ protected:
     static QString commandLineArguments();
 };
 
+class Q_QML_PRIVATE_EXPORT QQmlDebugConnectorFactory : public QObject {
+    Q_OBJECT
+public:
+    virtual QQmlDebugConnector *create(const QString &key) = 0;
+    ~QQmlDebugConnectorFactory();
+};
+
+#define QQmlDebugConnectorFactory_iid "org.qt-project.Qt.QQmlDebugConnectorFactory"
+
 QT_END_NAMESPACE
 
 #endif // QQMLDEBUGCONNECTOR_H

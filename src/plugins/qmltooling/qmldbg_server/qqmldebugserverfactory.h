@@ -31,47 +31,35 @@
 **
 ****************************************************************************/
 
-#ifndef QTCPSERVERCONNECTION_H
-#define QTCPSERVERCONNECTION_H
+#ifndef QQMLDEBUGSERVERFACTORY_H
+#define QQMLDEBUGSERVERFACTORY_H
 
-#include "qqmldebugserverconnection.h"
+#include <private/qqmldebugconnector_p.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// ementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-class QTcpServerConnectionPrivate;
-class QTcpServerConnection : public QObject, public QQmlDebugServerConnection
+class QQmlDebugServerFactory : public QQmlDebugConnectorFactory
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QTcpServerConnection)
-    Q_DISABLE_COPY(QTcpServerConnection)
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlDebugServerConnection")
-    Q_INTERFACES(QQmlDebugServerConnection)
 
+    // The interface for the code that loads this thing is QQmlDebugConnector.
+    // QQmlDebugServer is for connection plugins.
+    Q_PLUGIN_METADATA(IID QQmlDebugConnectorFactory_iid FILE "qqmldebugserver.json")
 public:
-    QTcpServerConnection();
-    ~QTcpServerConnection();
-
-    void setServer(QQmlDebugServer *server);
-    bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
-    bool setFileName(const QString &fileName, bool block);
-
-    bool isConnected() const;
-    void send(const QList<QByteArray> &messages);
-    void disconnect();
-    bool waitForMessage();
-
-    bool listen();
-    void waitForConnection();
-
-private Q_SLOTS:
-    void readyRead();
-    void newConnection();
-    void invalidPacket();
-
-private:
-    QTcpServerConnectionPrivate *d_ptr;
+    QQmlDebugConnector *create(const QString &key);
 };
 
 QT_END_NAMESPACE
 
-#endif // QTCPSERVERCONNECTION_H
+#endif // QQMLDEBUGSERVERFACTORY_H
