@@ -825,10 +825,7 @@ bool QQmlDebugServerPrivate::enable(Action action)
     }
     return true;
 #else
-    Q_UNUSED(portFrom);
-    Q_UNUSED(portTo);
-    Q_UNUSED(block);
-    Q_UNUSED(hostAddress);
+    Q_UNUSED(action);
     return false;
 #endif
 }
