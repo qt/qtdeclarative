@@ -84,8 +84,6 @@ private slots:
     void wakeEngine(QQmlEngine *engine);
 
 private:
-    friend class QQmlDebugService;
-    friend class QQmlDebugServicePrivate;
     friend class QQmlDebugServerThread;
     friend struct QQmlDebugServerInstanceWrapper;
     QQmlDebugServer();
