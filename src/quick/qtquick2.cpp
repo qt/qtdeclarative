@@ -38,8 +38,8 @@
 #include <private/qquickitemsmodule_p.h>
 #include <private/qquickaccessiblefactory_p.h>
 
-#include <private/qqmlenginedebugservice_p.h>
 #include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
@@ -187,11 +187,13 @@ void QQmlQtQuick2Module::defineModule()
     QAccessible::installFactory(&qQuickAccessibleFactory);
 #endif
 
-    if (QQmlDebugConnector::instance()) {
-        QQmlEngineDebugServiceImpl::instance()->setStatesDelegate(
-                    new QQmlQtQuick2DebugStatesDelegate);
-        QQuickProfiler::initialize();
-    }
+    QQmlEngineDebugService *debugService = QQmlDebugConnector::service<QQmlEngineDebugService>();
+    if (debugService)
+        debugService->setStatesDelegate(new QQmlQtQuick2DebugStatesDelegate);
+
+    QQmlProfilerService *profilerService = QQmlDebugConnector::service<QQmlProfilerService>();
+    if (profilerService)
+        QQuickProfiler::initialize(profilerService);
 }
 
 void QQmlQtQuick2Module::undefineModule()

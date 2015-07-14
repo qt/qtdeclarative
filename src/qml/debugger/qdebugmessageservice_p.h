@@ -66,9 +66,13 @@ public:
                           const QString &buf);
 
 protected:
+    static const QString s_key;
+
     void stateChanged(State);
 
 private:
+    friend class QQmlDebugConnector;
+
     QtMessageHandler oldMsgHandler;
     QQmlDebugService::State prevState;
     QMutex initMutex;

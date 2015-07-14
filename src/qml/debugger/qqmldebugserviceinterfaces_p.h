@@ -63,6 +63,8 @@ public:
     virtual void signalEmitted(const QString &signal) = 0;
 
 protected:
+    friend class QQmlDebugConnector;
+
     QV4DebugService(float version, QObject *parent = 0) :
         QQmlDebugService(s_key, version, parent) {}
 
@@ -83,6 +85,8 @@ public:
     virtual void dataReady(QQmlAbstractProfilerAdapter *profiler) = 0;
 
 protected:
+    friend class QQmlDebugConnector;
+
     QQmlProfilerService(float version, QObject *parent = 0) :
         QQmlDebugService(s_key, version, parent) {}
 
@@ -97,6 +101,8 @@ public:
     virtual void setStatesDelegate(QQmlDebugStatesDelegate *) = 0;
 
 protected:
+    friend class QQmlDebugConnector;
+
     QQmlEngineDebugService(float version, QObject *parent = 0) :
         QQmlDebugService(s_key, version, parent) {}
 
@@ -113,6 +119,8 @@ public:
     virtual void removeView(QObject *) = 0;
 
 protected:
+    friend class QQmlDebugConnector;
+
     QQmlInspectorService(float version, QObject *parent = 0) :
         QQmlDebugService(s_key, version, parent) {}
 

@@ -41,8 +41,8 @@
 #include <private/qv8engine_p.h>
 #include <QFileInfo>
 
-#include <private/qqmlprofilerservice_p.h>
 #include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlglobal_p.h>
 
 #include <private/qqmlplatform_p.h>
@@ -1448,10 +1448,11 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
-    if (!QQmlDebugConnector::instance()) {
+    QQmlProfilerService *service = QQmlDebugConnector::service<QQmlProfilerService>();
+    if (!service) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
     } else {
-        QQmlProfilerServiceImpl::instance()->startProfiling(v4->qmlEngine());
+        service->startProfiling(v4->qmlEngine());
         logger.debug("Profiling started.");
     }
 
@@ -1467,10 +1468,11 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     const QByteArray baFunction = frame.function.toUtf8();
     QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData());
 
-    if (!QQmlDebugConnector::instance()) {
+    QQmlProfilerService *service = QQmlDebugConnector::service<QQmlProfilerService>();
+    if (!service) {
         logger.warning("Ignoring console.profileEnd(): the debug service is disabled.");
     } else {
-        QQmlProfilerServiceImpl::instance()->stopProfiling(v4->qmlEngine());
+        service->stopProfiling(v4->qmlEngine());
         logger.debug("Profiling ended.");
     }
 

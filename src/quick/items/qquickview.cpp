@@ -40,7 +40,7 @@
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qquickprofiler_p.h>
-#include <private/qqmlinspectorservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtQml/qqmlengine.h>
@@ -87,8 +87,9 @@ void QQuickViewPrivate::init(QQmlEngine* e)
         rootItemMarker.set(v4, v);
     }
 
-    if (QQmlDebugConnector::instance())
-        QQmlInspectorServiceImpl::instance()->addView(q);
+    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
+    if (service)
+        service->addView(q);
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
@@ -98,8 +99,9 @@ QQuickViewPrivate::QQuickViewPrivate()
 
 QQuickViewPrivate::~QQuickViewPrivate()
 {
-    if (QQmlDebugConnector::instance())
-        QQmlInspectorServiceImpl::instance()->removeView(q_func());
+    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
+    if (service)
+        service->removeView(q_func());
 }
 
 void QQuickViewPrivate::execute()

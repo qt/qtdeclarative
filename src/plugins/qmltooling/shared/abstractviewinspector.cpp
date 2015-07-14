@@ -32,7 +32,6 @@
 ****************************************************************************/
 
 #include "abstractviewinspector.h"
-
 #include "abstracttool.h"
 
 #include <QtCore/QDebug>
@@ -40,6 +39,7 @@
 #include <QtQml/QQmlComponent>
 #include <QtCore/private/qabstractanimation_p.h>
 #include <QtQml/private/qqmlinspectorservice_p.h>
+#include <QtQml/private/qqmldebugconnector_p.h>
 #include <QtQml/private/qqmlcontext_p.h>
 
 #include <QtGui/QMouseEvent>
@@ -83,7 +83,7 @@ namespace QmlJSDebugger {
 AbstractViewInspector::AbstractViewInspector(QObject *parent) :
     QObject(parent),
     m_enabled(false),
-    m_debugService(QQmlInspectorServiceImpl::instance()),
+    m_debugService(QQmlDebugConnector::service<QQmlInspectorServiceImpl>()),
     m_eventId(0),
     m_reloadEventId(-1)
 {

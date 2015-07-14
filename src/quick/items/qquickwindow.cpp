@@ -64,7 +64,6 @@
 
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
-#include <private/qqmlprofilerservice_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 
 #include <private/qopenglvertexarrayobject_p.h>

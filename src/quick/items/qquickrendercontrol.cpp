@@ -46,7 +46,6 @@
 
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
-#include <private/qqmlprofilerservice_p.h>
 #include <QtCore/private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE

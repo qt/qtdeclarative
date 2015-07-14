@@ -71,6 +71,13 @@ public:
     virtual bool removeService(QQmlDebugService *service) = 0;
 
     virtual bool open(const QVariantHash &configuration = QVariantHash()) = 0;
+
+    template<class Service>
+    static Service *service()
+    {
+        QQmlDebugConnector *inst = instance();
+        return inst ? static_cast<Service *>(inst->service(Service::s_key)) : 0;
+    }
 };
 
 QT_END_NAMESPACE

@@ -63,8 +63,6 @@
 #include <private/qobject_p.h>
 #include <qmutex.h>
 
-#include <private/qqmlprofilerservice_p.h>
-
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 /*

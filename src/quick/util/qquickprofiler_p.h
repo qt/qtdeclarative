@@ -318,7 +318,7 @@ public:
         return featuresEnabled & (1 << QQuickProfiler::ProfileSceneGraph);
     }
 
-    static void initialize();
+    static void initialize(QQmlProfilerService *service);
 
     virtual ~QQuickProfiler();
 

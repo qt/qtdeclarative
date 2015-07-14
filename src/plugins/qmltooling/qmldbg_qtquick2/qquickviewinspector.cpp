@@ -37,7 +37,6 @@
 #include "inspecttool.h"
 
 #include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmldebugservice_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 #include <QtQuick/QQuickView>

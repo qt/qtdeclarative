@@ -41,7 +41,7 @@
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qquickprofiler_p.h>
-#include <private/qqmlinspectorservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 
 #include <QtQml/qqmlengine.h>
@@ -96,8 +96,9 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
-    if (QQmlDebugConnector::instance())
-        QQmlInspectorServiceImpl::instance()->addView(q);
+    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
+    if (service)
+        service->addView(q);
 
 #ifndef QT_NO_DRAGANDDROP
     q->setAcceptDrops(true);
@@ -149,8 +150,9 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
-    if (QQmlDebugConnector::instance())
-        QQmlInspectorServiceImpl::instance()->removeView(q_func());
+    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
+    if (service)
+        service->removeView(q_func());
 
     invalidateRenderControl();
 

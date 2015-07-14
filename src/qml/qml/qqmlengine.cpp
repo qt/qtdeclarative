@@ -580,7 +580,7 @@ the same object as is returned from the Qt.include() call.
 // Qt.include() is implemented in qv4include.cpp
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
-: propertyCapture(0), rootContext(0), isDebugging(false),
+: propertyCapture(0), rootContext(0),
   profiler(0), outputWarningsToMsgLog(true),
   cleanup(0), erroredBindings(0), inProgressCreations(0),
   workerScriptEngine(0),
@@ -857,7 +857,6 @@ void QQmlEnginePrivate::init()
     rootContext = new QQmlContext(q,true);
 
     if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugConnector::instance()) {
-        isDebugging = true;
         QQmlDebugConnector::instance()->open();
         QQmlDebugConnector::instance()->addEngine(q);
     }
@@ -936,8 +935,9 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
-    if (d->isDebugging)
-        QQmlDebugConnector::instance()->removeEngine(this);
+    QQmlDebugConnector *server = QQmlDebugConnector::instance();
+    if (server)
+        server->removeEngine(this);
 
     d->typeLoader.invalidate();
 

@@ -33,8 +33,7 @@
 
 #include "qquickprofiler_p.h"
 #include <QCoreApplication>
-#include <private/qqmldebugservice_p.h>
-#include <private/qqmlprofilerservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -124,12 +123,11 @@ qint64 QQuickProfiler::sendMessages(qint64 until, QList<QByteArray> &messages)
     return -1;
 }
 
-void QQuickProfiler::initialize()
+void QQuickProfiler::initialize(QQmlProfilerService *service)
 {
     Q_ASSERT(s_instance == 0);
-    QQmlProfilerServiceImpl *service = QQmlProfilerServiceImpl::instance();
     s_instance = new QQuickProfiler(service);
-    QQmlProfilerServiceImpl::instance()->addGlobalProfiler(s_instance);
+    service->addGlobalProfiler(s_instance);
 }
 
 void animationTimerCallback(qint64 delta)

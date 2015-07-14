@@ -54,7 +54,7 @@
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <private/qquickprofiler_p.h>
-#include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 
 #include <private/qquickshadereffectnode_p.h>
@@ -689,7 +689,7 @@ void QSGRenderThread::run()
     qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "run()";
     animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
     animatorDriver->install();
-    if (QQmlDebugConnector::instance())
+    if (QQmlDebugConnector::service<QQmlProfilerService>())
         QQuickProfiler::registerAnimationCallback();
 
     while (active) {

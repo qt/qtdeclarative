@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qdebugmessageservice_p.h"
+#include <private/qqmldebugconnector_p.h>
 
 #include <QDataStream>
 
@@ -39,14 +40,16 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDebugMessageService, qmlDebugMessageService)
 
+const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
+
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
                          const QString &buf)
 {
-    QDebugMessageService::instance()->sendDebugMessage(type, ctxt, buf);
+    QQmlDebugConnector::service<QDebugMessageService>()->sendDebugMessage(type, ctxt, buf);
 }
 
 QDebugMessageService::QDebugMessageService(QObject *parent) :
-    QQmlDebugService(QStringLiteral("DebugMessages"), 2, parent), oldMsgHandler(0),
+    QQmlDebugService(s_key, 2, parent), oldMsgHandler(0),
     prevState(QQmlDebugService::NotConnected)
 {
     // don't execute stateChanged() in parallel

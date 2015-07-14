@@ -128,7 +128,6 @@ public:
     QRecyclePool<QQmlJavaScriptExpressionGuard> jsExpressionGuardPool;
 
     QQmlContext *rootContext;
-    bool isDebugging;
     QQmlProfiler *profiler;
     void enableProfiler();
 

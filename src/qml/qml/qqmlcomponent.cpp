@@ -43,7 +43,8 @@
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
 #include "qqmlglobal_p.h"
-#include <private/qqmlenginedebugservice_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
 #include <private/qqmljavascriptexpression_p.h>
@@ -895,10 +896,11 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         depthIncreased = false;
     }
 
-    if (enginePriv->isDebugging && rv) {
+    QQmlEngineDebugService *service = QQmlDebugConnector::service<QQmlEngineDebugService>();
+    if (service && rv) {
         if (!context->isInternal)
             context->asQQmlContextPrivate()->instances.append(rv);
-        QQmlEngineDebugServiceImpl::instance()->objectCreated(engine, rv);
+        service->objectCreated(engine, rv);
     }
 
     return rv;
