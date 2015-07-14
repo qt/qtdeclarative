@@ -644,18 +644,11 @@ void QQmlDebugServerPrivate::_q_removeThread()
     q_func()->moveToThread(parentThread);
 }
 
-QList<QQmlDebugService*> QQmlDebugServer::services() const
+QQmlDebugService *QQmlDebugServer::service(const QString &name) const
 {
     Q_D(const QQmlDebugServer);
     QReadLocker lock(&d->pluginsLock);
-    return d->plugins.values();
-}
-
-QStringList QQmlDebugServer::serviceNames() const
-{
-    Q_D(const QQmlDebugServer);
-    QReadLocker lock(&d->pluginsLock);
-    return d->plugins.keys();
+    return d->plugins.value(name);
 }
 
 void QQmlDebugServer::addEngine(QQmlEngine *engine)

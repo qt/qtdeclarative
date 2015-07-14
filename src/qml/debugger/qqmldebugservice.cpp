@@ -71,7 +71,7 @@ QQmlDebugService::State QQmlDebugService::registerService()
     if (!server)
         return NotConnected;
 
-    if (server->serviceNames().contains(d->name)) {
+    if (server->service(d->name)) {
         qWarning() << "QQmlDebugService: Conflicting plugin name" << d->name;
     } else {
         server->addService(this);

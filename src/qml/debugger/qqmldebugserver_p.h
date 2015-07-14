@@ -64,8 +64,7 @@ public:
 
     bool blockingMode() const;
 
-    QList<QQmlDebugService*> services() const;
-    QStringList serviceNames() const;
+    QQmlDebugService *service(const QString &name) const;
 
     void addEngine(QQmlEngine *engine);
     void removeEngine(QQmlEngine *engine);
