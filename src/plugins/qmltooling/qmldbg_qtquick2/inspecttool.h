@@ -40,11 +40,12 @@
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
 
-QT_FORWARD_DECLARE_CLASS(QQuickView)
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
+QT_BEGIN_NAMESPACE
+
+class QQuickView;
+class QQuickItem;
 
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 class QQuickViewInspector;
 class HoverHighlight;
@@ -119,7 +120,8 @@ private:
     QQuickItem *m_lastClickedItem;
 };
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
 
 #endif // INSPECTTOOL_H

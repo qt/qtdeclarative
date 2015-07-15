@@ -45,8 +45,8 @@
 
 #include <cfloat>
 
+QT_BEGIN_NAMESPACE
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 /*
  * Collects all the items at the given position, from top to bottom.
@@ -372,5 +372,6 @@ void QQuickViewInspector::applyAppOnTop()
     setWindowFlags(flags);
 }
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE

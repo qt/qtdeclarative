@@ -61,6 +61,8 @@
 //          clearCache: void
 // Response for "destroyObject" carries the <debugId_int> of the destroyed object.
 
+QT_BEGIN_NAMESPACE
+
 const char REQUEST[] = "request";
 const char RESPONSE[] = "response";
 const char EVENT[] = "event";
@@ -414,3 +416,5 @@ void AbstractViewInspector::removeTool(AbstractTool *tool)
 }
 
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE

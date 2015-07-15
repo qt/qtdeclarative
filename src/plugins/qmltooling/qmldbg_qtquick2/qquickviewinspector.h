@@ -43,10 +43,8 @@
 QT_BEGIN_NAMESPACE
 class QQuickView;
 class QQuickItem;
-QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 class InspectTool;
 class SelectionHighlight;
@@ -104,7 +102,8 @@ private:
     bool m_appOnTop;
 };
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
 
 #endif // QQUICKVIEWINSPECTOR_H

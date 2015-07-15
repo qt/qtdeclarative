@@ -48,8 +48,9 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
+QT_BEGIN_NAMESPACE
+
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 static const double ZoomSnapDelta = 0.04;
 static const int PressAndHoldTimeout = 800;
@@ -421,5 +422,6 @@ void InspectTool::showSelectedItemName()
     inspector()->showSelectedItemName(m_lastItem, m_mousePosition);
 }
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE

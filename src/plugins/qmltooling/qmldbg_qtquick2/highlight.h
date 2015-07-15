@@ -39,9 +39,9 @@
 #include <QtGui/QTransform>
 #include <QtQuick/QQuickPaintedItem>
 
+QT_BEGIN_NAMESPACE
 
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 class Highlight : public QQuickPaintedItem
 {
@@ -104,7 +104,8 @@ public:
     void paint(QPainter *painter);
 };
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
 
 #endif // HIGHLIGHT_H

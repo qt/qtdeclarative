@@ -38,8 +38,9 @@
 #include <QtGui/QStaticText>
 #include <QtQuick/QQuickWindow>
 
+QT_BEGIN_NAMESPACE
+
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 Highlight::Highlight(QQuickItem *parent) : QQuickPaintedItem(parent)
 {
@@ -193,5 +194,6 @@ void SelectionHighlight::disableNameDisplay()
     update();
 }
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE

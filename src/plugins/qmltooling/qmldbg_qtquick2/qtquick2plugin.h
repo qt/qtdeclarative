@@ -37,11 +37,11 @@
 #include <QtCore/QPointer>
 #include <QtQml/private/qqmlinspectorinterface_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace QmlJSDebugger {
 
 class AbstractViewInspector;
-
-namespace QtQuick2 {
 
 class QtQuick2Plugin : public QObject, public QQmlInspectorInterface
 {
@@ -64,7 +64,8 @@ private:
     QPointer<AbstractViewInspector> m_inspector;
 };
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
 
 #endif // QTQUICK2PLUGINPLUGIN_H

@@ -35,6 +35,8 @@
 
 #include "abstractviewinspector.h"
 
+QT_BEGIN_NAMESPACE
+
 namespace QmlJSDebugger {
 
 AbstractTool::AbstractTool(AbstractViewInspector *inspector) :
@@ -44,3 +46,5 @@ AbstractTool::AbstractTool(AbstractViewInspector *inspector) :
 }
 
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE

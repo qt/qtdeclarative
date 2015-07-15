@@ -46,8 +46,6 @@ class QMouseEvent;
 class QWheelEvent;
 class QTouchEvent;
 
-QT_END_NAMESPACE
-
 namespace QmlJSDebugger {
 
 class AbstractTool;
@@ -122,5 +120,7 @@ private:
 };
 
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
 
 #endif // ABSTRACTVIEWINSPECTOR_H

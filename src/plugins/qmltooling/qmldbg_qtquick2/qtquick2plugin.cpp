@@ -38,8 +38,9 @@
 #include <QtQml/private/qqmlinspectorservice_p.h>
 #include <QtQuick/QQuickView>
 
+QT_BEGIN_NAMESPACE
+
 namespace QmlJSDebugger {
-namespace QtQuick2 {
 
 QtQuick2Plugin::QtQuick2Plugin() :
     m_inspector(0)
@@ -74,5 +75,6 @@ void QtQuick2Plugin::clientMessage(const QByteArray &message)
         m_inspector->handleMessage(message);
 }
 
-} // namespace QtQuick2
 } // namespace QmlJSDebugger
+
+QT_END_NAMESPACE
