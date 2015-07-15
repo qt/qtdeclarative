@@ -7542,10 +7542,6 @@ Class QJSValueIterator
    base size=8 base align=8
 QJSValueIterator (0x0x7f49b0d69420) 0
 
-Class DesignerSupport
-   size=8 align=8
-   base size=8 base align=8
-DesignerSupport (0x0x7f49b0d69540) 0
 
 Class QQuickTransform::QPrivateSignal
    size=1 align=1

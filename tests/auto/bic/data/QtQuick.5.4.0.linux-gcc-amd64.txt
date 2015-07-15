@@ -8549,11 +8549,6 @@ QQmlPropertyMap (0x0x7faeca8d9e38) 0
   QObject (0x0x7faeca7bb780) 0
       primary-for QQmlPropertyMap (0x0x7faeca8d9e38)
 
-Class DesignerSupport
-   size=8 align=8
-   base size=8 base align=8
-DesignerSupport (0x0x7faeca7bb840) 0
-
 Class QQuickTransform::QPrivateSignal
    size=1 align=1
    base size=0 base align=1
