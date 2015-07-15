@@ -198,18 +198,10 @@ public:
     QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    QV4::WeakValue varProperties;
-    int firstVarPropertyIndex;
-    bool varPropertiesInitialized;
-    inline void allocateVarPropertiesArray();
-    inline bool ensureVarPropertiesAllocated();
-
-    // temporary solution so I can experiment with storing
-    // properties in a JS array. Should be switched over to also
-    // use the 'varProperties' in the end.
     QV4::WeakValue properties;
+    int firstVarPropertyIndex;
     bool propertiesInitialized;
-    inline void allocatePropertiesArray();
+    inline void allocateProperties();
     inline bool ensurePropertiesAllocated();
 
     int readPropertyAsInt(int id);

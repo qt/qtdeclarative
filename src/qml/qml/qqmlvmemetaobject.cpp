@@ -63,14 +63,14 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
-        if (m_isVar && m_target->varPropertiesInitialized && !m_target->varProperties.isUndefined()) {
+        if (m_isVar && m_target->propertiesInitialized && !m_target->properties.isUndefined()) {
             // Set the var property to NULL
-            QV4::ExecutionEngine *v4 = m_target->varProperties.engine();
+            QV4::ExecutionEngine *v4 = m_target->properties.engine();
             if (v4) {
                 QV4::Scope scope(v4);
-                QV4::ScopedArrayObject a(scope, m_target->varProperties.value());
+                QV4::ScopedArrayObject a(scope, m_target->properties.value());
                 if (a)
-                    a->putIndexed(m_index - m_target->firstVarPropertyIndex, QV4::ScopedValue(scope, QV4::Primitive::nullValue()));
+                    a->putIndexed(m_index, QV4::ScopedValue(scope, QV4::Primitive::nullValue()));
             }
         }
 
@@ -516,7 +516,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 : object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
   hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
-  varPropertiesInitialized(false), propertiesInitialized(false), interceptors(0), v8methods(0)
+  propertiesInitialized(false), interceptors(0), v8methods(0)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
@@ -1074,10 +1074,10 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
-    if (ensureVarPropertiesAllocated()) {
-        QV4::Scope scope(varProperties.engine());
-        QV4::ScopedObject o(scope, varProperties.value());
-        return o->getIndexed(id - firstVarPropertyIndex);
+    if (ensurePropertiesAllocated()) {
+        QV4::Scope scope(properties.engine());
+        QV4::ScopedObject o(scope, properties.value());
+        return o->getIndexed(id);
     }
     return QV4::Primitive::undefinedValue().asReturnedValue();
 }
@@ -1085,11 +1085,11 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
-        if (ensureVarPropertiesAllocated()) {
-            QV4::ExecutionEngine *v4 = varProperties.engine();
+        if (ensurePropertiesAllocated()) {
+            QV4::ExecutionEngine *v4 = properties.engine();
             QV4::Scope scope(v4);
-            QV4::ScopedObject o(scope, varProperties.value());
-            QV4::ScopedValue val(scope, o->getIndexed(id - firstVarPropertyIndex));
+            QV4::ScopedObject o(scope, properties.value());
+            QV4::ScopedValue val(scope, o->getIndexed(id));
             return scope.engine->toVariant(val, -1);
         }
         return QVariant();
@@ -1105,14 +1105,14 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
-    if (!ensureVarPropertiesAllocated())
+    if (!ensurePropertiesAllocated())
         return;
 
-    QV4::Scope scope(varProperties.engine());
+    QV4::Scope scope(properties.engine());
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    QV4::ScopedObject vp(scope, varProperties.value());
-    QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id - firstVarPropertyIndex));
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id));
     if (!!oldv)
         oldv->removeVmePropertyReference();
 
@@ -1142,22 +1142,22 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     }
 
     // Write the value and emit change signal as appropriate.
-    vp->putIndexed(id - firstVarPropertyIndex, value);
+    vp->putIndexed(id, value);
     activate(object, methodOffset() + id, 0);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
     if (id >= firstVarPropertyIndex) {
-        if (!ensureVarPropertiesAllocated())
+        if (!ensurePropertiesAllocated())
             return;
 
-        QV4::Scope scope(varProperties.engine());
+        QV4::Scope scope(properties.engine());
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        QV4::ScopedObject vp(scope, varProperties.value());
-        QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id - firstVarPropertyIndex));
+        QV4::ScopedObject vp(scope, properties.value());
+        QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id));
         if (!!oldv)
             oldv->removeVmePropertyReference();
 
@@ -1170,7 +1170,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        vp->putIndexed(id - firstVarPropertyIndex, newv);
+        vp->putIndexed(id, newv);
         if ((currentValue.userType() != value.userType() || currentValue != value))
             activate(object, methodOffset() + id, 0);
     } else {
@@ -1291,23 +1291,10 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
     return writeVarProperty(index - propOffset(), v);
 }
 
-bool QQmlVMEMetaObject::ensureVarPropertiesAllocated()
-{
-    if (!varPropertiesInitialized)
-        allocateVarPropertiesArray();
-
-    // in some situations, the QObject's v8object (and associated v8 data,
-    // such as the varProperties array) will have been cleaned up, but the
-    // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
-    // In this situation, the varProperties handle will be (and should remain)
-    // empty.
-    return !varProperties.isUndefined();
-}
-
 bool QQmlVMEMetaObject::ensurePropertiesAllocated()
 {
     if (!propertiesInitialized)
-        allocatePropertiesArray();
+        allocateProperties();
 
     // in some situations, the QObject's v8object (and associated v8 data,
     // such as the varProperties array) will have been cleaned up, but the
@@ -1332,7 +1319,6 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
     if (v4 != e)
         return;
 
-    varProperties.markOnce(e);
     properties.markOnce(e);
 
     // add references created by VMEVariant properties
@@ -1349,26 +1335,15 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
         parent->mark(e);
 }
 
-void QQmlVMEMetaObject::allocateVarPropertiesArray()
+void QQmlVMEMetaObject::allocateProperties()
 {
     QQmlEngine *qml = qmlEngine(object);
     Q_ASSERT(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
     QV4::Scope scope(v4);
-    varProperties.set(scope.engine, v4->newArrayObject(metaData->varPropertyCount));
-    varPropertiesInitialized = true;
-}
-
-void QQmlVMEMetaObject::allocatePropertiesArray()
-{
-    QQmlEngine *qml = qmlEngine(object);
-    Q_ASSERT(qml);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
-    QV4::Scope scope(v4);
-    properties.set(scope.engine, v4->newArrayObject(metaData->propertyCount - metaData->varPropertyCount));
+    properties.set(scope.engine, v4->newArrayObject(metaData->propertyCount));
     propertiesInitialized = true;
 }
-
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {
