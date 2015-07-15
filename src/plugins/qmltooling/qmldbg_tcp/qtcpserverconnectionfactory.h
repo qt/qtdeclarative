@@ -31,42 +31,12 @@
 **
 ****************************************************************************/
 
-#ifndef QTCPSERVERCONNECTION_H
-#define QTCPSERVERCONNECTION_H
+#ifndef QTCPSERVERCONNECTIONFACTORY_H
+#define QTCPSERVERCONNECTIONFACTORY_H
 
 #include "qqmldebugserverconnection.h"
 
 QT_BEGIN_NAMESPACE
-
-class QTcpServerConnectionPrivate;
-class QTcpServerConnection : public QObject, public QQmlDebugServerConnection
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QTcpServerConnection)
-    Q_DISABLE_COPY(QTcpServerConnection)
-
-public:
-    QTcpServerConnection();
-    ~QTcpServerConnection();
-
-    void setServer(QQmlDebugServer *server);
-    bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
-    bool setFileName(const QString &fileName, bool block);
-
-    bool isConnected() const;
-    void disconnect();
-
-    void waitForConnection();
-    void flush();
-
-private Q_SLOTS:
-    void newConnection();
-
-private:
-    bool listen();
-
-    QTcpServerConnectionPrivate *d_ptr;
-};
 
 class QTcpServerConnectionFactory : public QQmlDebugServerConnectionFactory
 {
@@ -79,4 +49,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QTCPSERVERCONNECTION_H
+#endif // QTCPSERVERCONNECTIONFACTORY_H

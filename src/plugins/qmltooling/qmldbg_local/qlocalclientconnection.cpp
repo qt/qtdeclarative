@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-#include "qlocalclientconnection.h"
+#include "qlocalclientconnectionfactory.h"
 #include "qpacketprotocol.h"
 #include "qqmldebugserver.h"
 
@@ -40,25 +40,42 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLocalClientConnectionPrivate {
-public:
-    QLocalClientConnectionPrivate();
 
-    bool block;
-    QString filename;
-    QLocalSocket *socket;
-    QQmlDebugServer *debugServer;
+class QLocalClientConnection : public QQmlDebugServerConnection
+{
+    Q_OBJECT
+    Q_DISABLE_COPY(QLocalClientConnection)
+
+public:
+    QLocalClientConnection();
+    ~QLocalClientConnection();
+
+    void setServer(QQmlDebugServer *server);
+    bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress);
+    bool setFileName(const QString &filename, bool block);
+
+    bool isConnected() const;
+    void disconnect();
+
+    void waitForConnection();
+    void flush();
+
+private slots:
+    void connectionEstablished();
+
+private:
+    bool connectToServer();
+
+    bool m_block;
+    QString m_filename;
+    QLocalSocket *m_socket;
+    QQmlDebugServer *m_debugServer;
 };
 
-QLocalClientConnectionPrivate::QLocalClientConnectionPrivate() :
-    block(false),
-    socket(0),
-    debugServer(0)
-{
-}
-
 QLocalClientConnection::QLocalClientConnection() :
-    d_ptr(new QLocalClientConnectionPrivate)
+    m_block(false),
+    m_socket(0),
+    m_debugServer(0)
 {
 }
 
@@ -66,30 +83,25 @@ QLocalClientConnection::~QLocalClientConnection()
 {
     if (isConnected())
         disconnect();
-    delete d_ptr;
 }
 
 void QLocalClientConnection::setServer(QQmlDebugServer *server)
 {
-    Q_D(QLocalClientConnection);
-    d->debugServer = server;
+    m_debugServer = server;
 }
 
 bool QLocalClientConnection::isConnected() const
 {
-    Q_D(const QLocalClientConnection);
-    return d->socket && d->socket->state() == QLocalSocket::ConnectedState;
+    return m_socket && m_socket->state() == QLocalSocket::ConnectedState;
 }
 
 void QLocalClientConnection::disconnect()
 {
-    Q_D(QLocalClientConnection);
+    while (m_socket && m_socket->bytesToWrite() > 0)
+        m_socket->waitForBytesWritten();
 
-    while (d->socket && d->socket->bytesToWrite() > 0)
-        d->socket->waitForBytesWritten();
-
-    d->socket->deleteLater();
-    d->socket = 0;
+    m_socket->deleteLater();
+    m_socket = 0;
 }
 
 bool QLocalClientConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -104,42 +116,35 @@ bool QLocalClientConnection::setPortRange(int portFrom, int portTo, bool block,
 
 bool QLocalClientConnection::setFileName(const QString &filename, bool block)
 {
-    Q_D(QLocalClientConnection);
-    d->filename = filename;
-    d->block = block;
+    m_filename = filename;
+    m_block = block;
     return connectToServer();
 }
 
 void QLocalClientConnection::waitForConnection()
 {
-    Q_D(QLocalClientConnection);
-    d->socket->waitForConnected(-1);
+    m_socket->waitForConnected(-1);
 }
 
 bool QLocalClientConnection::connectToServer()
 {
-    Q_D(QLocalClientConnection);
-
-    d->socket = new QLocalSocket;
-    d->socket->setParent(this);
-    QObject::connect(d->socket, SIGNAL(connected()), this, SLOT(connectionEstablished()));
-    d->socket->connectToServer(d->filename);
-    qDebug("QML Debugger: Connecting to socket %s...",
-           d->filename.toLatin1().constData());
+    m_socket = new QLocalSocket;
+    m_socket->setParent(this);
+    QObject::connect(m_socket, SIGNAL(connected()), this, SLOT(connectionEstablished()));
+    m_socket->connectToServer(m_filename);
+    qDebug("QML Debugger: Connecting to socket %s...", m_filename.toLatin1().constData());
     return true;
 }
 
 void QLocalClientConnection::flush()
 {
-    Q_D(QLocalClientConnection);
-    if (d->socket)
-        d->socket->flush();
+    if (m_socket)
+        m_socket->flush();
 }
 
 void QLocalClientConnection::connectionEstablished()
 {
-    Q_D(QLocalClientConnection);
-    d->debugServer->setDevice(d->socket);
+    m_debugServer->setDevice(m_socket);
 }
 
 QQmlDebugServerConnection *QLocalClientConnectionFactory::create(const QString &key)
@@ -148,3 +153,5 @@ QQmlDebugServerConnection *QLocalClientConnectionFactory::create(const QString &
 }
 
 QT_END_NAMESPACE
+
+#include "qlocalclientconnection.moc"

@@ -9,7 +9,7 @@ SOURCES += \
     $$PWD/qtcpserverconnection.cpp
 
 HEADERS += \
-    $$PWD/qtcpserverconnection.h \
+    $$PWD/qtcpserverconnectionfactory.h \
     $$PWD/../shared/qqmldebugserver.h \
     $$PWD/../shared/qqmldebugserverconnection.h
 

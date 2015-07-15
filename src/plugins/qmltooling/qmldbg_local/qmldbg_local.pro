@@ -9,7 +9,7 @@ SOURCES += \
     $$PWD/qlocalclientconnection.cpp
 
 HEADERS += \
-    $$PWD/qlocalclientconnection.h \
+    $$PWD/qlocalclientconnectionfactory.h \
     $$PWD/../shared/qqmldebugserver.h \
     $$PWD/../shared/qqmldebugserverconnection.h
 

@@ -31,42 +31,12 @@
 **
 ****************************************************************************/
 
-#ifndef QLOCALCLIENTCONNECTION_H
-#define QLOCALCLIENTCONNECTION_H
+#ifndef QLOCALCLIENTCONNECTIONFACTORY_H
+#define QLOCALCLIENTCONNECTIONFACTORY_H
 
 #include "qqmldebugserverconnection.h"
 
 QT_BEGIN_NAMESPACE
-
-class QLocalClientConnectionPrivate;
-class QLocalClientConnection : public QObject, public QQmlDebugServerConnection
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QLocalClientConnection)
-    Q_DISABLE_COPY(QLocalClientConnection)
-
-public:
-    QLocalClientConnection();
-    ~QLocalClientConnection();
-
-    void setServer(QQmlDebugServer *server);
-    bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress);
-    bool setFileName(const QString &filename, bool block);
-
-    bool isConnected() const;
-    void disconnect();
-
-    void waitForConnection();
-    void flush();
-
-private Q_SLOTS:
-    void connectionEstablished();
-
-private:
-    bool connectToServer();
-
-    QLocalClientConnectionPrivate *d_ptr;
-};
 
 class QLocalClientConnectionFactory : public QQmlDebugServerConnectionFactory
 {
@@ -79,4 +49,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QLOCALCLIENTCONNECTION_H
+#endif // QLOCALCLIENTCONNECTIONFACTORY_H

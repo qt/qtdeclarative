@@ -52,13 +52,14 @@ QT_BEGIN_NAMESPACE
 
 
 class QQmlDebugServer;
-class QQmlDebugServerConnection
+class QQmlDebugServerConnection : public QObject
 {
+    Q_OBJECT
 public:
-    virtual ~QQmlDebugServerConnection() {}
+    QQmlDebugServerConnection(QObject *parent = 0) : QObject(parent) {}
 
     virtual void setServer(QQmlDebugServer *server) = 0;
-    virtual bool setPortRange(int portFrom, int portTo, bool bock, const QString &hostaddress) = 0;
+    virtual bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) = 0;
     virtual bool setFileName(const QString &fileName, bool block) = 0;
     virtual bool isConnected() const = 0;
     virtual void disconnect() = 0;
