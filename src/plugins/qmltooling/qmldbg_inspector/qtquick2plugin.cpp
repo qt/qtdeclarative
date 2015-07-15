@@ -57,11 +57,11 @@ bool QtQuick2Plugin::canHandleView(QObject *view)
     return qobject_cast<QQuickView*>(view);
 }
 
-void QtQuick2Plugin::activate(QObject *view)
+void QtQuick2Plugin::activate(QQmlDebugService *service, QObject *view)
 {
     QQuickView *qtQuickView = qobject_cast<QQuickView*>(view);
     Q_ASSERT(qtQuickView);
-    m_inspector = new QQuickViewInspector(qtQuickView, qtQuickView);
+    m_inspector = new QQuickViewInspector(service, qtQuickView, qtQuickView);
 }
 
 void QtQuick2Plugin::deactivate()

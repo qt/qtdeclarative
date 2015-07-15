@@ -97,7 +97,7 @@ void QQmlInspectorServiceImpl::updateState()
             qWarning() << "QQmlInspector: No plugin available for view '" << m_views.first()->metaObject()->className() << "'.";
             return;
         }
-        m_currentInspectorPlugin->activate(m_views.first());
+        m_currentInspectorPlugin->activate(this, m_views.first());
     } else {
         if (m_currentInspectorPlugin) {
             m_currentInspectorPlugin->deactivate();

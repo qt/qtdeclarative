@@ -53,7 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QmlJSDebugger { class AbstractViewInspector; }
 
 class QQmlInspectorInterface;
 
@@ -76,7 +75,6 @@ private Q_SLOTS:
     void updateState();
 
 private:
-    friend class QmlJSDebugger::AbstractViewInspector;
     friend class QQmlInspectorServiceFactory;
     void loadInspectorPlugins();
 

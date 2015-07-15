@@ -47,6 +47,7 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmldebugservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +59,7 @@ public:
 
     virtual bool canHandleView(QObject *view) = 0;
 
-    virtual void activate(QObject *view) = 0;
+    virtual void activate(QQmlDebugService *service, QObject *view) = 0;
     virtual void deactivate() = 0;
 
     virtual void clientMessage(const QByteArray &message) = 0;

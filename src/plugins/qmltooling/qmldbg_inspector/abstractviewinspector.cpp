@@ -33,7 +33,6 @@
 
 #include "abstractviewinspector.h"
 #include "abstracttool.h"
-#include "qqmlinspectorservice.h"
 
 #include <QtCore/QDebug>
 #include <QtQml/QQmlEngine>
@@ -80,10 +79,10 @@ const char CLEAR_CACHE[] = "clearCache";
 namespace QmlJSDebugger {
 
 
-AbstractViewInspector::AbstractViewInspector(QObject *parent) :
+AbstractViewInspector::AbstractViewInspector(QQmlDebugService *service, QObject *parent) :
     QObject(parent),
     m_enabled(false),
-    m_debugService(QQmlDebugConnector::service<QQmlInspectorServiceImpl>()),
+    m_debugService(service),
     m_eventId(0),
     m_reloadEventId(-1)
 {

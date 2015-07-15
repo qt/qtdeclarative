@@ -53,7 +53,7 @@ class QQuickViewInspector : public AbstractViewInspector
 {
     Q_OBJECT
 public:
-    explicit QQuickViewInspector(QQuickView *view, QObject *parent = 0);
+    explicit QQuickViewInspector(QQmlDebugService *service, QQuickView *view, QObject *parent = 0);
 
     // AbstractViewInspector
     void changeCurrentObjects(const QList<QObject*> &objects);

@@ -58,7 +58,7 @@ class AbstractViewInspector : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractViewInspector(QObject *parent = 0);
+    explicit AbstractViewInspector(QQmlDebugService *service, QObject *parent = 0);
 
     void handleMessage(const QByteArray &message);
 

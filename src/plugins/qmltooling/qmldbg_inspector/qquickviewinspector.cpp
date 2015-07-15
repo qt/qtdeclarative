@@ -109,8 +109,9 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos,
 }
 
 
-QQuickViewInspector::QQuickViewInspector(QQuickView *view, QObject *parent) :
-    AbstractViewInspector(parent),
+QQuickViewInspector::QQuickViewInspector(QQmlDebugService *service, QQuickView *view,
+                                         QObject *parent) :
+    AbstractViewInspector(service, parent),
     m_view(view),
     m_overlay(new QQuickItem),
     m_inspectTool(new InspectTool(this, view)),

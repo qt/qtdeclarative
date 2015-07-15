@@ -36,6 +36,7 @@
 
 #include <QtCore/QPointer>
 #include "qqmlinspectorinterface.h"
+#include <private/qqmldebugservice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,7 +55,7 @@ public:
 
     // QQmlInspectorInterface
     bool canHandleView(QObject *view);
-    void activate(QObject *view);
+    void activate(QQmlDebugService *service, QObject *view);
     void deactivate();
     void clientMessage(const QByteArray &message);
 
