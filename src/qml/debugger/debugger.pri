@@ -20,6 +20,7 @@ HEADERS += \
     $$PWD/qqmldebugconnector_p.h \
     $$PWD/qqmldebugpluginmanager_p.h \
     $$PWD/qqmldebugservice_p.h \
+    $$PWD/qqmldebugservicefactory_p.h \
     $$PWD/qqmlprofilerservice_p.h \
     $$PWD/qqmldebugserviceinterfaces_p.h \
     $$PWD/qqmldebugstatesdelegate_p.h \
