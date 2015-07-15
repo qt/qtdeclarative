@@ -425,10 +425,12 @@ bool QQmlDebugServerImpl::open(const QVariantHash &configuration = QVariantHash(
 
 bool QQmlDebugServerImpl::enableFromArguments()
 {
-    if (qApp == 0)
-        return false;
-    QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
+    // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
+    const QString args = commandLineArguments();
 #ifndef QT_NO_QML_DEBUGGER
+    if (args.isEmpty())
+        return false; // Manual initialization, through QQmlDebugServer::open()
+
     // ### remove port definition when protocol is changed
     int portFrom = 0;
     int portTo = 0;
@@ -437,57 +439,55 @@ bool QQmlDebugServerImpl::enableFromArguments()
     QString hostAddress;
     QString fileName;
 
-    // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
-    if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-        QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
-                                                                .split(QLatin1Char(','));
-        QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
-        QStringList::const_iterator argsIt = lstjsDebugArguments.cbegin();
-        for (; argsIt != argsItEnd; ++argsIt) {
-            const QString strArgument = *argsIt;
-            if (strArgument.startsWith(QLatin1String("port:"))) {
-                portFrom = strArgument.mid(5).toInt(&ok);
-                portTo = portFrom;
-                QStringList::const_iterator argsNext = argsIt + 1;
-                if (argsNext == argsItEnd)
-                    break;
-                const QString nextArgument = *argsNext;
-                if (ok && nextArgument.contains(QRegExp(QStringLiteral("^\\s*\\d+\\s*$")))) {
-                    portTo = nextArgument.toInt(&ok);
-                    ++argsIt;
-                }
-            } else if (strArgument.startsWith(QLatin1String("host:"))) {
-                hostAddress = strArgument.mid(5);
-            } else if (strArgument == QLatin1String("block")) {
-                block = true;
-            } else if (strArgument.startsWith(QLatin1String("file:"))) {
-                fileName = strArgument.mid(5);
-                ok = !fileName.isEmpty();
-            } else {
-                qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
-                                                  "detected. Ignoring the same.")
-                                                   .arg(strArgument);
-            }
-        }
+    const QStringList lstjsDebugArguments = args.split(QLatin1Char(','));
+    QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
+    QStringList::const_iterator argsIt = lstjsDebugArguments.cbegin();
+    for (; argsIt != argsItEnd; ++argsIt) {
+        const QString strArgument = *argsIt;
+        if (strArgument.startsWith(QLatin1String("port:"))) {
+            portFrom = strArgument.mid(5).toInt(&ok);
+            portTo = portFrom;
+            QStringList::const_iterator argsNext = argsIt + 1;
+            if (argsNext == argsItEnd)
+                break;
+            const QString nextArgument = *argsNext;
 
-        if (ok) {
-            if (!fileName.isEmpty())
-                return enable(ConnectToLocalAction(fileName, block));
-            else
-                return enable(StartTcpServerAction(portFrom, portTo, block, hostAddress));
+            // Don't use QStringLiteral here. QRegExp has a global cache and will save an implicitly
+            // shared copy of the passed string. That copy isn't properly detached when the library
+            // is unloaded if the original string lives in the library's .rodata
+            if (ok && nextArgument.contains(QRegExp(QLatin1String("^\\s*\\d+\\s*$")))) {
+                portTo = nextArgument.toInt(&ok);
+                ++argsIt;
+            }
+        } else if (strArgument.startsWith(QLatin1String("host:"))) {
+            hostAddress = strArgument.mid(5);
+        } else if (strArgument == QLatin1String("block")) {
+            block = true;
+        } else if (strArgument.startsWith(QLatin1String("file:"))) {
+            fileName = strArgument.mid(5);
+            ok = !fileName.isEmpty();
         } else {
-            qWarning() << QString(QLatin1String(
-                              "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                              "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
-                              "<ip address>][,block]")).arg(appD->qmljsDebugArgumentsString());
+            qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
+                                              "detected. Ignoring the same.")
+                                               .arg(strArgument);
         }
     }
+
+    if (ok) {
+        if (!fileName.isEmpty())
+            return enable(ConnectToLocalAction(fileName, block));
+        else
+            return enable(StartTcpServerAction(portFrom, portTo, block, hostAddress));
+    } else {
+        qWarning() << QString::fromLatin1("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
+                                          "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
+                                          "<ip address>][,block]").arg(args);
+    }
 #else
-    if (!appD->qmljsDebugArgumentsString().isEmpty()) {
+    if (!args.isEmpty()) {
         qWarning() << QString(QLatin1String(
                      "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                     "QtQml is not configured for debugging.")).arg(
-                     appD->qmljsDebugArgumentsString());
+                     "QtQml is not configured for debugging.")).arg(args);
     }
 #endif
     return false;

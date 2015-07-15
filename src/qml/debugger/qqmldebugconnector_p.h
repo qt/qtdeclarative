@@ -78,6 +78,9 @@ public:
         QQmlDebugConnector *inst = instance();
         return inst ? static_cast<Service *>(inst->service(Service::s_key)) : 0;
     }
+
+protected:
+    static QString commandLineArguments();
 };
 
 QT_END_NAMESPACE

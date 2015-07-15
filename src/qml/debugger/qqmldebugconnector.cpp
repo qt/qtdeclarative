@@ -80,6 +80,14 @@ void QQmlDebugConnector::setPluginKey(const QString &key)
     }
 }
 
+QString QQmlDebugConnector::commandLineArguments()
+{
+    QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
+    if (!params)
+        return QString();
+    return params->arguments;
+}
+
 QQmlDebugConnector *QQmlDebugConnector::instance()
 {
     QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
