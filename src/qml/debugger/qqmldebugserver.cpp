@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
   client plugin advertisement
     1. Client sends
          "QDeclarativeDebugServer" 1 pluginNames
-  server plugin advertisement
+  server plugin advertisement (not implemented: all services are required to register before open())
     1. Server sends
          "QDeclarativeDebugClient" 1 pluginNames pluginVersions
   plugin communication:
@@ -139,7 +139,6 @@ private:
 
     bool init(const QString &pluginName, bool block);
 
-    void advertisePlugins();
     void cleanup();
     QQmlDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
 
@@ -241,31 +240,6 @@ struct ConnectToLocalAction {
         return true;
     }
 };
-
-void QQmlDebugServerImpl::advertisePlugins()
-{
-    if (!m_gotHello)
-        return;
-
-    QByteArray message;
-    {
-        QQmlDebugStream out(&message, QIODevice::WriteOnly);
-        QStringList pluginNames;
-        QList<float> pluginVersions;
-        const QList<QQmlDebugService *> debugServices = m_plugins.values();
-        const int count = debugServices.count();
-        pluginNames.reserve(count);
-        pluginVersions.reserve(count);
-        foreach (QQmlDebugService *service, debugServices) {
-            pluginNames << service->name();
-            pluginVersions << service->version();
-        }
-        out << QString(QStringLiteral("QDeclarativeDebugClient")) << 1 << pluginNames << pluginVersions;
-    }
-
-    QMetaObject::invokeMethod(this, "sendMessages", Qt::QueuedConnection,
-                              Q_ARG(QList<QByteArray>, QList<QByteArray>() << message));
-}
 
 void QQmlDebugServerImpl::cleanup()
 {
@@ -746,7 +720,6 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
     if (!service || m_plugins.contains(service->name()))
         return false;
     m_plugins.insert(service->name(), service);
-    advertisePlugins();
     QQmlDebugService::State newState = QQmlDebugService::Unavailable;
     if (m_clientPlugins.contains(service->name()))
         newState = QQmlDebugService::Enabled;
@@ -770,8 +743,6 @@ bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
     if (!service || !m_plugins.contains(service->name()))
         return false;
     m_plugins.remove(service->name());
-
-    advertisePlugins();
 
     return true;
 }
