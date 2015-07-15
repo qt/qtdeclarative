@@ -34,8 +34,8 @@
 #ifndef QQMLDEBUGSERVERCONNECTION_H
 #define QQMLDEBUGSERVERCONNECTION_H
 
-#include <QtQml/qtqmlglobal.h>
-#include <private/qqmlglobal_p.h>
+#include <private/qtqmlglobal_p.h>
+#include <QtCore/qobject.h>
 
 //
 //  W A R N I N G
