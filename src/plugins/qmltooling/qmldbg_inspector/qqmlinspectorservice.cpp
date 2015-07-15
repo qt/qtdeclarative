@@ -32,8 +32,7 @@
 ****************************************************************************/
 
 #include "qqmlinspectorservice.h"
-#include "qqmlinspectorinterface.h"
-#include "qtquick2plugin.h"
+#include "qquickviewinspector.h"
 
 #include <private/qqmlglobal_p.h>
 
@@ -45,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
-    QQmlInspectorService(1, parent), m_currentInspectorPlugin(0)
+    QQmlInspectorService(1, parent), m_currentInspector(0)
 {
 }
 
@@ -68,42 +67,18 @@ void QQmlInspectorServiceImpl::stateChanged(State /*state*/)
 
 void QQmlInspectorServiceImpl::updateState()
 {
-    if (m_views.isEmpty()) {
-        if (m_currentInspectorPlugin) {
-            m_currentInspectorPlugin->deactivate();
-            m_currentInspectorPlugin = 0;
-        }
+    delete m_currentInspector;
+    m_currentInspector = 0;
+
+    if (m_views.isEmpty() || state() != Enabled)
         return;
-    }
 
-    if (state() == Enabled) {
-        if (m_inspectorPlugins.isEmpty())
-            loadInspectorPlugins();
-
-        if (m_inspectorPlugins.isEmpty()) {
-            qWarning() << "QQmlInspector: No plugins found.";
-            return;
-        }
-
-        m_currentInspectorPlugin = 0;
-        foreach (QQmlInspectorInterface *inspector, m_inspectorPlugins) {
-            if (inspector->canHandleView(m_views.first())) {
-                m_currentInspectorPlugin = inspector;
-                break;
-            }
-        }
-
-        if (!m_currentInspectorPlugin) {
-            qWarning() << "QQmlInspector: No plugin available for view '" << m_views.first()->metaObject()->className() << "'.";
-            return;
-        }
-        m_currentInspectorPlugin->activate(this, m_views.first());
-    } else {
-        if (m_currentInspectorPlugin) {
-            m_currentInspectorPlugin->deactivate();
-            m_currentInspectorPlugin = 0;
-        }
-    }
+    QQuickView *qtQuickView = qobject_cast<QQuickView*>(m_views.first());
+    if (qtQuickView)
+        m_currentInspector = new QmlJSDebugger::QQuickViewInspector(this, qtQuickView, this);
+    else
+        qWarning() << "QQmlInspector: No inspector available for view '"
+                   << m_views.first()->metaObject()->className() << "'.";
 }
 
 void QQmlInspectorServiceImpl::messageReceived(const QByteArray &message)
@@ -113,13 +88,8 @@ void QQmlInspectorServiceImpl::messageReceived(const QByteArray &message)
 
 void QQmlInspectorServiceImpl::processMessage(const QByteArray &message)
 {
-    if (m_currentInspectorPlugin)
-        m_currentInspectorPlugin->clientMessage(message);
-}
-
-void QQmlInspectorServiceImpl::loadInspectorPlugins()
-{
-    m_inspectorPlugins << new QmlJSDebugger::QtQuick2Plugin;
+    if (m_currentInspector)
+        m_currentInspector->handleMessage(message);
 }
 
 QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)

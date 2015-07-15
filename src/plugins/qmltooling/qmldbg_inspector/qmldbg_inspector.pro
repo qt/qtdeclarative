@@ -8,7 +8,6 @@ load(qt_plugin)
 INCLUDEPATH *= $$PWD $$PWD/../shared
 
 SOURCES += \
-    $$PWD/qtquick2plugin.cpp \
     $$PWD/highlight.cpp \
     $$PWD/qquickviewinspector.cpp \
     $$PWD/abstracttool.cpp \
@@ -17,13 +16,11 @@ SOURCES += \
     $$PWD/qqmlinspectorservice.cpp
 
 HEADERS += \
-    $$PWD/qtquick2plugin.h \
     $$PWD/highlight.h \
     $$PWD/qquickviewinspector.h \
     $$PWD/qqmlinspectorservice.h \
     $$PWD/abstracttool.h \
     $$PWD/abstractviewinspector.h \
-    $$PWD/qqmlinspectorinterface.h \
     $$PWD/inspecttool.h
 
 OTHER_FILES += \
