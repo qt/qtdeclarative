@@ -5,4 +5,13 @@ PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QLocalClientConnection
 load(qt_plugin)
 
-include(qmldbg_local.pri)
+SOURCES += \
+    $$PWD/qlocalclientconnection.cpp \
+    $$PWD/../shared/qpacketprotocol.cpp
+
+HEADERS += \
+    $$PWD/qlocalclientconnection.h \
+    $$PWD/../shared/qpacketprotocol.h
+
+INCLUDEPATH += $$PWD \
+    $$PWD/../shared
