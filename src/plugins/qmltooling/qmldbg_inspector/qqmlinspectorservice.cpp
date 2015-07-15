@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorservice.h"
+#include "qqmlinspectorservicefactory.h"
 #include "qquickviewinspector.h"
 
 #include <private/qqmlglobal_p.h>
@@ -42,6 +42,31 @@
 #include <QtCore/QPluginLoader>
 
 QT_BEGIN_NAMESPACE
+
+class QQmlInspectorServiceImpl : public QQmlInspectorService
+{
+    Q_OBJECT
+
+public:
+    QQmlInspectorServiceImpl(QObject *parent = 0);
+
+    void addView(QObject *);
+    void removeView(QObject *);
+
+protected:
+    virtual void stateChanged(State state);
+    virtual void messageReceived(const QByteArray &);
+
+private Q_SLOTS:
+    void processMessage(const QByteArray &message);
+    void updateState();
+
+private:
+    friend class QQmlInspectorServiceFactory;
+
+    QList<QObject*> m_views;
+    QmlJSDebugger::AbstractViewInspector *m_currentInspector;
+};
 
 QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
     QQmlInspectorService(1, parent), m_currentInspector(0)
@@ -98,3 +123,5 @@ QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)
 }
 
 QT_END_NAMESPACE
+
+#include "qqmlinspectorservice.moc"

@@ -53,33 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QmlJSDebugger { class AbstractViewInspector; }
-
-class QQmlInspectorServiceImpl : public QQmlInspectorService
-{
-    Q_OBJECT
-
-public:
-    QQmlInspectorServiceImpl(QObject *parent = 0);
-
-    void addView(QObject *);
-    void removeView(QObject *);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &);
-
-private Q_SLOTS:
-    void processMessage(const QByteArray &message);
-    void updateState();
-
-private:
-    friend class QQmlInspectorServiceFactory;
-
-    QList<QObject*> m_views;
-    QmlJSDebugger::AbstractViewInspector *m_currentInspector;
-};
-
 class QQmlInspectorServiceFactory : public QQmlDebugServiceFactory
 {
     Q_OBJECT

@@ -18,7 +18,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/highlight.h \
     $$PWD/qquickviewinspector.h \
-    $$PWD/qqmlinspectorservice.h \
+    $$PWD/qqmlinspectorservicefactory.h \
     $$PWD/abstracttool.h \
     $$PWD/abstractviewinspector.h \
     $$PWD/inspecttool.h
