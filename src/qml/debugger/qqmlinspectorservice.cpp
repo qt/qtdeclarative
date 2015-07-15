@@ -33,7 +33,6 @@
 
 #include "qqmlinspectorservice_p.h"
 #include "qqmlinspectorinterface_p.h"
-#include "qqmldebugserver_p.h"
 
 #include <private/qqmlglobal_p.h>
 
@@ -104,7 +103,6 @@ void QQmlInspectorService::updateState()
 
         if (m_inspectorPlugins.isEmpty()) {
             qWarning() << "QQmlInspector: No plugins found.";
-            QQmlDebugServer::instance()->removeService(this);
             return;
         }
 
