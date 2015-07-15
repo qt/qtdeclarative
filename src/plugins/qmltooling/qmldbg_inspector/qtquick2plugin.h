@@ -35,7 +35,7 @@
 #define QTQUICK2PLUGINPLUGIN_H
 
 #include <QtCore/QPointer>
-#include <QtQml/private/qqmlinspectorinterface_p.h>
+#include "qqmlinspectorinterface.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -47,8 +47,6 @@ class QtQuick2Plugin : public QObject, public QQmlInspectorInterface
 {
     Q_OBJECT
     Q_DISABLE_COPY(QtQuick2Plugin)
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlInspectorInterface")
-    Q_INTERFACES(QQmlInspectorInterface)
 
 public:
     QtQuick2Plugin();

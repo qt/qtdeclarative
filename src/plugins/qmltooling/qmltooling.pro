@@ -5,4 +5,4 @@ SUBDIRS += \
     qmldbg_server \
     qmldbg_tcp
 
-qtHaveModule(quick): SUBDIRS += qmldbg_qtquick2
+qtHaveModule(quick): SUBDIRS += qmldbg_inspector

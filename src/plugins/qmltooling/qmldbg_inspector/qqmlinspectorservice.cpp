@@ -31,8 +31,9 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorservice_p.h"
-#include "qqmlinspectorinterface_p.h"
+#include "qqmlinspectorservice.h"
+#include "qqmlinspectorinterface.h"
+#include "qtquick2plugin.h"
 
 #include <private/qqmlglobal_p.h>
 
@@ -41,23 +42,11 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 
-#ifndef QT_NO_LIBRARY
-// print detailed information about loading of plugins
-DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
-#endif
-
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlInspectorServiceImpl, serviceInstance)
-
-QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(): QQmlInspectorService(1),
-    m_currentInspectorPlugin(0)
+QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
+    QQmlInspectorService(1, parent), m_currentInspectorPlugin(0)
 {
-}
-
-QQmlInspectorServiceImpl *QQmlInspectorServiceImpl::instance()
-{
-    return serviceInstance();
 }
 
 void QQmlInspectorServiceImpl::addView(QObject *view)
@@ -130,46 +119,12 @@ void QQmlInspectorServiceImpl::processMessage(const QByteArray &message)
 
 void QQmlInspectorServiceImpl::loadInspectorPlugins()
 {
-#ifndef QT_NO_LIBRARY
-    QStringList pluginCandidates;
-    const QStringList paths = QCoreApplication::libraryPaths();
-    foreach (const QString &libPath, paths) {
-        const QDir dir(libPath + QLatin1String("/qmltooling"));
-        if (dir.exists())
-            foreach (const QString &pluginPath, dir.entryList(QDir::Files))
-                pluginCandidates << dir.absoluteFilePath(pluginPath);
-    }
+    m_inspectorPlugins << new QmlJSDebugger::QtQuick2Plugin;
+}
 
-    foreach (const QString &pluginPath, pluginCandidates) {
-        if (qmlDebugVerbose())
-            qDebug() << "QQmlInspector: Trying to load plugin " << pluginPath << "...";
-
-        QPluginLoader loader(pluginPath);
-        if (loader.metaData()[QLatin1String("IID")] !=
-                QLatin1String("org.qt-project.Qt.QQmlInspectorInterface"))
-            continue;
-
-        if (!loader.load()) {
-            if (qmlDebugVerbose())
-                qDebug() << "QQmlInspector: Error while loading: " << loader.errorString();
-
-            continue;
-        }
-
-        QQmlInspectorInterface *inspector =
-                qobject_cast<QQmlInspectorInterface*>(loader.instance());
-        if (inspector) {
-            if (qmlDebugVerbose())
-                qDebug() << "QQmlInspector: Plugin successfully loaded.";
-            m_inspectorPlugins << inspector;
-        } else {
-            if (qmlDebugVerbose())
-                qDebug() << "QQmlInspector: Plugin does not implement interface QQmlInspectorInterface.";
-
-            loader.unload();
-        }
-    }
-#endif
+QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)
+{
+    return key == QQmlInspectorServiceImpl::s_key ? new QQmlInspectorServiceImpl(this) : 0;
 }
 
 QT_END_NAMESPACE

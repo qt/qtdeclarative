@@ -45,8 +45,8 @@
 // We mean it.
 //
 
-#include "qqmldebugservice_p.h"
-#include "qqmldebugserviceinterfaces_p.h"
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugservicefactory_p.h>
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/QList>
@@ -57,13 +57,12 @@ namespace QmlJSDebugger { class AbstractViewInspector; }
 
 class QQmlInspectorInterface;
 
-class Q_QML_PRIVATE_EXPORT QQmlInspectorServiceImpl : public QQmlInspectorService
+class QQmlInspectorServiceImpl : public QQmlInspectorService
 {
     Q_OBJECT
 
 public:
-    QQmlInspectorServiceImpl();
-    static QQmlInspectorServiceImpl *instance();
+    QQmlInspectorServiceImpl(QObject *parent = 0);
 
     void addView(QObject *);
     void removeView(QObject *);
@@ -78,11 +77,20 @@ private Q_SLOTS:
 
 private:
     friend class QmlJSDebugger::AbstractViewInspector;
+    friend class QQmlInspectorServiceFactory;
     void loadInspectorPlugins();
 
     QList<QObject*> m_views;
     QQmlInspectorInterface *m_currentInspectorPlugin;
     QList<QQmlInspectorInterface*> m_inspectorPlugins;
+};
+
+class QQmlInspectorServiceFactory : public QQmlDebugServiceFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qqmlinspectorservice.json")
+public:
+    QQmlDebugService *create(const QString &key);
 };
 
 QT_END_NAMESPACE

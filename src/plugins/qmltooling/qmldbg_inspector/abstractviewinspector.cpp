@@ -33,12 +33,12 @@
 
 #include "abstractviewinspector.h"
 #include "abstracttool.h"
+#include "qqmlinspectorservice.h"
 
 #include <QtCore/QDebug>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtCore/private/qabstractanimation_p.h>
-#include <QtQml/private/qqmlinspectorservice_p.h>
 #include <QtQml/private/qqmldebugconnector_p.h>
 #include <QtQml/private/qqmlcontext_p.h>
 

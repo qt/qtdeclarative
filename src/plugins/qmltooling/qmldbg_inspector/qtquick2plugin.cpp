@@ -33,9 +33,9 @@
 
 #include "qtquick2plugin.h"
 #include "qquickviewinspector.h"
+#include "qqmlinspectorservice.h"
 
 #include <QtCore/qplugin.h>
-#include <QtQml/private/qqmlinspectorservice_p.h>
 #include <QtQuick/QQuickView>
 
 QT_BEGIN_NAMESPACE

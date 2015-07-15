@@ -50,8 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
-
-class Q_QML_PRIVATE_EXPORT QQmlInspectorInterface
+class QQmlInspectorInterface
 {
 public:
     QQmlInspectorInterface() {}
@@ -64,10 +63,6 @@ public:
 
     virtual void clientMessage(const QByteArray &message) = 0;
 };
-
-#define QQmlInspectorInterface_iid "org.qt-project.Qt.QQmlInspectorInterface"
-
-Q_DECLARE_INTERFACE(QQmlInspectorInterface, QQmlInspectorInterface_iid)
 
 QT_END_NAMESPACE
 
