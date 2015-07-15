@@ -44,8 +44,6 @@ class QLocalClientConnection : public QObject, public QQmlDebugServerConnection
     Q_OBJECT
     Q_DECLARE_PRIVATE(QLocalClientConnection)
     Q_DISABLE_COPY(QLocalClientConnection)
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlDebugServerConnection")
-    Q_INTERFACES(QQmlDebugServerConnection)
 
 public:
     QLocalClientConnection();
@@ -68,6 +66,15 @@ private:
     bool connectToServer();
 
     QLocalClientConnectionPrivate *d_ptr;
+};
+
+class QLocalClientConnectionFactory : public QQmlDebugServerConnectionFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServerConnectionFactory_iid FILE "qlocalclientconnection.json")
+    Q_INTERFACES(QQmlDebugServerConnectionFactory)
+public:
+    QQmlDebugServerConnection *create(const QString &key);
 };
 
 QT_END_NAMESPACE

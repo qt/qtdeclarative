@@ -39,6 +39,7 @@
 #include <private/qqmldebugservice_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qqmldebugpluginmanager_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -48,10 +49,6 @@
 
 #include <private/qobject_p.h>
 #include <private/qcoreapplication_p.h>
-
-#if defined(QT_STATIC) && !defined(QT_NO_LIBRARY)
-#include "../../plugins/qmltooling/qmldbg_tcp/qtcpserverconnection.h"
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -77,12 +74,11 @@ QT_BEGIN_NAMESPACE
        Everything send with a header different to "QDeclarativeDebugServer" is sent to the appropriate plugin.
   */
 
-const int protocolVersion = 1;
+Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugServerConnection)
+Q_QML_IMPORT_DEBUG_PLUGIN(QTcpServerConnectionFactory)
+Q_QML_IMPORT_DEBUG_PLUGIN(QLocalClientConnectionFactory)
 
-// print detailed information about loading of plugins
-#ifndef QT_NO_LIBRARY
-DEFINE_BOOL_CONFIG_OPTION(qmlDebugVerbose, QML_DEBUGGER_VERBOSE)
-#endif
+const int protocolVersion = 1;
 
 class QQmlDebugServerThread;
 class QQmlDebugServerImpl : public QQmlDebugServer
@@ -143,7 +139,6 @@ private:
 
     bool canSendMessage(const QString &name);
     void doSendMessage(const QString &name, const QByteArray &message);
-    QQmlDebugServerConnection *loadConnectionPlugin(const QString &pluginName);
 
     QQmlDebugServerConnection *m_connection;
     QHash<QString, QQmlDebugService *> m_plugins;
@@ -157,9 +152,6 @@ private:
     QWaitCondition m_helloCondition;
     QQmlDebugServerThread *m_thread;
     QPacketProtocol *m_protocol;
-#ifndef QT_NO_LIBRARY
-    QPluginLoader m_loader;
-#endif
     QAtomicInt m_changeServiceStateCalls;
 };
 
@@ -209,7 +201,7 @@ struct StartTcpServerAction {
 
     bool operator()(QQmlDebugServerImpl *d)
     {
-        if (!d->init(QLatin1String("qmldbg_tcp"), block))
+        if (!d->init(QLatin1String("QTcpServerConnection"), block))
             return false;
         d->m_thread->setPortRange(portFrom, portTo == -1 ? portFrom : portTo, block, hostAddress);
         return true;
@@ -225,7 +217,7 @@ struct ConnectToLocalAction {
 
     bool operator()(QQmlDebugServerImpl *d)
     {
-        if (!d->init(QLatin1String("qmldbg_local"), block))
+        if (!d->init(QLatin1String("QLocalClientConnection"), block))
             return false;
         d->m_thread->setFileName(fileName, block);
         return true;
@@ -263,63 +255,10 @@ void QQmlDebugServerImpl::cleanup()
     }
 }
 
-QQmlDebugServerConnection *QQmlDebugServerImpl::loadConnectionPlugin(const QString &pluginName)
-{
-#ifndef QT_NO_LIBRARY
-    QStringList pluginCandidates;
-    const QStringList paths = QCoreApplication::libraryPaths();
-    foreach (const QString &libPath, paths) {
-        const QDir dir(libPath + QLatin1String("/qmltooling"));
-        if (dir.exists()) {
-            QStringList plugins(dir.entryList(QDir::Files));
-            foreach (const QString &pluginPath, plugins) {
-                if (QFileInfo(pluginPath).fileName().contains(pluginName))
-                    pluginCandidates << dir.absoluteFilePath(pluginPath);
-            }
-        }
-    }
-
-    QQmlDebugServerConnection *loadedConnection = 0;
-    foreach (const QString &pluginPath, pluginCandidates) {
-        if (qmlDebugVerbose())
-            qDebug() << "QML Debugger: Trying to load plugin " << pluginPath << "...";
-
-        m_loader.setFileName(pluginPath);
-        if (!m_loader.load()) {
-            if (qmlDebugVerbose())
-                qDebug() << "QML Debugger: Error while loading: " << m_loader.errorString();
-            continue;
-        }
-        if (QObject *instance = m_loader.instance())
-            loadedConnection = qobject_cast<QQmlDebugServerConnection*>(instance);
-
-        if (loadedConnection) {
-            if (qmlDebugVerbose())
-                qDebug() << "QML Debugger: Plugin successfully loaded.";
-
-            return loadedConnection;
-        }
-
-        if (qmlDebugVerbose())
-            qDebug() << "QML Debugger: Plugin does not implement interface QQmlDebugServerConnection.";
-
-        m_loader.unload();
-    }
-#else
-    Q_UNUSED(pluginName);
-#endif
-    return 0;
-}
-
 void QQmlDebugServerThread::run()
 {
     Q_ASSERT_X(m_server != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
-#if defined(QT_STATIC) && !defined(QT_NO_LIBRARY)
-    QQmlDebugServerConnection *connection
-            = new QTcpServerConnection;
-#else
-    QQmlDebugServerConnection *connection = m_server->loadConnectionPlugin(m_pluginName);
-#endif
+    QQmlDebugServerConnection *connection = loadQQmlDebugServerConnection(m_pluginName);
     if (connection) {
         connection->setServer(m_server);
 

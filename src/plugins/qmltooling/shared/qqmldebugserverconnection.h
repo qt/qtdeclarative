@@ -66,9 +66,15 @@ public:
     virtual void flush() = 0;
 };
 
-#define QQmlDebugServerConnection_iid "org.qt-project.Qt.QQmlDebugServerConnection"
+class QQmlDebugServerConnectionFactory : public QObject
+{
+    Q_OBJECT
+public:
+    virtual QQmlDebugServerConnection *create(const QString &key) = 0;
+};
 
-Q_DECLARE_INTERFACE(QQmlDebugServerConnection, QQmlDebugServerConnection_iid)
+#define QQmlDebugServerConnectionFactory_iid "org.qt-project.Qt.QQmlDebugServerConnectionFactory"
+Q_DECLARE_INTERFACE(QQmlDebugServerConnectionFactory, QQmlDebugServerConnectionFactory_iid)
 
 QT_END_NAMESPACE
 

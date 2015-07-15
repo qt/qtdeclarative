@@ -189,4 +189,9 @@ void QTcpServerConnection::newConnection()
     d->debugServer->setDevice(d->socket);
 }
 
+QQmlDebugServerConnection *QTcpServerConnectionFactory::create(const QString &key)
+{
+    return (key == QLatin1String("QTcpServerConnection") ? new QTcpServerConnection : 0);
+}
+
 QT_END_NAMESPACE

@@ -44,8 +44,6 @@ class QTcpServerConnection : public QObject, public QQmlDebugServerConnection
     Q_OBJECT
     Q_DECLARE_PRIVATE(QTcpServerConnection)
     Q_DISABLE_COPY(QTcpServerConnection)
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlDebugServerConnection")
-    Q_INTERFACES(QQmlDebugServerConnection)
 
 public:
     QTcpServerConnection();
@@ -68,6 +66,15 @@ private:
     bool listen();
 
     QTcpServerConnectionPrivate *d_ptr;
+};
+
+class QTcpServerConnectionFactory : public QQmlDebugServerConnectionFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServerConnectionFactory_iid FILE "qtcpserverconnection.json")
+    Q_INTERFACES(QQmlDebugServerConnectionFactory)
+public:
+    QQmlDebugServerConnection *create(const QString &key);
 };
 
 QT_END_NAMESPACE

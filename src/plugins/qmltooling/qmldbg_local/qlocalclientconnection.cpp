@@ -142,4 +142,9 @@ void QLocalClientConnection::connectionEstablished()
     d->debugServer->setDevice(d->socket);
 }
 
+QQmlDebugServerConnection *QLocalClientConnectionFactory::create(const QString &key)
+{
+    return (key == QLatin1String("QLocalClientConnection") ? new QLocalClientConnection : 0);
+}
+
 QT_END_NAMESPACE
