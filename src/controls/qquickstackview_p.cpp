@@ -506,7 +506,7 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
 
     if (transitioner->runningJobs.isEmpty()) {
         int i = elements.count() - 1;
-        while (--i > 0)
+        while (--i >= 0)
             if (QQuickItem *item = elements[i]->item)
                 item->setVisible(false);
         setBusy(false);
