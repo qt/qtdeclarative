@@ -47,31 +47,25 @@
 //
 
 #include "qqmldebugservice_p.h"
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
-class QMutex;
-class QQmlConfigurableDebugServicePrivate;
 class QQmlConfigurableDebugService : public QQmlDebugService
 {
     Q_OBJECT
-public:
+protected:
     QQmlConfigurableDebugService(const QString &name, float version, QObject *parent = 0);
 
-protected:
-    QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd, QObject *parent = 0);
-
-    QMutex *configMutex();
     void stopWaiting();
     void init();
 
     void stateChanged(State);
     void engineAboutToBeAdded(QQmlEngine *);
 
-    virtual ~QQmlConfigurableDebugService() {}
-private:
-    Q_DISABLE_COPY(QQmlConfigurableDebugService)
-    Q_DECLARE_PRIVATE(QQmlConfigurableDebugService)
+    QMutex m_configMutex;
+    QList<QQmlEngine *> m_waitingEngines;
+    bool m_waitingForConfiguration;
 };
 
 QT_END_NAMESPACE

@@ -32,10 +32,8 @@
 ****************************************************************************/
 
 #include "qdebugmessageservice_p.h"
-#include "qqmldebugservice_p_p.h"
 
 #include <QDataStream>
-#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 
@@ -47,29 +45,15 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
     QDebugMessageService::instance()->sendDebugMessage(type, ctxt, buf);
 }
 
-class QDebugMessageServicePrivate : public QQmlDebugServicePrivate
-{
-public:
-    QDebugMessageServicePrivate() : QQmlDebugServicePrivate(QStringLiteral("DebugMessages"), 2),
-        oldMsgHandler(0), prevState(QQmlDebugService::NotConnected)
-    {
-    }
-
-    QtMessageHandler oldMsgHandler;
-    QQmlDebugService::State prevState;
-    QMutex initMutex;
-};
-
 QDebugMessageService::QDebugMessageService(QObject *parent) :
-    QQmlDebugService(*(new QDebugMessageServicePrivate), parent)
+    QQmlDebugService(QStringLiteral("DebugMessages"), 2, parent), oldMsgHandler(0),
+    prevState(QQmlDebugService::NotConnected)
 {
-    Q_D(QDebugMessageService);
-
     // don't execute stateChanged() in parallel
-    QMutexLocker lock(&d->initMutex);
+    QMutexLocker lock(&initMutex);
     if (state() == Enabled) {
-        d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
-        d->prevState = Enabled;
+        oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
+        prevState = Enabled;
     }
 }
 
@@ -82,8 +66,6 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
                                             const QMessageLogContext &ctxt,
                                             const QString &buf)
 {
-    Q_D(QDebugMessageService);
-
     //We do not want to alter the message handling mechanism
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
@@ -94,26 +76,25 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
     emit messageToClient(name(), message);
-    if (d->oldMsgHandler)
-        (*d->oldMsgHandler)(type, ctxt, buf);
+    if (oldMsgHandler)
+        (*oldMsgHandler)(type, ctxt, buf);
 }
 
 void QDebugMessageService::stateChanged(State state)
 {
-    Q_D(QDebugMessageService);
-    QMutexLocker lock(&d->initMutex);
+    QMutexLocker lock(&initMutex);
 
-    if (state != Enabled && d->prevState == Enabled) {
-        QtMessageHandler handler = qInstallMessageHandler(d->oldMsgHandler);
+    if (state != Enabled && prevState == Enabled) {
+        QtMessageHandler handler = qInstallMessageHandler(oldMsgHandler);
         // has our handler been overwritten in between?
         if (handler != DebugMessageHandler)
             qInstallMessageHandler(handler);
 
-    } else if (state == Enabled && d->prevState != Enabled) {
-        d->oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
+    } else if (state == Enabled && prevState != Enabled) {
+        oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
     }
 
-    d->prevState = state;
+    prevState = state;
 }
 
 QT_END_NAMESPACE

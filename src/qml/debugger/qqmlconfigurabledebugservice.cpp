@@ -32,48 +32,32 @@
 ****************************************************************************/
 
 #include "qqmlconfigurabledebugservice_p.h"
-#include "qqmlconfigurabledebugservice_p_p.h"
 #include "qqmldebugconnector_p.h"
 
 QT_BEGIN_NAMESPACE
 
 QQmlConfigurableDebugService::QQmlConfigurableDebugService(const QString &name, float version,
                                                            QObject *parent) :
-    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate(name, version)), parent)
+    QQmlDebugService(name, version, parent), m_configMutex(QMutex::Recursive)
 {
     init();
-}
-
-QQmlConfigurableDebugService::QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd,
-                                                           QObject *parent) :
-    QQmlDebugService(dd, parent)
-{
-    init();
-}
-
-QMutex *QQmlConfigurableDebugService::configMutex()
-{
-    Q_D(QQmlConfigurableDebugService);
-    return &d->configMutex;
 }
 
 void QQmlConfigurableDebugService::init()
 {
-    Q_D(QQmlConfigurableDebugService);
-    QMutexLocker lock(&d->configMutex);
+    QMutexLocker lock(&m_configMutex);
     // If we're not enabled or not blocking, don't wait for configuration
-    d->waitingForConfiguration = (state() == Enabled &&
-                                  QQmlDebugConnector::instance()->blockingMode());
+    m_waitingForConfiguration = (state() == Enabled &&
+                                 QQmlDebugConnector::instance()->blockingMode());
 }
 
 void QQmlConfigurableDebugService::stopWaiting()
 {
-    Q_D(QQmlConfigurableDebugService);
-    QMutexLocker lock(&d->configMutex);
-    d->waitingForConfiguration = false;
-    foreach (QQmlEngine *engine, d->waitingEngines)
+    QMutexLocker lock(&m_configMutex);
+    m_waitingForConfiguration = false;
+    foreach (QQmlEngine *engine, m_waitingEngines)
         emit attachedToEngine(engine);
-    d->waitingEngines.clear();
+    m_waitingEngines.clear();
 }
 
 void QQmlConfigurableDebugService::stateChanged(QQmlDebugService::State newState)
@@ -86,10 +70,9 @@ void QQmlConfigurableDebugService::stateChanged(QQmlDebugService::State newState
 
 void QQmlConfigurableDebugService::engineAboutToBeAdded(QQmlEngine *engine)
 {
-    Q_D(QQmlConfigurableDebugService);
-    QMutexLocker lock(&d->configMutex);
-    if (d->waitingForConfiguration)
-        d->waitingEngines.append(engine);
+    QMutexLocker lock(&m_configMutex);
+    if (m_waitingForConfiguration)
+        m_waitingEngines.append(engine);
     else
         emit attachedToEngine(engine);
 }

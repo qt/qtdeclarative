@@ -20,7 +20,6 @@ HEADERS += \
     $$PWD/qqmldebugconnector_p.h \
     $$PWD/qqmldebugpluginmanager_p.h \
     $$PWD/qqmldebugservice_p.h \
-    $$PWD/qqmldebugservice_p_p.h \
     $$PWD/qqmlprofilerservice_p.h \
     $$PWD/qqmldebugserver_p.h \
     $$PWD/qqmldebugserverconnection_p.h \
@@ -32,7 +31,6 @@ HEADERS += \
     $$PWD/qdebugmessageservice_p.h \
     $$PWD/qv4debugservice_p.h \
     $$PWD/qqmlconfigurabledebugservice_p.h \
-    $$PWD/qqmlconfigurabledebugservice_p_p.h \
     $$PWD/qqmlenginecontrolservice_p.h \
     $$PWD/qqmlprofilerdefinitions_p.h \
     $$PWD/qqmlabstractprofileradapter_p.h \

@@ -48,6 +48,7 @@
 #include "qqmldebugservice_p.h"
 
 #include <QtCore/qlogging.h>
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,8 +69,9 @@ protected:
     void stateChanged(State);
 
 private:
-    Q_DISABLE_COPY(QDebugMessageService)
-    Q_DECLARE_PRIVATE(QDebugMessageService)
+    QtMessageHandler oldMsgHandler;
+    QQmlDebugService::State prevState;
+    QMutex initMutex;
 };
 
 QT_END_NAMESPACE

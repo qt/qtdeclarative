@@ -34,7 +34,6 @@
 #include "qqmldebugserver_p.h"
 #include "qqmldebugserverconnection_p.h"
 #include "qqmldebugservice_p.h"
-#include "qqmldebugservice_p_p.h"
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>

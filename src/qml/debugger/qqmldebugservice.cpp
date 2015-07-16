@@ -32,7 +32,6 @@
 ****************************************************************************/
 
 #include "qqmldebugservice_p.h"
-#include "qqmldebugservice_p_p.h"
 #include "qqmldebugconnector_p.h"
 #include <private/qqmldata_p.h>
 #include <private/qqmlcontext_p.h>
@@ -43,6 +42,19 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlDebugServer;
+
+class QQmlDebugServicePrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQmlDebugService)
+public:
+    QQmlDebugServicePrivate(const QString &name, float version);
+
+    const QString name;
+    const float version;
+    QQmlDebugService::State state;
+};
+
 QQmlDebugServicePrivate::QQmlDebugServicePrivate(const QString &name, float version) :
     name(name), version(version), state(QQmlDebugService::NotConnected)
 {
@@ -51,33 +63,17 @@ QQmlDebugServicePrivate::QQmlDebugServicePrivate(const QString &name, float vers
 QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *parent)
     : QObject(*(new QQmlDebugServicePrivate(name, version)), parent)
 {
-    registerService();
-}
-
-QQmlDebugService::QQmlDebugService(QQmlDebugServicePrivate &dd, QObject *parent)
-    : QObject(dd, parent)
-{
-    registerService();
-}
-
-/**
-  Registers the service. This should be called in the constructor of the inherited class. From
-  then on the service might get asynchronous calls to messageReceived().
-  */
-QQmlDebugService::State QQmlDebugService::registerService()
-{
     Q_D(QQmlDebugService);
     QQmlDebugConnector *server = QQmlDebugConnector::instance();
 
     if (!server)
-        return NotConnected;
+        return;
 
     if (server->service(d->name)) {
         qWarning() << "QQmlDebugService: Conflicting plugin name" << d->name;
     } else {
         server->addService(this);
     }
-    return state();
 }
 
 QQmlDebugService::~QQmlDebugService()

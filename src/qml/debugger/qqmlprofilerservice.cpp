@@ -63,7 +63,7 @@ QQmlProfilerService::~QQmlProfilerService()
 
 void QQmlProfilerService::dataReady(QQmlAbstractProfilerAdapter *profiler)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     bool dataComplete = true;
     for (QMultiMap<qint64, QQmlAbstractProfilerAdapter *>::iterator i(m_startTimes.begin()); i != m_startTimes.end();) {
         if (i.value() == profiler) {
@@ -104,7 +104,7 @@ void QQmlProfilerService::engineAboutToBeAdded(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be added from the engine thread");
 
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     QQmlProfilerAdapter *qmlAdapter = new QQmlProfilerAdapter(this, QQmlEnginePrivate::get(engine));
     QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
     addEngineProfiler(qmlAdapter, engine);
@@ -118,7 +118,7 @@ void QQmlProfilerService::engineAdded(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be added from the engine thread");
 
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine))
         profiler->stopWaiting();
 }
@@ -128,7 +128,7 @@ void QQmlProfilerService::engineAboutToBeRemoved(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be removed from the engine thread");
 
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     bool isRunning = false;
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
         if (profiler->isRunning())
@@ -148,7 +148,7 @@ void QQmlProfilerService::engineRemoved(QQmlEngine *engine)
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be removed from the engine thread");
 
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {
         removeProfilerFromStartTimes(profiler);
         delete profiler;
@@ -165,7 +165,7 @@ void QQmlProfilerService::addEngineProfiler(QQmlAbstractProfilerAdapter *profile
 
 void QQmlProfilerService::addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     profiler->synchronize(m_timer);
     m_globalProfilers.append(profiler);
     // Global profiler, not connected to a specific engine.
@@ -181,7 +181,7 @@ void QQmlProfilerService::addGlobalProfiler(QQmlAbstractProfilerAdapter *profile
 
 void QQmlProfilerService::removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     removeProfilerFromStartTimes(profiler);
     m_globalProfilers.removeOne(profiler);
     delete profiler;
@@ -208,7 +208,7 @@ void QQmlProfilerService::removeProfilerFromStartTimes(const QQmlAbstractProfile
  */
 void QQmlProfilerService::startProfiling(QQmlEngine *engine, quint64 features)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
 
     QByteArray message;
     QQmlDebugStream d(&message, QIODevice::WriteOnly);
@@ -257,7 +257,7 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine, quint64 features)
  */
 void QQmlProfilerService::stopProfiling(QQmlEngine *engine)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
     QList<QQmlAbstractProfilerAdapter *> stopping;
     QList<QQmlAbstractProfilerAdapter *> reporting;
 
@@ -339,7 +339,7 @@ void QQmlProfilerService::sendMessages()
 
 void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
 
     if (state() == newState)
         return;
@@ -353,7 +353,7 @@ void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState
 
 void QQmlProfilerService::messageReceived(const QByteArray &message)
 {
-    QMutexLocker lock(configMutex());
+    QMutexLocker lock(&m_configMutex);
 
     QByteArray rwData = message;
     QQmlDebugStream stream(&rwData, QIODevice::ReadOnly);

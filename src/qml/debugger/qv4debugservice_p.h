@@ -46,12 +46,38 @@
 //
 
 #include "qqmlconfigurabledebugservice_p.h"
+#include <private/qv4debugging_p.h>
+
+#include <QtCore/QJsonValue>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 { struct ExecutionEngine; }
+
 class QQmlEngine;
-class QV4DebugServicePrivate;
+class VariableCollector;
+class V8CommandHandler;
+class UnknownV8CommandHandler;
+class QV4DebugService;
+
+class QV4DebuggerAgent : public QV4::Debugging::DebuggerAgent
+{
+    Q_OBJECT
+public:
+    QV4DebuggerAgent(QV4DebugService *debugService);
+    QV4::Debugging::Debugger *firstDebugger() const;
+    bool isRunning() const;
+
+public slots:
+    virtual void debuggerPaused(QV4::Debugging::Debugger *debugger,
+                                QV4::Debugging::PauseReason reason);
+    virtual void sourcesCollected(QV4::Debugging::Debugger *debugger, QStringList sources,
+                                  int requestSequenceNr);
+
+private:
+    QV4DebugService *debugService;
+};
+
 
 class QV4DebugService : public QQmlConfigurableDebugService
 {
@@ -65,6 +91,21 @@ public:
     void engineAboutToBeRemoved(QQmlEngine *engine);
 
     void signalEmitted(const QString &signal);
+    void send(QJsonObject v8Payload);
+
+    QJsonObject buildScope(int frameNr, int scopeNr, QV4::Debugging::Debugger *debugger);
+    QJsonArray buildRefs();
+    QJsonValue lookup(int refId) const;
+
+    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
+                           QV4::Debugging::Debugger *debugger);
+    int selectedFrame() const;
+    void selectFrame(int frameNr);
+
+    void clearHandles(QV4::ExecutionEngine *engine);
+
+    VariableCollector *collector() const;
+    QV4DebuggerAgent debuggerAgent;
 
 protected:
     void messageReceived(const QByteArray &);
@@ -72,10 +113,24 @@ protected:
 
 private:
     void handleV8Request(const QByteArray &payload);
+    static QByteArray packMessage(const QByteArray &command,
+                                  const QByteArray &message = QByteArray());
+    void processCommand(const QByteArray &command, const QByteArray &data);
+    V8CommandHandler *v8CommandHandler(const QString &command) const;
+    int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
-private:
-    Q_DISABLE_COPY(QV4DebugService)
-    Q_DECLARE_PRIVATE(QV4DebugService)
+    QStringList breakOnSignals;
+    QMap<int, QV4::Debugging::Debugger *> debuggerMap;
+    static int debuggerIndex;
+    static int sequence;
+    const int version;
+
+    QScopedPointer<VariableCollector> theCollector;
+    int theSelectedFrame;
+
+    void addHandler(V8CommandHandler* handler);
+    QHash<QString, V8CommandHandler*> handlers;
+    QScopedPointer<UnknownV8CommandHandler> unknownV8CommandHandler;
 };
 
 QT_END_NAMESPACE
