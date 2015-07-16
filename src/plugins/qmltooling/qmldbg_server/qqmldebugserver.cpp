@@ -231,11 +231,13 @@ void QQmlDebugServerImpl::cleanup()
     if (!server)
         return;
 
-    foreach (QQmlDebugService *service, server->m_plugins.values()) {
+    for (QHash<QString, QQmlDebugService *>::ConstIterator i = server->m_plugins.constBegin();
+         i != server->m_plugins.constEnd(); ++i) {
         server->m_changeServiceStateCalls.ref();
         QMetaObject::invokeMethod(server, "changeServiceState", Qt::QueuedConnection,
-                                  Q_ARG(QString, service->name()),
-                                  Q_ARG(QQmlDebugService::State, QQmlDebugService::NotConnected));
+                                  Q_ARG(QString, i.key()),
+                                  Q_ARG(QQmlDebugService::State,
+                                        QQmlDebugService::NotConnected));
     }
 
     // Wait for changeServiceState calls to finish
@@ -458,13 +460,13 @@ void QQmlDebugServerImpl::receiveMessage()
             QQmlDebugStream out(&helloAnswer, QIODevice::WriteOnly);
             QStringList pluginNames;
             QList<float> pluginVersions;
-            const QList<QQmlDebugService*> debugServices = m_plugins.values();
-            const int count = debugServices.count();
+            const int count = m_plugins.count();
             pluginNames.reserve(count);
             pluginVersions.reserve(count);
-            foreach (QQmlDebugService *service, debugServices) {
-                pluginNames << service->name();
-                pluginVersions << service->version();
+            for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
+                 i != m_plugins.constEnd(); ++i) {
+                pluginNames << i.key();
+                pluginVersions << i.value()->version();
             }
 
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
@@ -483,7 +485,7 @@ void QQmlDebugServerImpl::receiveMessage()
                 if (m_clientPlugins.contains(iter.key()))
                     newState = QQmlDebugService::Enabled;
                 m_changeServiceStateCalls.ref();
-                changeServiceState(iter.value()->name(), newState);
+                changeServiceState(iter.key(), newState);
             }
 
             m_helloCondition.wakeAll();
@@ -502,7 +504,7 @@ void QQmlDebugServerImpl::receiveMessage()
                 if (oldClientPlugins.contains(pluginName)
                         != m_clientPlugins.contains(pluginName)) {
                     m_changeServiceStateCalls.ref();
-                    changeServiceState(iter.value()->name(), newState);
+                    changeServiceState(iter.key(), newState);
                 }
             }
 
