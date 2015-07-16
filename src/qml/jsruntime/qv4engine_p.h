@@ -94,6 +94,9 @@ struct Module;
 
 struct Function;
 
+namespace Promise {
+class ReactionHandler;
+};
 
 struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
@@ -158,6 +161,7 @@ public:
         SyntaxErrorProto,
         TypeErrorProto,
         URIErrorProto,
+        PromiseProto,
         VariantProto,
 #if QT_CONFIG(qml_sequence_object)
         SequenceProto,
@@ -197,6 +201,7 @@ public:
         TypeError_Ctor,
         URIError_Ctor,
         SharedArrayBuffer_Ctor,
+        Promise_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
         WeakSet_Ctor,
@@ -236,6 +241,7 @@ public:
     FunctionObject *typeErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + TypeError_Ctor); }
     FunctionObject *uRIErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + URIError_Ctor); }
     FunctionObject *sharedArrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + SharedArrayBuffer_Ctor); }
+    FunctionObject *promiseCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Promise_Ctor); }
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
     FunctionObject *weakSetCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + WeakSet_Ctor); }
@@ -266,6 +272,7 @@ public:
     Object *syntaxErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + SyntaxErrorProto); }
     Object *typeErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + TypeErrorProto); }
     Object *uRIErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + URIErrorProto); }
+    Object *promisePrototype() const { return reinterpret_cast<Object *>(jsObjects + PromiseProto); }
     Object *variantPrototype() const { return reinterpret_cast<Object *>(jsObjects + VariantProto); }
 #if QT_CONFIG(qml_sequence_object)
     Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
@@ -523,6 +530,10 @@ public:
     Heap::Object *newRangeErrorObject(const QString &message);
     Heap::Object *newURIErrorObject(const Value &message);
 
+    Heap::PromiseObject *newPromiseObject();
+    Heap::Object *newPromiseObject(const QV4::FunctionObject *thisObject, const QV4::PromiseCapability *capability);
+    Promise::ReactionHandler *getPromiseReactionHandler();
+
     Heap::Object *newVariantObject(const QVariant &v);
 
     Heap::Object *newForInIteratorObject(Object *o);
@@ -611,6 +622,9 @@ private:
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
     int jitCallCountThreshold;
+
+    // used by generated Promise objects to handle 'then' events
+    QScopedPointer<QV4::Promise::ReactionHandler> m_reactionHandler;
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't

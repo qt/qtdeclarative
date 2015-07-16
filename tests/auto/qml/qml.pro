@@ -26,6 +26,7 @@ PUBLICTESTS += \
     qqmlnotifier \
     qqmlqt \
     qqmlxmlhttprequest \
+    qqmlpromise \
     qtqmlmodules \
     qquickfolderlistmodel \
     qqmlapplicationengine \
