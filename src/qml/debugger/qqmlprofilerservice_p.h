@@ -66,7 +66,9 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlConfigurableDebugService, public QQmlProfilerDefinitions
+class Q_QML_PRIVATE_EXPORT QQmlProfilerService :
+        public QQmlConfigurableDebugService<QQmlDebugService>,
+        public QQmlProfilerDefinitions
 {
     Q_OBJECT
 public:

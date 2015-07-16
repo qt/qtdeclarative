@@ -10,7 +10,6 @@ SOURCES += \
     $$PWD/qqmlenginedebugservice.cpp \
     $$PWD/qdebugmessageservice.cpp \
     $$PWD/qv4debugservice.cpp \
-    $$PWD/qqmlconfigurabledebugservice.cpp \
     $$PWD/qqmlenginecontrolservice.cpp \
     $$PWD/qqmlabstractprofileradapter.cpp \
     $$PWD/qv4profileradapter.cpp \

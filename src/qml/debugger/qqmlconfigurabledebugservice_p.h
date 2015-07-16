@@ -47,21 +47,54 @@
 //
 
 #include "qqmldebugservice_p.h"
+#include "qqmldebugconnector_p.h"
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlConfigurableDebugService : public QQmlDebugService
+template <class Base>
+class QQmlConfigurableDebugService : public Base
 {
-    Q_OBJECT
 protected:
-    QQmlConfigurableDebugService(const QString &name, float version, QObject *parent = 0);
+    QQmlConfigurableDebugService(const QString &name, float version, QObject *parent = 0) :
+        Base(name, version, parent), m_configMutex(QMutex::Recursive)
+    {
+        init();
+    }
 
-    void stopWaiting();
-    void init();
+    void stopWaiting()
+    {
+        QMutexLocker lock(&m_configMutex);
+        m_waitingForConfiguration = false;
+        foreach (QQmlEngine *engine, m_waitingEngines)
+            emit Base::attachedToEngine(engine);
+        m_waitingEngines.clear();
+    }
 
-    void stateChanged(State);
-    void engineAboutToBeAdded(QQmlEngine *);
+    void init()
+    {
+        QMutexLocker lock(&m_configMutex);
+        // If we're not enabled or not blocking, don't wait for configuration
+        m_waitingForConfiguration = (Base::state() == QQmlDebugService::Enabled &&
+                                     QQmlDebugConnector::instance()->blockingMode());
+    }
+
+    void stateChanged(QQmlDebugService::State newState)
+    {
+        if (newState != QQmlDebugService::Enabled)
+            stopWaiting();
+        else
+            init();
+    }
+
+    void engineAboutToBeAdded(QQmlEngine *engine)
+    {
+        QMutexLocker lock(&m_configMutex);
+        if (m_waitingForConfiguration)
+            m_waitingEngines.append(engine);
+        else
+            emit Base::attachedToEngine(engine);
+    }
 
     QMutex m_configMutex;
     QList<QQmlEngine *> m_waitingEngines;

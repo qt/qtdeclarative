@@ -78,8 +78,7 @@ private:
     QV4DebugService *debugService;
 };
 
-
-class QV4DebugService : public QQmlConfigurableDebugService
+class QV4DebugService : public QQmlConfigurableDebugService<QQmlDebugService>
 {
     Q_OBJECT
 public:

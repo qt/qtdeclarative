@@ -832,8 +832,9 @@ V8CommandHandler *QV4DebugService::v8CommandHandler(const QString &command) cons
 }
 
 QV4DebugService::QV4DebugService(QObject *parent) :
-    QQmlConfigurableDebugService(QStringLiteral("V8Debugger"), 1, parent), debuggerAgent(this),
-    version(1), theSelectedFrame(0), unknownV8CommandHandler(new UnknownV8CommandHandler)
+    QQmlConfigurableDebugService<QQmlDebugService>(QStringLiteral("V8Debugger"), 1, parent),
+    debuggerAgent(this), version(1), theSelectedFrame(0),
+    unknownV8CommandHandler(new UnknownV8CommandHandler)
 {
     addHandler(new V8VersionRequest);
     addHandler(new V8SetBreakPointRequest);
@@ -875,7 +876,7 @@ void QV4DebugService::engineAboutToBeAdded(QQmlEngine *engine)
             }
         }
     }
-    QQmlConfigurableDebugService::engineAboutToBeAdded(engine);
+    QQmlConfigurableDebugService<QQmlDebugService>::engineAboutToBeAdded(engine);
 }
 
 void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
@@ -896,7 +897,7 @@ void QV4DebugService::engineAboutToBeRemoved(QQmlEngine *engine)
             debuggerAgent.removeDebugger(debugger);
         }
     }
-    QQmlConfigurableDebugService::engineAboutToBeRemoved(engine);
+    QQmlConfigurableDebugService<QQmlDebugService>::engineAboutToBeRemoved(engine);
 }
 
 void QV4DebugService::signalEmitted(const QString &signal)

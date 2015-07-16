@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QQmlProfilerService, profilerInstance)
 
 QQmlProfilerService::QQmlProfilerService()
-    : QQmlConfigurableDebugService(QStringLiteral("CanvasFrameRate"), 1)
+    : QQmlConfigurableDebugService<QQmlDebugService>(QStringLiteral("CanvasFrameRate"), 1)
 {
     m_timer.start();
 }
@@ -109,8 +109,7 @@ void QQmlProfilerService::engineAboutToBeAdded(QQmlEngine *engine)
     QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
     addEngineProfiler(qmlAdapter, engine);
     addEngineProfiler(v4Adapter, engine);
-
-    QQmlConfigurableDebugService::engineAboutToBeAdded(engine);
+    QQmlConfigurableDebugService<QQmlDebugService>::engineAboutToBeAdded(engine);
 }
 
 void QQmlProfilerService::engineAdded(QQmlEngine *engine)
