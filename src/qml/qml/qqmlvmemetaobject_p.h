@@ -211,6 +211,9 @@ public:
     QSizeF readPropertyAsSizeF(int id);
     QPointF readPropertyAsPointF(int id);
     QUrl readPropertyAsUrl(int id);
+    QDate readPropertyAsDate(int id);
+    QDateTime readPropertyAsDateTime(int id);
+    QRectF readPropertyAsRectF(int id);
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
@@ -219,6 +222,9 @@ public:
     void writeProperty(int id, const QPointF& v);
     void writeProperty(int id, const QSizeF& v);
     void writeProperty(int id, const QUrl& v);
+    void writeProperty(int id, const QDate& v);
+    void writeProperty(int id, const QDateTime& v);
+    void writeProperty(int id, const QRectF& v);
 
     void ensureQObjectWrapper();
 

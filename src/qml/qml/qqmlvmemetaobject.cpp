@@ -635,6 +635,29 @@ void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
     vp->putIndexed(id, sv);
 }
 
+// TODO: can we store the QDate in a QV4::Value primitive?
+void QQmlVMEMetaObject::writeProperty(int id, const QDate& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, const QDateTime& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
 void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
 {
     if (!ensurePropertiesAllocated())
@@ -647,6 +670,17 @@ void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, const QRectF& v)
 {
     if (!ensurePropertiesAllocated())
         return;
@@ -733,6 +767,38 @@ QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
     return v->d()->data.value<QUrl>();
 }
 
+QDate QQmlVMEMetaObject::readPropertyAsDate(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QDate();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::Date) {
+        writeProperty(id, QDate());
+        return QDate();
+    }
+    return v->d()->data.value<QDate>();
+}
+
+QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QDateTime();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::DateTime) {
+        writeProperty(id, QDateTime());
+        return QDateTime();
+    }
+    return v->d()->data.value<QDateTime>();
+}
+
 QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
 {
     if (!ensurePropertiesAllocated())
@@ -765,6 +831,21 @@ QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
     return v->d()->data.value<QPointF>();
 }
 
+QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QRectF();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::RectF) {
+        writeProperty(id, QRectF());
+        return QRectF();
+    }
+    return v->d()->data.value<QRectF>();
+}
 
 int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 {
@@ -887,13 +968,13 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QUrl *>(a[0]) = readPropertyAsUrl(id);
                             break;
                         case QVariant::Date:
-                            *reinterpret_cast<QDate *>(a[0]) = data[id].asQDate();
+                            *reinterpret_cast<QDate *>(a[0]) = readPropertyAsDate(id);
                             break;
                         case QVariant::DateTime:
-                            *reinterpret_cast<QDateTime *>(a[0]) = data[id].asQDateTime();
+                            *reinterpret_cast<QDateTime *>(a[0]) = readPropertyAsDateTime(id);
                             break;
                         case QVariant::RectF:
-                            *reinterpret_cast<QRectF *>(a[0]) = data[id].asQRectF();
+                            *reinterpret_cast<QRectF *>(a[0]) = readPropertyAsRectF(id);
                             break;
                         case QVariant::SizeF:
                             *reinterpret_cast<QSizeF *>(a[0]) = readPropertyAsSizeF(id);
@@ -944,16 +1025,16 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QUrl *>(a[0]));
                             break;
                         case QVariant::Date:
-                            needActivate = *reinterpret_cast<QDate *>(a[0]) != data[id].asQDate();
-                            data[id].setValue(*reinterpret_cast<QDate *>(a[0]));
+                            needActivate = *reinterpret_cast<QDate *>(a[0]) != readPropertyAsDate(id);
+                            writeProperty(id, *reinterpret_cast<QDate *>(a[0]));
                             break;
                         case QVariant::DateTime:
-                            needActivate = *reinterpret_cast<QDateTime *>(a[0]) != data[id].asQDateTime();
-                            data[id].setValue(*reinterpret_cast<QDateTime *>(a[0]));
+                            needActivate = *reinterpret_cast<QDateTime *>(a[0]) != readPropertyAsDateTime(id);
+                            writeProperty(id, *reinterpret_cast<QDateTime *>(a[0]));
                             break;
                         case QVariant::RectF:
-                            needActivate = *reinterpret_cast<QRectF *>(a[0]) != data[id].asQRectF();
-                            data[id].setValue(*reinterpret_cast<QRectF *>(a[0]));
+                            needActivate = *reinterpret_cast<QRectF *>(a[0]) != readPropertyAsRectF(id);
+                            writeProperty(id, *reinterpret_cast<QRectF *>(a[0]));
                             break;
                         case QVariant::SizeF:
                             needActivate = *reinterpret_cast<QSizeF *>(a[0]) != readPropertyAsSizeF(id);
