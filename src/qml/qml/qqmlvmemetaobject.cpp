@@ -624,6 +624,28 @@ void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
     vp->putIndexed(id, s);
 }
 
+void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
+{
+    if (!ensurePropertiesAllocated())
+        return;
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
+    vp->putIndexed(id, sv);
+}
+
 void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
 {
     if (!ensurePropertiesAllocated())
@@ -695,6 +717,22 @@ QString QQmlVMEMetaObject::readPropertyAsString(int id)
     return sv->stringValue()->toQString();
 }
 
+QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QUrl();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::Url) {
+        writeProperty(id, QUrl());
+        return QUrl();
+    }
+    return v->d()->data.value<QUrl>();
+}
+
 QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
 {
     if (!ensurePropertiesAllocated())
@@ -710,6 +748,23 @@ QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
     }
     return v->d()->data.value<QSizeF>();
 }
+
+QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
+{
+    if (!ensurePropertiesAllocated())
+        return QPointF();
+
+    QV4::Scope scope(properties.engine());
+    QV4::ScopedObject vp(scope, properties.value());
+    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data.type() != QVariant::PointF) {
+        writeProperty(id, QPointF());
+        return QPointF();
+    }
+    return v->d()->data.value<QPointF>();
+}
+
 
 int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
 {
@@ -829,7 +884,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QString *>(a[0]) = readPropertyAsString(id);
                             break;
                         case QVariant::Url:
-                            *reinterpret_cast<QUrl *>(a[0]) = data[id].asQUrl();
+                            *reinterpret_cast<QUrl *>(a[0]) = readPropertyAsUrl(id);
                             break;
                         case QVariant::Date:
                             *reinterpret_cast<QDate *>(a[0]) = data[id].asQDate();
@@ -844,7 +899,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QSizeF *>(a[0]) = readPropertyAsSizeF(id);
                             break;
                         case QVariant::PointF:
-                            *reinterpret_cast<QPointF *>(a[0]) = data[id].asQPointF();
+                            *reinterpret_cast<QPointF *>(a[0]) = readPropertyAsPointF(id);
                             break;
                         case QMetaType::QObjectStar:
                             *reinterpret_cast<QObject **>(a[0]) = data[id].asQObject();
@@ -885,8 +940,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QString *>(a[0]));
                             break;
                         case QVariant::Url:
-                            needActivate = *reinterpret_cast<QUrl *>(a[0]) != data[id].asQUrl();
-                            data[id].setValue(*reinterpret_cast<QUrl *>(a[0]));
+                            needActivate = *reinterpret_cast<QUrl *>(a[0]) != readPropertyAsUrl(id);
+                            writeProperty(id, *reinterpret_cast<QUrl *>(a[0]));
                             break;
                         case QVariant::Date:
                             needActivate = *reinterpret_cast<QDate *>(a[0]) != data[id].asQDate();
@@ -905,8 +960,8 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QSizeF *>(a[0]));
                             break;
                         case QVariant::PointF:
-                            needActivate = *reinterpret_cast<QPointF *>(a[0]) != data[id].asQPointF();
-                            data[id].setValue(*reinterpret_cast<QPointF *>(a[0]));
+                            needActivate = *reinterpret_cast<QPointF *>(a[0]) != readPropertyAsPointF(id);
+                            writeProperty(id, *reinterpret_cast<QPointF *>(a[0]));
                             break;
                         case QMetaType::QObjectStar:
                             needActivate = *reinterpret_cast<QObject **>(a[0]) != data[id].asQObject();

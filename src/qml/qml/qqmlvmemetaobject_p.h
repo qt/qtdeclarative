@@ -209,12 +209,16 @@ public:
     double readPropertyAsDouble(int id);
     QString readPropertyAsString(int id);
     QSizeF readPropertyAsSizeF(int id);
+    QPointF readPropertyAsPointF(int id);
+    QUrl readPropertyAsUrl(int id);
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
     void writeProperty(int id, double v);
     void writeProperty(int id, const QString& v);
+    void writeProperty(int id, const QPointF& v);
     void writeProperty(int id, const QSizeF& v);
+    void writeProperty(int id, const QUrl& v);
 
     void ensureQObjectWrapper();
 
