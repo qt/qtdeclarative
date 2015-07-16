@@ -125,7 +125,7 @@ private:
     public:
         EngineCondition() : numServices(0), condition(new QWaitCondition) {}
 
-        bool waitForServices(QReadWriteLock *locked, int numEngines);
+        bool waitForServices(QMutex *locked, int numEngines);
 
         void wake();
     private:
@@ -144,7 +144,6 @@ private:
 
     QQmlDebugServerConnection *m_connection;
     QHash<QString, QQmlDebugService *> m_plugins;
-    mutable QReadWriteLock m_pluginsLock;
     QStringList m_clientPlugins;
     bool m_gotHello;
     bool m_blockingMode;
@@ -243,14 +242,11 @@ struct ConnectToLocalAction {
 
 void QQmlDebugServerImpl::cleanup()
 {
-    {
-        QReadLocker lock(&m_pluginsLock);
-        foreach (QQmlDebugService *service, m_plugins.values()) {
-            m_changeServiceStateCalls.ref();
-            QMetaObject::invokeMethod(this, "changeServiceState", Qt::QueuedConnection,
-                                      Q_ARG(QString, service->name()),
-                                      Q_ARG(QQmlDebugService::State, QQmlDebugService::NotConnected));
-        }
+    foreach (QQmlDebugService *service, m_plugins.values()) {
+        m_changeServiceStateCalls.ref();
+        QMetaObject::invokeMethod(this, "changeServiceState", Qt::QueuedConnection,
+                                  Q_ARG(QString, service->name()),
+                                  Q_ARG(QQmlDebugService::State, QQmlDebugService::NotConnected));
     }
 
     // Wait for changeServiceState calls to finish
@@ -411,7 +407,6 @@ bool QQmlDebugServerImpl::init(const QString &pluginName, bool block)
 
 QQmlDebugServerImpl::QQmlDebugServerImpl() :
     m_connection(0),
-    m_pluginsLock(QReadWriteLock::Recursive),
     m_gotHello(false),
     m_blockingMode(false),
     m_thread(0)
@@ -526,7 +521,6 @@ void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
         int op = -1;
         in >> op;
         if (op == 0) {
-            QWriteLocker lock(&m_pluginsLock);
             int version;
             in >> version >> m_clientPlugins;
 
@@ -572,8 +566,6 @@ void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
             m_helloCondition.wakeAll();
 
         } else if (op == 1) {
-            QWriteLocker lock(&m_pluginsLock);
-
             // Service Discovery
             QStringList oldClientPlugins = m_clientPlugins;
             in >> m_clientPlugins;
@@ -602,7 +594,6 @@ void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
             QByteArray message;
             in >> message;
 
-            QReadLocker lock(&m_pluginsLock);
             QHash<QString, QQmlDebugService *>::Iterator iter = m_plugins.find(name);
             if (iter == m_plugins.end()) {
                 qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
@@ -622,15 +613,7 @@ void QQmlDebugServerImpl::changeServiceState(const QString &serviceName,
     // to be executed in debugger thread
     Q_ASSERT(QThread::currentThread() == thread());
 
-    QQmlDebugService *service = 0;
-    {
-        // Write lock here, because this can be called from receiveMessage which already has a write
-        // lock. We cannot downgrade it. We also don't want to give up the write lock and later get
-        // a read lock as that technique has great potential for deadlocks.
-        QWriteLocker lock(&m_pluginsLock);
-        service = m_plugins.value(serviceName);
-    }
-
+    QQmlDebugService *service = m_plugins.value(serviceName);
     if (service && service->state() != newState) {
         service->stateAboutToBeChanged(newState);
         service->setState(newState);
@@ -669,7 +652,6 @@ void QQmlDebugServerImpl::removeThread()
 
 QQmlDebugService *QQmlDebugServerImpl::service(const QString &name) const
 {
-    QReadLocker lock(&m_pluginsLock);
     return m_plugins.value(name);
 }
 
@@ -678,12 +660,11 @@ void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != m_thread);
 
-    QWriteLocker lock(&m_pluginsLock);
-
+    QMutexLocker locker(&m_helloMutex);
     foreach (QQmlDebugService *service, m_plugins)
         service->engineAboutToBeAdded(engine);
 
-    m_engineConditions[engine].waitForServices(&m_pluginsLock, m_plugins.count());
+    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
 
     foreach (QQmlDebugService *service, m_plugins)
         service->engineAdded(engine);
@@ -694,12 +675,11 @@ void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != m_thread);
 
-    QWriteLocker lock(&m_pluginsLock);
-
+    QMutexLocker locker(&m_helloMutex);
     foreach (QQmlDebugService *service, m_plugins)
         service->engineAboutToBeRemoved(engine);
 
-    m_engineConditions[engine].waitForServices(&m_pluginsLock, m_plugins.count());
+    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
 
     foreach (QQmlDebugService *service, m_plugins)
         service->engineRemoved(engine);
@@ -716,7 +696,6 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
             this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
 
 
-    QWriteLocker lock(&m_pluginsLock);
     if (!service || m_plugins.contains(service->name()))
         return false;
     m_plugins.insert(service->name(), service);
@@ -732,7 +711,6 @@ bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
     // to be executed after thread ends
     Q_ASSERT(!m_thread);
 
-    QWriteLocker lock(&m_pluginsLock);
     QQmlDebugService::State newState = QQmlDebugService::NotConnected;
 
     m_changeServiceStateCalls.ref();
@@ -787,11 +765,11 @@ void QQmlDebugServerImpl::wakeEngine(QQmlEngine *engine)
     // to be executed in debugger thread
     Q_ASSERT(QThread::currentThread() == thread());
 
-    QWriteLocker lock(&m_pluginsLock);
+    QMutexLocker locker(&m_helloMutex);
     m_engineConditions[engine].wake();
 }
 
-bool QQmlDebugServerImpl::EngineCondition::waitForServices(QReadWriteLock *locked, int num)
+bool QQmlDebugServerImpl::EngineCondition::waitForServices(QMutex *locked, int num)
 {
     Q_ASSERT_X(numServices == 0, Q_FUNC_INFO, "Request to wait again before previous wait finished");
     numServices = num;
