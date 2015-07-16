@@ -177,8 +177,8 @@ void tst_QQmlInspector::reloadQmlWindow()
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
 
     QEXPECT_FAIL("", "cannot debug with a QML file containing a top-level Window", Abort); // QTBUG-33376
-    QTRY_COMPARE(m_process->output().contains(
-                     QString("version 2.0")), true);
+    // TODO: remove the timeout once we don't expect it to fail anymore.
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains(QString("version 2.0")), 1);
 
     QCOMPARE(m_client->m_requestResult, true);
     QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
