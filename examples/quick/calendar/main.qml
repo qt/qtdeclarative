@@ -41,6 +41,7 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 import QtQuick.Calendar 2.0
+import QtQuick.Layouts 1.0
 import io.qt.examples.calendar 1.0
 
 ApplicationWindow {
@@ -55,12 +56,19 @@ ApplicationWindow {
 
     SqlEventModel {
         id: eventModel
+        date: calendar.selectedDate
+    }
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+        anchors.margins: 20
+
+        initialItem: flow
     }
 
     Flow {
-        id: row
-        anchors.fill: parent
-        anchors.margins: 20
+        id: flow
         spacing: 10
         layoutDirection: Qt.RightToLeft
 
@@ -79,7 +87,7 @@ ApplicationWindow {
             }
 
             focus: true
-            currentIndex: -1
+            currentIndex: model.indexOf(selectedDate.getFullYear(), selectedDate.getMonth() + 1)
             snapMode: ListView.SnapOneItem
             highlightMoveDuration: 250
             highlightRangeMode: ListView.StrictlyEnforceRange
@@ -139,8 +147,13 @@ ApplicationWindow {
                         height: width
                         radius: width / 2
                         opacity: 0.5
-                        color: pressed ? Theme.pressColor : "transparent"
-                        border.color: eventModel.eventsForDate(model.date).length > 0 ? Theme.accentColor : "transparent"
+                        color: pressed ? Theme.pressColor : "transparent";
+
+                        SqlEventModel {
+                            id: delegateEventModel
+                        }
+
+                        border.color: delegateEventModel.rowCount > 0 ? Theme.accentColor : "transparent"
                     }
                 }
             }
@@ -152,89 +165,53 @@ ApplicationWindow {
             }
         }
 
-        Component {
-            id: eventListHeader
-
-            Row {
-                id: eventDateRow
-                width: parent.width
-                height: eventDayLabel.height
-                spacing: 10
-
-                Label {
-                    id: eventDayLabel
-                    text: calendar.selectedDate.getDate()
-                    font.pointSize: 35
-                }
-
-                Column {
-                    height: eventDayLabel.height
-
-                    Label {
-                        readonly property var options: { weekday: "long" }
-                        text: Qt.locale().standaloneDayName(calendar.selectedDate.getDay(), Locale.LongFormat)
-                        font.pointSize: 18
-                    }
-                    Label {
-                        text: Qt.locale().standaloneMonthName(calendar.selectedDate.getMonth())
-                              + calendar.selectedDate.toLocaleDateString(Qt.locale(), " yyyy")
-                        font.pointSize: 12
-                    }
-                }
-            }
-        }
-
-        Rectangle {
+        EventView {
             width: (parent.width > parent.height ? (parent.width - parent.spacing) * 0.4 : parent.width)
             height: (parent.height > parent.width ? (parent.height - parent.spacing) * 0.4 : parent.height)
-            border.color: Theme.frameColor
+            selectedDate: calendar.selectedDate
+            eventModel: eventModel
+            locale: calendar.locale
 
-            ListView {
-                id: eventsListView
-                spacing: 4
-                clip: true
-                header: eventListHeader
-                anchors.fill: parent
-                anchors.margins: 10
-                model: eventModel.eventsForDate(calendar.selectedDate)
+            onAddEventClicked: stackView.push(createEventComponent)
+        }
+    }
 
-                delegate: Rectangle {
-                    width: eventsListView.width
-                    height: eventItemColumn.height
-                    anchors.horizontalCenter: parent.horizontalCenter
+    Component {
+        id: createEventComponent
 
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: "#eee"
-                    }
+        ColumnLayout {
+            spacing: 10
+            visible: AbstractStackView.index === stackView.currentIndex
 
-                    Column {
-                        id: eventItemColumn
-                        x: 4
-                        y: 4
-                        width: parent.width - 8
-                        height: timeRow.height + nameLabel.height + 8
+            DateTimePicker {
+                id: dateTimePicker
+                anchors.horizontalCenter: parent.horizontalCenter
+                dateToShow: calendar.selectedDate
+            }
+            Frame {
+                Layout.fillWidth: true
 
-                        Label {
-                            id: nameLabel
-                            width: parent.width
-                            wrapMode: Text.Wrap
-                            text: modelData.name
-                        }
-                        Row {
-                            id: timeRow
-                            width: parent.width
-                            Label {
-                                text: modelData.start.toLocaleTimeString(calendar.locale, Locale.ShortFormat)
-                                color: "#aaa"
-                            }
-                            Label {
-                                text: "-" + new Date(modelData.end).toLocaleTimeString(calendar.locale, Locale.ShortFormat)
-                                visible: modelData.start.getTime() !== modelData.end.getTime() && modelData.start.getDate() === modelData.end.getDate()
-                                color: "#aaa"
-                            }
-                        }
+                TextArea {
+                    id: descriptionField
+                    placeholder.text: "Description"
+                    anchors.fill: parent
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+
+                Button {
+                    text: "Cancel"
+                    Layout.fillWidth: true
+                    onClicked: stackView.pop()
+                }
+                Button {
+                    text: "Create"
+                    enabled: dateTimePicker.enabled
+                    Layout.fillWidth: true
+                    onClicked: {
+                        eventModel.addEvent(descriptionField.text, dateTimePicker.chosenDate);
+                        stackView.pop();
                     }
                 }
             }

@@ -70,6 +70,7 @@ class Q_QUICKEXTRAS_EXPORT QQuickTumbler : public QQuickControl
 
 public:
     explicit QQuickTumbler(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickTumbler();
 
     QVariant model() const;
     void setModel(const QVariant &model);
@@ -114,11 +115,14 @@ class QQuickTumblerAttachedPrivate;
 class Q_QUICKEXTRAS_EXPORT QQuickTumblerAttached : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT)
     Q_PROPERTY(qreal displacement READ displacement NOTIFY displacementChanged FINAL)
 
 public:
     explicit QQuickTumblerAttached(QQuickItem *delegateItem);
+    ~QQuickTumblerAttached();
 
+    QQuickTumbler *tumbler() const;
     qreal displacement() const;
 
 Q_SIGNALS:

@@ -51,10 +51,13 @@ TestCase {
     name: "Tumbler"
 
     property var tumbler: null
+    readonly property real defaultImplicitDelegateHeight: 200 / 3
+    readonly property real defaultListViewTumblerOffset: -defaultImplicitDelegateHeight
 
     function init() {
         tumbler = Qt.createQmlObject("import QtQuick.Extras 2.0; Tumbler { }", testCase, "");
         verify(tumbler, "Tumbler: failed to create an instance");
+        compare(tumbler.contentItem.parent, tumbler);
     }
 
     function cleanup() {
@@ -63,6 +66,10 @@ TestCase {
 
     function tumblerXCenter() {
         return tumbler.leftPadding + tumbler.width / 2;
+    }
+
+    function tumblerYCenter() {
+        return tumbler.topPadding + tumbler.height / 2;
     }
 
     // visualItemIndex is from 0 to the amount of visible items.
@@ -277,8 +284,14 @@ TestCase {
     property Component displacementDelegate: Text {
         objectName: "delegate" + index
         text: modelData
+        opacity: 0.2 + Math.max(0, 1 - Math.abs(AbstractTumbler.displacement)) * 0.8
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+
+        Text {
+            text: parent.displacement.toFixed(2)
+            anchors.right: parent.right
+        }
 
         property real displacement: AbstractTumbler.displacement
     }
@@ -297,6 +310,183 @@ TestCase {
         compare(delegate.displacement, data.expectedDisplacement);
 
         // test displacement after adding and removing items
+    }
+
+    Component {
+        id: listViewTumblerComponent
+
+        Tumbler {
+            id: listViewTumbler
+
+            //! [contentItem]
+            contentItem: ListView {
+                anchors.fill: parent
+                model: listViewTumbler.model
+                delegate: listViewTumbler.delegate
+
+                snapMode: ListView.SnapToItem
+                highlightRangeMode: ListView.StrictlyEnforceRange
+                preferredHighlightBegin: height / 2 - (height / listViewTumbler.visibleItemCount / 2)
+                preferredHighlightEnd: height / 2  + (height / listViewTumbler.visibleItemCount / 2)
+                clip: true
+            }
+            //! [contentItem]
+        }
+    }
+
+    function test_displacementListView_data() {
+        var offset = defaultListViewTumblerOffset;
+
+        var data = [
+            // At 0 contentY, the first item is current.
+            { contentY: offset, expectedDisplacements: [
+                { index: 0, displacement: 0 },
+                { index: 1, displacement: -1 },
+                { index: 2, displacement: -2 } ]
+            },
+            // When we start to move the first item down, the second item above it starts to become current.
+            { contentY: offset + defaultImplicitDelegateHeight * 0.25, expectedDisplacements: [
+                { index: 0, displacement: 0.25 },
+                { index: 1, displacement: -0.75 },
+                { index: 2, displacement: -1.75 } ]
+            },
+            { contentY: offset + defaultImplicitDelegateHeight * 0.5, expectedDisplacements: [
+                { index: 0, displacement: 0.5 },
+                { index: 1, displacement: -0.5 },
+                { index: 2, displacement: -1.5 } ]
+            },
+            { contentY: offset + defaultImplicitDelegateHeight * 0.75, expectedDisplacements: [
+                { index: 0, displacement: 0.75 },
+                { index: 1, displacement: -0.25 } ]
+            },
+            { contentY: offset + defaultImplicitDelegateHeight * 3.5, expectedDisplacements: [
+                { index: 3, displacement: 0.5 },
+                { index: 4, displacement: -0.5 } ]
+            }
+        ];
+        for (var i = 0; i < data.length; ++i) {
+            var row = data[i];
+            row.tag = "contentY=" + row.contentY;
+        }
+        return data;
+    }
+
+    function test_displacementListView(data) {
+        tumbler.destroy();
+        // Sanity check that they're aren't any children at this stage.
+        tryCompare(testCase.children, "length", 0);
+
+        tumbler = listViewTumblerComponent.createObject(testCase);
+        verify(tumbler);
+
+        tumbler.delegate = displacementDelegate;
+        tumbler.model = 5;
+        compare(tumbler.count, 5);
+        // Ensure assumptions about the tumbler used in our data() function are correct.
+        compare(tumbler.contentItem.contentY, -defaultImplicitDelegateHeight);
+        var delegateCount = 0;
+        var listView = tumbler.contentItem;
+        var listViewContentItem = tumbler.contentItem.contentItem;
+
+        // We use the mouse instead of setting contentY directly, otherwise the
+        // items snap back into place. This doesn't seem to be an issue for
+        // PathView for some reason.
+        //
+        // I tried lots of things to get this test to work with small changes
+        // in ListView's contentY ( to match the tests for a PathView-based Tumbler), but they didn't work:
+        //
+        // - Pressing once and then directly moving the mouse to the correct location
+        // - Pressing once and interpolating the mouse position to the correct location
+        // - Pressing once and doing some dragging up and down to trigger the
+        //   overThreshold of QQuickFlickable
+        //
+        // Even after the last item above, QQuickFlickable wouldn't consider it a drag.
+        // It seems that overThreshold is set too late, and because the drag distance is quite small
+        // to begin with, nothing changes (the displacement was always very close to 0 in the end).
+
+        // Ensure that we at least cover the distance required to reach the desired contentY.
+        var distanceToReachContentY = data.contentY - defaultListViewTumblerOffset;
+        var distance = Math.abs(distanceToReachContentY) + tumbler.height / 2;
+        // If distanceToReachContentY is 0, we're testing 0 displacement, so we don't need to do anything.
+        if (distanceToReachContentY != 0) {
+            mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
+
+            var dragDirection = distanceToReachContentY > 0 ? -1 : 1;
+            for (var i = 0; i < distance && Math.floor(listView.contentY) !== Math.floor(data.contentY); ++i) {
+                mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i * dragDirection, 10);
+            }
+        }
+
+        for (var i = 0; i < data.expectedDisplacements.length; ++i) {
+            var delegate = findChild(listViewContentItem, "delegate" + data.expectedDisplacements[i].index);
+            verify(delegate);
+            compare(delegate.height, defaultImplicitDelegateHeight);
+            // Due to the way we must perform this test, we can't expect high precision.
+            var expectedDisplacement = data.expectedDisplacements[i].displacement;
+            fuzzyCompare(delegate.displacement, expectedDisplacement, 0.1,
+                "Delegate of ListView-based Tumbler at index " + data.expectedDisplacements[i].index
+                    + " has displacement of " + delegate.displacement + " when it should be " + expectedDisplacement);
+        }
+
+        if (distanceToReachContentY != 0)
+            mouseRelease(tumbler, tumblerXCenter(), itemCenterPos(1) + (data.contentY - defaultListViewTumblerOffset), Qt.LeftButton);
+    }
+
+    function test_listViewFlickAboveBounds_data() {
+        // Tests that flicking above the bounds when already at the top of the
+        // tumbler doesn't result in an incorrect displacement.
+        var data = [];
+        // Less than two items doesn't make sense. The default visibleItemCount
+        // is 3, so we test a bit more than double that.
+        for (var i = 2; i <= 7; ++i) {
+            data.push({ tag: i + " items", model: i });
+        }
+        return data;
+    }
+
+    function test_listViewFlickAboveBounds(data) {
+        tumbler.destroy();
+
+        tumbler = listViewTumblerComponent.createObject(testCase);
+        verify(tumbler);
+
+        tumbler.delegate = displacementDelegate;
+        tumbler.model = data.model;
+
+        mousePress(tumbler, tumblerXCenter(), tumblerYCenter());
+
+        // Ensure it's stationary.
+        var listView = tumbler.contentItem;
+        compare(listView.contentY, defaultListViewTumblerOffset);
+
+        // We could just move up until the contentY changed, but this is safer.
+        var distance = tumbler.height;
+        var changed = false;
+
+        for (var i = 0; i < distance && !changed; ++i) {
+            mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i, 10);
+
+            // Don't test until the contentY has actually changed.
+            if (Math.abs(listView.contentY) - listView.preferredHighlightBegin > 0.01) {
+
+                for (var delegateIndex = 0; delegateIndex < Math.min(tumbler.count, tumbler.visibleItemCount); ++delegateIndex) {
+                    var delegate = findChild(listView.contentItem, "delegate" + delegateIndex);
+                    verify(delegate);
+
+                    verify(delegate.displacement <= -delegateIndex, "Delegate at index " + delegateIndex + " has a displacement of "
+                        + delegate.displacement + " when it should be less than or equal to " + -delegateIndex);
+                    verify(delegate.displacement > -delegateIndex - 0.1, "Delegate at index 0 has a displacement of "
+                        + delegate.displacement + " when it should be greater than ~ " + -delegateIndex - 0.1);
+                }
+
+                changed = true;
+            }
+        }
+
+        // Sanity check that something was actually tested.
+        verify(changed);
+
+        mouseRelease(tumbler, tumblerXCenter(), tumbler.topPadding);
     }
 
     property Component objectNameDelegate: Text {
@@ -347,7 +537,7 @@ TestCase {
         property real displacement: AbstractTumbler.displacement
     }
 
-    property Component listViewComponent: ListView {}
+    property Component gridViewComponent: GridView {}
     property Component simpleDisplacementDelegate: Text {
         property real displacement: AbstractTumbler.displacement
         property int index: -1
@@ -361,17 +551,17 @@ TestCase {
 //        // Cause displacement to be changed. The warning isn't triggered if we don't do this.
 //        tumbler.contentItem.offset += 1;
 
-        ignoreWarning("Attached properties of Tumbler must be accessed from within a delegate item that has a parent");
+        ignoreWarning("Tumbler: attached properties must be accessed from within a delegate item that has a parent");
         noParentDelegateComponent.createObject(null);
 
-        ignoreWarning("Attempting to access attached property on item without an \"index\" property");
+        ignoreWarning("Tumbler: attempting to access attached property on item without an \"index\" property");
         var object = noParentDelegateComponent.createObject(testCase);
         object.destroy();
 
-        var listView = listViewComponent.createObject(testCase);
-        ignoreWarning("contentItems other than PathView are not currently supported");
-        object = simpleDisplacementDelegate.createObject(listView);
+        // Should not be any warnings from this, as ListView, for example, doesn't produce warnings for the same code.
+        var gridView = gridViewComponent.createObject(testCase);
+        object = simpleDisplacementDelegate.createObject(gridView);
         object.destroy();
-        listView.destroy();
+        gridView.destroy();
     }
 }

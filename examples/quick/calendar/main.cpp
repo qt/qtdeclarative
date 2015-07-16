@@ -45,31 +45,84 @@
 class Event : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString name MEMBER name NOTIFY nameChanged)
+    Q_PROPERTY(QString description MEMBER description NOTIFY descriptionChanged)
     Q_PROPERTY(QDateTime start MEMBER start NOTIFY startChanged)
     Q_PROPERTY(QDateTime end MEMBER end NOTIFY endChanged)
 
 public:
-    explicit Event(const QString &name, QObject *parent = 0) : QObject(parent), name(name) { }
+    explicit Event(const QString &description, QObject *parent = 0) :
+        QObject(parent),
+        description(description)
+    {
 
-    QString name;
+    }
+
+    QString description;
     QDateTime start;
     QDateTime end;
 
 signals:
-    void nameChanged();
+    void descriptionChanged();
     void startChanged();
     void endChanged();
 };
 
-class SqlEventModel : public QSqlQueryModel
+static void addEvent(const QString &description, const QDateTime &start, qint64 duration = 0)
+{
+    QSqlQuery query;
+    QDateTime end = start.addSecs(duration);
+    if (!query.exec(QStringLiteral("INSERT INTO Event (description, start, end) VALUES ('%1', %2, %3)")
+        .arg(description).arg(start.toMSecsSinceEpoch()).arg(end.toMSecsSinceEpoch()))) {
+        qWarning() << query.lastError();
+    }
+}
+
+// create an in-memory SQLITE database
+static void createDatabase()
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(":memory:");
+    if (!db.open()) {
+        qFatal("Cannot open database");
+        return;
+    }
+
+    QSqlQuery query;
+    query.exec("CREATE TABLE IF NOT EXISTS Event (description TEXT, start BIGINT, end BIGINT)");
+
+    const QDate current = QDate::currentDate();
+    addEvent("Job interview", QDateTime(current.addDays(-19), QTime(12, 0)));
+    addEvent("Grocery shopping", QDateTime(current.addDays(-14), QTime(18, 0)));
+    addEvent("Ice skating", QDateTime(current.addDays(-14), QTime(20, 0)), 5400);
+    addEvent("Dentist''s appointment", QDateTime(current.addDays(-8), QTime(14, 0)), 1800);
+    addEvent("Cross-country skiing", QDateTime(current.addDays(1), QTime(19, 30)), 3600);
+    addEvent("Conference", QDateTime(current.addDays(10), QTime(9, 0)), 432000);
+    addEvent("Hairdresser", QDateTime(current.addDays(19), QTime(13, 0)));
+    addEvent("Doctor''s appointment", QDateTime(current.addDays(21), QTime(16, 0)));
+    addEvent("Vacation", QDateTime(current.addDays(35), QTime(0, 0)), 604800);
+}
+
+class SqlEventModel : public QSqlTableModel
 {
     Q_OBJECT
     Q_PROPERTY(QDate min READ min CONSTANT)
     Q_PROPERTY(QDate max READ max CONSTANT)
+    Q_PROPERTY(QDate date READ date WRITE setDate NOTIFY dateChanged FINAL)
+    Q_PROPERTY(int rowCount READ rowCount NOTIFY rowCountChanged)
 
 public:
-    SqlEventModel(QObject *parent = 0) : QSqlQueryModel(parent) { }
+    SqlEventModel(QObject *parent = 0) :
+        QSqlTableModel(parent, QSqlDatabase::database(":memory:"))
+    {
+        connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SIGNAL(rowCountChanged()));
+        connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SIGNAL(rowCountChanged()));
+
+        setTable("Event");
+        setEditStrategy(QSqlTableModel::OnManualSubmit);
+        select();
+
+        setDate(QDate::currentDate());
+    }
 
     QDate min() const
     {
@@ -87,58 +140,83 @@ public:
         return QDate();
     }
 
-    Q_INVOKABLE QList<QObject*> eventsForDate(const QDate &date)
+    QDate date() const
     {
-        qint64 from = QDateTime(date, QTime(0, 0)).toMSecsSinceEpoch();
-        qint64 to = QDateTime(date, QTime(23, 59)).toMSecsSinceEpoch();
+        return mDate;
+    }
 
-        QSqlQuery query;
-        if (!query.exec(QStringLiteral("SELECT * FROM Event WHERE start <= %1 AND end >= %2").arg(to).arg(from)))
-            qFatal("Query failed");
+    void setDate(const QDate &date)
+    {
+        if (date != mDate) {
+            mDate = date;
 
-        QList<QObject*> events;
-        while (query.next()) {
-            Event *event = new Event(query.value("name").toString(), this);
-            event->start = QDateTime::fromMSecsSinceEpoch(query.value("start").toLongLong());
-            event->end = QDateTime::fromMSecsSinceEpoch(query.value("end").toLongLong());
-            events.append(event);
+            qint64 from = QDateTime(mDate, QTime(0, 0)).toMSecsSinceEpoch();
+            qint64 to = QDateTime(mDate, QTime(23, 59)).toMSecsSinceEpoch();
+
+            setFilter(QStringLiteral("start <= %1 AND end >= %2").arg(to).arg(from));
+
+            emit dateChanged();
         }
-        return events;
     }
+
+    enum {
+        DescriptionRole = Qt::UserRole,
+        StartDateRole,
+        EndDateRole
+    };
+
+    QHash<int,QByteArray> roleNames() const Q_DECL_OVERRIDE
+    {
+        QHash<int,QByteArray> names;
+        names[DescriptionRole] = "description";
+        names[StartDateRole] = "start";
+        names[EndDateRole] = "end";
+        return names;
+    }
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE
+    {
+        if (role < Qt::UserRole)
+            return QSqlTableModel::data(index, role);
+
+        int columnIndex = role - DescriptionRole;
+        QModelIndex modelIndex = this->index(index.row(), columnIndex);
+        QVariant eventData = QSqlTableModel::data(modelIndex, Qt::DisplayRole);
+        if (role == DescriptionRole)
+            return eventData;
+
+        return QDateTime::fromMSecsSinceEpoch(eventData.toLongLong());
+    }
+
+    Q_INVOKABLE void addEvent(const QString &description, const QDateTime &date)
+    {
+        const int row = rowCount();
+        insertRows(row, 1);
+        setData(index(row, 0), description);
+        setData(index(row, 1), date.toMSecsSinceEpoch());
+        setData(index(row, 2), date.toMSecsSinceEpoch());
+        submitAll();
+    }
+
+    Q_INVOKABLE void removeEvent(int modelRow)
+    {
+        if (modelRow < 0 || modelRow >= rowCount()) {
+            qWarning() << "Invalid model row:" << modelRow;
+            return;
+        }
+
+        removeRows(modelRow, 1);
+        submitAll();
+    }
+
+signals:
+    void dateChanged();
+    void rowCountChanged();
+
+private:
+    // The date to show events for.
+    QDate mDate;
 };
-
-// create an in-memory SQLITE database
-static bool addEvent(QSqlQuery* query, const QString &name, const QDateTime &start, qint64 duration = 0)
-{
-    QDateTime end = start.addSecs(duration);
-    return query->exec(QStringLiteral("insert into Event values('%1', %2, %3)").arg(name)
-                                                                               .arg(start.toMSecsSinceEpoch())
-                                                                               .arg(end.toMSecsSinceEpoch()));
-}
-
-static void createDatabase()
-{
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(":memory:");
-    if (!db.open()) {
-        qFatal("Cannot open database");
-        return;
-    }
-
-    QSqlQuery query;
-    query.exec("create table if not exists Event (name TEXT, start BIGINT, end BIGINT)");
-
-    const QDate current = QDate::currentDate();
-    addEvent(&query, "Job interview", QDateTime(current.addDays(-19), QTime(12, 0)));
-    addEvent(&query, "Grocery shopping", QDateTime(current.addDays(-14), QTime(18, 0)));
-    addEvent(&query, "Ice skating", QDateTime(current.addDays(-14), QTime(20, 0)), 5400);
-    addEvent(&query, "Dentist's appointment", QDateTime(current.addDays(-8), QTime(14, 0)), 1800);
-    addEvent(&query, "Cross-country skiing", QDateTime(current.addDays(1), QTime(19, 30)), 3600);
-    addEvent(&query, "Conference", QDateTime(current.addDays(10), QTime(9, 0)), 432000);
-    addEvent(&query, "Hairdresser", QDateTime(current.addDays(19), QTime(13, 0)));
-    addEvent(&query, "Doctor's appointment", QDateTime(current.addDays(21), QTime(16, 0)));
-    addEvent(&query, "Vacation", QDateTime(current.addDays(35), QTime(0, 0)), 604800);
-}
 
 int main(int argc, char *argv[])
 {

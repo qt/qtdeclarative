@@ -13,3 +13,7 @@ RESOURCES += \
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quickcalendar2/calendar
 INSTALLS += target
+
+DISTFILES += \
+    DateTimePicker.qml \
+    EventView.qml

@@ -49,7 +49,21 @@ QT_BEGIN_NAMESPACE
     \ingroup containers
     \brief A spinnable wheel of items that can be selected.
 
-    TODO
+    \code
+    Tumbler {
+        model: 5
+    }
+    \endcode
+
+    \section1 Non-wrapping Tumbler
+
+    The default contentItem of Tumbler is a \l PathView, which wraps when it
+    reaches the top and bottom. To achieve a non-wrapping Tumbler, use ListView
+    as the contentItem:
+
+    \snippet tst_tumbler.qml contentItem
+
+    \image qtquickextras2-tumbler-wrap.gif
 */
 
 class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
@@ -60,6 +74,10 @@ public:
     QQuickTumblerPrivate() :
         delegate(Q_NULLPTR),
         visibleItemCount(3)
+    {
+    }
+
+    ~QQuickTumblerPrivate()
     {
     }
 
@@ -84,11 +102,55 @@ static QList<QQuickItem *> contentItemChildItems(QQuickItem *contentItem)
     return flickable ? flickable->contentItem()->childItems() : contentItem->childItems();
 }
 
+namespace {
+    static inline qreal delegateHeight(const QQuickItem *contentItem, qreal topPadding, qreal bottomPadding, int visibleItemCount)
+    {
+        // TODO: can we/do we want to support spacing?
+        return (contentItem->height()/* - qMax(0, itemCount - 1) * spacing*/ - topPadding - bottomPadding) / visibleItemCount;
+    }
+
+    enum ContentItemType {
+        UnsupportedContentItemType,
+        PathViewContentItem,
+        ListViewContentItem
+    };
+
+    static inline QQuickItem *actualContentItem(QQuickItem *rootContentItem, ContentItemType contentType)
+    {
+        if (contentType == PathViewContentItem)
+            return rootContentItem;
+        else if (contentType == ListViewContentItem)
+            return qobject_cast<QQuickFlickable*>(rootContentItem)->contentItem();
+
+        return Q_NULLPTR;
+    }
+
+    static inline ContentItemType contentItemType(QQuickItem *rootContentItem)
+    {
+        if (rootContentItem->inherits("QQuickPathView"))
+            return PathViewContentItem;
+        else if (rootContentItem->inherits("QQuickListView"))
+            return ListViewContentItem;
+
+        return UnsupportedContentItemType;
+    }
+
+    static inline ContentItemType contentItemTypeFromDelegate(QQuickItem *delegateItem)
+    {
+        if (delegateItem->parentItem()->inherits("QQuickPathView")) {
+            return PathViewContentItem;
+        } else if (delegateItem->parentItem()->parentItem()
+            && delegateItem->parentItem()->parentItem()->inherits("QQuickListView")) {
+            return ListViewContentItem;
+        }
+
+        return UnsupportedContentItemType;
+    }
+}
+
 void QQuickTumblerPrivate::updateItemHeights()
 {
-    // TODO: can we/do we want to support spacing?
-    const qreal itemHeight = (contentItem->height()/* - qMax(0, itemCount - 1) * spacing*/
-        - topPadding - bottomPadding) / visibleItemCount;
+    const qreal itemHeight = delegateHeight(contentItem, topPadding, bottomPadding, visibleItemCount);
     foreach (QQuickItem *childItem, contentItemChildItems(contentItem))
         childItem->setHeight(itemHeight);
 }
@@ -113,6 +175,11 @@ void QQuickTumblerPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
 
 QQuickTumbler::QQuickTumbler(QQuickItem *parent) :
     QQuickControl(*(new QQuickTumblerPrivate), parent)
+{
+    setActiveFocusOnTab(true);
+}
+
+QQuickTumbler::~QQuickTumbler()
 {
 }
 
@@ -199,7 +266,7 @@ void QQuickTumbler::setDelegate(QQmlComponent *delegate)
     \qmlproperty int QtQuickExtras2::Tumbler::visibleItemCount
 
     This property holds the number of items visible in the tumbler. It must be
-    an odd number.
+    an odd number, as the current item is always vertically centered.
 */
 int QQuickTumbler::visibleItemCount() const
 {
@@ -221,7 +288,7 @@ QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
 {
     QQuickItem *delegateItem = qobject_cast<QQuickItem *>(object);
     if (!delegateItem) {
-        qWarning() << "Attached properties of Tumbler must be accessed from within a delegate item";
+        qWarning() << "Tumbler: attached properties of Tumbler must be accessed from within a delegate item";
         return Q_NULLPTR;
     }
 
@@ -264,17 +331,26 @@ void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
         disconnect(oldItem, SIGNAL(currentItemChanged()), this, SIGNAL(currentItemChanged()));
         disconnect(oldItem, SIGNAL(countChanged()), this, SIGNAL(countChanged()));
 
-        QQuickItemPrivate *oldItemPrivate = QQuickItemPrivate::get(oldItem);
-        oldItemPrivate->removeItemChangeListener(d, QQuickItemPrivate::Children);
+        ContentItemType oldContentItemType = contentItemType(oldItem);
+        QQuickItem *actualOldContentItem = actualContentItem(oldItem, oldContentItemType);
+        QQuickItemPrivate *actualContentItemPrivate = QQuickItemPrivate::get(actualOldContentItem);
+        actualContentItemPrivate->removeItemChangeListener(d, QQuickItemPrivate::Children);
     }
 
     if (newItem) {
+        ContentItemType contentType = contentItemType(newItem);
+        if (contentType == UnsupportedContentItemType) {
+            qWarning() << "Tumbler: contentItems other than PathView and ListView are not supported";
+            return;
+        }
+
         connect(newItem, SIGNAL(currentIndexChanged()), this, SIGNAL(currentIndexChanged()));
         connect(newItem, SIGNAL(currentItemChanged()), this, SIGNAL(currentItemChanged()));
         connect(newItem, SIGNAL(countChanged()), this, SIGNAL(countChanged()));
 
-        QQuickItemPrivate *newItemPrivate = QQuickItemPrivate::get(newItem);
-        newItemPrivate->addItemChangeListener(d, QQuickItemPrivate::Children);
+        QQuickItem *actualNewContentItem = actualContentItem(newItem, contentType);
+        QQuickItemPrivate *actualContentItemPrivate = QQuickItemPrivate::get(actualNewContentItem);
+        actualContentItemPrivate->addItemChangeListener(d, QQuickItemPrivate::Children);
 
         // If the previous currentIndex is -1, it means we had no contentItem previously.
         if (previousCurrentIndex != -1) {
@@ -311,23 +387,28 @@ public:
         displacement(1)
     {
         if (!delegateItem->parentItem()) {
-            qWarning() << "Attached properties of Tumbler must be accessed from within a delegate item that has a parent";
+            qWarning() << "Tumbler: attached properties must be accessed from within a delegate item that has a parent";
             return;
         }
 
         QVariant indexContextProperty = qmlContext(delegateItem)->contextProperty(QStringLiteral("index"));
         if (!indexContextProperty.isValid()) {
-            qWarning() << "Attempting to access attached property on item without an \"index\" property";
+            qWarning() << "Tumbler: attempting to access attached property on item without an \"index\" property";
             return;
         }
 
         index = indexContextProperty.toInt();
-        if (!delegateItem->parentItem()->inherits("QQuickPathView")) {
-            qWarning() << "contentItems other than PathView are not currently supported";
+        const ContentItemType contentItemType = contentItemTypeFromDelegate(delegateItem);
+        if (contentItemType == UnsupportedContentItemType)
             return;
-        }
 
-        tumbler = qobject_cast<QQuickTumbler* >(delegateItem->parentItem()->parentItem());
+        // ListView has an "additional" content item.
+        tumbler = qobject_cast<QQuickTumbler* >(contentItemType == PathViewContentItem
+            ? delegateItem->parentItem()->parentItem() : delegateItem->parentItem()->parentItem()->parentItem());
+        Q_ASSERT(tumbler);
+    }
+
+    ~QQuickTumblerAttachedPrivate() {
     }
 
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
@@ -354,7 +435,7 @@ void QQuickTumblerAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
     _q_calculateDisplacement();
 }
 
-void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *, QQuickItem *child)
+void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
     _q_calculateDisplacement();
 
@@ -363,7 +444,9 @@ void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *, QQuickItem *ch
         // that our properties are attached to. If we don't remove the change
         // listener, the contentItem will attempt to notify a destroyed
         // listener, causing a crash.
-        QQuickItemPrivate *p = QQuickItemPrivate::get(tumbler->contentItem());
+
+        // item is the "actual content item" of Tumbler's contentItem, i.e. a PathView or ListView.contentItem
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
         p->removeItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
     }
 }
@@ -371,20 +454,35 @@ void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *, QQuickItem *ch
 void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
 {
     const int previousDisplacement = displacement;
+    displacement = 0;
 
-    displacement = 1;
-
-    // TODO: ListView has no offset property, need to try using contentY instead.
-    if (tumbler && tumbler->contentItem()->inherits("QQuickListView"))
+    // This can happen in tests, so it may happen in normal usage too.
+    if (tumbler->count() == 0)
         return;
 
-    qreal offset = tumbler->contentItem()->property("offset").toReal();
-    displacement = tumbler->count() - index - offset;
-    int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
-    if (displacement > halfVisibleItems)
-        displacement -= tumbler->count();
-    else if (displacement < -halfVisibleItems)
-        displacement += tumbler->count();
+    ContentItemType contentType = contentItemType(tumbler->contentItem());
+    if (contentType == UnsupportedContentItemType)
+        return;
+
+    qreal offset = 0;
+
+    if (contentType == PathViewContentItem) {
+        offset = tumbler->contentItem()->property("offset").toReal();
+
+        displacement = tumbler->count() - index - offset;
+        int halfVisibleItems = tumbler->visibleItemCount() / 2 + 1;
+        if (displacement > halfVisibleItems)
+            displacement -= tumbler->count();
+        else if (displacement < -halfVisibleItems)
+            displacement += tumbler->count();
+    } else {
+        const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
+        const qreal delegateH = delegateHeight(tumbler->contentItem(), tumbler->topPadding(), tumbler->bottomPadding(), tumbler->visibleItemCount());
+        const qreal preferredHighlightBegin = tumbler->contentItem()->property("preferredHighlightBegin").toReal();
+        // Tumbler's displacement goes from negative at the top to positive towards the bottom, so we must switch this around.
+        const qreal reverseDisplacement = (contentY + preferredHighlightBegin) / delegateH;
+        displacement = reverseDisplacement - index;
+    }
 
     Q_Q(QQuickTumblerAttached);
     if (displacement != previousDisplacement)
@@ -396,13 +494,25 @@ QQuickTumblerAttached::QQuickTumblerAttached(QQuickItem *delegateItem) :
 {
     Q_D(QQuickTumblerAttached);
     if (d->tumbler) {
-        // TODO: in case of listview, listen to contentItem of contentItem
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->tumbler->contentItem());
+        QQuickItem *rootContentItem = d->tumbler->contentItem();
+        const ContentItemType contentType = contentItemType(rootContentItem);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(actualContentItem(rootContentItem, contentType));
         p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 
-        // TODO: in case of ListView, listen to contentY changed
-        connect(d->tumbler->contentItem(), SIGNAL(offsetChanged()), this, SLOT(_q_calculateDisplacement()));
+        const char *contentItemSignal = contentType == PathViewContentItem
+            ? SIGNAL(offsetChanged()) : SIGNAL(contentYChanged());
+        connect(d->tumbler->contentItem(), contentItemSignal, this, SLOT(_q_calculateDisplacement()));
     }
+}
+
+QQuickTumblerAttached::~QQuickTumblerAttached()
+{
+}
+
+QQuickTumbler *QQuickTumblerAttached::tumbler() const
+{
+    Q_D(const QQuickTumblerAttached);
+    return d->tumbler;
 }
 
 qreal QQuickTumblerAttached::displacement() const
