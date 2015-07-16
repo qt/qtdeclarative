@@ -67,8 +67,8 @@ public:
     virtual void addEngine(QQmlEngine *engine) = 0;
     virtual void removeEngine(QQmlEngine *engine) = 0;
 
-    virtual bool addService(QQmlDebugService *service) = 0;
-    virtual bool removeService(QQmlDebugService *service) = 0;
+    virtual bool addService(const QString &name, QQmlDebugService *service) = 0;
+    virtual bool removeService(const QString &name) = 0;
 
     virtual bool open(const QVariantHash &configuration = QVariantHash()) = 0;
 

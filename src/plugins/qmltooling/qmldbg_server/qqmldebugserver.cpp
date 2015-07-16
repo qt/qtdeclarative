@@ -94,8 +94,8 @@ public:
     void addEngine(QQmlEngine *engine);
     void removeEngine(QQmlEngine *engine);
 
-    bool addService(QQmlDebugService *service);
-    bool removeService(QQmlDebugService *service);
+    bool addService(const QString &name, QQmlDebugService *service);
+    bool removeService(const QString &name);
 
     bool open(const QVariantHash &configuration);
     void setDevice(QIODevice *socket);
@@ -601,10 +601,13 @@ void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
         service->engineRemoved(engine);
 }
 
-bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
+bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *service)
 {
     // to be executed before thread starts
     Q_ASSERT(!m_thread);
+
+    if (!service || m_plugins.contains(name))
+        return false;
 
     connect(service, SIGNAL(messageToClient(QString,QByteArray)),
             this, SLOT(sendMessage(QString,QByteArray)));
@@ -616,31 +619,28 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
     connect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
             this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
 
+    service->setState(QQmlDebugService::Unavailable);
+    m_plugins.insert(name, service);
 
-    if (!service || m_plugins.contains(service->name()))
-        return false;
-    m_plugins.insert(service->name(), service);
-    QQmlDebugService::State newState = QQmlDebugService::Unavailable;
-    if (m_clientPlugins.contains(service->name()))
-        newState = QQmlDebugService::Enabled;
-    service->setState(newState);
     return true;
 }
 
-bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
+bool QQmlDebugServerImpl::removeService(const QString &name)
 {
     // to be executed after thread ends
     Q_ASSERT(!m_thread);
 
-    QQmlDebugService::State newState = QQmlDebugService::NotConnected;
-
-    m_changeServiceStateCalls.ref();
-    QMetaObject::invokeMethod(this, "changeServiceState", Qt::QueuedConnection,
-                              Q_ARG(QString, service->name()),
-                              Q_ARG(QQmlDebugService::State, newState));
-
-    if (!service || !m_plugins.contains(service->name()))
+    QQmlDebugService *service = m_plugins.value(name);
+    if (!service)
         return false;
+
+    m_plugins.remove(name);
+    service->setState(QQmlDebugService::NotConnected);
+
+    disconnect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
+               this, SLOT(wakeEngine(QQmlEngine*)));
+    disconnect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
+               this, SLOT(wakeEngine(QQmlEngine*)));
 
     disconnect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
                this, SLOT(sendMessages(QString,QList<QByteArray>)));

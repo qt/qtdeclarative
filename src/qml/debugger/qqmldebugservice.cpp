@@ -72,7 +72,7 @@ QQmlDebugService::QQmlDebugService(const QString &name, float version, QObject *
     if (server->service(d->name)) {
         qWarning() << "QQmlDebugService: Conflicting plugin name" << d->name;
     } else {
-        server->addService(this);
+        server->addService(d->name, this);
     }
 }
 
@@ -87,7 +87,7 @@ QQmlDebugService::~QQmlDebugService()
     if (server->service(d->name) != this)
         qWarning() << "QQmlDebugService: Plugin" << d->name << "is not registered.";
     else
-        server->removeService(this);
+        server->removeService(d->name);
 }
 
 const QString &QQmlDebugService::name() const
