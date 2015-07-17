@@ -106,7 +106,11 @@ public:
         , quickDocument(0), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
+#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+        , renderType(QQuickTextEdit::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+#else
         , renderType(QQuickTextEdit::QtRendering)
+#endif
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
 #ifndef QT_NO_IM

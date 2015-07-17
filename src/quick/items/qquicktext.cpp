@@ -72,7 +72,11 @@ QQuickTextPrivate::QQuickTextPrivate()
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
     , format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap)
     , style(QQuickText::Normal)
+#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+    , renderType(QQuickText::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+#else
     , renderType(QQuickText::QtRendering)
+#endif
     , updateType(UpdatePaintNode)
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
     , styledText(false), widthExceeded(false), heightExceeded(false), internalWidthUpdate(false)

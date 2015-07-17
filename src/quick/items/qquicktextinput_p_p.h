@@ -115,7 +115,11 @@ public:
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
         , m_echoMode(QQuickTextInput::Normal)
+#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+        , renderType(QQuickTextInput::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+#else
         , renderType(QQuickTextInput::QtRendering)
+#endif
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)
