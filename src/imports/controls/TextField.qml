@@ -57,11 +57,12 @@ AbstractTextField {
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
 
         color: control.Theme.disabledColor
         visible: !control.displayText
+        elide: Text.ElideRight
     }
     //! [placeholder]
 
