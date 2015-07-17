@@ -104,6 +104,7 @@ void QQuickTextFieldPrivate::resizeBackground()
 QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
+    setActiveFocusOnTab(true);
 }
 
 QQuickTextField::~QQuickTextField()
