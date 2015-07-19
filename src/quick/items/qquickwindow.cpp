@@ -113,7 +113,7 @@ public:
     }
 
 protected:
-    void timerEvent(QTimerEvent *)
+    void timerEvent(QTimerEvent *) Q_DECL_OVERRIDE
     {
         killTimer(m_timer);
         m_timer = 0;

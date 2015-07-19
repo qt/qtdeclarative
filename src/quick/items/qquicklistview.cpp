@@ -255,7 +255,7 @@ public:
         static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
     }
 
-    qreal position() const {
+    qreal position() const Q_DECL_OVERRIDE {
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical)
                 return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop ? -section()->height()-section()->y() : section()->y());
@@ -271,7 +271,7 @@ public:
         else
             return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
     }
-    qreal size() const {
+    qreal size() const Q_DECL_OVERRIDE {
         if (section())
             return (view->orientation() == QQuickListView::Vertical ? item->height()+section()->height() : item->width()+section()->width());
         else
@@ -280,12 +280,12 @@ public:
     qreal itemSize() const {
         return (view->orientation() == QQuickListView::Vertical ? item->height() : item->width());
     }
-    qreal sectionSize() const {
+    qreal sectionSize() const Q_DECL_OVERRIDE {
         if (section())
             return (view->orientation() == QQuickListView::Vertical ? section()->height() : section()->width());
         return 0.0;
     }
-    qreal endPosition() const {
+    qreal endPosition() const Q_DECL_OVERRIDE {
         if (view->orientation() == QQuickListView::Vertical) {
             return (view->verticalLayoutDirection() == QQuickItemView::BottomToTop
                     ? -itemY()

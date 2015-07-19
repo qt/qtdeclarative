@@ -178,7 +178,7 @@ public:
 
     void regenerate(bool orientationChanged=false);
     void layout();
-    virtual void animationFinished(QAbstractAnimationJob *);
+    virtual void animationFinished(QAbstractAnimationJob *) Q_DECL_OVERRIDE;
     void refill();
     void refill(qreal from, qreal to);
     void mirrorChange() Q_DECL_OVERRIDE;
