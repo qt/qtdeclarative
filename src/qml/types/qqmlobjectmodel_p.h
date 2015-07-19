@@ -61,7 +61,7 @@ public:
     virtual ReleaseFlags release(QObject *object) = 0;
     virtual void cancel(int) {}
     virtual QString stringValue(int, const QString &) = 0;
-    virtual void setWatchedRoles(QList<QByteArray> roles) = 0;
+    virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
 
@@ -99,7 +99,7 @@ public:
     virtual QObject *object(int index, bool asynchronous=false);
     virtual ReleaseFlags release(QObject *object);
     virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(QList<QByteArray>) {}
+    virtual void setWatchedRoles(const QList<QByteArray> &) {}
 
     virtual int indexOf(QObject *object, QObject *objectContext) const;
 

@@ -96,7 +96,7 @@ public:
     ReleaseFlags release(QObject *object);
     void cancel(int index);
     virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(QList<QByteArray> roles);
+    virtual void setWatchedRoles(const QList<QByteArray> &roles);
 
     int indexOf(QObject *object, QObject *objectContext) const;
 

@@ -1057,7 +1057,7 @@ int QQmlDelegateModel::indexOf(QObject *item, QObject *) const
     return -1;
 }
 
-void QQmlDelegateModel::setWatchedRoles(QList<QByteArray> roles)
+void QQmlDelegateModel::setWatchedRoles(const QList<QByteArray> &roles)
 {
     Q_D(QQmlDelegateModel);
     d->m_adaptorModel.replaceWatchedRoles(d->m_watchedRoles, roles);
@@ -3185,7 +3185,7 @@ QString QQmlPartsModel::stringValue(int index, const QString &role)
     return QQmlDelegateModelPrivate::get(m_model)->stringValue(m_compositorGroup, index, role);
 }
 
-void QQmlPartsModel::setWatchedRoles(QList<QByteArray> roles)
+void QQmlPartsModel::setWatchedRoles(const QList<QByteArray> &roles)
 {
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
     model->m_adaptorModel.replaceWatchedRoles(m_watchedRoles, roles);

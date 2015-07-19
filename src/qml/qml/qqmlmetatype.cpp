@@ -255,7 +255,7 @@ QObject *QQmlType::SingletonInstanceInfo::qobjectApi(QQmlEngine *e) const
     return qobjectApis.value(e);
 }
 
-void QQmlType::SingletonInstanceInfo::setScriptApi(QQmlEngine *e, QJSValue v)
+void QQmlType::SingletonInstanceInfo::setScriptApi(QQmlEngine *e, const QJSValue &v)
 {
     scriptApis.insert(e, v);
 }

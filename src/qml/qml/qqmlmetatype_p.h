@@ -191,7 +191,7 @@ public:
 
         void setQObjectApi(QQmlEngine *, QObject *);
         QObject *qobjectApi(QQmlEngine *) const;
-        void setScriptApi(QQmlEngine *, QJSValue);
+        void setScriptApi(QQmlEngine *, const QJSValue &);
         QJSValue scriptApi(QQmlEngine *) const;
 
         void init(QQmlEngine *);

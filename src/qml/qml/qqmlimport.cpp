@@ -385,7 +385,7 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 // We need to exclude the entry for the current baseUrl. This can happen for example
 // when handling qmldir files on the remote dir case and the current type is marked as
 // singleton.
-bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QString baseUrl)
+bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QString &baseUrl)
 {
     if (importUrl.isEmpty())
         return false;
@@ -401,7 +401,7 @@ bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QSt
     return true;
 }
 
-void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::CompositeSingletonReference> &resultList, QUrl baseUrl)
+void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::CompositeSingletonReference> &resultList, const QUrl &baseUrl)
 {
     typedef QQmlDirComponents::const_iterator ConstIterator;
 
