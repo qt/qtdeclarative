@@ -278,8 +278,6 @@ struct PropertyAttributes
             setConfigurable(!(f & Attr_NotConfigurable));
         }
     }
-    PropertyAttributes(const PropertyAttributes &other) : m_all(other.m_all) {}
-    PropertyAttributes & operator=(const PropertyAttributes &other) { m_all = other.m_all; return *this; }
 
     void setType(Type t) { m_type = t; type_set = true; }
     Type type() const { return type_set ? (Type)m_type : Generic; }
