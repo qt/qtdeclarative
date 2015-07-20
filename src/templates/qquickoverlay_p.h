@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKAPPLICATIONWINDOW_P_H
-#define QQUICKAPPLICATIONWINDOW_P_H
+#ifndef QQUICKOVERLAY_P_H
+#define QQUICKOVERLAY_P_H
 
 //
 //  W A R N I N G
@@ -48,55 +48,39 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickwindowmodule_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickApplicationWindowPrivate;
+class QQuickPanel;
 
-class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
+class QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
-    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
-    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
-    Q_CLASSINFO("DefaultProperty", "data")
 
 public:
-    explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
-    ~QQuickApplicationWindow();
-
-    QQuickItem *contentItem() const;
-    QQmlListProperty<QObject> contentData();
-
-    QQuickItem *header() const;
-    void setHeader(QQuickItem *header);
-
-    QQuickItem *footer() const;
-    void setFooter(QQuickItem *footer);
-
-    QQuickItem *overlay() const;
+    explicit QQuickOverlay(QQuickItem *parent = Q_NULLPTR);
 
 Q_SIGNALS:
-    void headerChanged();
-    void footerChanged();
+    void pressed();
+    void released();
 
 protected:
-    bool isComponentComplete() const;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
+
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *item, QEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickApplicationWindow)
-    Q_DECLARE_PRIVATE(QQuickApplicationWindow)
-    QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
+    Q_DISABLE_COPY(QQuickOverlay)
+    QHash<QQuickItem *, QQuickPanel *> m_panels;
+    int m_modalPanels;
 };
-
-Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKAPPLICATIONWINDOW_P_H
+#endif // QQUICKOVERLAY_P_H

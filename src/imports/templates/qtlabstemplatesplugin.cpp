@@ -49,6 +49,7 @@
 #include <QtLabsTemplates/private/qquickgroupbox_p.h>
 #include <QtLabsTemplates/private/qquicklabel_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
+#include <QtLabsTemplates/private/qquickpanel_p.h>
 #include <QtLabsTemplates/private/qquickprogressbar_p.h>
 #include <QtLabsTemplates/private/qquickradiobutton_p.h>
 #include <QtLabsTemplates/private/qquickrangeslider_p.h>
@@ -93,6 +94,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickGroupBox>(uri, 1, 0, "GroupBox");
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
+    qmlRegisterType<QQuickPanel>(uri, 1, 0, "Panel");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
     qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
     qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");

@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>CompletionPopup.qml</file>
+        <file>ContextMenu.qml</file>
+        <file>Dialog.qml</file>
+        <file>NotificationPopup.qml</file>
+        <file>MessageCenter.qml</file>
+        <file>NotificationCenter.qml</file>
+    </qresource>
+</RCC>

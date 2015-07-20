@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKAPPLICATIONWINDOW_P_H
-#define QQUICKAPPLICATIONWINDOW_P_H
+#ifndef QQUICKPANEL_P_P_H
+#define QQUICKPANEL_P_P_H
 
 //
 //  W A R N I N G
@@ -48,55 +48,58 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickwindowmodule_p.h>
-#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
+#include <QtCore/private/qobject_p.h>
+#include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickApplicationWindowPrivate;
+class QQuickItem;
+class QQuickTransition;
+class QQuickTransitionManager;
+class QQuickPanel;
+class QQuickPanelPrivate;
+class QQuickOverlay;
 
-class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
+class QQuickPanelTransitionManager : public QQuickTransitionManager
 {
-    Q_OBJECT
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
-    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
-    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
-    Q_CLASSINFO("DefaultProperty", "data")
-
 public:
-    explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
-    ~QQuickApplicationWindow();
-
-    QQuickItem *contentItem() const;
-    QQmlListProperty<QObject> contentData();
-
-    QQuickItem *header() const;
-    void setHeader(QQuickItem *header);
-
-    QQuickItem *footer() const;
-    void setFooter(QQuickItem *footer);
-
-    QQuickItem *overlay() const;
-
-Q_SIGNALS:
-    void headerChanged();
-    void footerChanged();
+    QQuickPanelTransitionManager(QQuickPanelPrivate *);
+    void transitionShow();
+    void transitionHide();
 
 protected:
-    bool isComponentComplete() const;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    void finished() Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickApplicationWindow)
-    Q_DECLARE_PRIVATE(QQuickApplicationWindow)
-    QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
+    enum TransitionState {
+        Off, Show, Hide
+    };
+
+    TransitionState state;
+    QQuickPanelPrivate *pp;
 };
 
-Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
+class QQuickPanelPrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickPanel)
+
+public:
+    QQuickPanelPrivate();
+    ~QQuickPanelPrivate();
+
+    void finalizeShowTransition();
+    void finalizeHideTransition();
+
+    QQuickItem *contentItem;
+    QQuickOverlay *overlay;
+    bool focus;
+    bool modal;
+    QQuickTransition *showTransition;
+    QQuickTransition *hideTransition;
+    QQuickPanelTransitionManager transitionManager;
+};
 
 QT_END_NAMESPACE
 
-#endif // QQUICKAPPLICATIONWINDOW_P_H
+#endif // QQUICKPANEL_P_P_H
+

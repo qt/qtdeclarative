@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKAPPLICATIONWINDOW_P_H
-#define QQUICKAPPLICATIONWINDOW_P_H
+#ifndef QQUICKPANEL_P_H
+#define QQUICKPANEL_P_H
 
 //
 //  W A R N I N G
@@ -48,55 +48,74 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickwindowmodule_p.h>
+#include <QtCore/qobject.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickApplicationWindowPrivate;
+class QQuickItem;
+class QQuickPanelPrivate;
+class QQuickTransition;
 
-class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
+class Q_LABSTEMPLATES_EXPORT QQuickPanel : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
-    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
-    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
-    Q_CLASSINFO("DefaultProperty", "data")
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged)
+    Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
+    Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged)
+    Q_PROPERTY(QQuickTransition *showTransition READ showTransition WRITE setShowTransition NOTIFY showTransitionChanged FINAL)
+    Q_PROPERTY(QQuickTransition *hideTransition READ showTransition WRITE setHideTransition NOTIFY hideTransitionChanged FINAL)
 
 public:
-    explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
-    ~QQuickApplicationWindow();
+    explicit QQuickPanel(QObject *parent = Q_NULLPTR);
+    ~QQuickPanel();
 
     QQuickItem *contentItem() const;
-    QQmlListProperty<QObject> contentData();
+    void setContentItem(QQuickItem *item);
 
-    QQuickItem *header() const;
-    void setHeader(QQuickItem *header);
+    bool hasFocus() const;
+    void setFocus(bool focus);
 
-    QQuickItem *footer() const;
-    void setFooter(QQuickItem *footer);
+    bool isModal() const;
+    void setModal(bool modal);
 
-    QQuickItem *overlay() const;
+    bool isVisible() const;
+
+    QQuickTransition *showTransition() const;
+    void setShowTransition(QQuickTransition *);
+
+    QQuickTransition *hideTransition() const;
+    void setHideTransition(QQuickTransition *);
 
 Q_SIGNALS:
-    void headerChanged();
-    void footerChanged();
+    void contentItemChanged();
+    void focusChanged();
+    void modalChanged();
+    void visibleChanged();
+    void showTransitionChanged();
+    void hideTransitionChanged();
+
+    void pressedOutside();
+    void releasedOutside();
+    void clickedOutside();
+
+    void aboutToShow();
+    void aboutToHide();
+
+
+public Q_SLOTS:
+    void show();
+    void hide();
 
 protected:
-    bool isComponentComplete() const;
-    void componentComplete() Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    QQuickPanel(QQuickPanelPrivate &dd, QObject *parent);
 
 private:
-    Q_DISABLE_COPY(QQuickApplicationWindow)
-    Q_DECLARE_PRIVATE(QQuickApplicationWindow)
-    QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
+    Q_DISABLE_COPY(QQuickPanel)
+    Q_DECLARE_PRIVATE(QQuickPanel)
 };
-
-Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKAPPLICATIONWINDOW_P_H
+#endif // QQUICKPANEL_P_H

@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickapplicationwindow_p.h"
+#include "qquickoverlay_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
@@ -69,6 +70,7 @@ public:
         , contentItem(Q_NULLPTR)
         , header(Q_NULLPTR)
         , footer(Q_NULLPTR)
+        , overlay(Q_NULLPTR)
     { }
 
     void relayout();
@@ -80,6 +82,7 @@ public:
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
+    QQuickOverlay *overlay;
     QQuickApplicationWindow *q_ptr;
 };
 
@@ -94,6 +97,12 @@ void QQuickApplicationWindowPrivate::relayout()
     content->setY(hh);
     content->setWidth(q->width());
     content->setHeight(q->height() - hh - fh);
+
+    if (overlay) {
+        overlay->setWidth(q->width());
+        overlay->setHeight(q->height());
+        overlay->stackAfter(content);
+    }
 
     if (header) {
         header->setY(-hh);
@@ -222,6 +231,16 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
         ncd->relayout();
     }
     return d->contentItem;
+}
+
+QQuickItem *QQuickApplicationWindow::overlay() const
+{
+    QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
+    if (!d->overlay) {
+        d->overlay = new QQuickOverlay(QQuickWindow::contentItem());
+        d->relayout();
+    }
+    return d->overlay;
 }
 
 bool QQuickApplicationWindow::isComponentComplete() const
