@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickText;
 class QQuickTextFieldPrivate;
+class QQuickMouseEvent;
 
 class Q_QUICKCONTROLS_EXPORT QQuickTextField : public QQuickTextInput
 {
@@ -75,10 +76,15 @@ public:
 Q_SIGNALS:
     void backgroundChanged();
     void placeholderChanged();
+    void pressAndHold(QQuickMouseEvent *mouse);
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickTextField)

@@ -36,10 +36,12 @@
 
 #include "qquicktextfield_p.h"
 
+#include <QtCore/qbasictimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 #include <QtQuick/private/qquicktextinput_p_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,17 +74,32 @@ QT_BEGIN_NAMESPACE
     \sa TextArea, {Customizing TextField}
 */
 
+/*!
+    \qmlsignal QtQuickControls2::TextField::pressAndHold(MouseEvent mouse)
+
+    This signal is emitted when there is a long press (the delay depends on the platform plugin).
+    The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
+    position of the press, and which button is pressed.
+*/
+
 class QQuickTextFieldPrivate : public QQuickTextInputPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextField)
 
 public:
-    QQuickTextFieldPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
+    QQuickTextFieldPrivate()
+        : background(Q_NULLPTR)
+        , placeholder(Q_NULLPTR)
+        , longPress(false)
+    { }
 
     void resizeBackground();
+    bool isPressAndHoldConnected();
 
     QQuickItem *background;
     QQuickText *placeholder;
+    QBasicTimer pressAndHoldTimer;
+    bool longPress;
 };
 
 void QQuickTextFieldPrivate::resizeBackground()
@@ -99,6 +116,12 @@ void QQuickTextFieldPrivate::resizeBackground()
             p->heightValid = false;
         }
     }
+}
+
+bool QQuickTextFieldPrivate::isPressAndHoldConnected()
+{
+    Q_Q(QQuickTextField);
+    IS_SIGNAL_CONNECTED(q, QQuickTextField, pressAndHold, (QQuickMouseEvent *));
 }
 
 QQuickTextField::QQuickTextField(QQuickItem *parent) :
@@ -191,6 +214,52 @@ QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         clipNode->appendChildNode(textNode);
 
     return clipNode;
+}
+
+void QQuickTextField::mousePressEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextField);
+    d->longPress = false;
+    if (Qt::LeftButton == (event->buttons() & Qt::LeftButton))
+        d->pressAndHoldTimer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), this);
+    else
+        d->pressAndHoldTimer.stop();
+    QQuickTextInput::mousePressEvent(event);
+}
+
+void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextField);
+    if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
+        d->pressAndHoldTimer.stop();
+    if (!d->pressAndHoldTimer.isActive())
+        QQuickTextInput::mouseMoveEvent(event);
+}
+
+void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextField);
+    if (!d->longPress) {
+        d->pressAndHoldTimer.stop();
+        QQuickTextInput::mouseReleaseEvent(event);
+    }
+}
+
+void QQuickTextField::timerEvent(QTimerEvent *event)
+{
+    Q_D(QQuickTextField);
+    if (event->timerId() == d->pressAndHoldTimer.timerId()) {
+        d->pressAndHoldTimer.stop();
+        d->longPress = true;
+        QQuickMouseEvent me(d->pressPos.x(), d->pressPos.y(), Qt::LeftButton, Qt::LeftButton,
+                            QGuiApplication::keyboardModifiers(), false/*isClick*/, true/*wasHeld*/);
+        me.setAccepted(d->isPressAndHoldConnected());
+        emit pressAndHold(&me);
+        if (!me.isAccepted())
+            d->longPress = false;
+    } else {
+        QQuickTextInput::timerEvent(event);
+    }
 }
 
 QT_END_NAMESPACE
