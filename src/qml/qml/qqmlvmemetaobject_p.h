@@ -142,7 +142,7 @@ public:
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;
-    unsigned m_isVar : 1;
+    unsigned m_isVar : 1; // TODO: remove?
     int m_index : 31;
 };
 
@@ -214,6 +214,7 @@ public:
     QDate readPropertyAsDate(int id);
     QDateTime readPropertyAsDateTime(int id);
     QRectF readPropertyAsRectF(int id);
+    QObject* readPropertyAsQObject(int id);
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
@@ -225,6 +226,7 @@ public:
     void writeProperty(int id, const QDate& v);
     void writeProperty(int id, const QDateTime& v);
     void writeProperty(int id, const QRectF& v);
+    void writeProperty(int id, QObject *v);
 
     void ensureQObjectWrapper();
 
