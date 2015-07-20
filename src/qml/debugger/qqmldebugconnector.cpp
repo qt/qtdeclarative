@@ -34,9 +34,7 @@
 #include "qqmldebugpluginmanager_p.h"
 #include "qqmldebugconnector_p.h"
 #include "qdebugmessageservice_p.h"
-#include "qqmlenginecontrolservice_p.h"
 #include "qqmlenginedebugservice_p.h"
-#include "qqmlprofilerservice_p.h"
 #include "qv4debugservice_p.h"
 #include "qqmldebugservicefactory_p.h"
 #include <QtCore/QPluginLoader>
@@ -56,6 +54,7 @@ Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebugServerFactory)
 
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugService)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlInspectorServiceFactory)
+Q_QML_IMPORT_DEBUG_PLUGIN(QQmlProfilerServiceFactory)
 
 struct QQmlDebugConnectorParams {
     QString pluginKey;
@@ -121,9 +120,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
         if (params->instance) {
             QQmlEngineDebugServiceImpl::instance();
             QV4DebugServiceImpl::instance();
-            QQmlProfilerServiceImpl::instance();
             QDebugMessageService::instance();
-            QQmlEngineControlService::instance();
 
             foreach (const QJsonObject &object, metaDataForQQmlDebugService()) {
                 foreach (const QJsonValue &key, object.value(QLatin1String("MetaData")).toObject()

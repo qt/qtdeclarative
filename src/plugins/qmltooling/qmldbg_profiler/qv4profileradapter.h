@@ -31,33 +31,51 @@
 **
 ****************************************************************************/
 
-#include "qqmlprofiler_p.h"
-#include "qqmldebugservice_p.h"
+#ifndef QV4PROFILERADAPTER_P_H
+#define QV4PROFILERADAPTER_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qv4profiling_p.h>
+#include <private/qqmlabstractprofileradapter_p.h>
+
+#include <QStack>
+#include <QList>
 
 QT_BEGIN_NAMESPACE
 
-QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
-{
-    static int metatype = qRegisterMetaType<QVector<QQmlProfilerData> >();
-    Q_UNUSED(metatype);
-    m_timer.start();
-}
+class QQmlProfilerService;
+class QV4ProfilerAdapter : public QQmlAbstractProfilerAdapter {
+    Q_OBJECT
 
-void QQmlProfiler::startProfiling(quint64 features)
-{
-    featuresEnabled = features;
-}
+public:
+    QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine);
 
-void QQmlProfiler::stopProfiling()
-{
-    featuresEnabled = false;
-    reportData();
-}
+    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
-void QQmlProfiler::reportData()
-{
-    emit dataReady(m_data);
-    m_data.clear();
-}
+public slots:
+    void receiveData(const QVector<QV4::Profiling::FunctionCallProperties> &,
+                     const QVector<QV4::Profiling::MemoryAllocationProperties> &);
+
+private:
+    QVector<QV4::Profiling::FunctionCallProperties> data;
+    QVector<QV4::Profiling::MemoryAllocationProperties> memory_data;
+    int dataPos;
+    int memoryPos;
+    QStack<qint64> stack;
+    qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
+    qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
+};
 
 QT_END_NAMESPACE
+
+#endif // QV4PROFILERADAPTER_P_H

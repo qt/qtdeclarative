@@ -45,11 +45,10 @@
 // We mean it.
 //
 
-#include "qqmlconfigurabledebugservice_p.h"
-#include "qqmldebugserviceinterfaces_p.h"
-#include "qqmlprofilerdefinitions_p.h"
-#include "qqmlabstractprofileradapter_p.h"
-
+#include <private/qqmlconfigurabledebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmlprofilerdefinitions_p.h>
+#include <private/qqmlabstractprofileradapter_p.h>
 #include <private/qqmlboundsignal_p.h>
 
 #include <QtCore/qelapsedtimer.h>
@@ -68,14 +67,13 @@ class QUrl;
 class QQmlEngine;
 
 
-class Q_QML_PRIVATE_EXPORT QQmlProfilerServiceImpl :
+class QQmlProfilerServiceImpl :
         public QQmlConfigurableDebugService<QQmlProfilerService>,
         public QQmlProfilerDefinitions
 {
     Q_OBJECT
 public:
 
-    static QQmlProfilerServiceImpl *instance();
     void engineAboutToBeAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
     void engineAdded(QQmlEngine *engine);
@@ -87,7 +85,7 @@ public:
     void startProfiling(QQmlEngine *engine, quint64 features = std::numeric_limits<quint64>::max());
     void stopProfiling(QQmlEngine *engine);
 
-    QQmlProfilerServiceImpl();
+    QQmlProfilerServiceImpl(QObject *parent = 0);
     ~QQmlProfilerServiceImpl();
 
     void dataReady(QQmlAbstractProfilerAdapter *profiler);
@@ -104,6 +102,7 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private:
+    friend class QQmlProfilerServiceFactory;
 
     void sendMessages();
     void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine);

@@ -31,33 +31,39 @@
 **
 ****************************************************************************/
 
-#include "qqmlprofiler_p.h"
-#include "qqmldebugservice_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#ifndef QQMLPROFILERADAPTER_H
+#define QQMLPROFILERADAPTER_H
+
+#include <private/qqmlabstractprofileradapter_p.h>
+#include <private/qqmlprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
-{
-    static int metatype = qRegisterMetaType<QVector<QQmlProfilerData> >();
-    Q_UNUSED(metatype);
-    m_timer.start();
-}
+class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {
+    Q_OBJECT
+public:
+    QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine);
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
-void QQmlProfiler::startProfiling(quint64 features)
-{
-    featuresEnabled = features;
-}
+public slots:
+    void receiveData(const QVector<QQmlProfilerData> &new_data);
 
-void QQmlProfiler::stopProfiling()
-{
-    featuresEnabled = false;
-    reportData();
-}
-
-void QQmlProfiler::reportData()
-{
-    emit dataReady(m_data);
-    m_data.clear();
-}
+private:
+    QVector<QQmlProfilerData> data;
+    int next;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQMLPROFILERADAPTER_H

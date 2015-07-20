@@ -31,33 +31,60 @@
 **
 ****************************************************************************/
 
-#include "qqmlprofiler_p.h"
-#include "qqmldebugservice_p.h"
+#ifndef QQMLENGINECONTROLSERVICE_H
+#define QQMLENGINECONTROLSERVICE_H
+
+#include <QMutex>
+#include <private/qqmldebugservice_p.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
+class QQmlEngineControlService : public QQmlDebugService
 {
-    static int metatype = qRegisterMetaType<QVector<QQmlProfilerData> >();
-    Q_UNUSED(metatype);
-    m_timer.start();
-}
+public:
+    static const QString s_key;
 
-void QQmlProfiler::startProfiling(quint64 features)
-{
-    featuresEnabled = features;
-}
+    enum MessageType {
+        EngineAboutToBeAdded,
+        EngineAdded,
+        EngineAboutToBeRemoved,
+        EngineRemoved
+    };
 
-void QQmlProfiler::stopProfiling()
-{
-    featuresEnabled = false;
-    reportData();
-}
+    enum CommandType {
+        StartWaitingEngine,
+        StopWaitingEngine
+    };
 
-void QQmlProfiler::reportData()
-{
-    emit dataReady(m_data);
-    m_data.clear();
-}
+    QQmlEngineControlService(QObject *parent = 0);
+
+protected:
+    QMutex dataMutex;
+    QList<QQmlEngine *> startingEngines;
+    QList<QQmlEngine *> stoppingEngines;
+
+    void messageReceived(const QByteArray &);
+    void engineAboutToBeAdded(QQmlEngine *);
+    void engineAboutToBeRemoved(QQmlEngine *);
+    void engineAdded(QQmlEngine *);
+    void engineRemoved(QQmlEngine *);
+
+    void sendMessage(MessageType type, QQmlEngine *engine);
+
+    void stateChanged(State);
+};
 
 QT_END_NAMESPACE
+
+#endif // QQMLENGINECONTROLSERVICE_H

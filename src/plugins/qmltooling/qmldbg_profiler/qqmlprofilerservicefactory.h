@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4PROFILERADAPTER_P_H
-#define QV4PROFILERADAPTER_P_H
+#ifndef QQMLPROFILERSERVICE_H
+#define QQMLPROFILERSERVICE_H
 
 //
 //  W A R N I N G
@@ -45,37 +45,18 @@
 // We mean it.
 //
 
-#include "qv4profiling_p.h"
-#include "qqmlabstractprofileradapter_p.h"
-
-#include <QStack>
-#include <QList>
+#include <private/qqmldebugservicefactory_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerService;
-class QV4ProfilerAdapter : public QQmlAbstractProfilerAdapter {
+class QQmlProfilerServiceFactory : public QQmlDebugServiceFactory
+{
     Q_OBJECT
-
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qqmlprofilerservice.json")
 public:
-    QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine);
-
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
-
-public slots:
-    void receiveData(const QVector<QV4::Profiling::FunctionCallProperties> &,
-                     const QVector<QV4::Profiling::MemoryAllocationProperties> &);
-
-private:
-    QVector<QV4::Profiling::FunctionCallProperties> data;
-    QVector<QV4::Profiling::MemoryAllocationProperties> memory_data;
-    int dataPos;
-    int memoryPos;
-    QStack<qint64> stack;
-    qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
-    qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
+    QQmlDebugService *create(const QString &key);
 };
 
 QT_END_NAMESPACE
 
-#endif // QV4PROFILERADAPTER_P_H
+#endif // QQMLPROFILERSERVICE_H

@@ -68,8 +68,9 @@ QT_BEGIN_NAMESPACE
 // This struct is somewhat dangerous to use:
 // The messageType is a bit field. You can pack multiple messages into
 // one object, e.g. RangeStart and RangeLocation. Each one will be read
-// independently by toByteArrays. Thus you can only pack messages if their data
-// doesn't overlap. It's up to you to figure that out.
+// independently when converting to QByteArrays. Thus you can only pack
+// messages if their data doesn't overlap. It's up to you to figure that
+// out.
 struct Q_AUTOTEST_EXPORT QQmlProfilerData
 {
     QQmlProfilerData() {}
@@ -103,8 +104,6 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
 
     int x;                  //used by RangeLocation
     int y;                  //used by RangeLocation
-
-    void toByteArrays(QList<QByteArray> &messages) const;
 };
 
 Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
@@ -176,20 +175,6 @@ signals:
 protected:
     QElapsedTimer m_timer;
     QVector<QQmlProfilerData> m_data;
-};
-
-class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {
-    Q_OBJECT
-public:
-    QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine);
-    qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
-
-public slots:
-    void receiveData(const QVector<QQmlProfilerData> &new_data);
-
-private:
-    QVector<QQmlProfilerData> data;
-    int next;
 };
 
 //

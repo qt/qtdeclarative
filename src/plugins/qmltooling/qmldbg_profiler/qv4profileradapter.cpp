@@ -31,9 +31,8 @@
 **
 ****************************************************************************/
 
-#include "qv4profileradapter_p.h"
-#include "qqmlprofilerservice_p.h"
-#include "qqmldebugservice_p.h"
+#include "qv4profileradapter.h"
+#include "qqmlprofilerservice.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -31,22 +31,16 @@
 **
 ****************************************************************************/
 
+#include "qqmlenginecontrolservice.h"
 #include <QQmlEngine>
-#include "qqmldebug.h"
-#include "qqmlenginecontrolservice_p.h"
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlEngineControlService, qmlEngineControlService)
+const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 
-QQmlEngineControlService::QQmlEngineControlService() :
-    QQmlDebugService(QStringLiteral("EngineControl"), 1)
+QQmlEngineControlService::QQmlEngineControlService(QObject *parent) :
+    QQmlDebugService(s_key, 1, parent)
 {
-}
-
-QQmlEngineControlService *QQmlEngineControlService::instance()
-{
-    return qmlEngineControlService();
 }
 
 void QQmlEngineControlService::messageReceived(const QByteArray &message)

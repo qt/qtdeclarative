@@ -31,10 +31,10 @@
 **
 ****************************************************************************/
 
-#include "qqmlprofilerservice_p.h"
-#include "qv4profileradapter_p.h"
-#include "qqmlprofiler_p.h"
-#include "qqmldebugconnector_p.h"
+#include "qqmlprofilerservice.h"
+#include "qv4profileradapter.h"
+#include "qqmlprofileradapter.h"
+#include "qqmlprofilerservicefactory.h"
 #include <private/qqmlengine_p.h>
 
 #include <QtCore/qdatastream.h>
@@ -45,11 +45,9 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QQmlProfilerServiceImpl, profilerInstance)
-
-QQmlProfilerServiceImpl::QQmlProfilerServiceImpl()
-    : QQmlConfigurableDebugService<QQmlProfilerService>(1),
-      m_waitingForStop(false)
+QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
+    QQmlConfigurableDebugService<QQmlProfilerService>(1, parent),
+    m_waitingForStop(false)
 {
     m_timer.start();
 }
@@ -92,12 +90,6 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
             emit detachedFromEngine(engine);
         }
     }
-}
-
-QQmlProfilerServiceImpl *QQmlProfilerServiceImpl::instance()
-{
-    // just make sure that the service is properly registered
-    return profilerInstance();
 }
 
 void QQmlProfilerServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
