@@ -95,6 +95,7 @@ void QQuickTextAreaPrivate::resizeBackground()
 QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
     QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
+    setActiveFocusOnTab(true);
 }
 
 QQuickTextArea::~QQuickTextArea()
