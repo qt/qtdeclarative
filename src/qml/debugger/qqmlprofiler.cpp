@@ -91,8 +91,8 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
     connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
             engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QList<QQmlProfilerData>)),
-            this, SLOT(receiveData(QList<QQmlProfilerData>)));
+    connect(engine->profiler, SIGNAL(dataReady(QVector<QQmlProfilerData>)),
+            this, SLOT(receiveData(QVector<QQmlProfilerData>)));
 }
 
 qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
@@ -104,7 +104,7 @@ qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messag
     return data.empty() ? -1 : data.front().time;
 }
 
-void QQmlProfilerAdapter::receiveData(const QList<QQmlProfilerData> &new_data)
+void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data)
 {
     data = new_data;
     service->dataReady(this);
@@ -113,7 +113,7 @@ void QQmlProfilerAdapter::receiveData(const QList<QQmlProfilerData> &new_data)
 
 QQmlProfiler::QQmlProfiler() : featuresEnabled(0)
 {
-    static int metatype = qRegisterMetaType<QList<QQmlProfilerData> >();
+    static int metatype = qRegisterMetaType<QVector<QQmlProfilerData> >();
     Q_UNUSED(metatype);
     m_timer.start();
 }
@@ -132,7 +132,7 @@ void QQmlProfiler::stopProfiling()
 
 void QQmlProfiler::reportData()
 {
-    QList<QQmlProfilerData> result;
+    QVector<QQmlProfilerData> result;
     result.reserve(m_data.size());
     for (int i = 0; i < m_data.size(); ++i)
         result.append(m_data[i]);

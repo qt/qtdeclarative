@@ -171,7 +171,7 @@ public slots:
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:
-    void dataReady(const QList<QQmlProfilerData> &);
+    void dataReady(const QVector<QQmlProfilerData> &);
 
 protected:
     QElapsedTimer m_timer;
@@ -185,10 +185,10 @@ public:
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
 public slots:
-    void receiveData(const QList<QQmlProfilerData> &new_data);
+    void receiveData(const QVector<QQmlProfilerData> &new_data);
 
 private:
-    QList<QQmlProfilerData> data;
+    QVector<QQmlProfilerData> data;
 };
 
 //
@@ -332,6 +332,6 @@ private:
 };
 
 QT_END_NAMESPACE
-Q_DECLARE_METATYPE(QList<QQmlProfilerData>)
+Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 
 #endif // QQMLPROFILER_P_H

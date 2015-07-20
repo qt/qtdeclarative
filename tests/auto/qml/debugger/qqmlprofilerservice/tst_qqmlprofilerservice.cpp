@@ -139,11 +139,11 @@ public:
     {
     }
 
-    QList<QQmlProfilerData> qmlMessages;
-    QList<QQmlProfilerData> javascriptMessages;
-    QList<QQmlProfilerData> jsHeapMessages;
-    QList<QQmlProfilerData> asynchronousMessages;
-    QList<QQmlProfilerData> pixmapMessages;
+    QVector<QQmlProfilerData> qmlMessages;
+    QVector<QQmlProfilerData> javascriptMessages;
+    QVector<QQmlProfilerData> jsHeapMessages;
+    QVector<QQmlProfilerData> asynchronousMessages;
+    QVector<QQmlProfilerData> pixmapMessages;
 
     void setTraceState(bool enabled) {
         QByteArray message;
@@ -449,7 +449,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
                                      int expectedPosition, const QQmlProfilerData &expected,
                                      quint32 checks)
 {
-    QList<QQmlProfilerData> *target = 0;
+    QVector<QQmlProfilerData> *target = 0;
     switch (type) {
         case MessageListQML:          target = &(m_client->qmlMessages); break;
         case MessageListJavaScript:   target = &(m_client->javascriptMessages); break;
