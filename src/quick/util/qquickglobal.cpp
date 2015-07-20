@@ -479,49 +479,6 @@ public:
         return false;
     }
 
-    template<typename T>
-    bool typedCopyConstruct(const void *src, void *dst, size_t dstSize)
-    {
-        ASSERT_VALID_SIZE(dstSize, sizeof(T));
-        const T *srcT = reinterpret_cast<const T *>(src);
-        T *destT = reinterpret_cast<T *>(dst);
-        new (destT) T(*srcT);
-        return true;
-    }
-
-    bool copy(int type, const void *src, void *dst, size_t dstSize)
-    {
-        switch (type) {
-        case QMetaType::QColor:
-            return typedCopyConstruct<QColor>(src, dst, dstSize);
-        case QMetaType::QFont:
-            return typedCopyConstruct<QFont>(src, dst, dstSize);
-        case QMetaType::QVector2D:
-            return typedCopyConstruct<QVector2D>(src, dst, dstSize);
-        case QMetaType::QVector3D:
-            return typedCopyConstruct<QVector3D>(src, dst, dstSize);
-        case QMetaType::QVector4D:
-            return typedCopyConstruct<QVector4D>(src, dst, dstSize);
-        case QMetaType::QQuaternion:
-            return typedCopyConstruct<QQuaternion>(src, dst, dstSize);
-        case QMetaType::QMatrix4x4:
-            {
-            if (dstSize >= sizeof(QMatrix4x4))
-                return typedCopyConstruct<QMatrix4x4>(src, dst, dstSize);
-
-            // special case: copying matrix into variant.
-            Q_ASSERT(dstSize >= sizeof(QVariant));
-            const QMatrix4x4 *srcMatrix = reinterpret_cast<const QMatrix4x4 *>(src);
-            QVariant *dstMatrixVar = reinterpret_cast<QVariant *>(dst);
-            new (dstMatrixVar) QVariant(*srcMatrix);
-            return true;
-            }
-        default: break;
-        }
-
-        return false;
-    }
-
     bool create(int type, int argc, const void *argv[], QVariant *v)
     {
         switch (type) {

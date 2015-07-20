@@ -226,7 +226,6 @@ public:
 
     bool initValueType(int, void *, size_t);
     bool destroyValueType(int, void *, size_t);
-    bool copyValueType(int, const void *, void *, size_t);
 
     QVariant createValueType(int, int, const void *[]);
     bool createValueFromString(int, const QString &, void *, size_t);
@@ -245,7 +244,6 @@ private:
     virtual const QMetaObject *getMetaObjectForMetaType(int);
     virtual bool init(int, void *, size_t);
     virtual bool destroy(int, void *, size_t);
-    virtual bool copy(int, const void *, void *, size_t);
 
     virtual bool create(int, int, const void *[], QVariant *);
     virtual bool createFromString(int, const QString &, void *, size_t);

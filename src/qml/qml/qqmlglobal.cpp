@@ -88,20 +88,6 @@ bool QQmlValueTypeProvider::destroyValueType(int type, void *data, size_t n)
     return false;
 }
 
-bool QQmlValueTypeProvider::copyValueType(int type, const void *src, void *dst, size_t n)
-{
-    Q_ASSERT(src);
-    Q_ASSERT(dst);
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->copy(type, src, dst, n))
-            return true;
-    } while ((p = p->next));
-
-    return false;
-}
-
 QVariant QQmlValueTypeProvider::createValueType(int type, int argc, const void *argv[])
 {
     QVariant v;
@@ -247,7 +233,6 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, void *dst,
 const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return 0; }
 bool QQmlValueTypeProvider::init(int, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::destroy(int, void *, size_t) { return false; }
-bool QQmlValueTypeProvider::copy(int, const void *, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::create(int, int, const void *[], QVariant *) { return false; }
 bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::createStringFrom(int, const void *, QString *) { return false; }
