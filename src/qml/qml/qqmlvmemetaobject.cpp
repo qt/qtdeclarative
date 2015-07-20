@@ -546,7 +546,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
         int t = (metaData->propertyData() + ii)->propertyType;
         if (t == list_type) {
             listProperties.append(List(methodOffset() + ii, this));
-            data[ii].setValue(listProperties.count() - 1);
+            writeProperty(ii, listProperties.count() - 1);
         } else if (!needsJSWrapper && (t == qobject_type || t == variant_type)) {
             needsJSWrapper = true;
         }
@@ -993,7 +993,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             break;
                         }
                         if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
-                            int listIndex = data[id].asInt();
+                            const int listIndex = readPropertyAsInt(id);
                             const List *list = &listProperties.at(listIndex);
                             *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
                                 QQmlListProperty<QObject>(object, const_cast<List *>(list),
