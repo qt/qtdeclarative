@@ -146,6 +146,7 @@ private slots:
     void warnOnInvalidBinding();
     void registeredCompositeTypeProperty();
     void deeplyNestedObject();
+    void readOnlyDynamicProperties();
 
     void copy();
 private:
@@ -2037,6 +2038,20 @@ void tst_qqmlproperty::deeplyNestedObject()
 
     p.write(14);
     QCOMPARE(p.read(), QVariant(14));
+}
+
+void tst_qqmlproperty::readOnlyDynamicProperties()
+{
+    QQmlComponent comp(&engine, testFileUrl("readonlyPrimitiveVsVar.qml"));
+    QObject *obj = comp.create();
+    QVERIFY(obj != 0);
+
+    QVERIFY(!obj->metaObject()->property(obj->metaObject()->indexOfProperty("r_var")).isWritable());
+    QVERIFY(!obj->metaObject()->property(obj->metaObject()->indexOfProperty("r_int")).isWritable());
+    QVERIFY(obj->metaObject()->property(obj->metaObject()->indexOfProperty("w_var")).isWritable());
+    QVERIFY(obj->metaObject()->property(obj->metaObject()->indexOfProperty("w_int")).isWritable());
+
+    delete obj;
 }
 
 void tst_qqmlproperty::initTestCase()
