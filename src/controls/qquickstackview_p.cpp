@@ -150,11 +150,11 @@ void QQuickStackElement::initItem(QObject *object)
         QQuickItemPrivate *p = QQuickItemPrivate::get(item);
         if (!p->widthValid) {
             item->setWidth(view->width());
-            p->widthValid = false;
+            p->widthValid = true;
         }
         if (!p->heightValid) {
             item->setHeight(view->height());
-            p->heightValid = false;
+            p->heightValid = true;
         }
         item->setParentItem(view);
         p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
