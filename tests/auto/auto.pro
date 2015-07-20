@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    applicationwindow \
     controls \
     extras \
     sanity \
