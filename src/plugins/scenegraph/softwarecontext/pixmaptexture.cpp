@@ -20,7 +20,9 @@
 #include "pixmaptexture.h"
 
 PixmapTexture::PixmapTexture(const QImage &image)
-    : m_pixmap(QPixmap::fromImage(image))
+    // Prevent pixmap format conversion to reduce memory consumption
+    // and surprises in calling code. (See QTBUG-47328)
+    : m_pixmap(QPixmap::fromImage(image, Qt::NoFormatConversion))
 {
 }
 
