@@ -619,7 +619,7 @@ is finished.
     \qmlsignal QtQuick::Flickable::movementStarted()
 
     This signal is emitted when the view begins moving due to user
-    interaction.
+    interaction or a generated flick().
 
     The corresponding handler is \c onMovementStarted.
 */
@@ -628,9 +628,9 @@ is finished.
     \qmlsignal QtQuick::Flickable::movementEnded()
 
     This signal is emitted when the view stops moving due to user
-    interaction.  If a flick was generated, this signal will
+    interaction or a generated flick().  If a flick was active, this signal will
     be emitted once the flick stops.  If a flick was not
-    generated, this signal will be emitted when the
+    active, this signal will be emitted when the
     user stops dragging - i.e. a mouse or touch release.
 
     The corresponding handler is \c onMovementEnded.
@@ -1654,6 +1654,9 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
     \qmlmethod QtQuick::Flickable::flick(qreal xVelocity, qreal yVelocity)
 
     Flicks the content with \a xVelocity horizontally and \a yVelocity vertically in pixels/sec.
+
+    Calling this method will update the corresponding moving and flicking properties and signals,
+    just like a real flick.
 */
 
 void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
@@ -1663,8 +1666,15 @@ void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
     d->vData.reset();
     d->hData.velocity = xVelocity;
     d->vData.velocity = yVelocity;
+
     bool flickedX = d->flickX(xVelocity);
     bool flickedY = d->flickY(yVelocity);
+
+    if (flickedX)
+        d->hMoved = true;
+    if (flickedY)
+        d->vMoved = true;
+    movementStarting();
     d->flickingStarted(flickedX, flickedY);
 }
 

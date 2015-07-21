@@ -91,6 +91,7 @@ private slots:
     void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
     void pressDelayWithLoader();
+    void movementFromProgrammaticFlick();
     void cleanup();
 
 private:
@@ -1717,6 +1718,25 @@ void tst_qquickflickable::pressDelayWithLoader()
     // do not crash
     moveAndPress(window.data(), QPoint(150, 150));
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+}
+
+// QTBUG-34507
+void tst_qquickflickable::movementFromProgrammaticFlick()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("movementSignals.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != 0);
+
+    // verify that the signals for movement and flicking are called in the right order
+    flickable->flick(0, -1000);
+    QTRY_COMPARE(flickable->property("signalString").toString(), QString("msfsfeme"));
 }
 
 QTEST_MAIN(tst_qquickflickable)
