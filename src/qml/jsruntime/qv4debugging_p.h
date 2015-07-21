@@ -61,8 +61,6 @@ enum PauseReason {
     Step
 };
 
-class DebuggerAgent;
-
 struct DebuggerBreakPoint {
     DebuggerBreakPoint(const QString &fileName, int line)
         : fileName(fileName), lineNumber(line)
@@ -137,8 +135,9 @@ private:
     DataCollector::Refs *m_previousRefs;
 };
 
-class Q_QML_EXPORT Debugger
+class Q_QML_EXPORT Debugger : public QObject
 {
+    Q_OBJECT
 public:
     class Job
     {
@@ -162,14 +161,9 @@ public:
     };
 
     Debugger(ExecutionEngine *engine);
-    ~Debugger();
 
     ExecutionEngine *engine() const
     { return m_engine; }
-
-    void attachToAgent(DebuggerAgent *agent);
-    void detachFromAgent();
-    DebuggerAgent *agent() const { return m_agent; }
 
     void gatherSources(int requestSequenceNr);
     void pause();
@@ -214,6 +208,10 @@ public: // execution hooks
     void leavingFunction(const ReturnedValue &retVal);
     void aboutToThrow();
 
+signals:
+    void sourcesCollected(QV4::Debugging::Debugger *self, const QStringList &sources, int seq);
+    void debuggerPaused(QV4::Debugging::Debugger *self, QV4::Debugging::PauseReason reason);
+
 private:
     Function *getFunction() const;
 
@@ -228,7 +226,6 @@ private:
 private:
     QV4::ExecutionEngine *m_engine;
     QV4::PersistentValue m_currentContext;
-    DebuggerAgent *m_agent;
     QMutex m_lock;
     QWaitCondition m_runningCondition;
     State m_state;
@@ -243,54 +240,6 @@ private:
     Job *m_gatherSources;
     Job *m_runningJob;
     QWaitCondition m_jobIsRunning;
-};
-
-class Q_QML_EXPORT DebuggerAgent : public QObject
-{
-    Q_OBJECT
-public:
-    DebuggerAgent(): m_breakOnThrow(false) {}
-    ~DebuggerAgent();
-
-    void addDebugger(Debugger *debugger);
-    void removeDebugger(Debugger *debugger);
-
-    void pause(Debugger *debugger) const;
-    void pauseAll() const;
-    void resumeAll() const;
-    int addBreakPoint(const QString &fileName, int lineNumber, bool enabled = true, const QString &condition = QString());
-    void removeBreakPoint(int id);
-    void removeAllBreakPoints();
-    void enableBreakPoint(int id, bool onoff);
-    QList<int> breakPointIds(const QString &fileName, int lineNumber) const;
-
-    bool breakOnThrow() const { return m_breakOnThrow; }
-    void setBreakOnThrow(bool onoff);
-
-    Q_INVOKABLE virtual void debuggerPaused(QV4::Debugging::Debugger *debugger,
-                                            QV4::Debugging::PauseReason reason) = 0;
-    Q_INVOKABLE virtual void sourcesCollected(QV4::Debugging::Debugger *debugger,
-                                              QStringList sources, int requestSequenceNr) = 0;
-
-protected:
-    QList<Debugger *> m_debuggers;
-
-    struct BreakPoint {
-        QString fileName;
-        int lineNr;
-        bool enabled;
-        QString condition;
-
-        BreakPoint(): lineNr(-1), enabled(false) {}
-        BreakPoint(const QString &fileName, int lineNr, bool enabled, const QString &condition)
-            : fileName(fileName), lineNr(lineNr), enabled(enabled), condition(condition)
-        {}
-
-        bool isValid() const { return lineNr >= 0 && !fileName.isEmpty(); }
-    };
-
-    QHash<int, BreakPoint> m_breakPoints;
-    bool m_breakOnThrow;
 };
 
 } // namespace Debugging

@@ -93,7 +93,7 @@ signals:
     void evaluateFinished();
 };
 
-class TestAgent : public QV4::Debugging::DebuggerAgent
+class TestAgent : public QObject
 {
     Q_OBJECT
 public:
@@ -151,12 +151,14 @@ public:
         , m_captureContextInfo(false)
         , m_thrownValue(-1)
         , collector(engine)
+        , m_debugger(0)
     {
     }
 
-    virtual void debuggerPaused(Debugger *debugger, PauseReason reason)
+public slots:
+    void debuggerPaused(QV4::Debugging::Debugger *debugger, QV4::Debugging::PauseReason reason)
     {
-        Q_ASSERT(m_debuggers.count() == 1 && m_debuggers.first() == debugger);
+        Q_ASSERT(debugger == m_debugger);
         Q_ASSERT(debugger->engine() == collector.engine());
         m_wasPaused = true;
         m_pauseReason = reason;
@@ -190,15 +192,7 @@ public:
         debugger->resume(Debugger::FullThrottle);
     }
 
-    virtual void sourcesCollected(Debugger *debugger, QStringList sources, int requestSequenceNr)
-    {
-        Q_UNUSED(debugger);
-        Q_UNUSED(sources);
-        Q_UNUSED(requestSequenceNr);
-    }
-
-    int debuggerCount() const { return m_debuggers.count(); }
-
+public:
     struct TestBreakPoint
     {
         TestBreakPoint() : lineNumber(-1) {}
@@ -221,6 +215,16 @@ public:
         }
     }
 
+    void addDebugger(QV4::Debugging::Debugger *debugger)
+    {
+        Q_ASSERT(!m_debugger);
+        m_debugger = debugger;
+        connect(m_debugger,
+                SIGNAL(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
+                this,
+                SLOT(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)));
+    }
+
     bool m_wasPaused;
     PauseReason m_pauseReason;
     bool m_captureContextInfo;
@@ -238,6 +242,7 @@ public:
     };
     QVector<ExpressionRequest> m_expressionRequests;
     QVector<Refs> m_expressionResults;
+    QV4::Debugging::Debugger *m_debugger;
 
     // Utility methods:
     void dumpStackTrace() const
@@ -315,7 +320,6 @@ void tst_qv4debugger::cleanup()
     delete m_javaScriptThread;
     m_engine = 0;
     m_v4 = 0;
-    QCOMPARE(m_debuggerAgent->debuggerCount(), 0);
     delete m_debuggerAgent;
     m_debuggerAgent = 0;
 }
@@ -326,7 +330,7 @@ void tst_qv4debugger::breakAnywhere()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->pauseAll();
+    m_v4->debugger->pause();
     evaluateJavaScript(script, "testFile");
     QVERIFY(m_debuggerAgent->m_wasPaused);
 }
@@ -337,7 +341,7 @@ void tst_qv4debugger::pendingBreakpoint()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint("testfile", 2);
+    m_v4->debugger->addBreakPoint("testfile", 2);
     evaluateJavaScript(script, "testfile");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
@@ -353,7 +357,7 @@ void tst_qv4debugger::liveBreakPoint()
             "var j = i + 1\n"
             "var k = i\n";
     m_debuggerAgent->m_breakPointsToAddWhenPaused << TestAgent::TestBreakPoint("liveBreakPoint", 3);
-    m_debuggerAgent->pauseAll();
+    m_v4->debugger->pause();
     evaluateJavaScript(script, "liveBreakPoint");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 2);
@@ -368,8 +372,8 @@ void tst_qv4debugger::removePendingBreakPoint()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    int id = m_debuggerAgent->addBreakPoint("removePendingBreakPoint", 2);
-    m_debuggerAgent->removeBreakPoint(id);
+    m_v4->debugger->addBreakPoint("removePendingBreakPoint", 2);
+    m_v4->debugger->removeBreakPoint("removePendingBreakPoint", 2);
     evaluateJavaScript(script, "removePendingBreakPoint");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
 }
@@ -380,7 +384,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
             "var i = 42;\n"
             "var j = i + 1\n"
             "var k = i\n";
-    m_debuggerAgent->addBreakPoint("addBreakPointWhilePaused", 1);
+    m_v4->debugger->addBreakPoint("addBreakPointWhilePaused", 1);
     m_debuggerAgent->m_breakPointsToAddWhenPaused << TestAgent::TestBreakPoint("addBreakPointWhilePaused", 2);
     evaluateJavaScript(script, "addBreakPointWhilePaused");
     QVERIFY(m_debuggerAgent->m_wasPaused);
@@ -410,7 +414,7 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
     QMetaObject::invokeMethod(m_engine, "injectFunction", Qt::BlockingQueuedConnection,
                               Q_ARG(QString, "someCall"), Q_ARG(InjectedFunction, someCall));
 
-    m_debuggerAgent->addBreakPoint("removeBreakPointForNextInstruction", 2);
+    m_v4->debugger->addBreakPoint("removeBreakPointForNextInstruction", 2);
 
     evaluateJavaScript(script, "removeBreakPointForNextInstruction");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
@@ -427,7 +431,7 @@ void tst_qv4debugger::conditionalBreakPoint()
             "}\n"
             "test()\n";
 
-    m_debuggerAgent->addBreakPoint("conditionalBreakPoint", 3, /*enabled*/true, QStringLiteral("i > 10"));
+    m_v4->debugger->addBreakPoint("conditionalBreakPoint", 3, QStringLiteral("i > 10"));
     evaluateJavaScript(script, "conditionalBreakPoint");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 4);
@@ -465,7 +469,7 @@ void tst_qv4debugger::conditionalBreakPointInQml()
                       "    }\n"
                       "}\n", QUrl("test.qml"));
 
-    debuggerAgent->addBreakPoint("test.qml", 7, /*enabled*/true, "root.foo == 42");
+    v4->debugger->addBreakPoint("test.qml", 7, "root.foo == 42");
 
     QScopedPointer<QObject> obj(component.create());
     QCOMPARE(obj->property("success").toBool(), true);
@@ -487,7 +491,7 @@ void tst_qv4debugger::readArguments()
             "}\n"
             "var four;\n"
             "f(1, 'two', null, four);\n";
-    m_debuggerAgent->addBreakPoint("readArguments", 2);
+    m_v4->debugger->addBreakPoint("readArguments", 2);
     evaluateJavaScript(script, "readArguments");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedArguments.size() > 1);
@@ -511,7 +515,7 @@ void tst_qv4debugger::readLocals()
             "  return c === d\n"
             "}\n"
             "f(1, 2, 3);\n";
-    m_debuggerAgent->addBreakPoint("readLocals", 3);
+    m_v4->debugger->addBreakPoint("readLocals", 3);
     evaluateJavaScript(script, "readLocals");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedLocals.size() > 1);
@@ -533,7 +537,7 @@ void tst_qv4debugger::readObject()
             "  return b\n"
             "}\n"
             "f({head: 1, tail: { head: 'asdf', tail: null }});\n";
-    m_debuggerAgent->addBreakPoint("readObject", 3);
+    m_v4->debugger->addBreakPoint("readObject", 3);
     evaluateJavaScript(script, "readObject");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedLocals.size() > 1);
@@ -591,7 +595,7 @@ void tst_qv4debugger::readContextInAllFrames()
             "    return 1;\n" // breakpoint
             "}\n"
             "fact(12);\n";
-    m_debuggerAgent->addBreakPoint("readFormalsInAllFrames", 7);
+    m_v4->debugger->addBreakPoint("readFormalsInAllFrames", 7);
     evaluateJavaScript(script, "readFormalsInAllFrames");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 13);
@@ -626,7 +630,7 @@ void tst_qv4debugger::pauseOnThrow()
             "  throw n\n"
             "}\n"
             "die('hard');\n";
-    m_debuggerAgent->setBreakOnThrow(true);
+    m_v4->debugger->setBreakOnThrow(true);
     evaluateJavaScript(script, "pauseOnThrow");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_pauseReason, Throwing);
@@ -647,7 +651,7 @@ void tst_qv4debugger::breakInCatch()
             "    console.log(e, 'me');\n"
             "}\n";
 
-    m_debuggerAgent->addBreakPoint("breakInCatch", 4);
+    m_v4->debugger->addBreakPoint("breakInCatch", 4);
     evaluateJavaScript(script, "breakInCatch");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_pauseReason, BreakPoint);
@@ -664,7 +668,7 @@ void tst_qv4debugger::breakInWith()
             "    console.log('give the answer');\n"
             "}\n";
 
-    m_debuggerAgent->addBreakPoint("breakInWith", 2);
+    m_v4->debugger->addBreakPoint("breakInWith", 2);
     evaluateJavaScript(script, "breakInWith");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_pauseReason, BreakPoint);
@@ -692,7 +696,7 @@ void tst_qv4debugger::evaluateExpression()
     request.frameNr = 1;
     m_debuggerAgent->m_expressionRequests << request;
 
-    m_debuggerAgent->addBreakPoint("evaluateExpression", 3);
+    m_v4->debugger->addBreakPoint("evaluateExpression", 3);
 
     evaluateJavaScript(script, "evaluateExpression");
 

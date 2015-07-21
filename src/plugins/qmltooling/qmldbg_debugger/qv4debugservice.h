@@ -46,6 +46,7 @@
 //
 
 #include "qqmlconfigurabledebugservice.h"
+#include "qv4debuggeragent.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 
@@ -60,24 +61,6 @@ class VariableCollector;
 class V8CommandHandler;
 class UnknownV8CommandHandler;
 class QV4DebugServiceImpl;
-
-class QV4DebuggerAgent : public QV4::Debugging::DebuggerAgent
-{
-    Q_OBJECT
-public:
-    QV4DebuggerAgent(QV4DebugServiceImpl *debugService);
-    QV4::Debugging::Debugger *firstDebugger() const;
-    bool isRunning() const;
-
-public slots:
-    virtual void debuggerPaused(QV4::Debugging::Debugger *debugger,
-                                QV4::Debugging::PauseReason reason);
-    virtual void sourcesCollected(QV4::Debugging::Debugger *debugger, QStringList sources,
-                                  int requestSequenceNr);
-
-private:
-    QV4DebugServiceImpl *debugService;
-};
 
 class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
 {

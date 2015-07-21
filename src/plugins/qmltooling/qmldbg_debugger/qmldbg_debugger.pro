@@ -10,7 +10,8 @@ SOURCES += \
     $$PWD/qqmldebuggerservicefactory.cpp \
     $$PWD/qqmlenginedebugservice.cpp \
     $$PWD/qqmlwatcher.cpp \
-    $$PWD/qv4debugservice.cpp
+    $$PWD/qv4debugservice.cpp \
+    $$PWD/qv4debuggeragent.cpp
 
 HEADERS += \
     $$PWD/../shared/qqmlconfigurabledebugservice.h \
@@ -18,7 +19,8 @@ HEADERS += \
     $$PWD/qqmldebuggerservicefactory.h \
     $$PWD/qqmlenginedebugservice.h \
     $$PWD/qqmlwatcher.h \
-    $$PWD/qv4debugservice.h
+    $$PWD/qv4debugservice.h \
+    $$PWD/qv4debuggeragent.h
 
 INCLUDEPATH += $$PWD \
     $$PWD/../shared

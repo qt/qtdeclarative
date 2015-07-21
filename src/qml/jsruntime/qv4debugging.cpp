@@ -164,10 +164,7 @@ public:
         }
 
         Debugger *debugger = engine->debugger;
-        QMetaObject::invokeMethod(debugger->agent(), "sourcesCollected", Qt::QueuedConnection,
-                                  Q_ARG(QV4::Debugging::Debugger*, debugger),
-                                  Q_ARG(QStringList, sources),
-                                  Q_ARG(int, seq));
+        emit debugger->sourcesCollected(debugger, sources, seq);
     }
 };
 }
@@ -386,7 +383,6 @@ QJsonObject DataCollector::collectAsJson(const QString &name, const ScopedValue 
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
-    , m_agent(0)
     , m_state(Running)
     , m_stepping(NotStepping)
     , m_pauseRequested(false)
@@ -398,29 +394,6 @@ Debugger::Debugger(QV4::ExecutionEngine *engine)
 {
     qMetaTypeId<Debugger*>();
     qMetaTypeId<PauseReason>();
-}
-
-Debugger::~Debugger()
-{
-    detachFromAgent();
-}
-
-void Debugger::attachToAgent(DebuggerAgent *agent)
-{
-    Q_ASSERT(!m_agent);
-    m_agent = agent;
-}
-
-void Debugger::detachFromAgent()
-{
-    DebuggerAgent *agent = 0;
-    {
-        QMutexLocker locker(&m_lock);
-        agent = m_agent;
-        m_agent = 0;
-    }
-    if (agent)
-        agent->removeDebugger(this);
 }
 
 void Debugger::gatherSources(int requestSequenceNr)
@@ -835,9 +808,7 @@ void Debugger::pauseAndWait(PauseReason reason)
         return;
 
     m_state = Paused;
-    QMetaObject::invokeMethod(m_agent, "debuggerPaused", Qt::QueuedConnection,
-                              Q_ARG(QV4::Debugging::Debugger*, this),
-                              Q_ARG(QV4::Debugging::PauseReason, reason));
+    emit debuggerPaused(this, reason);
 
     while (true) {
         m_runningCondition.wait(&m_lock);
@@ -885,117 +856,6 @@ void Debugger::runInEngine_havingLock(Debugger::Job *job)
     m_runningCondition.wakeAll();
     m_jobIsRunning.wait(&m_lock);
     m_runningJob = 0;
-}
-
-void DebuggerAgent::addDebugger(Debugger *debugger)
-{
-    Q_ASSERT(!m_debuggers.contains(debugger));
-    m_debuggers << debugger;
-    debugger->attachToAgent(this);
-
-    debugger->setBreakOnThrow(m_breakOnThrow);
-
-    foreach (const BreakPoint &breakPoint, m_breakPoints.values())
-        if (breakPoint.enabled)
-            debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
-}
-
-void DebuggerAgent::removeDebugger(Debugger *debugger)
-{
-    m_debuggers.removeAll(debugger);
-    debugger->detachFromAgent();
-}
-
-void DebuggerAgent::pause(Debugger *debugger) const
-{
-    debugger->pause();
-}
-
-void DebuggerAgent::pauseAll() const
-{
-    foreach (Debugger *debugger, m_debuggers)
-        pause(debugger);
-}
-
-void DebuggerAgent::resumeAll() const
-{
-    foreach (Debugger *debugger, m_debuggers)
-        if (debugger->state() == Debugger::Paused)
-            debugger->resume(Debugger::FullThrottle);
-}
-
-int DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, bool enabled, const QString &condition)
-{
-    if (enabled)
-        foreach (Debugger *debugger, m_debuggers)
-            debugger->addBreakPoint(fileName, lineNumber, condition);
-
-    int id = m_breakPoints.size();
-    m_breakPoints.insert(id, BreakPoint(fileName, lineNumber, enabled, condition));
-    return id;
-}
-
-void DebuggerAgent::removeBreakPoint(int id)
-{
-    BreakPoint breakPoint = m_breakPoints.value(id);
-    if (!breakPoint.isValid())
-        return;
-
-    m_breakPoints.remove(id);
-
-    if (breakPoint.enabled)
-        foreach (Debugger *debugger, m_debuggers)
-            debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
-}
-
-void DebuggerAgent::removeAllBreakPoints()
-{
-    QList<int> ids = m_breakPoints.keys();
-    foreach (int id, ids)
-        removeBreakPoint(id);
-}
-
-void DebuggerAgent::enableBreakPoint(int id, bool onoff)
-{
-    BreakPoint &breakPoint = m_breakPoints[id];
-    if (!breakPoint.isValid() || breakPoint.enabled == onoff)
-        return;
-    breakPoint.enabled = onoff;
-
-    foreach (Debugger *debugger, m_debuggers) {
-        if (onoff)
-            debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
-        else
-            debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
-    }
-}
-
-QList<int> DebuggerAgent::breakPointIds(const QString &fileName, int lineNumber) const
-{
-    QList<int> ids;
-
-    for (QHash<int, BreakPoint>::const_iterator i = m_breakPoints.begin(), ei = m_breakPoints.end(); i != ei; ++i)
-        if (i->lineNr == lineNumber && fileName.endsWith(i->fileName))
-            ids.push_back(i.key());
-
-    return ids;
-}
-
-void DebuggerAgent::setBreakOnThrow(bool onoff)
-{
-    if (onoff != m_breakOnThrow) {
-        m_breakOnThrow = onoff;
-        foreach (Debugger *debugger, m_debuggers)
-            debugger->setBreakOnThrow(onoff);
-    }
-}
-
-DebuggerAgent::~DebuggerAgent()
-{
-    foreach (Debugger *debugger, m_debuggers)
-        debugger->detachFromAgent();
-
-    Q_ASSERT(m_debuggers.isEmpty());
 }
 
 Debugger::Job::~Job()
