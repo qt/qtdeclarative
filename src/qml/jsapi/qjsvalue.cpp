@@ -212,6 +212,18 @@ QJSValue::QJSValue(const QJSValue& other)
 }
 
 /*!
+    \fn QJSValue::QJSValue(QJSValue && other)
+
+    Move constructor. Moves from \a other into this QJSValue object.
+*/
+
+/*!
+    \fn QJSValue &operator=(QJSValue && other)
+
+    Move-assigns \a other to this QJSValue object.
+*/
+
+/*!
     Destroys this QJSValue.
 */
 QJSValue::~QJSValue()
