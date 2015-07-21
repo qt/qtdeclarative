@@ -38,8 +38,6 @@
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 
-#include "qmlinspectorconstants.h"
-
 QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QQmlInspectorService;

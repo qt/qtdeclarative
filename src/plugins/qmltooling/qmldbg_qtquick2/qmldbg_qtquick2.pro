@@ -21,7 +21,6 @@ HEADERS += \
     qquickviewinspector.h \
     ../shared/abstracttool.h \
     ../shared/abstractviewinspector.h \
-    ../shared/qmlinspectorconstants.h \
     inspecttool.h
 
 OTHER_FILES += qtquick2plugin.json

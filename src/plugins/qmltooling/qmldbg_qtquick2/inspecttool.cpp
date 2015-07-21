@@ -51,6 +51,9 @@
 namespace QmlJSDebugger {
 namespace QtQuick2 {
 
+static const double ZoomSnapDelta = 0.04;
+static const int PressAndHoldTimeout = 800;
+
 InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     AbstractTool(inspector),
     m_originalSmooth(view->contentItem()->smooth()),
@@ -60,7 +63,7 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
     m_tapEvent(false),
     m_contentItem(view->contentItem()),
     m_originalPosition(view->contentItem()->position()),
-    m_smoothScaleFactor(Constants::ZoomSnapDelta),
+    m_smoothScaleFactor(ZoomSnapDelta),
     m_minScale(0.125f),
     m_maxScale(48.0f),
     m_originalScale(view->contentItem()->scale()),
@@ -71,7 +74,7 @@ InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
 {
     //Press and Hold Timer
     m_pressAndHoldTimer.setSingleShot(true);
-    m_pressAndHoldTimer.setInterval(Constants::PressAndHoldTimeout);
+    m_pressAndHoldTimer.setInterval(PressAndHoldTimeout);
     connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
     //Timer to display selected item's name
     m_nameDisplayTimer.setSingleShot(true);
