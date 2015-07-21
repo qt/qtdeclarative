@@ -31,53 +31,21 @@
 **
 ****************************************************************************/
 
-#ifndef QDEBUGMESSAGESERVICE_P_H
-#define QDEBUGMESSAGESERVICE_P_H
+#ifndef QQMLDEBUGGERSERVICEFACTORY_H
+#define QQMLDEBUGGERSERVICEFACTORY_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmldebugservice_p.h"
-
-#include <QtCore/qlogging.h>
-#include <QtCore/qmutex.h>
+#include <private/qqmldebugservicefactory_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDebugMessageServicePrivate;
-
-class QDebugMessageService : public QQmlDebugService
+class QQmlDebuggerServiceFactory : public QQmlDebugServiceFactory
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qqmldebuggerservice.json")
 public:
-    QDebugMessageService(QObject *parent = 0);
-
-    static QDebugMessageService *instance();
-
-    void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt,
-                          const QString &buf);
-
-protected:
-    static const QString s_key;
-
-    void stateChanged(State);
-
-private:
-    friend class QQmlDebugConnector;
-
-    QtMessageHandler oldMsgHandler;
-    QQmlDebugService::State prevState;
-    QMutex initMutex;
+    QQmlDebugService *create(const QString &key);
 };
 
 QT_END_NAMESPACE
 
-#endif // QDEBUGMESSAGESERVICE_P_H
+#endif // QQMLDEBUGGERSERVICEFACTORY_H

@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4DEBUGSERVICE_P_H
-#define QV4DEBUGSERVICE_P_H
+#ifndef QV4DEBUGSERVICE_H
+#define QV4DEBUGSERVICE_H
 
 //
 //  W A R N I N G
@@ -45,8 +45,8 @@
 // We mean it.
 //
 
-#include "qqmlconfigurabledebugservice_p.h"
-#include "qqmldebugserviceinterfaces_p.h"
+#include <private/qqmlconfigurabledebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 
 #include <QtCore/QJsonValue>
@@ -86,7 +86,6 @@ public:
     explicit QV4DebugServiceImpl(QObject *parent = 0);
     ~QV4DebugServiceImpl();
 
-    static QV4DebugServiceImpl *instance();
     void engineAboutToBeAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
 
@@ -112,6 +111,8 @@ protected:
     void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
 private:
+    friend class QQmlDebuggerServiceFactory;
+
     void handleV8Request(const QByteArray &payload);
     static QByteArray packMessage(const QByteArray &command,
                                   const QByteArray &message = QByteArray());
@@ -135,4 +136,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QV4DEBUGSERVICE_P_H
+#endif // QV4DEBUGSERVICE_H

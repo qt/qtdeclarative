@@ -31,9 +31,10 @@
 **
 ****************************************************************************/
 
-#include "qqmlenginedebugservice_p.h"
+#include "qqmlenginedebugservice.h"
+#include "qqmlwatcher.h"
 
-#include "qqmldebugstatesdelegate_p.h"
+#include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <qqmlengine.h>
 #include <private/qqmlmetatype_p.h>
@@ -41,7 +42,6 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qqmlwatcher_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlexpression_p.h>
@@ -52,13 +52,6 @@
 #include <private/qmetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_GLOBAL_STATIC(QQmlEngineDebugServiceImpl, qmlEngineDebugService)
-
-QQmlEngineDebugServiceImpl *QQmlEngineDebugServiceImpl::instance()
-{
-    return qmlEngineDebugService();
-}
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
     QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(0)

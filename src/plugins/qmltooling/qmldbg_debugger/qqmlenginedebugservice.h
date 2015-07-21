@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLENGINEDEBUGSERVICE_P_H
-#define QQMLENGINEDEBUGSERVICE_P_H
+#ifndef QQMLENGINEDEBUGSERVICE_H
+#define QQMLENGINEDEBUGSERVICE_H
 
 //
 //  W A R N I N G
@@ -60,7 +60,7 @@ class QQmlWatcher;
 class QDataStream;
 class QQmlDebugStatesDelegate;
 
-class Q_QML_PRIVATE_EXPORT QQmlEngineDebugServiceImpl : public QQmlEngineDebugService
+class QQmlEngineDebugServiceImpl : public QQmlEngineDebugService
 {
     Q_OBJECT
 public:
@@ -95,8 +95,6 @@ public:
 
     void setStatesDelegate(QQmlDebugStatesDelegate *);
 
-    static QQmlEngineDebugServiceImpl *instance();
-
 protected:
     virtual void messageReceived(const QByteArray &);
 
@@ -105,6 +103,8 @@ private Q_SLOTS:
     void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
 
 private:
+    friend class QQmlDebuggerServiceFactory;
+
     void prepareDeferredObjects(QObject *);
     void buildObjectList(QDataStream &, QQmlContext *,
                          const QList<QPointer<QObject> > &instances);
@@ -124,12 +124,12 @@ private:
     QQmlWatcher *m_watch;
     QQmlDebugStatesDelegate *m_statesDelegate;
 };
-Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectData &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectData &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
-Q_QML_PRIVATE_EXPORT QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
+QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectData &);
+QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectData &);
+QDataStream &operator<<(QDataStream &, const QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
+QDataStream &operator>>(QDataStream &, QQmlEngineDebugServiceImpl::QQmlObjectProperty &);
 
 QT_END_NAMESPACE
 
-#endif // QQMLENGINEDEBUGSERVICE_P_H
+#endif // QQMLENGINEDEBUGSERVICE_H
 

@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLWATCHER_P_H
-#define QQMLWATCHER_P_H
+#ifndef QQMLWATCHER_H
+#define QQMLWATCHER_H
 
 //
 //  W A R N I N G
@@ -83,4 +83,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QQMLWATCHER_P_H
+#endif // QQMLWATCHER_H

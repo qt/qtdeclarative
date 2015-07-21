@@ -31,14 +31,12 @@
 **
 ****************************************************************************/
 
-#include "qdebugmessageservice_p.h"
+#include "qdebugmessageservice.h"
 #include <private/qqmldebugconnector_p.h>
 
 #include <QDataStream>
 
 QT_BEGIN_NAMESPACE
-
-Q_GLOBAL_STATIC(QDebugMessageService, qmlDebugMessageService)
 
 const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
 
@@ -58,11 +56,6 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
         oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
         prevState = Enabled;
     }
-}
-
-QDebugMessageService *QDebugMessageService::instance()
-{
-    return qmlDebugMessageService();
 }
 
 void QDebugMessageService::sendDebugMessage(QtMsgType type,

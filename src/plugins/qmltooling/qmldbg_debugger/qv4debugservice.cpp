@@ -31,11 +31,11 @@
 **
 ****************************************************************************/
 
-#include "qv4debugservice_p.h"
+#include "qv4debugservice.h"
 #include "qqmlengine.h"
-#include "qv4engine_p.h"
-#include "qv4function_p.h"
-#include "qqmldebugconnector_p.h"
+#include <private/qv4engine_p.h>
+#include <private/qv4function_p.h>
+#include <private/qqmldebugconnector_p.h>
 
 #include <private/qv8engine_p.h>
 
@@ -57,8 +57,6 @@ const char *const V4_PAUSE = "interrupt";
 #endif
 
 QT_BEGIN_NAMESPACE
-
-Q_GLOBAL_STATIC(QV4DebugServiceImpl, v4ServiceInstance)
 
 class V8CommandHandler;
 class UnknownV8CommandHandler;
@@ -855,11 +853,6 @@ QV4DebugServiceImpl::~QV4DebugServiceImpl()
     qDeleteAll(handlers);
 }
 
-QV4DebugServiceImpl *QV4DebugServiceImpl::instance()
-{
-    return v4ServiceInstance();
-}
-
 void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
@@ -872,7 +865,6 @@ void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
                 debuggerMap.insert(debuggerIndex++, debugger);
                 debuggerAgent.addDebugger(debugger);
                 debuggerAgent.moveToThread(server->thread());
-                moveToThread(server->thread());
             }
         }
     }

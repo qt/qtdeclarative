@@ -31,15 +31,15 @@
 **
 ****************************************************************************/
 
-#include "qqmlwatcher_p.h"
+#include "qqmlwatcher.h"
 
 #include "qqmlexpression.h"
 #include "qqmlcontext.h"
 #include "qqml.h"
 
 #include <private/qqmldebugservice_p.h>
-#include "qqmlproperty_p.h"
-#include "qqmlvaluetype_p.h"
+#include <private/qqmlproperty_p.h>
+#include <private/qqmlvaluetype_p.h>
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>
