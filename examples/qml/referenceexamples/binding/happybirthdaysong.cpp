@@ -45,7 +45,7 @@ HappyBirthdaySong::HappyBirthdaySong(QObject *parent)
 {
     setName(QString());
     QTimer *timer = new QTimer(this);
-    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(advance()));
+    QObject::connect(timer, &QTimer::timeout, this, &HappyBirthdaySong::advance);
     timer->start(1000);
 }
 

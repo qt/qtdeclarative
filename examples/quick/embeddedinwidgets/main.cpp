@@ -63,10 +63,10 @@ MainWindow::MainWindow()
     QVBoxLayout *layout = new QVBoxLayout(centralWidget);
 
     m_quickView->setResizeMode(QQuickView::SizeRootObjectToView);
-    connect(m_quickView, SIGNAL(statusChanged(QQuickView::Status)),
-            this, SLOT(quickViewStatusChanged(QQuickView::Status)));
-    connect(m_quickView, SIGNAL(sceneGraphError(QQuickWindow::SceneGraphError,QString)),
-            this, SLOT(sceneGraphError(QQuickWindow::SceneGraphError,QString)));
+    connect(m_quickView, &QQuickView::statusChanged,
+            this, &MainWindow::quickViewStatusChanged);
+    connect(m_quickView, &QQuickWindow::sceneGraphError,
+            this, &MainWindow::sceneGraphError);
     m_quickView->setSource(QUrl(QStringLiteral("qrc:///embeddedinwidgets/main.qml")));
 
     QWidget *container = QWidget::createWindowContainer(m_quickView);
@@ -79,8 +79,7 @@ MainWindow::MainWindow()
     setCentralWidget(centralWidget);
 
     QMenu *fileMenu = menuBar()->addMenu(tr("File"));
-    QAction *quitAction = fileMenu->addAction(tr("Quit"));
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    fileMenu->addAction(tr("Quit"), qApp, &QCoreApplication::quit);
 }
 
 void MainWindow::quickViewStatusChanged(QQuickView::Status status)

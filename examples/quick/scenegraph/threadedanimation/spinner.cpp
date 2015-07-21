@@ -49,8 +49,8 @@ public:
         , m_spinning(false)
         , m_window(window)
     {
-        connect(window, SIGNAL(beforeRendering()), this, SLOT(maybeRotate()));
-        connect(window, SIGNAL(frameSwapped()), this, SLOT(maybeUpdate()));
+        connect(window, &QQuickWindow::beforeRendering, this, &SpinnerNode::maybeRotate);
+        connect(window, &QQuickWindow::frameSwapped, this, &SpinnerNode::maybeUpdate);
 
         QImage image(":/scenegraph/threadedanimation/spinner.png");
         m_texture = window->createTextureFromImage(image);

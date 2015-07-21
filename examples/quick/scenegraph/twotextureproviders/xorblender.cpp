@@ -151,8 +151,8 @@ public:
 
         // If this node is used as in a shader effect source, we need to propegate
         // changes that will occur in this node outwards.
-        connect(m_provider1, SIGNAL(textureChanged()), this, SLOT(textureChange()), Qt::DirectConnection);
-        connect(m_provider2, SIGNAL(textureChanged()), this, SLOT(textureChange()), Qt::DirectConnection);
+        connect(m_provider1.data(), &QSGTextureProvider::textureChanged, this, &XorNode::textureChange, Qt::DirectConnection);
+        connect(m_provider2.data(), &QSGTextureProvider::textureChanged, this, &XorNode::textureChange, Qt::DirectConnection);
     }
 
     void preprocess() {

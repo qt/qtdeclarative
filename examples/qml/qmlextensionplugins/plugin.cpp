@@ -110,7 +110,7 @@ public:
         if (++instances == 1) {
             if (!timer)
                 timer = new MinuteTimer(QCoreApplication::instance());
-            connect(timer, SIGNAL(timeChanged()), this, SIGNAL(timeChanged()));
+            connect(timer, &MinuteTimer::timeChanged, this, &TimeModel::timeChanged);
             timer->start();
         }
     }

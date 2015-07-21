@@ -78,10 +78,10 @@ MainWindow::MainWindow()
 
     QUrl source("qrc:quickwidget/rotatingsquare.qml");
 
-    connect(m_quickWidget, SIGNAL(statusChanged(QQuickWidget::Status)),
-            this, SLOT(quickWidgetStatusChanged(QQuickWidget::Status)));
-    connect(m_quickWidget, SIGNAL(sceneGraphError(QQuickWindow::SceneGraphError,QString)),
-            this, SLOT(sceneGraphError(QQuickWindow::SceneGraphError,QString)));
+    connect(m_quickWidget, &QQuickWidget::statusChanged,
+            this, &MainWindow::quickWidgetStatusChanged);
+    connect(m_quickWidget, &QQuickWidget::sceneGraphError,
+            this, &MainWindow::sceneGraphError);
     m_quickWidget->resize(300,300);
     m_quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView );
     m_quickWidget->setSource(source);
@@ -91,12 +91,9 @@ MainWindow::MainWindow()
     setCentralWidget(centralWidget);
 
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    QAction *grabAction = fileMenu->addAction(tr("Grab to image"));
-    connect(grabAction, SIGNAL(triggered()), this, SLOT(grabToFile()));
-    QAction *renderAction = fileMenu->addAction(tr("Render to pixmap"));
-    connect(renderAction, SIGNAL(triggered()), this, SLOT(renderToFile()));
-    QAction *quitAction = fileMenu->addAction(tr("Quit"));
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    fileMenu->addAction(tr("Grab to imFage"), this, &MainWindow::grabToFile);
+    fileMenu->addAction(tr("Render to pixmap"), this, &MainWindow::renderToFile);
+    fileMenu->addAction(tr("Quit"), qApp, &QCoreApplication::quit);
 }
 
 void MainWindow::quickWidgetStatusChanged(QQuickWidget::Status status)

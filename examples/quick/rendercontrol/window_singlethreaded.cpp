@@ -206,7 +206,7 @@ void WindowSingleThreaded::requestUpdate()
 
 void WindowSingleThreaded::run()
 {
-    disconnect(m_qmlComponent, SIGNAL(statusChanged(QQmlComponent::Status)), this, SLOT(run()));
+    disconnect(m_qmlComponent, &QQmlComponent::statusChanged, this, &WindowSingleThreaded::run);
 
     if (m_qmlComponent->isError()) {
         QList<QQmlError> errorList = m_qmlComponent->errors();

@@ -353,7 +353,7 @@ void WindowMultiThreaded::polishSyncAndRender()
 
 void WindowMultiThreaded::run()
 {
-    disconnect(m_qmlComponent, SIGNAL(statusChanged(QQmlComponent::Status)), this, SLOT(run()));
+    disconnect(m_qmlComponent, &QQmlComponent::statusChanged, this, &WindowMultiThreaded::run);
 
     if (m_qmlComponent->isError()) {
         QList<QQmlError> errorList = m_qmlComponent->errors();
