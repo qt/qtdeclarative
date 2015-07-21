@@ -46,8 +46,8 @@
 // We mean it.
 //
 
-#include "qqmldebugservice_p.h"
-#include "qqmldebugconnector_p.h"
+#include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugconnector_p.h>
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE

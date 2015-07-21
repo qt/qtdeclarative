@@ -13,6 +13,7 @@ SOURCES += \
     $$PWD/qv4profileradapter.cpp
 
 HEADERS += \
+    $$PWD/../shared/qqmlconfigurabledebugservice.h \
     $$PWD/qqmlenginecontrolservice.h \
     $$PWD/qqmlprofileradapter.h \
     $$PWD/qqmlprofilerservice.h \

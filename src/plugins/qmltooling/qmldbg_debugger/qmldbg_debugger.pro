@@ -13,6 +13,7 @@ SOURCES += \
     $$PWD/qv4debugservice.cpp
 
 HEADERS += \
+    $$PWD/../shared/qqmlconfigurabledebugservice.h \
     $$PWD/qdebugmessageservice.h \
     $$PWD/qqmldebuggerservicefactory.h \
     $$PWD/qqmlenginedebugservice.h \
