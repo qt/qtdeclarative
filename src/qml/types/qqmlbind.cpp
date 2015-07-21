@@ -70,65 +70,56 @@ public:
     \instantiates QQmlBind
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
-    \brief Enables the arbitrary creation of property bindings
+    \brief Enables the arbitrary creation of property bindings.
 
-    \section1 Binding to an Inaccessible Property
+    In QML, property bindings result in a dependency between the properties of
+    different objects.
 
-    Sometimes it is necessary to bind to a property of an object that wasn't
-    directly instantiated by QML - generally a property of a class exported
-    to QML by C++. In these cases, regular property binding doesn't work. Binding
-    allows you to bind any value to any property.
+    \section1 Binding to an inaccessible property
 
-    For example, imagine a C++ application that maps an "app.enteredText"
-    property into QML. You could use Binding to update the enteredText property
-    like this.
+    Sometimes it is necessary to bind an object's property to
+    that of another object that isn't directly instantiated by QML, such as a
+    property of a class exported to QML by C++. You can use the Binding type
+    to establish this dependency; binding any value to any object's property.
+
+    For example, in a C++ application that maps an "app.enteredText" property
+    into QML, you can use Binding to update the enteredText property.
+
     \code
     TextEdit { id: myTextField; text: "Please type here..." }
     Binding { target: app; property: "enteredText"; value: myTextField.text }
     \endcode
-    Whenever the text in the TextEdit is updated, the C++ property will be
-    updated also.
 
-    \section1 "Single-branch" conditional binding
+    When \c{text} changes, the C++ property \c{enteredText} will update
+    automatically.
 
-    In some circumstances you may want to control the value of a property
-    only when a certain condition is true (and relinquish control in all
-    other circumstances). This often isn't possible to accomplish with a direct
-    binding, as you need to supply values for all possible branches.
+    \section1 Conditional bindings
 
-    \code
+    In some cases you may want to modify the value of a property when a certain
+    condition is met but leave it unmodified otherwise. Often, it's not possible
+    to do this with direct bindings, as you have to supply values for all
+    possible branches.
+
+    For example, the code snippet below results in a warning whenever you
+    release the mouse. This is because the value of the binding is undefined
+    when the mouse isn't pressed.
+
+    \qml
     // produces warning: "Unable to assign [undefined] to double value"
     value: if (mouse.pressed) mouse.mouseX
-    \endcode
+    \endqml
 
-    The above example will produce a warning whenever we release the mouse, as the value
-    of the binding is undefined when the mouse isn't pressed. We can use the Binding
-    type to rewrite the above code and avoid the warning.
+    The Binding type can prevent this warning.
 
-    \code
+    \qml
     Binding on value {
         when: mouse.pressed
         value: mouse.mouseX
     }
-    \endcode
-
-    The Binding type will also restore any previously set direct bindings on
-    the property. In that sense, it functions much like a simplified State.
-
-    \qml
-    // this is equivalent to the above Binding
-    State {
-        name: "pressed"
-        when: mouse.pressed
-        PropertyChanges {
-            target: obj
-            value: mouse.mouseX
-        }
-    }
     \endqml
 
-    If the binding target or binding property is changed, the bound value is
-    immediately pushed onto the new target.
+    The Binding type restores any previously set direct bindings on the
+    property.
 
     \sa {Qt QML}
 */
