@@ -65,7 +65,7 @@ void QQuickDesignerSupportPropertyChanges::removeProperty(QObject *propertyChang
     if (!propertyChange)
         return;
 
-    propertyChange->removeProperty(QString::fromLatin1(propertyName));
+    propertyChange->removeProperty(QString::fromUtf8(propertyName));
 }
 
 QVariant QQuickDesignerSupportPropertyChanges::getProperty(QObject *propertyChanges,
@@ -76,7 +76,7 @@ QVariant QQuickDesignerSupportPropertyChanges::getProperty(QObject *propertyChan
     if (!propertyChange)
         return QVariant();
 
-    return propertyChange->property(QString::fromLatin1(propertyName));
+    return propertyChange->property(QString::fromUtf8(propertyName));
 }
 
 void QQuickDesignerSupportPropertyChanges::changeValue(QObject *propertyChanges,
