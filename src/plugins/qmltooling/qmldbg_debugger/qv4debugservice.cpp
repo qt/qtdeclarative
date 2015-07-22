@@ -506,7 +506,9 @@ public:
         }
 
         // do it:
-        debugService->debuggerAgent.firstDebugger()->gatherSources(requestSequenceNr());
+        QV4::Debugging::Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        GatherSourcesJob job(debugger->engine(), requestSequenceNr());
+        debugger->runInEngine(&job);
 
         // response will be send by
     }
@@ -555,10 +557,13 @@ public:
         QV4::Debugging::Debugger *debugger = debugService->debuggerAgent.firstDebugger();
         Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
 
-        QV4::Debugging::DataCollector *collector = debugService->collector();
-        QV4::Debugging::DataCollector::Refs refs;
-        QV4::Debugging::RefHolder holder(collector, &refs);
-        debugger->evaluateExpression(frame, expression, collector);
+        QV4DataCollector *collector = debugService->collector();
+        QV4DataCollector::Refs refs;
+        RefHolder holder(collector, &refs);
+        Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
+
+        ExpressionEvalJob job(debugger->engine(), frame, expression, collector);
+        debugger->runInEngine(&job);
 
         Q_ASSERT(refs.size() == 1);
 
@@ -762,13 +767,13 @@ void QV4DebugServiceImpl::send(QJsonObject v8Payload)
 
 void QV4DebugServiceImpl::clearHandles(QV4::ExecutionEngine *engine)
 {
-    theCollector.reset(new QV4::Debugging::DataCollector(engine));
+    theCollector.reset(new QV4DataCollector(engine));
 }
 
 QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                                         QV4::Debugging::Debugger *debugger)
 {
-    QV4::Debugging::DataCollector::Ref ref;
+    QV4DataCollector::Ref ref;
 
     QJsonObject frame;
     frame[QLatin1String("index")] = frameNr;
@@ -783,24 +788,28 @@ QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, i
     if (stackFrame.column >= 0)
         frame[QLatin1String("column")] = stackFrame.column;
 
-    {
-        QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
-        if (debugger->collectThisInContext(theCollector.data(), frameNr))
-            frame[QLatin1String("receiver")] = toRef(collectedRefs.last());
-    }
-
     QJsonArray scopes;
-    // Only type and index are used by Qt Creator, so we keep it easy:
-    QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
-    for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
-        int type = encodeScopeType(scopeTypes[i]);
-        if (type == -1)
-            continue;
+    if (debugger->state() == QV4::Debugging::Debugger::Paused) {
+        RefHolder holder(theCollector.data(), &collectedRefs);
+        bool foundThis = false;
+        ThisCollectJob job(debugger->engine(), theCollector.data(), frameNr, &foundThis);
+        debugger->runInEngine(&job);
+        if (foundThis)
+            frame[QLatin1String("receiver")] = toRef(collectedRefs.last());
 
-        QJsonObject scope;
-        scope[QLatin1String("index")] = i;
-        scope[QLatin1String("type")] = type;
-        scopes.push_back(scope);
+        // Only type and index are used by Qt Creator, so we keep it easy:
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
+                QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
+        for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
+            int type = encodeScopeType(scopeTypes[i]);
+            if (type == -1)
+                continue;
+
+            QJsonObject scope;
+            scope[QLatin1String("index")] = i;
+            scope[QLatin1String("type")] = type;
+            scopes.push_back(scope);
+        }
     }
     frame[QLatin1String("scopes")] = scopes;
 
@@ -835,11 +844,16 @@ QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr,
     QJsonObject scope;
 
     QJsonObject object;
-    QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
+    RefHolder holder(theCollector.data(), &collectedRefs);
     theCollector->collectScope(&object, debugger, frameNr, scopeNr);
 
-    QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
-    scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
+    if (debugger->state() == QV4::Debugging::Debugger::Paused) {
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
+                QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
+        scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
+    } else {
+        scope[QLatin1String("type")] = -1;
+    }
     scope[QLatin1String("index")] = scopeNr;
     scope[QLatin1String("frameIndex")] = frameNr;
     scope[QLatin1String("object")] = object;
@@ -847,9 +861,9 @@ QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr,
     return scope;
 }
 
-QJsonValue QV4DebugServiceImpl::lookup(QV4::Debugging::DataCollector::Ref refId)
+QJsonValue QV4DebugServiceImpl::lookup(QV4DataCollector::Ref refId)
 {
-    QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
+    RefHolder holder(theCollector.data(), &collectedRefs);
     return theCollector->lookupRef(refId);
 }
 
@@ -858,7 +872,7 @@ QJsonArray QV4DebugServiceImpl::buildRefs()
     QJsonArray refs;
     std::sort(collectedRefs.begin(), collectedRefs.end());
     for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
-        QV4::Debugging::DataCollector::Ref ref = collectedRefs.at(i);
+        QV4DataCollector::Ref ref = collectedRefs.at(i);
         if (i > 0 && ref == collectedRefs.at(i - 1))
             continue;
         refs.append(lookup(ref));
@@ -868,14 +882,14 @@ QJsonArray QV4DebugServiceImpl::buildRefs()
     return refs;
 }
 
-QJsonValue QV4DebugServiceImpl::toRef(QV4::Debugging::DataCollector::Ref ref)
+QJsonValue QV4DebugServiceImpl::toRef(QV4DataCollector::Ref ref)
 {
     QJsonObject dict;
     dict.insert(QStringLiteral("ref"), qint64(ref));
     return dict;
 }
 
-QV4::Debugging::DataCollector *QV4DebugServiceImpl::collector() const
+QV4DataCollector *QV4DebugServiceImpl::collector() const
 {
     return theCollector.data();
 }

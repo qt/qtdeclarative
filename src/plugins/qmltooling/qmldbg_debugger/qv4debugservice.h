@@ -47,6 +47,7 @@
 
 #include "qqmlconfigurabledebugservice.h"
 #include "qv4debuggeragent.h"
+#include "qv4datacollector.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 
@@ -77,8 +78,8 @@ public:
 
     QJsonObject buildScope(int frameNr, int scopeNr, QV4::Debugging::Debugger *debugger);
     QJsonArray buildRefs();
-    QJsonValue lookup(QV4::Debugging::DataCollector::Ref refId);
-    QJsonValue toRef(QV4::Debugging::DataCollector::Ref ref);
+    QJsonValue lookup(QV4DataCollector::Ref refId);
+    QJsonValue toRef(QV4DataCollector::Ref ref);
 
     QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                            QV4::Debugging::Debugger *debugger);
@@ -87,7 +88,7 @@ public:
 
     void clearHandles(QV4::ExecutionEngine *engine);
 
-    QV4::Debugging::DataCollector *collector() const;
+    QV4DataCollector *collector() const;
     QV4DebuggerAgent debuggerAgent;
 
 protected:
@@ -109,9 +110,9 @@ private:
     static int debuggerIndex;
     static int sequence;
     const int version;
-    QV4::Debugging::DataCollector::Refs collectedRefs;
+    QV4DataCollector::Refs collectedRefs;
 
-    QScopedPointer<QV4::Debugging::DataCollector> theCollector;
+    QScopedPointer<QV4DataCollector> theCollector;
     int theSelectedFrame;
 
     void addHandler(V8CommandHandler* handler);

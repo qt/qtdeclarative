@@ -181,7 +181,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     }
 };
 
-struct CallContext : public ExecutionContext
+struct Q_QML_EXPORT CallContext : public ExecutionContext
 {
     V4_MANAGED(CallContext, ExecutionContext)
 

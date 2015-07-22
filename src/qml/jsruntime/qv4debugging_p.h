@@ -79,71 +79,29 @@ inline bool operator==(const DebuggerBreakPoint &a, const DebuggerBreakPoint &b)
 
 typedef QHash<DebuggerBreakPoint, QString> BreakPoints;
 
-class Q_QML_PRIVATE_EXPORT DataCollector
-{
-public:
-    typedef uint Ref;
-    typedef QVector<uint> Refs;
-
-    DataCollector(QV4::ExecutionEngine *engine);
-    ~DataCollector();
-
-    void collect(const QV4::ScopedValue &value);
-
-    QJsonObject lookupRef(Ref ref);
-
-    Ref addFunctionRef(const QString &functionName);
-    Ref addScriptRef(const QString &scriptName);
-
-    void collectScope(QJsonObject *dict, QV4::Debugging::Debugger *debugger, int frameNr,
-                      int scopeNr);
-
-    QV4::ExecutionEngine *engine() const { return m_engine; }
-
-private:
-    friend class RefHolder;
-
-    Ref addRef(QV4::Value value, bool deduplicate = true);
-    QV4::ReturnedValue getValue(Ref ref);
-    bool lookupSpecialRef(Ref ref, QJsonObject *dict);
-
-    QJsonArray collectProperties(QV4::Object *object);
-    QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
-
-    QV4::ExecutionEngine *m_engine;
-    Refs *m_collectedRefs;
-    QV4::PersistentValue values;
-    typedef QHash<Ref, QJsonObject> SpecialRefs;
-    SpecialRefs specialRefs;
-};
-
-class RefHolder {
-public:
-    RefHolder(DataCollector *collector, DataCollector::Refs *target) :
-        m_collector(collector), m_previousRefs(collector->m_collectedRefs)
-    {
-        m_collector->m_collectedRefs = target;
-    }
-
-    ~RefHolder()
-    {
-        std::swap(m_collector->m_collectedRefs, m_previousRefs);
-    }
-
-private:
-    DataCollector *m_collector;
-    DataCollector::Refs *m_previousRefs;
-};
-
 class Q_QML_EXPORT Debugger : public QObject
 {
     Q_OBJECT
 public:
-    class Job
+    class Q_QML_EXPORT Job
     {
     public:
         virtual ~Job() = 0;
         virtual void run() = 0;
+    };
+
+    class Q_QML_EXPORT JavaScriptJob: public Job
+    {
+        QV4::ExecutionEngine *engine;
+        int frameNr;
+        const QString &script;
+
+    public:
+        JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
+        void run();
+
+    protected:
+        virtual void handleResult(QV4::ScopedValue &result) = 0;
     };
 
     enum State {
@@ -165,7 +123,6 @@ public:
     ExecutionEngine *engine() const
     { return m_engine; }
 
-    void gatherSources(int requestSequenceNr);
     void pause();
     void resume(Speed speed);
 
@@ -189,16 +146,10 @@ public:
     }
 
     QVector<StackFrame> stackTrace(int frameLimit = -1) const;
-    void collectArgumentsInContext(DataCollector *collector, QStringList *names, int frameNr = 0,
-                                   int scopeNr = 0);
-    void collectLocalsInContext(DataCollector *collector, QStringList *names, int frameNr = 0,
-                                int scopeNr = 0);
-    bool collectThisInContext(DataCollector *collector, int frame = 0);
-    bool collectThrownValue(DataCollector *collector);
     QVector<Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
-    void evaluateExpression(int frameNr, const QString &expression,
-                            DataCollector *resultsCollector);
+    Function *getFunction() const;
+    void runInEngine(Job *job);
 
 public: // compile-time interface
     void maybeBreakAtInstruction();
@@ -213,14 +164,9 @@ signals:
     void debuggerPaused(QV4::Debugging::Debugger *self, QV4::Debugging::PauseReason reason);
 
 private:
-    Function *getFunction() const;
-
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
-
     bool reallyHitTheBreakPoint(const QString &filename, int linenr);
-
-    void runInEngine(Job *job);
     void runInEngine_havingLock(Debugger::Job *job);
 
 private:

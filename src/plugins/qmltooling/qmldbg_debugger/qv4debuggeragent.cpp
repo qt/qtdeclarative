@@ -33,6 +33,7 @@
 
 #include "qv4debuggeragent.h"
 #include "qv4debugservice.h"
+#include "qv4datacollector.h"
 
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>

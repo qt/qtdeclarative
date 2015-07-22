@@ -32,6 +32,8 @@
 ****************************************************************************/
 #include <QtTest/QtTest>
 
+#include "qv4datacollector.h"
+
 #include <QJSEngine>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -97,14 +99,14 @@ class TestAgent : public QObject
 {
     Q_OBJECT
 public:
-    typedef QV4::Debugging::DataCollector::Refs Refs;
-    typedef QV4::Debugging::DataCollector::Ref Ref;
+    typedef QV4DataCollector::Refs Refs;
+    typedef QV4DataCollector::Ref Ref;
     struct NamedRefs {
-        NamedRefs(DataCollector *collector = 0): collector(collector) {}
+        NamedRefs(QV4DataCollector *collector = 0): collector(collector) {}
 
         QStringList names;
         Refs refs;
-        DataCollector *collector;
+        QV4DataCollector *collector;
 
         int size() const {
             Q_ASSERT(names.size() == refs.size());
@@ -164,13 +166,14 @@ public slots:
         m_pauseReason = reason;
         m_statesWhenPaused << debugger->currentExecutionState();
 
-        {
+        if (debugger->state() == QV4::Debugging::Debugger::Paused &&
+                debugger->engine()->hasException) {
             Refs refs;
-            QV4::Debugging::RefHolder holder(&collector, &refs);
-            if (debugger->collectThrownValue(&collector)) {
-                Q_ASSERT(refs.size() > 0);
-                m_thrownValue = refs.first();
-            }
+            RefHolder holder(&collector, &refs);
+            ExceptionCollectJob job(debugger->engine(), &collector);
+            debugger->runInEngine(&job);
+            Q_ASSERT(refs.size() > 0);
+            m_thrownValue = refs.first();
         }
 
         foreach (const TestBreakPoint &bp, m_breakPointsToAddWhenPaused)
@@ -180,10 +183,13 @@ public slots:
         m_stackTrace = debugger->stackTrace();
 
         while (!m_expressionRequests.isEmpty()) {
+            Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
             ExpressionRequest request = m_expressionRequests.takeFirst();
             m_expressionResults << Refs();
             RefHolder holder(&collector, &m_expressionResults.last());
-            debugger->evaluateExpression(request.frameNr, request.expression, &collector);
+            ExpressionEvalJob job(debugger->engine(), request.frameNr, request.expression,
+                                  &collector);
+            debugger->runInEngine(&job);
         }
 
         if (m_captureContextInfo)
@@ -207,11 +213,15 @@ public:
         for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
             m_capturedArguments.append(NamedRefs(&collector));
             RefHolder argHolder(&collector, &m_capturedArguments.last().refs);
-            debugger->collectArgumentsInContext(&collector, &m_capturedArguments.last().names, i);
+            ArgumentCollectJob argumentsJob(debugger->engine(), &collector,
+                                            &m_capturedArguments.last().names, i, 0);
+            debugger->runInEngine(&argumentsJob);
 
             m_capturedLocals.append(NamedRefs(&collector));
             RefHolder localHolder(&collector, &m_capturedLocals.last().refs);
-            debugger->collectLocalsInContext(&collector, &m_capturedLocals.last().names, i);
+            LocalCollectJob localsJob(debugger->engine(), &collector,
+                                      &m_capturedLocals.last().names, i, 0);
+            debugger->runInEngine(&localsJob);
         }
     }
 
@@ -234,7 +244,7 @@ public:
     QVector<NamedRefs> m_capturedArguments;
     QVector<NamedRefs> m_capturedLocals;
     qint64 m_thrownValue;
-    QV4::Debugging::DataCollector collector;
+    QV4DataCollector collector;
 
     struct ExpressionRequest {
         QString expression;
