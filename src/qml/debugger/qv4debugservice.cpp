@@ -371,7 +371,7 @@ public:
         QByteArray responseData = doc.toJson(QJsonDocument::Indented);
 #endif
 
-        TRACE_PROTOCOL(qDebug() << "sending response for:" << responseData << endl);
+        TRACE_PROTOCOL(qDebug() << "sending response for:" << responseData.constData() << endl);
 
         q_func()->sendMessage(packMessage("v8message", responseData));
     }
@@ -1154,7 +1154,7 @@ void QV4DebugService::messageReceived(const QByteArray &message)
         } else if (type == "v8request") {
             handleV8Request(payload);
         } else if (type == V4_DISCONNECT) {
-            TRACE_PROTOCOL(qDebug() << "... payload:" << payload);
+            TRACE_PROTOCOL(qDebug() << "... payload:" << payload.constData());
             handleV8Request(payload);
         } else {
             sendSomethingToSomebody(type, 0);
@@ -1239,7 +1239,7 @@ void QV4DebugService::handleV8Request(const QByteArray &payload)
 {
     Q_D(QV4DebugService);
 
-    TRACE_PROTOCOL(qDebug() << "v8request, payload:" << payload);
+    TRACE_PROTOCOL(qDebug() << "v8request, payload:" << payload.constData());
 
     QJsonDocument request = QJsonDocument::fromJson(payload);
     QJsonObject o = request.object();
