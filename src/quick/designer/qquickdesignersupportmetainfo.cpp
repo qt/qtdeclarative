@@ -47,7 +47,7 @@ bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArr
 
     while (metaObject) {
          QQmlType *qmlType =  QQmlMetaType::qmlType(metaObject);
-         if (qmlType && qmlType->qmlTypeName() == superTypeName) // ignore version numbers
+         if (qmlType && qmlType->qmlTypeName() == QLatin1String(superTypeName)) // ignore version numbers
              return true;
 
          if (metaObject->className() == superTypeName)

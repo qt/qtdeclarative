@@ -88,7 +88,7 @@ void QQuickDesignerSupportPropertyChanges::changeValue(QObject *propertyChanges,
     if (!propertyChange)
         return;
 
-    propertyChange->changeValue(propertyName, value);
+    propertyChange->changeValue(QString::fromUtf8(propertyName), value);
 }
 
 void QQuickDesignerSupportPropertyChanges::changeExpression(QObject *propertyChanges,
@@ -100,7 +100,7 @@ void QQuickDesignerSupportPropertyChanges::changeExpression(QObject *propertyCha
     if (!propertyChange)
         return;
 
-    propertyChange->changeExpression(propertyName, expression);
+    propertyChange->changeExpression(QString::fromUtf8(propertyName), expression);
 }
 
 QObject *QQuickDesignerSupportPropertyChanges::stateObject(QObject *propertyChanges)

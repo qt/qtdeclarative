@@ -143,7 +143,7 @@ void QQuickDesignerCustomObjectData::populateResetHashes()
             QQuickDesignerSupportProperties::propertyNameListForWritableProperties(object());
 
     Q_FOREACH (const QQuickDesignerSupport::PropertyName &propertyName, propertyNameList) {
-        QQmlProperty property(object(), propertyName, QQmlEngine::contextForObject(object()));
+        QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
         QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));
 
@@ -167,7 +167,7 @@ QVariant QQuickDesignerCustomObjectData::getResetValue(const QQuickDesignerSuppo
 
 void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const QQuickDesignerSupport::PropertyName &propertyName)
 {
-    QQmlProperty property(object(), propertyName, context);
+    QQmlProperty property(object(), QString::fromUtf8(propertyName), context);
 
     if (!property.isValid())
         return;
@@ -224,7 +224,7 @@ bool QQuickDesignerCustomObjectData::hasBindingForProperty(QQmlContext *context,
     if (QQuickDesignerSupportProperties::isPropertyBlackListed(propertyName))
         return false;
 
-    QQmlProperty property(object(), propertyName, context);
+    QQmlProperty property(object(), QString::fromUtf8(propertyName), context);
 
     bool hasBinding = QQmlPropertyPrivate::binding(property);
 
@@ -241,7 +241,7 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
                                                   const QQuickDesignerSupport::PropertyName &propertyName,
                                                   const QString &expression)
 {
-    QQmlProperty property(object(), propertyName, context);
+    QQmlProperty property(object(), QString::fromUtf8(propertyName), context);
 
     if (!property.isValid())
         return;
@@ -256,7 +256,7 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
         binding->update();
         if (binding->hasError()) {
             if (property.property().userType() == QVariant::String)
-                property.write(QVariant(QString("#%1#").arg(expression)));
+                property.write(QVariant(QLatin1Char('#') + expression + QLatin1Char('#')));
         }
 
     } else {

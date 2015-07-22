@@ -59,8 +59,8 @@ static void stopAnimation(QObject *object)
     QQuickAbstractAnimation *animation = qobject_cast<QQuickAbstractAnimation*>(object);
     QQmlTimer *timer = qobject_cast<QQmlTimer*>(object);
     if (transition) {
-       transition->setFromState("");
-       transition->setToState("");
+       transition->setFromState(QString());
+       transition->setToState(QString());
     } else if (animation) {
 //        QQuickScriptAction *scriptAimation = qobject_cast<QQuickScriptAction*>(animation);
 //        if (scriptAimation) FIXME
@@ -90,7 +90,7 @@ static void allSubObjects(QObject *object, QObjectList &objectList)
         if (metaProperty.isReadable()
                 && metaProperty.isWritable()
                 && QQmlMetaType::isQObject(metaProperty.userType())) {
-            if (metaProperty.name() != QLatin1String("parent")) {
+            if (qstrcmp(metaProperty.name(), "parent")) {
                 QObject *propertyObject = QQmlMetaType::toQObject(metaProperty.read(object));
                 allSubObjects(propertyObject, objectList);
             }
@@ -163,7 +163,7 @@ static bool isWindow(QObject *object) {
 
 static QQmlType *getQmlType(const QString &typeName, int majorNumber, int minorNumber)
 {
-     return QQmlMetaType::qmlType(typeName.toUtf8(), majorNumber, minorNumber);
+     return QQmlMetaType::qmlType(typeName, majorNumber, minorNumber);
 }
 
 static bool isCrashingType(QQmlType *type)
@@ -220,7 +220,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
 
     if (!object) {
         qWarning() << "QuickDesigner: Cannot create an object of type"
-                   << QString("%1 %2,%3").arg(typeName).arg(majorNumber).arg(minorNumber)
+                   << QString::fromLatin1("%1 %2,%3").arg(typeName).arg(majorNumber).arg(minorNumber)
                    << "- type isn't known to declarative meta type system";
     }
 
@@ -292,8 +292,9 @@ void QQuickDesignerSupportItems::disableTransition(QObject *object)
 {
     QQuickTransition *transition = qobject_cast<QQuickTransition*>(object);
     Q_ASSERT(transition);
-    transition->setToState("invalidState");
-    transition->setFromState("invalidState");
+    const QString invalidState = QLatin1String("invalidState");
+    transition->setToState(invalidState);
+    transition->setFromState(invalidState);
 }
 
 void QQuickDesignerSupportItems::disableBehaivour(QObject *object)

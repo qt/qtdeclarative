@@ -47,7 +47,7 @@ bool QQuickDesignerSupportStates::isStateActive(QObject *object, QQmlContext *co
 
     QQuickStateGroup *stateGroup = stateObject->stateGroup();
 
-    QQmlProperty property(object, "name", context);
+    QQmlProperty property(object, QLatin1String("name"), context);
 
     return stateObject && stateGroup && stateGroup->state() == property.read();
 }
@@ -61,7 +61,7 @@ void QQuickDesignerSupportStates::activateState(QObject *object, QQmlContext *co
 
     QQuickStateGroup *stateGroup = stateObject->stateGroup();
 
-    QQmlProperty property(object, "name", context);
+    QQmlProperty property(object, QLatin1String("name"), context);
 
     stateGroup->setState(property.read().toString());
 }
