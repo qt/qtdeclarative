@@ -76,14 +76,24 @@ QQuickFramePrivate::QQuickFramePrivate() : contentWidth(0), contentHeight(0), fr
 {
 }
 
+void QQuickFramePrivate::init()
+{
+    Q_Q(QQuickFrame);
+    q->setFlag(QQuickItem::ItemIsFocusScope);
+    q->setAcceptedMouseButtons(Qt::AllButtons);
+
+}
+
 QQuickFrame::QQuickFrame(QQuickItem *parent) :
     QQuickControl(*(new QQuickFramePrivate), parent)
 {
+    d_func()->init();
 }
 
 QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
     QQuickControl(dd, parent)
 {
+    d_func()->init();
 }
 
 /*!

@@ -52,10 +52,16 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickFrame;
+
 class Q_LABSTEMPLATES_EXPORT QQuickFramePrivate : public QQuickControlPrivate
 {
+    Q_DECLARE_PUBLIC(QQuickFrame)
+
 public:
     QQuickFramePrivate();
+
+    void init();
 
     qreal contentWidth;
     qreal contentHeight;
