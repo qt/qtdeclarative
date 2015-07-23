@@ -461,6 +461,12 @@ public:
     void dumpComposite(QQmlEngine *engine, const QQmlType *compositeType, QSet<QByteArray> &defaultReachableNames)
     {
         QQmlComponent e(engine, compositeType->sourceUrl());
+        if (!e.isReady()) {
+            std::cerr << "WARNING: skipping module " << compositeType->elementName().toStdString()
+                      << std::endl << e.errorString().toStdString() << std::endl;
+            return;
+        }
+
         QObject *object = e.create();
 
         if (!object)
@@ -899,6 +905,7 @@ void printDebugMessage(QtMsgType, const QMessageLogContext &, const QString &msg
     // In case of QtFatalMsg the calling code will abort() when appropriate.
 }
 
+
 int main(int argc, char *argv[])
 {
 #if defined(Q_OS_WIN) && !defined(Q_CC_MINGW)
@@ -1039,6 +1046,7 @@ int main(int argc, char *argv[])
     if (calculateDependencies)
         getDependencies(engine, pluginImportUri, pluginImportVersion, &dependencies);
     compactDependencies(&dependencies);
+
     // load the QtQml 2.2 builtins and the dependencies
     {
         QByteArray code("import QtQml 2.2");
