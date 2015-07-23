@@ -67,7 +67,8 @@ excludedirs += ../../imports/models \
 
 examples.fileextensions        += "*.qm"
 
-manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example"
+manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
+                                "QtQuick/QML Dynamic View Ordering Tutorial*"
 
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
