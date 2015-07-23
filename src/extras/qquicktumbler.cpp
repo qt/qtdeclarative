@@ -70,8 +70,8 @@ public:
     void updateItemHeights();
     void updateItemWidths();
 
-    void itemChildAdded(QQuickItem *, QQuickItem *);
-    void itemChildRemoved(QQuickItem *, QQuickItem *);
+    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
 };
 
 static QList<QQuickItem *> contentItemChildItems(QQuickItem *contentItem)
@@ -331,8 +331,8 @@ public:
     }
 
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemChildAdded(QQuickItem *, QQuickItem *);
-    void itemChildRemoved(QQuickItem *, QQuickItem *);
+    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
 
     void _q_calculateDisplacement();
 
