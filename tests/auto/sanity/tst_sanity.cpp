@@ -156,7 +156,7 @@ void tst_Sanity::initTestCase()
 void tst_Sanity::jsFiles()
 {
     QMap<QString, QString>::const_iterator it;
-    for (it = files.begin(); it != files.end(); ++it) {
+    for (it = files.constBegin(); it != files.constEnd(); ++it) {
         if (QFileInfo(it.value()).suffix() == QStringLiteral("js"))
             QFAIL(qPrintable(it.value() +  ": JS files are not allowed"));
     }
@@ -188,7 +188,7 @@ void tst_Sanity::functions_data()
     QTest::addColumn<QString>("filePath");
 
     QMap<QString, QString>::const_iterator it;
-    for (it = files.begin(); it != files.end(); ++it)
+    for (it = files.constBegin(); it != files.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
@@ -225,7 +225,7 @@ void tst_Sanity::signalHandlers_data()
     QTest::addColumn<QString>("filePath");
 
     QMap<QString, QString>::const_iterator it;
-    for (it = files.begin(); it != files.end(); ++it)
+    for (it = files.constBegin(); it != files.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
@@ -249,7 +249,7 @@ void tst_Sanity::anchors_data()
     QTest::addColumn<QString>("filePath");
 
     QMap<QString, QString>::const_iterator it;
-    for (it = files.begin(); it != files.end(); ++it)
+    for (it = files.constBegin(); it != files.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
@@ -278,7 +278,7 @@ void tst_Sanity::attachedObjects_data()
     QTest::addColumn<QString>("filePath");
 
     QMap<QString, QString>::const_iterator it;
-    for (it = files.begin(); it != files.end(); ++it)
+    for (it = files.constBegin(); it != files.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 

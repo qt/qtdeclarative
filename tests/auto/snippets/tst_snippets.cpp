@@ -97,7 +97,7 @@ void tst_Snippets::screenshots_data()
     QTest::addColumn<QString>("output");
 
     QMap<QString, QStringPair>::const_iterator it;
-    for (it = filePaths.begin(); it != filePaths.end(); ++it)
+    for (it = filePaths.constBegin(); it != filePaths.constEnd(); ++it)
         QTest::newRow(qPrintable(it.key())) << it.value().first << it.value().second;
 }
 
