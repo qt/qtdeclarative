@@ -31,10 +31,10 @@
     \brief A set of UI controls to create user interfaces in Qt Quick
 
     Qt Quick Controls consist of a hierarchy (tree) of items. In order to
-    provide a custom look'n'feel, the default implementation of each can be
-    replaced with a custom item. The following snippets present the default
-    implementations of various items. These can be used as a starting point
-    to implement custom look'n'feel.
+    provide a custom look and feel, the default implementation of each item
+    can be replaced with a custom one. The following snippets present the
+    default implementations of various items. These can be used as a starting
+    point to implement a custom look and feel.
 
     \sa {Customizing Qt Quick Controls 2}
 
