@@ -451,7 +451,7 @@ void tst_qqmllocale::firstDayOfWeek()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("firstDayOfWeek");
-    QVERIFY(val.type() == QVariant::Int);
+    QCOMPARE(val.type(), QVariant::Int);
 
     int day = int(QLocale(locale).firstDayOfWeek());
     if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
@@ -486,12 +486,12 @@ void tst_qqmllocale::weekDays()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("weekDays");
-    QVERIFY(val.userType() == qMetaTypeId<QJSValue>());
+    QCOMPARE(val.userType(), qMetaTypeId<QJSValue>());
 
     QList<QVariant> qmlDays = val.toList();
     QList<Qt::DayOfWeek> days = QLocale(locale).weekdays();
 
-    QVERIFY(days.count() == qmlDays.count());
+    QCOMPARE(days.count(), qmlDays.count());
 
     for (int i = 0; i < days.count(); ++i) {
         int day = int(days.at(i));
@@ -528,12 +528,12 @@ void tst_qqmllocale::uiLanguages()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("uiLanguages");
-    QVERIFY(val.userType() == qMetaTypeId<QJSValue>());
+    QCOMPARE(val.userType(), qMetaTypeId<QJSValue>());
 
     QList<QVariant> qmlLangs = val.toList();
     QStringList langs = QLocale(locale).uiLanguages();
 
-    QVERIFY(langs.count() == qmlLangs.count());
+    QCOMPARE(langs.count(), qmlLangs.count());
 
     for (int i = 0; i < langs.count(); ++i) {
         QCOMPARE(langs.at(i), qmlLangs.at(i).toString());

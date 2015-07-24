@@ -251,7 +251,7 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
 
     QObject *testObject1 = object->property("declarativerectangle").value<QObject*>();
     QVERIFY(testObject1);
-    QVERIFY(testObject1->parent() == object);
+    QCOMPARE(testObject1->parent(), object);
     QCOMPARE(testObject1->property("x").value<int>(), 17);
     QCOMPARE(testObject1->property("y").value<int>(), 17);
     QCOMPARE(testObject1->property("color").value<QColor>(), QColor(255,255,255));
@@ -261,7 +261,7 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
 
     QObject *testObject2 = object->property("declarativeitem").value<QObject*>();
     QVERIFY(testObject2);
-    QVERIFY(testObject2->parent() == object);
+    QCOMPARE(testObject2->parent(), object);
     //QCOMPARE(testObject2->metaObject()->className(), "QDeclarativeItem_QML_2");
     QCOMPARE(testObject2->property("x").value<int>(), 17);
     QCOMPARE(testObject2->property("y").value<int>(), 17);
@@ -448,7 +448,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.5.qml"));
         QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component is not ready").data());
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object == 0);
+        QVERIFY(object.isNull());
     }
 }
 

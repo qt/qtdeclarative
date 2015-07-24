@@ -187,11 +187,11 @@ void tst_qqmlproperty::qmlmetaproperty()
     QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::InvalidCategory);
     QCOMPARE(prop.propertyType(), 0);
     QCOMPARE(prop.propertyTypeName(), (const char *)0);
-    QVERIFY(prop.property().name() == 0);
-    QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+    QVERIFY(!prop.property().name());
+    QVERIFY(!QQmlPropertyPrivate::binding(prop));
     QQmlPropertyPrivate::setBinding(prop, binding.data());
     QVERIFY(binding->ref == 1);
-    QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+    QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
     QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
     QVERIFY(sigExprWatcher.wasDeleted());
     QCOMPARE(prop.index(), -1);
@@ -254,7 +254,7 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QQmlProperty p1e(obj, "first", &engine);
         QQmlProperty p2e(obj, "second", &engine);
         QQmlProperty p3e(obj, "third", &engine);
-        QVERIFY(p1.propertyType() == p2.propertyType());
+        QCOMPARE(p1.propertyType(), p2.propertyType());
         QVERIFY(p1.propertyType() != p3.propertyType());
 
         // check that the values are retrievable from CPP
@@ -292,7 +292,7 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QQmlProperty lp2e(obj, "sclistOne", &engine);
         QQmlProperty lp3e(obj, "sclistTwo", &engine);
         QVERIFY(lp1e.propertyType() != lp2e.propertyType());
-        QVERIFY(lp2e.propertyType() == lp3e.propertyType());
+        QCOMPARE(lp2e.propertyType(), lp3e.propertyType());
 
         // check that the list values are retrievable from CPP
         QVariant firstList = obj->property("fclist");
@@ -438,11 +438,11 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::InvalidCategory);
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
-        QVERIFY(prop.property().name() == 0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!prop.property().name());
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
@@ -487,12 +487,12 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.propertyType(), (int)QVariant::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QCOMPARE(QQmlPropertyPrivate::binding(prop), binding.data());
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
@@ -541,11 +541,11 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::InvalidCategory);
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
-        QVERIFY(prop.property().name() == 0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!prop.property().name());
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
@@ -590,12 +590,12 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyType(), (int)QVariant::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QCOMPARE(QQmlPropertyPrivate::binding(prop), binding.data());
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
@@ -640,13 +640,13 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
+        QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
 
@@ -689,13 +689,13 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
+        QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
 
@@ -742,11 +742,11 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::InvalidCategory);
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
-        QVERIFY(prop.property().name() == 0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!prop.property().name());
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
@@ -791,12 +791,12 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.propertyType(), (int)QVariant::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QCOMPARE(QQmlPropertyPrivate::binding(prop), binding.data());
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
@@ -845,11 +845,11 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::InvalidCategory);
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
-        QVERIFY(prop.property().name() == 0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!prop.property().name());
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), -1);
@@ -894,12 +894,12 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyType(), (int)QVariant::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: Unable to assign null to int");
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == binding.data());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QCOMPARE(QQmlPropertyPrivate::binding(prop), binding.data());
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(sigExprWatcher.wasDeleted());
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfProperty("defaultProperty"));
@@ -944,13 +944,13 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
+        QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("clicked()"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
 
@@ -993,13 +993,13 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.propertyType(), 0);
         QCOMPARE(prop.propertyTypeName(), (const char *)0);
         QCOMPARE(prop.property().name(), (const char *)0);
-        QVERIFY(QQmlPropertyPrivate::binding(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::binding(prop));
         QQmlPropertyPrivate::setBinding(prop, binding.data());
         QVERIFY(binding->ref == 1);
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == 0);
+        QVERIFY(!QQmlPropertyPrivate::signalExpression(prop));
         QQmlPropertyPrivate::takeSignalExpression(prop, sigExpr);
         QVERIFY(!sigExprWatcher.wasDeleted());
-        QVERIFY(QQmlPropertyPrivate::signalExpression(prop) == sigExpr);
+        QCOMPARE(QQmlPropertyPrivate::signalExpression(prop), sigExpr);
         QCOMPARE(prop.index(), dobject.metaObject()->indexOfMethod("oddlyNamedNotifySignal()"));
         QCOMPARE(QQmlPropertyPrivate::valueTypeCoreIndex(prop), -1);
 
@@ -1202,7 +1202,7 @@ void tst_qqmlproperty::read()
         QCOMPARE(p.propertyTypeCategory(), QQmlProperty::Object);
         QCOMPARE(p.propertyType(), qMetaTypeId<MyQmlObject*>());
         QVariant v = p.read();
-        QVERIFY(v.userType() == QMetaType::QObjectStar);
+        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
         QVERIFY(qvariant_cast<QObject *>(v) == o.qmlObject());
     }
     {
@@ -1216,7 +1216,7 @@ void tst_qqmlproperty::read()
         QVERIFY(p.propertyType() != QMetaType::QObjectStar);
 
         QVariant v = p.read();
-        QVERIFY(v.userType() == QMetaType::QObjectStar);
+        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
         QCOMPARE(qvariant_cast<QObject *>(v)->property("a").toInt(), 10);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
     }
@@ -1226,7 +1226,7 @@ void tst_qqmlproperty::read()
         QVERIFY(object != 0);
 
         QVariant v = QQmlProperty::read(object, "test", &engine);
-        QVERIFY(v.userType() == QMetaType::QObjectStar);
+        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
         QCOMPARE(qvariant_cast<QObject *>(v)->property("a").toInt(), 10);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
     }
@@ -1642,7 +1642,7 @@ void tst_qqmlproperty::writeObjectToList()
     MyContainer *container = qobject_cast<MyContainer*>(containerComponent.create());
     QVERIFY(container != 0);
     QQmlListReference list(container, "children");
-    QVERIFY(list.count() == 1);
+    QCOMPARE(list.count(), 1);
 
     MyQmlObject *object = new MyQmlObject;
     QQmlProperty prop(container, "children");
@@ -1658,7 +1658,7 @@ void tst_qqmlproperty::writeListToList()
     MyContainer *container = qobject_cast<MyContainer*>(containerComponent.create());
     QVERIFY(container != 0);
     QQmlListReference list(container, "children");
-    QVERIFY(list.count() == 1);
+    QCOMPARE(list.count(), 1);
 
     QList<QObject*> objList;
     objList << new MyQmlObject() << new MyQmlObject() << new MyQmlObject() << new MyQmlObject();

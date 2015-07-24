@@ -120,10 +120,10 @@ void tst_QPauseAnimationJob::changeDirectionWhileRunning()
     animation.setDuration(400);
     animation.start();
     QTest::qWait(100);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
     animation.setDirection(QAbstractAnimationJob::Backward);
     QTest::qWait(animation.totalDuration() + 50);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
 }
 
 void tst_QPauseAnimationJob::noTimerUpdates_data()
@@ -155,7 +155,7 @@ void tst_QPauseAnimationJob::noTimerUpdates()
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
 
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
     const int expectedLoopCount = 1 + loopCount;
 
 #ifdef Q_OS_WIN
@@ -183,13 +183,13 @@ void tst_QPauseAnimationJob::multiplePauseAnimations()
     if (animation.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (animation2.state() != QAbstractAnimationJob::Running)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(animation2.state(), QAbstractAnimationJob::Running);
 
 #ifdef Q_OS_WIN
     if (animation.m_updateCurrentTimeCount != 2)
@@ -224,7 +224,7 @@ void tst_QPauseAnimationJob::pauseAndPropertyAnimations()
     QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
 
     QTRY_COMPARE(animation.state(), QAbstractAnimationJob::Running);
-    QVERIFY(pause.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(pause.state(), QAbstractAnimationJob::Running);
     QVERIFY2(pause.m_updateCurrentTimeCount >= 2,
              QByteArrayLiteral("pause.m_updateCurrentTimeCount=") + QByteArray::number(pause.m_updateCurrentTimeCount));
 
@@ -245,7 +245,7 @@ void tst_QPauseAnimationJob::pauseResume()
     QCOMPARE(animation.state(), QAbstractAnimationJob::Paused);
     animation.start();
     QTest::qWait(300);
-    QTRY_VERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QTRY_COMPARE(animation.state(), QAbstractAnimationJob::Stopped);
     QVERIFY2(animation.m_updateCurrentTimeCount >= 3,
             QByteArrayLiteral("animation.m_updateCurrentTimeCount=") + QByteArray::number(animation.m_updateCurrentTimeCount));
 }
@@ -266,39 +266,39 @@ void tst_QPauseAnimationJob::sequentialPauseGroup()
     QCOMPARE(animation2.m_updateCurrentTimeCount, 0);
     QCOMPARE(animation3.m_updateCurrentTimeCount, 0);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation1.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation3.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation1.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation2.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation3.state(), QAbstractAnimationJob::Stopped);
 
     group.setCurrentTime(250);
     QCOMPARE(animation1.m_updateCurrentTimeCount, 2);
     QCOMPARE(animation2.m_updateCurrentTimeCount, 1);
     QCOMPARE(animation3.m_updateCurrentTimeCount, 0);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation1.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation1.state(), QAbstractAnimationJob::Stopped);
     QCOMPARE((QAbstractAnimationJob*)&animation2, group.currentAnimation());
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation3.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation2.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation3.state(), QAbstractAnimationJob::Stopped);
 
     group.setCurrentTime(500);
     QCOMPARE(animation1.m_updateCurrentTimeCount, 2);
     QCOMPARE(animation2.m_updateCurrentTimeCount, 2);
     QCOMPARE(animation3.m_updateCurrentTimeCount, 1);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation1.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation1.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation2.state(), QAbstractAnimationJob::Stopped);
     QCOMPARE((QAbstractAnimationJob*)&animation3, group.currentAnimation());
-    QVERIFY(animation3.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(animation3.state(), QAbstractAnimationJob::Running);
 
     group.setCurrentTime(750);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation1.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation2.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation3.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation1.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation2.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation3.state(), QAbstractAnimationJob::Stopped);
 
     QCOMPARE(animation1.m_updateCurrentTimeCount, 2);
     QCOMPARE(animation2.m_updateCurrentTimeCount, 2);
@@ -318,22 +318,22 @@ void tst_QPauseAnimationJob::sequentialGroupWithPause()
 
     group.start();
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Running);
-    QVERIFY(pause.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(pause.state(), QAbstractAnimationJob::Stopped);
 
     group.setCurrentTime(300);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
     QCOMPARE((QAbstractAnimationJob*)&pause, group.currentAnimation());
-    QVERIFY(pause.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(pause.state(), QAbstractAnimationJob::Running);
 
     group.setCurrentTime(600);
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
-    QVERIFY(pause.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
+    QCOMPARE(pause.state(), QAbstractAnimationJob::Stopped);
 
     QCOMPARE(pause.m_updateCurrentTimeCount, 2);
 }
@@ -383,11 +383,11 @@ void tst_QPauseAnimationJob::multipleSequentialGroups()
 
     group.start();
 
-    QVERIFY(group.state() == QAbstractAnimationJob::Running);
-    QVERIFY(subgroup1.state() == QAbstractAnimationJob::Running);
-    QVERIFY(subgroup2.state() == QAbstractAnimationJob::Running);
-    QVERIFY(subgroup3.state() == QAbstractAnimationJob::Running);
-    QVERIFY(subgroup4.state() == QAbstractAnimationJob::Running);
+    QCOMPARE(group.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(subgroup1.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(subgroup2.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(subgroup3.state(), QAbstractAnimationJob::Running);
+    QCOMPARE(subgroup4.state(), QAbstractAnimationJob::Running);
 
     // This is a pretty long animation so it tends to get rather out of sync
     // when using the consistent timer, so run for an extra half second for good
@@ -398,31 +398,31 @@ void tst_QPauseAnimationJob::multipleSequentialGroups()
     if (group.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QTRY_VERIFY(group.state() == QAbstractAnimationJob::Stopped);
+    QTRY_COMPARE(group.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (subgroup1.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(subgroup1.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(subgroup1.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (subgroup2.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(subgroup2.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(subgroup2.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (subgroup3.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(subgroup3.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(subgroup3.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (subgroup4.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", winTimerError, Abort);
 #endif
-    QVERIFY(subgroup4.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(subgroup4.state(), QAbstractAnimationJob::Stopped);
 
 #ifdef Q_OS_WIN
     if (pause5.m_updateCurrentTimeCount != 4)
@@ -437,7 +437,7 @@ void tst_QPauseAnimationJob::zeroDuration()
     animation.setDuration(0);
     animation.start();
     QTest::qWait(animation.totalDuration() + 100);
-    QVERIFY(animation.state() == QAbstractAnimationJob::Stopped);
+    QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
     QCOMPARE(animation.m_updateCurrentTimeCount, 1);
 }
 

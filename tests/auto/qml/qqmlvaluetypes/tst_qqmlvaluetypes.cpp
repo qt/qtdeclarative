@@ -1183,7 +1183,7 @@ void tst_qqmlvaluetypes::enums()
     QQmlComponent component(&engine, testFileUrl("enums.1.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
-    QVERIFY(object->font().capitalization() == QFont::AllUppercase);
+    QCOMPARE(object->font().capitalization(), QFont::AllUppercase);
     delete object;
     }
 
@@ -1191,7 +1191,7 @@ void tst_qqmlvaluetypes::enums()
     QQmlComponent component(&engine, testFileUrl("enums.2.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
-    QVERIFY(object->font().capitalization() == QFont::AllUppercase);
+    QCOMPARE(object->font().capitalization(), QFont::AllUppercase);
     delete object;
     }
 
@@ -1199,7 +1199,7 @@ void tst_qqmlvaluetypes::enums()
     QQmlComponent component(&engine, testFileUrl("enums.3.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
-    QVERIFY(object->font().capitalization() == QFont::AllUppercase);
+    QCOMPARE(object->font().capitalization(), QFont::AllUppercase);
     delete object;
     }
 
@@ -1207,7 +1207,7 @@ void tst_qqmlvaluetypes::enums()
     QQmlComponent component(&engine, testFileUrl("enums.4.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
-    QVERIFY(object->font().capitalization() == QFont::AllUppercase);
+    QCOMPARE(object->font().capitalization(), QFont::AllUppercase);
     delete object;
     }
 
@@ -1215,7 +1215,7 @@ void tst_qqmlvaluetypes::enums()
     QQmlComponent component(&engine, testFileUrl("enums.5.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
     QVERIFY(object != 0);
-    QVERIFY(object->font().capitalization() == QFont::AllUppercase);
+    QCOMPARE(object->font().capitalization(), QFont::AllUppercase);
     delete object;
     }
 }

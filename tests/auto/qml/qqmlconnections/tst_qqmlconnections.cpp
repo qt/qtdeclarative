@@ -72,7 +72,7 @@ void tst_qqmlconnections::defaultValues()
     QQmlConnections *item = qobject_cast<QQmlConnections*>(c.create());
 
     QVERIFY(item != 0);
-    QVERIFY(item->target() == 0);
+    QVERIFY(!item->target());
 
     delete item;
 }
@@ -86,7 +86,7 @@ void tst_qqmlconnections::properties()
     QVERIFY(item != 0);
 
     QVERIFY(item != 0);
-    QVERIFY(item->target() == item);
+    QCOMPARE(item->target(), item);
 
     delete item;
 }
@@ -146,7 +146,7 @@ void tst_qqmlconnections::targetChanged()
 
     QQuickItem *item2 = item->findChild<QQuickItem*>("item2");
     QVERIFY(item2);
-    QVERIFY(connections->target() == item2);
+    QCOMPARE(connections->target(), item2);
 
     // If we don't crash then we're OK
 
@@ -213,7 +213,7 @@ void tst_qqmlconnections::errors()
     QQmlComponent c(&engine, url);
     QVERIFY(c.isError());
     QList<QQmlError> errors = c.errors();
-    QVERIFY(errors.count() == 1);
+    QCOMPARE(errors.count(), 1);
     QCOMPARE(errors.at(0).description(), error);
 }
 

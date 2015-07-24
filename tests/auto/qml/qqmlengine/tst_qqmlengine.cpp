@@ -90,7 +90,7 @@ void tst_qqmlengine::rootContext()
     QVERIFY(engine.rootContext());
 
     QCOMPARE(engine.rootContext()->engine(), &engine);
-    QVERIFY(engine.rootContext()->parentContext() == 0);
+    QVERIFY(!engine.rootContext()->parentContext());
 }
 
 class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
@@ -119,8 +119,9 @@ void tst_qqmlengine::networkAccessManager()
     engine = new QQmlEngine;
     NetworkAccessManagerFactory factory;
     engine->setNetworkAccessManagerFactory(&factory);
-    QVERIFY(engine->networkAccessManagerFactory() == &factory);
-    QVERIFY(engine->networkAccessManager() == factory.manager);
+    QCOMPARE(engine->networkAccessManagerFactory(), &factory);
+    QNetworkAccessManager *engineNam = engine->networkAccessManager(); // calls NetworkAccessManagerFactory::create()
+    QCOMPARE(engineNam, factory.manager);
     delete engine;
 }
 
@@ -184,7 +185,7 @@ void tst_qqmlengine::baseUrl()
     dir.cdUp();
     QVERIFY(dir != QDir::current());
     QDir::setCurrent(dir.path());
-    QVERIFY(QDir::current() == dir);
+    QCOMPARE(QDir::current(), dir);
 
     QUrl cwd2 = QUrl::fromLocalFile(QDir::currentPath() + QDir::separator());
     QCOMPARE(engine.baseUrl(), cwd2);
@@ -200,11 +201,11 @@ void tst_qqmlengine::contextForObject()
     QQmlEngine *engine = new QQmlEngine;
 
     // Test null-object
-    QVERIFY(QQmlEngine::contextForObject(0) == 0);
+    QVERIFY(!QQmlEngine::contextForObject(0));
 
     // Test an object with no context
     QObject object;
-    QVERIFY(QQmlEngine::contextForObject(&object) == 0);
+    QVERIFY(!QQmlEngine::contextForObject(&object));
 
     // Test setting null-object
     QQmlEngine::setContextForObject(0, engine->rootContext());
@@ -214,18 +215,18 @@ void tst_qqmlengine::contextForObject()
 
     // Test setting context
     QQmlEngine::setContextForObject(&object, engine->rootContext());
-    QVERIFY(QQmlEngine::contextForObject(&object) == engine->rootContext());
+    QCOMPARE(QQmlEngine::contextForObject(&object), engine->rootContext());
 
     QQmlContext context(engine->rootContext());
 
     // Try changing context
     QTest::ignoreMessage(QtWarningMsg, "QQmlEngine::setContextForObject(): Object already has a QQmlContext");
     QQmlEngine::setContextForObject(&object, &context);
-    QVERIFY(QQmlEngine::contextForObject(&object) == engine->rootContext());
+    QCOMPARE(QQmlEngine::contextForObject(&object), engine->rootContext());
 
     // Delete context
     delete engine; engine = 0;
-    QVERIFY(QQmlEngine::contextForObject(&object) == 0);
+    QVERIFY(!QQmlEngine::contextForObject(&object));
 }
 
 void tst_qqmlengine::offlineStoragePath()
@@ -446,7 +447,7 @@ void tst_qqmlengine::failedCompilation()
     QQmlComponent component(&engine, testFileUrl(file));
     QVERIFY(!component.isReady());
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object == 0);
+    QVERIFY(object.isNull());
 
     engine.collectGarbage();
     engine.trimComponentCache();

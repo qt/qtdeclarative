@@ -92,7 +92,7 @@ void tst_QJSValueIterator::iterateForward()
     QFETCH(QStringList, propertyNames);
     QFETCH(QStringList, propertyValues);
     QMap<QString, QString> pmap;
-    QVERIFY(propertyNames.size() == propertyValues.size());
+    QCOMPARE(propertyNames.size(), propertyValues.size());
 
     QJSEngine engine;
     QJSValue object = engine.newObject();

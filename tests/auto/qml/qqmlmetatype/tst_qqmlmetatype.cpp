@@ -126,7 +126,7 @@ void tst_qqmlmetatype::initTestCase()
 
 void tst_qqmlmetatype::qmlParserStatusCast()
 {
-    QVERIFY(QQmlMetaType::qmlType(QVariant::Int) == 0);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->parserStatusCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()) != 0);
@@ -146,7 +146,7 @@ void tst_qqmlmetatype::qmlParserStatusCast()
 
 void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 {
-    QVERIFY(QQmlMetaType::qmlType(QVariant::Int) == 0);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->propertyValueSourceCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()) != 0);
@@ -166,7 +166,7 @@ void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 
 void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 {
-    QVERIFY(QQmlMetaType::qmlType(QVariant::Int) == 0);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
     QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->propertyValueInterceptorCast(), -1);
     QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()) != 0);
@@ -224,8 +224,8 @@ void tst_qqmlmetatype::isList()
 
 void tst_qqmlmetatype::defaultObject()
 {
-    QVERIFY(QQmlMetaType::defaultProperty(&QObject::staticMetaObject).name() == 0);
-    QVERIFY(QQmlMetaType::defaultProperty(&ParserStatusTestType::staticMetaObject).name() == 0);
+    QVERIFY(!QQmlMetaType::defaultProperty(&QObject::staticMetaObject).name());
+    QVERIFY(!QQmlMetaType::defaultProperty(&ParserStatusTestType::staticMetaObject).name());
     QCOMPARE(QString(QQmlMetaType::defaultProperty(&TestType::staticMetaObject).name()), QString("foo"));
 
     QObject o;
@@ -233,8 +233,8 @@ void tst_qqmlmetatype::defaultObject()
     ParserStatusTestType p;
 
     QVERIFY(QQmlMetaType::defaultProperty((QObject *)0).name() == 0);
-    QVERIFY(QQmlMetaType::defaultProperty(&o).name() == 0);
-    QVERIFY(QQmlMetaType::defaultProperty(&p).name() == 0);
+    QVERIFY(!QQmlMetaType::defaultProperty(&o).name());
+    QVERIFY(!QQmlMetaType::defaultProperty(&p).name());
     QCOMPARE(QString(QQmlMetaType::defaultProperty(&t).name()), QString("foo"));
 }
 
@@ -270,8 +270,8 @@ void tst_qqmlmetatype::compositeType()
 
     QQmlType *type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
     QVERIFY(type);
-    QVERIFY(type->module() == QLatin1String(""));
-    QVERIFY(type->elementName() == QLatin1String("ImplicitType"));
+    QVERIFY(type->module().isEmpty());
+    QCOMPARE(type->elementName(), QLatin1String("ImplicitType"));
     QCOMPARE(type->qmlTypeName(), QLatin1String("ImplicitType"));
     QCOMPARE(type->sourceUrl(), testFileUrl("ImplicitType.qml"));
 }

@@ -164,7 +164,7 @@ void tst_QQmlDebugClient::sequentialConnect()
     connection2.connectToHost("127.0.0.1", PORT);
     QVERIFY(connection2.waitForConnected());
     QVERIFY(connection2.isConnected());
-    QTRY_VERIFY(client2.state() == QQmlDebugClient::Enabled);
+    QTRY_COMPARE(client2.state(), QQmlDebugClient::Enabled);
 }
 
 int main(int argc, char *argv[])

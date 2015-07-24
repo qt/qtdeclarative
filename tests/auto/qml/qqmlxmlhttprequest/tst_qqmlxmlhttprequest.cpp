@@ -850,7 +850,7 @@ void tst_qqmlxmlhttprequest::getBinaryData()
     component.completeCreate();
 
     QFileInfo fileInfo("data/qml_logo.png");
-    QTRY_VERIFY(object->property("readSize").toInt() == fileInfo.size());
+    QTRY_COMPARE(object->property("readSize").toInt(), fileInfo.size());
     QCOMPARE(object->property("status").toInt(), 200);
 }
 

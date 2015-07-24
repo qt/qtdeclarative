@@ -222,7 +222,7 @@ void tst_QPacketProtocol::read()
 void tst_QPacketProtocol::device()
 {
     QPacketProtocol p(m_client);
-    QVERIFY(p.device() == m_client);
+    QCOMPARE(p.device(), m_client);
 }
 
 void tst_QPacketProtocol::tst_QPacket_clear()

@@ -186,7 +186,7 @@ void tst_qqmltimer::repeat()
     timer->stop();
 
     consistentWait(200);
-    QVERIFY(helper.count == oldCount);
+    QCOMPARE(helper.count, oldCount);
     QVERIFY(!timer->isRunning());
 
     QSignalSpy spy(timer, SIGNAL(repeatChanged()));

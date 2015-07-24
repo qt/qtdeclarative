@@ -148,7 +148,7 @@ void tst_qqmlincubator::objectDeleted()
         component.create(incubator);
 
         QCOMPARE(incubator.status(), QQmlIncubator::Loading);
-        QVERIFY(SelfRegisteringType::me() == 0);
+        QVERIFY(!SelfRegisteringType::me());
 
         while (SelfRegisteringOuterType::me() == 0 && incubator.isLoading()) {
             bool b = false;
@@ -172,7 +172,7 @@ void tst_qqmlincubator::objectDeleted()
 
         QVERIFY(incubator.isError());
         VERIFY_ERRORS(incubator, "objectDeleted.errors.txt");
-        QVERIFY(incubator.object() == 0);
+        QVERIFY(!incubator.object());
     }
     QVERIFY(SelfRegisteringOuterType::beenDeleted);
 }
@@ -236,7 +236,7 @@ void tst_qqmlincubator::clear()
 
     incubator.clear();
     QVERIFY(incubator.isNull());
-    QVERIFY(incubator.object() == 0);
+    QVERIFY(!incubator.object());
     QVERIFY(!obj.isNull());
 
     delete obj;
@@ -413,7 +413,7 @@ void tst_qqmlincubator::clearDuringCompletion()
     component.create(incubator);
 
     QCOMPARE(incubator.status(), QQmlIncubator::Loading);
-    QVERIFY(CompletionRegisteringType::me() == 0);
+    QVERIFY(!CompletionRegisteringType::me());
 
     while (CompletionRegisteringType::me() == 0 && incubator.isLoading()) {
         bool b = false;
@@ -622,7 +622,7 @@ void tst_qqmlincubator::asynchronousIfNested()
     component.create(incubator);
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() == 0);
+    QVERIFY(!SelfRegisteringType::me());
     while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
         bool b = false;
         controller.incubateWhile(&b);
@@ -741,7 +741,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
     component.create(incubator);
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() == 0);
+    QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
         bool b = false;
@@ -855,7 +855,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     component.create(incubator);
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() == 0);
+    QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
         bool b = false;
@@ -983,7 +983,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
     component.create(incubator);
 
     QVERIFY(incubator.isLoading());
-    QVERIFY(SelfRegisteringType::me() == 0);
+    QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
         bool b = false;
@@ -1106,7 +1106,7 @@ void tst_qqmlincubator::selfDelete()
     component.create(*incubator);
 
     QCOMPARE(incubator->QQmlIncubator::status(), QQmlIncubator::Loading);
-    QVERIFY(SelfRegisteringType::me() == 0);
+    QVERIFY(!SelfRegisteringType::me());
 
     while (SelfRegisteringType::me() == 0 && incubator->isLoading()) {
         bool b = false;

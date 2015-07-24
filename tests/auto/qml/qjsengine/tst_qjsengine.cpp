@@ -336,7 +336,7 @@ void tst_QJSEngine::constructWithParent()
         QJSEngine *engine = new QJSEngine(&obj);
         ptr = engine;
     }
-    QVERIFY(ptr == 0);
+    QVERIFY(ptr.isNull());
 }
 
 void tst_QJSEngine::newObject()
@@ -631,7 +631,7 @@ void tst_QJSEngine::newQObject_ownership()
         eng.collectGarbage();
         if (ptr)
             QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
-        QVERIFY(ptr == 0);
+        QVERIFY(ptr.isNull());
     }
     {
         QPointer<QObject> ptr = new QObject(this);
@@ -641,7 +641,7 @@ void tst_QJSEngine::newQObject_ownership()
         }
         QObject *before = ptr;
         eng.collectGarbage();
-        QVERIFY(ptr == before);
+        QCOMPARE(ptr.data(), before);
         delete ptr;
     }
     {
@@ -662,7 +662,7 @@ void tst_QJSEngine::newQObject_ownership()
         // no parent, so it should be like ScriptOwnership
         if (ptr)
             QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
-        QVERIFY(ptr == 0);
+        QVERIFY(ptr.isNull());
     }
     {
         QObject *parent = new QObject();
@@ -1258,7 +1258,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     {
         QVariant tmp1;
         QVariant tmp2(QMetaType::QVariant, &tmp1);
-        QVERIFY(QMetaType::Type(tmp2.type()) == QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp2.type()), QMetaType::QVariant);
 
         QJSValue val1 = eng.toScriptValue(tmp1);
         QJSValue val2 = eng.toScriptValue(tmp2);
@@ -1273,9 +1273,9 @@ void tst_QJSEngine::valueConversion_QVariant()
         QVariant tmp1(123);
         QVariant tmp2(QMetaType::QVariant, &tmp1);
         QVariant tmp3(QMetaType::QVariant, &tmp2);
-        QVERIFY(QMetaType::Type(tmp1.type()) == QMetaType::Int);
-        QVERIFY(QMetaType::Type(tmp2.type()) == QMetaType::QVariant);
-        QVERIFY(QMetaType::Type(tmp3.type()) == QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp1.type()), QMetaType::Int);
+        QCOMPARE(QMetaType::Type(tmp2.type()), QMetaType::QVariant);
+        QCOMPARE(QMetaType::Type(tmp3.type()), QMetaType::QVariant);
 
         QJSValue val1 = eng.toScriptValue(tmp2);
         QJSValue val2 = eng.toScriptValue(tmp3);
@@ -1285,8 +1285,8 @@ void tst_QJSEngine::valueConversion_QVariant()
         QVERIFY(val1.isVariant());
         QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(val2.isVariant());
-        QVERIFY(val1.toVariant().toInt() == 123);
-        QVERIFY(eng.toScriptValue(val2.toVariant()).toVariant().toInt() == 123);
+        QCOMPARE(val1.toVariant().toInt(), 123);
+        QCOMPARE(eng.toScriptValue(val2.toVariant()).toVariant().toInt(), 123);
     }
     {
         QJSValue val = eng.toScriptValue(QVariant(true));
@@ -1472,7 +1472,7 @@ void tst_QJSEngine::collectGarbage()
     eng.collectGarbage();
     if (ptr)
         QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
-    QVERIFY(ptr == 0);
+    QVERIFY(ptr.isNull());
 }
 
 void tst_QJSEngine::gcWithNestedDataStructure()

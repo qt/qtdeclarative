@@ -104,7 +104,7 @@ void tst_QQmlPropertyMap::insert()
     QQmlPropertyMap map;
     map.insert(QLatin1String("key1"),100);
     map.insert(QLatin1String("key2"),200);
-    QVERIFY(map.keys().count() == 2);
+    QCOMPARE(map.keys().count(), 2);
     QVERIFY(map.contains(QLatin1String("key1")));
 
     QCOMPARE(map.value(QLatin1String("key1")), QVariant(100));
@@ -117,33 +117,33 @@ void tst_QQmlPropertyMap::insert()
     //QQmlPropertyMap has an invokable keys() method
     QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"keys\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("keys"), 1);
-    QVERIFY(map.keys().count() == 2);
+    QCOMPARE(map.keys().count(), 2);
     QVERIFY(!map.contains(QLatin1String("keys")));
     QVERIFY(map.value(QLatin1String("keys")).isNull());
 
     //QQmlPropertyMap has a deleteLater() slot
     QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"deleteLater\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("deleteLater"), 1);
-    QVERIFY(map.keys().count() == 2);
+    QCOMPARE(map.keys().count(), 2);
     QVERIFY(!map.contains(QLatin1String("deleteLater")));
     QVERIFY(map.value(QLatin1String("deleteLater")).isNull());
 
     //QQmlPropertyMap has an valueChanged() signal
     QTest::ignoreMessage(QtWarningMsg, "Creating property with name \"valueChanged\" is not permitted, conflicts with internal symbols.");
     map.insert(QLatin1String("valueChanged"), 1);
-    QVERIFY(map.keys().count() == 2);
+    QCOMPARE(map.keys().count(), 2);
     QVERIFY(!map.contains(QLatin1String("valueChanged")));
     QVERIFY(map.value(QLatin1String("valueChanged")).isNull());
 
     //but 'valueChange' should be ok
     map.insert(QLatin1String("valueChange"), 1);
-    QVERIFY(map.keys().count() == 3);
+    QCOMPARE(map.keys().count(), 3);
     QVERIFY(map.contains(QLatin1String("valueChange")));
     QCOMPARE(map.value(QLatin1String("valueChange")), QVariant(1));
 
     //'valueCHANGED' should be ok, too
     map.insert(QLatin1String("valueCHANGED"), 1);
-    QVERIFY(map.keys().count() == 4);
+    QCOMPARE(map.keys().count(), 4);
     QVERIFY(map.contains(QLatin1String("valueCHANGED")));
     QCOMPARE(map.value(QLatin1String("valueCHANGED")), QVariant(1));
 }
@@ -153,7 +153,7 @@ void tst_QQmlPropertyMap::operatorInsert()
     QQmlPropertyMap map;
     map[QLatin1String("key1")] = 100;
     map[QLatin1String("key2")] = 200;
-    QVERIFY(map.keys().count() == 2);
+    QCOMPARE(map.keys().count(), 2);
 
     QCOMPARE(map.value(QLatin1String("key1")), QVariant(100));
     QCOMPARE(map.value(QLatin1String("key2")), QVariant(200));
@@ -167,7 +167,7 @@ void tst_QQmlPropertyMap::operatorValue()
     QQmlPropertyMap map;
     map.insert(QLatin1String("key1"),100);
     map.insert(QLatin1String("key2"),200);
-    QVERIFY(map.count() == 2);
+    QCOMPARE(map.count(), 2);
     QVERIFY(map.contains(QLatin1String("key1")));
 
     const QQmlPropertyMap &constMap = map;
@@ -182,12 +182,12 @@ void tst_QQmlPropertyMap::clear()
 {
     QQmlPropertyMap map;
     map.insert(QLatin1String("key1"),100);
-    QVERIFY(map.keys().count() == 1);
+    QCOMPARE(map.keys().count(), 1);
 
     QCOMPARE(map.value(QLatin1String("key1")), QVariant(100));
 
     map.clear(QLatin1String("key1"));
-    QVERIFY(map.keys().count() == 1);
+    QCOMPARE(map.keys().count(), 1);
     QVERIFY(map.contains(QLatin1String("key1")));
     QCOMPARE(map.value(QLatin1String("key1")), QVariant());
 }
@@ -463,7 +463,7 @@ void tst_QQmlPropertyMap::QTBUG_35906()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QVariant value = obj->property("testValue");
-    QVERIFY(value.type() == QVariant::Int);
+    QCOMPARE(value.type(), QVariant::Int);
     QCOMPARE(value.toInt(), 42);
 }
 

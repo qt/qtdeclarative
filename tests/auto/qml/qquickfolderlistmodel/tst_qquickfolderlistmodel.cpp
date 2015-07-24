@@ -295,11 +295,11 @@ void tst_qquickfolderlistmodel::changeDrive()
 
     flm->setProperty("folder",QUrl::fromLocalFile(dataDir));
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(dataDir));
-    QTRY_VERIFY(folderChangeSpy.count() == 1);
+    QTRY_COMPARE(folderChangeSpy.count(), 1);
 
     flm->setProperty("folder",QUrl::fromLocalFile("X:/resetfiltering/"));
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile("X:/resetfiltering/"));
-    QTRY_VERIFY(folderChangeSpy.count() == 2);
+    QTRY_COMPARE(folderChangeSpy.count(), 2);
 }
 #endif
 

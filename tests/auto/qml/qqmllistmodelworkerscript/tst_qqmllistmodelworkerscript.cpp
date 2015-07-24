@@ -647,15 +647,15 @@ void tst_qqmllistmodelworkerscript::worker_sync()
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
-    QVERIFY(model.count() == 0);
+    QCOMPARE(model.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItem0"));
 
-    QVERIFY(model.count() == 2);
+    QCOMPARE(model.count(), 2);
     QVariant childData = model.data(0, 0);
     QQmlListModel *childModel = qobject_cast<QQmlListModel *>(childData.value<QObject *>());
     QVERIFY(childModel);
-    QVERIFY(childModel->count() == 1);
+    QCOMPARE(childModel->count(), 1);
 
     QSignalSpy spyModelInserted(&model, SIGNAL(rowsInserted(QModelIndex,int,int)));
     QSignalSpy spyChildInserted(childModel, SIGNAL(rowsInserted(QModelIndex,int,int)));
@@ -663,34 +663,34 @@ void tst_qqmllistmodelworkerscript::worker_sync()
     QVERIFY(QMetaObject::invokeMethod(item, "addItemViaWorker"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 2);
-    QVERIFY(childModel->count() == 1);
-    QVERIFY(spyModelInserted.count() == 0);
-    QVERIFY(spyChildInserted.count() == 0);
+    QCOMPARE(model.count(), 2);
+    QCOMPARE(childModel->count(), 1);
+    QCOMPARE(spyModelInserted.count(), 0);
+    QCOMPARE(spyChildInserted.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 2);
-    QVERIFY(childModel->count() == 2);
-    QVERIFY(spyModelInserted.count() == 0);
-    QVERIFY(spyChildInserted.count() == 1);
+    QCOMPARE(model.count(), 2);
+    QCOMPARE(childModel->count(), 2);
+    QCOMPARE(spyModelInserted.count(), 0);
+    QCOMPARE(spyChildInserted.count(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItemViaWorker"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 2);
-    QVERIFY(childModel->count() == 2);
-    QVERIFY(spyModelInserted.count() == 0);
-    QVERIFY(spyChildInserted.count() == 1);
+    QCOMPARE(model.count(), 2);
+    QCOMPARE(childModel->count(), 2);
+    QCOMPARE(spyModelInserted.count(), 0);
+    QCOMPARE(spyChildInserted.count(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 2);
-    QVERIFY(childModel->count() == 3);
-    QVERIFY(spyModelInserted.count() == 0);
-    QVERIFY(spyChildInserted.count() == 2);
+    QCOMPARE(model.count(), 2);
+    QCOMPARE(childModel->count(), 3);
+    QCOMPARE(spyModelInserted.count(), 0);
+    QCOMPARE(spyChildInserted.count(), 2);
 
     delete item;
     qApp->processEvents();
@@ -714,24 +714,24 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
 
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
-    QVERIFY(model.count() == 0);
-    QVERIFY(spyModelRemoved.count() == 0);
+    QCOMPARE(model.count(), 0);
+    QCOMPARE(spyModelRemoved.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItem"));
 
-    QVERIFY(model.count() == 1);
+    QCOMPARE(model.count(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "removeItemViaWorker"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 1);
-    QVERIFY(spyModelRemoved.count() == 0);
+    QCOMPARE(model.count(), 1);
+    QCOMPARE(spyModelRemoved.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 0);
-    QVERIFY(spyModelRemoved.count() == 1);
+    QCOMPARE(model.count(), 0);
+    QCOMPARE(spyModelRemoved.count(), 1);
 
     delete item;
     qApp->processEvents();
@@ -747,7 +747,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
 
         QVERIFY(QMetaObject::invokeMethod(item, "addItem"));
 
-        QVERIFY(model->count() == 1);
+        QCOMPARE(model->count(), 1);
 
         QVERIFY(QMetaObject::invokeMethod(item, "removeItemViaWorker"));
         QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
@@ -777,24 +777,24 @@ void tst_qqmllistmodelworkerscript::worker_remove_list()
 
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
-    QVERIFY(model.count() == 0);
-    QVERIFY(spyModelRemoved.count() == 0);
+    QCOMPARE(model.count(), 0);
+    QCOMPARE(spyModelRemoved.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addList"));
 
-    QVERIFY(model.count() == 1);
+    QCOMPARE(model.count(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "removeListViaWorker"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 1);
-    QVERIFY(spyModelRemoved.count() == 0);
+    QCOMPARE(model.count(), 1);
+    QCOMPARE(spyModelRemoved.count(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
-    QVERIFY(model.count() == 0);
-    QVERIFY(spyModelRemoved.count() == 1);
+    QCOMPARE(model.count(), 0);
+    QCOMPARE(spyModelRemoved.count(), 1);
 
     delete item;
     qApp->processEvents();

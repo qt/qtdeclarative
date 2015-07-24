@@ -185,7 +185,7 @@ void tst_QDebugMessageService::init()
     if (m_client->state() != QQmlDebugClient::Enabled)
         QQmlDebugTest::waitForSignal(m_client, SIGNAL(enabled()));
 
-    QVERIFY(m_client->state() == QQmlDebugClient::Enabled);
+    QCOMPARE(m_client->state(), QQmlDebugClient::Enabled);
 }
 
 void tst_QDebugMessageService::cleanup()

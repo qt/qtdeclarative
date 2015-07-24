@@ -642,7 +642,7 @@ void tst_qqmllistmodel::enumerate()
         }
     }
 
-    QVERIFY(matchCount == expectedStringCount);
+    QCOMPARE(matchCount, expectedStringCount);
 
     delete item;
 }
@@ -1296,7 +1296,7 @@ void tst_qqmllistmodel::datetime()
     QQmlExpression e(engine.rootContext(), &model, qml);
     QVariant result = e.evaluate();
     QDateTime dtResult = result.toDateTime();
-    QVERIFY(expected == dtResult);
+    QCOMPARE(expected, dtResult);
 }
 
 class RowTester : public QObject

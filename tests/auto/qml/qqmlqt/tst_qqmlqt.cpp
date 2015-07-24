@@ -651,7 +651,7 @@ void tst_qqmlqt::createQmlObject()
 
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     QVERIFY(item != 0);
-    QVERIFY(item->childItems().count() == 1);
+    QCOMPARE(item->childItems().count(), 1);
 
     delete object;
 }

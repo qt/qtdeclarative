@@ -433,12 +433,12 @@ void tst_qqmlcontext::idAsContextProperty()
     QVERIFY(obj);
 
     QVariant a = obj->property("a");
-    QVERIFY(a.userType() == QMetaType::QObjectStar);
+    QCOMPARE(a.userType(), int(QMetaType::QObjectStar));
 
     QVariant ctxt = qmlContext(obj)->contextProperty("myObject");
-    QVERIFY(ctxt.userType() == QMetaType::QObjectStar);
+    QCOMPARE(ctxt.userType(), int(QMetaType::QObjectStar));
 
-    QVERIFY(a == ctxt);
+    QCOMPARE(a, ctxt);
 
     delete obj;
 }
@@ -455,20 +455,20 @@ void tst_qqmlcontext::readOnlyContexts()
     QQmlContext *context = qmlContext(obj);
     QVERIFY(context);
 
-    QVERIFY(qvariant_cast<QObject*>(context->contextProperty("me")) == obj);
-    QVERIFY(context->contextObject() == obj);
+    QCOMPARE(qvariant_cast<QObject*>(context->contextProperty("me")), obj);
+    QCOMPARE(context->contextObject(), obj);
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set property on internal context.");
     context->setContextProperty("hello", 12);
-    QVERIFY(context->contextProperty("hello") == QVariant());
+    QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set property on internal context.");
     context->setContextProperty("hello", obj);
-    QVERIFY(context->contextProperty("hello") == QVariant());
+    QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set context object for internal context.");
     context->setContextObject(0);
-    QVERIFY(context->contextObject() == obj);
+    QCOMPARE(context->contextObject(), obj);
 
     delete obj;
 }
