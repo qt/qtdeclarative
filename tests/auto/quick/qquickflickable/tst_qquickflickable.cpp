@@ -196,9 +196,9 @@ void tst_qquickflickable::properties()
     QCOMPARE(obj->pressDelay(), 200);
     QCOMPARE(obj->maximumFlickVelocity(), 2000.);
 
-    QVERIFY(obj->property("ok").toBool() == false);
+    QVERIFY(!obj->property("ok").toBool());
     QMetaObject::invokeMethod(obj, "check");
-    QVERIFY(obj->property("ok").toBool() == true);
+    QVERIFY(obj->property("ok").toBool());
 
     delete obj;
 }
@@ -410,10 +410,10 @@ void tst_qquickflickable::pressDelay()
     moveAndPress(window.data(), QPoint(150, 150));
 
     // The press should not occur immediately
-    QVERIFY(mouseArea->property("pressed").toBool() == false);
+    QVERIFY(!mouseArea->property("pressed").toBool());
 
     // But, it should occur eventually
-    QTRY_VERIFY(mouseArea->property("pressed").toBool() == true);
+    QTRY_VERIFY(mouseArea->property("pressed").toBool());
 
     QCOMPARE(clickedSpy.count(),0);
 
@@ -431,7 +431,7 @@ void tst_qquickflickable::pressDelay()
     moveAndPress(window.data(), QPoint(180, 180));
 
     // The press should not occur immediately
-    QVERIFY(mouseArea->property("pressed").toBool() == false);
+    QVERIFY(!mouseArea->property("pressed").toBool());
 
     QCOMPARE(clickedSpy.count(),0);
 
@@ -448,13 +448,13 @@ void tst_qquickflickable::pressDelay()
     moveAndPress(window.data(), QPoint(150, 110));
 
     // The press should not occur immediately
-    QVERIFY(mouseArea->property("pressed").toBool() == false);
+    QVERIFY(!mouseArea->property("pressed").toBool());
 
     QTest::mouseMove(window.data(), QPoint(150, 190));
 
     // As we moved pass the drag threshold, we should never receive the press
-    QVERIFY(mouseArea->property("pressed").toBool() == false);
-    QTRY_VERIFY(mouseArea->property("pressed").toBool() == false);
+    QVERIFY(!mouseArea->property("pressed").toBool());
+    QTRY_VERIFY(!mouseArea->property("pressed").toBool());
 
     // On release the clicked signal should *not* be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 190));
@@ -481,42 +481,42 @@ void tst_qquickflickable::nestedPressDelay()
 
     moveAndPress(window.data(), QPoint(150, 150));
     // the MouseArea is not pressed immediately
-    QVERIFY(outer->property("pressed").toBool() == false);
-    QVERIFY(inner->property("pressed").toBool() == false);
+    QVERIFY(!outer->property("pressed").toBool());
+    QVERIFY(!inner->property("pressed").toBool());
 
     // The inner pressDelay will prevail (50ms, vs. 10sec)
     // QTRY_VERIFY() has 5sec timeout, so will timeout well within 10sec.
-    QTRY_VERIFY(outer->property("pressed").toBool() == true);
+    QTRY_VERIFY(outer->property("pressed").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
 
     // Dragging inner Flickable should work
     moveAndPress(window.data(), QPoint(80, 150));
     // the MouseArea is not pressed immediately
-    QVERIFY(outer->property("pressed").toBool() == false);
-    QVERIFY(inner->property("pressed").toBool() == false);
+    QVERIFY(!outer->property("pressed").toBool());
+    QVERIFY(!inner->property("pressed").toBool());
 
     QTest::mouseMove(window.data(), QPoint(60, 150));
     QTest::mouseMove(window.data(), QPoint(40, 150));
     QTest::mouseMove(window.data(), QPoint(20, 150));
 
-    QVERIFY(inner->property("moving").toBool() == true);
-    QVERIFY(outer->property("moving").toBool() == false);
+    QVERIFY(inner->property("moving").toBool());
+    QVERIFY(!outer->property("moving").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(20, 150));
 
     // Dragging the MouseArea in the inner Flickable should move the inner Flickable
     moveAndPress(window.data(), QPoint(150, 150));
     // the MouseArea is not pressed immediately
-    QVERIFY(outer->property("pressed").toBool() == false);
+    QVERIFY(!outer->property("pressed").toBool());
 
     QTest::mouseMove(window.data(), QPoint(130, 150));
     QTest::mouseMove(window.data(), QPoint(110, 150));
     QTest::mouseMove(window.data(), QPoint(90, 150));
 
 
-    QVERIFY(outer->property("moving").toBool() == false);
-    QVERIFY(inner->property("moving").toBool() == true);
+    QVERIFY(!outer->property("moving").toBool());
+    QVERIFY(inner->property("moving").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(90, 150));
 }
@@ -542,26 +542,26 @@ void tst_qquickflickable::nestedClickThenFlick()
     moveAndPress(window.data(), QPoint(150, 150));
 
     // the MouseArea is not pressed immediately
-    QVERIFY(outer->property("pressed").toBool() == false);
-    QTRY_VERIFY(outer->property("pressed").toBool() == true);
+    QVERIFY(!outer->property("pressed").toBool());
+    QTRY_VERIFY(outer->property("pressed").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
 
-    QVERIFY(outer->property("pressed").toBool() == false);
+    QVERIFY(!outer->property("pressed").toBool());
 
     // Dragging inner Flickable should work
     moveAndPress(window.data(), QPoint(80, 150));
     // the MouseArea is not pressed immediately
 
-    QVERIFY(outer->property("pressed").toBool() == false);
+    QVERIFY(!outer->property("pressed").toBool());
 
     QTest::mouseMove(window.data(), QPoint(80, 148));
     QTest::mouseMove(window.data(), QPoint(80, 140));
     QTest::mouseMove(window.data(), QPoint(80, 120));
     QTest::mouseMove(window.data(), QPoint(80, 100));
 
-    QVERIFY(outer->property("moving").toBool() == false);
-    QVERIFY(inner->property("moving").toBool() == true);
+    QVERIFY(!outer->property("moving").toBool());
+    QVERIFY(inner->property("moving").toBool());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(80, 100));
 }
@@ -965,7 +965,7 @@ void tst_qquickflickable::movingAndDragging()
     // Don't test whether moving finished because a flick could occur
 
     // wait for any motion to end
-    QTRY_VERIFY(flickable->isMoving() == false);
+    QTRY_VERIFY(!flickable->isMoving());
 
     QVERIFY(!flickable->isMovingHorizontally());
     QVERIFY(!flickable->isMovingVertically());
@@ -1095,7 +1095,7 @@ void tst_qquickflickable::flickOnRelease()
     QCOMPARE(vFlickSpy.count(), 1);
 
     // wait for any motion to end
-    QTRY_VERIFY(flickable->isMoving() == false);
+    QTRY_VERIFY(!flickable->isMoving());
 
 #ifdef Q_OS_MAC
     QEXPECT_FAIL("", "QTBUG-26094 stopping on a full pixel doesn't work on OS X", Continue);
@@ -1174,7 +1174,7 @@ void tst_qquickflickable::disabled()
     QTest::mouseMove(window.data(), QPoint(50, 70));
     QTest::mouseMove(window.data(), QPoint(50, 60));
 
-    QVERIFY(flick->isMoving() == false);
+    QVERIFY(!flick->isMoving());
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(50, 60));
 
@@ -1182,7 +1182,7 @@ void tst_qquickflickable::disabled()
     moveAndPress(window.data(), QPoint(50, 10));
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(50, 10));
 
-    QTRY_VERIFY(window->rootObject()->property("clicked").toBool() == true);
+    QTRY_VERIFY(window->rootObject()->property("clicked").toBool());
 }
 
 void tst_qquickflickable::flickVelocity()

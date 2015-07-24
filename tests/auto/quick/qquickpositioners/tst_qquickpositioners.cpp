@@ -3919,9 +3919,9 @@ void tst_qquickpositioners::test_attachedproperties()
     int posIndex = greenRect->property("posIndex").toInt();
     QVERIFY(posIndex == 0);
     bool isFirst = greenRect->property("isFirstItem").toBool();
-    QVERIFY(isFirst == true);
+    QVERIFY(isFirst);
     bool isLast = greenRect->property("isLastItem").toBool();
-    QVERIFY(isLast == false);
+    QVERIFY(!isLast);
 
     QQuickRectangle *yellowRect = window->rootObject()->findChild<QQuickRectangle *>("yellowRect");
     QVERIFY(yellowRect != 0);
@@ -3929,18 +3929,18 @@ void tst_qquickpositioners::test_attachedproperties()
     posIndex = yellowRect->property("posIndex").toInt();
     QVERIFY(posIndex == -1);
     isFirst = yellowRect->property("isFirstItem").toBool();
-    QVERIFY(isFirst == false);
+    QVERIFY(!isFirst);
     isLast = yellowRect->property("isLastItem").toBool();
-    QVERIFY(isLast == false);
+    QVERIFY(!isLast);
 
     yellowRect->metaObject()->invokeMethod(yellowRect, "onDemandPositioner");
 
     posIndex = yellowRect->property("posIndex").toInt();
     QVERIFY(posIndex == 1);
     isFirst = yellowRect->property("isFirstItem").toBool();
-    QVERIFY(isFirst == false);
+    QVERIFY(!isFirst);
     isLast = yellowRect->property("isLastItem").toBool();
-    QVERIFY(isLast == true);
+    QVERIFY(isLast);
 
 }
 
@@ -3968,9 +3968,9 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     int posIndex = rect0->property("index").toInt();
     QVERIFY(posIndex == 0);
     bool isFirst = rect0->property("firstItem").toBool();
-    QVERIFY(isFirst == true);
+    QVERIFY(isFirst);
     bool isLast = rect0->property("lastItem").toBool();
-    QVERIFY(isLast == false);
+    QVERIFY(!isLast);
 
     QQuickRectangle *rect1 = window->rootObject()->findChild<QQuickRectangle *>("rect1");
     QVERIFY(rect1 != 0);
@@ -3978,15 +3978,15 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     posIndex = rect1->property("index").toInt();
     QVERIFY(posIndex == 1);
     isFirst = rect1->property("firstItem").toBool();
-    QVERIFY(isFirst == false);
+    QVERIFY(!isFirst);
     isLast = rect1->property("lastItem").toBool();
-    QVERIFY(isLast == true);
+    QVERIFY(isLast);
 
     row->metaObject()->invokeMethod(row, "createSubRect");
 
     QTRY_VERIFY(rect1->property("index").toInt() == 1);
-    QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
-    QTRY_VERIFY(rect1->property("lastItem").toBool() == false);
+    QTRY_VERIFY(!rect1->property("firstItem").toBool());
+    QTRY_VERIFY(!rect1->property("lastItem").toBool());
 
     QQuickRectangle *rect2 = window->rootObject()->findChild<QQuickRectangle *>("rect2");
     QVERIFY(rect2 != 0);
@@ -3994,9 +3994,9 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     posIndex = rect2->property("index").toInt();
     QVERIFY(posIndex == 2);
     isFirst = rect2->property("firstItem").toBool();
-    QVERIFY(isFirst == false);
+    QVERIFY(!isFirst);
     isLast = rect2->property("lastItem").toBool();
-    QVERIFY(isLast == true);
+    QVERIFY(isLast);
 
     row->metaObject()->invokeMethod(row, "destroySubRect");
 
@@ -4004,8 +4004,8 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QCoreApplication::processEvents();
 
     QTRY_VERIFY(rect1->property("index").toInt() == 1);
-    QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
-    QTRY_VERIFY(rect1->property("lastItem").toBool() == true);
+    QTRY_VERIFY(!rect1->property("firstItem").toBool());
+    QTRY_VERIFY(rect1->property("lastItem").toBool());
 
 }
 

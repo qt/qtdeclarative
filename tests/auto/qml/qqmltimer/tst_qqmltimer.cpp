@@ -134,7 +134,7 @@ void tst_qqmltimer::notRepeating()
     QCOMPARE(helper.count, 1);
     consistentWait(200);
     QCOMPARE(helper.count, 1);
-    QVERIFY(timer->isRunning() == false);
+    QVERIFY(!timer->isRunning());
 }
 
 void tst_qqmltimer::notRepeatingStart()
@@ -157,7 +157,7 @@ void tst_qqmltimer::notRepeatingStart()
     QCOMPARE(helper.count, 1);
     consistentWait(200);
     QCOMPARE(helper.count, 1);
-    QVERIFY(timer->isRunning() == false);
+    QVERIFY(!timer->isRunning());
 
     delete timer;
 }
@@ -187,7 +187,7 @@ void tst_qqmltimer::repeat()
 
     consistentWait(200);
     QVERIFY(helper.count == oldCount);
-    QVERIFY(timer->isRunning() == false);
+    QVERIFY(!timer->isRunning());
 
     QSignalSpy spy(timer, SIGNAL(repeatChanged()));
 
@@ -221,7 +221,7 @@ void tst_qqmltimer::triggeredOnStart()
     QCOMPARE(helper.count, 2);
     consistentWait(200);
     QCOMPARE(helper.count, 2);
-    QVERIFY(timer->isRunning() == false);
+    QVERIFY(!timer->isRunning());
 
     QSignalSpy spy(timer, SIGNAL(triggeredOnStartChanged()));
 

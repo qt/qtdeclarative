@@ -84,24 +84,24 @@ void tst_qquickfocusscope::basic()
     QTRY_VERIFY(view == qGuiApp->focusWindow());
 
     QVERIFY(view->isTopLevel());
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Right);
     QTest::qWait(50);
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == true);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Down);
     QTest::qWait(50);
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == true);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(item3->hasActiveFocus());
 
     delete view;
 }
@@ -128,11 +128,11 @@ void tst_qquickfocusscope::nested()
     QTest::qWaitForWindowActive(view);
     QTRY_VERIFY(view == qGuiApp->focusWindow());
 
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == true);
-    QVERIFY(item3->hasActiveFocus() == true);
-    QVERIFY(item4->hasActiveFocus() == true);
-    QVERIFY(item5->hasActiveFocus() == true);
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(item2->hasActiveFocus());
+    QVERIFY(item3->hasActiveFocus());
+    QVERIFY(item4->hasActiveFocus());
+    QVERIFY(item5->hasActiveFocus());
     delete view;
 }
 
@@ -155,22 +155,22 @@ void tst_qquickfocusscope::noFocus()
     QVERIFY(QTest::qWaitForWindowActive(view));
     QVERIFY(view == qGuiApp->focusWindow());
 
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Right);
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Down);
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     delete view;
 }
@@ -195,32 +195,32 @@ void tst_qquickfocusscope::textEdit()
     QTest::qWaitForWindowActive(view);
 
     QTRY_VERIFY(view == qGuiApp->focusWindow());
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Right);
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Right);
     QTest::keyClick(view, Qt::Key_Right);
     QTest::keyClick(view, Qt::Key_Right);
     QTest::keyClick(view, Qt::Key_Right);
     QTest::keyClick(view, Qt::Key_Right);
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == true);
-    QVERIFY(item3->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_Down);
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == true);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(item3->hasActiveFocus());
 
     delete view;
 }
@@ -248,28 +248,28 @@ void tst_qquickfocusscope::forceFocus()
     QTest::qWaitForWindowActive(view);
     QTRY_VERIFY(view == qGuiApp->focusWindow());
 
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
-    QVERIFY(item4->hasActiveFocus() == false);
-    QVERIFY(item5->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
+    QVERIFY(!item4->hasActiveFocus());
+    QVERIFY(!item5->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_4);
-    QVERIFY(item0->hasActiveFocus() == true);
-    QVERIFY(item1->hasActiveFocus() == true);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == false);
-    QVERIFY(item4->hasActiveFocus() == false);
-    QVERIFY(item5->hasActiveFocus() == false);
+    QVERIFY(item0->hasActiveFocus());
+    QVERIFY(item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(!item3->hasActiveFocus());
+    QVERIFY(!item4->hasActiveFocus());
+    QVERIFY(!item5->hasActiveFocus());
 
     QTest::keyClick(view, Qt::Key_5);
-    QVERIFY(item0->hasActiveFocus() == false);
-    QVERIFY(item1->hasActiveFocus() == false);
-    QVERIFY(item2->hasActiveFocus() == false);
-    QVERIFY(item3->hasActiveFocus() == true);
-    QVERIFY(item4->hasActiveFocus() == false);
-    QVERIFY(item5->hasActiveFocus() == true);
+    QVERIFY(!item0->hasActiveFocus());
+    QVERIFY(!item1->hasActiveFocus());
+    QVERIFY(!item2->hasActiveFocus());
+    QVERIFY(item3->hasActiveFocus());
+    QVERIFY(!item4->hasActiveFocus());
+    QVERIFY(item5->hasActiveFocus());
 
     delete view;
 }
@@ -285,11 +285,11 @@ void tst_qquickfocusscope::noParentFocus()
     QTest::qWaitForWindowActive(view);
     QTRY_VERIFY(view == qGuiApp->focusWindow());
 
-    QVERIFY(view->rootObject()->property("focus1") == false);
-    QVERIFY(view->rootObject()->property("focus2") == false);
-    QVERIFY(view->rootObject()->property("focus3") == true);
-    QVERIFY(view->rootObject()->property("focus4") == true);
-    QVERIFY(view->rootObject()->property("focus5") == true);
+    QVERIFY(!view->rootObject()->property("focus1").toBool());
+    QVERIFY(!view->rootObject()->property("focus2").toBool());
+    QVERIFY(view->rootObject()->property("focus3").toBool());
+    QVERIFY(view->rootObject()->property("focus4").toBool());
+    QVERIFY(view->rootObject()->property("focus5").toBool());
 
     delete view;
 }

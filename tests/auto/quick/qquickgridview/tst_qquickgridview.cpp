@@ -1876,7 +1876,7 @@ void tst_QQuickGridView::currentIndex()
 
     // turn off auto highlight
     gridview->setHighlightFollowsCurrentItem(false);
-    QVERIFY(gridview->highlightFollowsCurrentItem() == false);
+    QVERIFY(!gridview->highlightFollowsCurrentItem());
     QVERIFY(gridview->highlightItem());
     qreal hlPosX = gridview->highlightItem()->x();
     qreal hlPosY = gridview->highlightItem()->y();

@@ -132,7 +132,7 @@ void tst_QQuickRepeater::numberModel()
     QVERIFY(!repeater->itemAt(repeater->count()));
 
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QVERIFY(testObject->error() == false);
+    QVERIFY(!testObject->error());
 
     delete testObject;
     delete window;
@@ -444,7 +444,7 @@ void tst_QQuickRepeater::itemModel()
 
     testObject->setUseModel(true);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QVERIFY(testObject->error() == false);
+    QVERIFY(!testObject->error());
 
     QCOMPARE(container->childItems().count(), 4);
     QVERIFY(qobject_cast<QObject*>(container->childItems().at(0))->objectName() == "item1");

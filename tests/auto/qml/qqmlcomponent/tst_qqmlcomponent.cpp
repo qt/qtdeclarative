@@ -158,7 +158,7 @@ void tst_qqmlcomponent::qmlIncubateObject()
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), false);
 
-    QTRY_VERIFY(object->property("test2").toBool() == true);
+    QTRY_VERIFY(object->property("test2").toBool());
 
     delete object;
 }

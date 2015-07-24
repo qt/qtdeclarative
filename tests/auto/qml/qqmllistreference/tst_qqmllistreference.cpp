@@ -98,7 +98,7 @@ void tst_qqmllistreference::qmllistreference()
     TestType tt;
 
     QQmlListReference r(&tt, "data");
-    QVERIFY(r.isValid() == true);
+    QVERIFY(r.isValid());
     QCOMPARE(r.count(), 0);
 
     tt.data.append(&tt);
@@ -112,52 +112,52 @@ void tst_qqmllistreference::qmllistreference_invalid()
     // Invalid
     {
     QQmlListReference r;
-    QVERIFY(r.isValid() == false);
+    QVERIFY(!r.isValid());
     QVERIFY(r.object() == 0);
     QVERIFY(r.listElementType() == 0);
-    QVERIFY(r.canAt() == false);
-    QVERIFY(r.canClear() == false);
-    QVERIFY(r.canCount() == false);
-    QVERIFY(r.append(0) == false);
+    QVERIFY(!r.canAt());
+    QVERIFY(!r.canClear());
+    QVERIFY(!r.canCount());
+    QVERIFY(!r.append(0));
     QVERIFY(r.at(10) == 0);
-    QVERIFY(r.clear() == false);
+    QVERIFY(!r.clear());
     QVERIFY(r.count() == 0);
-    QVERIFY(r.isReadable() == false);
-    QVERIFY(r.isManipulable() == false);
+    QVERIFY(!r.isReadable());
+    QVERIFY(!r.isManipulable());
     }
 
     // Non-property
     {
     QQmlListReference r(&tt, "blah");
-    QVERIFY(r.isValid() == false);
+    QVERIFY(!r.isValid());
     QVERIFY(r.object() == 0);
     QVERIFY(r.listElementType() == 0);
-    QVERIFY(r.canAt() == false);
-    QVERIFY(r.canClear() == false);
-    QVERIFY(r.canCount() == false);
-    QVERIFY(r.append(0) == false);
+    QVERIFY(!r.canAt());
+    QVERIFY(!r.canClear());
+    QVERIFY(!r.canCount());
+    QVERIFY(!r.append(0));
     QVERIFY(r.at(10) == 0);
-    QVERIFY(r.clear() == false);
+    QVERIFY(!r.clear());
     QVERIFY(r.count() == 0);
-    QVERIFY(r.isReadable() == false);
-    QVERIFY(r.isManipulable() == false);
+    QVERIFY(!r.isReadable());
+    QVERIFY(!r.isManipulable());
     }
 
     // Non-list property
     {
     QQmlListReference r(&tt, "intProperty");
-    QVERIFY(r.isValid() == false);
+    QVERIFY(!r.isValid());
     QVERIFY(r.object() == 0);
     QVERIFY(r.listElementType() == 0);
-    QVERIFY(r.canAt() == false);
-    QVERIFY(r.canClear() == false);
-    QVERIFY(r.canCount() == false);
-    QVERIFY(r.append(0) == false);
+    QVERIFY(!r.canAt());
+    QVERIFY(!r.canClear());
+    QVERIFY(!r.canCount());
+    QVERIFY(!r.append(0));
     QVERIFY(r.at(10) == 0);
-    QVERIFY(r.clear() == false);
+    QVERIFY(!r.clear());
     QVERIFY(r.count() == 0);
-    QVERIFY(r.isReadable() == false);
-    QVERIFY(r.isManipulable() == false);
+    QVERIFY(!r.isReadable());
+    QVERIFY(!r.isManipulable());
     }
 }
 
@@ -167,19 +167,19 @@ void tst_qqmllistreference::isValid()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.isValid() == false);
+    QVERIFY(!ref.isValid());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.isValid() == false);
+    QVERIFY(!ref.isValid());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.isValid() == true);
+    QVERIFY(ref.isValid());
     delete tt;
-    QVERIFY(ref.isValid() == false);
+    QVERIFY(!ref.isValid());
     }
 }
 
@@ -233,26 +233,26 @@ void tst_qqmllistreference::canAppend()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.canAppend() == false);
+    QVERIFY(!ref.canAppend());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.canAppend() == false);
+    QVERIFY(!ref.canAppend());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.canAppend() == true);
+    QVERIFY(ref.canAppend());
     delete tt;
-    QVERIFY(ref.canAppend() == false);
+    QVERIFY(!ref.canAppend());
     }
 
     {
     TestType tt;
     tt.property.append = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.canAppend() == false);
+    QVERIFY(!ref.canAppend());
     }
 }
 
@@ -262,26 +262,26 @@ void tst_qqmllistreference::canAt()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.canAt() == false);
+    QVERIFY(!ref.canAt());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.canAt() == false);
+    QVERIFY(!ref.canAt());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.canAt() == true);
+    QVERIFY(ref.canAt());
     delete tt;
-    QVERIFY(ref.canAt() == false);
+    QVERIFY(!ref.canAt());
     }
 
     {
     TestType tt;
     tt.property.at = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.canAt() == false);
+    QVERIFY(!ref.canAt());
     }
 }
 
@@ -291,26 +291,26 @@ void tst_qqmllistreference::canClear()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.canClear() == false);
+    QVERIFY(!ref.canClear());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.canClear() == false);
+    QVERIFY(!ref.canClear());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.canClear() == true);
+    QVERIFY(ref.canClear());
     delete tt;
-    QVERIFY(ref.canClear() == false);
+    QVERIFY(!ref.canClear());
     }
 
     {
     TestType tt;
     tt.property.clear = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.canClear() == false);
+    QVERIFY(!ref.canClear());
     }
 }
 
@@ -320,26 +320,26 @@ void tst_qqmllistreference::canCount()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.canCount() == false);
+    QVERIFY(!ref.canCount());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.canCount() == false);
+    QVERIFY(!ref.canCount());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.canCount() == true);
+    QVERIFY(ref.canCount());
     delete tt;
-    QVERIFY(ref.canCount() == false);
+    QVERIFY(!ref.canCount());
     }
 
     {
     TestType tt;
     tt.property.count = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.canCount() == false);
+    QVERIFY(!ref.canCount());
     }
 }
 
@@ -349,26 +349,26 @@ void tst_qqmllistreference::isReadable()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.isReadable() == false);
+    QVERIFY(!ref.isReadable());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.isReadable() == false);
+    QVERIFY(!ref.isReadable());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.isReadable() == true);
+    QVERIFY(ref.isReadable());
     delete tt;
-    QVERIFY(ref.isReadable() == false);
+    QVERIFY(!ref.isReadable());
     }
 
     {
     TestType tt;
     tt.property.count = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.isReadable() == false);
+    QVERIFY(!ref.isReadable());
     }
 }
 
@@ -378,26 +378,26 @@ void tst_qqmllistreference::isManipulable()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.isManipulable() == false);
+    QVERIFY(!ref.isManipulable());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.isManipulable() == false);
+    QVERIFY(!ref.isManipulable());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.isManipulable() == true);
+    QVERIFY(ref.isManipulable());
     delete tt;
-    QVERIFY(ref.isManipulable() == false);
+    QVERIFY(!ref.isManipulable());
     }
 
     {
     TestType tt;
     tt.property.count = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.isManipulable() == false);
+    QVERIFY(!ref.isManipulable());
     }
 }
 
@@ -408,35 +408,35 @@ void tst_qqmllistreference::append()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.append(tt) == false);
+    QVERIFY(!ref.append(tt));
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.append(tt) == false);
+    QVERIFY(!ref.append(tt));
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.append(tt) == true);
+    QVERIFY(ref.append(tt));
     QVERIFY(tt->data.count() == 1);
     QVERIFY(tt->data.at(0) == tt);
-    QVERIFY(ref.append(&object) == false);
+    QVERIFY(!ref.append(&object));
     QVERIFY(tt->data.count() == 1);
     QVERIFY(tt->data.at(0) == tt);
-    QVERIFY(ref.append(0) == true);
+    QVERIFY(ref.append(0));
     QVERIFY(tt->data.count() == 2);
     QVERIFY(tt->data.at(0) == tt);
     QVERIFY(tt->data.at(1) == 0);
     delete tt;
-    QVERIFY(ref.append(0) == false);
+    QVERIFY(!ref.append(0));
     }
 
     {
     TestType tt;
     tt.property.append = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.append(&tt) == false);
+    QVERIFY(!ref.append(&tt));
     }
 }
 
@@ -484,27 +484,27 @@ void tst_qqmllistreference::clear()
 
     {
     QQmlListReference ref;
-    QVERIFY(ref.clear() == false);
+    QVERIFY(!ref.clear());
     }
 
     {
     QQmlListReference ref(tt, "blah");
-    QVERIFY(ref.clear() == false);
+    QVERIFY(!ref.clear());
     }
 
     {
     QQmlListReference ref(tt, "data");
-    QVERIFY(ref.clear() == true);
+    QVERIFY(ref.clear());
     QVERIFY(tt->data.count() == 0);
     delete tt;
-    QVERIFY(ref.clear() == false);
+    QVERIFY(!ref.clear());
     }
 
     {
     TestType tt;
     tt.property.clear = 0;
     QQmlListReference ref(&tt, "data");
-    QVERIFY(ref.clear() == false);
+    QVERIFY(!ref.clear());
     }
 }
 

@@ -801,7 +801,7 @@ void tst_QQuickPathView::dataModel()
     QVERIFY(pathview != 0);
 
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QVERIFY(testObject->error() == false);
+    QVERIFY(!testObject->error());
 
     QQuickItem *item = findItem<QQuickItem>(pathview, "wrapper", 0);
     QVERIFY(item);
@@ -830,7 +830,7 @@ void tst_QQuickPathView::dataModel()
 
     testObject->setPathItemCount(5);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QVERIFY(testObject->error() == false);
+    QVERIFY(!testObject->error());
 
     QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
 

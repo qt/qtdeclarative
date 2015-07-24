@@ -1750,9 +1750,9 @@ void tst_qqmlecmascript::objectHasOwnProperty()
 
     // test QObjects in QML
     QMetaObject::invokeMethod(object, "testHasOwnPropertySuccess");
-    QVERIFY(object->property("result").value<bool>() == true);
+    QVERIFY(object->property("result").value<bool>());
     QMetaObject::invokeMethod(object, "testHasOwnPropertyFailure");
-    QVERIFY(object->property("result").value<bool>() == false);
+    QVERIFY(!object->property("result").value<bool>());
 
     // now test other types in QML
     QObject *child = object->findChild<QObject*>("typeObj");
@@ -3929,7 +3929,7 @@ void tst_qqmlecmascript::singletonTypeResolution()
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeResolution.qml"));
     QObject *object = component.create();
     QVERIFY(object);
-    QVERIFY(object->property("success") == true);
+    QVERIFY(object->property("success").toBool());
     delete object;
 }
 
@@ -6064,7 +6064,7 @@ void tst_qqmlecmascript::include()
     o->setProperty("serverBaseUrl", server.baseUrl().toString());
     component.completeCreate();
 
-    QTRY_VERIFY(o->property("done").toBool() == true);
+    QTRY_VERIFY(o->property("done").toBool());
 
     QCOMPARE(o->property("test1").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
@@ -6108,8 +6108,8 @@ void tst_qqmlecmascript::includeRemoteSuccess()
     o->setProperty("serverBaseUrl", server.baseUrl().toString());
     component.completeCreate();
 
-    QTRY_VERIFY(o->property("done").toBool() == true);
-    QTRY_VERIFY(o->property("done2").toBool() == true);
+    QTRY_VERIFY(o->property("done").toBool());
+    QTRY_VERIFY(o->property("done2").toBool());
 
     QCOMPARE(o->property("test1").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
@@ -7032,7 +7032,7 @@ void tst_qqmlecmascript::invokableWithQObjectDerived()
     QObject *object = component.create();
 
     QVERIFY(object != 0);
-    QVERIFY(object->property("result").value<bool>() == true);
+    QVERIFY(object->property("result").value<bool>());
 
     delete object;
     }
@@ -7344,7 +7344,7 @@ void tst_qqmlecmascript::sequenceSort()
 
     QVariant q;
     QMetaObject::invokeMethod(object, function.toAscii().constData(), Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
 
     delete object;
 }
@@ -7360,10 +7360,10 @@ void tst_qqmlecmascript::dateParse()
 
     QVariant q;
     QMetaObject::invokeMethod(object, "test_is_invalid_jsDateTime", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
 
     QMetaObject::invokeMethod(object, "test_is_invalid_qtDateTime", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
 
     QMetaObject::invokeMethod(object, "test_rfc2822_date", Q_RETURN_ARG(QVariant, q));
     QCOMPARE(q.toLongLong(), 1379512851000LL);
@@ -7381,7 +7381,7 @@ void tst_qqmlecmascript::utcDate()
     QVariant q;
     QVariant val = QString::fromLatin1("2014-07-16T23:30:31");
     QMetaObject::invokeMethod(object, "check_utc", Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
 }
 
 void tst_qqmlecmascript::negativeYear()
@@ -7611,13 +7611,13 @@ void tst_qqmlecmascript::miscTypeTest()
 
     QVariant q;
     QMetaObject::invokeMethod(object, "test_invalid_url_equal", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
     QMetaObject::invokeMethod(object, "test_invalid_url_strictequal", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
     QMetaObject::invokeMethod(object, "test_valid_url_equal", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
     QMetaObject::invokeMethod(object, "test_valid_url_strictequal", Q_RETURN_ARG(QVariant, q));
-    QVERIFY(q.toBool() == true);
+    QVERIFY(q.toBool());
 
     delete object;
 }
@@ -7688,7 +7688,7 @@ void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
    if (obj.isNull())
        qDebug() << component.errors().first().toString();
    QVERIFY(!obj.isNull());
-   QVERIFY(obj->property("success") == true);
+   QVERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
@@ -7698,7 +7698,7 @@ void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
    if (obj.isNull())
        qDebug() << component.errors().first().toString();
    QVERIFY(!obj.isNull());
-   QTRY_VERIFY(obj->property("success") == true);
+   QTRY_VERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::importedScriptsWithoutQmlMode()
@@ -7708,7 +7708,7 @@ void tst_qqmlecmascript::importedScriptsWithoutQmlMode()
    if (obj.isNull())
        qDebug() << component.errors().first().toString();
    QVERIFY(!obj.isNull());
-   QTRY_VERIFY(obj->property("success") == true);
+   QTRY_VERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::contextObjectOnLazyBindings()

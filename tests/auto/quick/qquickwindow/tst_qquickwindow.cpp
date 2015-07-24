@@ -1693,7 +1693,7 @@ void tst_qquickwindow::requestActivate()
     window1->requestActivate();                 // and then transfer the focus to window1
 
     QTRY_COMPARE(QGuiApplication::focusWindow(), window1.data());
-    QVERIFY(window1->isActive() == true);
+    QVERIFY(window1->isActive());
 
     QQuickItem *item = QQuickVisualTestUtil::findItem<QQuickItem>(window1->contentItem(), "item1");
     QVERIFY(item);

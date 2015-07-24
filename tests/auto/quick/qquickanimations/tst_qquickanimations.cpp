@@ -568,7 +568,7 @@ void tst_qquickanimations::alwaysRunToEnd()
     animation.setLoops(-1);
     animation.setAlwaysRunToEnd(true);
     QVERIFY(animation.loops() == -1);
-    QVERIFY(animation.alwaysRunToEnd() == true);
+    QVERIFY(animation.alwaysRunToEnd());
 
     QElapsedTimer timer;
     timer.start();
@@ -1065,7 +1065,7 @@ void tst_qquickanimations::propertyValueSourceDefaultStart()
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim);
-        QVERIFY(myAnim->isRunning() == false);
+        QVERIFY(!myAnim->isRunning());
     }
 
     {
@@ -1351,7 +1351,7 @@ void tst_qquickanimations::alwaysRunToEndRestartBug()
     animation.setLoops(-1);
     animation.setAlwaysRunToEnd(true);
     QVERIFY(animation.loops() == -1);
-    QVERIFY(animation.alwaysRunToEnd() == true);
+    QVERIFY(animation.alwaysRunToEnd());
     animation.start();
     animation.stop();
     animation.start();

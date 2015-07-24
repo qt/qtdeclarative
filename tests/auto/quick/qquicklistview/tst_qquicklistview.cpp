@@ -396,7 +396,7 @@ void tst_QQuickListView::items(const QUrl &source)
     QTRY_VERIFY(contentItem != 0);
 
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QTRY_VERIFY(testObject->error() == false);
+    QTRY_VERIFY(!testObject->error());
 
     QTRY_VERIFY(listview->highlightItem() != 0);
     QTRY_COMPARE(listview->count(), model.count());
@@ -419,20 +419,20 @@ void tst_QQuickListView::items(const QUrl &source)
     // switch to other delegate
     testObject->setAnimate(true);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QTRY_VERIFY(testObject->error() == false);
+    QTRY_VERIFY(!testObject->error());
     QTRY_VERIFY(listview->currentItem());
 
     // set invalid highlight
     testObject->setInvalidHighlight(true);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QTRY_VERIFY(testObject->error() == false);
+    QTRY_VERIFY(!testObject->error());
     QTRY_VERIFY(listview->currentItem());
     QTRY_VERIFY(listview->highlightItem() == 0);
 
     // back to normal highlight
     testObject->setInvalidHighlight(false);
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
-    QTRY_VERIFY(testObject->error() == false);
+    QTRY_VERIFY(!testObject->error());
     QTRY_VERIFY(listview->currentItem());
     QTRY_VERIFY(listview->highlightItem() != 0);
 
@@ -2266,7 +2266,7 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     listview->setCurrentIndex(20);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
     QTRY_VERIFY(qFuzzyCompare(listview->contentY(), 200.0));
-    QTRY_VERIFY(listview->isMoving() == false);
+    QTRY_VERIFY(!listview->isMoving());
     listview->setCurrentIndex(0);
     QTRY_VERIFY(qFuzzyIsNull(listview->contentY()));
 
@@ -2709,7 +2709,7 @@ void tst_QQuickListView::currentIndex()
 
     // turn off auto highlight
     listview->setHighlightFollowsCurrentItem(false);
-    QVERIFY(listview->highlightFollowsCurrentItem() == false);
+    QVERIFY(!listview->highlightFollowsCurrentItem());
 
     QVERIFY(listview->highlightItem());
     qreal hlPos = listview->highlightItem()->y();
@@ -5039,7 +5039,7 @@ void tst_QQuickListView::marginsResize()
 
     // flick past the end and check content pos still settles on correct extents
     flick(window, flickStart, flickEnd, 180);
-    QTRY_VERIFY(listview->isMoving() == false);
+    QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), end);
     else
@@ -5054,7 +5054,7 @@ void tst_QQuickListView::marginsResize()
 
     // flick past the beginning and check content pos still settles on correct extents
     flick(window, flickEnd, flickStart, 180);
-    QTRY_VERIFY(listview->isMoving() == false);
+    QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), start);
     else
@@ -7892,7 +7892,7 @@ void tst_QQuickListView::QTBUG_38209()
 
     // simulate mouse flick
     flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
-    QTRY_VERIFY(listview->isMoving() == false);
+    QTRY_VERIFY(!listview->isMoving());
     qreal contentY = listview->contentY();
 
     // flick down

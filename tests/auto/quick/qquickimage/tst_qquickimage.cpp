@@ -201,14 +201,14 @@ void tst_qquickimage::imageSource()
     QVERIFY(obj != 0);
 
     if (async)
-        QVERIFY(obj->asynchronous() == true);
+        QVERIFY(obj->asynchronous());
     else
-        QVERIFY(obj->asynchronous() == false);
+        QVERIFY(!obj->asynchronous());
 
     if (cache)
-        QVERIFY(obj->cache() == true);
+        QVERIFY(obj->cache());
     else
-        QVERIFY(obj->cache() == false);
+        QVERIFY(!obj->cache());
 
     if (remote || async)
         QTRY_VERIFY(obj->status() == QQuickImage::Loading);

@@ -470,7 +470,7 @@ void tst_qqmlengine::outputWarningsToStandardError()
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.0; QtObject { property int a: undefined }", QUrl());
 
-    QVERIFY(c.isReady() == true);
+    QVERIFY(c.isReady());
 
     QQmlTestMessageHandler messageHandler;
 

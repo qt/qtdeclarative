@@ -2041,7 +2041,7 @@ void tst_QQuickItem::smooth()
     QCOMPARE(spy.count(),1);
     QList<QVariant> arguments = spy.first();
     QVERIFY(arguments.count() == 1);
-    QVERIFY(arguments.at(0).toBool() == true);
+    QVERIFY(arguments.at(0).toBool());
 
     item->setSmooth(true);
     QCOMPARE(spy.count(),1);
@@ -2070,7 +2070,7 @@ void tst_QQuickItem::antialiasing()
     QCOMPARE(spy.count(),1);
     QList<QVariant> arguments = spy.first();
     QVERIFY(arguments.count() == 1);
-    QVERIFY(arguments.at(0).toBool() == true);
+    QVERIFY(arguments.at(0).toBool());
 
     item->setAntialiasing(true);
     QCOMPARE(spy.count(),1);
@@ -2099,7 +2099,7 @@ void tst_QQuickItem::clip()
 
     QList<QVariant> arguments = spy.first();
     QVERIFY(arguments.count() == 1);
-    QVERIFY(arguments.at(0).toBool() == true);
+    QVERIFY(arguments.at(0).toBool());
 
     QCOMPARE(spy.count(),1);
     item->setClip(true);

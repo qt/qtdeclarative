@@ -663,7 +663,7 @@ void tst_qquicktext::textFormat()
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != 0);
-        QVERIFY(textPrivate->richText == true);
+        QVERIFY(textPrivate->richText);
 
         delete textObject;
     }
@@ -677,7 +677,7 @@ void tst_qquicktext::textFormat()
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != 0);
-        QVERIFY(textPrivate->styledText == true);
+        QVERIFY(textPrivate->styledText);
 
         delete textObject;
     }
