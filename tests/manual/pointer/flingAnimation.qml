@@ -39,24 +39,46 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
+import "content"
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("single point handler", "QQuickPointerSingleHandler: test properties copied from events", Qt.resolvedUrl("singlePointHandlerProperties.qml"))
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
-            addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
-            addExample("map", "scale and pan", Qt.resolvedUrl("map.qml"))
-            addExample("custom map", "scale and pan", Qt.resolvedUrl("map2.qml"))
-            addExample("fling animation", "DragHandler: after dragging, use an animation to simulate momentum", Qt.resolvedUrl("flingAnimation.qml"))
+Rectangle {
+    id: root
+    width: 640
+    height: 480
+    color: "black"
+
+    Repeater {
+        model: 2
+
+        Image {
+            id: ball
+            objectName: "ball" + index
+            source: "resources/redball.png"
+            width: 80; height: 80; x: 200 + index * 200; y: 200
+
+            Text {
+                anchors.centerIn: parent
+                color: "white"
+                text: anim.velocity.x.toFixed(2) + "," + anim.velocity.y.toFixed(2)
+            }
+
+            MomentumAnimation { id: anim; target: ball }
+
+            DragHandler {
+                id: dragHandler
+                onActiveChanged: {
+                    if (!active)
+                        anim.restart(velocity)
+                }
+            }
+            Rectangle {
+                visible: dragHandler.active
+                anchors.fill: parent
+                anchors.margins: -5
+                radius: width / 2
+                opacity: 0.25
+            }
         }
     }
 }
