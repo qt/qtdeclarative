@@ -236,7 +236,7 @@ void tst_QQuickLoader::clear()
         QCOMPARE(loader->progress(), 1.0);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
-        QTRY_VERIFY(loader->item() == 0);
+        QTRY_VERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
@@ -256,7 +256,7 @@ void tst_QQuickLoader::clear()
 
         loader->setSourceComponent(0);
 
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
@@ -276,7 +276,7 @@ void tst_QQuickLoader::clear()
 
         QMetaObject::invokeMethod(item, "clear");
 
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
         QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
@@ -447,7 +447,7 @@ void tst_QQuickLoader::networkRequestUrl()
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
 
-    QTRY_VERIFY(loader->status() == QQuickLoader::Ready);
+    QTRY_COMPARE(loader->status(), QQuickLoader::Ready);
 
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
@@ -480,7 +480,7 @@ void tst_QQuickLoader::networkComponent()
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(item->children().at(1));
     QVERIFY(loader);
-    QTRY_VERIFY(loader->status() == QQuickLoader::Ready);
+    QTRY_COMPARE(loader->status(), QQuickLoader::Ready);
 
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
@@ -505,9 +505,9 @@ void tst_QQuickLoader::failNetworkRequest()
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
 
-    QTRY_VERIFY(loader->status() == QQuickLoader::Error);
+    QTRY_COMPARE(loader->status(), QQuickLoader::Error);
 
-    QVERIFY(loader->item() == 0);
+    QVERIFY(!loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("did_load").toInt(), 123);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
@@ -525,11 +525,11 @@ void tst_QQuickLoader::active()
         QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
 
         QVERIFY(loader->active() == false); // set manually to false
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QMetaObject::invokeMethod(object, "doSetSourceComponent");
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QMetaObject::invokeMethod(object, "doSetSource");
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QMetaObject::invokeMethod(object, "doSetActive");
         QVERIFY(loader->item() != 0);
 
@@ -598,7 +598,7 @@ void tst_QQuickLoader::active()
         QVERIFY(loader->item() != 0);
         int currItemChangedCount = loader->property("itemChangedCount").toInt();
         QMetaObject::invokeMethod(object, "doSetInactive");
-        QVERIFY(loader->item() == 0);
+        QVERIFY(!loader->item());
         QCOMPARE(loader->property("itemChangedCount").toInt(), (currItemChangedCount+1));
 
         delete object;
@@ -781,7 +781,7 @@ void tst_QQuickLoader::initialPropertyValuesError()
     QVERIFY(object != 0);
     QQuickLoader *loader = object->findChild<QQuickLoader*>("loader");
     QVERIFY(loader != 0);
-    QVERIFY(loader->item() == 0);
+    QVERIFY(!loader->item());
     delete object;
 }
 
@@ -803,7 +803,7 @@ void tst_QQuickLoader::deleteComponentCrash()
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QTRY_COMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
-    QVERIFY(loader->source() == testFileUrl("BlueRect.qml"));
+    QCOMPARE(loader->source(), testFileUrl("BlueRect.qml"));
 
     delete item;
 }
@@ -833,7 +833,7 @@ void tst_QQuickLoader::vmeErrors()
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader);
-    QVERIFY(loader->item() == 0);
+    QVERIFY(!loader->item());
 
     delete loader;
 }
@@ -1098,7 +1098,7 @@ void tst_QQuickLoader::parented()
     QQuickItem *item = root->findChild<QQuickItem*>("comp");
     QVERIFY(item);
 
-    QVERIFY(item->parentItem() == root);
+    QCOMPARE(item->parentItem(), root);
 
     QCOMPARE(item->width(), 300.);
     QCOMPARE(item->height(), 300.);

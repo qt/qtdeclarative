@@ -378,7 +378,7 @@ void tst_QQuickGridView::items()
     ctxt->setContextProperty("testModel", &model2);
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    QTRY_VERIFY(itemCount == 0);
+    QTRY_COMPARE(itemCount, 0);
 
     delete window;
 }
@@ -478,8 +478,8 @@ void tst_QQuickGridView::inserted_basic()
     // Confirm items positioned correctly
     for (int i = 0; i < model.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     for (int i = model.count(); i < 30; ++i)
@@ -490,7 +490,7 @@ void tst_QQuickGridView::inserted_basic()
     // Insert item outside visible area
     model.insertItem(1, "Hello", "1324");
 
-    QTRY_VERIFY(gridview->contentY() == 120);
+    QTRY_COMPARE(gridview->contentY(), qreal(120));
 
     delete window;
 }
@@ -820,8 +820,8 @@ void tst_QQuickGridView::removed_basic()
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     // Remove first item (which is the current item);
@@ -841,8 +841,8 @@ void tst_QQuickGridView::removed_basic()
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     // Remove items not visible
@@ -854,8 +854,8 @@ void tst_QQuickGridView::removed_basic()
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     // Remove items before visible
@@ -872,8 +872,8 @@ void tst_QQuickGridView::removed_basic()
     for (int i = 6; i < 18; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     // Remove currentIndex
@@ -891,8 +891,8 @@ void tst_QQuickGridView::removed_basic()
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
+        QTRY_COMPARE(item->y(), qreal((i/3)*60));
     }
 
     // remove item outside current view.
@@ -900,7 +900,7 @@ void tst_QQuickGridView::removed_basic()
     gridview->setContentY(240);
 
     model.removeItem(30);
-    QTRY_VERIFY(gridview->currentIndex() == 31);
+    QTRY_COMPARE(gridview->currentIndex(), 31);
 
     // remove current item beyond visible items.
     gridview->setCurrentIndex(20);
@@ -917,7 +917,7 @@ void tst_QQuickGridView::removed_basic()
     model.removeItem(6);
 
     QTRY_COMPARE(gridview->currentIndex(), 7);
-    QTRY_VERIFY(gridview->currentItem() == oldCurrent);
+    QTRY_COMPARE(gridview->currentItem(), oldCurrent);
 
     delete window;
 }
@@ -1216,7 +1216,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", i));
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QTRY_VERIFY(item->x() == (i%3)*80);
+        QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_VERIFY(item->y() == (i/3)*60 + newTopContentY);
     }
 
@@ -1254,10 +1254,10 @@ void tst_QQuickGridView::clear()
     model.clear();
     gridview->forceLayout();
 
-    QVERIFY(gridview->count() == 0);
-    QVERIFY(gridview->currentItem() == 0);
-    QVERIFY(gridview->contentY() == 0);
-    QVERIFY(gridview->currentIndex() == -1);
+    QCOMPARE(gridview->count(), 0);
+    QVERIFY(!gridview->currentItem());
+    QCOMPARE(gridview->contentY(), qreal(0));
+    QCOMPARE(gridview->currentIndex(), -1);
     QCOMPARE(gridview->contentHeight(), 0.0);
 
     // confirm sanity when adding an item to cleared list
@@ -1265,7 +1265,7 @@ void tst_QQuickGridView::clear()
     gridview->forceLayout();
     QTRY_COMPARE(gridview->count(), 1);
     QVERIFY(gridview->currentItem() != 0);
-    QVERIFY(gridview->currentIndex() == 0);
+    QCOMPARE(gridview->currentIndex(), 0);
 
     delete window;
 }
@@ -1804,7 +1804,7 @@ void tst_QQuickGridView::swapWithFirstItem()
     // ensure content position is stable
     gridview->setContentY(0);
     model.moveItem(10, 0);
-    QTRY_VERIFY(gridview->contentY() == 0);
+    QTRY_COMPARE(gridview->contentY(), qreal(0));
 
     delete window;
 }
@@ -1854,7 +1854,7 @@ void tst_QQuickGridView::currentIndex()
     gridview->setCurrentIndex(35);
     QTRY_VERIFY(gridview->verticalVelocity() != 0.0);
     gridview->setCurrentIndex(0);
-    QTRY_VERIFY(gridview->verticalVelocity() == 0.0);
+    QTRY_COMPARE(gridview->verticalVelocity(), 0.0);
 
     // footer should become visible if it is out of view, and then current index moves to the first row
     window->rootObject()->setProperty("showFooter", true);
@@ -1976,7 +1976,7 @@ void tst_QQuickGridView::keyNavigation()
 
     window->requestActivate();
     QTest::qWaitForWindowActive(window);
-    QTRY_VERIFY(qGuiApp->focusWindow() == window);
+    QTRY_COMPARE(qGuiApp->focusWindow(), window);
     QCOMPARE(gridview->currentIndex(), 0);
 
     QTest::keyClick(window, forwardsKey);
@@ -2261,15 +2261,15 @@ void tst_QQuickGridView::defaultValues()
     QQuickGridView *obj = qobject_cast<QQuickGridView*>(c.create());
 
     QTRY_VERIFY(obj != 0);
-    QTRY_VERIFY(obj->model() == QVariant());
-    QTRY_VERIFY(obj->delegate() == 0);
+    QTRY_COMPARE(obj->model(), QVariant());
+    QTRY_VERIFY(!obj->delegate());
     QTRY_COMPARE(obj->currentIndex(), -1);
-    QTRY_VERIFY(obj->currentItem() == 0);
+    QTRY_VERIFY(!obj->currentItem());
     QTRY_COMPARE(obj->count(), 0);
-    QTRY_VERIFY(obj->highlight() == 0);
-    QTRY_VERIFY(obj->highlightItem() == 0);
+    QTRY_VERIFY(!obj->highlight());
+    QTRY_VERIFY(!obj->highlightItem());
     QTRY_COMPARE(obj->highlightFollowsCurrentItem(), true);
-    QTRY_VERIFY(obj->flow() == 0);
+    QTRY_COMPARE(obj->flow(), QQuickGridView::FlowLeftToRight);
     QTRY_COMPARE(obj->isWrapEnabled(), false);
 #ifdef QML_VIEW_DEFAULTCACHEBUFFER
     QTRY_COMPARE(obj->cacheBuffer(), QML_VIEW_DEFAULTCACHEBUFFER);
@@ -2296,7 +2296,7 @@ void tst_QQuickGridView::properties()
     QTRY_VERIFY(obj->highlight() != 0);
     QTRY_VERIFY(obj->highlightItem() != 0);
     QTRY_COMPARE(obj->highlightFollowsCurrentItem(), false);
-    QTRY_VERIFY(obj->flow() == 0);
+    QTRY_COMPARE(obj->flow(), QQuickGridView::FlowLeftToRight);
     QTRY_COMPARE(obj->isWrapEnabled(), true);
     QTRY_COMPARE(obj->cacheBuffer(), 200);
     QTRY_COMPARE(obj->cellWidth(), qreal(100));
@@ -2733,7 +2733,7 @@ void tst_QQuickGridView::mirroring()
     foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QQuickItem>(gridviewA, objectName)->x(), findItem<QQuickItem>(gridviewB, objectName)->x());
 
-    QVERIFY(gridviewB->layoutDirection() == gridviewB->effectiveLayoutDirection());
+    QCOMPARE(gridviewB->layoutDirection(), gridviewB->effectiveLayoutDirection());
     QQuickItemPrivate::get(gridviewB)->setLayoutMirror(true);
     QVERIFY(gridviewB->layoutDirection() != gridviewB->effectiveLayoutDirection());
 
@@ -3021,7 +3021,7 @@ void tst_QQuickGridView::footer()
 
     QQuickText *footer = findItem<QQuickText>(contentItem, "footer");
     QVERIFY(footer);
-    QVERIFY(footer == gridview->footerItem());
+    QCOMPARE(footer, gridview->footerItem());
 
     QCOMPARE(footer->position(), initialFooterPos);
     QCOMPARE(footer->width(), 100.);
@@ -3087,7 +3087,7 @@ void tst_QQuickGridView::footer()
     QVERIFY(!footer);
     footer = findItem<QQuickText>(contentItem, "footer2");
     QVERIFY(footer);
-    QVERIFY(footer == gridview->footerItem());
+    QCOMPARE(footer, gridview->footerItem());
 
     QCOMPARE(footer->position(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);
@@ -3270,7 +3270,7 @@ void tst_QQuickGridView::header()
 
     QQuickText *header = findItem<QQuickText>(contentItem, "header");
     QVERIFY(header);
-    QVERIFY(header == gridview->headerItem());
+    QCOMPARE(header, gridview->headerItem());
 
     QCOMPARE(header->position(), initialHeaderPos);
     QCOMPARE(header->width(), 100.);
@@ -3307,7 +3307,7 @@ void tst_QQuickGridView::header()
     header = findItem<QQuickText>(contentItem, "header2");
     QVERIFY(header);
 
-    QVERIFY(header == gridview->headerItem());
+    QCOMPARE(header, gridview->headerItem());
 
     QCOMPARE(header->position(), changedHeaderPos);
     QCOMPARE(header->width(), 50.);
@@ -3614,11 +3614,11 @@ void tst_QQuickGridView::resetModel_headerFooter()
 
     // A reset should not force a new header or footer to be created.
     QQuickItem *newHeader = findItem<QQuickItem>(contentItem, "header");
-    QVERIFY(newHeader == header);
+    QCOMPARE(newHeader, header);
     QCOMPARE(header->y(), -header->height());
 
     QQuickItem *newFooter = findItem<QQuickItem>(contentItem, "footer");
-    QVERIFY(newFooter == footer);
+    QCOMPARE(newFooter, footer);
     QCOMPARE(footer->y(), 60.*2);
 
     delete window;
@@ -5826,7 +5826,7 @@ void tst_QQuickGridView::cacheBuffer()
     window->engine()->setIncubationController(&controller);
 
     window->rootObject()->setProperty("cacheBuffer", 200);
-    QTRY_VERIFY(gridview->cacheBuffer() == 200);
+    QTRY_COMPARE(gridview->cacheBuffer(), 200);
 
     // items will be created one at a time
     for (int i = itemCount; i < qMin(itemCount+9,model.count()); ++i) {
@@ -5926,8 +5926,8 @@ void tst_QQuickGridView::asynchronous()
     for (int i = 0; i < 12; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
-        QVERIFY(item->x() == (i%3)*100);
-        QVERIFY(item->y() == (i/3)*100);
+        QCOMPARE(item->x(), qreal((i%3)*100));
+        QCOMPARE(item->y(), qreal((i/3)*100));
     }
 
     delete window;
@@ -6345,7 +6345,7 @@ void tst_QQuickGridView::matchIndexLists(const QVariantList &indexLists, const Q
 void tst_QQuickGridView::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
 {
     for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
-        QVERIFY(it.value().type() == QVariant::Int);
+        QCOMPARE(it.value().type(), QVariant::Int);
         QString name = it.key();
         int itemIndex = it.value().toInt();
         QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));

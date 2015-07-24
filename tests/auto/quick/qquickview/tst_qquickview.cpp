@@ -184,16 +184,16 @@ void tst_QQuickView::errors()
         QQuickView view;
         QQmlTestMessageHandler messageHandler;
         view.setSource(testFileUrl("error1.qml"));
-        QVERIFY(view.status() == QQuickView::Error);
-        QVERIFY(view.errors().count() == 1);
+        QCOMPARE(view.status(), QQuickView::Error);
+        QCOMPARE(view.errors().count(), 1);
     }
 
     {
         QQuickView view;
         QQmlTestMessageHandler messageHandler;
         view.setSource(testFileUrl("error2.qml"));
-        QVERIFY(view.status() == QQuickView::Error);
-        QVERIFY(view.errors().count() == 1);
+        QCOMPARE(view.status(), QQuickView::Error);
+        QCOMPARE(view.errors().count(), 1);
         view.show();
     }
 }
@@ -205,16 +205,16 @@ void tst_QQuickView::engine()
 
     QQuickView *view = new QQuickView(engine, 0);
     QVERIFY(view);
-    QVERIFY(engine->incubationController() == view->incubationController());
+    QCOMPARE(engine->incubationController(), view->incubationController());
 
     QQuickView *view2 = new QQuickView(engine, 0);
     QVERIFY(view);
-    QVERIFY(engine->incubationController() == view->incubationController());
+    QCOMPARE(engine->incubationController(), view->incubationController());
     delete view;
     QVERIFY(!engine->incubationController());
 
     engine->setIncubationController(view2->incubationController());
-    QVERIFY(engine->incubationController() == view2->incubationController());
+    QCOMPARE(engine->incubationController(), view2->incubationController());
     delete view2;
     QVERIFY(!engine->incubationController());
 

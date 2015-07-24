@@ -85,7 +85,7 @@ void tst_qquickfontloader::noFont()
     QVERIFY(fontObject != 0);
     QCOMPARE(fontObject->name(), QString(""));
     QCOMPARE(fontObject->source(), QUrl(""));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Null);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Null);
 
     delete fontObject;
 }
@@ -100,7 +100,7 @@ void tst_qquickfontloader::namedFont()
     QVERIFY(fontObject != 0);
     QCOMPARE(fontObject->source(), QUrl(""));
     QCOMPARE(fontObject->name(), QString("Helvetica"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
 }
 
 void tst_qquickfontloader::localFont()
@@ -113,7 +113,7 @@ void tst_qquickfontloader::localFont()
     QVERIFY(fontObject != 0);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
 }
 
 void tst_qquickfontloader::failLocalFont()
@@ -127,7 +127,7 @@ void tst_qquickfontloader::failLocalFont()
     QVERIFY(fontObject != 0);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString(""));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Error);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Error);
 }
 
 void tst_qquickfontloader::webFont()
@@ -141,7 +141,7 @@ void tst_qquickfontloader::webFont()
     QVERIFY(fontObject != 0);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
 }
 
 void tst_qquickfontloader::redirWebFont()
@@ -157,7 +157,7 @@ void tst_qquickfontloader::redirWebFont()
     QVERIFY(fontObject != 0);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
 }
 
 void tst_qquickfontloader::failWebFont()
@@ -172,7 +172,7 @@ void tst_qquickfontloader::failWebFont()
     QVERIFY(fontObject != 0);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString(""));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Error);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Error);
 }
 
 void tst_qquickfontloader::changeFont()
@@ -189,26 +189,26 @@ void tst_qquickfontloader::changeFont()
     QSignalSpy nameSpy(fontObject, SIGNAL(nameChanged()));
     QSignalSpy statusSpy(fontObject, SIGNAL(statusChanged()));
 
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 0);
     QCOMPARE(statusSpy.count(), 0);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
     ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Loading);
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Loading);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 1);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 
     ctxt->setContextProperty("font", testFileUrl("tarzeau_ocr_a.ttf"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 2);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
     ctxt->setContextProperty("font", server.urlString("/daniel.ttf"));
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(nameSpy.count(), 3);
     QCOMPARE(statusSpy.count(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
@@ -224,7 +224,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
 
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(qvariant_cast<QObject *>(window.rootObject()->property("fontloader")));
     QVERIFY(fontObject != 0);
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QVERIFY(fontObject->source() != QUrl(""));
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
@@ -236,7 +236,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QEXPECT_FAIL("", "QTBUG-20268", Abort);
-    QTRY_VERIFY(fontObject->status() == QQuickFontLoader::Ready);
+    QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
     QCOMPARE(window.rootObject()->property("name").toString(), QString("Tahoma"));
 }
 

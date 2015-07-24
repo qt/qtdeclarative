@@ -68,7 +68,7 @@ void tst_qquickpointattractor::test_basic()
 
         QVERIFY(d->x != 0.f);
         QVERIFY(d->y != 0.f);
-        QVERIFY(d->x == d->y);
+        QCOMPARE(d->x, d->y);
         QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);
         QCOMPARE(d->ax, 0.f);

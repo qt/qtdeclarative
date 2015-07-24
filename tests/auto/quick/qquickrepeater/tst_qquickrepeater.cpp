@@ -447,16 +447,16 @@ void tst_QQuickRepeater::itemModel()
     QVERIFY(!testObject->error());
 
     QCOMPARE(container->childItems().count(), 4);
-    QVERIFY(qobject_cast<QObject*>(container->childItems().at(0))->objectName() == "item1");
-    QVERIFY(qobject_cast<QObject*>(container->childItems().at(1))->objectName() == "item2");
-    QVERIFY(qobject_cast<QObject*>(container->childItems().at(2))->objectName() == "item3");
-    QVERIFY(container->childItems().at(3) == repeater);
+    QCOMPARE(qobject_cast<QObject*>(container->childItems().at(0))->objectName(), QLatin1String("item1"));
+    QCOMPARE(qobject_cast<QObject*>(container->childItems().at(1))->objectName(), QLatin1String("item2"));
+    QCOMPARE(qobject_cast<QObject*>(container->childItems().at(2))->objectName(), QLatin1String("item3"));
+    QCOMPARE(container->childItems().at(3), repeater);
 
     QMetaObject::invokeMethod(window->rootObject(), "switchModel");
     QCOMPARE(container->childItems().count(), 3);
-    QVERIFY(qobject_cast<QObject*>(container->childItems().at(0))->objectName() == "item4");
-    QVERIFY(qobject_cast<QObject*>(container->childItems().at(1))->objectName() == "item5");
-    QVERIFY(container->childItems().at(2) == repeater);
+    QCOMPARE(qobject_cast<QObject*>(container->childItems().at(0))->objectName(), QLatin1String("item4"));
+    QCOMPARE(qobject_cast<QObject*>(container->childItems().at(1))->objectName(), QLatin1String("item5"));
+    QCOMPARE(container->childItems().at(2), repeater);
 
     testObject->setUseModel(false);
     QCOMPARE(container->childItems().count(), 1);
@@ -812,8 +812,8 @@ void tst_QQuickRepeater::invalidContextCrash()
     repeater->setParent(root.data());
 
     QCOMPARE(root->children().count(), 2);
-    QVERIFY(root->children().at(0) == model);
-    QVERIFY(root->children().at(1) == repeater);
+    QCOMPARE(root->children().at(0), model);
+    QCOMPARE(root->children().at(1), repeater);
 
     // Delete the root object, which will invalidate/delete the QML context
     // and then delete the child QObjects, which may try to access the context.

@@ -91,7 +91,7 @@ void tst_QQuickPinchArea::pinchProperties()
     // target
     QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
     QVERIFY(blackRect != 0);
-    QVERIFY(blackRect == pinch->target());
+    QCOMPARE(blackRect, pinch->target());
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(rootItem != 0);
     QSignalSpy targetSpy(pinch, SIGNAL(targetChanged()));

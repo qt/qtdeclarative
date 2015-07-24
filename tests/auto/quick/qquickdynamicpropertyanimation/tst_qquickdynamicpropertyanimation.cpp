@@ -59,11 +59,11 @@ private:
         QQmlProperty testProp(item, propertyName);
         QPropertyAnimation animation(item, propertyName, this);
         animation.setEndValue(toValue);
-        QVERIFY(animation.targetObject() == item);
-        QVERIFY(animation.propertyName() == propertyName);
-        QVERIFY(animation.endValue().value<T>() == toValue);
+        QCOMPARE(animation.targetObject(), item);
+        QCOMPARE(animation.propertyName(), propertyName);
+        QCOMPARE(animation.endValue().value<T>(), toValue);
         animation.start();
-        QVERIFY(animation.state() == QAbstractAnimation::Running);
+        QCOMPARE(animation.state(), QAbstractAnimation::Running);
         QTest::qWait(animation.duration());
         QTRY_COMPARE(testProp.read().value<T>(), toValue);
     }

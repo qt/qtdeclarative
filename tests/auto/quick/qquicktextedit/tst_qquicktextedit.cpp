@@ -577,7 +577,7 @@ void tst_qquicktextedit::textFormat()
         QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->textFormat() == QQuickTextEdit::RichText);
+        QCOMPARE(textObject->textFormat(), QQuickTextEdit::RichText);
     }
     {
         QQmlComponent textComponent(&engine);
@@ -585,7 +585,7 @@ void tst_qquicktextedit::textFormat()
         QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->textFormat() == QQuickTextEdit::PlainText);
+        QCOMPARE(textObject->textFormat(), QQuickTextEdit::PlainText);
     }
     {
         QQmlComponent component(&engine);
@@ -802,7 +802,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     // keyboard input direction from qApp->inputMethod()->inputDirection
     textEdit->setText("");
     platformInputContext.setInputDirection(Qt::LeftToRight);
-    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(qApp->inputMethod()->inputDirection(), Qt::LeftToRight);
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignLeft);
     QVERIFY(textEdit->positionToRectangle(0).x() < window.width()/2);
 
@@ -810,7 +810,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
 
     platformInputContext.setInputDirection(Qt::RightToLeft);
     QCOMPARE(cursorRectangleSpy.count(), 1);
-    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::RightToLeft);
+    QCOMPARE(qApp->inputMethod()->inputDirection(), Qt::RightToLeft);
     QCOMPARE(textEdit->hAlign(), QQuickTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > window.width()/2);
 
@@ -1401,22 +1401,22 @@ void tst_qquicktextedit::selection()
     }
 
     textEditObject->setCursorPosition(0);
-    QVERIFY(textEditObject->cursorPosition() == 0);
-    QVERIFY(textEditObject->selectionStart() == 0);
-    QVERIFY(textEditObject->selectionEnd() == 0);
+    QCOMPARE(textEditObject->cursorPosition(), 0);
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 0);
     QVERIFY(textEditObject->selectedText().isNull());
 
     // Verify invalid positions are ignored.
     textEditObject->setCursorPosition(-1);
-    QVERIFY(textEditObject->cursorPosition() == 0);
-    QVERIFY(textEditObject->selectionStart() == 0);
-    QVERIFY(textEditObject->selectionEnd() == 0);
+    QCOMPARE(textEditObject->cursorPosition(), 0);
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 0);
     QVERIFY(textEditObject->selectedText().isNull());
 
     textEditObject->setCursorPosition(textEditObject->text().count()+1);
-    QVERIFY(textEditObject->cursorPosition() == 0);
-    QVERIFY(textEditObject->selectionStart() == 0);
-    QVERIFY(textEditObject->selectionEnd() == 0);
+    QCOMPARE(textEditObject->cursorPosition(), 0);
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 0);
     QVERIFY(textEditObject->selectedText().isNull());
 
     //Test selection
@@ -1430,9 +1430,9 @@ void tst_qquicktextedit::selection()
     }
 
     textEditObject->setCursorPosition(0);
-    QVERIFY(textEditObject->cursorPosition() == 0);
-    QVERIFY(textEditObject->selectionStart() == 0);
-    QVERIFY(textEditObject->selectionEnd() == 0);
+    QCOMPARE(textEditObject->cursorPosition(), 0);
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 0);
     QVERIFY(textEditObject->selectedText().isNull());
 
     //Test Error Ignoring behaviour
@@ -1447,20 +1447,20 @@ void tst_qquicktextedit::selection()
     textEditObject->select(0,100);
     QVERIFY(textEditObject->selectedText().isNull());
     textEditObject->select(0,10);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->select(-10,0);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->select(100,101);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->select(0,-10);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->select(0,100);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
 
     textEditObject->deselect();
     QVERIFY(textEditObject->selectedText().isNull());
     textEditObject->select(0,10);
-    QVERIFY(textEditObject->selectedText().size() == 10);
+    QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->deselect();
     QVERIFY(textEditObject->selectedText().isNull());
 }
@@ -3223,15 +3223,15 @@ void tst_qquicktextedit::pastingRichText_QTBUG_14003()
     QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(component.create());
 
     QTRY_VERIFY(obj != 0);
-    QTRY_VERIFY(obj->textFormat() == QQuickTextEdit::PlainText);
+    QTRY_COMPARE(obj->textFormat(), QQuickTextEdit::PlainText);
 
     QMimeData *mData = new QMimeData;
     mData->setHtml("<font color=\"red\">Hello</font>");
     QGuiApplication::clipboard()->setMimeData(mData);
 
     obj->paste();
-    QTRY_VERIFY(obj->text() == "");
-    QTRY_VERIFY(obj->textFormat() == QQuickTextEdit::PlainText);
+    QTRY_COMPARE(obj->text(), QString());
+    QTRY_COMPARE(obj->textFormat(), QQuickTextEdit::PlainText);
 }
 #endif
 
@@ -3257,11 +3257,11 @@ void tst_qquicktextedit::implicitSize()
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 
     textObject->resetWidth();
-    QVERIFY(textObject->width() == textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 void tst_qquicktextedit::contentSize()
@@ -3329,7 +3329,7 @@ void tst_qquicktextedit::signal_editingfinished()
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
-    QVERIFY(QGuiApplication::focusWindow() == window);
+    QCOMPARE(QGuiApplication::focusWindow(), window);
 
     QVERIFY(window->rootObject() != 0);
 

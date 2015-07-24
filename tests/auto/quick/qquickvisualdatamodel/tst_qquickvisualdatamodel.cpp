@@ -513,15 +513,15 @@ void tst_qquickvisualdatamodel::rootIndex()
     QVERIFY(obj != 0);
 
     QMetaObject::invokeMethod(obj, "setRoot");
-    QVERIFY(qvariant_cast<QModelIndex>(obj->rootIndex()) == model.index(0,0));
+    QCOMPARE(qvariant_cast<QModelIndex>(obj->rootIndex()), model.index(0,0));
 
     QMetaObject::invokeMethod(obj, "setRootToParent");
-    QVERIFY(qvariant_cast<QModelIndex>(obj->rootIndex()) == QModelIndex());
+    QCOMPARE(qvariant_cast<QModelIndex>(obj->rootIndex()), QModelIndex());
 
     QMetaObject::invokeMethod(obj, "setRoot");
-    QVERIFY(qvariant_cast<QModelIndex>(obj->rootIndex()) == model.index(0,0));
+    QCOMPARE(qvariant_cast<QModelIndex>(obj->rootIndex()), model.index(0,0));
     model.clear(); // will emit modelReset()
-    QVERIFY(qvariant_cast<QModelIndex>(obj->rootIndex()) == QModelIndex());
+    QCOMPARE(qvariant_cast<QModelIndex>(obj->rootIndex()), QModelIndex());
 
     delete obj;
 }
@@ -628,7 +628,7 @@ void tst_qquickvisualdatamodel::childChanged()
 
     model.item(1,0)->takeRow(1);
     name = findItem<QQuickText>(contentItem, "display", 1);
-    QVERIFY(name == 0);
+    QVERIFY(!name);
 
     vdm->setRootIndex(QVariant::fromValue(QModelIndex()));
     QCOMPARE(listview->count(), 3);

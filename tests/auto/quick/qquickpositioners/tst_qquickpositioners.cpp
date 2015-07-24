@@ -3847,8 +3847,8 @@ void tst_qquickpositioners::test_allInvisible()
 
     QQuickRow *row = window->rootObject()->findChild<QQuickRow*>("row");
     QVERIFY(row != 0);
-    QVERIFY(row->width() == 0);
-    QVERIFY(row->height() == 0);
+    QCOMPARE(row->width(), qreal(0));
+    QCOMPARE(row->height(), qreal(0));
 
     // test padding
     row->setProperty("padding", 1);
@@ -3862,8 +3862,8 @@ void tst_qquickpositioners::test_allInvisible()
 
     QQuickColumn *column = window->rootObject()->findChild<QQuickColumn*>("column");
     QVERIFY(column != 0);
-    QVERIFY(column->width() == 0);
-    QVERIFY(column->height() == 0);
+    QCOMPARE(column->width(), qreal(0));
+    QCOMPARE(column->height(), qreal(0));
 
     // test padding
     column->setProperty("padding", 1);
@@ -3877,8 +3877,8 @@ void tst_qquickpositioners::test_allInvisible()
 
     QQuickGrid *grid = window->rootObject()->findChild<QQuickGrid*>("grid");
     QVERIFY(grid != 0);
-    QVERIFY(grid->width() == 0);
-    QVERIFY(grid->height() == 0);
+    QCOMPARE(grid->width(), qreal(0));
+    QCOMPARE(grid->height(), qreal(0));
 
     // test padding
     grid->setProperty("padding", 1);
@@ -3892,8 +3892,8 @@ void tst_qquickpositioners::test_allInvisible()
 
     QQuickFlow *flow = window->rootObject()->findChild<QQuickFlow*>("flow");
     QVERIFY(flow != 0);
-    QVERIFY(flow->width() == 0);
-    QVERIFY(flow->height() == 0);
+    QCOMPARE(flow->width(), qreal(0));
+    QCOMPARE(flow->height(), qreal(0));
 
     // test padding
     flow->setProperty("padding", 1);
@@ -3917,7 +3917,7 @@ void tst_qquickpositioners::test_attachedproperties()
     QVERIFY(greenRect != 0);
 
     int posIndex = greenRect->property("posIndex").toInt();
-    QVERIFY(posIndex == 0);
+    QCOMPARE(posIndex, 0);
     bool isFirst = greenRect->property("isFirstItem").toBool();
     QVERIFY(isFirst);
     bool isLast = greenRect->property("isLastItem").toBool();
@@ -3927,7 +3927,7 @@ void tst_qquickpositioners::test_attachedproperties()
     QVERIFY(yellowRect != 0);
 
     posIndex = yellowRect->property("posIndex").toInt();
-    QVERIFY(posIndex == -1);
+    QCOMPARE(posIndex, -1);
     isFirst = yellowRect->property("isFirstItem").toBool();
     QVERIFY(!isFirst);
     isLast = yellowRect->property("isLastItem").toBool();
@@ -3936,7 +3936,7 @@ void tst_qquickpositioners::test_attachedproperties()
     yellowRect->metaObject()->invokeMethod(yellowRect, "onDemandPositioner");
 
     posIndex = yellowRect->property("posIndex").toInt();
-    QVERIFY(posIndex == 1);
+    QCOMPARE(posIndex, 1);
     isFirst = yellowRect->property("isFirstItem").toBool();
     QVERIFY(!isFirst);
     isLast = yellowRect->property("isLastItem").toBool();
@@ -3966,7 +3966,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QVERIFY(rect0 != 0);
 
     int posIndex = rect0->property("index").toInt();
-    QVERIFY(posIndex == 0);
+    QCOMPARE(posIndex, 0);
     bool isFirst = rect0->property("firstItem").toBool();
     QVERIFY(isFirst);
     bool isLast = rect0->property("lastItem").toBool();
@@ -3976,7 +3976,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QVERIFY(rect1 != 0);
 
     posIndex = rect1->property("index").toInt();
-    QVERIFY(posIndex == 1);
+    QCOMPARE(posIndex, 1);
     isFirst = rect1->property("firstItem").toBool();
     QVERIFY(!isFirst);
     isLast = rect1->property("lastItem").toBool();
@@ -3984,7 +3984,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 
     row->metaObject()->invokeMethod(row, "createSubRect");
 
-    QTRY_VERIFY(rect1->property("index").toInt() == 1);
+    QTRY_COMPARE(rect1->property("index").toInt(), 1);
     QTRY_VERIFY(!rect1->property("firstItem").toBool());
     QTRY_VERIFY(!rect1->property("lastItem").toBool());
 
@@ -3992,7 +3992,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QVERIFY(rect2 != 0);
 
     posIndex = rect2->property("index").toInt();
-    QVERIFY(posIndex == 2);
+    QCOMPARE(posIndex, 2);
     isFirst = rect2->property("firstItem").toBool();
     QVERIFY(!isFirst);
     isLast = rect2->property("lastItem").toBool();
@@ -4003,7 +4003,7 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
-    QTRY_VERIFY(rect1->property("index").toInt() == 1);
+    QTRY_COMPARE(rect1->property("index").toInt(), 1);
     QTRY_VERIFY(!rect1->property("firstItem").toBool());
     QTRY_VERIFY(rect1->property("lastItem").toBool());
 
@@ -4038,7 +4038,7 @@ void tst_qquickpositioners::matchIndexLists(const QVariantList &indexLists, cons
 void tst_qquickpositioners::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
 {
     for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
-        QVERIFY(it.value().type() == QVariant::Int);
+        QCOMPARE(it.value().type(), QVariant::Int);
         QString name = it.key();
         int itemIndex = it.value().toInt();
         QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
@@ -4052,7 +4052,7 @@ void tst_qquickpositioners::matchItemsAndIndexes(const QVariantMap &items, const
 void tst_qquickpositioners::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
 {
     for (int i=0; i<itemLists.count(); i++) {
-        QVERIFY(itemLists[i].type() == QVariant::List);
+        QCOMPARE(itemLists[i].type(), QVariant::List);
         QVariantList current = itemLists[i].toList();
         for (int j=0; j<current.count(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());

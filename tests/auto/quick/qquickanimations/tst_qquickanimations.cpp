@@ -122,9 +122,9 @@ void tst_qquickanimations::simpleProperty()
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
-    QVERIFY(animation.target() == &rect);
-    QVERIFY(animation.property() == "x");
-    QVERIFY(animation.to().toReal() == 200.0);
+    QCOMPARE(animation.target(), &rect);
+    QCOMPARE(animation.property(), QLatin1String("x"));
+    QCOMPARE(animation.to().toReal(), 200.0);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -136,7 +136,7 @@ void tst_qquickanimations::simpleProperty()
     animation.pause();
     QVERIFY(animation.isPaused());
     animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
+    QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(),100.0);
 }
 
@@ -147,9 +147,9 @@ void tst_qquickanimations::simpleNumber()
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
-    QVERIFY(animation.target() == &rect);
-    QVERIFY(animation.property() == "x");
-    QVERIFY(animation.to() == 200);
+    QCOMPARE(animation.target(), &rect);
+    QCOMPARE(animation.property(), QLatin1String("x"));
+    QCOMPARE(animation.to(), qreal(200));
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -161,7 +161,7 @@ void tst_qquickanimations::simpleNumber()
     QVERIFY(animation.isRunning());
     QVERIFY(animation.isPaused());
     animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
+    QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(), qreal(100));
 }
 
@@ -172,9 +172,9 @@ void tst_qquickanimations::simpleColor()
     animation.setTargetObject(&rect);
     animation.setProperty("color");
     animation.setTo(QColor("red"));
-    QVERIFY(animation.target() == &rect);
-    QVERIFY(animation.property() == "color");
-    QVERIFY(animation.to() == QColor("red"));
+    QCOMPARE(animation.target(), &rect);
+    QCOMPARE(animation.property(), QLatin1String("color"));
+    QCOMPARE(animation.to(), QColor("red"));
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -186,12 +186,12 @@ void tst_qquickanimations::simpleColor()
     QVERIFY(animation.isRunning());
     QVERIFY(animation.isPaused());
     animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
+    QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.color(), QColor::fromRgbF(0.498039, 0, 0.498039, 1));
 
     rect.setColor(QColor("green"));
     animation.setFrom(QColor("blue"));
-    QVERIFY(animation.from() == QColor("blue"));
+    QCOMPARE(animation.from(), QColor("blue"));
     animation.restart();
     QCOMPARE(rect.color(), QColor("blue"));
     QVERIFY(animation.isRunning());
@@ -206,10 +206,10 @@ void tst_qquickanimations::simpleRotation()
     animation.setTargetObject(&rect);
     animation.setProperty("rotation");
     animation.setTo(270);
-    QVERIFY(animation.target() == &rect);
-    QVERIFY(animation.property() == "rotation");
-    QVERIFY(animation.to() == 270);
-    QVERIFY(animation.direction() == QQuickRotationAnimation::Numerical);
+    QCOMPARE(animation.target(), &rect);
+    QCOMPARE(animation.property(), QLatin1String("rotation"));
+    QCOMPARE(animation.to(), qreal(270));
+    QCOMPARE(animation.direction(), QQuickRotationAnimation::Numerical);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -221,7 +221,7 @@ void tst_qquickanimations::simpleRotation()
     QVERIFY(animation.isRunning());
     QVERIFY(animation.isPaused());
     animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
+    QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.rotation(), qreal(135));
 }
 
@@ -567,7 +567,7 @@ void tst_qquickanimations::alwaysRunToEnd()
     animation.setDuration(1000);
     animation.setLoops(-1);
     animation.setAlwaysRunToEnd(true);
-    QVERIFY(animation.loops() == -1);
+    QCOMPARE(animation.loops(), -1);
     QVERIFY(animation.alwaysRunToEnd());
 
     QElapsedTimer timer;
@@ -600,7 +600,7 @@ void tst_qquickanimations::complete()
     animation.setFrom(1);
     animation.setTo(200);
     animation.setDuration(500);
-    QVERIFY(animation.from() == 1);
+    QCOMPARE(animation.from().toInt(), 1);
     animation.start();
     QTest::qWait(50);
     animation.stop();
@@ -620,7 +620,7 @@ void tst_qquickanimations::resume()
     animation.setFrom(10);
     animation.setTo(200);
     animation.setDuration(1000);
-    QVERIFY(animation.from() == 10);
+    QCOMPARE(animation.from().toInt(), 10);
 
     animation.start();
     QTest::qWait(400);
@@ -685,7 +685,7 @@ void tst_qquickanimations::dotProperty()
     animation.start();
     animation.pause();
     animation.setCurrentTime(125);
-    QVERIFY(animation.currentTime() == 125);
+    QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.border()->width(), 5.0);
 }
 
@@ -708,7 +708,7 @@ void tst_qquickanimations::badTypes()
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
         c.create();
 
-        QVERIFY(c.errors().count() == 1);
+        QCOMPARE(c.errors().count(), 1);
         QCOMPARE(c.errors().at(0).description(), QLatin1String("Invalid property assignment: number expected"));
     }
 
@@ -719,7 +719,7 @@ void tst_qquickanimations::badTypes()
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
         c.create();
 
-        QVERIFY(c.errors().count() == 1);
+        QCOMPARE(c.errors().count(), 1);
         QCOMPARE(c.errors().at(0).description(), QLatin1String("Invalid property assignment: color expected"));
     }
 
@@ -1078,7 +1078,7 @@ void tst_qquickanimations::propertyValueSourceDefaultStart()
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
+        //QCOMPARE(myAnim->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
     }
 }
 
@@ -1097,7 +1097,7 @@ void tst_qquickanimations::dontStart()
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
+        //QCOMPARE(myAnim->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
     }
 
     {
@@ -1112,7 +1112,7 @@ void tst_qquickanimations::dontStart()
 
         QQuickAbstractAnimation *myAnim = rect->findChild<QQuickAbstractAnimation*>("MyAnim");
         QVERIFY(myAnim && !myAnim->qtAnimation());
-        //QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimationJob::Stopped);
+        //QCOMPARE(myAnim->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
     }
 }
 
@@ -1350,7 +1350,7 @@ void tst_qquickanimations::alwaysRunToEndRestartBug()
     animation.setDuration(1000);
     animation.setLoops(-1);
     animation.setAlwaysRunToEnd(true);
-    QVERIFY(animation.loops() == -1);
+    QCOMPARE(animation.loops(), -1);
     QVERIFY(animation.alwaysRunToEnd());
     animation.start();
     animation.stop();
@@ -1387,7 +1387,7 @@ void tst_qquickanimations::pauseBindingBug()
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
     QQuickAbstractAnimation *anim = rect->findChild<QQuickAbstractAnimation*>("animation");
-    QVERIFY(anim->qtAnimation()->state() == QAbstractAnimationJob::Paused);
+    QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
 
     delete rect;
 }

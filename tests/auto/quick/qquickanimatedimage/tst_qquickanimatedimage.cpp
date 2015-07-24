@@ -335,48 +335,48 @@ void tst_qquickanimatedimage::sourceSizeChanges()
     // Local
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Null);
-    QTRY_VERIFY(sourceSizeSpy.count() == 0);
+    QTRY_COMPARE(sourceSizeSpy.count(), 0);
 
     ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 1);
+    QTRY_COMPARE(sourceSizeSpy.count(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 1);
+    QTRY_COMPARE(sourceSizeSpy.count(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("hearts_copy.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 1);
+    QTRY_COMPARE(sourceSizeSpy.count(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("colors.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 2);
+    QTRY_COMPARE(sourceSizeSpy.count(), 2);
 
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Null);
-    QTRY_VERIFY(sourceSizeSpy.count() == 3);
+    QTRY_COMPARE(sourceSizeSpy.count(), 3);
 
     // Remote
     ctxt->setContextProperty("srcImage", server.url("/hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 4);
+    QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 4);
+    QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/hearts_copy.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 4);
+    QTRY_COMPARE(sourceSizeSpy.count(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/colors.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
-    QTRY_VERIFY(sourceSizeSpy.count() == 5);
+    QTRY_COMPARE(sourceSizeSpy.count(), 5);
 
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Null);
-    QTRY_VERIFY(sourceSizeSpy.count() == 6);
+    QTRY_COMPARE(sourceSizeSpy.count(), 6);
 
     delete anim;
 }
@@ -397,8 +397,8 @@ void tst_qquickanimatedimage::qtbug_16520()
     QVERIFY(anim != 0);
 
     anim->setProperty("source", server.urlString("/stickman.gif"));
-    QTRY_VERIFY(anim->opacity() == 0);
-    QTRY_VERIFY(anim->opacity() == 1);
+    QTRY_COMPARE(anim->opacity(), qreal(0));
+    QTRY_COMPARE(anim->opacity(), qreal(1));
 
     delete anim;
     delete root;
@@ -418,8 +418,8 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
-    QVERIFY(obj->status() == QQuickImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QCOMPARE(obj->status(), QQuickImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
 
     qRegisterMetaType<QQuickImageBase::Status>();
     QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
@@ -428,33 +428,33 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
 
     // Same image
     ctxt->setContextProperty("srcImage", testFileUrl("stickman.gif"));
-    QTRY_VERIFY(obj->status() == QQuickImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 0);
     QTRY_COMPARE(progressSpy.count(), 0);
     QTRY_COMPARE(statusSpy.count(), 0);
 
     // Loading local file
     ctxt->setContextProperty("srcImage", testFileUrl("colors.gif"));
-    QTRY_VERIFY(obj->status() == QQuickImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);
     QTRY_COMPARE(progressSpy.count(), 0);
     QTRY_COMPARE(statusSpy.count(), 1);
 
     // Loading remote file
     ctxt->setContextProperty("srcImage", server.url("/stickman.gif"));
-    QTRY_VERIFY(obj->status() == QQuickImage::Loading);
-    QTRY_VERIFY(obj->progress() == 0.0);
-    QTRY_VERIFY(obj->status() == QQuickImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickImage::Loading);
+    QTRY_COMPARE(obj->progress(), 0.0);
+    QTRY_COMPARE(obj->status(), QQuickImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 2);
     QTRY_VERIFY(progressSpy.count() > 1);
     QTRY_COMPARE(statusSpy.count(), 3);
 
     ctxt->setContextProperty("srcImage", "");
-    QTRY_VERIFY(obj->status() == QQuickImage::Null);
-    QTRY_VERIFY(obj->progress() == 0.0);
+    QTRY_COMPARE(obj->status(), QQuickImage::Null);
+    QTRY_COMPARE(obj->progress(), 0.0);
     QTRY_COMPARE(sourceSpy.count(), 3);
     QTRY_VERIFY(progressSpy.count() > 2);
     QTRY_COMPARE(statusSpy.count(), 4);
@@ -472,7 +472,7 @@ void tst_qquickanimatedimage::playingAndPausedChanges()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickAnimatedImage *obj = qobject_cast<QQuickAnimatedImage*>(component.create());
     QVERIFY(obj != 0);
-    QVERIFY(obj->status() == QQuickAnimatedImage::Null);
+    QCOMPARE(obj->status(), QQuickAnimatedImage::Null);
     QTRY_VERIFY(obj->isPlaying());
     QTRY_VERIFY(!obj->isPaused());
     QSignalSpy playingSpy(obj, SIGNAL(playingChanged()));

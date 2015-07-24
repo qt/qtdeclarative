@@ -593,7 +593,7 @@ void tst_qquicktextinput::wrap()
         textHeight = textObject->height();
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->wrapMode() == QQuickTextInput::WrapAnywhere);
+        QCOMPARE(textObject->wrapMode(), QQuickTextInput::WrapAnywhere);
         QCOMPARE(textObject->width(), 300.);
 
         delete textObject;
@@ -660,22 +660,22 @@ void tst_qquicktextinput::selection()
     }
 
     textinputObject->setCursorPosition(0);
-    QVERIFY(textinputObject->cursorPosition() == 0);
-    QVERIFY(textinputObject->selectionStart() == 0);
-    QVERIFY(textinputObject->selectionEnd() == 0);
+    QCOMPARE(textinputObject->cursorPosition(), 0);
+    QCOMPARE(textinputObject->selectionStart(), 0);
+    QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
     // Verify invalid positions are ignored.
     textinputObject->setCursorPosition(-1);
-    QVERIFY(textinputObject->cursorPosition() == 0);
-    QVERIFY(textinputObject->selectionStart() == 0);
-    QVERIFY(textinputObject->selectionEnd() == 0);
+    QCOMPARE(textinputObject->cursorPosition(), 0);
+    QCOMPARE(textinputObject->selectionStart(), 0);
+    QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
     textinputObject->setCursorPosition(textinputObject->text().count()+1);
-    QVERIFY(textinputObject->cursorPosition() == 0);
-    QVERIFY(textinputObject->selectionStart() == 0);
-    QVERIFY(textinputObject->selectionEnd() == 0);
+    QCOMPARE(textinputObject->cursorPosition(), 0);
+    QCOMPARE(textinputObject->selectionStart(), 0);
+    QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
     //Test selection
@@ -689,9 +689,9 @@ void tst_qquicktextinput::selection()
     }
 
     textinputObject->setCursorPosition(0);
-    QVERIFY(textinputObject->cursorPosition() == 0);
-    QVERIFY(textinputObject->selectionStart() == 0);
-    QVERIFY(textinputObject->selectionEnd() == 0);
+    QCOMPARE(textinputObject->cursorPosition(), 0);
+    QCOMPARE(textinputObject->selectionStart(), 0);
+    QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
     //Test Error Ignoring behaviour
@@ -706,20 +706,20 @@ void tst_qquicktextinput::selection()
     textinputObject->select(0,100);
     QVERIFY(textinputObject->selectedText().isNull());
     textinputObject->select(0,10);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
     textinputObject->select(-10,10);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
     textinputObject->select(100,101);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
     textinputObject->select(0,-10);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
     textinputObject->select(0,100);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
 
     textinputObject->deselect();
     QVERIFY(textinputObject->selectedText().isNull());
     textinputObject->select(0,10);
-    QVERIFY(textinputObject->selectedText().size() == 10);
+    QCOMPARE(textinputObject->selectedText().size(), 10);
     textinputObject->deselect();
     QVERIFY(textinputObject->selectedText().isNull());
 
@@ -1515,13 +1515,13 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     // keyboard input direction from QInputMethod::inputDirection()
     textInput->setText("");
     platformInputContext.setInputDirection(Qt::LeftToRight);
-    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::LeftToRight);
+    QCOMPARE(qApp->inputMethod()->inputDirection(), Qt::LeftToRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
     QCOMPARE(textInput->boundingRect().left(), qreal(0));
 
     QSignalSpy cursorRectangleSpy(textInput, SIGNAL(cursorRectangleChanged()));
     platformInputContext.setInputDirection(Qt::RightToLeft);
-    QVERIFY(qApp->inputMethod()->inputDirection() == Qt::RightToLeft);
+    QCOMPARE(qApp->inputMethod()->inputDirection(), Qt::RightToLeft);
     QCOMPARE(cursorRectangleSpy.count(), 1);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInput->boundingRect().right() >= textInput->width() - 1);
@@ -1855,7 +1855,7 @@ void tst_qquicktextinput::maxLength()
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textinputObject != 0);
     QVERIFY(textinputObject->text().isEmpty());
-    QVERIFY(textinputObject->maxLength() == 10);
+    QCOMPARE(textinputObject->maxLength(), 10);
     foreach (const QString &str, standard) {
         QVERIFY(textinputObject->text().length() <= 10);
         textinputObject->setText(str);
@@ -1883,7 +1883,7 @@ void tst_qquicktextinput::masks()
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textinputObject != 0);
     QTRY_VERIFY(textinputObject->hasActiveFocus());
-    QVERIFY(textinputObject->text().length() == 0);
+    QCOMPARE(textinputObject->text().length(), 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
     QCOMPARE(textinputObject->length(), 8);
     for (int i=0; i<10; i++) {
@@ -2411,8 +2411,8 @@ void tst_qquicktextinput::navigation()
     input->select(0,input->text().length());
     QVERIFY(input->selectionStart() != input->selectionEnd());
     simulateKey(&window, Qt::Key_Right);
-    QVERIFY(input->selectionStart() == input->selectionEnd());
-    QVERIFY(input->selectionStart() == input->text().length());
+    QCOMPARE(input->selectionStart(), input->selectionEnd());
+    QCOMPARE(input->selectionStart(), input->text().length());
     QVERIFY(input->hasActiveFocus());
     simulateKey(&window, Qt::Key_Right);
     QVERIFY(!input->hasActiveFocus());
@@ -5830,11 +5830,11 @@ void tst_qquicktextinput::implicitSize()
     QQuickTextInput *textObject = qobject_cast<QQuickTextInput*>(textComponent.create());
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 
     textObject->resetWidth();
-    QVERIFY(textObject->width() == textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 }
 
 void tst_qquicktextinput::implicitSizeBinding_data()

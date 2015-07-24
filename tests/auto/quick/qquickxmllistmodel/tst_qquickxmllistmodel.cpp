@@ -760,9 +760,9 @@ void tst_qquickxmllistmodel::noKeysValueChanges()
     QTRY_VERIFY(model->data(model->index(0, 0), roles.at(2)).toString() != QLatin1String("Football"));
     QCOMPARE(model->data(model->index(0, 0), roles.at(2)).toString(), QLatin1String("AussieRules"));
 
-    QVERIFY(spyInsert.count() == 0);
-    QVERIFY(spyRemove.count() == 0);
-    QVERIFY(spyCount.count() == 0);
+    QCOMPARE(spyInsert.count(), 0);
+    QCOMPARE(spyRemove.count(), 0);
+    QCOMPARE(spyCount.count(), 0);
 
     QCOMPARE(model->rowCount(), 2);
 
@@ -940,7 +940,7 @@ void tst_qquickxmllistmodel::propertyChanges()
     QCOMPARE(model->property("query").toString(), QString("/Pets"));
     QCOMPARE(model->property("namespaceDeclarations").toString(), QString("declare namespace media=\"http://search.yahoo.com/mrss/\";"));
 
-    QTRY_VERIFY(model->rowCount() == 1);
+    QTRY_COMPARE(model->rowCount(), 1);
 
     QCOMPARE(sourceSpy.count(),1);
     QCOMPARE(xmlSpy.count(),1);
@@ -957,7 +957,7 @@ void tst_qquickxmllistmodel::propertyChanges()
     QCOMPARE(modelQuerySpy.count(),1);
     QCOMPARE(namespaceDeclarationsSpy.count(),1);
 
-    QTRY_VERIFY(model->rowCount() == 1);
+    QTRY_COMPARE(model->rowCount(), 1);
     delete model;
 }
 

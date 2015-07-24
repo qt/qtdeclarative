@@ -237,15 +237,15 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
         async |= (provider->flags() & QQuickImageProvider::ForceAsynchronousImageLoading) != 0;
 
     if (async)
-        QTRY_VERIFY(obj->status() == QQuickImage::Loading);
+        QTRY_COMPARE(obj->status(), QQuickImage::Loading);
 
     QCOMPARE(obj->source(), QUrl(source));
 
     if (error.isEmpty()) {
         if (async)
-            QTRY_VERIFY(obj->status() == QQuickImage::Ready);
+            QTRY_COMPARE(obj->status(), QQuickImage::Ready);
         else
-            QVERIFY(obj->status() == QQuickImage::Ready);
+            QCOMPARE(obj->status(), QQuickImage::Ready);
         if (QByteArray(QTest::currentDataTag()).startsWith("qimage"))
             QCOMPARE(static_cast<TestQImageProvider*>(provider)->lastImageId, imageId);
         else
@@ -257,9 +257,9 @@ void tst_qquickimageprovider::runTest(bool async, QQuickImageProvider *provider)
         QCOMPARE(obj->progress(), 1.0);
     } else {
         if (async)
-            QTRY_VERIFY(obj->status() == QQuickImage::Error);
+            QTRY_COMPARE(obj->status(), QQuickImage::Error);
         else
-            QVERIFY(obj->status() == QQuickImage::Error);
+            QCOMPARE(obj->status(), QQuickImage::Error);
     }
 
     delete obj;
@@ -456,7 +456,7 @@ void tst_qquickimageprovider::threadTest()
     provider->cond.wakeAll();
     QTest::qWait(250);
     foreach (QQuickImage *img, images) {
-        QTRY_VERIFY(img->status() == QQuickImage::Ready);
+        QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
 }
 
@@ -544,14 +544,14 @@ void tst_qquickimageprovider::asyncTextureTest()
     QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.count(), 4);
 
-    QTRY_VERIFY(provider->pool.activeThreadCount() == 4);
+    QTRY_COMPARE(provider->pool.activeThreadCount(), 4);
     foreach (QQuickImage *img, images) {
-        QTRY_VERIFY(img->status() == QQuickImage::Loading);
+        QTRY_COMPARE(img->status(), QQuickImage::Loading);
     }
     provider->ok = true;
     provider->condition.wakeAll();
     foreach (QQuickImage *img, images) {
-        QTRY_VERIFY(img->status() == QQuickImage::Ready);
+        QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
 }
 

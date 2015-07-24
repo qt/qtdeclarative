@@ -58,7 +58,7 @@ void GeometryTest::testPoint2D()
     QCOMPARE(geometry.sizeOfVertex(), (int) sizeof(float) * 2);
     QCOMPARE(geometry.vertexCount(), 4);
     QCOMPARE(geometry.indexCount(), 0);
-    QVERIFY(geometry.indexData() == 0);
+    QVERIFY(!geometry.indexData());
 
     QSGGeometry::updateRectGeometry(&geometry, QRectF(1, 2, 3, 4));
 
@@ -91,7 +91,7 @@ void GeometryTest::testTexturedPoint2D()
     QCOMPARE(geometry.sizeOfVertex(), (int) sizeof(float) * 4);
     QCOMPARE(geometry.vertexCount(), 4);
     QCOMPARE(geometry.indexCount(), 0);
-    QVERIFY(geometry.indexData() == 0);
+    QVERIFY(!geometry.indexData());
 
     QSGGeometry::updateTexturedRectGeometry(&geometry, QRectF(1, 2, 3, 4), QRectF(5, 6, 7, 8));
 
@@ -163,7 +163,7 @@ void GeometryTest::testCustomGeometry()
     for (int i=0; i<4000; ++i)
         QCOMPARE(ii[i], (quint16) i);
     for (int i=0; i<1000; ++i)
-        QVERIFY(v[i].v1 == 6);
+        QCOMPARE(v[i].v1, float(6));
 
 }
 

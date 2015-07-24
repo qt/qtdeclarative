@@ -212,28 +212,28 @@ void tst_qquickflickable::boundsBehavior()
     QSignalSpy spy(flickable, SIGNAL(boundsBehaviorChanged()));
 
     QVERIFY(flickable);
-    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::StopAtBounds);
+    QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::StopAtBounds);
 
     flickable->setBoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
-    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::DragAndOvershootBounds);
+    QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::DragAndOvershootBounds);
     QCOMPARE(spy.count(),1);
     flickable->setBoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
     QCOMPARE(spy.count(),1);
 
     flickable->setBoundsBehavior(QQuickFlickable::DragOverBounds);
-    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::DragOverBounds);
+    QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::DragOverBounds);
     QCOMPARE(spy.count(),2);
     flickable->setBoundsBehavior(QQuickFlickable::DragOverBounds);
     QCOMPARE(spy.count(),2);
 
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
-    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::StopAtBounds);
+    QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::StopAtBounds);
     QCOMPARE(spy.count(),3);
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
     QCOMPARE(spy.count(),3);
 
     flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
-    QVERIFY(flickable->boundsBehavior() == QQuickFlickable::OvershootBounds);
+    QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::OvershootBounds);
     QCOMPARE(spy.count(),4);
     flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
     QCOMPARE(spy.count(),4);
@@ -688,10 +688,10 @@ void tst_qquickflickable::wheel()
     }
 
     QTRY_VERIFY(flick->contentY() > 0);
-    QVERIFY(flick->contentX() == 0);
+    QCOMPARE(flick->contentX(), qreal(0));
 
     flick->setContentY(0);
-    QVERIFY(flick->contentY() == 0);
+    QCOMPARE(flick->contentY(), qreal(0));
 
     {
         QPoint pos(200, 200);
@@ -702,7 +702,7 @@ void tst_qquickflickable::wheel()
     }
 
     QTRY_VERIFY(flick->contentX() > 0);
-    QVERIFY(flick->contentY() == 0);
+    QCOMPARE(flick->contentY(), qreal(0));
 }
 
 void tst_qquickflickable::movingAndFlicking_data()
@@ -1202,12 +1202,12 @@ void tst_qquickflickable::flickVelocity()
     // flick up
     flick(window.data(), QPoint(20,190), QPoint(20, 50), 200);
     QVERIFY(flickable->verticalVelocity() > 0.0);
-    QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
+    QTRY_COMPARE(flickable->verticalVelocity(), 0.0);
 
     // flick down
     flick(window.data(), QPoint(20,10), QPoint(20, 140), 200);
     QTRY_VERIFY(flickable->verticalVelocity() < 0.0);
-    QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
+    QTRY_COMPARE(flickable->verticalVelocity(), 0.0);
 
 #ifdef Q_OS_MAC
     QSKIP("boost doesn't work on OS X");
@@ -1226,7 +1226,7 @@ void tst_qquickflickable::flickVelocity()
     // Flick in opposite direction -> boost cancelled.
     flick(window.data(), QPoint(20,10), QPoint(20, 340), 200);
     QTRY_VERIFY(flickable->verticalVelocity() < 0.0);
-    QVERIFY(fp->flickBoost == 1.0);
+    QCOMPARE(fp->flickBoost, 1.0);
 }
 
 void tst_qquickflickable::margins()

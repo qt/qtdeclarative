@@ -108,11 +108,11 @@ void tst_qquickflipable::flipFlipable()
     QQmlComponent c(&engine, testFileUrl("flip-flipable.qml"));
     QQuickFlipable *obj = qobject_cast<QQuickFlipable*>(c.create());
     QVERIFY(obj != 0);
-    QVERIFY(obj->side() == QQuickFlipable::Front);
+    QCOMPARE(obj->side(), QQuickFlipable::Front);
     obj->setProperty("flipped", QVariant(true));
-    QTRY_VERIFY(obj->side() == QQuickFlipable::Back);
-    QTRY_VERIFY(obj->side() == QQuickFlipable::Front);
-    QTRY_VERIFY(obj->side() == QQuickFlipable::Back);
+    QTRY_COMPARE(obj->side(), QQuickFlipable::Back);
+    QTRY_COMPARE(obj->side(), QQuickFlipable::Front);
+    QTRY_COMPARE(obj->side(), QQuickFlipable::Back);
     delete obj;
 }
 

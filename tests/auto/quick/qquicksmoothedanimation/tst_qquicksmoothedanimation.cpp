@@ -130,9 +130,9 @@ void tst_qquicksmoothedanimation::simpleAnimation()
     animation->setProperty("x");
     animation->setTo(200);
     animation->setDuration(250);
-    QVERIFY(animation->target() == rect);
-    QVERIFY(animation->property() == "x");
-    QVERIFY(animation->to() == 200);
+    QCOMPARE(animation->target(), rect);
+    QCOMPARE(animation->property(), QLatin1String("x"));
+    QCOMPARE(animation->to(), qreal(200));
     animation->start();
     QVERIFY(animation->isRunning());
     QTest::qWait(animation->duration());
@@ -147,7 +147,7 @@ void tst_qquicksmoothedanimation::simpleAnimation()
     QVERIFY(animation->isRunning());
     QVERIFY(animation->isPaused());
     animation->setCurrentTime(125);
-    QVERIFY(animation->currentTime() == 125);
+    QCOMPARE(animation->currentTime(), 125);
     QCOMPARE(rect->x(), qreal(100));
 }
 

@@ -97,7 +97,7 @@ void tst_qquickapplication::active()
     window.show();
     window.requestActivate();
     QTest::qWaitForWindowActive(&window);
-    QVERIFY(QGuiApplication::focusWindow() == &window);
+    QCOMPARE(QGuiApplication::focusWindow(), &window);
     QVERIFY(item->property("active").toBool());
     QVERIFY(item->property("active2").toBool());
 
@@ -167,7 +167,7 @@ void tst_qquickapplication::state()
         window.show();
         window.requestActivate();
         QTest::qWaitForWindowActive(&window);
-        QVERIFY(QGuiApplication::focusWindow() == &window);
+        QCOMPARE(QGuiApplication::focusWindow(), &window);
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 

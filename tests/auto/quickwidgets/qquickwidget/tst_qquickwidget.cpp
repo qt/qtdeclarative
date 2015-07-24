@@ -226,8 +226,8 @@ void tst_qquickwidget::errors()
 
     QQmlTestMessageHandler messageHandler;
     view->setSource(testFileUrl("error1.qml"));
-    QVERIFY(view->status() == QQuickWidget::Error);
-    QVERIFY(view->errors().count() == 1);
+    QCOMPARE(view->status(), QQuickWidget::Error);
+    QCOMPARE(view->errors().count(), 1);
 }
 
 void tst_qquickwidget::engine()

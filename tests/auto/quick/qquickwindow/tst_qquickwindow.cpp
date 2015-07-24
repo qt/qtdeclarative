@@ -978,7 +978,7 @@ void tst_qquickwindow::clearWindow()
 
     delete window;
 
-    QVERIFY(item->window() == 0);
+    QVERIFY(!item->window());
 
     delete item;
 }
@@ -1232,7 +1232,7 @@ void tst_qquickwindow::headless()
 
     if (threaded) {
         QTRY_COMPARE(invalidated.size(), 1);
-        QVERIFY(window->openglContext() == 0);
+        QVERIFY(!window->openglContext());
     }
 
     if (QGuiApplication::platformName() == QLatin1String("windows")
@@ -1242,7 +1242,7 @@ void tst_qquickwindow::headless()
 
     // Destroy the native windowing system buffers
     window->destroy();
-    QVERIFY(window->handle() == 0);
+    QVERIFY(!window->handle());
 
     // Show and verify that we are back and running
     window->show();
@@ -1609,7 +1609,7 @@ void tst_qquickwindow::hideThenDelete()
                 if (!persistentGL)
                     QVERIFY(openglDestroyed->size() > 0);
                 else
-                    QVERIFY(openglDestroyed->size() == 0);
+                    QCOMPARE(openglDestroyed->size(), 0);
             } else {
                 QCOMPARE(sgInvalidated->size(), 0);
                 QCOMPARE(openglDestroyed->size(), 0);

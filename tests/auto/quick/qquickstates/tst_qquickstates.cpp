@@ -1241,7 +1241,7 @@ void tst_qquickstates::deletingState()
     QVERIFY(state != 0);
     delete state;
 
-    QVERIFY(sg->findState("blue") == 0);
+    QVERIFY(!sg->findState("blue"));
 
     //### should we warn that state doesn't exist
     sg->setState("blue");
@@ -1317,7 +1317,7 @@ void tst_qquickstates::illegalObjectCreation()
 
     QQmlComponent component(&engine, testFileUrl("illegalObj.qml"));
     QList<QQmlError> errors = component.errors();
-    QVERIFY(errors.count() == 1);
+    QCOMPARE(errors.count(), 1);
     const QQmlError &error = errors.at(0);
     QCOMPARE(error.line(), 9);
     QCOMPARE(error.column(), 23);

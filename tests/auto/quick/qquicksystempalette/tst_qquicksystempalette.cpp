@@ -97,7 +97,7 @@ void tst_qquicksystempalette::inactivePalette()
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != 0);
-    QVERIFY(object->colorGroup() == QQuickSystemPalette::Inactive);
+    QCOMPARE(object->colorGroup(), QQuickSystemPalette::Inactive);
 
     QPalette palette;
     palette.setCurrentColorGroup(QPalette::Inactive);
@@ -127,7 +127,7 @@ void tst_qquicksystempalette::disabledPalette()
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != 0);
-    QVERIFY(object->colorGroup() == QQuickSystemPalette::Disabled);
+    QCOMPARE(object->colorGroup(), QQuickSystemPalette::Disabled);
 
     QPalette palette;
     palette.setCurrentColorGroup(QPalette::Disabled);

@@ -276,7 +276,7 @@ void tst_qquickitem::simpleFocus()
     QQuickWindow window;
     ensureFocus(&window);
 
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *l1c1 = new TestItem(window.contentItem());
     QQuickItem *l1c2 = new TestItem(window.contentItem());
@@ -327,7 +327,7 @@ void tst_qquickitem::scopedFocus()
 {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *l1c1 = new TestItem(window.contentItem());
     QQuickItem *l1c2 = new TestItem(window.contentItem());
@@ -407,7 +407,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *item = new TestItem;
 
@@ -427,7 +427,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *item = new TestItem(window.contentItem());
 
@@ -456,7 +456,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *tree = new TestItem;
     QQuickItem *c1 = new TestItem(tree);
@@ -480,7 +480,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -508,7 +508,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
     QQuickItem *c2 = new TestItem(tree);
@@ -534,7 +534,7 @@ void tst_qquickitem::addedToWindow()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
@@ -574,7 +574,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
 
     FocusState focusState;
@@ -596,7 +596,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestItem(window.contentItem());
 
@@ -617,7 +617,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
     QQuickItem *item = new TestItem(child);
@@ -639,7 +639,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
     QQuickItem *item = new TestItem(child2);
@@ -661,7 +661,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
     QQuickItem *item = new TestItem(child2);
@@ -687,7 +687,7 @@ void tst_qquickitem::changeParent()
     {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *item = new TestFocusScope(window.contentItem());
     QQuickItem *child = new TestItem(item);
     QQuickItem *child2 = new TestItem;
@@ -726,7 +726,7 @@ void tst_qquickitem::multipleFocusClears()
     view.setSource(testFileUrl("multipleFocusClears.qml"));
     view.show();
     ensureFocus(&view);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &view);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &view);
 }
 
 void tst_qquickitem::focusSubItemInNonFocusScope()
@@ -757,7 +757,7 @@ void tst_qquickitem::parentItemWithFocus()
 {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     {
     QQuickItem parent;
     QQuickItem child;
@@ -856,7 +856,7 @@ void tst_qquickitem::reparentFocusedItem()
 {
     QQuickWindow window;
     ensureFocus(&window);
-    QTRY_VERIFY(QGuiApplication::focusWindow() == &window);
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem parent(window.contentItem());
     QQuickItem child(&parent);
@@ -883,18 +883,18 @@ void tst_qquickitem::reparentFocusedItem()
 void tst_qquickitem::constructor()
 {
     QScopedPointer<QQuickItem> root(new QQuickItem);
-    QVERIFY(root->parent() == 0);
-    QVERIFY(root->parentItem() == 0);
+    QVERIFY(!root->parent());
+    QVERIFY(!root->parentItem());
 
     QQuickItem *child1 = new QQuickItem(root.data());
-    QVERIFY(child1->parent() == root.data());
-    QVERIFY(child1->parentItem() == root.data());
+    QCOMPARE(child1->parent(), root.data());
+    QCOMPARE(child1->parentItem(), root.data());
     QCOMPARE(root->childItems().count(), 1);
     QCOMPARE(root->childItems().at(0), child1);
 
     QQuickItem *child2 = new QQuickItem(root.data());
-    QVERIFY(child2->parent() == root.data());
-    QVERIFY(child2->parentItem() == root.data());
+    QCOMPARE(child2->parent(), root.data());
+    QCOMPARE(child2->parentItem(), root.data());
     QCOMPARE(root->childItems().count(), 2);
     QCOMPARE(root->childItems().at(0), child1);
     QCOMPARE(root->childItems().at(1), child2);
@@ -903,41 +903,41 @@ void tst_qquickitem::constructor()
 void tst_qquickitem::setParentItem()
 {
     QQuickItem *root = new QQuickItem;
-    QVERIFY(root->parent() == 0);
-    QVERIFY(root->parentItem() == 0);
+    QVERIFY(!root->parent());
+    QVERIFY(!root->parentItem());
 
     QQuickItem *child1 = new QQuickItem;
-    QVERIFY(child1->parent() == 0);
-    QVERIFY(child1->parentItem() == 0);
+    QVERIFY(!child1->parent());
+    QVERIFY(!child1->parentItem());
 
     child1->setParentItem(root);
-    QVERIFY(child1->parent() == 0);
-    QVERIFY(child1->parentItem() == root);
+    QVERIFY(!child1->parent());
+    QCOMPARE(child1->parentItem(), root);
     QCOMPARE(root->childItems().count(), 1);
     QCOMPARE(root->childItems().at(0), child1);
 
     QQuickItem *child2 = new QQuickItem;
-    QVERIFY(child2->parent() == 0);
-    QVERIFY(child2->parentItem() == 0);
+    QVERIFY(!child2->parent());
+    QVERIFY(!child2->parentItem());
     child2->setParentItem(root);
-    QVERIFY(child2->parent() == 0);
-    QVERIFY(child2->parentItem() == root);
+    QVERIFY(!child2->parent());
+    QCOMPARE(child2->parentItem(), root);
     QCOMPARE(root->childItems().count(), 2);
     QCOMPARE(root->childItems().at(0), child1);
     QCOMPARE(root->childItems().at(1), child2);
 
     child1->setParentItem(0);
-    QVERIFY(child1->parent() == 0);
-    QVERIFY(child1->parentItem() == 0);
+    QVERIFY(!child1->parent());
+    QVERIFY(!child1->parentItem());
     QCOMPARE(root->childItems().count(), 1);
     QCOMPARE(root->childItems().at(0), child2);
 
     delete root;
 
-    QVERIFY(child1->parent() == 0);
-    QVERIFY(child1->parentItem() == 0);
-    QVERIFY(child2->parent() == 0);
-    QVERIFY(child2->parentItem() == 0);
+    QVERIFY(!child1->parent());
+    QVERIFY(!child1->parentItem());
+    QVERIFY(!child2->parent());
+    QVERIFY(!child2->parentItem());
 
     delete child1;
     delete child2;

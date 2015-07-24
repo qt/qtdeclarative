@@ -863,7 +863,7 @@ void tst_TouchMouse::pinchOnFlickable()
     QVERIFY(rect);
 
     // flickable - single touch point
-    QVERIFY(flickable->contentX() == 0.0);
+    QCOMPARE(flickable->contentX(), 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
     QQuickTouchUtils::flush(window);
@@ -945,7 +945,7 @@ void tst_TouchMouse::flickableOnPinch()
     QVERIFY(rect);
 
     // flickable - single touch point
-    QVERIFY(flickable->contentX() == 0.0);
+    QCOMPARE(flickable->contentX(), 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
     QQuickTouchUtils::flush(window);
@@ -1025,7 +1025,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     QVERIFY(rect);
 
     // flickable - single touch point
-    QVERIFY(flickable->contentX() == 0.0);
+    QCOMPARE(flickable->contentX(), 0.0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window, device).press(0, p, window);
     QQuickTouchUtils::flush(window);

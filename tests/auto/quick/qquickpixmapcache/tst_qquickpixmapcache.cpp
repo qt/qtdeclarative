@@ -161,10 +161,10 @@ void tst_qquickpixmapcache::single()
     if (incache) {
         QCOMPARE(pixmap.error(), expectedError);
         if (exists) {
-            QVERIFY(pixmap.status() == QQuickPixmap::Ready);
+            QCOMPARE(pixmap.status(), QQuickPixmap::Ready);
             QVERIFY(pixmap.width() > 0);
         } else {
-            QVERIFY(pixmap.status() == QQuickPixmap::Error);
+            QCOMPARE(pixmap.status(), QQuickPixmap::Error);
             QVERIFY(pixmap.width() <= 0);
         }
     } else {
@@ -176,10 +176,10 @@ void tst_qquickpixmapcache::single()
         QVERIFY(!QTestEventLoop::instance().timeout());
         QVERIFY(getter.gotslot);
         if (exists) {
-            QVERIFY(pixmap.status() == QQuickPixmap::Ready);
+            QCOMPARE(pixmap.status(), QQuickPixmap::Ready);
             QVERIFY(pixmap.width() > 0);
         } else {
-            QVERIFY(pixmap.status() == QQuickPixmap::Error);
+            QCOMPARE(pixmap.status(), QQuickPixmap::Error);
             QVERIFY(pixmap.width() <= 0);
         }
         QCOMPARE(pixmap.error(), expectedError);
@@ -309,7 +309,7 @@ void tst_qquickpixmapcache::massive()
     QVERIFY(p2.isReady());
     QVERIFY(p2.image().size() == QSize(10000, 1000));
 
-    QVERIFY(p2.image().cacheKey() == cachekey);
+    QCOMPARE(p2.image().cacheKey(), cachekey);
     }
 
     // Confirm that massive images are removed from the cache when

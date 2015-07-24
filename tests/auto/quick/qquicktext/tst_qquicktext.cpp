@@ -242,7 +242,7 @@ void tst_qquicktext::text()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->text(), QString(""));
-        QVERIFY(textObject->width() == 0);
+        QCOMPARE(textObject->width(), qreal(0));
 
         delete textObject;
     }
@@ -359,7 +359,7 @@ void tst_qquicktext::width()
         QVERIFY(doc != 0);
 
         QCOMPARE(int(textObject->width()), int(doc->idealWidth()));
-        QVERIFY(textObject->textFormat() == QQuickText::RichText);
+        QCOMPARE(textObject->textFormat(), QQuickText::RichText);
 
         delete textObject;
     }
@@ -376,7 +376,7 @@ void tst_qquicktext::wrap()
         textHeight = textObject->height();
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->wrapMode() == QQuickText::WordWrap);
+        QCOMPARE(textObject->wrapMode(), QQuickText::WordWrap);
         QCOMPARE(textObject->width(), 300.);
 
         delete textObject;
@@ -659,7 +659,7 @@ void tst_qquicktext::textFormat()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->textFormat() == QQuickText::RichText);
+        QCOMPARE(textObject->textFormat(), QQuickText::RichText);
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != 0);
@@ -673,7 +673,7 @@ void tst_qquicktext::textFormat()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->textFormat() == QQuickText::AutoText);
+        QCOMPARE(textObject->textFormat(), QQuickText::AutoText);
 
         QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
         QVERIFY(textPrivate != 0);
@@ -687,7 +687,7 @@ void tst_qquicktext::textFormat()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != 0);
-        QVERIFY(textObject->textFormat() == QQuickText::PlainText);
+        QCOMPARE(textObject->textFormat(), QQuickText::PlainText);
 
         delete textObject;
     }
@@ -2136,8 +2136,8 @@ void tst_qquicktext::lineHeight()
     QQuickText *myText = window->rootObject()->findChild<QQuickText*>("myText");
     QVERIFY(myText != 0);
 
-    QVERIFY(myText->lineHeight() == 1);
-    QVERIFY(myText->lineHeightMode() == QQuickText::ProportionalHeight);
+    QCOMPARE(myText->lineHeight(), qreal(1));
+    QCOMPARE(myText->lineHeightMode(), QQuickText::ProportionalHeight);
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
@@ -2207,12 +2207,12 @@ void tst_qquicktext::implicitSize()
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject->width() < textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
     QCOMPARE(textObject->property("iWidth").toReal(), textObject->implicitWidth());
 
     textObject->resetWidth();
-    QVERIFY(textObject->width() == textObject->implicitWidth());
-    QVERIFY(textObject->height() == textObject->implicitHeight());
+    QCOMPARE(textObject->width(), textObject->implicitWidth());
+    QCOMPARE(textObject->height(), textObject->implicitHeight());
 
     delete textObject;
 }
@@ -2748,7 +2748,7 @@ void tst_qquicktext::lineLaidOut()
             QVERIFY(r.x() == r.width() + 30);
         if (i >= 60) {
             QVERIFY(r.x() == r.width() * 2 + 60);
-            QVERIFY(r.height() == 20);
+            QCOMPARE(r.height(), qreal(20));
         }
     }
 
@@ -2926,7 +2926,7 @@ void tst_qquicktext::imgTagsAlign()
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != 0);
-    QVERIFY(textObject->height() == imgHeight);
+    QCOMPARE(textObject->height(), qreal(imgHeight));
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
     QVERIFY(textPrivate != 0);
@@ -2937,7 +2937,7 @@ void tst_qquicktext::imgTagsAlign()
     else if (align == "middle")
         QVERIFY(br.y() == imgHeight / 2.0 - br.height() / 2.0);
     else if (align == "top")
-        QVERIFY(br.y() == 0);
+        QCOMPARE(br.y(), qreal(0));
 
     delete textObject;
 }
@@ -2951,11 +2951,11 @@ void tst_qquicktext::imgTagsMultipleImages()
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != 0);
-    QVERIFY(textObject->height() == 85);
+    QCOMPARE(textObject->height(), qreal(85));
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
     QVERIFY(textPrivate != 0);
-    QVERIFY(textPrivate->extra->visibleImgTags.count() == 2);
+    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 2);
 
     delete textObject;
 }
@@ -2968,9 +2968,9 @@ void tst_qquicktext::imgTagsElide()
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
     QVERIFY(textPrivate != 0);
-    QVERIFY(textPrivate->extra->visibleImgTags.count() == 0);
+    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 0);
     myText->setMaximumLineCount(20);
-    QTRY_VERIFY(textPrivate->extra->visibleImgTags.count() == 1);
+    QTRY_COMPARE(textPrivate->extra->visibleImgTags.count(), 1);
 
     delete myText;
     delete window;
@@ -2988,16 +2988,16 @@ void tst_qquicktext::imgTagsUpdates()
     QVERIFY(textPrivate != 0);
 
     myText->setText("This is a heart<img src=\"images/heart200.png\">.");
-    QVERIFY(textPrivate->extra->visibleImgTags.count() == 1);
-    QVERIFY(spy.count() == 1);
+    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 1);
+    QCOMPARE(spy.count(), 1);
 
     myText->setMaximumLineCount(2);
     myText->setText("This is another heart<img src=\"images/heart200.png\">.");
-    QTRY_VERIFY(textPrivate->extra->visibleImgTags.count() == 1);
+    QTRY_COMPARE(textPrivate->extra->visibleImgTags.count(), 1);
 
     // if maximumLineCount is set and the img tag doesn't have an explicit size
     // we relayout twice.
-    QVERIFY(spy.count() == 3);
+    QCOMPARE(spy.count(), 3);
 
     delete myText;
     delete window;

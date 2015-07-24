@@ -176,9 +176,9 @@ void tst_qquickstyledtext::textOutput()
         QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
         QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);
         if (formats.at(i).type & Format::Bold)
-            QVERIFY(layoutFormats.at(i).format.fontWeight() == QFont::Bold);
+            QCOMPARE(layoutFormats.at(i).format.fontWeight(), int(QFont::Bold));
         else
-            QVERIFY(layoutFormats.at(i).format.fontWeight() == QFont::Normal);
+            QCOMPARE(layoutFormats.at(i).format.fontWeight(), int(QFont::Normal));
         QVERIFY(layoutFormats.at(i).format.fontItalic() == bool(formats.at(i).type & Format::Italic));
         QVERIFY(layoutFormats.at(i).format.fontUnderline() == bool(formats.at(i).type & Format::Underline));
     }

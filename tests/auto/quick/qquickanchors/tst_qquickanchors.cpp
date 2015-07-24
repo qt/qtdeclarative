@@ -405,15 +405,15 @@ void tst_qquickanchors::resetConvenience()
 
     //fill
     itemPrivate->anchors()->setFill(baseItem);
-    QVERIFY(itemPrivate->anchors()->fill() == baseItem);
+    QCOMPARE(itemPrivate->anchors()->fill(), baseItem);
     itemPrivate->anchors()->resetFill();
-    QVERIFY(itemPrivate->anchors()->fill() == 0);
+    QVERIFY(!itemPrivate->anchors()->fill());
 
     //centerIn
     itemPrivate->anchors()->setCenterIn(baseItem);
-    QVERIFY(itemPrivate->anchors()->centerIn() == baseItem);
+    QCOMPARE(itemPrivate->anchors()->centerIn(), baseItem);
     itemPrivate->anchors()->resetCenterIn();
-    QVERIFY(itemPrivate->anchors()->centerIn() == 0);
+    QVERIFY(!itemPrivate->anchors()->centerIn());
 
     delete item;
     delete baseItem;

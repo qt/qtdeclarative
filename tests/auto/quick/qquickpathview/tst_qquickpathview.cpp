@@ -185,8 +185,8 @@ void tst_QQuickPathView::initValues()
     QQuickPathView *obj = qobject_cast<QQuickPathView*>(c.create());
 
     QVERIFY(obj != 0);
-    QVERIFY(obj->path() == 0);
-    QVERIFY(obj->delegate() == 0);
+    QVERIFY(!obj->path());
+    QVERIFY(!obj->delegate());
     QCOMPARE(obj->model(), QVariant());
     QCOMPARE(obj->currentIndex(), 0);
     QCOMPARE(obj->offset(), 0.);
@@ -837,7 +837,7 @@ void tst_QQuickPathView::dataModel()
     QQuickRectangle *testItem = findItem<QQuickRectangle>(pathview, "wrapper", 4);
     QVERIFY(testItem != 0);
     testItem = findItem<QQuickRectangle>(pathview, "wrapper", 5);
-    QVERIFY(testItem == 0);
+    QVERIFY(!testItem);
 
     pathview->setCurrentIndex(1);
     QCOMPARE(pathview->currentIndex(), 1);
@@ -1816,7 +1816,7 @@ void tst_QQuickPathView::cancelDrag()
     item->grabMouse();
 
     // returns to a snap point.
-    QTRY_VERIFY(pathview->offset() == qFloor(pathview->offset()));
+    QTRY_COMPARE(pathview->offset(), qreal(qFloor(pathview->offset())));
     QTRY_VERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
     QCOMPARE(draggingSpy.count(), 2);
@@ -1899,7 +1899,7 @@ void tst_QQuickPathView::snapToItem()
     QVERIFY(pathview->isMoving());
     QTRY_VERIFY_WITH_TIMEOUT(!pathview->isMoving(), 50000);
 
-    QVERIFY(pathview->offset() == qFloor(pathview->offset()));
+    QCOMPARE(pathview->offset(), qreal(qFloor(pathview->offset())));
 
     if (enforceRange)
         QVERIFY(pathview->currentIndex() != currentIndex);
@@ -2053,7 +2053,7 @@ void tst_QQuickPathView::indexAt_itemAt()
         QVERIFY(item);
     }
     QCOMPARE(pathview->indexAt(x,y), index);
-    QVERIFY(pathview->itemAt(x,y) == item);
+    QCOMPARE(pathview->itemAt(x,y), item);
 
 }
 

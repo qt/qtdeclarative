@@ -157,12 +157,12 @@ void tst_qquickborderimage::imageSource()
     QVERIFY(obj != 0);
 
     if (remote)
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Loading);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Loading);
 
     QCOMPARE(obj->source(), remote ? source : QUrl(source));
 
     if (error.isEmpty()) {
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Ready);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
         QCOMPARE(obj->width(), 120.);
         QCOMPARE(obj->height(), 120.);
         QCOMPARE(obj->sourceSize().width(), 120);
@@ -170,7 +170,7 @@ void tst_qquickborderimage::imageSource()
         QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Stretch);
         QCOMPARE(obj->verticalTileMode(), QQuickBorderImage::Stretch);
     } else {
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Error);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Error);
     }
 
     delete obj;
@@ -185,13 +185,13 @@ void tst_qquickborderimage::clearSource()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
     QVERIFY(obj != 0);
-    QVERIFY(obj->status() == QQuickBorderImage::Ready);
+    QCOMPARE(obj->status(), QQuickBorderImage::Ready);
     QCOMPARE(obj->width(), 120.);
     QCOMPARE(obj->height(), 120.);
 
     ctxt->setContextProperty("srcImage", "");
     QVERIFY(obj->source().isEmpty());
-    QVERIFY(obj->status() == QQuickBorderImage::Null);
+    QCOMPARE(obj->status(), QQuickBorderImage::Null);
     QCOMPARE(obj->width(), 0.);
     QCOMPARE(obj->height(), 0.);
 
@@ -303,14 +303,14 @@ void tst_qquickborderimage::sciSource()
     QVERIFY(obj != 0);
 
     if (remote)
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Loading);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Loading);
 
     QCOMPARE(obj->source(), remote ? source : QUrl(source));
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
 
     if (valid) {
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Ready);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
         QCOMPARE(obj->border()->left(), 10);
         QCOMPARE(obj->border()->top(), 20);
         QCOMPARE(obj->border()->right(), 30);
@@ -318,7 +318,7 @@ void tst_qquickborderimage::sciSource()
         QCOMPARE(obj->horizontalTileMode(), QQuickBorderImage::Round);
         QCOMPARE(obj->verticalTileMode(), QQuickBorderImage::Repeat);
     } else {
-        QTRY_VERIFY(obj->status() == QQuickBorderImage::Error);
+        QTRY_COMPARE(obj->status(), QQuickBorderImage::Error);
     }
 
     delete obj;
@@ -450,7 +450,7 @@ void tst_qquickborderimage::statusChanges()
     obj->setSource(source);
     if (remote)
         server.sendDelayedItem();
-    QTRY_VERIFY(obj->status() == finalStatus);
+    QTRY_COMPARE(obj->status(), finalStatus);
     QCOMPARE(spy.count(), emissions);
 
     delete obj;
@@ -536,8 +536,8 @@ void tst_qquickborderimage::progressAndStatusChanges()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickBorderImage *obj = qobject_cast<QQuickBorderImage*>(component.create());
     QVERIFY(obj != 0);
-    QVERIFY(obj->status() == QQuickBorderImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QCOMPARE(obj->status(), QQuickBorderImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
 
     qRegisterMetaType<QQuickBorderImage::Status>();
     QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
@@ -546,33 +546,33 @@ void tst_qquickborderimage::progressAndStatusChanges()
 
     // Same file
     ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
-    QTRY_VERIFY(obj->status() == QQuickBorderImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 0);
     QTRY_COMPARE(progressSpy.count(), 0);
     QTRY_COMPARE(statusSpy.count(), 0);
 
     // Loading local file
     ctxt->setContextProperty("srcImage", testFileUrl("colors.png"));
-    QTRY_VERIFY(obj->status() == QQuickBorderImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);
     QTRY_COMPARE(progressSpy.count(), 0);
     QTRY_COMPARE(statusSpy.count(), 1);
 
     // Loading remote file
     ctxt->setContextProperty("srcImage", server.url("/heart200.png"));
-    QTRY_VERIFY(obj->status() == QQuickBorderImage::Loading);
-    QTRY_VERIFY(obj->progress() == 0.0);
-    QTRY_VERIFY(obj->status() == QQuickBorderImage::Ready);
-    QTRY_VERIFY(obj->progress() == 1.0);
+    QTRY_COMPARE(obj->status(), QQuickBorderImage::Loading);
+    QTRY_COMPARE(obj->progress(), 0.0);
+    QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
+    QTRY_COMPARE(obj->progress(), 1.0);
     QTRY_COMPARE(sourceSpy.count(), 2);
     QTRY_VERIFY(progressSpy.count() > 1);
     QTRY_COMPARE(statusSpy.count(), 3);
 
     ctxt->setContextProperty("srcImage", "");
-    QTRY_VERIFY(obj->status() == QQuickBorderImage::Null);
-    QTRY_VERIFY(obj->progress() == 0.0);
+    QTRY_COMPARE(obj->status(), QQuickBorderImage::Null);
+    QTRY_COMPARE(obj->progress(), 0.0);
     QTRY_COMPARE(sourceSpy.count(), 3);
     QTRY_VERIFY(progressSpy.count() > 2);
     QTRY_COMPARE(statusSpy.count(), 4);
