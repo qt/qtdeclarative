@@ -1265,7 +1265,6 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
             QV4::ScopedValue val(scope, o->getIndexed(id));
             return scope.engine->toVariant(val, -1);
         }
-        return QVariant();
     } else {
         if (ensurePropertiesAllocated()) {
             QV4::ExecutionEngine *v4 = properties.engine();
@@ -1275,9 +1274,15 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
             const QV4::QObjectWrapper *wrapper = sv->as<QV4::QObjectWrapper>();
             if (wrapper)
                 return QVariant::fromValue(wrapper->object());
+            const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+            if (!v) {
+                writeProperty(id, QVariant());
+                return QVariant();
+            }
+            return v->d()->data;
         }
-        return data[id].asQVariant();
     }
+    return QVariant();
 }
 
 void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
@@ -1358,10 +1363,22 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
             needActivate = readPropertyAsQObject(id) != o;  // TODO: still correct?
             writeProperty(id, o);
         } else {
-            needActivate = (data[id].dataType() != qMetaTypeId<QVariant>() ||
-                            data[id].asQVariant().userType() != value.userType() ||
-                            data[id].asQVariant() != value);
-            data[id].setValue(value);
+            if (ensurePropertiesAllocated()) {
+                QV4::ExecutionEngine *v4 = properties.engine();
+                QV4::Scope scope(v4);
+                QV4::ScopedObject o(scope, properties.value());
+                QV4::ScopedValue sv(scope, o->getIndexed(id));
+                QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+                needActivate = (!v ||
+                                 v->d()->data.userType() != value.userType() ||
+                                 v->d()->data != value);
+                if (v)
+                    v->removeVmePropertyReference();
+
+                QV4::Scoped<QV4::VariantObject> svo(scope, properties.engine()->newVariantObject(value));
+                svo->addVmePropertyReference();
+                o->putIndexed(id, svo);
+            }
         }
 
         if (needActivate)
