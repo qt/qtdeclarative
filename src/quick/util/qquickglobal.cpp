@@ -397,41 +397,30 @@ public:
         return 0;
     }
 
-    template<typename T>
-    bool typedInit(void *data, size_t dataSize)
-    {
-        ASSERT_VALID_SIZE(dataSize, sizeof(T));
-        T *t = reinterpret_cast<T *>(data);
-        new (t) T();
-        return true;
-    }
-
-    bool init(int type, void *data, size_t dataSize)
+    bool init(int type, QVariant& dst)
     {
         switch (type) {
         case QMetaType::QColor:
-            return typedInit<QColor>(data, dataSize);
-        case QMetaType::QFont:
-            return typedInit<QFont>(data, dataSize);
-        case QMetaType::QVector2D:
-            return typedInit<QVector2D>(data, dataSize);
-        case QMetaType::QVector3D:
-            return typedInit<QVector3D>(data, dataSize);
-        case QMetaType::QVector4D:
-            return typedInit<QVector4D>(data, dataSize);
-        case QMetaType::QQuaternion:
-            return typedInit<QQuaternion>(data, dataSize);
-        case QMetaType::QMatrix4x4:
-            {
-            if (dataSize >= sizeof(QMatrix4x4))
-                return typedInit<QMatrix4x4>(data, dataSize);
-
-            // special case: init matrix-containing qvariant.
-            Q_ASSERT(dataSize >= sizeof(QVariant));
-            QVariant *matvar = reinterpret_cast<QVariant *>(data);
-            new (matvar) QVariant(QMatrix4x4());
+            dst.setValue<QColor>(QColor());
             return true;
-            }
+        case QMetaType::QFont:
+            dst.setValue<QFont>(QFont());
+            return true;
+        case QMetaType::QVector2D:
+            dst.setValue<QVector2D>(QVector2D());
+            return true;
+        case QMetaType::QVector3D:
+            dst.setValue<QVector3D>(QVector3D());
+            return true;
+        case QMetaType::QVector4D:
+            dst.setValue<QVector4D>(QVector4D());
+            return true;
+        case QMetaType::QQuaternion:
+            dst.setValue<QQuaternion>(QQuaternion());
+            return true;
+        case QMetaType::QMatrix4x4:
+            dst.setValue<QMatrix4x4>(QMatrix4x4());
+            return true;
         default: break;
         }
 
@@ -691,12 +680,12 @@ public:
     }
 
     template<typename T>
-    bool typedEqual(const void *lhs, const void *rhs)
+    bool typedEqual(const void *lhs, const QVariant& rhs)
     {
-        return (*(reinterpret_cast<const T *>(lhs)) == *(reinterpret_cast<const T *>(rhs)));
+        return (*(reinterpret_cast<const T *>(lhs)) == rhs.value<T>());
     }
 
-    bool equal(int type, const void *lhs, const void *rhs, size_t rhsSize)
+    bool equal(int type, const void *lhs, const QVariant &rhs)
     {
         switch (type) {
         case QMetaType::QColor:
@@ -712,14 +701,7 @@ public:
         case QMetaType::QQuaternion:
             return typedEqual<QQuaternion>(lhs, rhs);
         case QMetaType::QMatrix4x4:
-            {
-            if (rhsSize >= sizeof(QMatrix4x4))
-                return typedEqual<QMatrix4x4>(lhs, rhs);
-
-            Q_ASSERT(rhsSize >= sizeof(QVariant));
-            QMatrix4x4 rhsmat = reinterpret_cast<const QVariant *>(rhs)->value<QMatrix4x4>();
-            return typedEqual<QMatrix4x4>(lhs, &rhsmat);
-            }
+            return typedEqual<QMatrix4x4>(lhs, rhs);
         default: break;
         }
 
@@ -778,50 +760,34 @@ public:
     }
 
     template<typename T>
-    bool typedRead(int srcType, const void *src, size_t srcSize, int dstType, void *dst)
+    bool typedRead(const QVariant& src, int dstType, void *dst)
     {
         T *dstT = reinterpret_cast<T *>(dst);
-        if (srcType == dstType) {
-            ASSERT_VALID_SIZE(srcSize, sizeof(T));
-            const T *srcT = reinterpret_cast<const T *>(src);
-            *dstT = *srcT;
+        if (src.type() == static_cast<uint>(dstType)) {
+            *dstT = src.value<T>();
         } else {
             *dstT = T();
         }
         return true;
     }
 
-    bool read(int srcType, const void *src, size_t srcSize, int dstType, void *dst)
+    bool read(const QVariant &src, void *dst, int dstType)
     {
         switch (dstType) {
         case QMetaType::QColor:
-            return typedRead<QColor>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QColor>(src, dstType, dst);
         case QMetaType::QFont:
-            return typedRead<QFont>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QFont>(src, dstType, dst);
         case QMetaType::QVector2D:
-            return typedRead<QVector2D>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QVector2D>(src, dstType, dst);
         case QMetaType::QVector3D:
-            return typedRead<QVector3D>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QVector3D>(src, dstType, dst);
         case QMetaType::QVector4D:
-            return typedRead<QVector4D>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QVector4D>(src, dstType, dst);
         case QMetaType::QQuaternion:
-            return typedRead<QQuaternion>(srcType, src, srcSize, dstType, dst);
+            return typedRead<QQuaternion>(src, dstType, dst);
         case QMetaType::QMatrix4x4:
-            {
-            if (srcSize >= sizeof(QMatrix4x4))
-                return typedRead<QMatrix4x4>(srcType, src, srcSize, dstType, dst);
-
-            // the source data may be stored in a QVariant.
-            QMatrix4x4 *dstMat = reinterpret_cast<QMatrix4x4 *>(dst);
-            if (srcType == dstType) {
-                Q_ASSERT(srcSize >= sizeof(QVariant));
-                const QVariant *srcMatVar = reinterpret_cast<const QVariant *>(src);
-                *dstMat = srcMatVar->value<QMatrix4x4>();
-            } else {
-                *dstMat = QMatrix4x4();
-            }
-            return true;
-            }
+            return typedRead<QMatrix4x4>(src, dstType, dst);
         default: break;
         }
 
@@ -829,51 +795,33 @@ public:
     }
 
     template<typename T>
-    bool typedWrite(const void *src, void *dst, size_t dstSize)
+    bool typedWrite(const void *src, QVariant& dst)
     {
-        ASSERT_VALID_SIZE(dstSize, sizeof(T));
         const T *srcT = reinterpret_cast<const T *>(src);
-        T *dstT = reinterpret_cast<T *>(dst);
-        if (*dstT != *srcT) {
-            *dstT = *srcT;
+        if (dst.value<T>() != *srcT) {
+            dst = *srcT;
             return true;
         }
         return false;
     }
 
-    bool write(int type, const void *src, void *dst, size_t dstSize)
+    bool write(int type, const void *src, QVariant& dst)
     {
         switch (type) {
         case QMetaType::QColor:
-            return typedWrite<QColor>(src, dst, dstSize);
+            return typedWrite<QColor>(src, dst);
         case QMetaType::QFont:
-            return typedWrite<QFont>(src, dst, dstSize);
+            return typedWrite<QFont>(src, dst);
         case QMetaType::QVector2D:
-            return typedWrite<QVector2D>(src, dst, dstSize);
+            return typedWrite<QVector2D>(src, dst);
         case QMetaType::QVector3D:
-            return typedWrite<QVector3D>(src, dst, dstSize);
+            return typedWrite<QVector3D>(src, dst);
         case QMetaType::QVector4D:
-            return typedWrite<QVector4D>(src, dst, dstSize);
+            return typedWrite<QVector4D>(src, dst);
         case QMetaType::QQuaternion:
-            return typedWrite<QQuaternion>(src, dst, dstSize);
+            return typedWrite<QQuaternion>(src, dst);
         case QMetaType::QMatrix4x4:
-            {
-            if (dstSize >= sizeof(QMatrix4x4))
-                return typedWrite<QMatrix4x4>(src, dst, dstSize);
-
-            // special case: storing matrix into variant
-            // eg, QVMEMO QVMEVariant data cell is big enough to store
-            // QVariant, but not large enough to store QMatrix4x4.
-            Q_ASSERT(dstSize >= sizeof(QVariant));
-            const QMatrix4x4 *srcMat = reinterpret_cast<const QMatrix4x4 *>(src);
-            QVariant *dstMatVar = reinterpret_cast<QVariant *>(dst);
-            QMatrix4x4 dstMatVal = dstMatVar->value<QMatrix4x4>();
-            if (dstMatVal != *srcMat) {
-                *dstMatVar = QVariant(*srcMat);
-                return true;
-            }
-            return false;
-            }
+            return typedWrite<QMatrix4x4>(src, dst);
         default: break;
         }
 

@@ -1026,8 +1026,19 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                             break;
                         default:
-                            QQml_valueTypeProvider()->readValueType(data[id].dataType(), data[id].dataPtr(), data->dataSize(), t, a[0]);
+                        {
+                            if (ensurePropertiesAllocated()) {
+                                QV4::ExecutionEngine *v4 = properties.engine();
+                                QV4::Scope scope(v4);
+                                QV4::ScopedObject o(scope, properties.value());
+                                QV4::ScopedValue sv(scope, o->getIndexed(id));
+                                const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+                                if (v) {
+                                    QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], t);
+                                }
+                            }
                             break;
+                        }
                         }
                         if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
                             const int listIndex = readPropertyAsInt(id);
@@ -1088,11 +1099,25 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         case QMetaType::QVariant:
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
-                        default:
-                            data[id].ensureValueType(t);
-                            needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
-                            QQml_valueTypeProvider()->writeValueType(t, a[0], data[id].dataPtr(), data[id].dataSize());
+                        default: {
+                            if (ensurePropertiesAllocated()) {
+                                QV4::ExecutionEngine *v4 = properties.engine();
+                                QV4::Scope scope(v4);
+                                QV4::ScopedObject o(scope, properties.value());
+                                QV4::ScopedValue sv(scope, o->getIndexed(id));
+                                QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+                                if (!v) {
+                                    QV4::ScopedValue svo(scope, properties.engine()->newVariantObject(QVariant()));
+                                    o->putIndexed(id, svo);
+                                    svo = o->getIndexed(id);
+                                    v = svo->as<QV4::VariantObject>();
+                                }
+                                QQmlValueTypeProvider().initValueType(t, v->d()->data);
+                                needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], v->d()->data);
+                                QQml_valueTypeProvider()->writeValueType(t, a[0], v->d()->data);
+                            }
                             break;
+                        }
                         }
                     }
 
