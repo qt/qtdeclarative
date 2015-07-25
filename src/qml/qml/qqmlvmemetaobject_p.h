@@ -195,7 +195,6 @@ public:
     inline int signalCount() const;
 
     bool hasAssignedMetaObjectData;
-    QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue properties;

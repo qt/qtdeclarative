@@ -515,7 +515,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      const QQmlVMEMetaData *meta, QV4::ExecutionContext *qmlBindingContext, QQmlCompiledData *compiledData)
 : object(obj),
   ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
-  hasAssignedMetaObjectData(false), data(0), aliasEndpoints(0), firstVarPropertyIndex(-1),
+  hasAssignedMetaObjectData(false), aliasEndpoints(0), firstVarPropertyIndex(-1),
   propertiesInitialized(false), interceptors(0), v8methods(0)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
@@ -529,8 +529,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
     op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
-
-    data = new QQmlVMEVariant[metaData->propertyCount - metaData->varPropertyCount];
 
     aConnected.resize(metaData->aliasCount);
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
@@ -576,7 +574,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
 {
     if (parent.isT1()) parent.asT1()->objectDestroyed(object);
-    delete [] data;
     delete [] aliasEndpoints;
     delete [] v8methods;
 
