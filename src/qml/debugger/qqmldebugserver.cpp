@@ -899,7 +899,7 @@ bool QQmlDebugServerPrivate::EngineCondition::waitForServices(QReadWriteLock *lo
 
     Q_ASSERT_X(numServices == 0, Q_FUNC_INFO, "Request to wait again before previous wait finished");
     numServices = num;
-    return condition->wait(locked);
+    return numServices > 0 ? condition->wait(locked) : true;
 }
 
 void QQmlDebugServerPrivate::EngineCondition::wake()
