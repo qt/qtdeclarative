@@ -36,7 +36,6 @@
 #include <private/qqmljsast_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qv4value_p.h>
-#include <private/qqmlpool_p.h>
 #include <private/qqmlirbuilder_p.h>
 
 #include <QtCore/QCoreApplication>

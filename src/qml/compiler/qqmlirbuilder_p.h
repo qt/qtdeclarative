@@ -34,7 +34,6 @@
 #define QQMLIRBUILDER_P_H
 
 #include <private/qqmljsast_p.h>
-#include <private/qqmlpool_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compileddata_p.h>
