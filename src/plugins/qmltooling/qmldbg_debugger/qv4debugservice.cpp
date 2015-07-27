@@ -42,6 +42,7 @@
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QJsonValue>
 
 const char *const V4_CONNECT = "connect";
 const char *const V4_DISCONNECT = "disconnect";
@@ -60,248 +61,6 @@ QT_BEGIN_NAMESPACE
 
 class V8CommandHandler;
 class UnknownV8CommandHandler;
-
-class VariableCollector: public QV4::Debugging::Debugger::Collector
-{
-public:
-    VariableCollector(QV4::ExecutionEngine *engine)
-        : Collector(engine)
-        , destination(0)
-    {}
-
-    virtual ~VariableCollector() {}
-
-    void collectScope(QJsonArray *dest, QV4::Debugging::Debugger *debugger, int frameNr, int scopeNr)
-    {
-        qSwap(destination, dest);
-        bool oldIsProp = isProperty();
-        setIsProperty(true);
-        debugger->collectArgumentsInContext(this, frameNr, scopeNr);
-        debugger->collectLocalsInContext(this, frameNr, scopeNr);
-        setIsProperty(oldIsProp);
-        qSwap(destination, dest);
-    }
-
-    void setDestination(QJsonArray *dest)
-    { destination = dest; }
-
-    QJsonArray retrieveRefsToInclude()
-    {
-        QJsonArray result;
-        qSwap(refsToInclude, result);
-        return result;
-    }
-
-    QJsonValue lookup(int handle, bool addRefs = true)
-    {
-        if (handle < 0)
-            handle = -handle;
-
-        if (addRefs)
-            foreach (int ref, refsByHandle[handle])
-                refsToInclude.append(lookup(ref, false));
-        return refs[handle];
-    }
-
-    QJsonObject makeRef(int refId)
-    {
-        QJsonObject ref;
-        ref[QLatin1String("ref")] = refId;
-        return ref;
-    }
-
-    QJsonObject addFunctionRef(const QString &name)
-    {
-        const int refId = newRefId();
-
-        QJsonObject func;
-        func[QLatin1String("handle")] = refId;
-        func[QLatin1String("type")] = QStringLiteral("function");
-        func[QLatin1String("className")] = QStringLiteral("Function");
-        func[QLatin1String("name")] = name;
-        insertRef(func, refId);
-
-        return makeRef(refId);
-    }
-
-    QJsonObject addScriptRef(const QString &name)
-    {
-        const int refId = newRefId();
-
-        QJsonObject func;
-        func[QLatin1String("handle")] = refId;
-        func[QLatin1String("type")] = QStringLiteral("script");
-        func[QLatin1String("name")] = name;
-        insertRef(func, refId);
-
-        return makeRef(refId);
-    }
-
-    QJsonObject addObjectRef(QJsonObject obj, bool anonymous)
-    {
-        int ref = newRefId();
-
-        if (anonymous)
-            ref = -ref;
-        obj[QLatin1String("handle")] = ref;
-        obj[QLatin1String("type")] = QStringLiteral("object");
-        insertRef(obj, ref);
-        QSet<int> used;
-        qSwap(usedRefs, used);
-        refsByHandle.insert(ref, used);
-
-        return makeRef(ref);
-    }
-
-protected:
-    virtual void addUndefined(const QString &name)
-    {
-        QJsonObject o;
-        addHandle(name, o, QStringLiteral("undefined"));
-    }
-
-    virtual void addNull(const QString &name)
-    {
-        QJsonObject o;
-        addHandle(name, o, QStringLiteral("null"));
-    }
-
-    virtual void addBoolean(const QString &name, bool value)
-    {
-        QJsonObject o;
-        o[QLatin1String("value")] = value;
-        addHandle(name, o, QStringLiteral("boolean"));
-    }
-
-    virtual void addString(const QString &name, const QString &value)
-    {
-        QJsonObject o;
-        o[QLatin1String("value")] = value;
-        addHandle(name, o, QStringLiteral("string"));
-    }
-
-    virtual void addObject(const QString &name, const QV4::Value &value)
-    {
-        QV4::Scope scope(engine());
-        QV4::ScopedObject obj(scope, value.as<QV4::Object>());
-
-        int ref = cachedObjectRef(obj);
-        if (ref != -1) {
-            addNameRefPair(name, ref);
-        } else {
-            int ref = newRefId();
-            cacheObjectRef(obj, ref);
-
-            QJsonArray properties, *prev = &properties;
-            QSet<int> used;
-            qSwap(usedRefs, used);
-            qSwap(destination, prev);
-            collect(obj);
-            qSwap(destination, prev);
-            qSwap(usedRefs, used);
-
-            QJsonObject o;
-            o[QLatin1String("properties")] = properties;
-            addHandle(name, o, QStringLiteral("object"), ref);
-            refsByHandle.insert(ref, used);
-        }
-    }
-
-    virtual void addInteger(const QString &name, int value)
-    {
-        QJsonObject o;
-        o[QLatin1String("value")] = value;
-        addHandle(name, o, QStringLiteral("number"));
-    }
-
-    virtual void addDouble(const QString &name, double value)
-    {
-        QJsonObject o;
-        o[QLatin1String("value")] = value;
-        addHandle(name, o, QStringLiteral("number"));
-    }
-
-private:
-    int addHandle(const QString &name, QJsonObject object, const QString &type, int suppliedRef = -1)
-    {
-        Q_ASSERT(destination);
-
-        object[QLatin1String("type")] = type;
-
-        QJsonDocument tmp;
-        tmp.setObject(object);
-        QByteArray key = tmp.toJson(QJsonDocument::Compact);
-
-        int ref;
-        if (suppliedRef == -1) {
-            ref = refCache.value(key, -1);
-            if (ref == -1) {
-                ref = newRefId();
-                object[QLatin1String("handle")] = ref;
-                insertRef(object, ref);
-                refCache.insert(key, ref);
-            }
-        } else {
-            ref = suppliedRef;
-            object[QLatin1String("handle")] = ref;
-            insertRef(object, ref);
-            refCache.insert(key, ref);
-        }
-
-        addNameRefPair(name, ref);
-        return ref;
-    }
-
-    void addNameRefPair(const QString &name, int ref)
-    {
-        QJsonObject nameValuePair;
-        nameValuePair[QLatin1String("name")] = name;
-        if (isProperty()) {
-            nameValuePair[QLatin1String("ref")] = ref;
-        } else {
-            QJsonObject refObj;
-            refObj[QLatin1String("ref")] = ref;
-            nameValuePair[QLatin1String("value")] = refObj;
-        }
-        destination->append(nameValuePair);
-        usedRefs.insert(ref);
-    }
-
-    int newRefId()
-    {
-        int ref = refs.count();
-        refs.insert(ref, QJsonValue());
-        return ref;
-    }
-
-    void insertRef(const QJsonValue &value, int refId)
-    {
-        if (refId < 0)
-            refId = -refId;
-
-        refs.insert(refId, value);
-        refsToInclude.append(value);
-    }
-
-    void cacheObjectRef(QV4::Object *obj, int ref)
-    {
-        objectRefs.insert(obj, ref);
-    }
-
-    int cachedObjectRef(QV4::Object *obj) const
-    {
-        return objectRefs.value(obj, -1);
-    }
-
-private:
-    QJsonArray refsToInclude;
-    QHash<int, QJsonValue> refs;
-    QHash<QByteArray, int> refCache;
-    QJsonArray *destination;
-    QSet<int> usedRefs;
-    QHash<int, QSet<int> > refsByHandle;
-    QHash<QV4::Object *, int> objectRefs;
-};
 
 int QV4DebugServiceImpl::debuggerIndex = 0;
 int QV4DebugServiceImpl::sequence = 0;
@@ -796,20 +555,19 @@ public:
         QV4::Debugging::Debugger *debugger = debugService->debuggerAgent.firstDebugger();
         Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
 
-        VariableCollector *collector = debugService->collector();
-        QJsonArray dest;
-        collector->setDestination(&dest);
+        QV4::Debugging::DataCollector *collector = debugService->collector();
+        QV4::Debugging::DataCollector::Refs refs;
+        QV4::Debugging::RefHolder holder(collector, &refs);
         debugger->evaluateExpression(frame, expression, collector);
 
-        const int ref = dest.at(0).toObject().value(QStringLiteral("value")).toObject()
-                .value(QStringLiteral("ref")).toInt();
+        Q_ASSERT(refs.size() == 1);
 
         // response:
         addCommand();
         addRequestSequence();
         addSuccess(true);
         addRunning();
-        addBody(collector->lookup(ref).toObject());
+        addBody(collector->lookupRef(refs.first()));
         addRefs();
     }
 };
@@ -1088,27 +846,31 @@ void QV4DebugServiceImpl::send(QJsonObject v8Payload)
 
 void QV4DebugServiceImpl::clearHandles(QV4::ExecutionEngine *engine)
 {
-    theCollector.reset(new VariableCollector(engine));
+    theCollector.reset(new QV4::Debugging::DataCollector(engine));
 }
 
 QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                                         QV4::Debugging::Debugger *debugger)
 {
+    QV4::Debugging::DataCollector::Ref ref;
+
     QJsonObject frame;
     frame[QLatin1String("index")] = frameNr;
     frame[QLatin1String("debuggerFrame")] = false;
-    frame[QLatin1String("func")] = theCollector->addFunctionRef(stackFrame.function);
-    frame[QLatin1String("script")] = theCollector->addScriptRef(stackFrame.source);
+    ref = theCollector->addFunctionRef(stackFrame.function);
+    collectedRefs.append(ref);
+    frame[QLatin1String("func")] = toRef(ref);
+    ref = theCollector->addScriptRef(stackFrame.source);
+    collectedRefs.append(ref);
+    frame[QLatin1String("script")] = toRef(ref);
     frame[QLatin1String("line")] = stackFrame.line - 1;
     if (stackFrame.column >= 0)
         frame[QLatin1String("column")] = stackFrame.column;
 
-    QJsonArray properties;
-    theCollector->setDestination(&properties);
-    if (debugger->collectThisInContext(theCollector.data(), frameNr)) {
-        QJsonObject obj;
-        obj[QLatin1String("properties")] = properties;
-        frame[QLatin1String("receiver")] = theCollector->addObjectRef(obj, false);
+    {
+        QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
+        if (debugger->collectThisInContext(theCollector.data(), frameNr))
+            frame[QLatin1String("receiver")] = toRef(collectedRefs.last());
     }
 
     QJsonArray scopes;
@@ -1156,32 +918,48 @@ QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr,
 {
     QJsonObject scope;
 
-    QJsonArray properties;
-    theCollector->collectScope(&properties, debugger, frameNr, scopeNr);
-
-    QJsonObject anonymous;
-    anonymous[QLatin1String("properties")] = properties;
+    QJsonObject object;
+    QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
+    theCollector->collectScope(&object, debugger, frameNr, scopeNr);
 
     QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = debugger->getScopeTypes(frameNr);
     scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
     scope[QLatin1String("index")] = scopeNr;
     scope[QLatin1String("frameIndex")] = frameNr;
-    scope[QLatin1String("object")] = theCollector->addObjectRef(anonymous, true);
+    scope[QLatin1String("object")] = object;
 
     return scope;
 }
 
-QJsonValue QV4DebugServiceImpl::lookup(int refId) const
+QJsonValue QV4DebugServiceImpl::lookup(QV4::Debugging::DataCollector::Ref refId)
 {
-    return theCollector->lookup(refId);
+    QV4::Debugging::RefHolder holder(theCollector.data(), &collectedRefs);
+    return theCollector->lookupRef(refId);
 }
 
 QJsonArray QV4DebugServiceImpl::buildRefs()
 {
-    return theCollector->retrieveRefsToInclude();
+    QJsonArray refs;
+    std::sort(collectedRefs.begin(), collectedRefs.end());
+    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
+        QV4::Debugging::DataCollector::Ref ref = collectedRefs.at(i);
+        if (i > 0 && ref == collectedRefs.at(i - 1))
+            continue;
+        refs.append(lookup(ref));
+    }
+
+    collectedRefs.clear();
+    return refs;
 }
 
-VariableCollector *QV4DebugServiceImpl::collector() const
+QJsonValue QV4DebugServiceImpl::toRef(QV4::Debugging::DataCollector::Ref ref)
+{
+    QJsonObject dict;
+    dict.insert(QStringLiteral("ref"), qint64(ref));
+    return dict;
+}
+
+QV4::Debugging::DataCollector *QV4DebugServiceImpl::collector() const
 {
     return theCollector.data();
 }

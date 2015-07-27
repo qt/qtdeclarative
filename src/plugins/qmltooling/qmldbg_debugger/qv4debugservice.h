@@ -94,7 +94,8 @@ public:
 
     QJsonObject buildScope(int frameNr, int scopeNr, QV4::Debugging::Debugger *debugger);
     QJsonArray buildRefs();
-    QJsonValue lookup(int refId) const;
+    QJsonValue lookup(QV4::Debugging::DataCollector::Ref refId);
+    QJsonValue toRef(QV4::Debugging::DataCollector::Ref ref);
 
     QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                            QV4::Debugging::Debugger *debugger);
@@ -103,7 +104,7 @@ public:
 
     void clearHandles(QV4::ExecutionEngine *engine);
 
-    VariableCollector *collector() const;
+    QV4::Debugging::DataCollector *collector() const;
     QV4DebuggerAgent debuggerAgent;
 
 protected:
@@ -125,8 +126,9 @@ private:
     static int debuggerIndex;
     static int sequence;
     const int version;
+    QV4::Debugging::DataCollector::Refs collectedRefs;
 
-    QScopedPointer<VariableCollector> theCollector;
+    QScopedPointer<QV4::Debugging::DataCollector> theCollector;
     int theSelectedFrame;
 
     void addHandler(V8CommandHandler* handler);

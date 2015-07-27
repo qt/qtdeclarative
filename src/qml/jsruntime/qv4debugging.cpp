@@ -38,12 +38,16 @@
 #include "qv4instr_moth_p.h"
 #include "qv4runtime_p.h"
 #include "qv4script_p.h"
-#include "qv4objectiterator_p.h"
 #include "qv4identifier_p.h"
 #include "qv4string_p.h"
-#include <iostream>
+#include "qv4objectiterator_p.h"
 
+#include <iostream>
 #include <algorithm>
+
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonValue>
 
 QT_BEGIN_NAMESPACE
 
@@ -120,10 +124,11 @@ public:
 
 class ExpressionEvalJob: public JavaScriptJob
 {
-    Debugger::Collector *collector;
+    QV4::Debugging::DataCollector *collector;
 
 public:
-    ExpressionEvalJob(ExecutionEngine *engine, int frameNr, const QString &expression, Debugger::Collector *collector)
+    ExpressionEvalJob(ExecutionEngine *engine, int frameNr, const QString &expression,
+                      QV4::Debugging::DataCollector *collector)
         : JavaScriptJob(engine, frameNr, expression)
         , collector(collector)
     {
@@ -131,7 +136,7 @@ public:
 
     virtual void handleResult(QV4::ScopedValue &result)
     {
-        collector->collect(QStringLiteral("body"), result);
+        collector->collect(result);
     }
 };
 
@@ -165,6 +170,218 @@ public:
                                   Q_ARG(int, seq));
     }
 };
+}
+
+
+DataCollector::DataCollector(QV4::ExecutionEngine *engine)
+    : m_engine(engine), m_collectedRefs(Q_NULLPTR)
+{
+    values.set(engine, engine->newArrayObject());
+}
+
+DataCollector::~DataCollector()
+{
+}
+
+void DataCollector::collect(const ScopedValue &value)
+{
+    if (m_collectedRefs)
+        m_collectedRefs->append(addRef(value));
+}
+
+QJsonObject DataCollector::lookupRef(Ref ref)
+{
+    QJsonObject dict;
+    if (lookupSpecialRef(ref, &dict))
+        return dict;
+
+    dict.insert(QStringLiteral("handle"), qint64(ref));
+
+    QV4::Scope scope(engine());
+    QV4::ScopedValue value(scope, getValue(ref));
+    switch (value->type()) {
+    case QV4::Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+        break;
+    case QV4::Value::Undefined_Type:
+        dict.insert(QStringLiteral("type"), QStringLiteral("undefined"));
+        break;
+    case QV4::Value::Null_Type:
+        dict.insert(QStringLiteral("type"), QStringLiteral("null"));
+        break;
+    case QV4::Value::Boolean_Type:
+        dict.insert(QStringLiteral("type"), QStringLiteral("boolean"));
+        dict.insert(QStringLiteral("value"), value->booleanValue() ? QStringLiteral("true")
+                                                                   : QStringLiteral("false"));
+        break;
+    case QV4::Value::Managed_Type:
+        if (QV4::String *s = value->as<QV4::String>()) {
+            dict.insert(QStringLiteral("type"), QStringLiteral("string"));
+            dict.insert(QStringLiteral("value"), s->toQString());
+        } else if (QV4::Object *o = value->as<QV4::Object>()) {
+            dict.insert(QStringLiteral("type"), QStringLiteral("object"));
+            dict.insert(QStringLiteral("properties"), collectProperties(o));
+        } else {
+            Q_UNREACHABLE();
+        }
+        break;
+    case QV4::Value::Integer_Type:
+        dict.insert(QStringLiteral("type"), QStringLiteral("number"));
+        dict.insert(QStringLiteral("value"), value->integerValue());
+        break;
+    default: // double
+        dict.insert(QStringLiteral("type"), QStringLiteral("number"));
+        dict.insert(QStringLiteral("value"), value->doubleValue());
+        break;
+    }
+
+    return dict;
+}
+
+DataCollector::Ref DataCollector::addFunctionRef(const QString &functionName)
+{
+    Ref ref = addRef(QV4::Primitive::emptyValue(), false);
+
+    QJsonObject dict;
+    dict.insert(QStringLiteral("handle"), qint64(ref));
+    dict.insert(QStringLiteral("type"), QStringLiteral("function"));
+    dict.insert(QStringLiteral("className"), QStringLiteral("Function"));
+    dict.insert(QStringLiteral("name"), functionName);
+    specialRefs.insert(ref, dict);
+
+    return ref;
+}
+
+DataCollector::Ref DataCollector::addScriptRef(const QString &scriptName)
+{
+    Ref ref = addRef(QV4::Primitive::emptyValue(), false);
+
+    QJsonObject dict;
+    dict.insert(QStringLiteral("handle"), qint64(ref));
+    dict.insert(QStringLiteral("type"), QStringLiteral("script"));
+    dict.insert(QStringLiteral("name"), scriptName);
+    specialRefs.insert(ref, dict);
+
+    return ref;
+}
+
+void DataCollector::collectScope(QJsonObject *dict, Debugger *debugger, int frameNr, int scopeNr)
+{
+    QStringList names;
+
+    Refs refs;
+    {
+        RefHolder holder(this, &refs);
+        debugger->collectArgumentsInContext(this, &names, frameNr, scopeNr);
+        debugger->collectLocalsInContext(this, &names, frameNr, scopeNr);
+    }
+
+    QV4::Scope scope(engine());
+    QV4::ScopedObject scopeObject(scope, engine()->newObject());
+
+    Q_ASSERT(names.size() == refs.size());
+    for (int i = 0, ei = refs.size(); i != ei; ++i)
+        scopeObject->put(engine(), names.at(i),
+                         QV4::Value::fromReturnedValue(getValue(refs.at(i))));
+
+    Ref scopeObjectRef = addRef(scopeObject);
+    dict->insert(QStringLiteral("ref"), qint64(scopeObjectRef));
+    if (m_collectedRefs)
+        m_collectedRefs->append(scopeObjectRef);
+}
+
+DataCollector::Ref DataCollector::addRef(Value value, bool deduplicate)
+{
+    class ExceptionStateSaver
+    {
+        quint32 *hasExceptionLoc;
+        quint32 hadException;
+
+    public:
+        ExceptionStateSaver(QV4::ExecutionEngine *engine)
+            : hasExceptionLoc(&engine->hasException)
+            , hadException(false)
+        { std::swap(*hasExceptionLoc, hadException); }
+
+        ~ExceptionStateSaver()
+        { std::swap(*hasExceptionLoc, hadException); }
+    };
+
+    // if we wouldn't do this, the putIndexed won't work.
+    ExceptionStateSaver resetExceptionState(engine());
+    QV4::Scope scope(engine());
+    QV4::ScopedObject array(scope, values.value());
+    if (deduplicate) {
+        for (Ref i = 0; i < array->getLength(); ++i) {
+            if (array->getIndexed(i) == value.rawValue())
+                return i;
+        }
+    }
+    Ref ref = array->getLength();
+    array->putIndexed(ref, value);
+    Q_ASSERT(array->getLength() - 1 == ref);
+    return ref;
+}
+
+ReturnedValue DataCollector::getValue(Ref ref)
+{
+    QV4::Scope scope(engine());
+    QV4::ScopedObject array(scope, values.value());
+    Q_ASSERT(ref < array->getLength());
+    return array->getIndexed(ref, Q_NULLPTR);
+}
+
+bool DataCollector::lookupSpecialRef(Ref ref, QJsonObject *dict)
+{
+    SpecialRefs::const_iterator it = specialRefs.find(ref);
+    if (it == specialRefs.end())
+        return false;
+
+    *dict = it.value();
+    return true;
+}
+
+QJsonArray DataCollector::collectProperties(Object *object)
+{
+    QJsonArray res;
+
+    QV4::Scope scope(engine());
+    QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::EnumerableOnly);
+    QV4::ScopedValue name(scope);
+    QV4::ScopedValue value(scope);
+    while (true) {
+        QV4::Value v;
+        name = it.nextPropertyNameAsString(&v);
+        if (name->isNull())
+            break;
+        QString key = name->toQStringNoThrow();
+        value = v;
+        res.append(collectAsJson(key, value));
+    }
+
+    return res;
+}
+
+QJsonObject DataCollector::collectAsJson(const QString &name, const ScopedValue &value)
+{
+    QJsonObject dict;
+    if (!name.isNull())
+        dict.insert(QStringLiteral("name"), name);
+    Ref ref = addRef(value);
+    dict.insert(QStringLiteral("ref"), qint64(ref));
+    if (m_collectedRefs)
+        m_collectedRefs->append(ref);
+
+    // TODO: enable this when creator can handle it.
+    if (false) {
+        if (value->isManaged() && !value->isString()) {
+            QV4::Scope scope(engine());
+            QV4::ScopedObject obj(scope, value->as<QV4::Object>());
+            dict.insert(QStringLiteral("propertycount"), qint64(obj->getLength()));
+        }
+    }
+
+    return dict;
 }
 
 Debugger::Debugger(QV4::ExecutionEngine *engine)
@@ -308,7 +525,8 @@ static inline Heap::CallContext *findScope(Heap::ExecutionContext *ctxt, int sco
     return (ctx && ctx->d()) ? ctx->asCallContext()->d() : 0;
 }
 
-void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int scopeNr)
+void Debugger::collectArgumentsInContext(DataCollector *collector, QStringList *names, int frameNr,
+                                         int scopeNr)
 {
     if (state() != Paused)
         return;
@@ -316,14 +534,17 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
     class ArgumentCollectJob: public Job
     {
         QV4::ExecutionEngine *engine;
-        Collector *collector;
+        QV4::Debugging::DataCollector *collector;
+        QStringList *names;
         int frameNr;
         int scopeNr;
 
     public:
-        ArgumentCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, int scopeNr)
+        ArgumentCollectJob(QV4::ExecutionEngine *engine, DataCollector *collector,
+                           QStringList *names, int frameNr, int scopeNr)
             : engine(engine)
             , collector(collector)
+            , names(names)
             , frameNr(frameNr)
             , scopeNr(scopeNr)
         {}
@@ -346,33 +567,40 @@ void Debugger::collectArgumentsInContext(Collector *collector, int frameNr, int 
                 QString qName;
                 if (Identifier *name = ctxt->formals()[nFormals - i - 1])
                     qName = name->string;
+                names->append(qName);
                 v = ctxt->argument(i);
-                collector->collect(qName, v);
+                collector->collect(v);
             }
         }
     };
 
-    ArgumentCollectJob job(m_engine, collector, frameNr, scopeNr);
+    ArgumentCollectJob job(m_engine, collector, names, frameNr, scopeNr);
     runInEngine(&job);
 }
 
 /// Same as \c retrieveArgumentsFromContext, but now for locals.
-void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int scopeNr)
+void Debugger::collectLocalsInContext(DataCollector *collector, QStringList *names, int frameNr,
+                                      int scopeNr)
 {
+    Q_ASSERT(collector);
+    Q_ASSERT(names);
+
     if (state() != Paused)
         return;
 
     class LocalCollectJob: public Job
     {
         QV4::ExecutionEngine *engine;
-        Collector *collector;
+        DataCollector *collector;
+        QStringList *names;
         int frameNr;
         int scopeNr;
 
     public:
-        LocalCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, int scopeNr)
+        LocalCollectJob(QV4::ExecutionEngine *engine, DataCollector *collector, QStringList *names, int frameNr, int scopeNr)
             : engine(engine)
             , collector(collector)
+            , names(names)
             , frameNr(frameNr)
             , scopeNr(scopeNr)
         {}
@@ -392,17 +620,18 @@ void Debugger::collectLocalsInContext(Collector *collector, int frameNr, int sco
                 QString qName;
                 if (Identifier *name = ctxt->variables()[i])
                     qName = name->string;
+                names->append(qName);
                 v = ctxt->d()->locals[i];
-                collector->collect(qName, v);
+                collector->collect(v);
             }
         }
     };
 
-    LocalCollectJob job(m_engine, collector, frameNr, scopeNr);
+    LocalCollectJob job(m_engine, collector, names, frameNr, scopeNr);
     runInEngine(&job);
 }
 
-bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
+bool Debugger::collectThisInContext(DataCollector *collector, int frame)
 {
     if (state() != Paused)
         return false;
@@ -410,12 +639,13 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
     class ThisCollectJob: public Job
     {
         QV4::ExecutionEngine *engine;
-        Collector *collector;
+        DataCollector *collector;
         int frameNr;
         bool *foundThis;
 
     public:
-        ThisCollectJob(QV4::ExecutionEngine *engine, Collector *collector, int frameNr, bool *foundThis)
+        ThisCollectJob(QV4::ExecutionEngine *engine, DataCollector *collector, int frameNr,
+                       bool *foundThis)
             : engine(engine)
             , collector(collector)
             , frameNr(frameNr)
@@ -441,7 +671,7 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
             if (!ctxt)
                 return false;
 
-            ScopedObject o(scope, ctxt->asCallContext()->d()->activation);
+            ScopedValue o(scope, ctxt->asCallContext()->d()->activation);
             collector->collect(o);
             return true;
         }
@@ -453,18 +683,18 @@ bool Debugger::collectThisInContext(Debugger::Collector *collector, int frame)
     return foundThis;
 }
 
-void Debugger::collectThrownValue(Collector *collector)
+bool Debugger::collectThrownValue(DataCollector *collector)
 {
     if (state() != Paused || !m_engine->hasException)
-        return;
+        return false;
 
-    class ThisCollectJob: public Job
+    class ExceptionCollectJob: public Job
     {
         QV4::ExecutionEngine *engine;
-        Collector *collector;
+        DataCollector *collector;
 
     public:
-        ThisCollectJob(QV4::ExecutionEngine *engine, Collector *collector)
+        ExceptionCollectJob(QV4::ExecutionEngine *engine, DataCollector *collector)
             : engine(engine)
             , collector(collector)
         {}
@@ -473,22 +703,13 @@ void Debugger::collectThrownValue(Collector *collector)
         {
             Scope scope(engine);
             ScopedValue v(scope, *engine->exceptionValue);
-            collector->collect(QStringLiteral("exception"), v);
+            collector->collect(v);
         }
     };
 
-    ThisCollectJob job(m_engine, collector);
+    ExceptionCollectJob job(m_engine, collector);
     runInEngine(&job);
-}
-
-void Debugger::collectReturnedValue(Collector *collector) const
-{
-    if (state() != Paused)
-        return;
-
-    Scope scope(m_engine);
-    ScopedObject o(scope, m_returnedValue.valueRef());
-    collector->collect(o);
+    return true;
 }
 
 QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) const
@@ -511,7 +732,8 @@ QVector<Heap::ExecutionContext::ContextType> Debugger::getScopeTypes(int frame) 
 }
 
 
-void Debugger::evaluateExpression(int frameNr, const QString &expression, Debugger::Collector *resultsCollector)
+void Debugger::evaluateExpression(int frameNr, const QString &expression,
+                                  DataCollector *resultsCollector)
 {
     Q_ASSERT(state() == Paused);
 
@@ -775,63 +997,6 @@ DebuggerAgent::~DebuggerAgent()
 
     Q_ASSERT(m_debuggers.isEmpty());
 }
-
-Debugger::Collector::~Collector()
-{
-}
-
-void Debugger::Collector::collect(const QString &name, const ScopedValue &value)
-{
-    switch (value->type()) {
-    case Value::Empty_Type:
-        Q_ASSERT(!"empty Value encountered");
-        break;
-    case Value::Undefined_Type:
-        addUndefined(name);
-        break;
-    case Value::Null_Type:
-        addNull(name);
-        break;
-    case Value::Boolean_Type:
-        addBoolean(name, value->booleanValue());
-        break;
-    case Value::Managed_Type:
-        if (const String *s = value->as<String>())
-            addString(name, s->toQString());
-        else
-            addObject(name, value);
-        break;
-    case Value::Integer_Type:
-        addInteger(name, value->int_32());
-        break;
-    default: // double
-        addDouble(name, value->doubleValue());
-        break;
-    }
-}
-
-void Debugger::Collector::collect(Object *object)
-{
-    bool property = true;
-    qSwap(property, m_isProperty);
-
-    Scope scope(m_engine);
-    ObjectIterator it(scope, object, ObjectIterator::EnumerableOnly);
-    ScopedValue name(scope);
-    ScopedValue value(scope);
-    while (true) {
-        Value v;
-        name = it.nextPropertyNameAsString(&v);
-        if (name->isNull())
-            break;
-        QString key = name->toQStringNoThrow();
-        value = v;
-        collect(key, value);
-    }
-
-    qSwap(property, m_isProperty);
-}
-
 
 Debugger::Job::~Job()
 {

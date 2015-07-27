@@ -44,6 +44,8 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+#include <QtCore/QJsonObject>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -79,6 +81,61 @@ inline bool operator==(const DebuggerBreakPoint &a, const DebuggerBreakPoint &b)
 
 typedef QHash<DebuggerBreakPoint, QString> BreakPoints;
 
+class Q_QML_PRIVATE_EXPORT DataCollector
+{
+public:
+    typedef uint Ref;
+    typedef QVector<uint> Refs;
+
+    DataCollector(QV4::ExecutionEngine *engine);
+    ~DataCollector();
+
+    void collect(const QV4::ScopedValue &value);
+
+    QJsonObject lookupRef(Ref ref);
+
+    Ref addFunctionRef(const QString &functionName);
+    Ref addScriptRef(const QString &scriptName);
+
+    void collectScope(QJsonObject *dict, QV4::Debugging::Debugger *debugger, int frameNr,
+                      int scopeNr);
+
+    QV4::ExecutionEngine *engine() const { return m_engine; }
+
+private:
+    friend class RefHolder;
+
+    Ref addRef(QV4::Value value, bool deduplicate = true);
+    QV4::ReturnedValue getValue(Ref ref);
+    bool lookupSpecialRef(Ref ref, QJsonObject *dict);
+
+    QJsonArray collectProperties(QV4::Object *object);
+    QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
+
+    QV4::ExecutionEngine *m_engine;
+    Refs *m_collectedRefs;
+    QV4::PersistentValue values;
+    typedef QHash<Ref, QJsonObject> SpecialRefs;
+    SpecialRefs specialRefs;
+};
+
+class RefHolder {
+public:
+    RefHolder(DataCollector *collector, DataCollector::Refs *target) :
+        m_collector(collector), m_previousRefs(collector->m_collectedRefs)
+    {
+        m_collector->m_collectedRefs = target;
+    }
+
+    ~RefHolder()
+    {
+        std::swap(m_collector->m_collectedRefs, m_previousRefs);
+    }
+
+private:
+    DataCollector *m_collector;
+    DataCollector::Refs *m_previousRefs;
+};
 
 class Q_QML_EXPORT Debugger
 {
@@ -88,34 +145,6 @@ public:
     public:
         virtual ~Job() = 0;
         virtual void run() = 0;
-    };
-
-    class Q_QML_EXPORT Collector
-    {
-    public:
-        Collector(ExecutionEngine *engine): m_engine(engine), m_isProperty(false) {}
-        virtual ~Collector();
-
-        void collect(const QString &name, const ScopedValue &value);
-        void collect(Object *object);
-
-    protected:
-        virtual void addUndefined(const QString &name) = 0;
-        virtual void addNull(const QString &name) = 0;
-        virtual void addBoolean(const QString &name, bool value) = 0;
-        virtual void addString(const QString &name, const QString &value) = 0;
-        virtual void addObject(const QString &name, const Value &value) = 0;
-        virtual void addInteger(const QString &name, int value) = 0;
-        virtual void addDouble(const QString &name, double value) = 0;
-
-        QV4::ExecutionEngine *engine() const { return m_engine; }
-
-        bool isProperty() const { return m_isProperty; }
-        void setIsProperty(bool onoff) { m_isProperty = onoff; }
-
-    private:
-        QV4::ExecutionEngine *m_engine;
-        bool m_isProperty;
     };
 
     enum State {
@@ -166,14 +195,16 @@ public:
     }
 
     QVector<StackFrame> stackTrace(int frameLimit = -1) const;
-    void collectArgumentsInContext(Collector *collector, int frameNr = 0, int scopeNr = 0);
-    void collectLocalsInContext(Collector *collector, int frameNr = 0, int scopeNr = 0);
-    bool collectThisInContext(Collector *collector, int frame = 0);
-    void collectThrownValue(Collector *collector);
-    void collectReturnedValue(Collector *collector) const;
+    void collectArgumentsInContext(DataCollector *collector, QStringList *names, int frameNr = 0,
+                                   int scopeNr = 0);
+    void collectLocalsInContext(DataCollector *collector, QStringList *names, int frameNr = 0,
+                                int scopeNr = 0);
+    bool collectThisInContext(DataCollector *collector, int frame = 0);
+    bool collectThrownValue(DataCollector *collector);
     QVector<Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
-    void evaluateExpression(int frameNr, const QString &expression, Collector *resultsCollector);
+    void evaluateExpression(int frameNr, const QString &expression,
+                            DataCollector *resultsCollector);
 
 public: // compile-time interface
     void maybeBreakAtInstruction();
