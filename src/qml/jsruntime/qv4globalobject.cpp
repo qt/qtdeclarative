@@ -37,6 +37,7 @@
 #include "qv4context_p.h"
 #include "qv4function_p.h"
 #include "qv4debugging_p.h"
+#include "qv4profiling_p.h"
 #include "qv4script_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4string_p.h"
@@ -380,7 +381,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     ctx->d()->strictMode = false;
     ctx->d()->compilationUnit = function->compilationUnit;
 
-    return function->code(ctx->engine(), function->codeData);
+    return Q_V4_PROFILE(ctx->engine(), function);
 }
 
 

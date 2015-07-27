@@ -37,6 +37,7 @@
 #include "qv4function_p.h"
 #include "qv4context_p.h"
 #include "qv4debugging_p.h"
+#include "qv4profiling_p.h"
 #include "qv4scopedvalue_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -293,7 +294,7 @@ ReturnedValue Script::run()
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
         scope->d()->compilationUnit = vmFunction->compilationUnit;
 
-        return vmFunction->code(engine, vmFunction->codeData);
+        return Q_V4_PROFILE(engine, vmFunction);
     } else {
         Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
         ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
