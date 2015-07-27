@@ -41,8 +41,12 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
 {
     engine->enableProfiler();
     connect(this, SIGNAL(profilingEnabled(quint64)),
-            engine->profiler, SLOT(startProfiling(quint64)));
+            this, SLOT(forwardEnabled(quint64)));
     connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
+            this, SLOT(forwardEnabledWhileWaiting(quint64)), Qt::DirectConnection);
+    connect(this, SIGNAL(v4ProfilingEnabled(quint64)),
+            engine->profiler, SLOT(startProfiling(quint64)));
+    connect(this, SIGNAL(v4ProfilingEnabledWhileWaiting(quint64)),
             engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
     connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
     connect(this, SIGNAL(profilingDisabledWhileWaiting()), engine->profiler, SLOT(stopProfiling()),
@@ -148,6 +152,27 @@ void QV4ProfilerAdapter::receiveData(
         memory_data.append(new_memory_data);
 
     service->dataReady(this);
+}
+
+quint64 QV4ProfilerAdapter::translateFeatures(quint64 qmlFeatures)
+{
+    quint64 v4Features = 0;
+    const quint64 one = 1;
+    if (qmlFeatures & (one << ProfileJavaScript))
+        v4Features |= (one << QV4::Profiling::FeatureFunctionCall);
+    if (qmlFeatures & (one << ProfileMemory))
+        v4Features |= (one << QV4::Profiling::FeatureMemoryAllocation);
+    return v4Features;
+}
+
+void QV4ProfilerAdapter::forwardEnabled(quint64 features)
+{
+    emit v4ProfilingEnabled(translateFeatures(features));
+}
+
+void QV4ProfilerAdapter::forwardEnabledWhileWaiting(quint64 features)
+{
+    emit v4ProfilingEnabledWhileWaiting(translateFeatures(features));
 }
 
 QT_END_NAMESPACE

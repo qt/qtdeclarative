@@ -62,9 +62,17 @@ public:
 
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
+signals:
+    void v4ProfilingEnabled(quint64 v4Features);
+    void v4ProfilingEnabledWhileWaiting(quint64 v4Features);
+
 public slots:
     void receiveData(const QVector<QV4::Profiling::FunctionCallProperties> &,
                      const QVector<QV4::Profiling::MemoryAllocationProperties> &);
+
+private slots:
+    void forwardEnabled(quint64 features);
+    void forwardEnabledWhileWaiting(quint64 features);
 
 private:
     QVector<QV4::Profiling::FunctionCallProperties> data;
@@ -74,6 +82,8 @@ private:
     QStack<qint64> stack;
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
     qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
+
+    static quint64 translateFeatures(quint64 qmlFeatures);
 };
 
 QT_END_NAMESPACE

@@ -126,8 +126,8 @@ struct QQmlProfilerDefinitions {
     typedef QV4::Profiling::MemoryType MemoryType;
 
     enum ProfileFeature {
-        ProfileJavaScript = QV4::Profiling::FeatureFunctionCall,
-        ProfileMemory = QV4::Profiling::FeatureMemoryAllocation,
+        ProfileJavaScript,
+        ProfileMemory,
         ProfilePixmapCache,
         ProfileSceneGraph,
         ProfileAnimations,
