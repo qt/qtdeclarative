@@ -88,6 +88,8 @@ public:
     QQmlObjectModel *contentModel;
 };
 
+Q_DECLARE_TYPEINFO(QQuickContainerPrivate, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCONTAINER_P_P_H

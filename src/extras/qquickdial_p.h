@@ -136,6 +136,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickDial)
 };
 
+Q_DECLARE_TYPEINFO(QQuickDial, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKDIAL_H

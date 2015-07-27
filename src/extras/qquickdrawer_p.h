@@ -108,6 +108,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickDrawer)
 };
 
+Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKDRAWER_P_H

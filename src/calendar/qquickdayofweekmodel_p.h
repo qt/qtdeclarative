@@ -89,6 +89,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickDayOfWeekModel)
 };
 
+Q_DECLARE_TYPEINFO(QQuickDayOfWeekModel, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKDAYOFWEEKMODEL_P_H

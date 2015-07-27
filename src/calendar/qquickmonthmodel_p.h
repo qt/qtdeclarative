@@ -108,6 +108,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickMonthModel)
 };
 
+Q_DECLARE_TYPEINFO(QQuickMonthModel, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKMONTHMODEL_P_H

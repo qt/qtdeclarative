@@ -117,6 +117,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickCalendarView)
 };
 
+Q_DECLARE_TYPEINFO(QQuickCalendarView, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCALENDARVIEW_P_H

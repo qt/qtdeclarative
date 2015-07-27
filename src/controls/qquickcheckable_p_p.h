@@ -62,6 +62,8 @@ public:
     QQuickItem *indicator;
 };
 
+Q_DECLARE_TYPEINFO(QQuickCheckablePrivate, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCHECKABLE_P_P_H

@@ -60,6 +60,8 @@ public:
     explicit QQuickCheckBox(QQuickItem *parent = Q_NULLPTR);
 };
 
+Q_DECLARE_TYPEINFO(QQuickCheckBox, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCHECKBOX_P_H

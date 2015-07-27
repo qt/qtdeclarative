@@ -97,6 +97,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickWeekNumberModel)
 };
 
+Q_DECLARE_TYPEINFO(QQuickWeekNumberModel, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKWEEKNUMBERMODEL_P_H

@@ -96,6 +96,8 @@ private:
     QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
+Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H

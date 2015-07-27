@@ -144,6 +144,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackView)
 };
 
+Q_DECLARE_TYPEINFO(QQuickStackView, Q_COMPLEX_TYPE);
+
 class QQuickStackAttachedPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickStackAttached : public QObject
@@ -169,6 +171,8 @@ private:
     Q_DISABLE_COPY(QQuickStackAttached)
     Q_DECLARE_PRIVATE(QQuickStackAttached)
 };
+
+Q_DECLARE_TYPEINFO(QQuickStackAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

@@ -96,6 +96,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickFrame)
 };
 
+Q_DECLARE_TYPEINFO(QQuickFrame, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKFRAME_P_H

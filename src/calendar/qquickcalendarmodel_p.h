@@ -102,6 +102,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickCalendarModel)
 };
 
+Q_DECLARE_TYPEINFO(QQuickCalendarModel, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCALENDARMODEL_P_H

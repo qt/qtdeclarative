@@ -88,6 +88,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickSwitch)
 };
 
+Q_DECLARE_TYPEINFO(QQuickSwitch, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKSWITCH_P_H

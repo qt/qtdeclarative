@@ -83,6 +83,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTabBar)
 };
 
+Q_DECLARE_TYPEINFO(QQuickTabBar, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTABBAR_P_H

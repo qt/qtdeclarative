@@ -110,6 +110,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickScrollBar)
 };
 
+Q_DECLARE_TYPEINFO(QQuickScrollBar, Q_COMPLEX_TYPE);
+
 class QQuickScrollBarAttachedPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickScrollBarAttached : public QObject
@@ -135,6 +137,8 @@ private:
     Q_DISABLE_COPY(QQuickScrollBarAttached)
     Q_DECLARE_PRIVATE(QQuickScrollBarAttached)
 };
+
+Q_DECLARE_TYPEINFO(QQuickScrollBarAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

@@ -104,6 +104,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickExclusiveGroupAttached)
 };
 
+Q_DECLARE_TYPEINFO(QQuickExclusiveGroup, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPEINFO(QQuickExclusiveGroup, QML_HAS_ATTACHED_PROPERTIES)

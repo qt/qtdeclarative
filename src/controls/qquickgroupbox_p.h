@@ -78,6 +78,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickGroupBox)
 };
 
+Q_DECLARE_TYPEINFO(QQuickGroupBox, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKGROUPBOX_P_H

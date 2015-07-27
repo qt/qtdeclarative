@@ -60,6 +60,8 @@ public:
     explicit QQuickTabButton(QQuickItem *parent = Q_NULLPTR);
 };
 
+Q_DECLARE_TYPEINFO(QQuickTabButton, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTABBUTTON_P_H

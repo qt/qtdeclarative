@@ -90,6 +90,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickCheckable)
 };
 
+Q_DECLARE_TYPEINFO(QQuickCheckable, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCHECKABLE_P_H

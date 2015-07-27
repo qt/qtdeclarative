@@ -66,6 +66,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickButton)
 };
 
+Q_DECLARE_TYPEINFO(QQuickButton, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKBUTTON_P_H

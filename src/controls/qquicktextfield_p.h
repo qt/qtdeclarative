@@ -91,6 +91,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextField)
 };
 
+Q_DECLARE_TYPEINFO(QQuickTextField, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTEXTFIELD_P_H

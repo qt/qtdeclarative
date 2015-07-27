@@ -89,6 +89,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickPageIndicator)
 };
 
+Q_DECLARE_TYPEINFO(QQuickPageIndicator, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKPAGEINDICATOR_P_H

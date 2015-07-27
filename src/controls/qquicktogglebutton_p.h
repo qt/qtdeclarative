@@ -60,6 +60,8 @@ public:
     explicit QQuickToggleButton(QQuickItem *parent = Q_NULLPTR);
 };
 
+Q_DECLARE_TYPEINFO(QQuickToggleButton, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTOGGLEBUTTON_P_H

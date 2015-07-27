@@ -98,6 +98,8 @@ public:
     QV4::PersistentValue qmlGlobal;
 };
 
+Q_DECLARE_TYPEINFO(QQuickStackElement, Q_COMPLEX_TYPE);
+
 class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemViewTransitionChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickStackView)
@@ -154,6 +156,8 @@ public:
     bool initialized;
     QQuickStackElement *element;
 };
+
+Q_DECLARE_TYPEINFO(QQuickStackViewPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

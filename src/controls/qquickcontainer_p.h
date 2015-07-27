@@ -93,6 +93,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickContainer)
 };
 
+Q_DECLARE_TYPEINFO(QQuickContainer, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCONTAINER_P_H

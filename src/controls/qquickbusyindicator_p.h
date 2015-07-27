@@ -78,6 +78,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickBusyIndicator)
 };
 
+Q_DECLARE_TYPEINFO(QQuickBusyIndicator, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKBUSYINDICATOR_P_H

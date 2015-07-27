@@ -62,6 +62,8 @@ public:
     QQuickItem *frame;
 };
 
+Q_DECLARE_TYPEINFO(QQuickFramePrivate, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKFRAME_P_P_H

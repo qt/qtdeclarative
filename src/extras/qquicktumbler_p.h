@@ -107,6 +107,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTumbler)
 };
 
+Q_DECLARE_TYPEINFO(QQuickTumbler, Q_COMPLEX_TYPE);
+
 class QQuickTumblerAttachedPrivate;
 
 class Q_QUICKEXTRAS_EXPORT QQuickTumblerAttached : public QObject
@@ -128,6 +130,8 @@ private:
 
     Q_PRIVATE_SLOT(d_func(), void _q_calculateDisplacement())
 };
+
+Q_DECLARE_TYPEINFO(QQuickTumblerAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

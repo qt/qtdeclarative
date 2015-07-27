@@ -79,6 +79,8 @@ private:
     QScopedPointer<QQuickLabelPrivate> d_ptr;
 };
 
+Q_DECLARE_TYPEINFO(QQuickLabel, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKLABEL_P_H

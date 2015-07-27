@@ -60,6 +60,8 @@ public:
     explicit QQuickToolButton(QQuickItem *parent = Q_NULLPTR);
 };
 
+Q_DECLARE_TYPEINFO(QQuickToolButton, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTOOLBUTTON_P_H

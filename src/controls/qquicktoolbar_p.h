@@ -60,6 +60,8 @@ public:
     explicit QQuickToolBar(QQuickItem *parent = Q_NULLPTR);
 };
 
+Q_DECLARE_TYPEINFO(QQuickToolBar, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTOOLBAR_P_H

@@ -85,6 +85,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
+Q_DECLARE_TYPEINFO(QQuickSwipeView, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKSWIPEVIEW_P_H

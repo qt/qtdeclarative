@@ -141,6 +141,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickSlider)
 };
 
+Q_DECLARE_TYPEINFO(QQuickSlider, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKSLIDER_P_H

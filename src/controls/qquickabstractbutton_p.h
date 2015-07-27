@@ -98,6 +98,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickAbstractButton)
 };
 
+Q_DECLARE_TYPEINFO(QQuickAbstractButton, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKABSTRACTBUTTON_P_H

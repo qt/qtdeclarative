@@ -146,6 +146,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickControl)
 };
 
+Q_DECLARE_TYPEINFO(QQuickControl, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKCONTROL_P_H

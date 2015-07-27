@@ -98,6 +98,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickScrollIndicator)
 };
 
+Q_DECLARE_TYPEINFO(QQuickScrollIndicator, Q_COMPLEX_TYPE);
+
 class QQuickScrollIndicatorAttachedPrivate;
 
 class Q_QUICKCONTROLS_EXPORT QQuickScrollIndicatorAttached : public QObject
@@ -123,6 +125,8 @@ private:
     Q_DISABLE_COPY(QQuickScrollIndicatorAttached)
     Q_DECLARE_PRIVATE(QQuickScrollIndicatorAttached)
 };
+
+Q_DECLARE_TYPEINFO(QQuickScrollIndicatorAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

@@ -64,6 +64,8 @@ public:
     QQuickItem *label;
 };
 
+Q_DECLARE_TYPEINFO(QQuickAbstractButtonPrivate, Q_COMPLEX_TYPE);
+
 QT_END_NAMESPACE
 
 #endif // QQUICKABSTRACTBUTTON_P_P_H
