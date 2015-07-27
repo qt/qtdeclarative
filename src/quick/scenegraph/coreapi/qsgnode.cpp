@@ -806,7 +806,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     the vertices and their structure, to be drawn. The Material defines how the shape is
     filled.
 
-    The following is a code snipped illustrating how to create a red
+    The following is a code snippet illustrating how to create a red
     line using a QSGGeometryNode:
     \code
         QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
