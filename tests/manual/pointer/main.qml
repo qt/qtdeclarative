@@ -59,6 +59,7 @@ Window {
             addExample("fling animation", "DragHandler: after dragging, use an animation to simulate momentum", Qt.resolvedUrl("flingAnimation.qml"))
             addExample("fake Flickable", "implementation of a simplified Flickable using only Items, DragHandler and MomentumAnimation", Qt.resolvedUrl("fakeFlickable.qml"))
             addExample("photo surface", "re-implementation of the existing photo surface demo using Handlers", Qt.resolvedUrl("photosurface.qml"))
+            addExample("tap", "TapHandler: device-agnostic tap/click detection for buttons", Qt.resolvedUrl("tapHandler.qml"))
         }
     }
 }

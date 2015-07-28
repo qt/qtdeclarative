@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -41,6 +41,7 @@
 #include "qquickpointerhandler_p.h"
 #include "qquickdraghandler_p.h"
 #include "qquickpinchhandler_p.h"
+#include "qquicktaphandler_p.h"
 
 static void initResources()
 {
@@ -80,6 +81,7 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QQuickDragAxis>(uri, major, minor, "DragAxis",
         QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
     qmlRegisterType<QQuickPinchHandler>(uri,major,minor,"PinchHandler");
+    qmlRegisterType<QQuickTapHandler>(uri,major,minor,"TapHandler");
 }
 
 void QQuickHandlersModule::defineModule()

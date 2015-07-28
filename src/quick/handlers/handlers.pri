@@ -7,6 +7,7 @@ HEADERS += \
     $$PWD/qquickpointersinglehandler_p.h \
     $$PWD/qquickhandlersmodule_p.h \
     $$PWD/qquickpointerdevicehandler_p.h \
+    $$PWD/qquicktaphandler_p.h \
     $$PWD/qquickhandlersmodule_p.h \
 
 SOURCES += \
@@ -16,4 +17,6 @@ SOURCES += \
     $$PWD/qquickmultipointerhandler.cpp \
     $$PWD/qquickpinchhandler.cpp \
     $$PWD/qquickpointersinglehandler.cpp \
+    $$PWD/qquicktaphandler.cpp \
     $$PWD/qquickhandlersmodule.cpp \
+

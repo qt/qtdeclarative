@@ -9,6 +9,7 @@
         <file>photosurface.qml</file>
         <file>pinchHandler.qml</file>
         <file>singlePointHandlerProperties.qml</file>
+        <file>tapHandler.qml</file>
         <file>content/FakeFlickable.qml</file>
         <file>content/MomentumAnimation.qml</file>
         <file>content/Slider.qml</file>
