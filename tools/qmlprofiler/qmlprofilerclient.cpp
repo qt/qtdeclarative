@@ -36,6 +36,8 @@
 #include <QtCore/QStack>
 #include <QtCore/QStringList>
 
+#include <limits>
+
 ProfilerClient::ProfilerClient(const QString &clientName,
                              QQmlDebugConnection *client)
     : QQmlDebugClient(clientName, client),

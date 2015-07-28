@@ -39,6 +39,8 @@
 #include <QFile>
 #include <QXmlStreamReader>
 
+#include <limits>
+
 const char PROFILER_FILE_VERSION[] = "1.02";
 
 static const char *RANGE_TYPE_STRINGS[] = {
