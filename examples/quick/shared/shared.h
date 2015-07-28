@@ -55,9 +55,11 @@
         f.setVersion(4, 4);\
         view.setFormat(f);\
     }\
-    view.connect(view.engine(), SIGNAL(quit()), &app, SLOT(quit()));\
+    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);\
     new QQmlFileSelector(view.engine(), &view);\
     view.setSource(QUrl("qrc:///" #NAME ".qml")); \
+    if (view.status() == QQuickView::Error)\
+        return -1;\
     view.setResizeMode(QQuickView::SizeRootObjectToView);\
     if (QGuiApplication::platformName() == QLatin1String("qnx") || \
           QGuiApplication::platformName() == QLatin1String("eglfs")) {\
