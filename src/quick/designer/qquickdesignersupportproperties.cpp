@@ -200,7 +200,7 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
         QMetaProperty metaProperty = metaObject->property(index);
         QQmlProperty declarativeProperty(object, QString::fromUtf8(metaProperty.name()));
         if (declarativeProperty.isValid() && declarativeProperty.propertyTypeCategory() == QQmlProperty::Object) {
-            if (declarativeProperty.name() != "parent") {
+            if (declarativeProperty.name() != QLatin1String("parent")) {
                 QObject *childObject = QQmlMetaType::toQObject(declarativeProperty.read());
                 if (childObject)
                     propertyNameList.append(allPropertyNames(childObject,
