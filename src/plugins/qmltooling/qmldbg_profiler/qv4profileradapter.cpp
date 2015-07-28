@@ -37,7 +37,7 @@
 QT_BEGIN_NAMESPACE
 
 QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine) :
-    QQmlAbstractProfilerAdapter(service), dataPos(0), memoryPos(0)
+    QQmlAbstractProfilerAdapter(service), m_functionCallPos(0), m_memoryPos(0)
 {
     engine->enableProfiler();
     connect(this, SIGNAL(profilingEnabled(quint64)),
@@ -63,29 +63,29 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
 qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages)
 {
     QByteArray message;
-    while (memory_data.length() > memoryPos && memory_data[memoryPos].timestamp <= until) {
+    while (m_memoryData.length() > m_memoryPos && m_memoryData[m_memoryPos].timestamp <= until) {
         QQmlDebugStream d(&message, QIODevice::WriteOnly);
-        QV4::Profiling::MemoryAllocationProperties &props = memory_data[memoryPos];
+        QV4::Profiling::MemoryAllocationProperties &props = m_memoryData[m_memoryPos];
         d << props.timestamp << MemoryAllocation << props.type << props.size;
-        ++memoryPos;
+        ++m_memoryPos;
         messages.append(message);
     }
-    return memory_data.length() == memoryPos ? -1 : memory_data[memoryPos].timestamp;
+    return m_memoryData.length() == m_memoryPos ? -1 : m_memoryData[m_memoryPos].timestamp;
 }
 
 qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &messages,
                                             qint64 callNext)
 {
     if (callNext == -1) {
-        data.clear();
-        dataPos = 0;
+        m_functionCallData.clear();
+        m_functionCallPos = 0;
     }
 
     qint64 memoryNext = appendMemoryEvents(until, messages);
 
     if (memoryNext == -1) {
-        memory_data.clear();
-        memoryPos = 0;
+        m_memoryData.clear();
+        m_memoryPos = 0;
         return callNext;
     }
 
@@ -96,18 +96,21 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
 {
     QByteArray message;
     while (true) {
-        while (!stack.isEmpty() && (dataPos == data.length() ||
-                                    stack.top() <= data[dataPos].start)) {
-            if (stack.top() > until)
-                return finalizeMessages(until, messages, stack.top());
+        while (!m_stack.isEmpty() &&
+               (m_functionCallPos == m_functionCallData.length() ||
+                m_stack.top() <= m_functionCallData[m_functionCallPos].start)) {
+            if (m_stack.top() > until)
+                return finalizeMessages(until, messages, m_stack.top());
 
-            appendMemoryEvents(stack.top(), messages);
+            appendMemoryEvents(m_stack.top(), messages);
             QQmlDebugStream d(&message, QIODevice::WriteOnly);
-            d << stack.pop() << RangeEnd << Javascript;
+            d << m_stack.pop() << RangeEnd << Javascript;
             messages.append(message);
         }
-        while (dataPos != data.length() && (stack.empty() || data[dataPos].start < stack.top())) {
-            const QV4::Profiling::FunctionCallProperties &props = data[dataPos];
+        while (m_functionCallPos != m_functionCallData.length() &&
+               (m_stack.empty() || m_functionCallData[m_functionCallPos].start < m_stack.top())) {
+            const QV4::Profiling::FunctionCallProperties &props =
+                    m_functionCallData[m_functionCallPos];
             if (props.start > until)
                 return finalizeMessages(until, messages, props.start);
 
@@ -126,30 +129,30 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             d_data << props.start << RangeData << Javascript << props.name;
             messages.push_back(message);
             message.clear();
-            stack.push(props.end);
-            ++dataPos;
+            m_stack.push(props.end);
+            ++m_functionCallPos;
         }
-        if (stack.empty() && dataPos == data.length())
+        if (m_stack.empty() && m_functionCallPos == m_functionCallData.length())
             return finalizeMessages(until, messages, -1);
     }
 }
 
 void QV4ProfilerAdapter::receiveData(
-        const QVector<QV4::Profiling::FunctionCallProperties> &new_data,
-        const QVector<QV4::Profiling::MemoryAllocationProperties> &new_memory_data)
+        const QVector<QV4::Profiling::FunctionCallProperties> &functionCallData,
+        const QVector<QV4::Profiling::MemoryAllocationProperties> &memoryData)
 {
     // In rare cases it could be that another flush or stop event is processed while data from
     // the previous one is still pending. In that case we just append the data.
 
-    if (data.isEmpty())
-        data = new_data;
+    if (m_functionCallData.isEmpty())
+        m_functionCallData = functionCallData;
     else
-        data.append(new_data);
+        m_functionCallData.append(functionCallData);
 
-    if (memory_data.isEmpty())
-        memory_data = new_memory_data;
+    if (m_memoryData.isEmpty())
+        m_memoryData = memoryData;
     else
-        memory_data.append(new_memory_data);
+        m_memoryData.append(memoryData);
 
     service->dataReady(this);
 }

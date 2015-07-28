@@ -75,11 +75,11 @@ private slots:
     void forwardEnabledWhileWaiting(quint64 features);
 
 private:
-    QVector<QV4::Profiling::FunctionCallProperties> data;
-    QVector<QV4::Profiling::MemoryAllocationProperties> memory_data;
-    int dataPos;
-    int memoryPos;
-    QStack<qint64> stack;
+    QVector<QV4::Profiling::FunctionCallProperties> m_functionCallData;
+    QVector<QV4::Profiling::MemoryAllocationProperties> m_memoryData;
+    int m_functionCallPos;
+    int m_memoryPos;
+    QStack<qint64> m_stack;
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
     qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
 
