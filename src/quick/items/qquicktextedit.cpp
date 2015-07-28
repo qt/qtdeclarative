@@ -1873,13 +1873,6 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 node->m_engine->addTextObject(QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
                                               pos, textFrame->frameFormat().position());
                 nodeStart = pos;
-            } else if (qobject_cast<QTextTable*>(textFrame)) { // To keep things simple, map text tables as one text node
-                QTextFrame::iterator it = textFrame->begin();
-                nodeOffset =  d->document->documentLayout()->frameBoundingRect(textFrame).topLeft();
-                updateNodeTransform(node, nodeOffset);
-                while (!it.atEnd())
-                    node->m_engine->addTextBlock(d->document, (it++).currentBlock(), -nodeOffset, d->color, QColor(), selectionStart(), selectionEnd() - 1);
-                nodeStart = textFrame->firstPosition();
             } else {
                 // Having nodes spanning across frame boundaries will break the current bookkeeping mechanism. We need to prevent that.
                 QList<int> frameBoundaries;
