@@ -145,10 +145,12 @@ public:
     QVector<QQmlProfilerData> asynchronousMessages;
     QVector<QQmlProfilerData> pixmapMessages;
 
-    void setTraceState(bool enabled) {
+    void setTraceState(bool enabled, quint32 flushInterval = 0) {
         QByteArray message;
         QDataStream stream(&message, QIODevice::WriteOnly);
         stream << enabled;
+        if (enabled && flushInterval)
+            stream << -1 << std::numeric_limits<quint64>::max() << flushInterval;
         sendMessage(message);
     }
 
@@ -213,6 +215,7 @@ private slots:
     void controlFromJS();
     void signalSourceLocation();
     void javascript();
+    void flushInterval();
 };
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
@@ -764,6 +767,24 @@ void tst_QQmlProfilerService::javascript()
 
     expected.messageType = QQmlProfilerClient::RangeEnd;
     VERIFY(MessageListJavaScript, 21, expected, CheckMessageType | CheckDetailType);
+}
+
+void tst_QQmlProfilerService::flushInterval()
+{
+    connect(true, "timer.qml");
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    m_client->setTraceState(true, 1);
+
+    // Make sure we get multiple messages
+    QTRY_VERIFY(m_client->qmlMessages.length() > 0);
+    QVERIFY(m_client->qmlMessages.length() < 100);
+    QTRY_VERIFY(m_client->qmlMessages.length() > 100);
+
+    m_client->setTraceState(false);
+    checkTraceReceived();
+    checkJsHeap();
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

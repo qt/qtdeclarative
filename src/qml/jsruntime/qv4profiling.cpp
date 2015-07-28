@@ -84,14 +84,13 @@ void Profiler::reportData()
         resolved.insert(std::upper_bound(resolved.begin(), resolved.end(), props, comp), props);
     }
     emit dataReady(resolved, m_memory_data);
+    m_data.clear();
+    m_memory_data.clear();
 }
 
 void Profiler::startProfiling(quint64 features)
 {
     if (featuresEnabled == 0) {
-        m_data.clear();
-        m_memory_data.clear();
-
         if (features & (1 << FeatureMemoryAllocation)) {
             qint64 timestamp = m_timer.nsecsElapsed();
             MemoryAllocationProperties heap = {timestamp,

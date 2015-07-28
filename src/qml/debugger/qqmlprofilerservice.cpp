@@ -48,7 +48,8 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QQmlProfilerService, profilerInstance)
 
 QQmlProfilerService::QQmlProfilerService()
-    : QQmlConfigurableDebugService<QQmlDebugService>(QStringLiteral("CanvasFrameRate"), 1)
+    : QQmlConfigurableDebugService<QQmlDebugService>(QStringLiteral("CanvasFrameRate"), 1),
+      m_waitingForStop(false)
 {
     m_timer.start();
 }
@@ -242,6 +243,8 @@ void QQmlProfilerService::startProfiling(QQmlEngine *engine, quint64 features)
             if (!profiler->isRunning())
                 profiler->startProfiling(features);
         }
+
+        emit startFlushTimer();
     }
 
     emit messageToClient(name(), message);
@@ -273,6 +276,9 @@ void QQmlProfilerService::stopProfiling(QQmlEngine *engine)
         }
     }
 
+    if (stopping.isEmpty())
+        return;
+
     foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
         if (!profiler->isRunning())
             continue;
@@ -283,6 +289,9 @@ void QQmlProfilerService::stopProfiling(QQmlEngine *engine)
             stopping << profiler;
         }
     }
+
+    emit stopFlushTimer();
+    m_waitingForStop = true;
 
     foreach (QQmlAbstractProfilerAdapter *profiler, reporting)
         profiler->reportData();
@@ -299,16 +308,19 @@ void QQmlProfilerService::sendMessages()
     QList<QByteArray> messages;
 
     QByteArray data;
-    QQmlDebugStream traceEnd(&data, QIODevice::WriteOnly);
-    traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
 
-    QSet<QQmlEngine *> seen;
-    foreach (QQmlAbstractProfilerAdapter *profiler, m_startTimes) {
-        for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
-                i != m_engineProfilers.end(); ++i) {
-            if (i.value() == profiler && !seen.contains(i.key())) {
-                seen << i.key();
-                traceEnd << idForObject(i.key());
+    if (m_waitingForStop) {
+        QQmlDebugStream traceEnd(&data, QIODevice::WriteOnly);
+        traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
+
+        QSet<QQmlEngine *> seen;
+        foreach (QQmlAbstractProfilerAdapter *profiler, m_startTimes) {
+            for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
+                    i != m_engineProfilers.end(); ++i) {
+                if (i.value() == profiler && !seen.contains(i.key())) {
+                    seen << i.key();
+                    traceEnd << idForObject(i.key());
+                }
             }
         }
     }
@@ -325,15 +337,26 @@ void QQmlProfilerService::sendMessages()
         }
     }
 
-    //indicate completion
-    messages << data;
-    data.clear();
+    if (m_waitingForStop) {
+        //indicate completion
+        messages << data;
+        data.clear();
 
-    QQmlDebugStream ds(&data, QIODevice::WriteOnly);
-    ds << (qint64)-1 << (int)Complete;
-    messages << data;
+        QQmlDebugStream ds(&data, QIODevice::WriteOnly);
+        ds << (qint64)-1 << (int)Complete;
+        messages << data;
+        m_waitingForStop = false;
+    }
 
     emit messagesToClient(name(), messages);
+
+    // Restart flushing if any profilers are still running
+    foreach (const QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
+        if (profiler->isRunning()) {
+            emit startFlushTimer();
+            break;
+        }
+    }
 }
 
 void QQmlProfilerService::stateAboutToBeChanged(QQmlDebugService::State newState)
@@ -360,11 +383,25 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
     int engineId = -1;
     quint64 features = std::numeric_limits<quint64>::max();
     bool enabled;
+    uint flushInterval = 0;
     stream >> enabled;
     if (!stream.atEnd())
         stream >> engineId;
     if (!stream.atEnd())
         stream >> features;
+    if (!stream.atEnd()) {
+        stream >> flushInterval;
+        m_flushTimer.setInterval(flushInterval);
+        if (flushInterval > 0) {
+            connect(&m_flushTimer, SIGNAL(timeout()), this, SLOT(flush()));
+            connect(this, SIGNAL(startFlushTimer()), &m_flushTimer, SLOT(start()));
+            connect(this, SIGNAL(stopFlushTimer()), &m_flushTimer, SLOT(stop()));
+        } else {
+            disconnect(&m_flushTimer, SIGNAL(timeout()), this, SLOT(flush()));
+            disconnect(this, SIGNAL(startFlushTimer()), &m_flushTimer, SLOT(start()));
+            disconnect(this, SIGNAL(stopFlushTimer()), &m_flushTimer, SLOT(stop()));
+        }
+    }
 
     // If engineId == -1 objectForId() and then the cast will return 0.
     if (enabled)
@@ -373,6 +410,25 @@ void QQmlProfilerService::messageReceived(const QByteArray &message)
         stopProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
 
     stopWaiting();
+}
+
+void QQmlProfilerService::flush()
+{
+    QMutexLocker lock(&m_configMutex);
+
+    foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers) {
+        if (profiler->isRunning()) {
+            m_startTimes.insert(-1, profiler);
+            profiler->reportData();
+        }
+    }
+
+    foreach (QQmlAbstractProfilerAdapter *profiler, m_globalProfilers) {
+        if (profiler->isRunning()) {
+            m_startTimes.insert(-1, profiler);
+            profiler->reportData();
+        }
+    }
 }
 
 QT_END_NAMESPACE

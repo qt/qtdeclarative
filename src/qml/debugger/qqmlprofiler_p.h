@@ -175,7 +175,7 @@ signals:
 
 protected:
     QElapsedTimer m_timer;
-    QVarLengthArray<QQmlProfilerData> m_data;
+    QVector<QQmlProfilerData> m_data;
 };
 
 class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {

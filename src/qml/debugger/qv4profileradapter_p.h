@@ -73,6 +73,7 @@ private:
     int memoryPos;
     QStack<qint64> stack;
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
+    qint64 finalizeMessages(qint64 until, QList<QByteArray> &messages, qint64 callNext);
 };
 
 QT_END_NAMESPACE

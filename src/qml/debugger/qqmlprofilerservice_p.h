@@ -57,6 +57,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qwaitcondition.h>
+#include <QtCore/qtimer.h>
 
 #include <limits>
 
@@ -90,6 +91,13 @@ public:
 
     void dataReady(QQmlAbstractProfilerAdapter *profiler);
 
+signals:
+    void startFlushTimer();
+    void stopFlushTimer();
+
+private slots:
+    void flush();
+
 protected:
     virtual void stateAboutToBeChanged(State state);
     virtual void messageReceived(const QByteArray &);
@@ -101,6 +109,8 @@ private:
     void removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler);
 
     QElapsedTimer m_timer;
+    QTimer m_flushTimer;
+    bool m_waitingForStop;
 
     QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
     QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;

@@ -21,4 +21,5 @@ OTHER_FILES += \
     data/scenegraphTest.qml \
     data/TestImage_2x2.png \
     data/signalSourceLocation.qml \
-    data/javascript.qml
+    data/javascript.qml \
+    data/timer.qml

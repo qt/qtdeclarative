@@ -110,7 +110,10 @@ qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messag
 
 void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data)
 {
-    data = new_data;
+    if (data.isEmpty())
+        data = new_data;
+    else
+        data.append(new_data);
     service->dataReady(this);
 }
 
@@ -131,16 +134,12 @@ void QQmlProfiler::stopProfiling()
 {
     featuresEnabled = false;
     reportData();
-    m_data.clear();
 }
 
 void QQmlProfiler::reportData()
 {
-    QVector<QQmlProfilerData> result;
-    result.reserve(m_data.size());
-    for (int i = 0; i < m_data.size(); ++i)
-        result.append(m_data[i]);
-    emit dataReady(result);
+    emit dataReady(m_data);
+    m_data.clear();
 }
 
 QT_END_NAMESPACE
