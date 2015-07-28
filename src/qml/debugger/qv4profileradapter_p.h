@@ -69,6 +69,8 @@ public slots:
 private:
     QVector<QV4::Profiling::FunctionCallProperties> data;
     QVector<QV4::Profiling::MemoryAllocationProperties> memory_data;
+    int dataPos;
+    int memoryPos;
     QStack<qint64> stack;
     qint64 appendMemoryEvents(qint64 until, QList<QByteArray> &messages);
 };
