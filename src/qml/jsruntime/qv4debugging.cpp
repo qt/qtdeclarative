@@ -45,6 +45,8 @@
 
 #include <algorithm>
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
 using namespace QV4::Debugging;
 
@@ -834,3 +836,5 @@ void Debugger::Collector::collect(Object *object)
 Debugger::Job::~Job()
 {
 }
+
+QT_END_NAMESPACE
