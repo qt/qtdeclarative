@@ -39,11 +39,19 @@ QT_BEGIN_NAMESPACE
 
 QQmlConfigurableDebugService::QQmlConfigurableDebugService(const QString &name, float version,
                                                            QObject *parent) :
-    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate(name, version)), parent) { init(); }
+    QQmlDebugService((*new QQmlConfigurableDebugServicePrivate(name, version)), parent)
+{
+    registerService();
+    init();
+}
 
 QQmlConfigurableDebugService::QQmlConfigurableDebugService(QQmlDebugServicePrivate &dd,
                                                            QObject *parent) :
-    QQmlDebugService(dd, parent) { init(); }
+    QQmlDebugService(dd, parent)
+{
+    registerService();
+    init();
+}
 
 QMutex *QQmlConfigurableDebugService::configMutex()
 {
@@ -56,7 +64,7 @@ void QQmlConfigurableDebugService::init()
     Q_D(QQmlConfigurableDebugService);
     QMutexLocker lock(&d->configMutex);
     // If we're not enabled or not blocking, don't wait for configuration
-    d->waitingForConfiguration = (registerService() == Enabled &&
+    d->waitingForConfiguration = (state() == Enabled &&
                                   QQmlDebugConnector::instance()->blockingMode());
 }
 
@@ -74,6 +82,8 @@ void QQmlConfigurableDebugService::stateChanged(QQmlDebugService::State newState
 {
     if (newState != Enabled)
         stopWaiting();
+    else
+        init();
 }
 
 void QQmlConfigurableDebugService::engineAboutToBeAdded(QQmlEngine *engine)

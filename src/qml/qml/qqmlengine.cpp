@@ -42,7 +42,6 @@
 #include "qqmlexpression.h"
 #include "qqmlcomponent.h"
 #include "qqmlvme_p.h"
-#include <private/qqmlenginedebugservice_p.h>
 #include "qqmlstringconverters_p.h"
 #include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
@@ -55,10 +54,6 @@
 #include "qqmltypenamecache_p.h"
 #include "qqmlnotifier_p.h"
 #include <private/qqmldebugconnector_p.h>
-#include <private/qqmlprofilerservice_p.h>
-#include <private/qv4debugservice_p.h>
-#include <private/qdebugmessageservice_p.h>
-#include <private/qqmlenginecontrolservice_p.h>
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
 #include <private/qqmlboundsignal_p.h>
@@ -863,11 +858,7 @@ void QQmlEnginePrivate::init()
 
     if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugConnector::instance()) {
         isDebugging = true;
-        QQmlEngineDebugService::instance();
-        QV4DebugService::instance();
-        QQmlProfilerService::instance();
-        QDebugMessageService::instance();
-        QQmlEngineControlService::instance();
+        QQmlDebugConnector::instance()->open();
         QQmlDebugConnector::instance()->addEngine(q);
     }
 }
@@ -1486,19 +1477,6 @@ Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *o
 }
 
 #endif // QT_DEPRECATED_SINCE(5, 1)
-
-QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
-{
-#ifndef QQML_NO_DEBUG_PROTOCOL
-    if (!QQmlEnginePrivate::qml_debugging_enabled
-            && printWarning) {
-        qDebug("QML debugging is enabled. Only use this in a safe environment.");
-    }
-    QQmlEnginePrivate::qml_debugging_enabled = true;
-#else
-    Q_UNUSED(printWarning);
-#endif
-}
 
 class QQmlDataExtended {
 public:

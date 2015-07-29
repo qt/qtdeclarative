@@ -106,19 +106,22 @@ QQmlProfilerService *QQmlProfilerService::instance()
 
 void QQmlProfilerService::engineAboutToBeAdded(QQmlEngine *engine)
 {
-    Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be added from the engine thread");
+    Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
+               "QML profilers have to be added from the engine thread");
 
     QMutexLocker lock(configMutex());
     QQmlProfilerAdapter *qmlAdapter = new QQmlProfilerAdapter(this, QQmlEnginePrivate::get(engine));
     QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
     addEngineProfiler(qmlAdapter, engine);
     addEngineProfiler(v4Adapter, engine);
+
     QQmlConfigurableDebugService::engineAboutToBeAdded(engine);
 }
 
 void QQmlProfilerService::engineAdded(QQmlEngine *engine)
 {
-    Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be added from the engine thread");
+    Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
+               "QML profilers have to be added from the engine thread");
 
     QMutexLocker lock(configMutex());
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine))
@@ -127,7 +130,8 @@ void QQmlProfilerService::engineAdded(QQmlEngine *engine)
 
 void QQmlProfilerService::engineAboutToBeRemoved(QQmlEngine *engine)
 {
-    Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be removed from the engine thread");
+    Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
+               "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(configMutex());
     bool isRunning = false;
@@ -146,7 +150,8 @@ void QQmlProfilerService::engineAboutToBeRemoved(QQmlEngine *engine)
 
 void QQmlProfilerService::engineRemoved(QQmlEngine *engine)
 {
-    Q_ASSERT_X(QThread::currentThread() != thread(), Q_FUNC_INFO, "QML profilers have to be removed from the engine thread");
+    Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
+               "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(configMutex());
     foreach (QQmlAbstractProfilerAdapter *profiler, m_engineProfilers.values(engine)) {

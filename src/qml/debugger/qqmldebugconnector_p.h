@@ -57,6 +57,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugConnector : public QObject
 {
     Q_OBJECT
 public:
+    static void setPluginKey(const QString &key);
     static QQmlDebugConnector *instance();
 
     virtual bool blockingMode() const = 0;
@@ -70,6 +71,7 @@ public:
     virtual bool removeService(QQmlDebugService *service) = 0;
 
     virtual void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages) = 0;
+    virtual bool open(const QVariantHash &configuration = QVariantHash()) = 0;
 };
 
 QT_END_NAMESPACE

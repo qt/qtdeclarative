@@ -35,10 +35,6 @@
 #include "qqmldebugserverconnection_p.h"
 #include "qqmldebugservice_p.h"
 #include "qqmldebugservice_p_p.h"
-#include "qqmlenginedebugservice_p.h"
-#include "qv4debugservice_p.h"
-#include "qdebugmessageservice_p.h"
-#include "qqmlprofilerservice_p.h"
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
@@ -103,11 +99,14 @@ public:
     bool addService(QQmlDebugService *service);
     bool removeService(QQmlDebugService *service);
 
+    bool open(const QVariantHash &configuration);
+
     void receiveMessage(const QByteArray &message);
     void sendMessages(QQmlDebugService *service, const QList<QByteArray> &messages);
 
     template<class Action>
-    static bool enable(Action action);
+    bool enable(Action action);
+    bool enableFromArguments();
 
 private slots:
     void wakeEngine(QQmlEngine *engine);
@@ -119,8 +118,8 @@ private:
     friend struct StartTcpServerAction;
     friend struct ConnectToLocalAction;
     friend class QQmlDebugServerThread;
-    friend class QQmlDebugConnector;
     friend struct QQmlDebugServerInstanceWrapper;
+    friend QQmlDebugConnector *loadQQmlDebugConnector(const QString &key);
 
     class EngineCondition {
     public:
@@ -207,6 +206,42 @@ private:
     bool m_block;
     QString m_hostAddress;
     QString m_fileName;
+};
+
+struct StartTcpServerAction {
+    int portFrom;
+    int portTo;
+    bool block;
+    QString hostAddress;
+
+    StartTcpServerAction(int portFrom, int portTo, bool block, const QString &hostAddress) :
+        portFrom(portFrom), portTo(portTo), block(block), hostAddress(hostAddress) {}
+
+    bool operator()(QQmlDebugServerImpl *d)
+    {
+        if (!d->init(QLatin1String("qmldbg_tcp"), block))
+            return false;
+        d->m_thread->setPortRange(portFrom, portTo == -1 ? portFrom : portTo, block, hostAddress);
+        d->m_thread->start();
+        return true;
+    }
+};
+
+struct ConnectToLocalAction {
+    QString fileName;
+    bool block;
+
+    ConnectToLocalAction(const QString &fileName, bool block) :
+        fileName(fileName), block(block) {}
+
+    bool operator()(QQmlDebugServerImpl *d)
+    {
+        if (!d->init(QLatin1String("qmldbg_local"), block))
+            return false;
+        d->m_thread->setFileName(fileName, block);
+        d->m_thread->start();
+        return true;
+    }
 };
 
 void QQmlDebugServerImpl::advertisePlugins()
@@ -357,15 +392,11 @@ bool QQmlDebugServerImpl::blockingMode() const
     return m_blockingMode;
 }
 
-QQmlDebugConnector *QQmlDebugConnector::instance()
+QQmlDebugConnector *loadQQmlDebugConnector(const QString &key)
 {
-    QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
-    if (wrapper && wrapper->m_instance.m_thread) {
-        QQmlDebugServerImpl *ret = &(wrapper->m_instance);
-        QMutexLocker locker(&ret->m_helloMutex);
-        if (ret->m_blockingMode && !ret->m_gotHello)
-            ret->m_helloCondition.wait(&ret->m_helloMutex);
-        return ret;
+    if (key == QLatin1String("QQmlDebugServer")) {
+        QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
+        return wrapper ? &(wrapper->m_instance) : 0;
     } else {
         return 0;
     }
@@ -380,8 +411,6 @@ static void cleanupOnShutdown()
 
 bool QQmlDebugServerImpl::init(const QString &pluginName, bool block)
 {
-    if (!QQmlEnginePrivate::qml_debugging_enabled)
-        return false;
     if (m_thread)
         return false;
     static bool postRoutineAdded = false;
@@ -414,9 +443,30 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
     qRegisterMetaType<QList<QByteArray> >("QList<QByteArray>");
     // used in changeServiceState
     qRegisterMetaType<QQmlDebugService::State>("QQmlDebugService::State");
+}
 
+bool QQmlDebugServerImpl::open(const QVariantHash &configuration = QVariantHash())
+{
+    if (configuration.isEmpty()) {
+        return enableFromArguments();
+    } if (configuration.contains(QLatin1String("portFrom"))) {
+        return enable(StartTcpServerAction(
+                             configuration[QLatin1String("portFrom")].toInt(),
+                             configuration[QLatin1String("portTo")].toInt(),
+                             configuration[QLatin1String("block")].toBool(),
+                             configuration[QLatin1String("hostAddress")].toString()));
+    } else if (configuration.contains(QLatin1String("fileName"))) {
+        return enable(ConnectToLocalAction(configuration[QLatin1String("fileName")].toString(),
+                      configuration[QLatin1String("block")].toBool()));
+    }
+
+    return false;
+}
+
+bool QQmlDebugServerImpl::enableFromArguments()
+{
     if (qApp == 0)
-        return;
+        return false;
     QCoreApplicationPrivate *appD = static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
 #ifndef QT_NO_QML_DEBUGGER
     // ### remove port definition when protocol is changed
@@ -429,15 +479,6 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
 
     // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
     if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-        if (!QQmlEnginePrivate::qml_debugging_enabled) {
-            qWarning() << QString(QLatin1String(
-                              "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                              "Debugging has not been enabled.")).arg(
-                              appD->qmljsDebugArgumentsString());
-            return;
-        }
-
-        QString pluginName;
         QStringList lstjsDebugArguments = appD->qmljsDebugArgumentsString()
                                                                 .split(QLatin1Char(','));
         QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
@@ -445,7 +486,6 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
         for (; argsIt != argsItEnd; ++argsIt) {
             const QString strArgument = *argsIt;
             if (strArgument.startsWith(QLatin1String("port:"))) {
-                pluginName = QLatin1String("qmldbg_tcp");
                 portFrom = strArgument.mid(5).toInt(&ok);
                 portTo = portFrom;
                 QStringList::const_iterator argsNext = argsIt + 1;
@@ -461,7 +501,6 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
             } else if (strArgument == QLatin1String("block")) {
                 block = true;
             } else if (strArgument.startsWith(QLatin1String("file:"))) {
-                pluginName = QLatin1String("qmldbg_local");
                 fileName = strArgument.mid(5);
                 ok = !fileName.isEmpty();
             } else {
@@ -472,13 +511,10 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
         }
 
         if (ok) {
-            if (init(pluginName, block)) {
-                if (!fileName.isEmpty())
-                    m_thread->setFileName(fileName, block);
-                else
-                    m_thread->setPortRange(portFrom, portTo, block, hostAddress);
-                m_thread->start();
-            }
+            if (!fileName.isEmpty())
+                return enable(ConnectToLocalAction(fileName, block));
+            else
+                return enable(StartTcpServerAction(portFrom, portTo, block, hostAddress));
         } else {
             qWarning() << QString(QLatin1String(
                               "QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
@@ -494,6 +530,7 @@ QQmlDebugServerImpl::QQmlDebugServerImpl() :
                      appD->qmljsDebugArgumentsString());
     }
 #endif
+    return false;
 }
 
 void QQmlDebugServerImpl::receiveMessage(const QByteArray &message)
@@ -688,7 +725,7 @@ void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
 bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
 {
     // to be executed outside of debugger thread
-    Q_ASSERT(QThread::currentThread() != thread());
+    Q_ASSERT(!m_thread || QThread::currentThread() != thread());
 
     connect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
             this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
@@ -711,7 +748,7 @@ bool QQmlDebugServerImpl::addService(QQmlDebugService *service)
 bool QQmlDebugServerImpl::removeService(QQmlDebugService *service)
 {
     // to be executed outside of debugger thread
-    Q_ASSERT(QThread::currentThread() != thread());
+    Q_ASSERT(!m_thread || QThread::currentThread() != thread());
 
     QWriteLocker lock(&m_pluginsLock);
     QQmlDebugService::State newState = QQmlDebugService::NotConnected;
@@ -745,113 +782,24 @@ void QQmlDebugServerImpl::sendMessages(QQmlDebugService *service, const QList<QB
                               Q_ARG(QList<QByteArray>, prefixedMessages));
 }
 
-struct StartTcpServerAction {
-    int portFrom;
-    int portTo;
-    bool block;
-    QString hostAddress;
-
-    StartTcpServerAction(int portFrom, int portTo, bool block, const QString &hostAddress) :
-        portFrom(portFrom), portTo(portTo), block(block), hostAddress(hostAddress) {}
-
-    bool operator()(QQmlDebugServerImpl *d)
-    {
-        if (!d->init(QLatin1String("qmldbg_tcp"), block))
-            return false;
-        d->m_thread->setPortRange(portFrom, portTo == -1 ? portFrom : portTo, block, hostAddress);
-        d->m_thread->start();
-        return true;
-    }
-};
-
-struct ConnectToLocalAction {
-    QString fileName;
-    bool block;
-
-    ConnectToLocalAction(const QString &fileName, bool block) :
-        fileName(fileName), block(block) {}
-
-    bool operator()(QQmlDebugServerImpl *d)
-    {
-        if (!d->init(QLatin1String("qmldbg_local"), block))
-            return false;
-        d->m_thread->setFileName(fileName, block);
-        d->m_thread->start();
-        return true;
-    }
-};
-
 template<class Action>
 bool QQmlDebugServerImpl::enable(Action action)
 {
 #ifndef QT_NO_QML_DEBUGGER
-    QQmlDebugServerInstanceWrapper *wrapper = debugServerInstance();
-    if (!wrapper)
+    if (m_thread)
         return false;
-    QQmlDebugServerImpl *d = &wrapper->m_instance;
-    if (d->m_thread)
+    if (!action(this))
         return false;
-    if (!action(d))
-        return false;
-    while (!d->m_connection) {
-        if (!d->m_thread)
+    while (!m_connection) {
+        if (!m_thread)
             return false;
     }
+    QMutexLocker locker(&m_helloMutex);
+    if (m_blockingMode && !m_gotHello)
+        m_helloCondition.wait(&m_helloMutex);
     return true;
 #else
     Q_UNUSED(action);
-    return false;
-#endif
-}
-
-/*!
- * \enum QQmlDebuggingEnabler::StartMode
- *
- * Defines the debug server's start behavior. You can interrupt QML engines starting while a debug
- * client is connecting, in order to set breakpoints in or profile startup code.
- *
- * \value DoNotWaitForClient Run any QML engines as usual while the debug services are connecting.
- * \value WaitForClient      If a QML engine starts while the debug services are connecting,
- *                           interrupt it until they are done.
- */
-
-/*!
- * Enables debugging for QML engines created after calling this function. The debug server will
- * listen on \a port at \a hostName and block the QML engine until it receives a connection if
- * \a mode is \c WaitForClient. If \a mode is not specified it won't block and if \a hostName is not
- * specified it will listen on all available interfaces. You can only start one debug server at a
- * time. A debug server may have already been started if the -qmljsdebugger= command line argument
- * was given. This method returns \c true if a new debug server was successfully started, or
- * \c false otherwise.
- */
-bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const QString &hostName)
-{
-#ifndef QQML_NO_DEBUG_PROTOCOL
-    return QQmlDebugServerImpl::enable(StartTcpServerAction(port, port, mode == WaitForClient,
-                                                            hostName));
-#else
-    Q_UNUSED(port);
-    Q_UNUSED(block);
-    Q_UNUSED(hostName);
-    return false;
-#endif
-}
-
-/*!
- * Enables debugging for QML engines created after calling this function. The debug server will
- * connect to a debugger waiting on a local socket at the given \a socketFileName and block the QML
- * engine until the connection is established if \a mode is \c WaitForClient. If \a mode is not
- * specified it will not block. You can only start one debug server at a time. A debug server may
- * have already been started if the -qmljsdebugger= command line argument was given. This method
- * returns \c true if a new debug server was successfully started, or \c false otherwise.
- */
-bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName, StartMode mode)
-{
-#ifndef QQML_NO_DEBUG_PROTOCOL
-    return QQmlDebugServerImpl::enable(ConnectToLocalAction(socketFileName, mode == WaitForClient));
-#else
-    Q_UNUSED(fileName);
-    Q_UNUSED(block);
     return false;
 #endif
 }
