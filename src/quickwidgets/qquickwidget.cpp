@@ -143,6 +143,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , eventPending(false)
     , updatePending(false)
     , fakeHidden(false)
+    , requestedSamples(0)
 {
 }
 
@@ -772,7 +773,7 @@ void QQuickWidget::createFramebufferObject()
 
     context->makeCurrent(d->offscreenSurface);
 
-    int samples = d->offscreenWindow->requestedFormat().samples();
+    int samples = d->requestedSamples;
     if (!QOpenGLExtensions(context).hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample))
         samples = 0;
 
@@ -1248,6 +1249,14 @@ void QQuickWidget::setFormat(const QSurfaceFormat &format)
     newFormat.setDepthBufferSize(qMax(newFormat.depthBufferSize(), currentFormat.depthBufferSize()));
     newFormat.setStencilBufferSize(qMax(newFormat.stencilBufferSize(), currentFormat.stencilBufferSize()));
     newFormat.setAlphaBufferSize(qMax(newFormat.alphaBufferSize(), currentFormat.alphaBufferSize()));
+
+    // Do not include the sample count. Requesting a multisampled context is not necessary
+    // since we render into an FBO, never to an actual surface. What's more, attempting to
+    // create a pbuffer with a multisampled config crashes certain implementations. Just
+    // avoid the entire hassle, the result is the same.
+    d->requestedSamples = newFormat.samples();
+    newFormat.setSamples(0);
+
     d->offscreenWindow->setFormat(newFormat);
 }
 

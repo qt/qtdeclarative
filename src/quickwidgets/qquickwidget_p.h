@@ -115,6 +115,8 @@ public:
     bool eventPending;
     bool updatePending;
     bool fakeHidden;
+
+    int requestedSamples;
 };
 
 QT_END_NAMESPACE
