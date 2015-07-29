@@ -222,7 +222,6 @@ struct StartTcpServerAction {
         if (!d->init(QLatin1String("qmldbg_tcp"), block))
             return false;
         d->m_thread->setPortRange(portFrom, portTo == -1 ? portFrom : portTo, block, hostAddress);
-        d->m_thread->start();
         return true;
     }
 };
@@ -239,7 +238,6 @@ struct ConnectToLocalAction {
         if (!d->init(QLatin1String("qmldbg_local"), block))
             return false;
         d->m_thread->setFileName(fileName, block);
-        d->m_thread->start();
         return true;
     }
 };
@@ -372,7 +370,12 @@ void QQmlDebugServerThread::run()
             }
         }
 
-        server->m_connection = connection;
+        {
+            QMutexLocker connectionLocker(&server->m_helloMutex);
+            server->m_connection = connection;
+            server->m_helloCondition.wakeAll();
+        }
+
         if (m_block)
             connection->waitForConnection();
     } else {
@@ -790,13 +793,11 @@ bool QQmlDebugServerImpl::enable(Action action)
         return false;
     if (!action(this))
         return false;
-    while (!m_connection) {
-        if (!m_thread)
-            return false;
-    }
     QMutexLocker locker(&m_helloMutex);
+    m_thread->start();
+    m_helloCondition.wait(&m_helloMutex); // wait for connection
     if (m_blockingMode && !m_gotHello)
-        m_helloCondition.wait(&m_helloMutex);
+        m_helloCondition.wait(&m_helloMutex); // wait for hello
     return true;
 #else
     Q_UNUSED(action);
