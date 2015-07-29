@@ -596,7 +596,6 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
                 addSelectedGlyphs(glyphRun);
-                addUnselectedGlyphs(glyphRun);
             }
         }
 
@@ -762,11 +761,10 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
         parentNode->addRectangleNode(rect, color);
     }
 
-    // Add all unselected text first
+    // Add all text with unselected color first
     for (int i = 0; i < nodes.size(); ++i) {
         const BinaryTreeNode *node = nodes.at(i);
-        if (node->selectionState == Unselected)
-            parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
+        parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
     }
 
     for (int i = 0; i < imageNodes.size(); ++i) {
