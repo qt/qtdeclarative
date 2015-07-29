@@ -106,6 +106,9 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickTumbler)
     Q_DECLARE_PRIVATE(QQuickTumbler)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_updateItemWidths())
+    Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
 };
 
 Q_DECLARE_TYPEINFO(QQuickTumbler, Q_COMPLEX_TYPE);

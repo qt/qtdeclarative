@@ -85,8 +85,8 @@ public:
     QQmlComponent *delegate;
     int visibleItemCount;
 
-    void updateItemHeights();
-    void updateItemWidths();
+    void _q_updateItemHeights();
+    void _q_updateItemWidths();
 
     void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
     void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
@@ -103,10 +103,9 @@ static QList<QQuickItem *> contentItemChildItems(QQuickItem *contentItem)
 }
 
 namespace {
-    static inline qreal delegateHeight(const QQuickItem *contentItem, qreal topPadding, qreal bottomPadding, int visibleItemCount)
+    static inline qreal delegateHeight(const QQuickTumbler *tumbler)
     {
-        // TODO: can we/do we want to support spacing?
-        return (contentItem->height()/* - qMax(0, itemCount - 1) * spacing*/ - topPadding - bottomPadding) / visibleItemCount;
+        return tumbler->availableHeight() / tumbler->visibleItemCount();
     }
 
     enum ContentItemType {
@@ -148,35 +147,45 @@ namespace {
     }
 }
 
-void QQuickTumblerPrivate::updateItemHeights()
+void QQuickTumblerPrivate::_q_updateItemHeights()
 {
-    const qreal itemHeight = delegateHeight(contentItem, topPadding, bottomPadding, visibleItemCount);
+    // Can't use our own private padding members here, as the padding property might be set,
+    // which doesn't affect them, only their getters.
+    Q_Q(const QQuickTumbler);
+    const qreal itemHeight = delegateHeight(q);
     foreach (QQuickItem *childItem, contentItemChildItems(contentItem))
         childItem->setHeight(itemHeight);
 }
 
-void QQuickTumblerPrivate::updateItemWidths()
+void QQuickTumblerPrivate::_q_updateItemWidths()
 {
+    Q_Q(const QQuickTumbler);
+    const qreal availableWidth = q->availableWidth();
     foreach (QQuickItem *childItem, contentItemChildItems(contentItem))
-        childItem->setWidth(width);
+        childItem->setWidth(availableWidth);
 }
 
 void QQuickTumblerPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
 {
-    updateItemWidths();
-    updateItemHeights();
+    _q_updateItemWidths();
+    _q_updateItemHeights();
 }
 
 void QQuickTumblerPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
 {
-    updateItemWidths();
-    updateItemHeights();
+    _q_updateItemWidths();
+    _q_updateItemHeights();
 }
 
 QQuickTumbler::QQuickTumbler(QQuickItem *parent) :
     QQuickControl(*(new QQuickTumblerPrivate), parent)
 {
     setActiveFocusOnTab(true);
+
+    connect(this, SIGNAL(leftPaddingChanged()), this, SLOT(_q_updateItemWidths()));
+    connect(this, SIGNAL(rightPaddingChanged()), this, SLOT(_q_updateItemWidths()));
+    connect(this, SIGNAL(topPaddingChanged()), this, SLOT(_q_updateItemHeights()));
+    connect(this, SIGNAL(bottomPaddingChanged()), this, SLOT(_q_updateItemHeights()));
 }
 
 QQuickTumbler::~QQuickTumbler()
@@ -279,7 +288,7 @@ void QQuickTumbler::setVisibleItemCount(int visibleItemCount)
     Q_D(QQuickTumbler);
     if (visibleItemCount != d->visibleItemCount) {
         d->visibleItemCount = visibleItemCount;
-        d->updateItemHeights();
+        d->_q_updateItemHeights();
         emit visibleItemCountChanged();
     }
 }
@@ -301,18 +310,18 @@ void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &old
 
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
 
-    d->updateItemHeights();
+    d->_q_updateItemHeights();
 
     if (newGeometry.width() != oldGeometry.width())
-        d->updateItemWidths();
+        d->_q_updateItemWidths();
 }
 
 void QQuickTumbler::componentComplete()
 {
     Q_D(QQuickTumbler);
     QQuickControl::componentComplete();
-    d->updateItemHeights();
-    d->updateItemWidths();
+    d->_q_updateItemHeights();
+    d->_q_updateItemWidths();
 }
 
 void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
@@ -477,7 +486,7 @@ void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
             displacement += tumbler->count();
     } else {
         const qreal contentY = tumbler->contentItem()->property("contentY").toReal();
-        const qreal delegateH = delegateHeight(tumbler->contentItem(), tumbler->topPadding(), tumbler->bottomPadding(), tumbler->visibleItemCount());
+        const qreal delegateH = delegateHeight(tumbler);
         const qreal preferredHighlightBegin = tumbler->contentItem()->property("preferredHighlightBegin").toReal();
         // Tumbler's displacement goes from negative at the top to positive towards the bottom, so we must switch this around.
         const qreal reverseDisplacement = (contentY + preferredHighlightBegin) / delegateH;

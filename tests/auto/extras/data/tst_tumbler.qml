@@ -51,7 +51,9 @@ TestCase {
     name: "Tumbler"
 
     property var tumbler: null
-    readonly property real defaultImplicitDelegateHeight: 200 / 3
+    readonly property real implicitTumblerWidth: 60
+    readonly property real implicitTumblerHeight: 200
+    readonly property real defaultImplicitDelegateHeight: implicitTumblerHeight / 3
     readonly property real defaultListViewTumblerOffset: -defaultImplicitDelegateHeight
 
     function init() {
@@ -563,5 +565,104 @@ TestCase {
         object = simpleDisplacementDelegate.createObject(gridView);
         object.destroy();
         gridView.destroy();
+    }
+
+    property Component paddingDelegate: Text {
+        objectName: "delegate" + index
+        text: modelData
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            border.color: "red"
+            border.width: 1
+        }
+    }
+
+    function test_padding_data() {
+        var data = [];
+
+        data.push({ padding: 0 });
+        data.push({ padding: 10 });
+        data.push({ left: 10, top: 10 });
+        data.push({ right: 10, bottom: 10 });
+
+        for (var i = 0; i < data.length; ++i) {
+            var tag = "";
+
+            if (data[i].padding !== undefined)
+                tag += "padding: " + data[i].padding + " ";
+            if (data[i].left !== undefined)
+                tag += "left: " + data[i].left + " ";
+            if (data[i].right !== undefined)
+                tag += "right: " + data[i].right + " ";
+            if (data[i].top !== undefined)
+                tag += "top: " + data[i].top + " ";
+            if (data[i].bottom !== undefined)
+                tag += "bottom: " + data[i].bottom + " ";
+            tag = tag.slice(0, -1);
+
+            data[i].tag = tag;
+        }
+
+        return data;
+    }
+
+    function test_padding(data) {
+        tumbler.delegate = paddingDelegate;
+        tumbler.model = 5;
+        compare(tumbler.padding, 0);
+        compare(tumbler.leftPadding, 0);
+        compare(tumbler.rightPadding, 0);
+        compare(tumbler.topPadding, 0);
+        compare(tumbler.bottomPadding, 0);
+        compare(tumbler.contentItem.x, 0);
+        compare(tumbler.contentItem.y, 0);
+
+        if (data.padding !== undefined)
+            tumbler.padding = data.padding;
+        if (data.left !== undefined)
+            tumbler.leftPadding = data.left;
+        if (data.right !== undefined)
+            tumbler.rightPadding = data.right;
+        if (data.top !== undefined)
+            tumbler.topPadding = data.top;
+        if (data.bottom !== undefined)
+            tumbler.bottomPadding = data.bottom;
+
+        compare(tumbler.availableWidth, implicitTumblerWidth - tumbler.leftPadding - tumbler.rightPadding);
+        compare(tumbler.availableHeight, implicitTumblerHeight - tumbler.topPadding - tumbler.bottomPadding);
+        compare(tumbler.contentItem.x, tumbler.leftPadding);
+        compare(tumbler.contentItem.y, tumbler.topPadding);
+
+        var pathView = tumbler.contentItem;
+        var expectedDelegateHeight = tumbler.availableHeight / tumbler.visibleItemCount;
+        var itemIndicesInVisualOrder = [4, 0, 1];
+        for (var i = 0; i < itemIndicesInVisualOrder.length; ++i) {
+            var delegate = findChild(pathView, "delegate" + itemIndicesInVisualOrder[i]);
+            verify(delegate, "Couldn't find delegate at index " + itemIndicesInVisualOrder[i]
+                + " (iteration " + i + " out of " + (pathView.children.length - 1) + ")");
+
+            compare(delegate.width, tumbler.availableWidth);
+            compare(delegate.height, expectedDelegateHeight);
+
+            var expectedY = tumbler.topPadding + i * expectedDelegateHeight;
+            var mappedPos = delegate.mapToItem(null, delegate.width / 2, 0);
+            fuzzyCompare(mappedPos.y, expectedY, 0.5,
+                "Tumbler's PathView delegate at index " + itemIndicesInVisualOrder[i]
+                    + " should have a y pos of " + expectedY + ", but it's actually " + mappedPos.y.toFixed(20));
+
+            var expectedX = tumbler.leftPadding;
+            compare(delegate.mapToItem(null, 0, 0).x, expectedX,
+                "Tumbler's PathView delegate at index " + itemIndicesInVisualOrder[i]
+                    + " should have a x pos of " + expectedX + ", but it's actually " + mappedPos.x.toFixed(20));
+        }
+
+        // Force new items to be created, as there was a bug where the path was correct until this happened.
+        compare(tumbler.contentItem.offset, 0);
+        ++tumbler.currentIndex;
+        tryCompare(tumbler.contentItem, "offset", 4, tumbler.contentItem.highlightMoveDuration * 2);
     }
 }

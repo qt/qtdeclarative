@@ -74,7 +74,7 @@ AbstractTumbler {
             }
         }
 
-        property real delegateHeight: (control.height - control.topPadding - control.bottomPadding) / control.visibleItemCount
+        property real delegateHeight: control.availableHeight / control.visibleItemCount
     }
     //! [contentItem]
 }
