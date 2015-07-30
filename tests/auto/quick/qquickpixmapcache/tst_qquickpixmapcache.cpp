@@ -261,7 +261,9 @@ void tst_qquickpixmapcache::parallel()
         }
     }
 
-    QCOMPARE(incache+slotters, targets.count());
+    if (incache + slotters != targets.count())
+        QFAIL(QString::fromLatin1("pixmap counts don't add up: %1 incache, %2 slotters, %3 total")
+              .arg(incache).arg(slotters).arg(targets.count()).toLatin1().constData());
 
     if (cancel >= 0) {
         pixmaps.at(cancel)->clear(getters[cancel]);
@@ -282,7 +284,12 @@ void tst_qquickpixmapcache::parallel()
             if (pending[i])
                 QVERIFY(getters[i]->gotslot);
 
-            QVERIFY(pixmap->isReady());
+            if (!pixmap->isReady()) {
+                QFAIL(QString::fromLatin1("pixmap %1 not ready, status %2: %3")
+                      .arg(pixmap->url().toString()).arg(pixmap->status())
+                      .arg(pixmap->error()).toLatin1().constData());
+
+            }
             QVERIFY(pixmap->width() > 0);
             delete getters[i];
         }
