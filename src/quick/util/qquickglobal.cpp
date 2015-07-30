@@ -427,47 +427,6 @@ public:
         return false;
     }
 
-    template<typename T>
-    bool typedDestroy(void *data, size_t dataSize)
-    {
-        ASSERT_VALID_SIZE(dataSize, sizeof(T));
-        T *t = reinterpret_cast<T *>(data);
-        t->~T();
-        return true;
-    }
-
-    bool destroy(int type, void *data, size_t dataSize)
-    {
-        switch (type) {
-        case QMetaType::QColor:
-            return typedDestroy<QColor>(data, dataSize);
-        case QMetaType::QFont:
-            return typedDestroy<QFont>(data, dataSize);
-        case QMetaType::QVector2D:
-            return typedDestroy<QVector2D>(data, dataSize);
-        case QMetaType::QVector3D:
-            return typedDestroy<QVector3D>(data, dataSize);
-        case QMetaType::QVector4D:
-            return typedDestroy<QVector4D>(data, dataSize);
-        case QMetaType::QQuaternion:
-            return typedDestroy<QQuaternion>(data, dataSize);
-        case QMetaType::QMatrix4x4:
-            {
-            if (dataSize >= sizeof(QMatrix4x4))
-                return typedDestroy<QMatrix4x4>(data, dataSize);
-
-            // special case: destroying matrix-containing qvariant.
-            Q_ASSERT(dataSize >= sizeof(QVariant));
-            QVariant *matvar = reinterpret_cast<QVariant *>(data);
-            matvar->~QVariant();
-            return true;
-            }
-        default: break;
-        }
-
-        return false;
-    }
-
     bool create(int type, int argc, const void *argv[], QVariant *v)
     {
         switch (type) {
