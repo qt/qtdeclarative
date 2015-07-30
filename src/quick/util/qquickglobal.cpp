@@ -679,6 +679,7 @@ public:
 
     bool store(int type, const void *src, void *dst, size_t dstSize) Q_DECL_OVERRIDE
     {
+        Q_UNUSED(dstSize);
         switch (type) {
         case QMetaType::QColor:
             {
@@ -688,31 +689,7 @@ public:
             new (color) QColor(QColor::fromRgba(*rgb));
             return true;
             }
-        case QMetaType::QFont:
-            return typedStore<QFont>(src, dst, dstSize);
-        case QMetaType::QVector2D:
-            return typedStore<QVector2D>(src, dst, dstSize);
-        case QMetaType::QVector3D:
-            return typedStore<QVector3D>(src, dst, dstSize);
-        case QMetaType::QVector4D:
-            return typedStore<QVector4D>(src, dst, dstSize);
-        case QMetaType::QQuaternion:
-            return typedStore<QQuaternion>(src, dst, dstSize);
-        case QMetaType::QMatrix4x4:
-            {
-            if (dstSize >= sizeof(QMatrix4x4))
-                return typedStore<QMatrix4x4>(src, dst, dstSize);
-
-            // special case: storing matrix into variant
-            // eg, QVMEMO QVMEVariant data cell is big enough to store
-            // QVariant, but not large enough to store QMatrix4x4.
-            Q_ASSERT(dstSize >= sizeof(QVariant));
-            const QMatrix4x4 *srcMat = reinterpret_cast<const QMatrix4x4 *>(src);
-            QVariant *dstMatVar = reinterpret_cast<QVariant *>(dst);
-            new (dstMatVar) QVariant(*srcMat);
-            return true;
-            }
-        default: break;
+            default: break;
         }
 
         return false;
