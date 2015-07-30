@@ -429,11 +429,6 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core)
 
     QQmlPropertyData pd = core;
 
-    if (!object) {
-        m_targetIndex = -1;
-        return;
-    }
-
     while (pd.isAlias()) {
         int coreIndex = pd.coreIndex;
         int valueTypeIndex = pd.getValueTypeCoreIndex();
