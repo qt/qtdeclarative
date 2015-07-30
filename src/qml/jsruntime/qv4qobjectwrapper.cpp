@@ -1466,7 +1466,8 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
         const QQmlPropertyData *candidate = &data;
         while (candidate) {
             error += QLatin1String("\n    ") +
-                     QString::fromUtf8(object.metaObject()->method(candidate->coreIndex).methodSignature().constData());
+                     QString::fromUtf8(object.metaObject()->method(candidate->coreIndex)
+                                       .methodSignature());
             candidate = RelatedMethod(object, candidate, dummy, propertyCache);
         }
 

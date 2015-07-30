@@ -878,9 +878,10 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
 
             QMetaMethod signalMethod = _qobject->metaObject()->method(property->coreIndex);
             if (!QMetaObject::checkConnectArgs(signalMethod, method)) {
-                recordError(binding->valueLocation, tr("Cannot connect mismatched signal/slot %1 %vs. %2")
-                              .arg(QString::fromLatin1(method.methodSignature().constData()))
-                              .arg(QString::fromLatin1(signalMethod.methodSignature().constData())));
+                recordError(binding->valueLocation,
+                            tr("Cannot connect mismatched signal/slot %1 %vs. %2")
+                            .arg(QString::fromUtf8(method.methodSignature()))
+                            .arg(QString::fromUtf8(signalMethod.methodSignature())));
                 return false;
             }
 
