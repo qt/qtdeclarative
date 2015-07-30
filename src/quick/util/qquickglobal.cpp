@@ -506,15 +506,7 @@ public:
         case QMetaType::QQuaternion:
             return createFromStringTyped<QQuaternion>(data, dataSize, quaternionFromString(s, &ok));
         case QMetaType::QMatrix4x4:
-            {
-            if (dataSize >= sizeof(QMatrix4x4))
-                return createFromStringTyped<QMatrix4x4>(data, dataSize, matrix4x4FromString(s, &ok));
-
-            Q_ASSERT(dataSize >= sizeof(QVariant));
-            QVariant *matVar = reinterpret_cast<QVariant *>(data);
-            new (matVar) QVariant(matrix4x4FromString(s, &ok));
-            return true;
-            }
+            return createFromStringTyped<QMatrix4x4>(data, dataSize, matrix4x4FromString(s, &ok));
         default: break;
         }
 
