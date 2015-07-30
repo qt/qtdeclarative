@@ -260,6 +260,18 @@ void QQmlEnginePrivate::activateDesignerMode()
         on producing the image without blocking the main thread.
 */
 
+/*!
+    \fn QQmlImageProviderBase::imageType() const
+
+    Implement this method to return the image type supported by this image provider.
+*/
+
+/*!
+    \fn QQmlImageProviderBase::flags() const
+
+    Implement this to return the properties of this image provider.
+*/
+
 /*! \internal */
 QQmlImageProviderBase::QQmlImageProviderBase()
 {
@@ -1354,6 +1366,9 @@ QQmlEngine::ObjectOwnership QQmlEngine::objectOwnership(QObject *object)
         return ddata->indestructible?CppOwnership:JavaScriptOwnership;
 }
 
+/*!
+   \reimp
+*/
 bool QQmlEngine::event(QEvent *e)
 {
     Q_D(QQmlEngine);

@@ -4237,8 +4237,19 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 
 /*!
     \qmlmethod QtQuick::Item::forceActiveFocus()
-    \overload
 
+    Forces active focus on the item.
+
+    This method sets focus on the item and ensures that all ancestor
+    FocusScope objects in the object hierarchy are also given \l focus.
+
+    The reason for the focus change will be \l [CPP] Qt::OtherFocusReason. Use
+    the overloaded method to specify the focus reason to enable better
+    handling of the focus change.
+
+    \sa activeFocus
+*/
+/*!
     Forces active focus on the item.
 
     This method sets focus on the item and ensures that all ancestor
@@ -4257,7 +4268,19 @@ void QQuickItem::forceActiveFocus()
 
 /*!
     \qmlmethod QtQuick::Item::forceActiveFocus(Qt::FocusReason reason)
+    \overload
 
+    Forces active focus on the item with the given \a reason.
+
+    This method sets focus on the item and ensures that all ancestor
+    FocusScope objects in the object hierarchy are also given \l focus.
+
+    \since 5.1
+
+    \sa activeFocus, Qt::FocusReason
+*/
+/*!
+    \overload
     Forces active focus on the item with the given \a reason.
 
     This method sets focus on the item and ensures that all ancestor
