@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     Button presents a push-button control that can be pushed or clicked by
     the user. Buttons are normally used to perform an action, or to answer
     a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
-    \e Yes, \e No and \e Help.
+    \e Yes, \e No, and \e Help.
 
     \table
     \row \li \image qtquickcontrols2-button-normal.png

@@ -152,8 +152,8 @@ void QQuickScrollIndicator::setPosition(qreal position)
 /*!
     \qmlproperty bool QtQuickControls2::ScrollIndicator::active
 
-    This property holds whether the indicator is active ie. when the attached
-    Flickable is \l {Flickable::moving}{moving}.
+    This property holds whether the indicator is active, that is, when the
+    attached Flickable is \l {Flickable::moving}{moving}.
 */
 bool QQuickScrollIndicator::isActive() const
 {

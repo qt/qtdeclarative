@@ -51,8 +51,7 @@ QT_BEGIN_NAMESPACE
     \brief An exclusive group of checkable controls.
 
     ExclusiveGroup is a non-visual, mutually exclusive group of checkable
-    controls and objects. It is used with controls like RadioButton, where
-    only one of options can be selected at a time.
+    controls and objects. It is used with controls such as RadioButton, where only one of the options can be selected at a time.
 
     Any control or object that has a \c checked property, and either a
     \c checkedChanged(), \c toggled(), or \c toggled(bool) signal, can be

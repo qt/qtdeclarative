@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \ingroup editors
     \brief A multi line text input control.
 
-    TextArea is a multi line text editor. TextArea extends TextEdit
+    TextArea is a multi-line text editor. TextArea extends TextEdit
     with a \l placeholder text functionality, and adds decoration.
 
     \code

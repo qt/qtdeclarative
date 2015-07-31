@@ -108,7 +108,7 @@ void QQuickBusyIndicator::setRunning(bool running)
 /*!
     \qmlproperty Item QtQuickControls2::BusyIndicator::indicator
 
-    This property holds the \l{QQuickItem,item} which graphically implements the busy indicator.
+    This property holds the \l[QML]{Item}, which graphically implements the busy indicator.
 */
 QQuickItem *QQuickBusyIndicator::indicator() const
 {
