@@ -35,13 +35,13 @@
 ****************************************************************************/
 
 #include "qquicktextfield_p.h"
+#include "qquickpressandholdhelper_p.h"
 
 #include <QtCore/qbasictimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 #include <QtQuick/private/qquicktextinput_p_p.h>
-#include <QtQuick/private/qquickevents_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,16 +90,13 @@ public:
     QQuickTextFieldPrivate()
         : background(Q_NULLPTR)
         , placeholder(Q_NULLPTR)
-        , longPress(false)
     { }
 
     void resizeBackground();
-    bool isPressAndHoldConnected();
 
     QQuickItem *background;
     QQuickText *placeholder;
-    QBasicTimer pressAndHoldTimer;
-    bool longPress;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
 };
 
 void QQuickTextFieldPrivate::resizeBackground()
@@ -118,15 +115,10 @@ void QQuickTextFieldPrivate::resizeBackground()
     }
 }
 
-bool QQuickTextFieldPrivate::isPressAndHoldConnected()
-{
-    Q_Q(QQuickTextField);
-    IS_SIGNAL_CONNECTED(q, QQuickTextField, pressAndHold, (QQuickMouseEvent *));
-}
-
 QQuickTextField::QQuickTextField(QQuickItem *parent) :
     QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
+    d_func()->pressAndHoldHelper.control = this;
     setActiveFocusOnTab(true);
 }
 
@@ -219,44 +211,31 @@ QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 void QQuickTextField::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    d->longPress = false;
-    if (Qt::LeftButton == (event->buttons() & Qt::LeftButton))
-        d->pressAndHoldTimer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), this);
-    else
-        d->pressAndHoldTimer.stop();
+    d->pressAndHoldHelper.mousePressEvent(event);
     QQuickTextInput::mousePressEvent(event);
 }
 
 void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
-        d->pressAndHoldTimer.stop();
-    if (!d->pressAndHoldTimer.isActive())
+    d->pressAndHoldHelper.mouseMoveEvent(event);
+    if (!d->pressAndHoldHelper.timer.isActive())
         QQuickTextInput::mouseMoveEvent(event);
 }
 
 void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
-    if (!d->longPress) {
-        d->pressAndHoldTimer.stop();
+    d->pressAndHoldHelper.mouseReleaseEvent(event);
+    if (!d->pressAndHoldHelper.longPress)
         QQuickTextInput::mouseReleaseEvent(event);
-    }
 }
 
 void QQuickTextField::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickTextField);
-    if (event->timerId() == d->pressAndHoldTimer.timerId()) {
-        d->pressAndHoldTimer.stop();
-        d->longPress = true;
-        QQuickMouseEvent me(d->pressPos.x(), d->pressPos.y(), Qt::LeftButton, Qt::LeftButton,
-                            QGuiApplication::keyboardModifiers(), false/*isClick*/, true/*wasHeld*/);
-        me.setAccepted(d->isPressAndHoldConnected());
-        emit pressAndHold(&me);
-        if (!me.isAccepted())
-            d->longPress = false;
+    if (event->timerId() == d->pressAndHoldHelper.timer.timerId()) {
+        d->pressAndHoldHelper.timerEvent(event);
     } else {
         QQuickTextInput::timerEvent(event);
     }

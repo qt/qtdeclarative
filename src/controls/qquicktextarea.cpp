@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquicktextarea_p.h"
+#include "qquickpressandholdhelper_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
@@ -74,6 +75,7 @@ public:
 
     QQuickItem *background;
     QQuickText *placeholder;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
 };
 
 void QQuickTextAreaPrivate::resizeBackground()
@@ -96,6 +98,7 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
     QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
     setActiveFocusOnTab(true);
+    d_func()->pressAndHoldHelper.control = this;
 }
 
 QQuickTextArea::~QQuickTextArea()
@@ -182,6 +185,39 @@ QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         clipNode->appendChildNode(textNode);
 
     return clipNode;
+}
+
+void QQuickTextArea::mousePressEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextArea);
+    d->pressAndHoldHelper.mousePressEvent(event);
+    QQuickTextEdit::mousePressEvent(event);
+}
+
+void QQuickTextArea::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextArea);
+    d->pressAndHoldHelper.mouseMoveEvent(event);
+    if (!d->pressAndHoldHelper.timer.isActive())
+        QQuickTextEdit::mouseMoveEvent(event);
+}
+
+void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTextArea);
+    d->pressAndHoldHelper.mouseReleaseEvent(event);
+    if (!d->pressAndHoldHelper.longPress)
+        QQuickTextEdit::mouseReleaseEvent(event);
+}
+
+void QQuickTextArea::timerEvent(QTimerEvent *event)
+{
+    Q_D(QQuickTextArea);
+    if (event->timerId() == d->pressAndHoldHelper.timer.timerId()) {
+        d->pressAndHoldHelper.timerEvent(event);
+    } else {
+        QQuickTextEdit::timerEvent(event);
+    }
 }
 
 QT_END_NAMESPACE

@@ -19,6 +19,7 @@ HEADERS += \
     $$PWD/qquickgroupbox_p.h \
     $$PWD/qquicklabel_p.h \
     $$PWD/qquickpageindicator_p.h \
+    $$PWD/qquickpressandholdhelper_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
     $$PWD/qquickscrollbar_p.h \
@@ -49,6 +50,7 @@ SOURCES += \
     $$PWD/qquickgroupbox.cpp \
     $$PWD/qquicklabel.cpp \
     $$PWD/qquickpageindicator.cpp \
+    $$PWD/qquickpressandholdhelper.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \
     $$PWD/qquickscrollbar.cpp \

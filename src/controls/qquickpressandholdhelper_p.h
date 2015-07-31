@@ -34,65 +34,34 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTEXTAREA_P_H
-#define QQUICKTEXTAREA_P_H
+#ifndef QQUICKPRESSANDHOLDHELPER_H
+#define QQUICKPRESSANDHOLDHELPER_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtCore/qpoint.h>
+#include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickText;
-class QQuickTextAreaPrivate;
-class QQuickMouseEvent;
+class QQuickItem;
+class QMouseEvent;
+class QTimerEvent;
 
-class Q_QUICKCONTROLS_EXPORT QQuickTextArea : public QQuickTextEdit
+struct QQuickPressAndHoldHelper
 {
-    Q_OBJECT
-    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
+    QQuickPressAndHoldHelper();
 
-public:
-    explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
-    ~QQuickTextArea();
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void timerEvent(QTimerEvent *event);
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
-
-    QQuickText *placeholder() const;
-    void setPlaceholder(QQuickText *placeholder);
-
-Q_SIGNALS:
-    void backgroundChanged();
-    void placeholderChanged();
-    void pressAndHold(QQuickMouseEvent *event);
-
-protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickTextArea)
-    Q_DECLARE_PRIVATE(QQuickTextArea)
+    QQuickItem *control;
+    QBasicTimer timer;
+    QPointF pressPos;
+    bool longPress;
+    int pressAndHoldSignalIndex;
 };
-
-Q_DECLARE_TYPEINFO(QQuickTextArea, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKTEXTAREA_P_H
+#endif // QQUICKPRESSANDHOLDHELPER_H
