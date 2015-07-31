@@ -37,6 +37,13 @@
 
     TODO
 
+    \section1 Customization
+
+    Qt Quick Controls consist of a hierarchy (tree) of items. In order to
+    provide a custom look and feel, the default implementation of each can be
+    replaced with a custom item. For examples of how do this, see
+    \l {Customizing Qt Quick Extras 2}.
+
     \section1 Related Information
 
      \list

@@ -43,6 +43,7 @@ AbstractTumbler {
     implicitWidth: 60
     implicitHeight: 200
 
+    //! [delegate]
     delegate: Text {
         id: label
         text: modelData
@@ -51,7 +52,9 @@ AbstractTumbler {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
+    //! [delegate]
 
+    //! [contentItem]
     contentItem: PathView {
         id: pathView
         model: control.model
@@ -73,4 +76,5 @@ AbstractTumbler {
 
         property real delegateHeight: (control.height - control.topPadding - control.bottomPadding) / control.visibleItemCount
     }
+    //! [contentItem]
 }
