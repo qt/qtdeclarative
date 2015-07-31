@@ -530,7 +530,7 @@ class DominatorTree
         const int bbCount = function->basicBlockCount();
         d->vertex = std::vector<int>(bbCount, InvalidBasicBlockIndex);
         d->parent = std::vector<int>(bbCount, InvalidBasicBlockIndex);
-        d->dfnum = std::vector<int>(bbCount, 0);
+        d->dfnum = std::vector<int>(size_t(bbCount), 0);
         d->semi = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
         d->ancestor = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
         idom = std::vector<BasicBlockIndex>(bbCount, InvalidBasicBlockIndex);
@@ -873,7 +873,7 @@ private:
     //      - set the current node's depth to that of immediate dominator + 1
     std::vector<int> calculateNodeDepths() const
     {
-        std::vector<int> nodeDepths(function->basicBlockCount(), -1);
+        std::vector<int> nodeDepths(size_t(function->basicBlockCount()), -1);
         nodeDepths[0] = 0;
         foreach (BasicBlock *bb, function->basicBlocks()) {
             if (bb->isRemoved())
