@@ -44,71 +44,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup plugins
 
-    QQmlExtensionPlugin is a plugin interface that makes it possible to
-    create QML extensions that can be loaded dynamically into QML applications.
-    These extensions allow custom QML types to be made available to the QML engine.
-
-    To write a QML extension plugin:
-
-    \list
-    \li Subclass QQmlExtensionPlugin, implement registerTypes() method to register types
-    using qmlRegisterType(), and export the class using the Q_PLUGIN_METADATA() macro
-    \li Write an appropriate project file for the plugin
-    \li Create a \l{Module Definition qmldir Files}{qmldir file} to describe the plugin
-    \endlist
-
-    QML extension plugins can be used to provide either application-specific or
-    library-like plugins. Library plugins should limit themselves to registering types,
-    as any manipulation of the engine's root context may cause conflicts
-    or other issues in the library user's code.
-
-
-    \section1 An Example
-
-    Suppose there is a new \c TimeModel C++ class that should be made available
-    as a new QML element. It provides the current time through \c hour and \c minute
-    properties, like this:
-
-    \snippet qmlextensionplugins/plugin.cpp 0
-    \dots
-
-    To make this class available as a QML type, create a plugin that registers
-    this type with a specific \l {QML Modules}{module} using qmlRegisterType(). For this example the plugin
-    module will be named \c TimeExample (as defined in the project
-    file further below).
-
-    \snippet qmlextensionplugins/plugin.cpp plugin
-
-    This registers the \c TimeModel class with the 1.0 version of this
-    plugin library, as a QML type called \c Time. The Q_ASSERT statement
-    ensures the module is imported correctly by any QML components that use this plugin.
-
-    The project file defines the project as a plugin library and specifies
-    it should be built into the \c imports/TimeExample directory:
-
-    \code
-    TEMPLATE = lib
-    CONFIG += qt plugin
-    QT += qml
-
-    DESTDIR = imports/TimeExample
-    TARGET = qmlqtimeexampleplugin
-    ...
-    \endcode
-
-    Finally, a \l{Module Definition qmldir Files}{qmldir file} is required in the \c imports/TimeExample directory
-    that describes the plugin. This directory includes a \c Clock.qml file that
-    should be bundled with the plugin, so it needs to be specified in the \c qmldir
-    file:
-
-    \quotefile qmlextensionplugins/imports/TimeExample/qmldir
-
-    Once the project is built and installed, the new \c Time element can be
-    used by any QML component that imports the \c TimeExample module:
-
-    \snippet qmlextensionplugins/plugins.qml 0
-
-    The full source code is available in the \l {qmlextensionplugins}{plugins example}.
+    \include qqmlextensionplugin.qdocinc
 
     The \l {Writing QML Extensions with C++} tutorial also contains a chapter
     on creating QML plugins.
