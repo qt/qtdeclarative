@@ -41,7 +41,7 @@ identifier for the plugin.
 
 \snippet qmlextensionplugins/plugin.cpp plugin
 
-The \c TimeModel class receives a \c{1.0} version of this plugin library, as
+This registers the \c TimeModel class with version \c{1.0} of this plugin library, as
 a QML type called \c Time. The Q_ASSERT() macro can ensure the type namespace is
 imported correctly by any QML components that use this plugin. The
 \l{Defining QML Types from C++} article has more information about registering C++
