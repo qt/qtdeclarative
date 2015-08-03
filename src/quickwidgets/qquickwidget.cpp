@@ -1121,13 +1121,18 @@ void QQuickWidget::wheelEvent(QWheelEvent *e)
 }
 #endif
 
-
+/*!
+   \reimp
+*/
 void QQuickWidget::focusInEvent(QFocusEvent * event)
 {
     Q_D(QQuickWidget);
     d->offscreenWindow->focusInEvent(event);
 }
 
+/*!
+   \reimp
+*/
 void QQuickWidget::focusOutEvent(QFocusEvent * event)
 {
     Q_D(QQuickWidget);

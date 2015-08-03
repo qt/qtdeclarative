@@ -188,6 +188,9 @@ QSGMaterialShader::QSGMaterialShader()
 {
 }
 
+/*!
+    \internal
+ */
 QSGMaterialShader::QSGMaterialShader(QSGMaterialShaderPrivate &dd)
     : d_ptr(&dd)
 {
@@ -463,7 +466,10 @@ QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
     Q_ASSERT(m_data);
     return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix();
 }
-
+/*!
+   Returns the ratio between physical pixels and device-independent pixels
+   to be used for rendering.
+*/
 float QSGMaterialShader::RenderState::devicePixelRatio() const
 {
     Q_ASSERT(m_data);

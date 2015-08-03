@@ -365,5 +365,26 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     return 0;
 }
 
+/*!
+   \fn QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
+/*!
+   \fn QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
+/*!
+   \fn QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
 QT_END_NAMESPACE
 
