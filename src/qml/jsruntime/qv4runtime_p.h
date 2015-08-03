@@ -370,6 +370,15 @@ inline ReturnedValue Runtime::div(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
+    if (Value::integerCompatible(left, right)) {
+        int lval = left.integerValue();
+        int rval = right.integerValue();
+        if (rval != 0 && (lval % rval == 0))
+            return Encode(int(lval / rval));
+        else
+            return Encode(double(lval) / rval);
+    }
+
     double lval = left.toNumber();
     double rval = right.toNumber();
     return Primitive::fromDouble(lval / rval).asReturnedValue();
