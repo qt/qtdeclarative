@@ -1614,34 +1614,45 @@ void QQuickItemPrivate::setLayoutMirror(bool mirror)
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \since 5.6
-    \brief Property used to manipulate Enter key appearance
+    \brief Provides a property to manipulate the appearance of Enter key on
+           an on-screen keyboard.
 
-    The EnterKey attached property is used to manipulate the appearance and behavior of the Enter key
-    on an on-screen keyboard.
+    The EnterKey attached property is used to manipulate the appearance and
+    behavior of the Enter key on an on-screen keyboard.
 */
 
 /*!
-    \qmlproperty bool QtQuick::EnterKey::type
+    \qmlproperty enumeration QtQuick::EnterKey::type
 
-    This property holds the type of the Enter key.
+    Holds the type of the Enter key.
 
-    \note Not all of these values are supported on all platforms.
-    For unsupported values the default key will be used instead.
+    \note Not all of these values are supported on all platforms. For
+          unsupported values the default key is used instead.
 
-    \li Qt.EnterKeyDefault      The default Enter key.
-                                This can either be a button closing the keyboard, or a Return button
-                                causing a new line in case of a multi-line input field.
-    \li Qt.EnterKeyReturn       Show a Return button that inserts a new line.
-    \li Qt.EnterKeyDone         Show a "Done" button.
-                                Typically the keyboard is expected to close when the button is pressed.
-    \li Qt.EnterKeyGo           Show a "Go" button.
-                                Typically used in an address bar when entering a URL.
-    \li Qt.EnterKeySend         Show a "Send" button.
-    \li Qt.EnterKeySearch       Show a "Search" button.
-    \li Qt.EnterKeyNext         Show a "Next" button.
-                                Typically used in a form to allow navigating to the next input field
-                                without the keyboard closing.
-    \li Qt.EnterKeyPrevious     Show a "Previous" button.
+    \value Qt.EnterKeyDefault   The default Enter key. This can be either a
+                                button to accept the input and close the
+                                keyboard, or a \e Return button to enter a
+                                newline in case of a multi-line input field.
+
+    \value Qt.EnterKeyReturn    Show a \e Return button that inserts a
+                                newline.
+
+    \value Qt.EnterKeyDone      Show a \e {"Done"} button. Typically, the
+                                keyboard is expected to close when the button
+                                is pressed.
+
+    \value Qt.EnterKeyGo        Show a \e {"Go"} button. Typically used in an
+                                address bar when entering a URL.
+
+    \value Qt.EnterKeySend      Show a \e {"Send"} button.
+
+    \value Qt.EnterKeySearch    Show a \e {"Search"} button.
+
+    \value Qt.EnterKeyNext      Show a \e {"Next"} button. Typically used in a
+                                form to allow navigating to the next input
+                                field without the keyboard closing.
+
+    \value Qt.EnterKeyPrevious  Show a \e {"Previous"} button.
 */
 
 QQuickEnterKeyAttached::QQuickEnterKeyAttached(QObject *parent)
