@@ -189,6 +189,7 @@ public slots:
 
 private:
     QVector<QQmlProfilerData> data;
+    int next;
 };
 
 //

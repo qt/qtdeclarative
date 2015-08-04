@@ -79,7 +79,7 @@ void QQmlProfilerData::toByteArrays(QList<QByteArray> &messages) const
 }
 
 QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine) :
-    QQmlAbstractProfilerAdapter(service)
+    QQmlAbstractProfilerAdapter(service), next(0)
 {
     engine->enableProfiler();
     connect(this, SIGNAL(profilingEnabled(quint64)), engine->profiler, SLOT(startProfiling(quint64)));
@@ -97,11 +97,15 @@ QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEngin
 
 qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
-    while (!data.empty() && data.front().time <= until) {
-        data.front().toByteArrays(messages);
-        data.pop_front();
+    while (next != data.length()) {
+        if (data[next].time > until)
+            return data[next].time;
+        data[next++].toByteArrays(messages);
     }
-    return data.empty() ? -1 : data.front().time;
+
+    next = 0;
+    data.clear();
+    return -1;
 }
 
 void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data)
