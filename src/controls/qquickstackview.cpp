@@ -49,9 +49,53 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickStackView
     \inqmlmodule QtQuick.Controls
     \ingroup navigation
-    \brief A stack view control.
+    \brief Provides a stack-based navigation model.
 
-    TODO
+    StackView can be used with a set of inter-linked information pages. For
+    example, an email application with separate views to list latest emails,
+    view a specific email, and list/view the attachments. The email list view
+    is pushed onto the stack as users open an email, and popped out as they
+    choose to go back.
+
+    The following snippet demonstrates a simple use case, where the \c mainView
+    is pushed onto and popped out of the stack on relevant button click:
+
+    \qml
+    ApplicationWindow {
+        title: qsTr("Hello World")
+        width: 640
+        height: 480
+        visible: true
+
+        StackView {
+            id: stack
+            initialItem: mainView
+            anchors.fill: parent
+        }
+
+        Component {
+            id: mainView
+
+            Row {
+                spacing: 10
+
+                Button {
+                    text: "Push"
+                    onClicked: stack.push(mainView)
+                }
+                Button {
+                    text: "Pop"
+                    enabled: stack.depth > 1
+                    onClicked: stack.pop()
+
+                }
+                Text {
+                    text: stack.depth
+                }
+            }
+        }
+    }
+    \endqml
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent) :
