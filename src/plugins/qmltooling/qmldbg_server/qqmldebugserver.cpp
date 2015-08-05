@@ -80,7 +80,43 @@ Q_QML_IMPORT_DEBUG_PLUGIN(QLocalClientConnectionFactory)
 
 const int protocolVersion = 1;
 
-class QQmlDebugServerThread;
+class QQmlDebugServerImpl;
+class QQmlDebugServerThread : public QThread
+{
+public:
+    QQmlDebugServerThread() : m_server(0), m_portFrom(-1), m_portTo(-1) {}
+
+    void setServer(QQmlDebugServerImpl *server)
+    {
+        m_server = server;
+    }
+
+    void setPortRange(int portFrom, int portTo, const QString &hostAddress)
+    {
+        m_pluginName = QLatin1String("QTcpServerConnection");
+        m_portFrom = portFrom;
+        m_portTo = portTo;
+        m_hostAddress = hostAddress;
+    }
+
+    void setFileName(const QString &fileName)
+    {
+        m_pluginName = QLatin1String("QLocalClientConnection");
+        m_fileName = fileName;
+    }
+
+    void run();
+
+private:
+    QQmlDebugServerImpl *m_server;
+    QString m_pluginName;
+    int m_portFrom;
+    int m_portTo;
+    bool m_block;
+    QString m_hostAddress;
+    QString m_fileName;
+};
+
 class QQmlDebugServerImpl : public QQmlDebugServer
 {
     Q_OBJECT
@@ -100,9 +136,7 @@ public:
     bool open(const QVariantHash &configuration);
     void setDevice(QIODevice *socket);
 
-    template<class Action>
-    bool enable(Action action);
-    bool enableFromArguments();
+    void parseArguments();
 
     static void cleanup();
 
@@ -116,8 +150,6 @@ private slots:
     void invalidPacket();
 
 private:
-    friend struct StartTcpServerAction;
-    friend struct ConnectToLocalAction;
     friend class QQmlDebugServerThread;
     friend class QQmlDebugServerFactory;
 
@@ -135,8 +167,6 @@ private:
         QSharedPointer<QWaitCondition> condition;
     };
 
-    bool init(const QString &pluginName, bool block);
-
     bool canSendMessage(const QString &name);
     void doSendMessage(const QString &name, const QByteArray &message);
 
@@ -150,78 +180,9 @@ private:
 
     QMutex m_helloMutex;
     QWaitCondition m_helloCondition;
-    QQmlDebugServerThread *m_thread;
+    QQmlDebugServerThread m_thread;
     QPacketProtocol *m_protocol;
     QAtomicInt m_changeServiceStateCalls;
-};
-
-class QQmlDebugServerThread : public QThread
-{
-public:
-    QQmlDebugServerThread(QQmlDebugServerImpl *server) :
-        m_server(server), m_portFrom(-1), m_portTo(-1), m_block(false) {}
-
-    void setPluginName(const QString &pluginName) {
-        m_pluginName = pluginName;
-    }
-
-    void setPortRange(int portFrom, int portTo, bool block, const QString &hostAddress) {
-        m_portFrom = portFrom;
-        m_portTo = portTo;
-        m_block = block;
-        m_hostAddress = hostAddress;
-    }
-
-    void setFileName(const QString &fileName, bool block)
-    {
-        m_fileName = fileName;
-        m_block = block;
-    }
-
-    void run();
-
-private:
-    QQmlDebugServerImpl *m_server;
-    QString m_pluginName;
-    int m_portFrom;
-    int m_portTo;
-    bool m_block;
-    QString m_hostAddress;
-    QString m_fileName;
-};
-
-struct StartTcpServerAction {
-    int portFrom;
-    int portTo;
-    bool block;
-    QString hostAddress;
-
-    StartTcpServerAction(int portFrom, int portTo, bool block, const QString &hostAddress) :
-        portFrom(portFrom), portTo(portTo), block(block), hostAddress(hostAddress) {}
-
-    bool operator()(QQmlDebugServerImpl *d)
-    {
-        if (!d->init(QLatin1String("QTcpServerConnection"), block))
-            return false;
-        d->m_thread->setPortRange(portFrom, portTo == -1 ? portFrom : portTo, block, hostAddress);
-        return true;
-    }
-};
-
-struct ConnectToLocalAction {
-    QString fileName;
-    bool block;
-
-    ConnectToLocalAction(const QString &fileName, bool block) :
-        fileName(fileName), block(block) {}
-
-    bool operator()(QQmlDebugServerImpl *d)
-    {
-        if (!d->init(QLatin1String("QLocalClientConnection"), block))
-            return false;
-        d->m_thread->setFileName(fileName, block);
-        return true;
-    }
 };
 
 void QQmlDebugServerImpl::cleanup()
@@ -247,14 +208,9 @@ void QQmlDebugServerImpl::cleanup()
     while (!server->m_changeServiceStateCalls.testAndSetOrdered(0, 0))
         loop.processEvents();
 
-    // Stop the thread while the application is still there. Copy here as the thread will set itself
-    // to 0 when it stops. It will also do deleteLater, but as long as we don't allow the GUI
-    // thread's event loop to run we're safe from that.
-    QThread *threadCopy = server->m_thread;
-    if (threadCopy) {
-        threadCopy->exit();
-        threadCopy->wait();
-    }
+    // Stop the thread while the application is still there.
+    server->m_thread.exit();
+    server->m_thread.wait();
 }
 
 void QQmlDebugServerThread::run()
@@ -265,12 +221,13 @@ void QQmlDebugServerThread::run()
         connection->setServer(m_server);
 
         if (m_fileName.isEmpty()) {
-            if (!connection->setPortRange(m_portFrom, m_portTo, m_block, m_hostAddress)) {
+            if (!connection->setPortRange(m_portFrom, m_portTo, m_server->blockingMode(),
+                                          m_hostAddress)) {
                 delete connection;
                 return;
             }
         } else {
-            if (!connection->setFileName(m_fileName, m_block)) {
+            if (!connection->setFileName(m_fileName, m_server->blockingMode())) {
                 delete connection;
                 return;
             }
@@ -282,7 +239,7 @@ void QQmlDebugServerThread::run()
             m_server->m_helloCondition.wakeAll();
         }
 
-        if (m_block)
+        if (m_server->blockingMode())
             connection->waitForConnection();
     } else {
         qWarning() << "QML Debugger: Couldn't load plugin" << m_pluginName;
@@ -309,65 +266,65 @@ static void cleanupOnShutdown()
     QQmlDebugServerImpl::cleanup();
 }
 
-bool QQmlDebugServerImpl::init(const QString &pluginName, bool block)
+QQmlDebugServerImpl::QQmlDebugServerImpl() :
+    m_connection(0),
+    m_gotHello(false),
+    m_blockingMode(false)
 {
-    if (m_thread)
-        return false;
     static bool postRoutineAdded = false;
     if (!postRoutineAdded) {
         qAddPostRoutine(cleanupOnShutdown);
         postRoutineAdded = true;
     }
-    m_thread = new QQmlDebugServerThread(this);
-    moveToThread(m_thread);
 
-    // Remove the thread immmediately when it finishes, so that we don't have to wait for the event
-    // loop to signal that.
-    QObject::connect(m_thread, SIGNAL(finished()), this, SLOT(removeThread()), Qt::DirectConnection);
-
-    m_thread->setObjectName(QStringLiteral("QQmlDebugServerThread"));
-    m_thread->setPluginName(pluginName);
-    m_blockingMode = block;
-    return true;
-}
-
-
-QQmlDebugServerImpl::QQmlDebugServerImpl() :
-    m_connection(0),
-    m_gotHello(false),
-    m_blockingMode(false),
-    m_thread(0)
-{
     // used in sendMessages
     qRegisterMetaType<QList<QByteArray> >("QList<QByteArray>");
     // used in changeServiceState
     qRegisterMetaType<QQmlDebugService::State>("QQmlDebugService::State");
+
+    m_thread.setServer(this);
+    moveToThread(&m_thread);
+
+    // Remove the thread immmediately when it finishes, so that we don't have to wait for the
+    // event loop to signal that.
+    QObject::connect(&m_thread, SIGNAL(finished()), this, SLOT(removeThread()),
+                     Qt::DirectConnection);
+    m_thread.setObjectName(QStringLiteral("QQmlDebugServerThread"));
+    parseArguments();
 }
 
 bool QQmlDebugServerImpl::open(const QVariantHash &configuration = QVariantHash())
 {
-    if (configuration.isEmpty()) {
-        return enableFromArguments();
-    } if (configuration.contains(QLatin1String("portFrom"))) {
-        return enable(StartTcpServerAction(
-                             configuration[QLatin1String("portFrom")].toInt(),
-                             configuration[QLatin1String("portTo")].toInt(),
-                             configuration[QLatin1String("block")].toBool(),
-                             configuration[QLatin1String("hostAddress")].toString()));
-    } else if (configuration.contains(QLatin1String("fileName"))) {
-        return enable(ConnectToLocalAction(configuration[QLatin1String("fileName")].toString(),
-                      configuration[QLatin1String("block")].toBool()));
+    if (m_thread.isRunning())
+        return false;
+    if (!configuration.isEmpty()) {
+        m_blockingMode = configuration[QLatin1String("block")].toBool();
+        if (configuration.contains(QLatin1String("portFrom"))) {
+            int portFrom = configuration[QLatin1String("portFrom")].toInt();
+            int portTo = configuration[QLatin1String("portTo")].toInt();
+            m_thread.setPortRange(portFrom, portTo == -1 ? portFrom : portTo,
+                                   configuration[QLatin1String("hostAddress")].toString());
+        } else if (configuration.contains(QLatin1String("fileName"))) {
+            m_thread.setFileName(configuration[QLatin1String("fileName")].toString());
+        } else {
+            return false;
+        }
     }
 
-    return false;
+    QMutexLocker locker(&m_helloMutex);
+    m_thread.start();
+    m_helloCondition.wait(&m_helloMutex); // wait for connection
+    if (m_blockingMode && !m_gotHello)
+        m_helloCondition.wait(&m_helloMutex); // wait for hello
+    return true;
 }
 
-bool QQmlDebugServerImpl::enableFromArguments()
+void QQmlDebugServerImpl::parseArguments()
 {
     // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
     const QString args = commandLineArguments();
     if (args.isEmpty())
-        return false; // Manual initialization, through QQmlDebugServer::open()
+        return; // Manual initialization, through QQmlDebugServer::open()
 
     // ### remove port definition when protocol is changed
     int portFrom = 0;
@@ -412,16 +369,16 @@ bool QQmlDebugServerImpl::enableFromArguments()
     }
 
     if (ok) {
+        m_blockingMode = block;
         if (!fileName.isEmpty())
-            return enable(ConnectToLocalAction(fileName, block));
+            m_thread.setFileName(fileName);
         else
-            return enable(StartTcpServerAction(portFrom, portTo, block, hostAddress));
+            m_thread.setPortRange(portFrom, portTo, hostAddress);
     } else {
         qWarning() << QString::fromLatin1("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
                                           "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
                                           "<ip address>][,block]").arg(args);
     }
-    return false;
 }
 
 void QQmlDebugServerImpl::receiveMessage()
@@ -550,14 +507,10 @@ void QQmlDebugServerImpl::changeServiceState(const QString &serviceName,
 
 void QQmlDebugServerImpl::removeThread()
 {
-    Q_ASSERT(m_thread->isFinished());
+    Q_ASSERT(m_thread.isFinished());
     Q_ASSERT(QThread::currentThread() == thread());
 
-    QThread *parentThread = m_thread->thread();
-
-    // We cannot delete it right away as it will access its data after the finished() signal.
-    m_thread->deleteLater();
-    m_thread = 0;
+    QThread *parentThread = m_thread.thread();
 
     delete m_connection;
     m_connection = 0;
@@ -574,7 +527,7 @@ QQmlDebugService *QQmlDebugServerImpl::service(const QString &name) const
 void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
 {
     // to be executed outside of debugger thread
-    Q_ASSERT(QThread::currentThread() != m_thread);
+    Q_ASSERT(QThread::currentThread() != &m_thread);
 
     QMutexLocker locker(&m_helloMutex);
     foreach (QQmlDebugService *service, m_plugins)
@@ -589,7 +542,7 @@ void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
 void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
 {
     // to be executed outside of debugger thread
-    Q_ASSERT(QThread::currentThread() != m_thread);
+    Q_ASSERT(QThread::currentThread() != &m_thread);
 
     QMutexLocker locker(&m_helloMutex);
     foreach (QQmlDebugService *service, m_plugins)
@@ -604,7 +557,7 @@ void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
 bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *service)
 {
     // to be executed before thread starts
-    Q_ASSERT(!m_thread);
+    Q_ASSERT(!m_thread.isRunning());
 
     if (!service || m_plugins.contains(name))
         return false;
@@ -628,7 +581,7 @@ bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *serv
 bool QQmlDebugServerImpl::removeService(const QString &name)
 {
     // to be executed after thread ends
-    Q_ASSERT(!m_thread);
+    Q_ASSERT(!m_thread.isRunning());
 
     QQmlDebugService *service = m_plugins.value(name);
     if (!service)
@@ -686,21 +639,6 @@ void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArr
             doSendMessage(name, message);
         m_connection->flush();
     }
-}
-
-template<class Action>
-bool QQmlDebugServerImpl::enable(Action action)
-{
-    if (m_thread)
-        return false;
-    if (!action(this))
-        return false;
-    QMutexLocker locker(&m_helloMutex);
-    m_thread->start();
-    m_helloCondition.wait(&m_helloMutex); // wait for connection
-    if (m_blockingMode && !m_gotHello)
-        m_helloCondition.wait(&m_helloMutex); // wait for hello
-    return true;
 }
 
 void QQmlDebugServerImpl::wakeEngine(QQmlEngine *engine)
