@@ -48,6 +48,13 @@ struct Q_QML_EXPORT QQmlDebuggingEnabler
     };
 
     QQmlDebuggingEnabler(bool printWarning = true);
+
+    static QStringList debuggerServices();
+    static QStringList inspectorServices();
+    static QStringList profilerServices();
+
+    static void setServices(const QStringList &services);
+
     static bool startTcpDebugServer(int port, StartMode mode = DoNotWaitForClient,
                                     const QString &hostName = QString());
     static bool connectToLocalDebugger(const QString &socketFileName,

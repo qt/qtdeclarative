@@ -33,6 +33,7 @@
 
 #include "qqmldebug.h"
 #include "qqmldebugconnector_p.h"
+#include "qqmldebugserviceinterfaces_p.h"
 
 #include <private/qqmlengine_p.h>
 
@@ -48,6 +49,60 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
     QQmlEnginePrivate::qml_debugging_enabled = true;
 #else
     Q_UNUSED(printWarning);
+#endif
+}
+
+/*!
+ * Retrieves the plugin keys of the debugger services provided by default. The debugger services
+ * enable a debug client to use a Qml/JavaScript debugger, in order to set breakpoints, pause
+ * execution, evaluate expressions and similar debugging tasks.
+ * \return List of plugin keys of default debugger services.
+ */
+QStringList QQmlDebuggingEnabler::debuggerServices()
+{
+    return QStringList() << QV4DebugService::s_key << QQmlEngineDebugService::s_key
+                         << QDebugMessageService::s_key;
+}
+
+/*!
+ * Retrieves the plugin keys of the inspector services provided by default. The inspector services
+ * enable a debug client to use a visual inspector tool for Qt Quick.
+ * \return List of plugin keys of default inspector services.
+ */
+QStringList QQmlDebuggingEnabler::inspectorServices()
+{
+    return QStringList() << QQmlInspectorService::s_key;
+}
+
+/*!
+ * Retrieves the names of the profiler services provided by default. The profiler services enable a
+ * debug client to use a profiler and track the time taken by various QML and JavaScript constructs,
+ * as well as the QtQuick SceneGraph.
+ * \return List of plugin keys of default profiler services.
+ */
+QStringList QQmlDebuggingEnabler::profilerServices()
+{
+    return QStringList() << QQmlProfilerService::s_key << QQmlEngineControlService::s_key;
+}
+
+/*!
+ * Restricts the services available from the debug connector. The connector will scan plugins in the
+ * "qmltooling" subdirectory of the default plugin path. If this function is not called before the
+ * debug connector is enabled, all services found that way will be available to any client. If this
+ * function is called, only the services with plugin keys given in \a services will be available.
+ *
+ * Use this method to disable debugger and inspector services when profiling to get better
+ * performance and more realistic profiles. The debugger service will put any JavaScript engine it
+ * connects to into interpreted mode, disabling the JIT compiler.
+ *
+ * \sa debuggerServices(), profilerServices(), inspectorServices()
+ */
+void QQmlDebuggingEnabler::setServices(const QStringList &services)
+{
+#ifndef QQML_NO_DEBUG_PROTOCOL
+    QQmlDebugConnector::setServices(services);
+#else
+    Q_UNUSED(services);
 #endif
 }
 
