@@ -47,12 +47,7 @@ imported correctly by any QML components that use this plugin. The
 \l{Defining QML Types from C++} article has more information about registering C++
 types into the runtime.
 
-For this example, the TimeExample source directory is in
-\c{imports/TimeExample}.  The plugin's type namespace will mirror
-this structure, so the types are registered into the namespace
-"TimeExample".
-
-Additionally, the project file, in a \c .pro file, defines the project as a plugin library,
+Additionally, the project file (\c .pro) defines the project as a plugin library,
 specifies it should be built into the \c imports/TimeExample directory, and registers
 the plugin target name and various other details:
 
@@ -73,6 +68,18 @@ that is built by the project (as shown above in the \c .pro file) so both of the
 need to be specified in the \c qmldir file:
 
 \quotefile qmlextensionplugins/imports/TimeExample/qmldir
+
+To make things easier for this example, the TimeExample source directory is in
+\c{imports/TimeExample}, and we build
+\l{Source, Build, and Install Directories}{in-source}. However, the structure
+of the source directory is not so important, as the \c qmldir file can specify
+paths to installed QML files.
+
+What is important is the name of the directory that the qmldir is installed
+into. When the user imports our module, the QML engine uses the
+\l{Contents of a Module Definition qmldir File}{module identifier}
+(\c TimeExample) to find the plugin, and so the directory in which it is
+installed must match the module identifier.
 
 Once the project is built and installed, the new \c Time component is
 accessible by any QML component that imports the \c TimeExample
