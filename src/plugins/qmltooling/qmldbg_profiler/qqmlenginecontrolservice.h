@@ -35,7 +35,7 @@
 #define QQMLENGINECONTROLSERVICE_H
 
 #include <QMutex>
-#include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 //
 //  W A R N I N G
@@ -50,11 +50,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlEngineControlService : public QQmlDebugService
+class QQmlEngineControlServiceImpl : public QQmlEngineControlService
 {
 public:
-    static const QString s_key;
-
     enum MessageType {
         EngineAboutToBeAdded,
         EngineAdded,
@@ -67,9 +65,11 @@ public:
         StopWaitingEngine
     };
 
-    QQmlEngineControlService(QObject *parent = 0);
+    QQmlEngineControlServiceImpl(QObject *parent = 0);
 
 protected:
+    friend class QQmlProfilerServiceFactory;
+
     QMutex dataMutex;
     QList<QQmlEngine *> startingEngines;
     QList<QQmlEngine *> stoppingEngines;

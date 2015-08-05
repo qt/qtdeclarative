@@ -38,16 +38,14 @@
 
 QT_BEGIN_NAMESPACE
 
-const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
-
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
                          const QString &buf)
 {
-    QQmlDebugConnector::service<QDebugMessageService>()->sendDebugMessage(type, ctxt, buf);
+    QQmlDebugConnector::service<QDebugMessageServiceImpl>()->sendDebugMessage(type, ctxt, buf);
 }
 
-QDebugMessageService::QDebugMessageService(QObject *parent) :
-    QQmlDebugService(s_key, 2, parent), oldMsgHandler(0),
+QDebugMessageServiceImpl::QDebugMessageServiceImpl(QObject *parent) :
+    QDebugMessageService(2, parent), oldMsgHandler(0),
     prevState(QQmlDebugService::NotConnected)
 {
     // don't execute stateChanged() in parallel
@@ -58,7 +56,7 @@ QDebugMessageService::QDebugMessageService(QObject *parent) :
     }
 }
 
-void QDebugMessageService::sendDebugMessage(QtMsgType type,
+void QDebugMessageServiceImpl::sendDebugMessage(QtMsgType type,
                                             const QMessageLogContext &ctxt,
                                             const QString &buf)
 {
@@ -76,7 +74,7 @@ void QDebugMessageService::sendDebugMessage(QtMsgType type,
         (*oldMsgHandler)(type, ctxt, buf);
 }
 
-void QDebugMessageService::stateChanged(State state)
+void QDebugMessageServiceImpl::stateChanged(State state)
 {
     QMutexLocker lock(&initMutex);
 

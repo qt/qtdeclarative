@@ -41,8 +41,8 @@ QT_BEGIN_NAMESPACE
 
 QQmlDebugService *QQmlDebuggerServiceFactory::create(const QString &key)
 {
-    if (key == QDebugMessageService::s_key)
-        return new QDebugMessageService(this);
+    if (key == QDebugMessageServiceImpl::s_key)
+        return new QDebugMessageServiceImpl(this);
 
     if (key == QQmlEngineDebugServiceImpl::s_key)
         return new QQmlEngineDebugServiceImpl(this);

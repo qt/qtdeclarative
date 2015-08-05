@@ -36,14 +36,12 @@
 
 QT_BEGIN_NAMESPACE
 
-const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
-
-QQmlEngineControlService::QQmlEngineControlService(QObject *parent) :
-    QQmlDebugService(s_key, 1, parent)
+QQmlEngineControlServiceImpl::QQmlEngineControlServiceImpl(QObject *parent) :
+    QQmlEngineControlService(1, parent)
 {
 }
 
-void QQmlEngineControlService::messageReceived(const QByteArray &message)
+void QQmlEngineControlServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&dataMutex);
     QQmlDebugStream d(message);
@@ -60,7 +58,7 @@ void QQmlEngineControlService::messageReceived(const QByteArray &message)
     }
 }
 
-void QQmlEngineControlService::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
 {
     QMutexLocker lock(&dataMutex);
     if (state() == Enabled) {
@@ -73,7 +71,7 @@ void QQmlEngineControlService::engineAboutToBeAdded(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlService::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
 {
     QMutexLocker lock(&dataMutex);
     if (state() == Enabled) {
@@ -86,7 +84,7 @@ void QQmlEngineControlService::engineAboutToBeRemoved(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlService::engineAdded(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAdded(QQmlEngine *engine)
 {
     if (state() == Enabled) {
         QMutexLocker lock(&dataMutex);
@@ -96,7 +94,7 @@ void QQmlEngineControlService::engineAdded(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlService::engineRemoved(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineRemoved(QQmlEngine *engine)
 {
     if (state() == Enabled) {
         QMutexLocker lock(&dataMutex);
@@ -106,7 +104,7 @@ void QQmlEngineControlService::engineRemoved(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlService::sendMessage(QQmlEngineControlService::MessageType type, QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QQmlEngine *engine)
 {
     QByteArray message;
     QQmlDebugStream d(&message, QIODevice::WriteOnly);
@@ -114,7 +112,7 @@ void QQmlEngineControlService::sendMessage(QQmlEngineControlService::MessageType
     emit messageToClient(name(), message);
 }
 
-void QQmlEngineControlService::stateChanged(State)
+void QQmlEngineControlServiceImpl::stateChanged(State)
 {
     // We flush everything for any kind of state change, to avoid complicated timing issues.
     QMutexLocker lock(&dataMutex);

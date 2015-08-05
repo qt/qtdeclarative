@@ -45,7 +45,7 @@
 // We mean it.
 //
 
-#include <private/qqmldebugservice_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtCore/qlogging.h>
 #include <QtCore/qmutex.h>
@@ -54,22 +54,19 @@ QT_BEGIN_NAMESPACE
 
 class QDebugMessageServicePrivate;
 
-class QDebugMessageService : public QQmlDebugService
+class QDebugMessageServiceImpl : public QDebugMessageService
 {
     Q_OBJECT
 public:
-    QDebugMessageService(QObject *parent = 0);
+    QDebugMessageServiceImpl(QObject *parent = 0);
 
     void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt,
                           const QString &buf);
 
 protected:
-    static const QString s_key;
-
     void stateChanged(State);
 
 private:
-    friend class QQmlDebugConnector;
     friend class QQmlDebuggerServiceFactory;
 
     QtMessageHandler oldMsgHandler;

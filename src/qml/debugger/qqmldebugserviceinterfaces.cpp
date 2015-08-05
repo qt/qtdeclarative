@@ -39,5 +39,7 @@ const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
 const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
 const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
 const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
+const QString QDebugMessageService::s_key = QStringLiteral("DebugMessages");
+const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 
 QT_END_NAMESPACE

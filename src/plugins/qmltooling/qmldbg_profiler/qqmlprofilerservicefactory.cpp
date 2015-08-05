@@ -42,8 +42,8 @@ QQmlDebugService *QQmlProfilerServiceFactory::create(const QString &key)
     if (key == QQmlProfilerServiceImpl::s_key)
         return new QQmlProfilerServiceImpl(this);
 
-    if (key == QQmlEngineControlService::s_key)
-        return new QQmlEngineControlService(this);
+    if (key == QQmlEngineControlServiceImpl::s_key)
+        return new QQmlEngineControlServiceImpl(this);
 
     return 0;
 }
