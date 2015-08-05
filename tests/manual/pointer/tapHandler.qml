@@ -81,7 +81,7 @@ Item {
             }
             onLongPressed: longPressFeedback.createObject(rect,
                 {"x": pos.x, "y": pos.y,
-                 "text": "long press",
+                 "text": Math.round(handler.timeHeld).toFixed(3) + " sec",
                  "color": borderBlink.blinkColor})
         }
 
@@ -110,6 +110,20 @@ Item {
                     }
                 }
             }
+        }
+
+        Rectangle {
+            id: expandingCircle
+            radius: handler.timeHeld * 100
+            visible: radius > 0 && handler.isPressed
+            border.width: 3
+            border.color: borderBlink.blinkColor
+            color: "transparent"
+            width: radius * 2
+            height: radius * 2
+            x: handler.pressPos.x - radius
+            y: handler.pressPos.y - radius
+            opacity: 0.25
         }
 
         Component {

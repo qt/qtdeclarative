@@ -245,10 +245,14 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
 {
     if (m_pressed != press) {
         m_pressed = press;
-        if (press)
+        connectPreRenderSignal(press);
+        if (press) {
             m_longPressTimer.start(longPressThresholdMilliseconds(), this);
-        else
+            m_holdTimer.start();
+        } else {
             m_longPressTimer.stop();
+            m_holdTimer.invalidate();
+        }
         if (m_gesturePolicy != DragThreshold)
             setGrab(point, press);
         if (!cancel && !press && point->timeHeld() < longPressThreshold()) {
@@ -276,6 +280,19 @@ void QQuickTapHandler::handleGrabCancel(QQuickEventPoint *point)
     setPressed(false, true, point);
 }
 
+void QQuickTapHandler::connectPreRenderSignal(bool conn)
+{
+    if (conn)
+        connect(parentItem()->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+    else
+        disconnect(parentItem()->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+}
+
+void QQuickTapHandler::updateTimeHeld()
+{
+    emit timeHeldChanged();
+}
+
 /*!
     \qmlproperty tapCount
 
@@ -292,6 +309,19 @@ void QQuickTapHandler::handleGrabCancel(QQuickEventPoint *point)
             onTapped: if (tapCount == 2) doubleTap()
         }
     }
+*/
+
+/*!
+    \qmlproperty timeHeld
+
+    The amount of time in seconds that a pressed point has been held, without
+    moving beyond the drag threshold. It will be updated at least once per
+    frame rendered, which enables rendering an animation showing the progress
+    towards an action which will be triggered by a long-press. It is also
+    possible to trigger one of a series of actions depending on how long the
+    press is held.
+
+    A value less than zero means no point is being held within this handler's Item.
 */
 
 QT_END_NAMESPACE

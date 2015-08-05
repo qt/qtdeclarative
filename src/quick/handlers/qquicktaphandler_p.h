@@ -63,6 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickPointerSingleHandler
     Q_OBJECT
     Q_PROPERTY(bool isPressed READ isPressed NOTIFY pressedChanged)
     Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged)
+    Q_PROPERTY(qreal timeHeld READ timeHeld NOTIFY timeHeldChanged)
     Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged)
     Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged)
 
@@ -83,6 +84,7 @@ public:
     bool isPressed() const { return m_pressed; }
 
     int tapCount() const { return m_tapCount; }
+    qreal timeHeld() const { return (m_holdTimer.isValid() ? m_holdTimer.elapsed() / 1000.0 : -1.0); }
 
     qreal longPressThreshold() const;
     void setLongPressThreshold(qreal longPressThreshold);
@@ -93,6 +95,7 @@ public:
 Q_SIGNALS:
     void pressedChanged();
     void tapCountChanged();
+    void timeHeldChanged();
     void longPressThresholdChanged();
     void gesturePolicyChanged();
     void tapped(QQuickEventPoint *point);
@@ -105,6 +108,8 @@ protected:
 private:
     void setPressed(bool press, bool cancel, QQuickEventPoint *point);
     int longPressThresholdMilliseconds() const;
+    void connectPreRenderSignal(bool conn = true);
+    void updateTimeHeld();
 
 private:
     bool m_pressed;
@@ -112,6 +117,7 @@ private:
     int m_tapCount;
     int m_longPressThreshold;
     QBasicTimer m_longPressTimer;
+    QElapsedTimer m_holdTimer;
     QPointF m_lastTapPos;
     qreal m_lastTapTimestamp;
 
