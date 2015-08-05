@@ -197,7 +197,7 @@ private:
         CheckAll = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckDataEndsWith
     };
 
-    void connect(bool block, const QString &testFile);
+    void connect(bool block, const QString &testFile, bool restrictServices = true);
     void checkTraceReceived();
     void checkJsHeap();
     bool verify(MessageListType type, int expectedPosition, const QQmlProfilerData &expected,
@@ -206,9 +206,8 @@ private:
 private slots:
     void cleanup();
 
-    void blockingConnectWithTraceEnabled();
-    void blockingConnectWithTraceDisabled();
-    void nonBlockingConnect();
+    void connect_data();
+    void connect();
     void pixmapCacheData();
     void scenegraphData();
     void profileOnExit();
@@ -357,17 +356,16 @@ void QQmlProfilerClient::messageReceived(const QByteArray &message)
         qmlMessages.append(data);
 }
 
-void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
+void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool restrictServices)
 {
     // ### Still using qmlscene due to QTBUG-33377
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
     QStringList arguments;
-    if (block)
-        arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block");
-    else
-        arguments << QString("-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO );
-
-    arguments << QQmlDataTest::instance()->testFile(testFile);
+    arguments << QString::fromLatin1("-qmljsdebugger=port:%1,%2%3%4")
+                 .arg(STR_PORT_FROM).arg(STR_PORT_TO)
+                 .arg(block ? QStringLiteral(",block") : QString())
+                 .arg(restrictServices ? QStringLiteral(",services:CanvasFrameRate") : QString())
+              << QQmlDataTest::instance()->testFile(testFile);
 
     m_process = new QQmlDebugProcess(executable, this);
     m_process->start(QStringList() << arguments);
@@ -378,6 +376,8 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile)
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 }
 
 void tst_QQmlProfilerService::checkTraceReceived()
@@ -560,37 +560,32 @@ void tst_QQmlProfilerService::cleanup()
     m_connection = 0;
 }
 
-void tst_QQmlProfilerService::blockingConnectWithTraceEnabled()
+void tst_QQmlProfilerService::connect_data()
 {
-    connect(true, "test.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
-
-    m_client->setTraceState(true);
-    m_client->setTraceState(false);
-    checkTraceReceived();
-    checkJsHeap();
+    QTest::addColumn<bool>("blockMode");
+    QTest::addColumn<bool>("restrictMode");
+    QTest::addColumn<bool>("traceEnabled");
+    QTest::newRow("normal/unrestricted/disabled") << false << false << false;
+    QTest::newRow("block/unrestricted/disabled") << true << false << false;
+    QTest::newRow("normal/restricted/disabled") << false << true << false;
+    QTest::newRow("block/restricted/disabled") << true << true << false;
+    QTest::newRow("normal/unrestricted/enabled") << false << false << true;
+    QTest::newRow("block/unrestricted/enabled") << true << false << true;
+    QTest::newRow("normal/restricted/enabled") << false << true << true;
+    QTest::newRow("block/restricted/enabled") << true << true << true;
 }
 
-void tst_QQmlProfilerService::blockingConnectWithTraceDisabled()
+void tst_QQmlProfilerService::connect()
 {
-    connect(true, "test.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    QFETCH(bool, blockMode);
+    QFETCH(bool, restrictMode);
+    QFETCH(bool, traceEnabled);
 
-    m_client->setTraceState(false);
-    m_client->setTraceState(true);
-    m_client->setTraceState(false);
-    checkTraceReceived();
-    checkJsHeap();
-}
+    connect(blockMode, "test.qml", restrictMode);
 
-void tst_QQmlProfilerService::nonBlockingConnect()
-{
-    connect(false, "test.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
-
+    // if the engine is waiting, then the first message determines if it starts with trace enabled
+    if (!traceEnabled)
+        m_client->setTraceState(false);
     m_client->setTraceState(true);
     m_client->setTraceState(false);
     checkTraceReceived();
@@ -600,8 +595,6 @@ void tst_QQmlProfilerService::nonBlockingConnect()
 void tst_QQmlProfilerService::pixmapCacheData()
 {
     connect(true, "pixmapCacheTest.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
     QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
@@ -639,8 +632,6 @@ void tst_QQmlProfilerService::pixmapCacheData()
 void tst_QQmlProfilerService::scenegraphData()
 {
     connect(true, "scenegraphTest.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
 
@@ -693,8 +684,6 @@ void tst_QQmlProfilerService::scenegraphData()
 void tst_QQmlProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
 
@@ -705,8 +694,6 @@ void tst_QQmlProfilerService::profileOnExit()
 void tst_QQmlProfilerService::controlFromJS()
 {
     connect(true, "controlFromJS.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(false);
     checkTraceReceived();
@@ -716,8 +703,6 @@ void tst_QQmlProfilerService::controlFromJS()
 void tst_QQmlProfilerService::signalSourceLocation()
 {
     connect(true, "signalSourceLocation.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
     while (!(m_process->output().contains(QLatin1String("500"))))
@@ -741,8 +726,6 @@ void tst_QQmlProfilerService::signalSourceLocation()
 void tst_QQmlProfilerService::javascript()
 {
     connect(true, "javascript.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true);
     while (!(m_process->output().contains(QLatin1String("done"))))
@@ -772,8 +755,6 @@ void tst_QQmlProfilerService::javascript()
 void tst_QQmlProfilerService::flushInterval()
 {
     connect(true, "timer.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     m_client->setTraceState(true, 1);
 

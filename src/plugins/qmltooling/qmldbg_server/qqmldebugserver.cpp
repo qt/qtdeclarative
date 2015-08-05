@@ -333,6 +333,7 @@ void QQmlDebugServerImpl::parseArguments()
     bool ok = false;
     QString hostAddress;
     QString fileName;
+    QStringList services;
 
     const QStringList lstjsDebugArguments = args.split(QLatin1Char(','));
     QStringList::const_iterator argsItEnd = lstjsDebugArguments.cend();
@@ -361,6 +362,10 @@ void QQmlDebugServerImpl::parseArguments()
         } else if (strArgument.startsWith(QLatin1String("file:"))) {
             fileName = strArgument.mid(5);
             ok = !fileName.isEmpty();
+        } else if (strArgument.startsWith(QLatin1String("services:"))) {
+            services.append(strArgument.mid(9));
+        } else if (!services.isEmpty()) {
+            services.append(strArgument);
         } else {
             qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
                                               "detected. Ignoring the same.")
@@ -369,6 +374,7 @@ void QQmlDebugServerImpl::parseArguments()
     }
 
     if (ok) {
+        setServices(services);
         m_blockingMode = block;
         if (!fileName.isEmpty())
             m_thread.setFileName(fileName);

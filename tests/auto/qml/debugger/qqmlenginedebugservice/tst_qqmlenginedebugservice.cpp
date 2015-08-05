@@ -1225,7 +1225,7 @@ int main(int argc, char *argv[])
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-    char arg[] = "-qmljsdebugger=port:3768";
+    char arg[] = "-qmljsdebugger=port:3768,services:QmlDebugger";
     _argv[_argc - 1] = arg;
 
     QGuiApplication app(_argc, _argv);
