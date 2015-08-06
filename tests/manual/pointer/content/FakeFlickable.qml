@@ -39,25 +39,51 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("single point handler", "QQuickPointerSingleHandler: test properties copied from events", Qt.resolvedUrl("singlePointHandlerProperties.qml"))
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
-            addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
-            addExample("map", "scale and pan", Qt.resolvedUrl("map.qml"))
-            addExample("custom map", "scale and pan", Qt.resolvedUrl("map2.qml"))
-            addExample("fling animation", "DragHandler: after dragging, use an animation to simulate momentum", Qt.resolvedUrl("flingAnimation.qml"))
-            addExample("fake Flickable", "implementation of a simplified Flickable using only Items, DragHandler and MomentumAnimation", Qt.resolvedUrl("fakeFlickable.qml"))
+Item {
+    id: root
+    default property alias data: __contentItem.data
+    property alias velocity: anim.velocity
+    property alias contentX: __contentItem.x // sign is reversed compared to Flickable.contentX
+    property alias contentY: __contentItem.y // sign is reversed compared to Flickable.contentY
+    property alias contentWidth: __contentItem.width
+    property alias contentHeight: __contentItem.height
+    signal flickStarted
+    signal flickEnded
+
+    Item {
+        id: __contentItem
+        objectName: "__contentItem"
+        width: childrenRect.width
+        height: childrenRect.height
+
+        property real xlimit: root.width - __contentItem.width
+        property real ylimit: root.height - __contentItem.height
+
+        function returnToBounds() {
+            if (x > 0)
+                x = 0
+            else if (x < xlimit)
+                x = xlimit
+            if (y > 0)
+                y = 0
+            else if (y < ylimit)
+                y = ylimit
+        }
+
+        DragHandler {
+            id: dragHandler
+            onActiveChanged: if (!active) anim.restart(velocity)
+        }
+        MomentumAnimation {
+            id: anim
+            target: __contentItem
+            onStarted: root.flickStarted()
+            onStopped: {
+                __contentItem.returnToBounds()
+                root.flickEnded()
+            }
         }
     }
 }
