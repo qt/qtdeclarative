@@ -51,6 +51,7 @@ private slots:
 
     void tumblerWrap();
     void slider();
+    void busyIndicator();
 
 private:
     QQuickView view;
@@ -257,6 +258,35 @@ void tst_Gifs::slider()
     QTest::mouseMove(&view, QPoint(8, 15), 17);
     QTest::mouseMove(&view, QPoint(0, 15), 16);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(0, 15), 215);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::busyIndicator()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    // Record nothing for a bit to make it smoother.
+    QTest::qWait(400);
+
+    QQuickItem *busyIndicator = view.rootObject()->property("busyIndicator").value<QQuickItem*>();
+    QVERIFY(busyIndicator);
+
+    busyIndicator->setProperty("running", true);
+
+    // 800 ms is the duration of one rotation animation cycle for BusyIndicator.
+    QTest::qWait(800 * 3);
+
+    busyIndicator->setProperty("running", false);
 
     gifRecorder.waitForFinish();
 }
