@@ -700,7 +700,7 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                                     *(md->data() + id) = properties.engine()->newVariantObject(QVariant());
                                     v = (md->data() + id)->as<QV4::VariantObject>();
                                 }
-                                QQmlValueTypeProvider().initValueType(t, v->d()->data);
+                                QQml_valueTypeProvider()->initValueType(t, v->d()->data);
                                 needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], v->d()->data);
                                 QQml_valueTypeProvider()->writeValueType(t, a[0], v->d()->data);
                             }
