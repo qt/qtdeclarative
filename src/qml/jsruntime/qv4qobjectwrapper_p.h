@@ -118,6 +118,8 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static void setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value);
     void setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value);
 
+    void destroyObject(bool lastCall);
+
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
 
@@ -134,7 +136,6 @@ private:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static void markObjects(Heap::Base *that, QV4::ExecutionEngine *e);
-    static void destroy(Heap::Base *that);
 
     static ReturnedValue method_connect(CallContext *ctx);
     static ReturnedValue method_disconnect(CallContext *ctx);

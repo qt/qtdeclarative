@@ -153,8 +153,6 @@ public:
 
     void dumpStats() const;
 
-    void registerDeletable(GCDeletable *d);
-
     size_t getUsedMem() const;
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;

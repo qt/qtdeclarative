@@ -78,14 +78,6 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     (classname::func == QV4::Managed::func ? 0 : classname::func)
 
 
-struct GCDeletable
-{
-    GCDeletable() : next(0), lastCall(false) {}
-    virtual ~GCDeletable() {}
-    GCDeletable *next;
-    bool lastCall;
-};
-
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
     parentVTable, \

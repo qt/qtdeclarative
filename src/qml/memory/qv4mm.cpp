@@ -109,8 +109,6 @@ struct MemoryManager::Data
     LargeItem *largeItems;
     std::size_t totalLargeItemsAllocated;
 
-    GCDeletable *deletable;
-
     // statistics:
 #ifdef DETAILED_MM_STATS
     QVector<unsigned> allocSizeCounters;
@@ -125,7 +123,6 @@ struct MemoryManager::Data
         , maxChunkSize(32*1024)
         , largeItems(0)
         , totalLargeItemsAllocated(0)
-        , deletable(0)
     {
         memset(nonFullChunks, 0, sizeof(nonFullChunks));
         memset(nChunks, 0, sizeof(nChunks));
@@ -351,8 +348,6 @@ void MemoryManager::mark()
         if ((*it).managed()->d()->vtable() != QObjectWrapper::staticVTable())
             continue;
         QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
-        if (!qobjectWrapper)
-            continue;
         QObject *qobject = qobjectWrapper->object();
         if (!qobject)
             continue;
@@ -379,13 +374,20 @@ void MemoryManager::mark()
 
 void MemoryManager::sweep(bool lastSweep)
 {
-    if (m_weakValues) {
-        for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
-            if (Managed *m = (*it).as<Managed>()) {
-                if (!m->markBit())
-                    (*it) = Primitive::undefinedValue();
-            }
+    for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
+        if (!(*it).isManaged())
+            continue;
+        Managed *m = (*it).as<Managed>();
+        if (m->markBit())
+            continue;
+        // we need to call detroyObject on qobjectwrappers now, so that they can emit the destroyed
+        // signal before we start sweeping the heap
+        if ((*it).managed()->d()->vtable() == QObjectWrapper::staticVTable()) {
+            QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
+            qobjectWrapper->destroyObject(lastSweep);
         }
+
+        (*it) = Primitive::undefinedValue();
     }
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
@@ -451,15 +453,6 @@ void MemoryManager::sweep(bool lastSweep)
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
                                   Profiling::LargeItem));
         i = *last;
-    }
-
-    GCDeletable *deletable = m_d->deletable;
-    m_d->deletable = 0;
-    while (deletable) {
-        GCDeletable *next = deletable->next;
-        deletable->lastCall = lastSweep;
-        delete deletable;
-        deletable = next;
     }
 
     // some execution contexts are allocated on the stack, make sure we clear their markBit as well
@@ -556,10 +549,10 @@ size_t MemoryManager::getLargeItemsMem() const
 MemoryManager::~MemoryManager()
 {
     delete m_persistentValues;
-    delete m_weakValues;
-    m_weakValues = 0;
 
     sweep(/*lastSweep*/true);
+
+    delete m_weakValues;
 #ifdef V4_USE_VALGRIND
     VALGRIND_DESTROY_MEMPOOL(this);
 #endif
@@ -582,12 +575,6 @@ void MemoryManager::dumpStats() const
         }
     }
 #endif // DETAILED_MM_STATS
-}
-
-void MemoryManager::registerDeletable(GCDeletable *d)
-{
-    d->next = m_d->deletable;
-    m_d->deletable = d;
 }
 
 #ifdef DETAILED_MM_STATS

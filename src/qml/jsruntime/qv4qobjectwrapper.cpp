@@ -1037,48 +1037,31 @@ void QObjectWrapper::markObjects(Heap::Base *that, QV4::ExecutionEngine *e)
     QV4::Object::markObjects(that, e);
 }
 
-namespace {
-    struct QObjectDeleter : public QV4::GCDeletable
-    {
-        QObjectDeleter(QObject *o)
-            : m_objectToDelete(o)
-        {}
-        ~QObjectDeleter()
-        {
-            QQmlData *ddata = QQmlData::get(m_objectToDelete, false);
-            if (ddata && ddata->ownContext && ddata->context)
-                ddata->context->emitDestruction();
-            // This object is notionally destroyed now
-            ddata->isQueuedForDeletion = true;
-            if (lastCall)
-                delete m_objectToDelete;
-            else
-                m_objectToDelete->deleteLater();
-        }
-
-        QObject *m_objectToDelete;
-    };
-}
-
-void QObjectWrapper::destroy(Heap::Base *that)
+void QObjectWrapper::destroyObject(bool lastCall)
 {
-    Heap::QObjectWrapper *This = static_cast<Heap::QObjectWrapper*>(that);
-    QPointer<QObject> object = This->object;
-    ExecutionEngine *engine = This->internalClass->engine;
-    This->~Data();
-    This = 0;
-    if (!object)
-        return;
+    Heap::QObjectWrapper *h = d();
+    if (!h->internalClass)
+        return; // destroyObject already got called
 
-    QQmlData *ddata = QQmlData::get(object, false);
-    if (!ddata)
-        return;
+    QPointer<QObject> object = h->object;
+    if (object) {
+        QQmlData *ddata = QQmlData::get(object, false);
+        if (ddata) {
+            if (!object->parent() && !ddata->indestructible) {
+                if (ddata && ddata->ownContext && ddata->context)
+                    ddata->context->emitDestruction();
+                // This object is notionally destroyed now
+                ddata->isQueuedForDeletion = true;
+                if (lastCall)
+                    delete object;
+                else
+                    object->deleteLater();
+            }
+        }
+    }
 
-    if (object->parent() || ddata->indestructible)
-        return;
-
-    QObjectDeleter *deleter = new QObjectDeleter(object);
-    engine->memoryManager->registerDeletable(deleter);
+    h->internalClass = 0;
+    h->~Data();
 }
 
 
