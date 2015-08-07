@@ -134,6 +134,20 @@ void QQuickShortcut::setSequence(const QVariant &sequence)
 }
 
 /*!
+    \qmlproperty string QtQuick::Shortcut::sequenceString
+    \since 5.6
+
+    This property provides the shortcut's key sequence as a string,
+    for display purposes (tooltips, for example).
+
+    \sa sequence
+*/
+QString QQuickShortcut::sequenceString() const
+{
+    return m_shortcut.toString(QKeySequence::NativeText);
+}
+
+/*!
     \qmlproperty bool QtQuick::Shortcut::enabled
 
     This property holds whether the shortcut is enabled.

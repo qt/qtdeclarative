@@ -57,6 +57,7 @@ class QQuickShortcut : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QVariant sequence READ sequence WRITE setSequence NOTIFY sequenceChanged FINAL)
+    Q_PROPERTY(QString sequenceString READ sequenceString NOTIFY sequenceChanged FINAL REVISION 1)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(Qt::ShortcutContext context READ context WRITE setContext NOTIFY contextChanged FINAL)
@@ -67,6 +68,8 @@ public:
 
     QVariant sequence() const;
     void setSequence(const QVariant &sequence);
+
+    Q_REVISION(1) QString sequenceString() const;
 
     bool isEnabled() const;
     void setEnabled(bool enabled);

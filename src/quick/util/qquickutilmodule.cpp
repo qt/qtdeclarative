@@ -114,4 +114,6 @@ void QQuickUtilModule::defineModule()
     qmlRegisterType<QQuickTextMetrics>("QtQuick", 2, 4, "TextMetrics");
 
     qmlRegisterType<QQuickShortcut>("QtQuick", 2, 5, "Shortcut");
+
+    qmlRegisterType<QQuickShortcut,1>("QtQuick", 2, 6, "Shortcut");
 }
