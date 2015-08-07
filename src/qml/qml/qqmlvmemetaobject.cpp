@@ -52,8 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr(bool isVar)
-    : QQmlGuard<QObject>(0), m_target(0), m_isVar(isVar), m_index(-1)
+QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
+    : QQmlGuard<QObject>(0), m_target(0), m_index(-1)
 {
 }
 
@@ -64,8 +64,7 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
-        // Set the var property to NULL
-        if (m_isVar && m_target->propertiesInitialized && !m_target->properties.isUndefined()) {
+        if (m_target->propertiesInitialized && !m_target->properties.isUndefined()) {
             QV4::ExecutionEngine *v4 = m_target->properties.engine();
             if (v4) {
                 QV4::Scope scope(v4);
@@ -303,7 +302,7 @@ void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
     if (v && !guard) {
-        guard = new QQmlVMEVariantQObjectPtr(true);
+        guard = new QQmlVMEVariantQObjectPtr();
         varObjectGuards.append(guard);
     }
     if (guard)
@@ -916,7 +915,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 
         // Do we already have a QObject guard for this property?
         if (valueObject && !guard) {
-            guard = new QQmlVMEVariantQObjectPtr(true);
+            guard = new QQmlVMEVariantQObjectPtr();
             varObjectGuards.append(guard);
         }
     }

@@ -136,15 +136,14 @@ class QQmlVMEMetaObject;
 class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
-    inline QQmlVMEVariantQObjectPtr(bool isVar);
+    inline QQmlVMEVariantQObjectPtr();
     inline ~QQmlVMEVariantQObjectPtr();
 
     inline void objectDestroyed(QObject *);
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;
-    unsigned m_isVar : 1; // TODO: remove?
-    int m_index : 31;
+    int m_index;
 };
 
 class QQmlVMEVariant;
