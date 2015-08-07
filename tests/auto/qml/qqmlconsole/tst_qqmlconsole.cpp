@@ -47,7 +47,7 @@ private slots:
     void logging();
     void tracing();
     void profiling();
-    void assert();
+    void testAssert();
     void exception();
 
 private:
@@ -122,7 +122,7 @@ void tst_qqmlconsole::profiling()
     delete object;
 }
 
-void tst_qqmlconsole::assert()
+void tst_qqmlconsole::testAssert()
 {
     QUrl testUrl = testFileUrl("assert.qml");
 
