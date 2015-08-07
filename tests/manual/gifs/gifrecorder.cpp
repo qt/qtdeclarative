@@ -89,7 +89,6 @@ void GifRecorder::setOutputDir(const QDir &dir)
 
 void GifRecorder::setOutputFileName(const QString &fileName)
 {
-    QVERIFY2(!fileName.isEmpty(), "Output file name cannot be empty");
     mOutputFileName = fileName;
 }
 
@@ -119,8 +118,10 @@ void GifRecorder::start()
     mView->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(mView, 500));
 
-    mOutputFileName = mOutputDir.absoluteFilePath(mQmlInputFileName);
-    mOutputFileName.replace(".qml", ".gif");
+    if (mOutputFileName.isEmpty()) {
+        mOutputFileName = mOutputDir.absoluteFilePath(mQmlInputFileName);
+        mOutputFileName.replace(".qml", ".gif");
+    }
 
     QStringList args;
     args << "-d" << QString::number(mRecordingDuration) << "-v";

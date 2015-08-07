@@ -78,7 +78,6 @@ void tst_Gifs::tumblerWrap()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
     gifRecorder.setQmlFileName("qtquickextras2-tumbler-wrap.qml");
-    gifRecorder.setOutputFileName("wrap.gif");
     gifRecorder.setView(&view);
 
     view.show();
@@ -151,8 +150,6 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
-    // TODO: default to replacing .qml with .gif if outputFileName is empty.
-    gifRecorder.setOutputFileName("qtquickcontrols2-slider.gif");
     gifRecorder.setView(&view);
 
     view.show();
