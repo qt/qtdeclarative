@@ -203,6 +203,7 @@ public:
     bool propertiesInitialized;
     inline void allocateProperties();
     inline bool ensurePropertiesAllocated();
+    QV4::MemberData *propertiesAsMemberData();
 
     int readPropertyAsInt(int id);
     bool readPropertyAsBool(int id);

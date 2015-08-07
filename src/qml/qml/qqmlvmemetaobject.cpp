@@ -64,14 +64,13 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
     if (m_target && m_index >= 0) {
+        // Set the var property to NULL
         if (m_isVar && m_target->propertiesInitialized && !m_target->properties.isUndefined()) {
-            // Set the var property to NULL
             QV4::ExecutionEngine *v4 = m_target->properties.engine();
             if (v4) {
                 QV4::Scope scope(v4);
-                QV4::ScopedArrayObject a(scope, m_target->properties.value());
-                if (a)
-                    a->putIndexed(m_index, QV4::ScopedValue(scope, QV4::Primitive::nullValue()));
+                QV4::Scoped<QV4::MemberData> sp(scope, m_target->properties.value());
+                *(sp->data() + m_index) = QV4::Primitive::nullValue();
             }
         }
 
@@ -218,125 +217,89 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     qDeleteAll(varObjectGuards);
 }
 
-void QQmlVMEMetaObject::writeProperty(int id, int v)
+QV4::MemberData *QQmlVMEMetaObject::propertiesAsMemberData()
 {
     if (!ensurePropertiesAllocated())
-        return;
+        return 0;
 
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    vp->putIndexed(id, QV4::Primitive::fromInt32(v));
+    return static_cast<QV4::MemberData*>(properties.asManaged());
+}
+
+void QQmlVMEMetaObject::writeProperty(int id, int v)
+{
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = QV4::Primitive::fromInt32(v);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, bool v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    vp->putIndexed(id, QV4::Primitive::fromBoolean(v));
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = QV4::Primitive::fromBoolean(v);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, double v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    vp->putIndexed(id, QV4::Primitive::fromDouble(v));
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = QV4::Primitive::fromDouble(v);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue s(scope, properties.engine()->newString(v));
-    vp->putIndexed(id, s);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newString(v);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QUrl& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
-// TODO: can we store the QDate in a QV4::Value primitive?
 void QQmlVMEMetaObject::writeProperty(int id, const QDate& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QDateTime& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QPointF& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QSizeF& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QRectF& v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, properties.engine()->newVariantObject(QVariant::fromValue(v)));
-    vp->putIndexed(id, sv);
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = properties.engine()->newVariantObject(QVariant::fromValue(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 {
-    if (!ensurePropertiesAllocated())
-        return;
-
-    QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
-    QV4::ExecutionEngine *v4 = ep->v4engine();
-    vp->putIndexed(id, QV4::ScopedObject(scope, QV4::QObjectWrapper::wrap(v4, v)));
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        *(md->data() + id) = QV4::QObjectWrapper::wrap(properties.engine(), v);
 
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
     if (v && !guard) {
@@ -349,12 +312,12 @@ void QQmlVMEMetaObject::writeProperty(int id, QObject* v)
 
 int QQmlVMEMetaObject::readPropertyAsInt(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return 0;
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isInt32()) {
         writeProperty(id, int(0));
         return 0;
@@ -364,12 +327,12 @@ int QQmlVMEMetaObject::readPropertyAsInt(int id)
 
 bool QQmlVMEMetaObject::readPropertyAsBool(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return false;
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isBoolean()) {
         writeProperty(id, false);
         return false;
@@ -379,12 +342,12 @@ bool QQmlVMEMetaObject::readPropertyAsBool(int id)
 
 double QQmlVMEMetaObject::readPropertyAsDouble(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return 0.0;
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isDouble()) {
         writeProperty(id, 0.0);
         return 0.0;
@@ -394,12 +357,12 @@ double QQmlVMEMetaObject::readPropertyAsDouble(int id)
 
 QString QQmlVMEMetaObject::readPropertyAsString(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QString();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     if (!sv->isString()) {
         writeProperty(id, QString());
         return QString();
@@ -409,12 +372,12 @@ QString QQmlVMEMetaObject::readPropertyAsString(int id)
 
 QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QUrl();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::Url) {
         writeProperty(id, QUrl());
@@ -425,12 +388,12 @@ QUrl QQmlVMEMetaObject::readPropertyAsUrl(int id)
 
 QDate QQmlVMEMetaObject::readPropertyAsDate(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QDate();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::Date) {
         writeProperty(id, QDate());
@@ -441,12 +404,12 @@ QDate QQmlVMEMetaObject::readPropertyAsDate(int id)
 
 QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QDateTime();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::DateTime) {
         writeProperty(id, QDateTime());
@@ -457,12 +420,12 @@ QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
 
 QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QSizeF();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::SizeF) {
         writeProperty(id, QSizeF());
@@ -473,12 +436,12 @@ QSizeF QQmlVMEMetaObject::readPropertyAsSizeF(int id)
 
 QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QPointF();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::PointF) {
         writeProperty(id, QPointF());
@@ -489,12 +452,12 @@ QPointF QQmlVMEMetaObject::readPropertyAsPointF(int id)
 
 QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return 0;
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::QObjectWrapper *wrapper = sv->as<QV4::QObjectWrapper>();
     if (!wrapper) {
         writeProperty(id, static_cast<QObject*>(Q_NULLPTR));
@@ -505,12 +468,12 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id)
 
 QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
 {
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return QRectF();
 
     QV4::Scope scope(properties.engine());
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::ScopedValue sv(scope, vp->getIndexed(id));
+    QV4::ScopedValue sv(scope, *(md->data() + id));
     const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
     if (!v || v->d()->data.type() != QVariant::RectF) {
         writeProperty(id, QRectF());
@@ -662,15 +625,11 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             break;
                         default:
                         {
-                            if (ensurePropertiesAllocated()) {
-                                QV4::ExecutionEngine *v4 = properties.engine();
-                                QV4::Scope scope(v4);
-                                QV4::ScopedObject o(scope, properties.value());
-                                QV4::ScopedValue sv(scope, o->getIndexed(id));
-                                const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
-                                if (v) {
+                            QV4::MemberData *md = propertiesAsMemberData();
+                            if (md) {
+                                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
+                                if (v)
                                     QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], t);
-                                }
                             }
                             break;
                         }
@@ -735,17 +694,12 @@ int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                             break;
                         default: {
-                            if (ensurePropertiesAllocated()) {
-                                QV4::ExecutionEngine *v4 = properties.engine();
-                                QV4::Scope scope(v4);
-                                QV4::ScopedObject o(scope, properties.value());
-                                QV4::ScopedValue sv(scope, o->getIndexed(id));
-                                QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+                            QV4::MemberData *md = propertiesAsMemberData();
+                            if (md) {
+                                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
                                 if (!v) {
-                                    QV4::ScopedValue svo(scope, properties.engine()->newVariantObject(QVariant()));
-                                    o->putIndexed(id, svo);
-                                    svo = o->getIndexed(id);
-                                    v = svo->as<QV4::VariantObject>();
+                                    *(md->data() + id) = properties.engine()->newVariantObject(QVariant());
+                                    v = (md->data() + id)->as<QV4::VariantObject>();
                                 }
                                 QQmlValueTypeProvider().initValueType(t, v->d()->data);
                                 needActivate = !QQml_valueTypeProvider()->equalValueType(t, a[0], v->d()->data);
@@ -907,34 +861,25 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
 
-    if (ensurePropertiesAllocated()) {
-        QV4::Scope scope(properties.engine());
-        QV4::ScopedObject o(scope, properties.value());
-        return o->getIndexed(id);
-    }
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (md)
+        return (md->data() + id)->asReturnedValue();
     return QV4::Primitive::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 {
     if (id >= firstVarPropertyIndex) {
-        if (ensurePropertiesAllocated()) {
-            QV4::ExecutionEngine *v4 = properties.engine();
-            QV4::Scope scope(v4);
-            QV4::ScopedObject o(scope, properties.value());
-            QV4::ScopedValue val(scope, o->getIndexed(id));
-            return scope.engine->toVariant(val, -1);
-        }
+        QV4::MemberData *md = propertiesAsMemberData();
+        if (md)
+            return properties.engine()->toVariant(*(md->data() + id), -1);
     } else {
-        if (ensurePropertiesAllocated()) {
-            QV4::ExecutionEngine *v4 = properties.engine();
-            QV4::Scope scope(v4);
-            QV4::ScopedObject o(scope, properties.value());
-            QV4::ScopedValue sv(scope, o->getIndexed(id));
-            const QV4::QObjectWrapper *wrapper = sv->as<QV4::QObjectWrapper>();
+        QV4::MemberData *md = propertiesAsMemberData();
+        if (md) {
+            const QV4::QObjectWrapper *wrapper = (md->data() + id)->as<QV4::QObjectWrapper>();
             if (wrapper)
                 return QVariant::fromValue(wrapper->object());
-            const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+            const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
             if (!v) {
                 writeProperty(id, QVariant());
                 return QVariant();
@@ -948,72 +893,66 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id)
 void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
 {
     Q_ASSERT(id >= firstVarPropertyIndex);
-    if (!ensurePropertiesAllocated())
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
         return;
 
-    QV4::Scope scope(properties.engine());
     // Importantly, if the current value is a scarce resource, we need to ensure that it
     // gets automatically released by the engine if no other references to it exist.
-    QV4::ScopedObject vp(scope, properties.value());
-    QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id));
-    if (!!oldv)
-        oldv->removeVmePropertyReference();
+    QV4::VariantObject *oldVariant = (md->data() + id)->as<QV4::VariantObject>();
+    if (oldVariant)
+        oldVariant->removeVmePropertyReference();
 
     QObject *valueObject = 0;
     QQmlVMEVariantQObjectPtr *guard = getQObjectGuardForProperty(id);
 
-    QV4::ScopedObject o(scope, value);
-    if (o) {
-        // And, if the new value is a scarce resource, we need to ensure that it does not get
-        // automatically released by the engine until no other references to it exist.
-        if (QV4::VariantObject *v = o->as<QV4::VariantObject>()) {
-            v->addVmePropertyReference();
-        } else if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
-            // We need to track this QObject to signal its deletion
-            valueObject = wrapper->object();
+    // And, if the new value is a scarce resource, we need to ensure that it does not get
+    // automatically released by the engine until no other references to it exist.
+    if (QV4::VariantObject *v = const_cast<QV4::VariantObject*>(value.as<QV4::VariantObject>())) {
+        v->addVmePropertyReference();
+    } else if (QV4::QObjectWrapper *wrapper = const_cast<QV4::QObjectWrapper*>(value.as<QV4::QObjectWrapper>())) {
+        // We need to track this QObject to signal its deletion
+        valueObject = wrapper->object();
 
-            // Do we already have a QObject guard for this property?
-            if (valueObject && !guard) {
-                guard = new QQmlVMEVariantQObjectPtr(true);
-                varObjectGuards.append(guard);
-            }
+        // Do we already have a QObject guard for this property?
+        if (valueObject && !guard) {
+            guard = new QQmlVMEVariantQObjectPtr(true);
+            varObjectGuards.append(guard);
         }
     }
 
-    if (guard) {
+    if (guard)
         guard->setGuardedValue(valueObject, this, id);
-    }
 
     // Write the value and emit change signal as appropriate.
-    vp->putIndexed(id, value);
+    *(md->data() + id) = value;
     activate(object, methodOffset() + id, 0);
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
 {
     if (id >= firstVarPropertyIndex) {
-        if (!ensurePropertiesAllocated())
+        QV4::MemberData *md = propertiesAsMemberData();
+        if (!md)
             return;
-
-        QV4::Scope scope(properties.engine());
 
         // Importantly, if the current value is a scarce resource, we need to ensure that it
         // gets automatically released by the engine if no other references to it exist.
-        QV4::ScopedObject vp(scope, properties.value());
-        QV4::Scoped<QV4::VariantObject> oldv(scope, vp->getIndexed(id));
-        if (!!oldv)
+        QV4::VariantObject *oldv = (md->data() + id)->as<QV4::VariantObject>();
+        if (oldv)
             oldv->removeVmePropertyReference();
 
         // And, if the new value is a scarce resource, we need to ensure that it does not get
         // automatically released by the engine until no other references to it exist.
-        QV4::ScopedValue newv(scope, scope.engine->fromVariant(value));
+        QV4::Scope scope(properties.engine());
+        QV4::ScopedValue newv(scope, properties.engine()->fromVariant(value));
         QV4::Scoped<QV4::VariantObject> v(scope, newv);
         if (!!v)
             v->addVmePropertyReference();
 
         // Write the value and emit change signal as appropriate.
         QVariant currentValue = readPropertyAsVariant(id);
-        vp->putIndexed(id, newv);
+        *(md->data() + id) = newv;
         if ((currentValue.userType() != value.userType() || currentValue != value))
             activate(object, methodOffset() + id, 0);
     } else {
@@ -1023,21 +962,17 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
             needActivate = readPropertyAsQObject(id) != o;  // TODO: still correct?
             writeProperty(id, o);
         } else {
-            if (ensurePropertiesAllocated()) {
-                QV4::ExecutionEngine *v4 = properties.engine();
-                QV4::Scope scope(v4);
-                QV4::ScopedObject o(scope, properties.value());
-                QV4::ScopedValue sv(scope, o->getIndexed(id));
-                QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+            QV4::MemberData *md = propertiesAsMemberData();
+            if (md) {
+                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
                 needActivate = (!v ||
                                  v->d()->data.userType() != value.userType() ||
                                  v->d()->data != value);
                 if (v)
                     v->removeVmePropertyReference();
-
-                QV4::Scoped<QV4::VariantObject> svo(scope, properties.engine()->newVariantObject(value));
-                svo->addVmePropertyReference();
-                o->putIndexed(id, svo);
+                *(md->data() + id) = properties.engine()->newVariantObject(value);
+                v = static_cast<QV4::VariantObject *>(md->data() + id);
+                v->addVmePropertyReference();
             }
         }
 
@@ -1185,8 +1120,7 @@ void QQmlVMEMetaObject::allocateProperties()
     QQmlEngine *qml = qmlEngine(object);
     Q_ASSERT(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
-    QV4::Scope scope(v4);
-    properties.set(scope.engine, v4->newArrayObject(metaData->propertyCount));
+    properties.set(v4, QV4::MemberData::reallocate(v4, 0, metaData->propertyCount));
     propertiesInitialized = true;
 }
 
