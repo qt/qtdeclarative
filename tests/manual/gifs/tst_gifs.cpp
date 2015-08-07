@@ -150,6 +150,7 @@ void tst_Gifs::slider()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
+    gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
     gifRecorder.setView(&view);
 
@@ -267,7 +268,8 @@ void tst_Gifs::busyIndicator()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
     gifRecorder.setView(&view);
 
@@ -284,7 +286,7 @@ void tst_Gifs::busyIndicator()
     busyIndicator->setProperty("running", true);
 
     // 800 ms is the duration of one rotation animation cycle for BusyIndicator.
-    QTest::qWait(800 * 3);
+    QTest::qWait(800 * 2);
 
     busyIndicator->setProperty("running", false);
 

@@ -54,30 +54,44 @@ public:
     void setRecordCursor(bool recordCursor);
     void setDataDirPath(const QString &path);
     void setOutputDir(const QDir &dir);
-    void setOutputFileName(const QString &fileName);
+    void setOutputFileBaseName(const QString &fileBaseName);
     void setQmlFileName(const QString &fileName);
     void setView(QQuickView *mView);
+    void setHighQuality(bool highQuality);
 
     void start();
     bool hasStarted() const;
     void waitForFinish();
 
 private slots:
-    void onError();
-    void onFinished();
+    void onByzanzError();
+    void onByzanzFinished();
 
 private:
-    const QString mProcessName;
-    QProcess mProcess;
-    int mRecordingDuration;
-    bool mRecordCursor;
     QString mDataDirPath;
     QDir mOutputDir;
-    QString mOutputFileName;
+    QString mOutputFileBaseName;
+    QString mByzanzOutputFileName;
+    QString mGifFileName;
     QString mQmlInputFileName;
     QQuickView *mView;
-    bool mStarted;
-    bool mFinished;
+    bool mHighQuality;
+    int mRecordingDuration;
+    bool mRecordCursor;
+
+    const QString mByzanzProcessName;
+    QProcess mByzanzProcess;
+    bool mByzanzProcessFinished;
+
+    const QString mAvconvProcessName;
+    QString mAvconvArgs;
+    QProcess mAvconvProcess;
+    bool mAvconvProcessFinished;
+
+    const QString mConvertProcessName;
+    QString mConvertArgs;
+    QProcess mConvertProcess;
+    bool mConvertProcessFinished;
 };
 
 #endif // GIFRECORDER_H
