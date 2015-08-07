@@ -374,7 +374,7 @@ public:
         return QMatrix4x4(matVals);
     }
 
-    const QMetaObject *getMetaObjectForMetaType(int type)
+    const QMetaObject *getMetaObjectForMetaType(int type) Q_DECL_OVERRIDE
     {
         switch (type) {
         case QMetaType::QColor:
