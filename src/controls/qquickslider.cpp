@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
     \ingroup sliders
     \brief A slider control.
 
+    \image qtquickcontrols2-slider.gif
+
     Slider is used to select a value by sliding a handle along a track.
 
     \table

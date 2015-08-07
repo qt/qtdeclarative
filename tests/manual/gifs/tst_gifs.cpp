@@ -50,6 +50,7 @@ private slots:
     void initTestCase();
 
     void tumblerWrap();
+    void slider();
 
 private:
     QQuickView view;
@@ -141,6 +142,126 @@ void tst_Gifs::tumblerWrap()
     foreach (CapturedEvent event, eventCapturer.capturedEvents())
         qDebug().noquote() << event.cppCommand();
 
+}
+
+void tst_Gifs::slider()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
+    // TODO: default to replacing .qml with .gif if outputFileName is empty.
+    gifRecorder.setOutputFileName("qtquickcontrols2-slider.gif");
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(18, 19), 122);
+    QTest::mouseMove(&view, QPoint(20, 19), 154);
+    QTest::mouseMove(&view, QPoint(22, 19), 10);
+    QTest::mouseMove(&view, QPoint(24, 20), 10);
+    QTest::mouseMove(&view, QPoint(27, 20), 11);
+    QTest::mouseMove(&view, QPoint(31, 20), 10);
+    QTest::mouseMove(&view, QPoint(33, 20), 10);
+    QTest::mouseMove(&view, QPoint(36, 21), 11);
+    QTest::mouseMove(&view, QPoint(40, 22), 10);
+    QTest::mouseMove(&view, QPoint(43, 22), 10);
+    QTest::mouseMove(&view, QPoint(45, 22), 11);
+    QTest::mouseMove(&view, QPoint(50, 23), 16);
+    QTest::mouseMove(&view, QPoint(54, 23), 17);
+    QTest::mouseMove(&view, QPoint(60, 24), 16);
+    QTest::mouseMove(&view, QPoint(63, 24), 17);
+    QTest::mouseMove(&view, QPoint(65, 24), 0);
+    QTest::mouseMove(&view, QPoint(66, 24), 17);
+    QTest::mouseMove(&view, QPoint(68, 24), 0);
+    QTest::mouseMove(&view, QPoint(70, 24), 16);
+    QTest::mouseMove(&view, QPoint(71, 24), 1);
+    QTest::mouseMove(&view, QPoint(73, 24), 16);
+    QTest::mouseMove(&view, QPoint(74, 24), 0);
+    QTest::mouseMove(&view, QPoint(76, 24), 16);
+    QTest::mouseMove(&view, QPoint(77, 24), 0);
+    QTest::mouseMove(&view, QPoint(78, 24), 17);
+    QTest::mouseMove(&view, QPoint(80, 24), 0);
+    QTest::mouseMove(&view, QPoint(81, 24), 17);
+    QTest::mouseMove(&view, QPoint(82, 24), 0);
+    QTest::mouseMove(&view, QPoint(83, 24), 17);
+    QTest::mouseMove(&view, QPoint(84, 24), 16);
+    QTest::mouseMove(&view, QPoint(85, 24), 48);
+    QTest::mouseMove(&view, QPoint(85, 23), 10);
+    QTest::mouseMove(&view, QPoint(86, 23), 11);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(86, 23), 71);
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(86, 22), 246);
+    QTest::mouseMove(&view, QPoint(87, 21), 123);
+    QTest::mouseMove(&view, QPoint(89, 21), 10);
+    QTest::mouseMove(&view, QPoint(91, 20), 10);
+    QTest::mouseMove(&view, QPoint(97, 20), 10);
+    QTest::mouseMove(&view, QPoint(101, 20), 11);
+    QTest::mouseMove(&view, QPoint(105, 20), 11);
+    QTest::mouseMove(&view, QPoint(113, 20), 10);
+    QTest::mouseMove(&view, QPoint(120, 20), 13);
+    QTest::mouseMove(&view, QPoint(129, 20), 17);
+    QTest::mouseMove(&view, QPoint(140, 20), 17);
+    QTest::mouseMove(&view, QPoint(150, 20), 16);
+    QTest::mouseMove(&view, QPoint(156, 20), 1);
+    QTest::mouseMove(&view, QPoint(161, 20), 16);
+    QTest::mouseMove(&view, QPoint(166, 20), 0);
+    QTest::mouseMove(&view, QPoint(172, 20), 17);
+    QTest::mouseMove(&view, QPoint(177, 20), 0);
+    QTest::mouseMove(&view, QPoint(181, 20), 16);
+    QTest::mouseMove(&view, QPoint(186, 20), 1);
+    QTest::mouseMove(&view, QPoint(191, 22), 16);
+    QTest::mouseMove(&view, QPoint(194, 22), 0);
+    QTest::mouseMove(&view, QPoint(197, 22), 17);
+    QTest::mouseMove(&view, QPoint(201, 22), 0);
+    QTest::mouseMove(&view, QPoint(204, 22), 17);
+    QTest::mouseMove(&view, QPoint(207, 22), 0);
+    QTest::mouseMove(&view, QPoint(211, 22), 16);
+    QTest::mouseMove(&view, QPoint(214, 22), 0);
+    QTest::mouseMove(&view, QPoint(216, 22), 10);
+    QTest::mouseMove(&view, QPoint(222, 22), 11);
+    QTest::mouseMove(&view, QPoint(226, 22), 10);
+    QTest::mouseMove(&view, QPoint(227, 22), 10);
+    QTest::mouseMove(&view, QPoint(229, 22), 10);
+    QTest::mouseMove(&view, QPoint(230, 22), 11);
+    QTest::mouseMove(&view, QPoint(232, 22), 10);
+    QTest::mouseMove(&view, QPoint(231, 22), 101);
+    QTest::mouseMove(&view, QPoint(230, 23), 10);
+    QTest::mouseMove(&view, QPoint(229, 23), 10);
+    QTest::mouseMove(&view, QPoint(225, 24), 10);
+    QTest::mouseMove(&view, QPoint(221, 24), 10);
+    QTest::mouseMove(&view, QPoint(218, 25), 10);
+    QTest::mouseMove(&view, QPoint(214, 25), 11);
+    QTest::mouseMove(&view, QPoint(201, 25), 10);
+    QTest::mouseMove(&view, QPoint(192, 25), 10);
+    QTest::mouseMove(&view, QPoint(183, 25), 11);
+    QTest::mouseMove(&view, QPoint(163, 25), 10);
+    QTest::mouseMove(&view, QPoint(154, 25), 11);
+    QTest::mouseMove(&view, QPoint(145, 23), 13);
+    QTest::mouseMove(&view, QPoint(136, 23), 1);
+    QTest::mouseMove(&view, QPoint(128, 21), 16);
+    QTest::mouseMove(&view, QPoint(120, 21), 0);
+    QTest::mouseMove(&view, QPoint(112, 20), 17);
+    QTest::mouseMove(&view, QPoint(110, 20), 0);
+    QTest::mouseMove(&view, QPoint(102, 20), 16);
+    QTest::mouseMove(&view, QPoint(94, 18), 0);
+    QTest::mouseMove(&view, QPoint(86, 18), 16);
+    QTest::mouseMove(&view, QPoint(78, 18), 0);
+    QTest::mouseMove(&view, QPoint(70, 18), 17);
+    QTest::mouseMove(&view, QPoint(62, 18), 0);
+    QTest::mouseMove(&view, QPoint(54, 18), 16);
+    QTest::mouseMove(&view, QPoint(47, 16), 0);
+    QTest::mouseMove(&view, QPoint(39, 16), 16);
+    QTest::mouseMove(&view, QPoint(31, 16), 0);
+    QTest::mouseMove(&view, QPoint(26, 16), 17);
+    QTest::mouseMove(&view, QPoint(20, 15), 0);
+    QTest::mouseMove(&view, QPoint(8, 15), 17);
+    QTest::mouseMove(&view, QPoint(0, 15), 16);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(0, 15), 215);
+
+    gifRecorder.waitForFinish();
 }
 
 QTEST_MAIN(tst_Gifs)
