@@ -171,10 +171,10 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
     int qobject_type = qMetaTypeId<QObject*>();
     int variant_type = qMetaTypeId<QVariant>();
-    // Need JS wrapper to ensure variant and var properties are marked.
+    // Need JS wrapper to ensure properties are marked.
     // ### FIXME: I hope that this can be removed once we have the proper scope chain
     // set up and the JS wrappers always exist.
-    bool needsJSWrapper = (metaData->varPropertyCount > 0);
+    bool needsJSWrapper = (metaData->propertyCount > 0);
 
     // ### Optimize
     for (int ii = 0; ii < metaData->propertyCount - metaData->varPropertyCount; ++ii) {
