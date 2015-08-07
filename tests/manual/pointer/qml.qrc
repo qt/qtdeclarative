@@ -6,6 +6,7 @@
         <file>joystick.qml</file>
         <file>map.qml</file>
         <file>mixer.qml</file>
+        <file>photosurface.qml</file>
         <file>pinchHandler.qml</file>
         <file>singlePointHandlerProperties.qml</file>
         <file>content/FakeFlickable.qml</file>
