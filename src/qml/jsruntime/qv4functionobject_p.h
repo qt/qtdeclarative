@@ -149,7 +149,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
 template<>
 inline const FunctionObject *Value::as() const {
-    return isManaged() && m() && m()->vtable->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
+    return isManaged() && m() && m()->vtable()->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
 }
 
 

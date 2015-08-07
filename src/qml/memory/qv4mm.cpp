@@ -183,8 +183,8 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 #ifdef V4_USE_VALGRIND
                 VALGRIND_ENABLE_ERROR_REPORTING;
 #endif
-                if (m->gcGetVtable()->destroy)
-                    m->gcGetVtable()->destroy(m);
+                if (m->vtable()->destroy)
+                    m->vtable()->destroy(m);
 
                 memset(m, 0, header->itemSize);
 #ifdef V4_USE_VALGRIND
@@ -324,8 +324,8 @@ static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
-        Q_ASSERT (h->gcGetVtable()->markObjects);
-        h->gcGetVtable()->markObjects(h, engine);
+        Q_ASSERT (h->vtable()->markObjects);
+        h->vtable()->markObjects(h, engine);
     }
 }
 
@@ -348,7 +348,7 @@ void MemoryManager::mark()
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         if (!(*it).isManaged())
             continue;
-        if ((*it).managed()->d()->gcGetVtable() != QObjectWrapper::staticVTable())
+        if ((*it).managed()->d()->vtable() != QObjectWrapper::staticVTable())
             continue;
         QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
         if (!qobjectWrapper)
@@ -444,8 +444,8 @@ void MemoryManager::sweep(bool lastSweep)
             i = i->next;
             continue;
         }
-        if (m->gcGetVtable()->destroy)
-            m->gcGetVtable()->destroy(m);
+        if (m->vtable()->destroy)
+            m->vtable()->destroy(m);
 
         *last = i->next;
         free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),

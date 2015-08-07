@@ -70,7 +70,7 @@ DEFINE_OBJECT_VTABLE(StringObject);
 Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
     : Heap::Object(ic, prototype)
 {
-    Q_ASSERT(vtable == QV4::StringObject::staticVTable());
+    Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
     string = ic->engine->newString();
 
     Scope scope(ic->engine);

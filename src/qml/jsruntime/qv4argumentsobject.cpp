@@ -45,7 +45,7 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     , context(context->d())
     , fullyCreated(false)
 {
-    Q_ASSERT(vtable == QV4::ArgumentsObject::staticVTable());
+    Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
     ExecutionEngine *v4 = context->d()->engine;
     Scope scope(v4);

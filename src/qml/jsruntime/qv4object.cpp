@@ -290,7 +290,7 @@ Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attr
             *attrs = o->arrayData->attributes(index);
             return p;
         }
-        if (o->vtable->type == Type_StringObject) {
+        if (o->vtable()->type == Type_StringObject) {
             if (index < static_cast<const Heap::StringObject *>(o)->length()) {
                 // this is an evil hack, but it works, as the method is only ever called from putIndexed,
                 // where we don't use the returned pointer there for non writable attributes

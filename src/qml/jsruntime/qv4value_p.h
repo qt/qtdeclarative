@@ -329,11 +329,11 @@ struct Q_QML_PRIVATE_EXPORT Value
         if (!m() || !isManaged())
             return 0;
 
-        Q_ASSERT(m()->vtable);
+        Q_ASSERT(m()->vtable());
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<const T *>(this)->qt_check_for_QMANAGED_macro(static_cast<const T *>(this));
 #endif
-        const VTable *vt = m()->vtable;
+        const VTable *vt = m()->vtable();
         while (vt) {
             if (vt == T::staticVTable())
                 return static_cast<const T *>(this);
@@ -396,13 +396,13 @@ inline bool Value::isString() const
 {
     if (!isManaged())
         return false;
-    return m() && m()->vtable->isString;
+    return m() && m()->vtable()->isString;
 }
 inline bool Value::isObject() const
 {
     if (!isManaged())
         return false;
-    return m() && m()->vtable->isObject;
+    return m() && m()->vtable()->isObject;
 }
 
 inline bool Value::isPrimitive() const

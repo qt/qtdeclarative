@@ -208,12 +208,12 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
 
 bool FunctionObject::isBinding() const
 {
-    return d()->vtable == QQmlBindingFunction::staticVTable();
+    return d()->vtable() == QQmlBindingFunction::staticVTable();
 }
 
 bool FunctionObject::isBoundFunction() const
 {
-    return d()->vtable == BoundFunction::staticVTable();
+    return d()->vtable() == BoundFunction::staticVTable();
 }
 
 QQmlSourceLocation FunctionObject::sourceLocation() const
@@ -513,7 +513,10 @@ ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *cal
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
-    ctx.vtable = CallContext::staticVTable();
+#ifndef QT_NO_DEBUG
+    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
+#endif
+    ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -548,7 +551,10 @@ ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
-    ctx.vtable = CallContext::staticVTable();
+#ifndef QT_NO_DEBUG
+    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
+#endif
+    ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
     ctx.function = f->d();
@@ -604,7 +610,10 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
-    ctx.vtable = CallContext::staticVTable();
+#ifndef QT_NO_DEBUG
+    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
+#endif
+    ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);
@@ -625,7 +634,10 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
-    ctx.vtable = CallContext::staticVTable();
+#ifndef QT_NO_DEBUG
+    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
+#endif
+    ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
     Q_ASSERT(v4->currentContext() == &ctx);

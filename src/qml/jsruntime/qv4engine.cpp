@@ -303,7 +303,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     strictArgumentsObjectClass = strictArgumentsObjectClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
     *static_cast<Value *>(globalObject) = newObject();
-    Q_ASSERT(globalObject->d()->vtable);
+    Q_ASSERT(globalObject->d()->vtable());
     initRootContext();
 
     jsObjects[StringProto] = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype());
@@ -403,7 +403,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     //
     rootContext()->d()->global = globalObject->d();
     rootContext()->d()->callData->thisObject = globalObject;
-    Q_ASSERT(globalObject->d()->vtable);
+    Q_ASSERT(globalObject->d()->vtable());
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
     globalObject->defineDefaultProperty(QStringLiteral("String"), *stringCtor());
@@ -919,7 +919,7 @@ void ExecutionEngine::markObjects()
         Q_ASSERT(c->inUse());
         if (!c->isMarked()) {
             c->setMarkBit();
-            c->gcGetVtable()->markObjects(c, this);
+            c->vtable()->markObjects(c, this);
         }
         c = c->parent;
     }
@@ -1553,7 +1553,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 
 void ExecutionEngine::assertObjectBelongsToEngine(const Heap::Base &baseObject)
 {
-    Q_ASSERT(!baseObject.vtable->isObject || static_cast<const Heap::Object&>(baseObject).internalClass->engine == this);
+    Q_ASSERT(!baseObject.vtable()->isObject || static_cast<const Heap::Object&>(baseObject).internalClass->engine == this);
     Q_UNUSED(baseObject);
 }
 

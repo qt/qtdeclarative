@@ -80,8 +80,8 @@ public:
             if (!entry || entry->isMarked())
                 continue;
             entry->setMarkBit();
-            Q_ASSERT(entry->gcGetVtable()->markObjects);
-            entry->gcGetVtable()->markObjects(entry, e);
+            Q_ASSERT(entry->vtable()->markObjects);
+            entry->vtable()->markObjects(entry, e);
         }
     }
 };

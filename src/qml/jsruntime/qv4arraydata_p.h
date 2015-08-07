@@ -96,7 +96,7 @@ struct ArrayData : public Base {
 
     bool isSparse() const { return type == Sparse; }
 
-    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(Base::vtable); }
+    const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(Base::vtable()); }
 
     inline ReturnedValue get(uint i) const {
         return vtable()->get(this, i);

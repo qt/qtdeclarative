@@ -87,7 +87,7 @@ public:
     {
         size = align(size);
         Heap::Base *o = allocData(size);
-        o->vtable = ManagedType::staticVTable();
+        o->setVtable(ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
     }
 

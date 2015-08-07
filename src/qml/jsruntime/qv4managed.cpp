@@ -59,7 +59,7 @@ const VTable Managed::static_vtbl =
 QString Managed::className() const
 {
     const char *s = 0;
-    switch (Type(d()->vtable->type)) {
+    switch (Type(d()->vtable()->type)) {
     case Type_Invalid:
     case Type_String:
         return QString();

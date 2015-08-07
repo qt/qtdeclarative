@@ -106,7 +106,7 @@ struct ArgumentsObject: Object {
     Heap::MemberData *mappedArguments() { return d()->mappedArguments; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->d()->vtable->type == Type_ArgumentsObject &&
+        return m->d()->vtable()->type == Type_ArgumentsObject &&
                 !static_cast<ArgumentsObject *>(m)->context()->strictMode;
     }
 

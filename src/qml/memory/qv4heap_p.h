@@ -60,10 +60,7 @@ struct VTable
 namespace Heap {
 
 struct Q_QML_EXPORT Base {
-    union {
-        const VTable *vtable;
-        quintptr mm_data;
-    };
+    quintptr mm_data; // vtable and markbit
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::ExecutionEngine *engine);
@@ -74,7 +71,11 @@ struct Q_QML_EXPORT Base {
         PointerMask = ~0x3
     };
 
-    VTable *gcGetVtable() const {
+    void setVtable(const VTable *v) {
+        Q_ASSERT(!(mm_data & MarkBit));
+        mm_data = reinterpret_cast<quintptr>(v);
+    }
+    VTable *vtable() const {
         return reinterpret_cast<VTable *>(mm_data & PointerMask);
     }
     inline bool isMarked() const {
