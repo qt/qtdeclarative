@@ -55,6 +55,10 @@
 
 #include "../../shared/util.h"
 
+#if defined(Q_OS_MAC)
+#include <unistd.h>
+#endif
+
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
 static inline bool isCaseSensitiveFileSystem(const QString &path) {
