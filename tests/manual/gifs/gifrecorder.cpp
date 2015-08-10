@@ -131,6 +131,33 @@ void GifRecorder::setHighQuality(bool highQuality)
     mHighQuality = highQuality;
 }
 
+namespace {
+    void startProcess(QProcess &process, const QString &processName, const QString &args)
+    {
+        qCDebug(lcGifRecorder) << "Starting" << processName << "with the following arguments:" << args;
+        const QString command = processName + QLatin1Char(' ') + args;
+        process.start(command);
+        if (!process.waitForStarted(1000)) {
+            QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
+            message = message.arg(processName).arg(args).arg(process.errorString());
+            QFAIL(qPrintable(message));
+        } else {
+            qCDebug(lcGifRecorder) << "Successfully started" << processName;
+        }
+    }
+
+    void waitForProcessToFinish(QProcess &process, const QString &processName, int waitDuration)
+    {
+        if (!process.waitForFinished(waitDuration) || process.exitCode() != 0) {
+            QString message = QString::fromLatin1("%1 failed to finish (exit code %2): %3");
+            message = message.arg(processName).arg(process.exitCode()).arg(process.errorString());
+            QFAIL(qPrintable(message));
+        } else {
+            qCDebug(lcGifRecorder) << processName << "finished";
+        }
+    }
+}
+
 void GifRecorder::start()
 {
     QVERIFY2(mView, "Must have a view to record");
@@ -160,27 +187,22 @@ void GifRecorder::start()
         mByzanzOutputFileName.append(QLatin1String(".gif"));
     }
 
-    QStringList args;
-    args << "-d" << QString::number(mRecordingDuration) << "-v";
-    if (mRecordCursor)
-        args << "-c";
-    args << "-x" << QString::number(mView->x()) << "-y" << QString::number(mView->y());
-    args << "-w" << QString::number(mView->width()) << "-h" << QString::number(mView->height());
-    args << mByzanzOutputFileName;
-    qCDebug(lcGifRecorder) << "Starting" << mByzanzProcessName << "with the following arguments:" << args;
-    mByzanzProcess.start(mByzanzProcessName, args);
+    QString args = QLatin1String("-d %1 -v %2 -x %3 -y %4 -w %5 -h %6 %7");
+    args = args.arg(QString::number(mRecordingDuration))
+        .arg(mRecordCursor ? QStringLiteral("-c") : QString())
+        .arg(QString::number(mView->x()))
+        .arg(QString::number(mView->y()))
+        .arg(QString::number(mView->width()))
+        .arg(QString::number(mView->height()))
+        .arg(mByzanzOutputFileName);
 
-    if (!mByzanzProcess.waitForStarted(1000)) {
-        QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
-        message = message.arg(mByzanzProcessName).arg(args.join(QLatin1Char(' '))).arg(mByzanzProcess.errorString());
-        QFAIL(qPrintable(message));
-    }
+    startProcess(mByzanzProcess, mByzanzProcessName, args);
 }
 
 void GifRecorder::waitForFinish()
 {
     // Give it an extra couple of seconds on top of its recording duration.
-    const qreal waitDuration = (mRecordingDuration + 2) * 1000;
+    const int waitDuration = (mRecordingDuration + 2) * 1000;
     QTRY_VERIFY_WITH_TIMEOUT(mByzanzProcessFinished, waitDuration);
 
     if (!QFileInfo::exists(mByzanzOutputFileName)) {
@@ -190,64 +212,37 @@ void GifRecorder::waitForFinish()
     }
 
     if (mHighQuality) {
-        mAvconvProcess.setStandardOutputProcess(&mConvertProcess);
+        QProcess avconvProcess;
+        QProcess convertProcess;
+        avconvProcess.setStandardOutputProcess(&convertProcess);
 
         const QString avconvProcessName = QStringLiteral("avconv");
-        const QString avconvArgs = QString::fromLatin1("%1 -i %2 -r 20 -f image2pipe -vcodec ppm -").arg(avconvProcessName).arg(mByzanzOutputFileName);
-        qCDebug(lcGifRecorder) << "Starting" << avconvProcessName << "with the following arguments:" << avconvArgs;
-        mAvconvProcess.start(avconvArgs);
-        if (!mAvconvProcess.waitForStarted(1000)) {
-            QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
-            message = message.arg(avconvProcessName).arg(avconvArgs).arg(mAvconvProcess.errorString());
-            QFAIL(qPrintable(message));
-        } else {
-            qCDebug(lcGifRecorder) << "Successfully started" << avconvProcessName;
-        }
+        const QString avconvArgs = QString::fromLatin1("-i %1 -r 20 -f image2pipe -vcodec ppm -").arg(mByzanzOutputFileName);
+        startProcess(avconvProcess, avconvProcessName, avconvArgs);
 
         const QString convertProcessName = QStringLiteral("convert");
-        const QString convertArgs = QString::fromLatin1("%1 -delay 5 -loop 0 - %2").arg(convertProcessName).arg(mGifFileName);
-        qCDebug(lcGifRecorder) << "Starting" << convertProcessName << "with the following arguments:" << convertArgs;
-        mConvertProcess.start(convertArgs);
-        if (!mConvertProcess.waitForStarted(1000)) {
-            QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
-            message = message.arg(convertProcessName).arg(convertArgs).arg(mConvertProcess.errorString());
-            QFAIL(qPrintable(message));
-        } else {
-            qCDebug(lcGifRecorder) << "Successfully started" << convertProcessName;
-        }
+        const QString convertArgs = QString::fromLatin1("-delay 5 -loop 0 - %1").arg(mGifFileName);
+        startProcess(convertProcess, convertProcessName, convertArgs);
 
-        if (!mAvconvProcess.waitForFinished(waitDuration)) {
-            const QString message = QString::fromLatin1("%1 failed to finish: %2");
-            QFAIL(qPrintable(message.arg(avconvProcessName).arg(mAvconvProcess.errorString())));
-        } else {
-            qCDebug(lcGifRecorder) << avconvProcessName << "finished";
-        }
-
-        if (!mConvertProcess.waitForFinished(waitDuration)) {
-            const QString message = QString::fromLatin1("%1 failed to finish: %2");
-            QFAIL(qPrintable(message.arg(convertProcessName).arg(mConvertProcess.errorString())));
-        } else {
-            qCDebug(lcGifRecorder) << convertProcessName << "finished";
-        }
+        waitForProcessToFinish(avconvProcess, avconvProcessName, waitDuration);
+        waitForProcessToFinish(convertProcess, convertProcessName, waitDuration);
 
         const QString gifsicleProcessName = QStringLiteral("gifsicle");
-        const QString gifsicleArgs = QString::fromLatin1("%1 -b -O %2").arg(gifsicleProcessName).arg(mGifFileName);
-        qCDebug(lcGifRecorder) << "Starting" << gifsicleProcessName << "with the following arguments:" << gifsicleArgs;
-        mGifsicleProcess.start(gifsicleArgs);
-        if (!mGifsicleProcess.waitForStarted(1000)) {
-            QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
-            message = message.arg(gifsicleProcessName).arg(gifsicleArgs).arg(mGifsicleProcess.errorString());
-            QFAIL(qPrintable(message));
-        } else {
-            qCDebug(lcGifRecorder) << "Successfully started" << gifsicleProcessName;
-        }
+        const QString verbose = lcGifRecorder().isDebugEnabled() ? QStringLiteral("-V") : QString();
 
-        if (!mGifsicleProcess.waitForFinished(waitDuration)) {
-            const QString message = QString::fromLatin1("%1 failed to finish: %2");
-            QFAIL(qPrintable(message.arg(gifsicleProcessName).arg(mGifsicleProcess.errorString())));
-        } else {
-            qCDebug(lcGifRecorder) << gifsicleProcessName << "finished";
-        }
+        // --colors 256 stops the warning about local color tables being used, and results in smaller files,
+        // but it seems to affect the duration of the GIF (checked with exiftool), so we don't use it.
+        // For example, the slider GIF has the following attributes with and without the option:
+        //                With                    Without
+        // Frame Count    57                      61
+        // Duration       2.85 seconds            3.05 seconds
+        // File size      11 kB                   13 kB
+        const QString gifsicleArgs = QString::fromLatin1("%1 -b -O %2").arg(verbose).arg(mGifFileName);
+        QProcess gifsicleProcess;
+        if (lcGifRecorder().isDebugEnabled())
+            gifsicleProcess.setProcessChannelMode(QProcess::ForwardedChannels);
+        startProcess(gifsicleProcess, gifsicleProcessName, gifsicleArgs);
+        waitForProcessToFinish(gifsicleProcess, gifsicleProcessName, waitDuration);
 
         if (QFile::exists(mByzanzOutputFileName)) {
             QVERIFY(QFile::remove(mByzanzOutputFileName));

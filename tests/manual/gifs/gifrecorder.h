@@ -82,10 +82,6 @@ private:
     const QString mByzanzProcessName;
     QProcess mByzanzProcess;
     bool mByzanzProcessFinished;
-
-    QProcess mAvconvProcess;
-    QProcess mConvertProcess;
-    QProcess mGifsicleProcess;
 };
 
 #endif // GIFRECORDER_H
