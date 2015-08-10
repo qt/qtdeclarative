@@ -52,6 +52,8 @@ private slots:
     void tumblerWrap();
     void slider();
     void busyIndicator();
+    void switchGif();
+    void button();
 
 private:
     QQuickView view;
@@ -149,7 +151,7 @@ void tst_Gifs::slider()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setRecordingDuration(4);
     gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
     gifRecorder.setView(&view);
@@ -289,6 +291,46 @@ void tst_Gifs::busyIndicator()
     QTest::qWait(800 * 2);
 
     busyIndicator->setProperty("running", false);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::switchGif()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setQmlFileName("qtquickcontrols2-switch.qml");
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.8, view.height() / 2), 0);
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.2, view.height() / 2), 800);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::button()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() / 2, view.height() / 2), 0);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() / 2, view.height() / 2), 700);
 
     gifRecorder.waitForFinish();
 }

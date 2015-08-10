@@ -47,6 +47,8 @@ QT_BEGIN_NAMESPACE
     \ingroup indicators
     \brief A busy indicator.
 
+    \image qtquickcontrols2-busyindicator.gif
+
     The busy indicator should be used to indicate activity while content is
     being loaded or the UI is blocked waiting for a resource to become available.
 

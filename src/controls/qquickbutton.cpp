@@ -47,6 +47,8 @@ QT_BEGIN_NAMESPACE
     \ingroup buttons
     \brief A button control.
 
+    \image qtquickcontrols2-button.gif
+
     Button presents a push-button control that can be pushed or clicked by
     the user. Buttons are normally used to perform an action, or to answer
     a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
