@@ -352,7 +352,11 @@ void tst_QQmlEngineDebugService::initTestCase()
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     m_dbg = new QQmlEngineDebugClient(m_conn);
+    QList<QQmlDebugClient *> others = m_conn->createOtherClients();
     QTRY_COMPARE(m_dbg->state(), QQmlEngineDebugClient::Enabled);
+    foreach (QQmlDebugClient *other, others)
+        QCOMPARE(other->state(), QQmlDebugClient::Unavailable);
+    qDeleteAll(others);
 }
 
 void tst_QQmlEngineDebugService::cleanupTestCase()

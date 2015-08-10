@@ -373,11 +373,17 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool 
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerClient(m_connection);
+    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
     QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    foreach (QQmlDebugClient *other, others)
+        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
+                                                    QQmlDebugClient::Enabled);
+    qDeleteAll(others);
 }
 
 void tst_QQmlProfilerService::checkTraceReceived()

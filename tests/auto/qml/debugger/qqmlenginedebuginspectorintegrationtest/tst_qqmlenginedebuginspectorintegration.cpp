@@ -111,9 +111,14 @@ void tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
     QQmlDebugConnection *m_connection = new QQmlDebugConnection(this);
     m_inspectorClient = new QQmlInspectorClient(m_connection);
     m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
+    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
     QVERIFY(m_connection->waitForConnected());
+    foreach (QQmlDebugClient *other, others)
+        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
+                                                    QQmlDebugClient::Enabled);
+    qDeleteAll(others);
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::cleanup()

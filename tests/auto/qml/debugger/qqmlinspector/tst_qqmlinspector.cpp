@@ -91,11 +91,16 @@ void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */, bool re
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlInspectorClient(m_connection);
+    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
     QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
+    foreach (QQmlDebugClient *other, others)
+        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
+                                                    QQmlDebugClient::Enabled);
+    qDeleteAll(others);
 }
 
 void tst_QQmlInspector::cleanup()

@@ -41,6 +41,7 @@
 #include <QtNetwork/qnetworkproxy.h>
 #include <QtNetwork/qlocalserver.h>
 #include <QtNetwork/qlocalsocket.h>
+#include <QtQml/qqmldebug.h>
 
 const int protocolVersion = 1;
 const QString serverId = QLatin1String("QDeclarativeDebugServer");
@@ -70,6 +71,7 @@ public:
     bool gotHello;
     QHash <QString, float> serverPlugins;
     QHash<QString, QQmlDebugClient *> plugins;
+    QStringList removedPlugins;
 
     void advertisePlugins();
     void connectDeviceSignals();
@@ -224,7 +226,11 @@ void QQmlDebugConnectionPrivate::readyRead()
             QHash<QString, QQmlDebugClient *>::Iterator iter =
                     plugins.find(name);
             if (iter == plugins.end()) {
-                qWarning() << "QQmlDebugConnection: Message received for missing plugin" << name;
+                // We can get more messages for plugins we have removed because it takes time to
+                // send the advertisement message but the removal is instant locally.
+                if (!removedPlugins.contains(name))
+                    qWarning() << "QQmlDebugConnection: Message received for missing plugin"
+                               << name;
             } else {
                 (*iter)->messageReceived(message);
             }
@@ -440,6 +446,7 @@ QQmlDebugClient::QQmlDebugClient(const QString &name,
         qWarning() << "QQmlDebugClient: Conflicting plugin name" << name;
         d->connection = 0;
     } else {
+        d->connection->d->removedPlugins.removeAll(name);
         d->connection->d->plugins.insert(name, this);
         d->connection->d->advertisePlugins();
     }
@@ -449,6 +456,7 @@ QQmlDebugClient::~QQmlDebugClient()
 {
     if (d->connection && d->connection->d) {
         d->connection->d->plugins.remove(d->name);
+        d->connection->d->removedPlugins.append(d->name);
         d->connection->d->advertisePlugins();
     }
     delete d;
@@ -498,6 +506,24 @@ void QQmlDebugClient::sendMessage(const QByteArray &message)
     pack << d->name << message;
     d->connection->d->protocol->send(pack);
     d->connection->flush();
+}
+
+QList<QQmlDebugClient *> QQmlDebugConnection::createOtherClients()
+{
+    QList<QQmlDebugClient *> ret;
+    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices()) {
+        if (!d->plugins.contains(service))
+            ret << new QQmlDebugClient(service, this);
+    }
+    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices()) {
+        if (!d->plugins.contains(service))
+            ret << new QQmlDebugClient(service, this);
+    }
+    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices()) {
+        if (!d->plugins.contains(service))
+            ret << new QQmlDebugClient(service, this);
+    }
+    return ret;
 }
 
 void QQmlDebugClient::stateChanged(State)

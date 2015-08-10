@@ -831,6 +831,7 @@ void tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode, bool restrict
     connection = new QQmlDebugConnection();
     process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     client = new QJSDebugClient(connection);
+    QList<QQmlDebugClient *> others = connection->createOtherClients();
 
     const char *args = 0;
     if (blockMode)
@@ -849,6 +850,11 @@ void tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode, bool restrict
 
     if (client->state() != QQmlDebugClient::Enabled)
         QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(enabled())));
+
+    foreach (QQmlDebugClient *otherClient, others)
+        QCOMPARE(otherClient->state(), restrictServices ? QQmlDebugClient::Unavailable :
+                                                          QQmlDebugClient::Enabled);
+    qDeleteAll(others);
 }
 
 void tst_QQmlDebugJS::cleanup()

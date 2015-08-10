@@ -36,6 +36,7 @@
 
 #include <QtNetwork/qtcpsocket.h>
 
+class QQmlDebugClient;
 class QQmlDebugConnectionPrivate;
 class QQmlDebugConnection : public QIODevice
 {
@@ -60,6 +61,7 @@ public:
     bool waitForConnected(int msecs = 30000);
 
     QString stateString() const;
+    QList<QQmlDebugClient *> createOtherClients();
 
 signals:
     void connected();

@@ -167,11 +167,16 @@ void tst_QQmlEngineControl::connect(const QString &testFile, bool restrictServic
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlEngineControlClient(m_connection);
+    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
 
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    foreach (QQmlDebugClient *other, others)
+        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
+                                                    QQmlDebugClient::Enabled);
+    qDeleteAll(others);
 }
 
 void tst_QQmlEngineControl::cleanup()
