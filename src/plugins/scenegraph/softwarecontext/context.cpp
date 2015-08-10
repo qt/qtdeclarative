@@ -223,13 +223,9 @@ void RenderContext::invalidate()
     QSGRenderContext::invalidate();
 }
 
-QSGTexture *RenderContext::createTexture(const QImage &image) const
+QSGTexture *RenderContext::createTexture(const QImage &image, uint flags) const
 {
-    return new PixmapTexture(image);
-}
-
-QSGTexture *RenderContext::createTextureNoAtlas(const QImage &image) const
-{
+    Q_UNUSED(flags)
     return new PixmapTexture(image);
 }
 

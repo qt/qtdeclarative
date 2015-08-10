@@ -78,8 +78,7 @@ public:
     void initializeIfNeeded();
     void invalidate();
     void renderNextFrame(QSGRenderer *renderer, GLuint fbo);
-    QSGTexture *createTexture(const QImage &image) const;
-    QSGTexture *createTextureNoAtlas(const QImage &image) const;
+    QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const;
     QSGRenderer *createRenderer();
 
     QWindow *currentWindow;
