@@ -42,6 +42,7 @@
 #include <QQuickView>
 #include <QDir>
 #include <QString>
+#include <QTimer>
 
 class GifRecorder : public QObject
 {
@@ -79,9 +80,9 @@ private:
     int mRecordingDuration;
     bool mRecordCursor;
 
-    const QString mByzanzProcessName;
     QProcess mByzanzProcess;
     bool mByzanzProcessFinished;
+    QTimer mEventTimer;
 };
 
 #endif // GIFRECORDER_H

@@ -57,13 +57,16 @@
 
 Q_LOGGING_CATEGORY(lcGifRecorder, "qt.gifrecorder")
 
+namespace {
+    static const char *byzanzProcessName = "byzanz-record";
+}
+
 GifRecorder::GifRecorder() :
     QObject(Q_NULLPTR),
     mView(Q_NULLPTR),
     mHighQuality(false),
     mRecordingDuration(0),
     mRecordCursor(false),
-    mByzanzProcessName(QStringLiteral("byzanz-record")),
     mByzanzProcessFinished(false)
 {
     if (lcGifRecorder().isDebugEnabled()) {
@@ -196,14 +199,27 @@ void GifRecorder::start()
         .arg(QString::number(mView->height()))
         .arg(mByzanzOutputFileName);
 
-    startProcess(mByzanzProcess, mByzanzProcessName, args);
+
+    // https://bugs.launchpad.net/ubuntu/+source/byzanz/+bug/1483581
+    // It seems that byzanz-record will cut a recording short if there are no
+    // screen repaints, no matter what format it outputs. This can be tested
+    // manually from the command line by recording any section of the screen
+    // without moving the mouse and then running avprobe on the resulting .flv.
+    // Our workaround is to force view updates.
+    connect(&mEventTimer, SIGNAL(timeout()), mView, SLOT(update()));
+    mEventTimer.start(100);
+
+    startProcess(mByzanzProcess, byzanzProcessName, args);
 }
 
 void GifRecorder::waitForFinish()
 {
     // Give it an extra couple of seconds on top of its recording duration.
-    const int waitDuration = (mRecordingDuration + 2) * 1000;
+    const int recordingDurationMs = mRecordingDuration * 1000;
+    const int waitDuration = recordingDurationMs + 2000;
     QTRY_VERIFY_WITH_TIMEOUT(mByzanzProcessFinished, waitDuration);
+
+    mEventTimer.stop();
 
     if (!QFileInfo::exists(mByzanzOutputFileName)) {
         const QString message = QString::fromLatin1(
@@ -253,11 +269,11 @@ void GifRecorder::waitForFinish()
 void GifRecorder::onByzanzError()
 {
     const QString message = QString::fromLatin1("%1 failed to finish: %2");
-    QFAIL(qPrintable(message.arg(mByzanzProcessName).arg(mByzanzProcess.errorString())));
+    QFAIL(qPrintable(message.arg(byzanzProcessName).arg(mByzanzProcess.errorString())));
 }
 
 void GifRecorder::onByzanzFinished()
 {
-    qCDebug(lcGifRecorder) << mByzanzProcessName << "finished";
+    qCDebug(lcGifRecorder) << byzanzProcessName << "finished";
     mByzanzProcessFinished = true;
 }
