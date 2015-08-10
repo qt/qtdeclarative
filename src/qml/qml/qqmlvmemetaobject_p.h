@@ -72,7 +72,6 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlVMEMetaData
 {
-    short varPropertyCount;
     short propertyCount;
     short aliasCount;
     short signalCount;
@@ -107,6 +106,10 @@ struct QQmlVMEMetaData
         int valueType() const {
             return (valueTypeIndex() != -1) ? propType : 0;
         }
+    };
+
+    enum {
+        VarPropertyType = -1
     };
 
     struct PropertyData {
@@ -198,7 +201,6 @@ public:
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue properties;
-    int firstVarPropertyIndex;
     bool propertiesInitialized;
     inline void allocateProperties();
     inline bool ensurePropertiesAllocated();

@@ -5007,6 +5007,12 @@ void tst_qqmlecmascript::propertyVarCircular()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
+    {
+        QCOMPARE(object->property("canaryInt"), QVariant(5));
+        QVariant canaryResourceVariant = object->property("canaryResource");
+        QVERIFY(canaryResourceVariant.isValid());
+    }
+
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
     QCoreApplication::processEvents();
     QCOMPARE(object->property("canaryInt"), QVariant(5));

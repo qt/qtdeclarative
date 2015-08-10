@@ -780,15 +780,18 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     int propertyIdx = 0;
     for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
 
-        if (p->type == QV4::CompiledData::Property::Alias ||
-            p->type == QV4::CompiledData::Property::Var)
+        if (p->type == QV4::CompiledData::Property::Alias)
             continue;
 
         int propertyType = 0;
         int vmePropertyType = 0;
         quint32 propertyFlags = 0;
 
-        if (p->type < builtinTypeCount) {
+        if (p->type == QV4::CompiledData::Property::Var) {
+            propertyType = QMetaType::QVariant;
+            vmePropertyType = QQmlVMEMetaData::VarPropertyType;
+            propertyFlags = QQmlPropertyData::IsVarProperty;
+        } else if (p->type < builtinTypeCount) {
             propertyType = builtinTypes[p->type].metaType;
             vmePropertyType = propertyType;
 
@@ -850,30 +853,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
         (vmd->propertyData() + vmd->propertyCount)->propertyType = vmePropertyType;
         vmd->propertyCount++;
-    }
-
-    // Now do var properties
-    propertyIdx = 0;
-    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
-
-        if (p->type != QV4::CompiledData::Property::Var)
-            continue;
-
-        quint32 propertyFlags = QQmlPropertyData::IsVarProperty;
-        if (!(p->flags & QV4::CompiledData::Property::IsReadOnly))
-            propertyFlags |= QQmlPropertyData::IsWritable;
-
-        VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-        (vmd->propertyData() + vmd->propertyCount)->propertyType = QMetaType::QVariant;
-        vmd->propertyCount++;
-        ((QQmlVMEMetaData *)dynamicData.data())->varPropertyCount++;
-
-        QString propertyName = stringAt(p->nameIndex);
-        if (propertyIdx == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
-        cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                              QMetaType::QVariant, effectiveSignalIndex);
-
-        effectiveSignalIndex++;
     }
 
     // Alias property count.  Actual data is setup in buildDynamicMetaAliases
