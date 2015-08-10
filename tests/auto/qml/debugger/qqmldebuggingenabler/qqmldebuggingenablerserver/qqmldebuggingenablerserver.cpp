@@ -54,6 +54,9 @@ int main(int argc, char *argv[])
           portTo = arguments.takeFirst().toInt();
       }
 
+      if (arguments.size() && arguments.takeFirst() == QLatin1String("-services"))
+          QQmlDebuggingEnabler::setServices(arguments);
+
       if (!portFrom || !portTo)
           qFatal("Port range has to be specified.");
 

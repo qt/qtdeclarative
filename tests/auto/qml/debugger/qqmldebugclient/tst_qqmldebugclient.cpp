@@ -68,10 +68,20 @@ private slots:
 void tst_QQmlDebugClient::initTestCase()
 {
     QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
+    QQmlDebugConnector::setServices(QStringList()
+                                    << QStringLiteral("tst_QQmlDebugClient::handshake()"));
     QTest::ignoreMessage(QtWarningMsg,
                          "QML debugger: Cannot set plugin key after loading the plugin.");
 
     m_service = new QQmlDebugTestService("tst_QQmlDebugClient::handshake()");
+
+    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices())
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices())
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices())
+        QCOMPARE(QQmlDebugConnector::instance()->service(service), (QQmlDebugService *)0);
+
     const QString waitingMsg = QString("QML Debugger: Waiting for connection on port %1...").arg(PORT);
     QTest::ignoreMessage(QtDebugMsg, waitingMsg.toLatin1().constData());
     QQmlDebuggingEnabler::startTcpDebugServer(PORT);

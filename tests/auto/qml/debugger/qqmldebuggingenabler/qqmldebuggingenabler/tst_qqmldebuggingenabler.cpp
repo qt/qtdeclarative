@@ -53,13 +53,14 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void cleanup();
-    void qmlscene();
-    void qmlsceneBlock();
 
+    void qmlscene_data();
+    void qmlscene();
+    void custom_data();
     void custom();
-    void customBlock();
 
 private:
+    void data();
     QQmlDebugProcess *process;
     QQmlDebugConnection *connection;
     QTime t;
@@ -142,24 +143,92 @@ void tst_QQmlDebuggingEnabler::cleanup()
     connection = 0;
 }
 
-void tst_QQmlDebuggingEnabler::qmlscene()
+void tst_QQmlDebuggingEnabler::data()
 {
-    QVERIFY(init(false, true, 5555, 5565));
+    QTest::addColumn<bool>("blockMode");
+    QTest::addColumn<QStringList>("services");
+
+    QTest::newRow("noblock,all") << false << QStringList();
+    QTest::newRow("block,all") << true << QStringList();
+    QTest::newRow("noblock,debugger") << false << QQmlDebuggingEnabler::debuggerServices();
+    QTest::newRow("block,debugger") << true << QQmlDebuggingEnabler::debuggerServices();
+    QTest::newRow("noblock,inspector") << false << QQmlDebuggingEnabler::inspectorServices();
+    QTest::newRow("block,inspector") << true << QQmlDebuggingEnabler::inspectorServices();
+    QTest::newRow("noblock,profiler") << false << QQmlDebuggingEnabler::profilerServices();
+    QTest::newRow("block,profiler") << true << QQmlDebuggingEnabler::profilerServices();
+    QTest::newRow("noblock,debugger+inspector")
+            << false << QQmlDebuggingEnabler::debuggerServices() +
+                        QQmlDebuggingEnabler::inspectorServices();
+    QTest::newRow("block,debugger+inspector")
+            << true << QQmlDebuggingEnabler::debuggerServices() +
+                       QQmlDebuggingEnabler::inspectorServices();
+
 }
 
-void tst_QQmlDebuggingEnabler::qmlsceneBlock()
+void tst_QQmlDebuggingEnabler::qmlscene_data()
 {
-    QVERIFY(init(true, true, 5555, 5565));
+    data();
+}
+
+void tst_QQmlDebuggingEnabler::qmlscene()
+{
+    QFETCH(bool, blockMode);
+    QFETCH(QStringList, services);
+
+    connection = new QQmlDebugConnection();
+    QList<QQmlDebugClient *> clients = connection->createOtherClients();
+    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                                   this);
+    process->setMaximumBindErrors(1);
+    process->start(QStringList()
+                   << QString::fromLatin1("-qmljsdebugger=port:5555,5565%1%2%3")
+                      .arg(blockMode ? QLatin1String(",block") : QString())
+                      .arg(services.isEmpty() ? QString() : QString::fromLatin1(",services:"))
+                      .arg(services.isEmpty() ? QString() : services.join(","))
+                   << testFile(QLatin1String("test.qml")));
+
+    QVERIFY(process->waitForSessionStart());
+    connection->connectToHost("127.0.0.1", process->debugPort());
+    QVERIFY(connection->waitForConnected());
+    foreach (QQmlDebugClient *client, clients)
+        QCOMPARE(client->state(), (services.isEmpty() || services.contains(client->name())) ?
+                     QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
+}
+
+void tst_QQmlDebuggingEnabler::custom_data()
+{
+    data();
 }
 
 void tst_QQmlDebuggingEnabler::custom()
 {
-    QVERIFY(init(false, false, 5555, 5565));
-}
+    QFETCH(bool, blockMode);
+    QFETCH(QStringList, services);
+    const int portFrom = 5555;
+    const int portTo = 5565;
 
-void tst_QQmlDebuggingEnabler::customBlock()
-{
-    QVERIFY(init(true, false, 5555, 5565));
+    connection = new QQmlDebugConnection();
+    QList<QQmlDebugClient *> clients = connection->createOtherClients();
+    process = new QQmlDebugProcess(QCoreApplication::applicationDirPath() +
+                                   QLatin1String("/qqmldebuggingenablerserver"), this);
+    process->setMaximumBindErrors(portTo - portFrom);
+
+    QStringList args;
+    if (blockMode)
+        args << QLatin1String("-block");
+
+    args << QString::number(portFrom) << QString::number(portTo);
+    if (!services.isEmpty())
+        args << QLatin1String("-services") << services;
+
+    process->start(args);
+
+    QVERIFY(process->waitForSessionStart());
+    connection->connectToHost("127.0.0.1", process->debugPort());
+    QVERIFY(connection->waitForConnected());
+    foreach (QQmlDebugClient *client, clients)
+        QCOMPARE(client->state(), (services.isEmpty() || services.contains(client->name())) ?
+                     QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
 }
 
 QTEST_MAIN(tst_QQmlDebuggingEnabler)
