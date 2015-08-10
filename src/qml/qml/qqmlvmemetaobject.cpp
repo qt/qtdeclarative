@@ -1119,7 +1119,10 @@ void QQmlVMEMetaObject::allocateProperties()
     QQmlEngine *qml = qmlEngine(object);
     Q_ASSERT(qml);
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(qml->handle());
-    properties.set(v4, QV4::MemberData::reallocate(v4, 0, metaData->propertyCount));
+    QV4::Heap::MemberData *data = QV4::MemberData::reallocate(v4, 0, metaData->propertyCount);
+    properties.set(v4, data);
+    for (uint i = 0; i < data->size; ++i)
+        data->data[i] = QV4::Encode::undefined();
     propertiesInitialized = true;
 }
 
