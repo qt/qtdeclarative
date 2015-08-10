@@ -5709,9 +5709,10 @@ void tst_qqmlecmascript::deletedEngine()
 
     delete engine;
 
-    QCOMPARE(object->property("a").toInt(), 117);
+    QCOMPARE(object->property("a").toInt(), 0);
     object->setProperty("b", QVariant(10));
-    QCOMPARE(object->property("a").toInt(), 117);
+    object->setProperty("b", QVariant());
+    QCOMPARE(object->property("a").toInt(), 0);
 
     delete object;
 }
