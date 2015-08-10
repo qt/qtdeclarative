@@ -189,6 +189,7 @@ QQuickShaderEffectSource::QQuickShaderEffectSource(QQuickItem *parent)
     , m_mipmap(false)
     , m_recursive(false)
     , m_grab(true)
+    , m_textureMirroring(MirrorVertically)
 {
     setFlag(ItemHasContents);
 }
@@ -543,6 +544,37 @@ void QQuickShaderEffectSource::setRecursive(bool enabled)
 }
 
 /*!
+    \qmlproperty enumeration QtQuick::ShaderEffectSource::textureMirroring
+    \since 5.6
+
+    This property defines how the generated OpenGL texture should be mirrored.
+    The default value is \c{ShaderEffectSource.MirrorVertically}.
+    Custom mirroring can be useful if the generated texture is directly accessed by custom shaders,
+    such as those specified by ShaderEffect. Mirroring has no effect on the UI representation of
+    the ShaderEffectSource item itself.
+
+    \list
+    \li ShaderEffectSource.NoMirroring - No mirroring
+    \li ShaderEffectSource.MirrorHorizontally - The generated texture is flipped along X-axis.
+    \li ShaderEffectSource.MirrorVertically - The generated texture is flipped along Y-axis.
+    \endlist
+*/
+
+QQuickShaderEffectSource::TextureMirroring QQuickShaderEffectSource::textureMirroring() const
+{
+    return QQuickShaderEffectSource::TextureMirroring(m_textureMirroring);
+}
+
+void QQuickShaderEffectSource::setTextureMirroring(TextureMirroring mirroring)
+{
+    if (mirroring == QQuickShaderEffectSource::TextureMirroring(m_textureMirroring))
+        return;
+    m_textureMirroring = mirroring;
+    update();
+    emit textureMirroringChanged();
+}
+
+/*!
     \qmlmethod QtQuick::ShaderEffectSource::scheduleUpdate()
 
     Schedules a re-rendering of the texture for the next frame.
@@ -642,6 +674,8 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     m_texture->setRecursive(m_recursive);
     m_texture->setFormat(GLenum(m_format));
     m_texture->setHasMipmaps(m_mipmap);
+    m_texture->setMirrorHorizontal(m_textureMirroring & MirrorHorizontally);
+    m_texture->setMirrorVertical(m_textureMirroring & MirrorVertically);
 
     if (m_grab)
         m_texture->scheduleUpdate();

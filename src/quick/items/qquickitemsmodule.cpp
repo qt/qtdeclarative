@@ -273,6 +273,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlow, 6>(uri, 2, 6, "Flow");
     qmlRegisterUncreatableType<QQuickEnterKeyAttached, 6>(uri, 2, 6, "EnterKey",
                                                            QQuickEnterKeyAttached::tr("EnterKey is only available via attached properties"));
+    qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
 }
 
 static void initResources()

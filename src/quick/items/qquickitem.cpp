@@ -7488,6 +7488,7 @@ QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     , m_effectComponent(0)
     , m_effect(0)
     , m_effectSource(0)
+    , m_textureMirroring(QQuickShaderEffectSource::MirrorVertically)
 {
 }
 
@@ -7559,6 +7560,7 @@ void QQuickItemLayer::activate()
     m_effectSource->setMipmap(m_mipmap);
     m_effectSource->setWrapMode(m_wrapMode);
     m_effectSource->setFormat(m_format);
+    m_effectSource->setTextureMirroring(m_textureMirroring);
 
     if (m_effectComponent)
         activateEffect();
@@ -7809,6 +7811,35 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
         m_effectSource->setWrapMode(m_wrapMode);
 
     emit wrapModeChanged(mode);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Item::layer.textureMirroring
+    \since 5.6
+
+    This property defines how the generated OpenGL texture should be mirrored.
+    The default value is \c{ShaderEffectSource.MirrorVertically}.
+    Custom mirroring can be useful if the generated texture is directly accessed by custom shaders,
+    such as those specified by ShaderEffect. If no effect is specified for the layered
+    item, mirroring has no effect on the UI representation of the item.
+
+    \list
+    \li ShaderEffectSource.NoMirroring - No mirroring
+    \li ShaderEffectSource.MirrorHorizontally - The generated texture is flipped along X-axis.
+    \li ShaderEffectSource.MirrorVertically - The generated texture is flipped along Y-axis.
+    \endlist
+ */
+
+void QQuickItemLayer::setTextureMirroring(QQuickShaderEffectSource::TextureMirroring mirroring)
+{
+    if (mirroring == m_textureMirroring)
+        return;
+    m_textureMirroring = mirroring;
+
+    if (m_effectSource)
+        m_effectSource->setTextureMirroring(m_textureMirroring);
+
+    emit textureMirroringChanged(mirroring);
 }
 
 /*!

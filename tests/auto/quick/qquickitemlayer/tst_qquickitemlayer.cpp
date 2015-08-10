@@ -87,7 +87,12 @@ private slots:
     void itemEffect();
     void rectangleEffect();
 
+    void textureMirroring_data();
+    void textureMirroring();
+
 private:
+    void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
+
     bool m_isMesaSoftwareRasterizer;
     int m_mesaVersion;
 };
@@ -434,6 +439,94 @@ void tst_QQuickItemLayer::rectangleEffect()
     QCOMPARE(fb.pixel(0, 100), qRgb(0, 0, 0xff));
 }
 
+void tst_QQuickItemLayer::textureMirroring_data()
+{
+    QTest::addColumn<int>("mirroring");
+
+    QTest::newRow("no mirroring") << 0;
+    QTest::newRow("horizontal") << 1;
+    QTest::newRow("vertical") << 2;
+    QTest::newRow("horizontal | vertical") << 3;
+}
+
+void tst_QQuickItemLayer::textureMirroring()
+{
+    QFETCH(int, mirroring);
+
+    QQuickView view;
+    view.setSource(testFileUrl("TextureMirroring.qml"));
+
+    QQuickItem *child = view.contentItem()->childItems().at(0);
+    child->setProperty("mirroring", mirroring);
+
+    view.show();
+
+    QTest::qWaitForWindowExposed(&view);
+
+    QImage fb = view.grabWindow();
+
+    // Mirroring should have no visual effect on layered item without shader effect
+    mirroringCheck(mirroring, 0, false, fb);
+
+    // Mirroring should have visual effect on layered item with shader effect
+    mirroringCheck(mirroring, 50, true, fb);
+
+    // Mirroring should have no visual effect on source item for ShaderEffectSource
+    mirroringCheck(mirroring, 100, false, fb);
+
+    // Mirroring should have no visual effect on ShaderEffectSource item
+    mirroringCheck(mirroring, 150, false, fb);
+
+    // Mirroring should have visual effect on ShaderEffect item itself
+    mirroringCheck(mirroring, 200, true, fb);
+}
+
+void tst_QQuickItemLayer::mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb)
+{
+    int offset = 10;
+    int spacing = 25;
+
+    if (shouldMirror) {
+        switch (mirroring) {
+        case 0: { // No mirroring -> Visually Y gets swapped, X is default
+            QCOMPARE(fb.pixel(x + offset, offset), qRgb(0, 0xff, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset), qRgb(0, 0, 0xff));
+            QCOMPARE(fb.pixel(x + offset, offset + spacing), qRgb(0, 0, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset + spacing), qRgb(0xff, 0, 0));
+            break;
+        }
+        case 1: { // Horizontal mirroring -> Visually both X and Y get swapped, as neither is default
+            QCOMPARE(fb.pixel(x + offset, offset), qRgb(0, 0, 0xff));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset), qRgb(0, 0xff, 0));
+            QCOMPARE(fb.pixel(x + offset, offset + spacing), qRgb(0xff, 0, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset + spacing), qRgb(0, 0, 0));
+            break;
+        }
+        case 2: { // Vertical mirroring -> The default case, nothing gets swapped
+            QCOMPARE(fb.pixel(x + offset, offset), qRgb(0, 0, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset), qRgb(0xff, 0, 0));
+            QCOMPARE(fb.pixel(x + offset, offset + spacing), qRgb(0, 0xff, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset + spacing), qRgb(0, 0, 0xff));
+            break;
+        }
+        case 3: { // Both axes mirrored -> Visually X gets swapped, Y is default
+            QCOMPARE(fb.pixel(x + offset, offset), qRgb(0xff, 0, 0));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset), qRgb(0, 0, 0));
+            QCOMPARE(fb.pixel(x + offset, offset + spacing), qRgb(0, 0, 0xff));
+            QCOMPARE(fb.pixel(x + offset + spacing, offset + spacing), qRgb(0, 0xff, 0));
+            break;
+        }
+        default:
+            qWarning() << "Invalid case!";
+            break;
+        }
+    } else {
+        QCOMPARE(fb.pixel(x + offset, offset), qRgb(0, 0, 0));
+        QCOMPARE(fb.pixel(x + offset + spacing, offset), qRgb(0xff, 0, 0));
+        QCOMPARE(fb.pixel(x + offset, offset + spacing), qRgb(0, 0xff, 0));
+        QCOMPARE(fb.pixel(x + offset + spacing, offset + spacing), qRgb(0, 0, 0xff));
+    }
+}
 
 QTEST_MAIN(tst_QQuickItemLayer)
 
