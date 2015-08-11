@@ -457,8 +457,11 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
     return v->d()->data.value<QRectF>();
 }
 
-int QQmlVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
+int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void **a)
 {
+    Q_ASSERT(o == object);
+    Q_UNUSED(o);
+
     int id = _id;
     if (c == QMetaObject::WriteProperty && interceptors &&
        !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {

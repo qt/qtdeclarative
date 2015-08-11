@@ -226,7 +226,7 @@ int QQmlDesignerMetaObject::propertyOffset() const
     return cache->propertyOffset();
 }
 
-int QQmlDesignerMetaObject::openMetaCall(QMetaObject::Call call, int id, void **a)
+int QQmlDesignerMetaObject::openMetaCall(QObject *o, QMetaObject::Call call, int id, void **a)
 {
     if ((call == QMetaObject::ReadProperty || call == QMetaObject::WriteProperty)
             && id >= m_type->propertyOffset()) {
@@ -248,14 +248,16 @@ int QQmlDesignerMetaObject::openMetaCall(QMetaObject::Call call, int id, void **
     } else {
         QAbstractDynamicMetaObject *directParent = parent();
         if (directParent)
-            return directParent->metaCall(call, id, a);
+            return directParent->metaCall(o, call, id, a);
         else
             return myObject()->qt_metacall(call, id, a);
     }
 }
 
-int QQmlDesignerMetaObject::metaCall(QMetaObject::Call call, int id, void **a)
+int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id, void **a)
 {
+    Q_ASSERT(myObject() == o);
+
     int metaCallReturnValue = -1;
 
     const QMetaProperty propertyById = QQmlVMEMetaObject::property(id);
@@ -288,9 +290,9 @@ int QQmlDesignerMetaObject::metaCall(QMetaObject::Call call, int id, void **a)
 
     QAbstractDynamicMetaObject *directParent = parent();
     if (directParent && id < directParent->propertyOffset()) {
-        metaCallReturnValue = directParent->metaCall(call, id, a);
+        metaCallReturnValue = directParent->metaCall(o, call, id, a);
     } else {
-        openMetaCall(call, id, a);
+        openMetaCall(o, call, id, a);
     }
 
 
