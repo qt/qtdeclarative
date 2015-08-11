@@ -377,8 +377,10 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
+public:
     QV4::ExecutionEngine *engine;
 
+private:
     QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
     int methodIndexCacheStart;

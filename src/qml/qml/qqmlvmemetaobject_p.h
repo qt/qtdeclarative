@@ -239,7 +239,7 @@ public:
 
     QQmlPropertyValueInterceptor *interceptors;
 
-    QV4::PersistentValue *v8methods;
+    QV4::PersistentValue *methods;
     QV4::ReturnedValue method(int);
 
     QV4::ReturnedValue readVarProperty(int);
