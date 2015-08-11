@@ -107,8 +107,6 @@ private:
     int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QStringList breakOnSignals;
-    QMap<int, QV4::Debugging::Debugger *> debuggerMap;
-    static int debuggerIndex;
     static int sequence;
     const int version;
     QV4DataCollector::Refs collectedRefs;
