@@ -591,6 +591,7 @@ private:
     void nodeWasRemoved(Node *node);
     void nodeWasAdded(QSGNode *node, Node *shadowParent);
     BatchRootInfo *batchRootInfo(Node *node);
+    void updateLineWidth(QSGGeometry *g);
 
     inline Batch *newBatch();
     void invalidateAndRecycleBatch(Batch *b);

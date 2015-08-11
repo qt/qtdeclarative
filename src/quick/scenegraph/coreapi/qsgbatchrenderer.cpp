@@ -1518,6 +1518,7 @@ void Renderer::prepareOpaqueBatches()
 
             if (gni->clipList() == gnj->clipList()
                     && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
+                    && (gni->geometry()->drawingMode() != GL_LINES || gni->geometry()->lineWidth() == gnj->geometry()->lineWidth())
                     && gni->geometry()->attributes() == gnj->geometry()->attributes()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
@@ -1616,6 +1617,7 @@ void Renderer::prepareAlphaBatches()
 
             if (gni->clipList() == gnj->clipList()
                     && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
+                    && (gni->geometry()->drawingMode() != GL_LINES || gni->geometry()->lineWidth() == gnj->geometry()->lineWidth())
                     && gni->geometry()->attributes() == gnj->geometry()->attributes()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
@@ -2278,6 +2280,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
     m_currentMaterial = material;
 
     QSGGeometry* g = gn->geometry();
+    updateLineWidth(g);
     char const *const *attrNames = program->attributeNames();
     for (int i=0; i<batch->drawSets.size(); ++i) {
         const DrawSet &draw = batch->drawSets.at(i);
@@ -2408,24 +2411,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
             offset += a.tupleSize * size_of_type(a.type);
         }
 
-        if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
-            glLineWidth(g->lineWidth());
-#if !defined(QT_OPENGL_ES_2)
-        else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
-            QOpenGLFunctions_1_0 *gl1funcs = 0;
-            QOpenGLFunctions_3_2_Core *gl3funcs = 0;
-            if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile)
-                gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
-            else
-                gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
-            Q_ASSERT(gl1funcs || gl3funcs);
-            if (gl1funcs)
-                gl1funcs->glPointSize(g->lineWidth());
-            else
-                gl3funcs->glPointSize(g->lineWidth());
-        }
-#endif
-
+        updateLineWidth(g);
         if (g->indexCount())
             glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), iOffset);
         else
@@ -2439,6 +2425,27 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
         e = e->nextInBatch;
     }
+}
+
+void Renderer::updateLineWidth(QSGGeometry *g)
+{
+    if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
+        glLineWidth(g->lineWidth());
+#if !defined(QT_OPENGL_ES_2)
+    else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
+        QOpenGLFunctions_1_0 *gl1funcs = 0;
+        QOpenGLFunctions_3_2_Core *gl3funcs = 0;
+        if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile)
+            gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
+        else
+            gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
+        Q_ASSERT(gl1funcs || gl3funcs);
+        if (gl1funcs)
+            gl1funcs->glPointSize(g->lineWidth());
+        else
+            gl3funcs->glPointSize(g->lineWidth());
+    }
+#endif
 }
 
 void Renderer::renderBatches()
