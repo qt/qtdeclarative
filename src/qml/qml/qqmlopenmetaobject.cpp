@@ -35,6 +35,7 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qv8engine_p.h>
 #include <qqmlengine.h>
 #include <qdebug.h>
 
@@ -367,7 +368,7 @@ void QQmlOpenMetaObject::setCached(bool c)
     QQmlData *qmldata = QQmlData::get(d->object, true);
     if (d->cacheProperties) {
         if (!d->type->d->cache)
-            d->type->d->cache = new QQmlPropertyCache(d->type->d->engine, this);
+            d->type->d->cache = new QQmlPropertyCache(QV8Engine::getV4(d->type->d->engine), this);
         qmldata->propertyCache = d->type->d->cache;
         d->type->d->cache->addref();
     } else {

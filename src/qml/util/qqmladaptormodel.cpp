@@ -547,7 +547,7 @@ public:
 
         metaObject = builder.toMetaObject();
         *static_cast<QMetaObject *>(this) = *metaObject;
-        propertyCache = new QQmlPropertyCache(engine, metaObject);
+        propertyCache = new QQmlPropertyCache(QV8Engine::getV4(engine), metaObject);
     }
 };
 

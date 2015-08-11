@@ -231,10 +231,10 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 /*!
 Creates a new empty QQmlPropertyCache.
 */
-QQmlPropertyCache::QQmlPropertyCache(QJSEngine *e)
-: engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
-  signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-  _metaObject(0), argumentsCache(0)
+QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e)
+    : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
+      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
+      _metaObject(0), argumentsCache(0)
 {
     Q_ASSERT(engine);
 }
@@ -242,10 +242,10 @@ QQmlPropertyCache::QQmlPropertyCache(QJSEngine *e)
 /*!
 Creates a new QQmlPropertyCache of \a metaObject.
 */
-QQmlPropertyCache::QQmlPropertyCache(QJSEngine *e, const QMetaObject *metaObject)
-: engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
-  signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-  _metaObject(0), argumentsCache(0)
+QQmlPropertyCache::QQmlPropertyCache(QV4::ExecutionEngine *e, const QMetaObject *metaObject)
+    : engine(e), _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
+      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
+      _metaObject(0), argumentsCache(0)
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
@@ -818,7 +818,7 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
                 data->propType = registerResult == -1 ? QMetaType::UnknownType : registerResult;
             }
         }
-        data->flags |= flagsForPropertyType(data->propType, qobject_cast<QQmlEngine*>(engine));
+        data->flags |= flagsForPropertyType(data->propType, engine->qmlEngine());
     }
 
     data->flags &= ~QQmlPropertyData::NotFullyResolved;
@@ -1134,7 +1134,7 @@ QString QQmlPropertyCache::signalParameterStringForJS(int index, QString *errorS
     }
 
     QString error;
-    QString parameters = signalParameterStringForJS(QV8Engine::getV4(engine), parameterNameList, &error);
+    QString parameters = signalParameterStringForJS(engine, parameterNameList, &error);
 
     A *arguments = static_cast<A *>(signalData->arguments);
     arguments->signalParameterStringForJS = new QString(!error.isEmpty() ? error : parameters);
