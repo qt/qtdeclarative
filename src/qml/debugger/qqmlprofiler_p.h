@@ -99,8 +99,9 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData
     int messageType;        //bit field of QQmlProfilerService::Message
     int detailType;
 
+    // RangeData prefers detailString; RangeLocation prefers detailUrl.
     QString detailString;   //used by RangeData and possibly by RangeLocation
-    QUrl detailUrl;         //used by RangeLocation, overrides detailString
+    QUrl detailUrl;         //used by RangeLocation and possibly by RangeData
 
     int x;                  //used by RangeLocation
     int y;                  //used by RangeLocation
@@ -120,11 +121,11 @@ public:
 
     // Have toByteArrays() construct another RangeData event from the same QString later.
     // This is somewhat pointless but important for backwards compatibility.
-    void startCompiling(const QString &name)
+    void startCompiling(const QUrl &url)
     {
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation | 1 << RangeData),
-                                       1 << Compiling, name, 1, 1));
+                                       1 << Compiling, url, 1, 1));
     }
 
     void startHandlingSignal(const QQmlSourceLocation &location)
@@ -217,10 +218,10 @@ struct QQmlHandlingSignalProfiler : public QQmlProfilerHelper {
 };
 
 struct QQmlCompilingProfiler : public QQmlProfilerHelper {
-    QQmlCompilingProfiler(QQmlProfiler *profiler, const QString &name) :
+    QQmlCompilingProfiler(QQmlProfiler *profiler, const QUrl &url) :
         QQmlProfilerHelper(profiler)
     {
-        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCompiling, profiler, startCompiling(name));
+        Q_QML_PROFILE(QQmlProfilerDefinitions::ProfileCompiling, profiler, startCompiling(url));
     }
 
     ~QQmlCompilingProfiler()

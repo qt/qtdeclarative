@@ -81,7 +81,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                     ds << QQmlProfilerDefinitions::QmlBinding;
                 break;
             case QQmlProfilerDefinitions::RangeData:
-                ds << d->detailString;
+                ds << (d->detailString.isEmpty() ? d->detailUrl.toString() : d->detailString);
                 break;
             case QQmlProfilerDefinitions::RangeLocation:
                 ds << (d->detailUrl.isEmpty() ? d->detailString : d->detailUrl.toString()) << d->x

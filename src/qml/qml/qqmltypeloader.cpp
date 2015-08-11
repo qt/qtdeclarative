@@ -647,6 +647,8 @@ void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
 {
     Q_ASSERT(m_waitingFor.contains(blob));
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler,
+                               blob->url());
 
     m_inCallback = true;
 
@@ -1194,6 +1196,8 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, QQmlFile *file)
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob->url());
+
     blob->m_inCallback = true;
 
     blob->dataReceived(d);
@@ -1212,6 +1216,8 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::Data &d)
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
+    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob->url());
+
     blob->m_inCallback = true;
 
     blob->initializeFromCachedUnit(unit);
@@ -2252,8 +2258,6 @@ void QQmlTypeData::compile()
     Q_ASSERT(m_compiledData == 0);
 
     m_compiledData = new QQmlCompiledData(typeLoader()->engine());
-
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler, finalUrlString());
 
     QQmlTypeCompiler compiler(QQmlEnginePrivate::get(typeLoader()->engine()), m_compiledData, this, m_document.data());
     if (!compiler.compile()) {
