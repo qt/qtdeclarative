@@ -39,20 +39,55 @@
 ****************************************************************************/
 
 import QtQuick 2.8
-import QtQuick.Window 2.2
-import "qrc:/quick/shared/" as Examples
+import Qt.labs.handlers 1.0
 
-Window {
-    width: 800
-    height: 600
-    visible: true
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("joystick", "DragHandler: move one item inside another with any pointing device", Qt.resolvedUrl("joystick.qml"))
-            addExample("mixer", "mixing console", Qt.resolvedUrl("mixer.qml"))
-            addExample("pinch", "PinchHandler: scale, rotate and drag", Qt.resolvedUrl("pinchHandler.qml"))
+Rectangle {
+    id: root
+    width: 1024; height: 600
+    color: "black"
+
+    Rectangle {
+        width: 400
+        height: 300
+        color: "lightsteelblue"
+        antialiasing: true
+
+        Text {
+            anchors.centerIn: parent
+            text: "Pinch with 2 fingers to scale & rotate\nDrag with 1 finger\ncurrent rotation " + pinch2.rotation.toFixed(1)
+        }
+
+        DragHandler { objectName: "DragHandler" }
+
+        PinchHandler {
+            id: pinch2
+            objectName: "2-finger pinch"
+            minimumRotation: -45
+            maximumRotation: 45
+            minimumScale: 0.1
+            maximumScale: 10
+            pointDistanceThreshold: 150
+        }
+    }
+
+    Rectangle {
+        x: 512
+        width: 400
+        height: 300
+        color: "wheat"
+        antialiasing: true
+
+        Text {
+            anchors.centerIn: parent
+            text: "Pinch with 3 fingers to scale & rotate\ncurrent rotation " + pinch3.rotation.toFixed(1)
+        }
+
+        PinchHandler {
+            id: pinch3
+            objectName: "3-finger pinch"
+            requiredPointCount: 3
+            minimumScale: 0.1
+            maximumScale: 10
         }
     }
 }
