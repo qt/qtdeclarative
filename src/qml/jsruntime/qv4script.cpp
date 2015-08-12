@@ -379,7 +379,7 @@ ReturnedValue Script::qmlBinding()
     return v.asReturnedValue();
 }
 
-QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
+QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject)
 {
     QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());

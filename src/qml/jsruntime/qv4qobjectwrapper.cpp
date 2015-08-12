@@ -333,9 +333,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
             Q_ASSERT(vmemo);
             return vmemo->vmeMethod(property->coreIndex);
         } else if (property->isV4Function()) {
-            QV4::ScopedObject qmlcontextobject(scope, engine->qmlContextObject());
-            ScopedContext global(scope, scope.engine->rootContext());
-            return QV4::QObjectMethod::create(global, object, property->coreIndex, qmlcontextobject);
+            ScopedContext global(scope, scope.engine->qmlContext());
+            return QV4::QObjectMethod::create(global, object, property->coreIndex);
         } else if (property->isSignalHandler()) {
             QV4::Scoped<QV4::QmlSignalHandler> handler(scope, scope.engine->memoryManager->alloc<QV4::QmlSignalHandler>(engine, object, property->coreIndex));
 
@@ -1726,7 +1725,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
     }
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index, const Value &qmlGlobal)
+ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index)
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope));
@@ -1736,18 +1735,16 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
         method->d()->propertyCache = ddata->propertyCache;
 
     method->d()->index = index;
-    method->d()->qmlGlobal = qmlGlobal;
     method->d()->valueTypeWrapper = Primitive::undefinedValue();
     return method.asReturnedValue();
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index, const Value &qmlGlobal)
+ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index)
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope));
     method->d()->propertyCache = valueType->d()->propertyCache;
     method->d()->index = index;
-    method->d()->qmlGlobal = qmlGlobal;
     method->d()->valueTypeWrapper = *valueType;
     return method.asReturnedValue();
 }
@@ -1863,11 +1860,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 
     if (method.isV4Function()) {
         QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
-
-        QV4::ScopedValue qmlGlobal(scope, d()->qmlGlobal);
-        QQmlV4Function func(callData, rv, qmlGlobal,
-                            QmlContextWrapper::getContext(qmlGlobal),
-                            scope.engine);
+        QQmlV4Function func(callData, rv, scope.engine);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
@@ -1886,7 +1879,6 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     QObjectMethod::Data *This = static_cast<QObjectMethod::Data*>(that);
-    This->qmlGlobal.mark(e);
     This->valueTypeWrapper.mark(e);
 
     FunctionObject::markObjects(that, e);
