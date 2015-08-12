@@ -677,5 +677,27 @@ CanvasTestCase {
         waitForRendering(implicitlySizedItem);
         comparePixel(implicitlySizedItem.canvas.context, xCenter, yCenter, 0, 0, 0, 255);
     }
+
+    Component {
+        id: simpleTextureNodeUsageComponent
+
+        Canvas {
+            id: canvas
+            anchors.fill: parent
+
+            onPaint: {
+                var ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, 200, 200);
+            }
+        }
+    }
+
+    function test_simpleTextureNodeUsage() {
+        var canvas = simpleTextureNodeUsageComponent.createObject(container);
+        verify(canvas);
+        wait(0);
+        // Shouldn't crash.
+        canvas.requestPaint();
+    }
 }
 }
