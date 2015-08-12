@@ -40,6 +40,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -103,6 +104,11 @@ public:
     {
         m_pluginName = QLatin1String("QLocalClientConnection");
         m_fileName = fileName;
+    }
+
+    const QString &pluginName() const
+    {
+        return m_pluginName;
     }
 
     void run();
@@ -310,6 +316,9 @@ bool QQmlDebugServerImpl::open(const QVariantHash &configuration = QVariantHash(
         }
     }
 
+    if (m_thread.pluginName().isEmpty())
+        return false;
+
     QMutexLocker locker(&m_helloMutex);
     m_thread.start();
     m_helloCondition.wait(&m_helloMutex); // wait for connection
@@ -318,6 +327,7 @@ bool QQmlDebugServerImpl::open(const QVariantHash &configuration = QVariantHash(
     return true;
 }
 
+#define qUsage qWarning().noquote().nospace
 void QQmlDebugServerImpl::parseArguments()
 {
     // format: qmljsdebugger=port:<port_from>[,port_to],host:<ip address>][,block]
@@ -366,9 +376,8 @@ void QQmlDebugServerImpl::parseArguments()
         } else if (!services.isEmpty()) {
             services.append(strArgument);
         } else {
-            qWarning() << QString::fromLatin1("QML Debugger: Invalid argument '%1' "
-                                              "detected. Ignoring the same.")
-                                               .arg(strArgument);
+            qUsage() << tr("QML Debugger: Invalid argument \"%1\" detected. Ignoring the same.")
+                        .arg(strArgument);
         }
     }
 
@@ -380,11 +389,43 @@ void QQmlDebugServerImpl::parseArguments()
         else
             m_thread.setPortRange(portFrom, portTo, hostAddress);
     } else {
-        qWarning() << QString::fromLatin1("QML Debugger: Ignoring \"-qmljsdebugger=%1\". "
-                                          "Format is qmljsdebugger=port:<port_from>[,port_to],host:"
-                                          "<ip address>][,block]").arg(args);
+        qUsage() << tr("QML Debugger: Ignoring \"-qmljsdebugger=%1\".").arg(args);
+        qUsage() << tr("The format is \"-qmljsdebugger=[file:<file>|port:<port_from>][,<port_to>]"
+                       "[,host:<ip address>][,block][,services:<service>][,<service>]*\"\n");
+        qUsage() << tr("\"file:\" can be used to specify the name of a file the debugger will try "
+                       "to connect to using a QLocalSocket. If \"file:\" is given any \"host:\" and"
+                       "\"port:\" arguments will be ignored.\n");
+        qUsage() << tr("\"host:\" and \"port:\" can be used to specify an address and a single "
+                       "port or a range of ports the debugger will try to bind to with a "
+                       "QTcpServer.\n");
+        qUsage() << tr("\"block\" makes the debugger and some services wait for clients to be "
+                       "connected and ready before the first QML engine starts.\n");
+        qUsage() << tr("\"services:\" can be used to specify which debug services the debugger "
+                       "should load. Some debug services interact badly with others. The V4 "
+                       "debugger should not be loaded when using the QML profiler as it will force "
+                       "any V4 engines to use the JavaScript interpreter rather than the JIT. The "
+                       "following debug services are available by default:");
+        qUsage() << QQmlEngineDebugService::s_key << tr("\t- The QML debugger");
+        qUsage() << QV4DebugService::s_key        << tr("\t- The V4 debugger");
+        qUsage() << QQmlInspectorService::s_key   << tr("\t- The QML inspector");
+        qUsage() << QQmlProfilerService::s_key    << tr("\t- The QML profiler");
+        qUsage() << QQmlEngineControlService::s_key
+                             << tr("\t- Allows the client to delay the starting and stopping of\n"
+                                   "\t\t  QML engines until other services are ready. QtCreator\n"
+                                   "\t\t  uses this service with the QML profiler in order to\n"
+                                   "\t\t  profile multiple QML engines at the same time.");
+        qUsage() << QDebugMessageService::s_key
+                             << tr("\t- Sends qDebug() and similar messages over the QML debug\n"
+                                   "\t\t  connection. QtCreator uses this for showing debug\n"
+                                   "\t\t  messages in the JavaScript console.");
+        qUsage() << tr("Other services offered by qmltooling plugins that implement "
+                       "QQmlDebugServiceFactory and which can be found in the standard plugin "
+                       "paths will also be available and can be specified. If no \"services\" "
+                       "argument is given, all services found this way, including the default "
+                       "ones, are loaded.");
     }
 }
+#undef qUsage
 
 void QQmlDebugServerImpl::receiveMessage()
 {
