@@ -96,6 +96,164 @@ QT_BEGIN_NAMESPACE
         }
     }
     \endqml
+
+    \section1 Using StackView in an Application
+
+    Using StackView in an application is as simple as adding it as a child to
+    a Window. The stack is usually anchored to the edges of the window, except
+    at the top or bottom where it might be anchored to a status bar, or some
+    other similar UI component. The stack can then be  used by invoking its
+    navigation methods. The first item to show in the StackView is the one
+    that was assigned to \l initialItem, or the topmost item if \l initialItem
+    is not set.
+
+    \section1 Basic Navigation
+
+    StackView supports three primary navigation operations: push(), pop(), and
+    replace(). These correspond to classic stack operations where "push" adds
+    an item to the top of a stack, "pop" removes the top item from the
+    stack, and "replace" is like a pop followed by a push, which replaces the
+    topmost item with the new item. The topmost item in the stack
+    corresponds to the one that is \l{StackView::currentItem}{currently}
+    visible on screen. Logically, "push" navigates forward or deeper into the
+    application UI, "pop" navigates backward, and "replace" replaces the
+    \l currentItem.
+
+    Sometimes, it is necessary to go back more than a single step in the stack.
+    For example, to return to a "main" item or some kind of section item in the
+    application. In such cases, it is possible to specify an item as a
+    parameter for pop(). This is called an "unwind" operation, where the stack
+    unwinds till the specified item. If the item is not found, stack unwinds
+    until it is left with one item, which becomes the \l currentItem. To
+    explicitly unwind to the bottom of the stack, it is recommended to use
+    \l{pop()}{pop(null)}, although any non-existent item will do.
+
+    Given the stack [A, B, C]:
+
+    \list
+    \li \l{push()}{push(D)} => [A, B, C, D] - "push" transition animation
+        between C and D
+    \li pop() => [A, B] - "pop" transition animation between C and B
+    \li \l{replace()}{replace(D)} => [A, B, D] - "replace" transition between
+        C and D
+    \li \l{pop()}{pop(A)} => [A] - "pop" transition between C and A
+    \endlist
+
+    \note When the stack is empty, a push() operation will not have a
+    transition animation because there is nothing to transition from (typically
+    on application start-up). A pop() operation on a stack with depth 1 or
+    0 does nothing. In such cases, the stack can be emptied using the clear()
+    method.
+
+    \section1 Deep Linking
+
+    \e{Deep linking} means launching an application into a particular state. For
+    example, a newspaper application could be launched into showing a
+    particular article, bypassing the topmost item. In terms of StackView, deep linking means the ability to modify
+    the state of the stack, so much so that it is possible to push a set of
+    items to the top of the stack, or to completely reset the stack to a given
+    state.
+
+    The API for deep linking in StackView is the same as for basic navigation.
+    Pushing an array instead of a single item adds all the items in that array
+    to the stack. The transition animation, however, is applied only for the
+    last item in the array. The normal semantics of push() apply for deep
+    linking, that is, it adds whatever is pushed onto the stack.
+
+    \note Only the last item of the array is loaded. The rest of the items are
+    loaded only when needed, either on subsequent calls to pop or on request to
+    get an item using get().
+
+    This gives us the following result, given the stack [A, B, C]:
+
+    \list
+    \li \l{push()}{push([D, E, F])} => [A, B, C, D, E, F] - "push" transition
+        animation between C and F
+    \li \l{replace()}{replace([D, E, F])} => [A, B, D, E, F] - "replace"
+        transition animation between C and F
+    \li \l{clear()} followed by \l{push()}{push([D, E, F])} => [D, E, F] - no
+        transition animation for pushing items as the stack was empty.
+    \endlist
+
+    \section1 Finding Items
+
+    An Item for which the application does not have a reference can be found
+    by calling find(). The method needs a callback function, which is invoked
+    for each item in the stack (starting at the top) until a match is found.
+    If the callback returns \c true, find() stops and returns the matching
+    item, otherwise \c null is returned.
+
+    The code below searches the stack for an item named "order_id" and unwinds
+    to that item.
+
+    \badcode
+    stackView.pop(stackView.find(function(item) {
+        return item.name == "order_id";
+    }));
+    \endcode
+
+    You can also get to an item in the stack using \l {get()}{get(index)}.
+
+    \badcode
+    previousItem = stackView.get(myItem.Stack.index - 1));
+    \endcode
+
+    \section1 Transitions
+
+    For each push or pop operation, different transition animations are applied
+    to entering and exiting items. These animations define how the entering item
+    should animate in, and the exiting item should animate out. The animations
+    can be customized by assigning different \l{Transition}s for the
+    \l pushEnter, \l pushExit, \l popEnter, and \l popExit properties of
+    StackView.
+
+    \note The pop and push transition animations affect each others'
+    transitional behavior. So customizing the animation for one and leaving
+    the other may give unexpected results.
+
+    The following snippet defines a simple fade transition for push and pop
+    operations:
+
+    \qml
+    StackView {
+        id: stackview
+        anchors.fill: parent
+
+        pushEnter: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 0
+                to:1
+                duration: 200
+            }
+        }
+        pushExit: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 1
+                to:0
+                duration: 200
+            }
+        }
+        popEnter: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 0
+                to:1
+                duration: 200
+            }
+        }
+        popExit: Transition {
+            PropertyAnimation {
+                property: "opacity"
+                from: 1
+                to:0
+                duration: 200
+            }
+        }
+    }
+    \endqml
+
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent) :
