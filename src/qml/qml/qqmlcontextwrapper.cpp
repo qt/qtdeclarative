@@ -323,25 +323,4 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     Object::put(m, name, value);
 }
 
-ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String *name)
-{
-    if (!d()->context->imports)
-        return Encode::undefined();
-    // Search for attached properties, enums and imported scripts
-    QQmlTypeNameCache::Result r = d()->context->imports->query(name);
-
-    Q_ASSERT(r.isValid());
-    Q_ASSERT(r.type);
-    Q_ASSERT(r.type->isSingleton());
-    Q_ASSERT(v4);
-
-    QQmlEngine *e = v4->qmlEngine();
-    QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
-    siinfo->init(e);
-
-    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
-        return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
-    return QJSValuePrivate::convertedToValue(engine(), siinfo->scriptApi(e));
-}
-
 QT_END_NAMESPACE

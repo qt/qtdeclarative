@@ -98,8 +98,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
-
-    ReturnedValue qmlSingletonWrapper(ExecutionEngine *e, String *name);
 };
 
 }

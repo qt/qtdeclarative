@@ -1460,8 +1460,7 @@ QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowEngine *engine, int name
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]);
-    Scoped<QmlContextWrapper> wrapper(scope, engine->qmlContextObject());
-    return wrapper->qmlSingletonWrapper(engine, name);
+    return engine->qmlSingletonWrapper(name);
 }
 
 void Runtime::convertThisToObject(ExecutionEngine *engine)
