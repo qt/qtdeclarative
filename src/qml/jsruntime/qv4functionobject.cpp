@@ -46,7 +46,7 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <private/qqmlcontextwrapper_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmlengine_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
@@ -430,7 +430,7 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
+        QQmlPropertyCapture::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     if (v4->hasException)
         return Encode::undefined();
@@ -457,7 +457,7 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(scope.engine, f->function()->compiledFunction);
+        QQmlPropertyCapture::registerQmlDependencies(scope.engine, f->function()->compiledFunction);
 
     return result->asReturnedValue();
 }
@@ -531,7 +531,7 @@ ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *cal
     ScopedObject result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
+        QQmlPropertyCapture::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     if (!result)
         return callData->thisObject.asReturnedValue();
@@ -569,7 +569,7 @@ ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
-        QmlContextWrapper::registerQmlDependencies(v4, f->function()->compiledFunction);
+        QQmlPropertyCapture::registerQmlDependencies(v4, f->function()->compiledFunction);
 
     return result->asReturnedValue();
 }

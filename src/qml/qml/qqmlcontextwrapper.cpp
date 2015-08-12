@@ -323,49 +323,6 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     Object::put(m, name, value);
 }
 
-void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const CompiledData::Function *compiledFunction)
-{
-    // Let the caller check and avoid the function call :)
-    Q_ASSERT(compiledFunction->hasQmlDependencies());
-
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
-    if (!ep)
-        return;
-    QQmlPropertyCapture *capture = ep->propertyCapture;
-    if (!capture)
-        return;
-
-    QV4::Scope scope(engine);
-    QV4::Scoped<QmlContext> context(scope, engine->qmlContext());
-    QQmlContextData *qmlContext = context->qmlContext();
-
-    const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
-    const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
-    for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
-        Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
-        capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
-    }
-
-    Q_ASSERT(qmlContext->contextObject);
-    const quint32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
-    const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
-    for (int i = 0; i < contextPropertyDependencyCount; ++i) {
-        const int propertyIndex = *contextPropertyDependency++;
-        const int notifyIndex = *contextPropertyDependency++;
-        capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex);
-    }
-
-    QObject *scopeObject = context->qmlScope();
-    const quint32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
-    const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
-    for (int i = 0; i < scopePropertyDependencyCount; ++i) {
-        const int propertyIndex = *scopePropertyDependency++;
-        const int notifyIndex = *scopePropertyDependency++;
-        capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
-    }
-
-}
-
 ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String *name)
 {
     if (!d()->context->imports)

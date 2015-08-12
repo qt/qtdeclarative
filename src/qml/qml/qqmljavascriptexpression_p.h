@@ -176,6 +176,8 @@ public:
     void captureProperty(QQmlNotifier *);
     void captureProperty(QObject *, int, int);
 
+    static void registerQmlDependencies(QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
+
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
     QQmlJavaScriptExpression::DeleteWatcher *watcher;
