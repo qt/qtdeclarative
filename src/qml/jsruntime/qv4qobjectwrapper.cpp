@@ -835,7 +835,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 QQmlError error = v4->catchExceptionAsQmlError();
                 if (error.description().isEmpty()) {
                     QV4::ScopedString name(scope, f->name());
-                    error.setDescription(QString::fromLatin1("Unknown exception occurred during evaluation of connected function: %1").arg(name->toQString()));
+                    error.setDescription(QStringLiteral("Unknown exception occurred during evaluation of connected function: %1").arg(name->toQString()));
                 }
                 if (QQmlEngine *qmlEngine = v4->qmlEngine()) {
                     QQmlEnginePrivate::get(qmlEngine)->warning(error);
@@ -1371,7 +1371,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
 
     if (returnType == QMetaType::UnknownType) {
         QString typeName = QString::fromLatin1(unknownTypeError);
-        QString error = QString::fromLatin1("Unknown method return type: %1").arg(typeName);
+        QString error = QStringLiteral("Unknown method return type: %1").arg(typeName);
         return engine->throwError(error);
     }
 
@@ -1384,7 +1384,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
 
         if (!args) {
             QString typeName = QString::fromLatin1(unknownTypeError);
-            QString error = QString::fromLatin1("Unknown method parameter type: %1").arg(typeName);
+            QString error = QStringLiteral("Unknown method parameter type: %1").arg(typeName);
             return engine->throwError(error);
         }
 

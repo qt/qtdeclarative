@@ -124,7 +124,7 @@ ReturnedValue NumberPrototype::method_toString(CallContext *ctx)
     if (ctx->argc() && !ctx->args()[0].isUndefined()) {
         int radix = ctx->args()[0].toInt32();
         if (radix < 2 || radix > 36)
-            return ctx->engine()->throwError(QString::fromLatin1("Number.prototype.toString: %0 is not a valid radix")
+            return ctx->engine()->throwError(QStringLiteral("Number.prototype.toString: %0 is not a valid radix")
                             .arg(radix));
 
         if (std::isnan(num)) {
@@ -202,7 +202,7 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
 
     QString str;
     if (std::isnan(v))
-        str = QString::fromLatin1("NaN");
+        str = QStringLiteral("NaN");
     else if (qIsInf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
     else if (v < 1.e21) {

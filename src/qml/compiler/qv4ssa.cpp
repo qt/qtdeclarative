@@ -3912,7 +3912,7 @@ void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = 
 
     QString name;
     if (f->name) name = *f->name;
-    else name = QString::fromLatin1("%1").arg((unsigned long long)f);
+    else name = QStringLiteral("%1").arg((unsigned long long)f);
     qout << "digraph \"" << name << "\" { ordering=out;\n";
 
     foreach (LoopDetection::LoopInfo *l, loops) {

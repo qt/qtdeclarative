@@ -129,7 +129,7 @@ QV4::ReturnedValue VariantPrototype::method_toString(CallContext *ctx)
         return Encode::undefined();
     QString result = o->d()->data.toString();
     if (result.isEmpty() && !o->d()->data.canConvert(QVariant::String))
-        result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(o->d()->data.typeName()));
+        result = QStringLiteral("QVariant(%0)").arg(QString::fromLatin1(o->d()->data.typeName()));
     return Encode(ctx->d()->engine->newString(result));
 }
 

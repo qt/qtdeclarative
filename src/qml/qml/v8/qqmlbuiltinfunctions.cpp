@@ -1355,12 +1355,12 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 
         QString stackFrame;
         if (frame.column >= 0)
-            stackFrame = QString::fromLatin1("%1 (%2:%3:%4)").arg(frame.function,
+            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(frame.function,
                                                              frame.source,
                                                              QString::number(frame.line),
                                                              QString::number(frame.column));
         else
-            stackFrame = QString::fromLatin1("%1 (%2:%3)").arg(frame.function,
+            stackFrame = QStringLiteral("%1 (%2:%3)").arg(frame.function,
                                                              frame.source,
                                                              QString::number(frame.line));
 

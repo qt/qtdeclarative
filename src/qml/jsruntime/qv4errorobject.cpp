@@ -361,11 +361,11 @@ ReturnedValue ErrorPrototype::method_toString(CallContext *ctx)
     ScopedValue name(scope, o->get(ctx->d()->engine->id_name()));
     QString qname;
     if (name->isUndefined())
-        qname = QString::fromLatin1("Error");
+        qname = QStringLiteral("Error");
     else
         qname = name->toQString();
 
-    ScopedString s(scope, ctx->d()->engine->newString(QString::fromLatin1("message")));
+    ScopedString s(scope, ctx->d()->engine->newString(QStringLiteral("message")));
     ScopedValue message(scope, o->get(s));
     QString qmessage;
     if (!message->isUndefined())

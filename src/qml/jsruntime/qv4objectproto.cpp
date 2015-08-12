@@ -392,7 +392,7 @@ ReturnedValue ObjectPrototype::method_toString(CallContext *ctx)
     } else {
         ScopedObject obj(scope, RuntimeHelpers::toObject(scope.engine, ctx->thisObject()));
         QString className = obj->className();
-        return ctx->d()->engine->newString(QString::fromLatin1("[object %1]").arg(className))->asReturnedValue();
+        return ctx->d()->engine->newString(QStringLiteral("[object %1]").arg(className))->asReturnedValue();
     }
 }
 
