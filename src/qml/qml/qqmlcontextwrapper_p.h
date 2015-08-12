@@ -92,7 +92,6 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return d()->context; }
-    static QQmlContextData *getContext(const Value &value);
 
     void setReadOnly(bool b) { d()->readOnly = b; }
 

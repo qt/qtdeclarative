@@ -93,19 +93,6 @@ ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
     return w.asReturnedValue();
 }
 
-QQmlContextData *QmlContextWrapper::getContext(const Value &value)
-{
-    if (!value.isObject())
-        return 0;
-
-    QV4::ExecutionEngine *v4 = value.as<Object>()->engine();
-    Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, value);
-
-    return c ? c->getContext() : 0;
-}
-
-
 ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
