@@ -338,19 +338,17 @@ void tst_QQuickWorkerScript::script_global()
         delete worker;
     }
 
+    qquickworkerscript_lastWarning = QString();
+
     {
+        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
+
         QQmlComponent component(&m_engine, testFileUrl("worker_global2.qml"));
         QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
         QVERIFY(worker != 0);
 
-        QString value("Hello");
-
-        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
-
-        QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-
         QTRY_COMPARE(qquickworkerscript_lastWarning,
-                testFileUrl("script_global.js").toString() + QLatin1String(":2: Invalid write to global property \"world\""));
+                testFileUrl("script_global2.js").toString() + QLatin1String(":1: Invalid write to global property \"world\""));
 
         qInstallMessageHandler(previousMsgHandler);
 
