@@ -37,8 +37,8 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
-using namespace QV4::Profiling;
+namespace QV4 {
+namespace Profiling {
 
 FunctionCallProperties FunctionCall::resolve() const
 {
@@ -63,26 +63,28 @@ Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(
     m_timer.start();
 }
 
-struct FunctionCallComparator {
-    bool operator()(const FunctionCallProperties &p1, const FunctionCallProperties &p2)
-    { return p1.start < p2.start; }
-};
-
 void Profiler::stopProfiling()
 {
     featuresEnabled = 0;
     reportData();
 }
 
+bool operator<(const FunctionCall &call1, const FunctionCall &call2)
+{
+    return call1.m_start < call2.m_start ||
+            (call1.m_start == call2.m_start && (call1.m_end < call2.m_end ||
+            (call1.m_end == call2.m_end && call1.m_function < call2.m_function)));
+}
+
 void Profiler::reportData()
 {
+    std::sort(m_data.begin(), m_data.end());
     QVector<FunctionCallProperties> resolved;
     resolved.reserve(m_data.size());
-    FunctionCallComparator comp;
-    foreach (const FunctionCall &call, m_data) {
-        FunctionCallProperties props = call.resolve();
-        resolved.insert(std::upper_bound(resolved.begin(), resolved.end(), props, comp), props);
-    }
+
+    foreach (const FunctionCall &call, m_data)
+        resolved.append(call.resolve());
+
     emit dataReady(resolved, m_memory_data);
     m_data.clear();
     m_memory_data.clear();
@@ -110,5 +112,8 @@ void Profiler::startProfiling(quint64 features)
         featuresEnabled = features;
     }
 }
+
+} // namespace Profiling
+} // namespace QV4
 
 QT_END_NAMESPACE

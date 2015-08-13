@@ -104,6 +104,7 @@ public:
     FunctionCallProperties resolve() const;
 
 private:
+    friend bool operator<(const FunctionCall &call1, const FunctionCall &call2);
 
     Function *m_function;
     qint64 m_start;
