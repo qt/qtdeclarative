@@ -61,7 +61,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(InternalClass *ic, QV4::Object *prototype);
     ~FunctionObject();
 
-    unsigned int formalParameterCount() { return function ? function->compiledFunction->nFormals : 0; }
+    unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
     bool needsActivation() const { return function ? function->needsActivation() : false; }
 

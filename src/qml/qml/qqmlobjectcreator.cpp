@@ -989,9 +989,8 @@ QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
     if (!_qmlContext->objectValue()) {
         QV4::Scope valueScope(v4);
-        QV4::Scoped<QV4::QmlContextWrapper> qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
         QV4::ScopedContext global(valueScope, v4->rootContext());
-        _qmlContext->setM(global->newQmlContext(qmlScope));
+        _qmlContext->setM(global->newQmlContext(context, _scopeObject));
         v4->popContext();
     }
     return _qmlContext->d();

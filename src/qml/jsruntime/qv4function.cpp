@@ -70,14 +70,45 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
             arg = mm->alloc<String>(mm, arg->d(), engine->newString(QString(0xfffe)));
         }
     }
+    nFormals = compiledFunction->nFormals;
 
     const quint32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+
+    activationRequired = compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject));
 }
 
 Function::~Function()
 {
+}
+
+void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
+{
+    internalClass = engine->emptyClass;
+
+    // iterate backwards, so we get the right ordering for duplicate names
+    Scope scope(engine);
+    ScopedString arg(scope);
+    for (int i = parameters.size() - 1; i >= 0; --i) {
+        arg = engine->newString(QString::fromUtf8(parameters.at(i)));
+        while (1) {
+            InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
+            if (newClass != internalClass) {
+                internalClass = newClass;
+                break;
+            }
+            // duplicate arguments, need some trick to store them
+            arg = engine->memoryManager->alloc<String>(engine->memoryManager, arg->d(), engine->newString(QString(0xfffe)));
+        }
+    }
+    nFormals = parameters.size();
+
+    const quint32 *localsIndices = compiledFunction->localsTable();
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
+        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+
+    activationRequired = true;
 }
 
 QT_END_NAMESPACE

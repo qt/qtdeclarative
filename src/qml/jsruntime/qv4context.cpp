@@ -98,6 +98,12 @@ Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
     return d()->engine->memoryManager->alloc<QmlContext>(this, qml);
 }
 
+Heap::QmlContext *ExecutionContext::newQmlContext(QQmlContextData *context, QObject *scopeObject)
+{
+    Scope scope(this);
+    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
+    return d()->engine->memoryManager->alloc<QmlContext>(this, qml);
+}
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {

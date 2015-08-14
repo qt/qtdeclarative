@@ -206,36 +206,18 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto);
 }
 
-static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
-{
-    QV4::Scope scope(ctx);
-    QV4::Scoped<CallContext> signalEmittingContext(scope, ctx->d()->parent.cast<Heap::CallContext>());
-    Q_ASSERT(signalEmittingContext && signalEmittingContext->d()->type >= QV4::Heap::ExecutionContext::Type_SimpleCallContext);
-    return signalEmittingContext->argument(parameterIndex);
-}
-
 Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
 {
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
-    QV4::Scoped<QmlContextWrapper> qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine, qmlContext, scopeObject));
     ScopedContext global(valueScope, valueScope.engine->rootContext());
-    QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlScopeObject));
+    QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlContext, scopeObject));
     engine->popContext();
 
     if (!signalParameters.isEmpty()) {
         if (error)
             QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, error);
-        QV4::ScopedProperty p(valueScope);
-        QV4::ScopedString s(valueScope);
-        int index = 0;
-        foreach (const QByteArray &param, signalParameters) {
-            QV4::ScopedFunctionObject g(valueScope, engine->memoryManager->alloc<QV4::IndexedBuiltinFunction>(wrapperContext, index++, signalParameterGetter));
-            p->setGetter(g);
-            p->setSetter(0);
-            s = engine->newString(QString::fromUtf8(param));
-            qmlScopeObject->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable|QV4::Attr_NotConfigurable);
-        }
+        runtimeFunction->updateInternalClass(engine, signalParameters);
     }
 
     QV4::ScopedFunctionObject function(valueScope, QV4::FunctionObject::createScriptFunction(wrapperContext, runtimeFunction));

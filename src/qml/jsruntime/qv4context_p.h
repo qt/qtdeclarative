@@ -153,6 +153,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Heap::WithContext *newWithContext(Object *with);
     Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
     Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);
+    Heap::QmlContext *newQmlContext(QQmlContextData *context, QObject *scopeObject);
 
     void createMutableBinding(String *name, bool deletable);
 
