@@ -123,7 +123,6 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
 
-private:
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired = true);
     static void setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value);
 

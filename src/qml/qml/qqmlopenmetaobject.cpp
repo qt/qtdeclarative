@@ -106,6 +106,28 @@ QMetaObject *QQmlOpenMetaObjectType::metaObject() const
     return d->mem;
 }
 
+void QQmlOpenMetaObjectType::createProperties(const QVector<QByteArray> &names)
+{
+    for (int i = 0; i < names.count(); ++i) {
+        const QByteArray &name = names.at(i);
+        const int id = d->mob.propertyCount();
+        d->mob.addSignal("__" + QByteArray::number(id) + "()");
+        QMetaPropertyBuilder build = d->mob.addProperty(name, "QVariant", id);
+        propertyCreated(id, build);
+        d->names.insert(name, id);
+    }
+    free(d->mem);
+    d->mem = d->mob.toMetaObject();
+    QSet<QQmlOpenMetaObject*>::iterator it = d->referers.begin();
+    while (it != d->referers.end()) {
+        QQmlOpenMetaObject *omo = *it;
+        *static_cast<QMetaObject *>(omo) = *d->mem;
+        if (d->cache)
+            d->cache->update(omo);
+        ++it;
+    }
+}
+
 int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
 {
     int id = d->mob.propertyCount();
@@ -228,6 +250,14 @@ QQmlOpenMetaObject::~QQmlOpenMetaObject()
 QQmlOpenMetaObjectType *QQmlOpenMetaObject::type() const
 {
     return d->type;
+}
+
+void QQmlOpenMetaObject::emitPropertyNotification(const QByteArray &propertyName)
+{
+    QHash<QByteArray, int>::ConstIterator iter = d->type->d->names.constFind(propertyName);
+    if (iter == d->type->d->names.constEnd())
+        return;
+    activate(d->object, *iter + d->type->d->signalOffset, 0);
 }
 
 int QQmlOpenMetaObject::metaCall(QMetaObject::Call c, int id, void **a)

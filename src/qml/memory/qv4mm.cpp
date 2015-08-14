@@ -373,7 +373,7 @@ void MemoryManager::mark()
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
         if (!(*it).isManaged())
             continue;
-        if ((*it).managed()->d()->vtable() != QObjectWrapper::staticVTable())
+        if (!(*it).as<QObjectWrapper>())
             continue;
         QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
         QObject *qobject = qobjectWrapper->object();
@@ -410,10 +410,8 @@ void MemoryManager::sweep(bool lastSweep)
             continue;
         // we need to call detroyObject on qobjectwrappers now, so that they can emit the destroyed
         // signal before we start sweeping the heap
-        if ((*it).managed()->d()->vtable() == QObjectWrapper::staticVTable()) {
-            QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper*>((*it).managed());
+        if (QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>())
             qobjectWrapper->destroyObject(lastSweep);
-        }
 
         (*it) = Primitive::undefinedValue();
     }

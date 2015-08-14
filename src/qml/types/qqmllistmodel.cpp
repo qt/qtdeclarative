@@ -242,11 +242,12 @@ const ListLayout::Role *ListLayout::getExistingRole(QV4::String *key)
     return r;
 }
 
-ModelObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementIndex)
+QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementIndex)
 {
     ListElement *e = elements[elementIndex];
     if (e->m_objectCache == 0) {
-        e->m_objectCache = new ModelObject(model, elementIndex);
+        e->m_objectCache = new QObject;
+        (void)new ModelNodeMetaObject(e->m_objectCache, model, elementIndex);
     }
     return e->m_objectCache;
 }
@@ -317,8 +318,8 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
     // Update values stored in target meta objects
     for (int i=0 ; i < target->elements.count() ; ++i) {
         ListElement *e = target->elements[i];
-        if (e->m_objectCache)
-            e->m_objectCache->updateValues();
+        if (ModelNodeMetaObject *mo = e->objectCache())
+            mo->updateValues();
     }
 }
 
@@ -384,9 +385,8 @@ void ListModel::updateCacheIndices()
 {
     for (int i=0 ; i < elements.count() ; ++i) {
         ListElement *e = elements.at(i);
-        if (e->m_objectCache) {
-            e->m_objectCache->m_elementIndex = i;
-        }
+        if (ModelNodeMetaObject *mo = e->objectCache())
+            mo->m_elementIndex = i;
     }
 }
 
@@ -470,9 +470,8 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             roles->append(roleIndex);
     }
 
-    if (e->m_objectCache) {
-        e->m_objectCache->updateValues(*roles);
-    }
+    if (ModelNodeMetaObject *mo = e->objectCache())
+        mo->updateValues(*roles);
 }
 
 void ListModel::set(int elementIndex, QV4::Object *object)
@@ -591,10 +590,12 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
         if (r) {
             roleIndex = e->setVariantProperty(*r, data);
 
-            if (roleIndex != -1 && e->m_objectCache) {
+            ModelNodeMetaObject *cache = e->objectCache();
+
+            if (roleIndex != -1 && cache) {
                 QVector<int> roles;
                 roles << roleIndex;
-                e->m_objectCache->updateValues(roles);
+                cache->updateValues(roles);
             }
         }
     }
@@ -631,6 +632,13 @@ inline char *ListElement::getPropertyMemory(const ListLayout::Role &role)
 
     char *mem = &e->data[role.blockOffset];
     return mem;
+}
+
+ModelNodeMetaObject *ListElement::objectCache()
+{
+    if (!m_objectCache)
+        return 0;
+    return ModelNodeMetaObject::get(m_objectCache);
 }
 
 QString *ListElement::getStringProperty(const ListLayout::Role &role)
@@ -1209,15 +1217,48 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
     return roleIndex;
 }
 
-ModelObject::ModelObject(QQmlListModel *model, int elementIndex)
-: m_model(model), m_elementIndex(elementIndex), m_meta(new ModelNodeMetaObject(this))
+ModelNodeMetaObject::ModelNodeMetaObject(QObject *object, QQmlListModel *model, int elementIndex)
+: QQmlOpenMetaObject(object), m_enabled(false), m_model(model), m_elementIndex(elementIndex), m_initialized(false)
+{}
+
+void ModelNodeMetaObject::initialize()
 {
+    const int roleCount = m_model->m_listModel->roleCount();
+    QVector<QByteArray> properties;
+    properties.reserve(roleCount);
+    for (int i = 0 ; i < roleCount ; ++i) {
+        const ListLayout::Role &role = m_model->m_listModel->getExistingRole(i);
+        QByteArray name = role.name.toUtf8();
+        properties << name;
+    }
+    type()->createProperties(properties);
     updateValues();
-    setNodeUpdatesEnabled(true);
+    m_enabled = true;
 }
 
-void ModelObject::updateValues()
+ModelNodeMetaObject::~ModelNodeMetaObject()
 {
+}
+
+QAbstractDynamicMetaObject *ModelNodeMetaObject::toDynamicMetaObject(QObject *object)
+{
+    if (!m_initialized) {
+        m_initialized = true;
+        initialize();
+    }
+    return QQmlOpenMetaObject::toDynamicMetaObject(object);
+}
+
+ModelNodeMetaObject *ModelNodeMetaObject::get(QObject *obj)
+{
+    QObjectPrivate *op = QObjectPrivate::get(obj);
+    return static_cast<ModelNodeMetaObject*>(op->metaObject);
+}
+
+void ModelNodeMetaObject::updateValues()
+{
+    if (!m_initialized)
+        return;
     int roleCount = m_model->m_listModel->roleCount();
     for (int i=0 ; i < roleCount ; ++i) {
         const ListLayout::Role &role = m_model->m_listModel->getExistingRole(i);
@@ -1227,8 +1268,10 @@ void ModelObject::updateValues()
     }
 }
 
-void ModelObject::updateValues(const QVector<int> &roles)
+void ModelNodeMetaObject::updateValues(const QVector<int> &roles)
 {
+    if (!m_initialized)
+        return;
     int roleCount = roles.count();
     for (int i=0 ; i < roleCount ; ++i) {
         int roleIndex = roles.at(i);
@@ -1239,15 +1282,6 @@ void ModelObject::updateValues(const QVector<int> &roles)
     }
 }
 
-ModelNodeMetaObject::ModelNodeMetaObject(ModelObject *object)
-: QQmlOpenMetaObject(object), m_enabled(false), m_obj(object)
-{
-}
-
-ModelNodeMetaObject::~ModelNodeMetaObject()
-{
-}
-
 void ModelNodeMetaObject::propertyWritten(int index)
 {
     if (!m_enabled)
@@ -1256,16 +1290,74 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QString propName = QString::fromUtf8(name(index));
     QVariant value = operator[](index);
 
-    QV4::Scope scope(m_obj->m_model->engine());
+    QV4::Scope scope(m_model->engine());
     QV4::ScopedValue v(scope, scope.engine->fromVariant(value));
 
-    int roleIndex = m_obj->m_model->m_listModel->setExistingProperty(m_obj->m_elementIndex, propName, v, scope.engine);
+    int roleIndex = m_model->m_listModel->setExistingProperty(m_elementIndex, propName, v, scope.engine);
     if (roleIndex != -1) {
         QVector<int> roles;
         roles << roleIndex;
-        m_obj->m_model->emitItemsChanged(m_obj->m_elementIndex, 1, roles);
+        m_model->emitItemsChanged(m_elementIndex, 1, roles);
     }
 }
+
+namespace QV4 {
+
+void ModelObject::put(Managed *m, String *name, const Value &value)
+{
+    ModelObject *that = static_cast<ModelObject*>(m);
+
+    ExecutionEngine *eng = that->engine();
+    const int elementIndex = that->d()->m_elementIndex;
+    const QString propName = name->toQString();
+    int roleIndex = that->d()->m_model->m_listModel->setExistingProperty(elementIndex, propName, value, eng);
+    if (roleIndex != -1) {
+        QVector<int> roles;
+        roles << roleIndex;
+        that->d()->m_model->emitItemsChanged(elementIndex, 1, roles);
+    }
+
+    ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
+    if (mo->initialized())
+        mo->emitPropertyNotification(name->toQString().toUtf8());
+}
+
+ReturnedValue ModelObject::get(const Managed *m, String *name, bool *hasProperty)
+{
+    const ModelObject *that = static_cast<const ModelObject*>(m);
+    const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
+    if (!role)
+        return QObjectWrapper::get(m, name, hasProperty);
+    if (hasProperty)
+        *hasProperty = true;
+    const int elementIndex = that->d()->m_elementIndex;
+    QVariant value = that->d()->m_model->data(elementIndex, role->index);
+    return that->engine()->fromVariant(value);
+}
+
+void ModelObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
+{
+    ModelObject *that = static_cast<ModelObject*>(m);
+    ExecutionEngine *v4 = that->engine();
+    name->setM(0);
+    *index = UINT_MAX;
+    if (it->arrayIndex < uint(that->d()->m_model->m_listModel->roleCount())) {
+        Scope scope(that->engine());
+        const ListLayout::Role &role = that->d()->m_model->m_listModel->getExistingRole(it->arrayIndex);
+        ++it->arrayIndex;
+        ScopedString roleName(scope, v4->newString(role.name));
+        name->setM(roleName->d());
+        *attributes = QV4::Attr_Data;
+        QVariant value = that->d()->m_model->data(that->d()->m_elementIndex, role.index);
+        p->value = v4->fromVariant(value);
+        return;
+    }
+    QV4::QObjectWrapper::advanceIterator(m, it, name, index, p, attributes);
+}
+
+DEFINE_OBJECT_VTABLE(ModelObject);
+
+} // namespace QV4
 
 DynamicRoleModelNode::DynamicRoleModelNode(QQmlListModel *owner, int uid) : m_owner(owner), m_uid(uid), m_meta(new DynamicRoleModelNodeMetaObject(this))
 {
@@ -2159,8 +2251,8 @@ QQmlV4Handle QQmlListModel::get(int index) const
             DynamicRoleModelNode *object = m_modelObjects[index];
             result = QV4::QObjectWrapper::wrap(scope.engine, object);
         } else {
-            ModelObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
-            result = QV4::QObjectWrapper::wrap(scope.engine, object);
+            QObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
+            result = scope.engine->memoryManager->alloc<QV4::ModelObject>(scope.engine, object, const_cast<QQmlListModel *>(this), index);
         }
     }
 
