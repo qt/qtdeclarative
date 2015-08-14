@@ -88,8 +88,6 @@ struct ContextStateSaver {
 namespace Heap {
 struct QmlBindingWrapper : Heap::FunctionObject {
     QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml);
-    // Constructor for QML functions and signal handlers, resulting binding wrapper is not callable!
-    QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml);
 };
 
 }
@@ -98,8 +96,6 @@ struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
     V4_OBJECT2(QmlBindingWrapper, FunctionObject)
 
     static ReturnedValue call(const Managed *that, CallData *callData);
-
-    Heap::QmlContext *context() const { return static_cast<Heap::QmlContext *>(d()->scope.ptr); }
 
     static Heap::FunctionObject *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
                                                               const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
