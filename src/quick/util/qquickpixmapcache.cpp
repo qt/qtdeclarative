@@ -148,6 +148,7 @@ public:
     class Event : public QEvent {
     public:
         Event(ReadError, const QString &, const QSize &, AutoTransform, QQuickTextureFactory *factory);
+        ~Event();
 
         ReadError error;
         QString errorString;
@@ -337,6 +338,11 @@ void QQuickPixmapReply::postReply(ReadError error, const QString &errorString,
 QQuickPixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, AutoTransform iTransformed, QQuickTextureFactory *factory)
     : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), autoTransform(iTransformed), textureFactory(factory)
 {
+}
+
+QQuickPixmapReply::Event::~Event()
+{
+    delete textureFactory;
 }
 
 QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
@@ -965,6 +971,7 @@ bool QQuickPixmapReply::event(QEvent *event)
             data->pixmapStatus = (de->error == NoError) ? QQuickPixmap::Ready : QQuickPixmap::Error;
             if (data->pixmapStatus == QQuickPixmap::Ready) {
                 data->textureFactory = de->textureFactory;
+                de->textureFactory = 0;
                 data->implicitSize = de->implicitSize;
                 data->appliedTransform = de->autoTransform;
                 PIXMAP_PROFILE(pixmapLoadingFinished(data->url,
