@@ -564,10 +564,8 @@ void tst_qv4debugger::readObject()
     QVERIFY(b_props.at(0).isObject());
     QJsonObject b_head = b_props.at(0).toObject();
     QCOMPARE(b_head.value("name").toString(), QStringLiteral("head"));
-    QVERIFY(b_head.contains("ref"));
-    QJsonObject b_head_value = frame0.collector->lookupRef(b_head.value("ref").toInt());
-    QCOMPARE(b_head_value.value("type").toString(), QStringLiteral("number"));
-    QCOMPARE(b_head_value.value("value").toDouble(), 1.0);
+    QCOMPARE(b_head.value("type").toString(), QStringLiteral("number"));
+    QCOMPARE(b_head.value("value").toDouble(), 1.0);
     QVERIFY(b_props.at(1).isObject());
     QJsonObject b_tail = b_props.at(1).toObject();
     QCOMPARE(b_tail.value("name").toString(), QStringLiteral("tail"));
@@ -580,16 +578,12 @@ void tst_qv4debugger::readObject()
     QCOMPARE(b_tail_props.size(), 2);
     QJsonObject b_tail_head = b_tail_props.at(0).toObject();
     QCOMPARE(b_tail_head.value("name").toString(), QStringLiteral("head"));
-    QVERIFY(b_tail_head.contains("ref"));
-    QJsonObject b_tail_head_value = frame0.collector->lookupRef(b_tail_head.value("ref").toInt());
-    QCOMPARE(b_tail_head_value.value("type").toString(), QStringLiteral("string"));
-    QCOMPARE(b_tail_head_value.value("value").toString(), QStringLiteral("asdf"));
+    QCOMPARE(b_tail_head.value("type").toString(), QStringLiteral("string"));
+    QCOMPARE(b_tail_head.value("value").toString(), QStringLiteral("asdf"));
     QJsonObject b_tail_tail = b_tail_props.at(1).toObject();
     QCOMPARE(b_tail_tail.value("name").toString(), QStringLiteral("tail"));
-    QVERIFY(b_tail_tail.contains("ref"));
-
-    QJsonObject b_tail_tail_value = frame0.collector->lookupRef(b_tail_tail.value("ref").toInt());
-    QCOMPARE(b_tail_tail_value.value("type").toString(), QStringLiteral("null"));
+    QCOMPARE(b_tail_tail.value("type").toString(), QStringLiteral("null"));
+    QVERIFY(b_tail_tail.value("value").isNull());
 }
 
 void tst_qv4debugger::readContextInAllFrames()

@@ -72,7 +72,7 @@ private:
     QV4::ReturnedValue getValue(Ref ref);
     bool lookupSpecialRef(Ref ref, QJsonObject *dict);
 
-    QJsonArray collectProperties(QV4::Object *object);
+    QJsonArray collectProperties(const QV4::Object *object);
     QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
     void collectArgumentsInContext();
 
