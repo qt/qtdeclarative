@@ -102,7 +102,6 @@ public:
     QQmlContext *itemContext;
     QQuickLoaderIncubator *incubator;
     QV4::PersistentValue initialPropertyValues;
-    QV4::PersistentValue qmlGlobalForIpv;
     bool updatingSize: 1;
     bool active : 1;
     bool loadingFromSource : 1;

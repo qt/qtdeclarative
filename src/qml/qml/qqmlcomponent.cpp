@@ -54,6 +54,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4objectiterator_p.h>
 
 #include <QStack>
 #include <QStringList>
@@ -61,23 +62,6 @@
 #include <QtCore/qdebug.h>
 #include <qqmlinfo.h>
 #include "qqmlmemoryprofiler_p.h"
-
-#define INITIALPROPERTIES_SOURCE \
-        "(function(object, values) {"\
-            "try {"\
-                "for (var property in values) {" \
-                    "try {"\
-                        "var properties = property.split(\".\");"\
-                        "var o = object;"\
-                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
-                            "o = o[properties[ii]];"\
-                        "}"\
-                        "o[properties[properties.length - 1]] = values[property];"\
-                    "} catch(e) {}"\
-                "}"\
-            "} catch(e) {}"\
-        "})"
-
 
 namespace {
     QThreadStorage<int> creationDepth;
@@ -1195,6 +1179,46 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     \sa incubateObject()
 */
 
+
+static void setInitialProperties(QV4::ExecutionEngine *engine, const QV4::Value &o, const QV4::Value &v)
+{
+    QV4::Scope scope(engine);
+    QV4::ScopedObject object(scope);
+    QV4::ScopedObject valueMap(scope, v);
+    QV4::ObjectIterator it(scope, valueMap, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ScopedString name(scope);
+    QV4::ScopedValue val(scope);
+    if (engine->hasException)
+        return;
+
+    while (1) {
+        name = it.nextPropertyNameAsString(val);
+        if (!name)
+            break;
+        object = o;
+        const QStringList properties = name->toQString().split(QLatin1Char('.'));
+        for (int i = 0; i < properties.length() - 1; ++i) {
+            name = engine->newString(properties.at(i));
+            object = object->get(name);
+            if (engine->hasException || !object) {
+                break;
+            }
+        }
+        if (engine->hasException || !object) {
+            engine->hasException = false;
+            continue;
+        }
+        name = engine->newString(properties.last());
+        object->put(name, val);
+        if (engine->hasException) {
+            engine->hasException = false;
+            continue;
+        }
+    }
+
+    engine->hasException = false;
+}
+
 /*!
     \internal
 */
@@ -1240,16 +1264,8 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4, rv));
     Q_ASSERT(object->isObject());
 
-    if (!valuemap->isUndefined()) {
-        QV4::ScopedObject qmlglobal(scope, args->qmlGlobal());
-        QV4::ScopedValue f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlglobal));
-        Q_ASSERT(f->as<QV4::FunctionObject>());
-        QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4->globalObject;
-        callData->args[0] = object;
-        callData->args[1] = valuemap;
-        f->as<QV4::FunctionObject>()->call(callData);
-    }
+    if (!valuemap->isUndefined())
+        setInitialProperties(v4, object, valuemap);
 
     d->completeCreate();
 
@@ -1381,7 +1397,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 }
 
 // XXX used by QSGLoader
-void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Value &qmlGlobal, const QV4::Value &valuemap, QObject *toCreate)
+void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Value &valuemap, QObject *toCreate)
 {
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
@@ -1390,16 +1406,8 @@ void QQmlComponentPrivate::initializeObjectWithInitialProperties(const QV4::Valu
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
     Q_ASSERT(object->as<QV4::Object>());
 
-    if (!valuemap.isUndefined()) {
-        QV4::ScopedObject qmlGlobalObj(scope, qmlGlobal);
-        QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4engine,
-                                                                 QString::fromLatin1(INITIALPROPERTIES_SOURCE), qmlGlobalObj));
-        QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4engine->globalObject;
-        callData->args[0] = object;
-        callData->args[1] = valuemap;
-        f->call(callData);
-    }
+    if (!valuemap.isUndefined())
+        setInitialProperties(v4engine, object, valuemap);
 }
 
 QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
@@ -1489,13 +1497,8 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o)
     if (!d()->valuemap.isUndefined()) {
         QV4::ExecutionEngine *v4 = engine();
         QV4::Scope scope(v4);
-
-        QV4::ScopedFunctionObject f(scope, QV4::Script::evaluate(v4, QString::fromLatin1(INITIALPROPERTIES_SOURCE), d()->qmlGlobal.as<Object>()));
-        QV4::ScopedCallData callData(scope, 2);
-        callData->thisObject = v4->globalObject;
-        callData->args[0] = QV4::QObjectWrapper::wrap(v4, o);
-        callData->args[1] = d()->valuemap;
-        f->call(callData);
+        QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
+        setInitialProperties(v4, obj, d()->valuemap);
     }
 }
 
