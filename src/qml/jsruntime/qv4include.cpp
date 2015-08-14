@@ -49,9 +49,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
+QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
                        const QV4::Value &qmlglobal, const QV4::Value &callback)
-    : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
+    : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0)
 {
     m_qmlglobal.set(engine, qmlglobal);
     if (callback.as<QV4::FunctionObject>())
@@ -193,9 +193,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     QV4::ScopedObject qmlcontextobject(scope, scope.engine->qmlContextObject());
 
     if (localFile.isEmpty()) {
-        QV4Include *i = new QV4Include(url, scope.engine, context,
-                                       qmlcontextobject,
-                                       callbackFunction);
+        QV4Include *i = new QV4Include(url, scope.engine, qmlcontextobject, callbackFunction);
         result = i->result();
 
     } else {
