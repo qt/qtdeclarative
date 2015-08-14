@@ -124,7 +124,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     QMetaMethod signal = QMetaObjectPrivate::signal(m_target->metaObject(), m_index);
     QString error;
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
-    m_function.set(engine, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
+    m_function.set(engine, QV4::FunctionObject::createQmlFunction(ctxt, scope, runtimeFunction, signal.parameterNames(), &error));
     if (!error.isEmpty()) {
         qmlInfo(scopeObject()) << error;
         m_function.clear();

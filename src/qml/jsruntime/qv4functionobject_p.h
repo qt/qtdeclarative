@@ -134,6 +134,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue call(const Managed *that, CallData *d);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function, bool createProto = true);
+    static Heap::FunctionObject *createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
+                                                   const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
     ReturnedValue protoProperty() { return memberData()->data[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
 

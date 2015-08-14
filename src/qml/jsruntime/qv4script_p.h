@@ -85,22 +85,6 @@ struct ContextStateSaver {
     }
 };
 
-namespace Heap {
-struct QmlBindingWrapper : Heap::FunctionObject {
-    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml);
-};
-
-}
-
-struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
-    V4_OBJECT2(QmlBindingWrapper, FunctionObject)
-
-    static ReturnedValue call(const Managed *that, CallData *callData);
-
-    static Heap::FunctionObject *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
-                                                              const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
-};
-
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
