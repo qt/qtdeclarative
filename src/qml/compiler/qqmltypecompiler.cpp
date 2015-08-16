@@ -1046,16 +1046,29 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             paramList = paramList->finish();
 
         QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-        QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
-        QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
-        QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
-        elements = elements->finish();
+        QQmlJS::AST::FunctionDeclaration *functionDeclaration = 0;
+        if (QQmlJS::AST::ExpressionStatement *es = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(foe->node)) {
+            if (QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression*>(es->expression)) {
+                functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(fe->name, fe->formals, fe->body);
+                functionDeclaration->functionToken = fe->functionToken;
+                functionDeclaration->identifierToken = fe->identifierToken;
+                functionDeclaration->lparenToken = fe->lparenToken;
+                functionDeclaration->rparenToken = fe->rparenToken;
+                functionDeclaration->lbraceToken = fe->lbraceToken;
+                functionDeclaration->rbraceToken = fe->rbraceToken;
+            }
+        }
+        if (!functionDeclaration) {
+            QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
+            QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
+            QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
+            elements = elements->finish();
 
-        QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
+            QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
 
-        QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
-        functionDeclaration->functionToken = foe->node->firstSourceLocation();
-
+            functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
+            functionDeclaration->functionToken = foe->node->firstSourceLocation();
+        }
         foe->node = functionDeclaration;
         binding->propertyNameIndex = compiler->registerString(propertyName);
         binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;

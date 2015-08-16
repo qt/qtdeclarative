@@ -117,6 +117,7 @@ private slots:
     void idProperty();
     void autoNotifyConnection();
     void assignSignal();
+    void assignSignalFunctionExpression();
     void overrideSignal_data();
     void overrideSignal();
     void dynamicProperties();
@@ -1263,6 +1264,17 @@ void tst_qqmllanguage::assignSignal()
     emit object->basicParameterizedSignal(9);
 }
 
+void tst_qqmllanguage::assignSignalFunctionExpression()
+{
+    QQmlComponent component(&engine, testFileUrl("assignSignalFunctionExpression.qml"));
+    VERIFY_ERRORS(0);
+    MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+    QVERIFY(object != 0);
+    QTest::ignoreMessage(QtWarningMsg, "MyQmlObject::basicSlot");
+    emit object->basicSignal();
+    QTest::ignoreMessage(QtWarningMsg, "MyQmlObject::basicSlotWithArgs(9)");
+    emit object->basicParameterizedSignal(9);
+}
 
 void tst_qqmllanguage::overrideSignal_data()
 {
