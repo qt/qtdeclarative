@@ -236,7 +236,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
     QV4::ScopedObject array(scope, values.value());
     if (deduplicate) {
         for (Ref i = 0; i < array->getLength(); ++i) {
-            if (array->getIndexed(i) == value.rawValue())
+            if (array->getIndexed(i) == value.rawValue() && !specialRefs.contains(i))
                 return i;
         }
     }
