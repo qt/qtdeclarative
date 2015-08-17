@@ -49,21 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QML_LIB)
-#    define Q_QML_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QML_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QML_EXPORT
-#endif
-
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-#    define Q_QML_PRIVATE_EXPORT
-#else
-#    define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
-#endif
+#define Q_QML_EXPORT
+#define Q_QML_PRIVATE_EXPORT
 
 QT_END_NAMESPACE
 #endif // QTQMLGLOBAL_P_H
