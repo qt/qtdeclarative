@@ -876,6 +876,9 @@ Item {
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
+        The event will be sent to the TestCase window or, in case of multiple windows,
+        to the current active window. See \l QGuiApplication::focusWindow() for more details.
+
         \b{Note:} At some point you should release the key using keyRelease().
 
         \sa keyRelease(), keyClick()
@@ -901,6 +904,9 @@ Item {
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
+        The event will be sent to the TestCase window or, in case of multiple windows,
+        to the current active window. See \l QGuiApplication::focusWindow() for more details.
+
         \sa keyPress(), keyClick()
     */
     function keyRelease(key, modifiers, delay) {
@@ -923,6 +929,9 @@ Item {
         Simulates clicking of \a key with an optional \a modifier on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
+
+        The event will be sent to the TestCase window or, in case of multiple windows,
+        to the current active window. See \l QGuiApplication::focusWindow() for more details.
 
         \sa keyPress(), keyRelease()
     */

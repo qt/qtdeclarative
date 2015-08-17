@@ -359,7 +359,7 @@ QObject *QQmlGuiProvider::inputMethod()
 {
     // We don't have any input method code by default
     QObject *o = new QObject();
-    o->setObjectName(QString::fromLatin1("No inputMethod available"));
+    o->setObjectName(QStringLiteral("No inputMethod available"));
     QQmlEngine::setObjectOwnership(o, QQmlEngine::JavaScriptOwnership);
     return o;
 }
@@ -368,7 +368,7 @@ QObject *QQmlGuiProvider::inputMethod()
 QObject *QQmlGuiProvider::styleHints()
 {
     QObject *o = new QObject();
-    o->setObjectName(QString::fromLatin1("No styleHints available"));
+    o->setObjectName(QStringLiteral("No styleHints available"));
     QQmlEngine::setObjectOwnership(o, QQmlEngine::JavaScriptOwnership);
     return o;
 }

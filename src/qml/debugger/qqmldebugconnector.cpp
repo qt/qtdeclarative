@@ -56,6 +56,7 @@ Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebuggerServiceFactory)
 
 struct QQmlDebugConnectorParams {
     QString pluginKey;
+    QStringList services;
     QString arguments;
     QQmlDebugConnector *instance;
 
@@ -81,6 +82,13 @@ void QQmlDebugConnector::setPluginKey(const QString &key)
         else
             params->pluginKey = key;
     }
+}
+
+void QQmlDebugConnector::setServices(const QStringList &services)
+{
+    QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
+    if (params)
+        params->services = services;
 }
 
 QString QQmlDebugConnector::commandLineArguments()
@@ -119,7 +127,9 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
             foreach (const QJsonObject &object, metaDataForQQmlDebugService()) {
                 foreach (const QJsonValue &key, object.value(QLatin1String("MetaData")).toObject()
                          .value(QLatin1String("Keys")).toArray()) {
-                    loadQQmlDebugService(key.toString());
+                    QString keyString = key.toString();
+                    if (params->services.isEmpty() || params->services.contains(keyString))
+                        loadQQmlDebugService(keyString);
                 }
             }
         }

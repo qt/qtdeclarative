@@ -74,6 +74,7 @@ public Q_SLOTS:
 
 private:
     QWindow *eventWindow(QObject *item = 0);
+    QWindow *activeWindow();
 };
 
 QT_END_NAMESPACE

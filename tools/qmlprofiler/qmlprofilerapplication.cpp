@@ -476,7 +476,8 @@ void QmlProfilerApplication::run()
     if (m_runMode == LaunchMode) {
         m_process = new QProcess(this);
         QStringList arguments;
-        arguments << QString::fromLatin1("-qmljsdebugger=port:%1,block").arg(m_port);
+        arguments << QString::fromLatin1("-qmljsdebugger=port:%1,block,services:CanvasFrameRate")
+                     .arg(m_port);
         arguments << m_programArguments;
 
         m_process->setProcessChannelMode(QProcess::MergedChannels);

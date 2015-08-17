@@ -1638,7 +1638,7 @@ void QQmlData::destroyed(QObject *object)
                 if (location.sourceFile.isEmpty())
                     location.sourceFile = QStringLiteral("<Unknown File>");
                 locationString.append(location.sourceFile);
-                locationString.append(QString::fromLatin1(":%0: ").arg(location.line));
+                locationString.append(QStringLiteral(":%0: ").arg(location.line));
                 QString source = expr->expression();
                 if (source.size() > 100) {
                     source.truncate(96);

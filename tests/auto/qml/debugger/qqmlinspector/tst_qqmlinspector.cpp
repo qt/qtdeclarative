@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    void startQmlsceneProcess(const char *qmlFile);
+    void startQmlsceneProcess(const char *qmlFile, bool restrictMode = true);
 
 private:
     QQmlDebugProcess *m_process;
@@ -68,18 +68,20 @@ private:
     QQmlInspectorClient *m_client;
 
 private slots:
-    void init();
     void cleanup();
 
+    void connect_data();
     void connect();
     void showAppOnTop();
     void reloadQml();
     void reloadQmlWindow();
 };
 
-void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
+void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */, bool restrictServices)
 {
-    const QString argument = "-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block";
+    const QString argument = QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
+            .arg(STR_PORT_FROM).arg(STR_PORT_TO)
+            .arg(restrictServices ? QStringLiteral(",services:QmlInspector") : QString());
 
     // ### This should be using qml instead of qmlscene, but can't because of QTBUG-33376 (same as the XFAIL testcase)
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
@@ -87,15 +89,13 @@ void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */)
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");
 
-    QQmlDebugConnection *m_connection = new QQmlDebugConnection();
+    m_connection = new QQmlDebugConnection();
     m_client = new QQmlInspectorClient(m_connection);
 
-    const int port = m_process->debugPort();
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-}
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
-void tst_QQmlInspector::init()
-{
 }
 
 void tst_QQmlInspector::cleanup()
@@ -104,16 +104,25 @@ void tst_QQmlInspector::cleanup()
         qDebug() << "Process State:" << m_process->state();
         qDebug() << "Application Output:" << m_process->output();
     }
-    delete m_process;
-    delete m_connection;
     delete m_client;
+    m_client = 0;
+    delete m_connection;
+    m_connection = 0;
+    delete m_process;
+    m_process = 0;
+}
+
+void tst_QQmlInspector::connect_data()
+{
+    QTest::addColumn<bool>("restrictMode");
+    QTest::newRow("unrestricted") << false;
+    QTest::newRow("restricted") << true;
 }
 
 void tst_QQmlInspector::connect()
 {
-    startQmlsceneProcess("qtquick2.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    QFETCH(bool, restrictMode);
+    startQmlsceneProcess("qtquick2.qml", restrictMode);
 }
 
 void tst_QQmlInspector::showAppOnTop()

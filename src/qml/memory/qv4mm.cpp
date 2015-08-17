@@ -275,7 +275,6 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
                     Q_V4_PROFILE_ALLOC(m_d->engine, allocSize, Profiling::HeapPage),
                     OSAllocator::JSGCHeapPages);
         m_d->heapChunks.append(allocation);
-        std::sort(m_d->heapChunks.begin(), m_d->heapChunks.end());
 
         header = reinterpret_cast<Data::ChunkHeader *>(allocation.base());
         header->itemSize = int(size);

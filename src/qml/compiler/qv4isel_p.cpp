@@ -93,8 +93,6 @@ void IRDecoder::visitMove(IR::Move *s)
                 loadThisObject(s->target);
             else if (n->builtin == IR::Name::builtin_qml_context)
                 loadQmlContext(s->target);
-            else if (n->builtin == IR::Name::builtin_qml_id_array)
-                loadQmlIdArray(s->target);
             else if (n->builtin == IR::Name::builtin_qml_imported_scripts_object)
                 loadQmlImportedScripts(s->target);
             else if (n->qmlSingleton)
@@ -138,8 +136,8 @@ void IRDecoder::visitMove(IR::Move *s)
 #else
                 bool captureRequired = true;
 
-                Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
-                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+                Q_ASSERT(m->kind != IR::Member::MemberOfEnum && m->kind != IR::Member::MemberOfIdObjectsArray);
+                const int attachedPropertiesId = m->attachedPropertiesId;
                 const bool isSingletonProperty = m->kind == IR::Member::MemberOfSingletonObject;
 
                 if (_function && attachedPropertiesId == 0 && !m->property->isConstant()) {
@@ -157,6 +155,9 @@ void IRDecoder::visitMove(IR::Move *s)
                 }
                 getQObjectProperty(m->base, m->property->coreIndex, captureRequired, isSingletonProperty, attachedPropertiesId, s->target);
 #endif // V4_BOOTSTRAP
+                return;
+            } else if (m->kind == IR::Member::MemberOfIdObjectsArray) {
+                getQmlContextProperty(m->base, (IR::Member::MemberKind)m->kind, m->idIndex, s->target);
                 return;
             } else if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {
                 getProperty(m->base, *m->name, s->target);
@@ -177,6 +178,7 @@ void IRDecoder::visitMove(IR::Move *s)
                 return;
             } else if (Member *member = c->base->asMember()) {
 #ifndef V4_BOOTSTRAP
+                Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
                 if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
                     callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, s->target);
                     return;
@@ -200,7 +202,8 @@ void IRDecoder::visitMove(IR::Move *s)
         if (m->base->asTemp() || m->base->asConst() || m->base->asArgLocal()) {
             if (s->source->asTemp() || s->source->asConst() || s->source->asArgLocal()) {
                 Q_ASSERT(m->kind != IR::Member::MemberOfEnum);
-                const int attachedPropertiesId = m->attachedPropertiesIdOrEnumValue;
+                Q_ASSERT(m->kind != IR::Member::MemberOfIdObjectsArray);
+                const int attachedPropertiesId = m->attachedPropertiesId;
                 if (m->property && attachedPropertiesId == 0) {
 #ifdef V4_BOOTSTRAP
                     Q_UNIMPLEMENTED();
@@ -251,6 +254,7 @@ void IRDecoder::visitExp(IR::Exp *s)
         } else if (Member *member = c->base->asMember()) {
             Q_ASSERT(member->base->asTemp() || member->base->asArgLocal());
 #ifndef V4_BOOTSTRAP
+            Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
             if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
                 callQmlContextProperty(member->base, (IR::Member::MemberKind)member->kind, member->property->coreIndex, c->args, 0);
                 return;

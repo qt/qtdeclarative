@@ -1458,7 +1458,6 @@ JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR
     , _scopeObject(0)
     , _qmlContextTemp(-1)
     , _importedScriptsTemp(-1)
-    , _idArrayTemp(-1)
 {
     _module = jsModule;
     _module->setFileName(fileName);
@@ -1765,14 +1764,12 @@ void JSCodeGen::beginFunctionBodyHook()
 {
     _qmlContextTemp = _block->newTemp();
     _importedScriptsTemp = _block->newTemp();
-    _idArrayTemp = _block->newTemp();
 
 #ifndef V4_BOOTSTRAP
     QV4::IR::Temp *temp = _block->TEMP(_qmlContextTemp);
     move(temp, _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0));
 
     move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
-    move(_block->TEMP(_idArrayTemp), _block->NAME(QV4::IR::Name::builtin_qml_id_array, 0, 0));
 #endif
 }
 
@@ -1798,7 +1795,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
     foreach (const IdMapping &mapping, _idObjects)
         if (name == mapping.name) {
             _function->idObjectDependencies.insert(mapping.idIndex);
-            QV4::IR::Expr *s = subscript(_block->TEMP(_idArrayTemp), _block->CONST(QV4::IR::SInt32Type, mapping.idIndex));
+            QV4::IR::Expr *s = _block->MEMBER(_block->TEMP(_qmlContextTemp), _function->newString(name), 0, QV4::IR::Member::MemberOfIdObjectsArray, mapping.idIndex);
             QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
             _block->MOVE(result, s);
             result = _block->TEMP(result->index);

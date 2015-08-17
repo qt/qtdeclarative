@@ -68,6 +68,7 @@ QT_BEGIN_NAMESPACE
     F(StoreContextObjectProperty, storeContextObjectProperty) \
     F(LoadScopeObjectProperty, loadScopeObjectProperty) \
     F(LoadContextObjectProperty, loadContextObjectProperty) \
+    F(LoadIdObject, loadIdObject) \
     F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
     F(LoadSingletonQObjectProperty, loadQObjectProperty) \
     F(Push, push) \
@@ -132,7 +133,6 @@ QT_BEGIN_NAMESPACE
     F(BinopContext, binopContext) \
     F(LoadThis, loadThis) \
     F(LoadQmlContext, loadQmlContext) \
-    F(LoadQmlIdArray, loadQmlIdArray) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlSingleton, loadQmlSingleton)
 
@@ -307,6 +307,12 @@ union Instr
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
+        Param base;
+        Param result;
+    };
+    struct instr_loadIdObject {
+        MOTH_INSTR_HEADER
+        int index;
         Param base;
         Param result;
     };
@@ -733,10 +739,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_loadQmlIdArray {
-        MOTH_INSTR_HEADER
-        Param result;
-    };
     struct instr_loadQmlImportedScripts {
         MOTH_INSTR_HEADER
         Param result;
@@ -768,6 +770,7 @@ union Instr
     instr_getLookup getLookup;
     instr_loadScopeObjectProperty loadScopeObjectProperty;
     instr_loadContextObjectProperty loadContextObjectProperty;
+    instr_loadIdObject loadIdObject;
     instr_loadQObjectProperty loadQObjectProperty;
     instr_loadAttachedQObjectProperty loadAttachedQObjectProperty;
     instr_storeProperty storeProperty;
@@ -837,7 +840,6 @@ union Instr
     instr_binopContext binopContext;
     instr_loadThis loadThis;
     instr_loadQmlContext loadQmlContext;
-    instr_loadQmlIdArray loadQmlIdArray;
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlSingleton loadQmlSingleton;
 

@@ -595,13 +595,6 @@ void InstructionSelection::loadQmlContext(IR::Expr *e)
     addInstruction(load);
 }
 
-void InstructionSelection::loadQmlIdArray(IR::Expr *e)
-{
-    Instruction::LoadQmlIdArray load;
-    load.result = getResultParam(e);
-    addInstruction(load);
-}
-
 void InstructionSelection::loadQmlImportedScripts(IR::Expr *e)
 {
     Instruction::LoadQmlImportedScripts load;
@@ -750,6 +743,12 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::M
         Instruction::LoadContextObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
+        load.result = getResultParam(target);
+        addInstruction(load);
+    } else if (kind == IR::Member::MemberOfIdObjectsArray) {
+        Instruction::LoadIdObject load;
+        load.base = getParam(source);
+        load.index = index;
         load.result = getResultParam(target);
         addInstruction(load);
     } else {

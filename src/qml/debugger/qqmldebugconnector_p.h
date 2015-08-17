@@ -58,6 +58,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugConnector : public QObject
     Q_OBJECT
 public:
     static void setPluginKey(const QString &key);
+    static void setServices(const QStringList &services);
     static QQmlDebugConnector *instance();
 
     virtual bool blockingMode() const = 0;

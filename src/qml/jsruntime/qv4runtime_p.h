@@ -210,7 +210,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 
     // qml
     static ReturnedValue getQmlContext(NoThrowEngine *engine);
-    static ReturnedValue getQmlIdArray(NoThrowEngine *engine);
     static ReturnedValue getQmlImportedScripts(NoThrowEngine *engine);
     static ReturnedValue getQmlSingleton(NoThrowEngine *engine, int nameIndex);
     static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
@@ -218,6 +217,8 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static ReturnedValue getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
     static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
     static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
+    static ReturnedValue getQmlIdObject(ExecutionEngine *engine, const Value &context, uint index);
+
     static void setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
     static void setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
     static void setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value);

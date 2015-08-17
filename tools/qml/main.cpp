@@ -209,7 +209,7 @@ public Q_SLOTS:
         //Will be checked before calling exec()
         earlyExit = true;
     }
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
     void onOpenGlContextCreated(QOpenGLContext *context);
 #endif
 };
@@ -231,7 +231,7 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 
 void LoadWatcher::checkForWindow(QObject *o)
 {
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
     if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
         connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
                 this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
@@ -241,7 +241,7 @@ void LoadWatcher::checkForWindow(QObject *o)
 #endif // QT_GUI_LIB
 }
 
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
 void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
 {
     context->makeCurrent(qobject_cast<QWindow *>(sender()));

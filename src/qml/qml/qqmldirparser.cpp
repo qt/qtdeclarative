@@ -146,7 +146,7 @@ bool QQmlDirParser::parse(const QString &source)
 
         if (invalidLine) {
             reportError(lineNumber, 0,
-                        QString::fromLatin1("invalid qmldir directive contains too many tokens"));
+                        QStringLiteral("invalid qmldir directive contains too many tokens"));
             continue;
         } else if (sectionCount == 0) {
             continue; // no sections, no party.
@@ -154,17 +154,17 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("module")) {
             if (sectionCount != 2) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("module identifier directive requires one argument, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("module identifier directive requires one argument, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
             if (!_typeNamespace.isEmpty()) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("only one module identifier directive may be defined in a qmldir file"));
+                            QStringLiteral("only one module identifier directive may be defined in a qmldir file"));
                 continue;
             }
             if (!firstLine) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("module identifier directive must be the first directive in a qmldir file"));
+                            QStringLiteral("module identifier directive must be the first directive in a qmldir file"));
                 continue;
             }
 
@@ -173,7 +173,7 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("plugin")) {
             if (sectionCount < 2 || sectionCount > 3) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("plugin directive requires one or two arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("plugin directive requires one or two arguments, but %1 were provided").arg(sectionCount - 1));
 
                 continue;
             }
@@ -185,7 +185,7 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("internal")) {
             if (sectionCount != 3) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("internal types require 2 arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("internal types require 2 arguments, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
             Component entry(sections[1], sections[2], -1, -1);
@@ -194,7 +194,7 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("singleton")) {
             if (sectionCount < 3 || sectionCount > 4) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("singleton types require 2 or 3 arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("singleton types require 2 or 3 arguments, but %1 were provided").arg(sectionCount - 1));
                 continue;
             } else if (sectionCount == 3) {
                 // handle qmldir directory listing case where singleton is defined in the following pattern:
@@ -218,7 +218,7 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("typeinfo")) {
             if (sectionCount != 2) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("typeinfo requires 1 argument, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("typeinfo requires 1 argument, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
 #ifdef QT_CREATOR
@@ -228,13 +228,13 @@ bool QQmlDirParser::parse(const QString &source)
 
         } else if (sections[0] == QLatin1String("designersupported")) {
             if (sectionCount != 1)
-                reportError(lineNumber, 0, QString::fromLatin1("designersupported does not expect any argument"));
+                reportError(lineNumber, 0, QStringLiteral("designersupported does not expect any argument"));
             else
                 _designerSupported = true;
         } else if (sections[0] == QLatin1String("depends")) {
             if (sectionCount != 3) {
                 reportError(lineNumber, 0,
-                            QString::fromLatin1("depends requires 2 arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("depends requires 2 arguments, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
 
@@ -268,7 +268,7 @@ bool QQmlDirParser::parse(const QString &source)
             }
         } else {
             reportError(lineNumber, 0,
-                        QString::fromLatin1("a component declaration requires two or three arguments, but %1 were provided").arg(sectionCount));
+                        QStringLiteral("a component declaration requires two or three arguments, but %1 were provided").arg(sectionCount));
         }
 
         firstLine = false;
@@ -364,14 +364,14 @@ bool QQmlDirParser::designerSupported() const
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
 {
-    const QString output = QString::fromLatin1("{%1 %2.%3}").
+    const QString output = QStringLiteral("{%1 %2.%3}").
         arg(component.typeName).arg(component.majorVersion).arg(component.minorVersion);
     return debug << qPrintable(output);
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Script &script)
 {
-    const QString output = QString::fromLatin1("{%1 %2.%3}").
+    const QString output = QStringLiteral("{%1 %2.%3}").
         arg(script.nameSpace).arg(script.majorVersion).arg(script.minorVersion);
     return debug << qPrintable(output);
 }

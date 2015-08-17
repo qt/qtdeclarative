@@ -39,16 +39,6 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 
-#ifndef Q_ALWAYS_INLINE
-#if defined(Q_CC_GNU)
-#  define Q_ALWAYS_INLINE inline __attribute__((always_inline))
-#elif defined(Q_CC_MSVC)
-#  define Q_ALWAYS_INLINE __forceinline
-#else
-#  define Q_ALWAYS_INLINE inline
-#endif
-#endif // Q_ALWAYS_INLINE
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

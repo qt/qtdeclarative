@@ -50,7 +50,7 @@ QuickTestEvent::~QuickTestEvent()
 
 bool QuickTestEvent::keyPress(int key, int modifiers, int delay)
 {
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyPress(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
@@ -59,7 +59,7 @@ bool QuickTestEvent::keyPress(int key, int modifiers, int delay)
 
 bool QuickTestEvent::keyRelease(int key, int modifiers, int delay)
 {
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyRelease(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
@@ -68,7 +68,7 @@ bool QuickTestEvent::keyRelease(int key, int modifiers, int delay)
 
 bool QuickTestEvent::keyClick(int key, int modifiers, int delay)
 {
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyClick(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
@@ -78,7 +78,7 @@ bool QuickTestEvent::keyClick(int key, int modifiers, int delay)
 bool QuickTestEvent::keyPressChar(const QString &character, int modifiers, int delay)
 {
     QTEST_ASSERT(character.length() == 1);
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyPress(window, character[0].toLatin1(), Qt::KeyboardModifiers(modifiers), delay);
@@ -88,7 +88,7 @@ bool QuickTestEvent::keyPressChar(const QString &character, int modifiers, int d
 bool QuickTestEvent::keyReleaseChar(const QString &character, int modifiers, int delay)
 {
     QTEST_ASSERT(character.length() == 1);
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyRelease(window, character[0].toLatin1(), Qt::KeyboardModifiers(modifiers), delay);
@@ -98,7 +98,7 @@ bool QuickTestEvent::keyReleaseChar(const QString &character, int modifiers, int
 bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int delay)
 {
     QTEST_ASSERT(character.length() == 1);
-    QWindow *window = eventWindow();
+    QWindow *window = activeWindow();
     if (!window)
         return false;
     QTest::keyClick(window, character[0].toLatin1(), Qt::KeyboardModifiers(modifiers), delay);
@@ -314,6 +314,13 @@ QWindow *QuickTestEvent::eventWindow(QObject *item)
     if (testParentitem)
         return testParentitem->window();
     return 0;
+}
+
+QWindow *QuickTestEvent::activeWindow()
+{
+    if (QWindow *window = QGuiApplication::focusWindow())
+        return window;
+    return eventWindow();
 }
 
 QT_END_NAMESPACE

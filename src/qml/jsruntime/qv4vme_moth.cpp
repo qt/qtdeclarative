@@ -531,6 +531,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         STOREVALUE(instr.result, Runtime::getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadContextObjectProperty)
 
+    MOTH_BEGIN_INSTR(LoadIdObject)
+        STOREVALUE(instr.result, Runtime::getQmlIdObject(engine, VALUE(instr.base), instr.index));
+    MOTH_END_INSTR(LoadIdObject)
+
     MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
         STOREVALUE(instr.result, Runtime::getQmlAttachedProperty(engine, instr.attachedPropertiesId, instr.propertyIndex));
     MOTH_END_INSTR(LoadAttachedQObjectProperty)
@@ -906,10 +910,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_BEGIN_INSTR(LoadQmlContext)
         VALUE(instr.result) = Runtime::getQmlContext(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlContext)
-
-    MOTH_BEGIN_INSTR(LoadQmlIdArray)
-        VALUE(instr.result) = Runtime::getQmlIdArray(static_cast<QV4::NoThrowEngine*>(engine));
-    MOTH_END_INSTR(LoadQmlIdArray)
 
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
         VALUE(instr.result) = Runtime::getQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));

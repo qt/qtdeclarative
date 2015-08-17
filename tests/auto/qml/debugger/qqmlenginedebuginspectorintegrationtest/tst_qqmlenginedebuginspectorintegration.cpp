@@ -61,6 +61,7 @@ public:
 
 
 private:
+    void init(bool restrictServices);
     QmlDebugObjectReference findRootObject();
 
     QQmlDebugProcess *m_process;
@@ -68,9 +69,9 @@ private:
     QQmlEngineDebugClient *m_engineDebugClient;
 
 private slots:
-    void init();
     void cleanup();
 
+    void connect_data();
     void connect();
     void clearObjectReferenceHashonReloadQml();
 };
@@ -93,9 +94,12 @@ QmlDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject(
 }
 
 
-void tst_QQmlEngineDebugInspectorIntegration::init()
+void tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
 {
-    const QString argument = "-qmljsdebugger=port:" STR_PORT_FROM "," STR_PORT_TO ",block";
+    const QString argument = QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
+            .arg(STR_PORT_FROM).arg(STR_PORT_TO)
+            .arg(restrictServices ? QStringLiteral(",services:QmlDebugger,QmlInspector") :
+                                    QString());
 
     // ### Still using qmlscene because of QTBUG-33376
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
@@ -108,10 +112,8 @@ void tst_QQmlEngineDebugInspectorIntegration::init()
     m_inspectorClient = new QQmlInspectorClient(m_connection);
     m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
 
-    const int port = m_process->debugPort();
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-    bool ok = m_connection->waitForConnected();
-    QVERIFY(ok);
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
+    QVERIFY(m_connection->waitForConnected());
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::cleanup()
@@ -125,14 +127,24 @@ void tst_QQmlEngineDebugInspectorIntegration::cleanup()
     delete m_inspectorClient;
 }
 
+void tst_QQmlEngineDebugInspectorIntegration::connect_data()
+{
+    QTest::addColumn<bool>("restrictMode");
+    QTest::newRow("unrestricted") << false;
+    QTest::newRow("restricted") << true;
+}
+
 void tst_QQmlEngineDebugInspectorIntegration::connect()
 {
+    QFETCH(bool, restrictMode);
+    init(restrictMode);
     QTRY_COMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
     QTRY_COMPARE(m_engineDebugClient->state(), QQmlDebugClient::Enabled);
 }
 
 void tst_QQmlEngineDebugInspectorIntegration::clearObjectReferenceHashonReloadQml()
 {
+    init(true);
     QTRY_COMPARE(m_engineDebugClient->state(), QQmlDebugClient::Enabled);
     bool success = false;
     QmlDebugObjectReference rootObject = findRootObject();

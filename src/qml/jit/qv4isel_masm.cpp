@@ -579,11 +579,6 @@ void InstructionSelection::loadQmlContext(IR::Expr *temp)
     generateFunctionCall(temp, Runtime::getQmlContext, Assembler::EngineRegister);
 }
 
-void InstructionSelection::loadQmlIdArray(IR::Expr *temp)
-{
-    generateFunctionCall(temp, Runtime::getQmlIdArray, Assembler::EngineRegister);
-}
-
 void InstructionSelection::loadQmlImportedScripts(IR::Expr *temp)
 {
     generateFunctionCall(temp, Runtime::getQmlImportedScripts, Assembler::EngineRegister);
@@ -681,6 +676,8 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::Mem
         generateFunctionCall(target, Runtime::getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else if (kind == IR::Member::MemberOfQmlContextObject)
         generateFunctionCall(target, Runtime::getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+    else if (kind == IR::Member::MemberOfIdObjectsArray)
+        generateFunctionCall(target, Runtime::getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
