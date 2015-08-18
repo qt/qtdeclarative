@@ -317,7 +317,14 @@ ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
 
 void ExpressionEvalJob::handleResult(QV4::ScopedValue &result)
 {
+    if (hasExeption())
+        exception = result->toQStringNoThrow();
     collector->collect(result);
+}
+
+const QString &ExpressionEvalJob::exceptionMessage() const
+{
+    return exception;
 }
 
 GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine, int seq)

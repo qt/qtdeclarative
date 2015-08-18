@@ -90,6 +90,7 @@ public:
 
     QV4DataCollector *collector() const;
     QV4DebuggerAgent debuggerAgent;
+    QV4DataCollector::Refs *refs();
 
 protected:
     void messageReceived(const QByteArray &);

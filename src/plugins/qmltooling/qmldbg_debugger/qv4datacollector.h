@@ -104,11 +104,13 @@ private:
 class ExpressionEvalJob: public QV4::Debugging::Debugger::JavaScriptJob
 {
     QV4DataCollector *collector;
+    QString exception;
 
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
                       QV4DataCollector *collector);
     virtual void handleResult(QV4::ScopedValue &result);
+    const QString &exceptionMessage() const;
 };
 
 class GatherSourcesJob: public QV4::Debugging::Debugger::Job

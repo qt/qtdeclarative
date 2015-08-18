@@ -95,10 +95,12 @@ public:
         QV4::ExecutionEngine *engine;
         int frameNr;
         const QString &script;
+        bool resultIsException;
 
     public:
         JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
         void run();
+        bool hasExeption() const;
 
     protected:
         virtual void handleResult(QV4::ScopedValue &result) = 0;
