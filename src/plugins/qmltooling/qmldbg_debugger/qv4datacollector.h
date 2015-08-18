@@ -116,11 +116,12 @@ public:
 class GatherSourcesJob: public QV4::Debugging::Debugger::Job
 {
     QV4::ExecutionEngine *engine;
-    const int seq;
+    QStringList sources;
 
 public:
-    GatherSourcesJob(QV4::ExecutionEngine *engine, int seq);
+    GatherSourcesJob(QV4::ExecutionEngine *engine);
     void run();
+    const QStringList &result() const;
 };
 
 class ArgumentCollectJob: public QV4::Debugging::Debugger::Job

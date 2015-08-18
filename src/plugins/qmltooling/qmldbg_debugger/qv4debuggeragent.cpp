@@ -105,27 +105,6 @@ void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger,
     m_debugService->send(event);
 }
 
-void QV4DebuggerAgent::sourcesCollected(QV4::Debugging::Debugger *debugger,
-                                        const QStringList &sources, int requestSequenceNr)
-{
-    QJsonArray body;
-    foreach (const QString &source, sources) {
-        QJsonObject src;
-        src[QLatin1String("name")] = source;
-        src[QLatin1String("scriptType")] = 4;
-        body.append(src);
-    }
-
-    QJsonObject response;
-    response[QLatin1String("success")] = true;
-    response[QLatin1String("running")] = debugger->state() == QV4::Debugging::Debugger::Running;
-    response[QLatin1String("body")] = body;
-    response[QLatin1String("command")] = QStringLiteral("scripts");
-    response[QLatin1String("request_seq")] = requestSequenceNr;
-    response[QLatin1String("type")] = QStringLiteral("response");
-    m_debugService->send(response);
-}
-
 void QV4DebuggerAgent::addDebugger(QV4::Debugging::Debugger *debugger)
 {
     Q_ASSERT(!m_debuggers.contains(debugger));
@@ -139,9 +118,6 @@ void QV4DebuggerAgent::addDebugger(QV4::Debugging::Debugger *debugger)
 
     connect(debugger, SIGNAL(destroyed(QObject*)),
             this, SLOT(handleDebuggerDeleted(QObject*)));
-    connect(debugger, SIGNAL(sourcesCollected(QV4::Debugging::Debugger*,QStringList,int)),
-            this, SLOT(sourcesCollected(QV4::Debugging::Debugger*,QStringList,int)),
-            Qt::QueuedConnection);
     connect(debugger, SIGNAL(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
             this, SLOT(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
             Qt::QueuedConnection);
@@ -152,8 +128,6 @@ void QV4DebuggerAgent::removeDebugger(QV4::Debugging::Debugger *debugger)
     m_debuggers.removeAll(debugger);
     disconnect(debugger, SIGNAL(destroyed(QObject*)),
                this, SLOT(handleDebuggerDeleted(QObject*)));
-    disconnect(debugger, SIGNAL(sourcesCollected(QV4::Debugging::Debugger*,QStringList,int)),
-               this, SLOT(sourcesCollected(QV4::Debugging::Debugger*,QStringList,int)));
     disconnect(debugger,
                SIGNAL(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
                this,

@@ -66,8 +66,6 @@ public:
 
 public slots:
     void debuggerPaused(QV4::Debugging::Debugger *debugger, QV4::Debugging::PauseReason reason);
-    void sourcesCollected(QV4::Debugging::Debugger *debugger, const QStringList &sources,
-                          int requestSequenceNr);
     void handleDebuggerDeleted(QObject *debugger);
 
 private:

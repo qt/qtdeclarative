@@ -102,7 +102,7 @@ protected:
     void addCommand() { response.insert(QStringLiteral("command"), cmd); }
     void addRequestSequence() { response.insert(QStringLiteral("request_seq"), seq); }
     void addSuccess(bool success) { response.insert(QStringLiteral("success"), success); }
-    void addBody(const QJsonObject &body)
+    void addBody(const QJsonValue &body)
     {
         response.insert(QStringLiteral("body"), body);
     }
@@ -506,10 +506,22 @@ public:
 
         // do it:
         QV4::Debugging::Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-        GatherSourcesJob job(debugger->engine(), requestSequenceNr());
+        GatherSourcesJob job(debugger->engine());
         debugger->runInEngine(&job);
 
-        // response will be send by
+        QJsonArray body;
+        foreach (const QString &source, job.result()) {
+            QJsonObject src;
+            src[QLatin1String("name")] = source;
+            src[QLatin1String("scriptType")] = 4;
+            body.append(src);
+        }
+
+        addSuccess(true);
+        addRunning();
+        addBody(body);
+        addCommand();
+        addRequestSequence();
     }
 };
 

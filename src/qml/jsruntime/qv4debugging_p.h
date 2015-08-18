@@ -162,7 +162,6 @@ public: // execution hooks
     void aboutToThrow();
 
 signals:
-    void sourcesCollected(QV4::Debugging::Debugger *self, const QStringList &sources, int seq);
     void debuggerPaused(QV4::Debugging::Debugger *self, QV4::Debugging::PauseReason reason);
 
 private:

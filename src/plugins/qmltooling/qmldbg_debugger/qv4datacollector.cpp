@@ -348,23 +348,22 @@ const QString &ExpressionEvalJob::exceptionMessage() const
     return exception;
 }
 
-GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine, int seq)
+GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine)
     : engine(engine)
-    , seq(seq)
 {}
 
 void GatherSourcesJob::run()
 {
-    QStringList sources;
-
     foreach (QV4::CompiledData::CompilationUnit *unit, engine->compilationUnits) {
         QString fileName = unit->fileName();
         if (!fileName.isEmpty())
             sources.append(fileName);
     }
+}
 
-    QV4::Debugging::Debugger *debugger = engine->debugger;
-    emit debugger->sourcesCollected(debugger, sources, seq);
+const QStringList &GatherSourcesJob::result() const
+{
+    return sources;
 }
 
 ArgumentCollectJob::ArgumentCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
