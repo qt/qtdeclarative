@@ -252,14 +252,14 @@ public:
     inline bool equals(const QHashedStringRef &string) const {
         return length == string.length() &&
                hash == string.hash() &&
-               (isQString()?QHashedString::compare(string.constData(), (QChar *)utf16Data(), length):
+               (isQString()?QHashedString::compare(string.constData(), (const QChar *)utf16Data(), length):
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
 
     inline bool equals(const QHashedCStringRef &string) const {
         return length == string.length() &&
                hash == string.hash() &&
-               (isQString()?QHashedString::compare((QChar *)utf16Data(), string.constData(), length):
+               (isQString()?QHashedString::compare((const QChar *)utf16Data(), string.constData(), length):
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
 };

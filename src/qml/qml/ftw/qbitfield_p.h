@@ -129,15 +129,16 @@ QBitField QBitField::united(const QBitField &o)
         rv.bits = max;
         rv.ownData = new quint32[length + 1];
         *(rv.ownData) = 1;
-        rv.data = rv.ownData + 1;
+        quint32 *rvdata;
+        rv.data = rvdata = rv.ownData + 1;
         if (bits > o.bits) {
-            ::memcpy((quint32 *)rv.data, data, length * sizeof(quint32));
+            ::memcpy(rvdata, data, length * sizeof(quint32));
             for (quint32 ii = 0; ii < (o.bits + quint32(31)) / 32; ++ii)
-                ((quint32 *)rv.data)[ii] |= o.data[ii];
+                (rvdata)[ii] |= o.data[ii];
         } else {
-            ::memcpy((quint32 *)rv.data, o.data, length * sizeof(quint32));
+            ::memcpy(rvdata, o.data, length * sizeof(quint32));
             for (quint32 ii = 0; ii < (bits + quint32(31)) / 32; ++ii)
-                ((quint32 *)rv.data)[ii] |= data[ii];
+                (rvdata)[ii] |= data[ii];
         }
         return rv;
     }

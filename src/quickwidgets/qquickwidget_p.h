@@ -70,7 +70,7 @@ public:
     ~QQuickWidgetPrivate();
 
     void execute();
-    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
+    void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void initResize();
     void updateSize();
     void updatePosition();
@@ -82,7 +82,7 @@ public:
     void destroyContext();
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
-    QObject *focusObject();
+    QObject *focusObject() Q_DECL_OVERRIDE;
 
     GLuint textureId() const Q_DECL_OVERRIDE;
     QImage grabFramebuffer() Q_DECL_OVERRIDE;

@@ -323,7 +323,7 @@ Item {
     \qmlproperty point QtQuick::WheelEvent::pixelDelta
 
     This property holds the delta in screen pixels and is available in plataforms that
-    have high-resolution trackpads, such as Mac OS X.
+    have high-resolution trackpads, such as OS X.
     The x and y cordinate of this property holds the delta in horizontal and
     vertical orientation. The value should be used directly to scroll content on screen.
 

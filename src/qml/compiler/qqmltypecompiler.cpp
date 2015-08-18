@@ -836,7 +836,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                 propertyFlags |= QQmlPropertyData::IsQList;
         }
 
-        if ((!p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
+        if (!(p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
             propertyFlags |= QQmlPropertyData::IsWritable;
 
 
@@ -860,7 +860,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
             continue;
 
         quint32 propertyFlags = QQmlPropertyData::IsVarProperty;
-        if (!p->flags & QV4::CompiledData::Property::IsReadOnly)
+        if (!(p->flags & QV4::CompiledData::Property::IsReadOnly))
             propertyFlags |= QQmlPropertyData::IsWritable;
 
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();

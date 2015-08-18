@@ -96,9 +96,9 @@ Rectangle {
                     var records = xhr.responseText.split('\n');
                     if (records.length > 0) {
                         var r = records[1].split(',');
-                        model.setProperty(index, "value", r[4]);
-
                         var today = parseFloat(r[4]);
+                        model.setProperty(index, "value", today.toFixed(2));
+
                         r = records[2].split(',');
                         var yesterday = parseFloat(r[4]);
                         var change = today - yesterday;

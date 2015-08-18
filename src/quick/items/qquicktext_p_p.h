@@ -104,6 +104,7 @@ public:
         int minimumPointSize;
         int nbActiveDownloads;
         int maximumLineCount;
+        bool lineHeightValid : 1;
         QQuickText::LineHeightMode lineHeightMode;
         QQuickText::FontSizeMode fontSizeMode;
         QList<QQuickStyledTextImgTag*> imgTags;

@@ -25,7 +25,8 @@ PUBLICTESTS += \
     qtqmlmodules \
     qquickfolderlistmodel \
     qqmlapplicationengine \
-    qqmlsettings
+    qqmlsettings \
+    qqmlstatemachine
 
 PRIVATETESTS += \
     animation \

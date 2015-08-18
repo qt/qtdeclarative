@@ -88,7 +88,7 @@ public:
     bool mipmap() const;
     void setMipmap(bool use);
 
-    virtual void emitAutoTransformBaseChanged() { emit autoTransformChanged(); }
+    virtual void emitAutoTransformBaseChanged() Q_DECL_OVERRIDE { emit autoTransformChanged(); }
 
 Q_SIGNALS:
     void fillModeChanged();

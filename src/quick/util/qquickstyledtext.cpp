@@ -542,6 +542,12 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
                 textOut += QChar(38);
             else if (entity == QLatin1String("quot"))
                 textOut += QChar(34);
+            else if (entity == QLatin1String("nbsp"))
+                textOut += QChar(QChar::Nbsp);
+            return;
+        } else if (*ch == QLatin1Char(' ')) {
+            QStringRef entity(&textIn, entityStart - 1, entityLength + 1);
+            textOut += entity + *ch;
             return;
         }
         ++entityLength;

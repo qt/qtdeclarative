@@ -187,7 +187,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     QML provides several types of data models among the built-in set of QML
     types. In addition, models can be created with Qt C++ and then made
-    available to the \l{QQmlEngine}{QMLEngine} for use by
+    available to \l{QQmlEngine} for use by
     QML components. For information about creating these models, visit the
     \l{Using C++ Models with Qt Quick Views}
     and \l{qtqml-typesystem-topic.html#qml-object-types}

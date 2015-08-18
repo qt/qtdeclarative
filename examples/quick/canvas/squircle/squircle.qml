@@ -90,9 +90,9 @@ Item {
             onFillChanged: requestPaint();
             onStrokeChanged: requestPaint();
 
-            onPaint: squcirle();
+            onPaint: squircle();
 
-            function squcirle() {
+            function squircle() {
                 var ctx = canvas.getContext("2d");
                 var N = canvas.nSize;
                 var R = canvas.radius;

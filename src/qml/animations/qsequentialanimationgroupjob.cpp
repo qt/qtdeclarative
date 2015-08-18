@@ -411,7 +411,7 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
 
 void QSequentialAnimationGroupJob::debugAnimation(QDebug d) const
 {
-    d << "SequentialAnimationGroupJob(" << hex << (void *) this << dec << ")" << "currentAnimation:" << (void *)m_currentAnimation;
+    d << "SequentialAnimationGroupJob(" << hex << (const void *) this << dec << ")" << "currentAnimation:" << (void *)m_currentAnimation;
 
     debugChildren(d);
 }
