@@ -591,7 +591,7 @@ V8CommandHandler *QV4DebugServiceImpl::v8CommandHandler(const QString &command) 
 
 QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QV4DebugService>(1, parent),
-    debuggerAgent(this), version(1), theSelectedFrame(0),
+    debuggerAgent(this), theSelectedFrame(0),
     unknownV8CommandHandler(new UnknownV8CommandHandler)
 {
     addHandler(new V8VersionRequest);
@@ -706,7 +706,7 @@ void QV4DebugServiceImpl::sendSomethingToSomebody(const char *type, int magicNum
     QByteArray response;
     QQmlDebugStream rs(&response, QIODevice::WriteOnly);
     rs << QByteArray(type)
-       << QByteArray::number(version) << QByteArray::number(magicNumber);
+       << QByteArray::number(int(version())) << QByteArray::number(magicNumber);
     emit messageToClient(name(), packMessage(type, response));
 }
 

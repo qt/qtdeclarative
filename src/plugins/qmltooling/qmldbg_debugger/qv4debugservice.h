@@ -108,7 +108,6 @@ private:
 
     QStringList breakOnSignals;
     static int sequence;
-    const int version;
     QV4DataCollector::Refs collectedRefs;
 
     QScopedPointer<QV4DataCollector> theCollector;
