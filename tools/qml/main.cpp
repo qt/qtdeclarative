@@ -196,7 +196,7 @@ public Q_SLOTS:
             exit(2);//Different return code from qFatal
         }
     }
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
     void onOpenGlContextCreated(QOpenGLContext *context);
 #endif
 };
@@ -218,17 +218,17 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 
 void LoadWatcher::checkForWindow(QObject *o)
 {
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
     if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
         connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
                 this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
     }
 #else
     Q_UNUSED(o)
-#endif // QT_GUI_LIB
+#endif // QT_GUI_LIB && !QT_NO_OPENGL
 }
 
-#ifdef QT_GUI_LIB
+#if defined(QT_GUI_LIB) && !defined(QT_NO_OPENGL)
 void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
 {
     context->makeCurrent(qobject_cast<QWindow *>(sender()));
@@ -244,7 +244,7 @@ void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
     puts(output.constData());
     context->doneCurrent();
 }
-#endif // QT_GUI_LIB
+#endif // QT_GUI_LIB && !QT_NO_OPENGL
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
