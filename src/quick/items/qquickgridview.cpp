@@ -60,19 +60,19 @@ public:
     {
     }
 
-    qreal position() const {
+    qreal position() const Q_DECL_OVERRIDE {
         return rowPos();
     }
 
-    qreal endPosition() const {
+    qreal endPosition() const Q_DECL_OVERRIDE {
         return endRowPos();
     }
 
-    qreal size() const {
+    qreal size() const Q_DECL_OVERRIDE {
         return view->flow() == QQuickGridView::FlowLeftToRight ? view->cellHeight() : view->cellWidth();
     }
 
-    qreal sectionSize() const {
+    qreal sectionSize() const Q_DECL_OVERRIDE {
         return 0.0;
     }
 

@@ -119,7 +119,7 @@ struct QQmlVMEMetaData
     };
 
     PropertyData *propertyData() const {
-        return (PropertyData *)(((const char *)this) + sizeof(QQmlVMEMetaData));
+        return (PropertyData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
     }
 
     AliasData *aliasData() const {

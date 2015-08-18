@@ -470,8 +470,8 @@
    as any other item).
 
    Usage:
-   // First, define your QML singleton type which provides the functionality.
    \qml
+   // First, define your QML singleton type which provides the functionality.
    pragma Singleton
    import QtQuick 2.0
    Item {

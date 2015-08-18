@@ -329,11 +329,17 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     return n;
 }
 
+/*!
+   \reimp
+*/
 bool QQuickFramebufferObject::isTextureProvider() const
 {
     return true;
 }
 
+/*!
+   \reimp
+*/
 QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
 {
     Q_D(const QQuickFramebufferObject);
@@ -347,6 +353,9 @@ QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
     return d->node;
 }
 
+/*!
+   \reimp
+*/
 void QQuickFramebufferObject::releaseResources()
 {
     // When release resources is called on the GUI thread, we only need to

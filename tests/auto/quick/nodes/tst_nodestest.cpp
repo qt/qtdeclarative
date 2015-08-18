@@ -283,7 +283,7 @@ void NodesTest::textureNodeTextureOwnership()
         QVERIFY(!texture.isNull());
     }
 
-    { // Check that it is deleted when we so desire
+    { // Check that it is deleted on destruction when we so desire
         QPointer<QSGTexture> texture(new QSGPlainTexture());
 
         QSGSimpleTextureNode *tn = new QSGSimpleTextureNode();
@@ -293,6 +293,25 @@ void NodesTest::textureNodeTextureOwnership()
         tn->setTexture(texture);
         delete tn;
         QVERIFY(texture.isNull());
+    }
+
+    { // Check that it is deleted on update when we so desire
+        QPointer<QSGTexture> oldTexture(new QSGPlainTexture());
+        QPointer<QSGTexture> newTexture(new QSGPlainTexture());
+
+        QSGSimpleTextureNode *tn = new QSGSimpleTextureNode();
+        tn->setOwnsTexture(true);
+        QVERIFY(tn->ownsTexture());
+
+        tn->setTexture(oldTexture);
+        QVERIFY(!oldTexture.isNull());
+        QVERIFY(!newTexture.isNull());
+
+        tn->setTexture(newTexture);
+        QVERIFY(oldTexture.isNull());
+        QVERIFY(!newTexture.isNull());
+
+        delete tn;
     }
 }
 

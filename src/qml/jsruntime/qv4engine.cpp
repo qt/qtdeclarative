@@ -107,6 +107,9 @@ static ReturnedValue throwTypeError(CallContext *ctx)
 
 const int MinimumStackSize = 256; // in kbytes
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_MSVC(4172) // MSVC 2015: warning C4172: returning address of local variable or temporary: dummy
+
 quintptr getStackLimit()
 {
     quintptr stackLimit;
@@ -171,6 +174,7 @@ quintptr getStackLimit()
     int dummy;
     // this is inexact, as part of the stack is used when being called here,
     // but let's simply default to 1MB from where the stack is right now
+    // (Note: triggers warning C4172 as of MSVC 2015, returning address of local variable)
     stackLimit = reinterpret_cast<qintptr>(&dummy) - 1024*1024;
 #endif
 
@@ -178,6 +182,7 @@ quintptr getStackLimit()
     return stackLimit + MinimumStackSize*1024;
 }
 
+QT_WARNING_POP
 
 QJSEngine *ExecutionEngine::jsEngine() const
 {
@@ -540,7 +545,7 @@ Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Obje
 Heap::String *ExecutionEngine::newString(const QString &s)
 {
     Scope scope(this);
-    return ScopedString(scope, memoryManager->alloc<String>(s))->d();
+    return ScopedString(scope, memoryManager->allocWithStringData<String>(s.length() * sizeof(QChar), s))->d();
 }
 
 Heap::String *ExecutionEngine::newIdentifier(const QString &text)
@@ -1373,7 +1378,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         QV4::Scope scope(this);
         if (type == qMetaTypeId<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
-            QDLRP *p = QDLRP::get((QQmlListReference*)ptr);
+            QDLRP *p = QDLRP::get((QQmlListReference*)const_cast<void *>(ptr));
             if (p->object) {
                 return QV4::QmlListWrapper::create(scope.engine, p->property, p->propertyType);
             } else {
@@ -1385,7 +1390,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
-            const QList<QObject *> &list = *(QList<QObject *>*)ptr;
+            const QList<QObject *> &list = *(const QList<QObject *>*)ptr;
             QV4::ScopedArrayObject a(scope, newArrayObject());
             a->arrayReserve(list.count());
             QV4::ScopedValue v(scope);

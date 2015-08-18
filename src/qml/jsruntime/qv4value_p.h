@@ -39,6 +39,14 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 
+/* We cannot rely on QT_POINTER_SIZE to be set correctly on host builds. In qmldevtools the Value objects
+   are only used to store primitives, never object pointers. So we can use the 64-bit encoding. */
+#ifdef V4_BOOTSTRAP
+#define QV4_USE_64_BIT_VALUE_ENCODING
+#elif QT_POINTER_SIZE == 8
+#define QV4_USE_64_BIT_VALUE_ENCODING
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -94,10 +102,10 @@ struct Q_QML_PRIVATE_EXPORT Value
     Q_ALWAYS_INLINE quint32 value() const { return _val >> 32; }
 #endif
 
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     Q_ALWAYS_INLINE Heap::Base *m() const { Heap::Base *b; memcpy(&b, &_val, 8); return b; }
     Q_ALWAYS_INLINE void setM(Heap::Base *b) { memcpy(&_val, &b, 8); }
-#else // QT_POINTER_SIZE == 4
+#else // !QV4_USE_64_BIT_VALUE_ENCODING
     Q_ALWAYS_INLINE Heap::Base *m() const { Heap::Base *b; quint32 v = value(); memcpy(&b, &v, 4); return b; }
     Q_ALWAYS_INLINE void setM(Heap::Base *b) { quint32 v; memcpy(&v, &b, 4); setValue(v); }
 #endif
@@ -106,7 +114,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     Q_ALWAYS_INLINE void setInt_32(int i) { quint32 u; memcpy(&u, &i, 4); setValue(u); }
     Q_ALWAYS_INLINE uint uint_32() const { return value(); }
 
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
     enum Masks {
         SilentNaNBit           =                  0x00040000,
         NaN_Mask               =                  0x7ff80000,
@@ -186,7 +194,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool isUndefined() const { return tag() == Undefined_Type; }
     inline bool isNull() const { return tag() == _Null_Type; }
     inline bool isBoolean() const { return tag ()== _Boolean_Type; }
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     inline bool isInteger() const { return (_val >> IsNumber_Shift) == 1; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
     inline bool isNumber() const { return (_val >> IsNumber_Shift); }
@@ -219,7 +227,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         Q_ASSERT(isDouble());
         double d;
         quint64 v = _val;
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         v ^= NaNEncodeMask;
 #endif
         memcpy(&d, &v, 8);
@@ -227,7 +235,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     Q_ALWAYS_INLINE void setDouble(double d) {
         memcpy(&_val, &d, 8);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         _val ^= NaNEncodeMask;
 #endif
         Q_ASSERT(isDouble());
@@ -287,7 +295,7 @@ struct Q_QML_PRIVATE_EXPORT Value
         Value v;
         v.setRawValue(0);
         v.setM(m);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         v.setTag(Managed_Type);
 #endif
         return v;
@@ -368,7 +376,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     Value &operator=(Heap::Base *o) {
         setM(o);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         setTag(Managed_Type);
 #endif
         return *this;
@@ -413,7 +421,7 @@ inline double Value::toNumber() const
 #ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     if (!isNumber())
         return UINT_MAX;
     if (isInteger())
@@ -461,7 +469,7 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     v.setRawValue(quint64(Undefined_Type) << Tag_Shift);
 #else
     v.setRawValue(0);
@@ -481,7 +489,7 @@ inline Primitive Primitive::emptyValue()
 inline Primitive Primitive::nullValue()
 {
     Primitive v;
-#if QT_POINTER_SIZE == 8
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
     v.setRawValue(quint64(_Null_Type) << Tag_Shift);
 #else
     v.setTagValue(_Null_Type, 0);

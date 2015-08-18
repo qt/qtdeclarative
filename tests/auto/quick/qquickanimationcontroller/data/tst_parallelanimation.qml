@@ -24,7 +24,7 @@ Rectangle {
     name:"AnimationController"
     when:windowShown
     function test_parallelAnimation_data() {
-       //FIXME:the commented lines fail on MAC OS X
+       //FIXME:the commented lines fail on OS X
        return [
               {tag:"0.1",progress:0.1, x:5, y:10, color:"#e50019", width:14, height:14},
               //{tag:"0.2",progress:0.2, x:10, y:20, color:"#cb0033", width:18, height:18},

@@ -104,7 +104,9 @@ tst_examples::tst_examples()
     excludedDirs << "demos/twitter";
     excludedDirs << "demos/flickr";
     excludedDirs << "demos/photoviewer";
-    excludedDirs << "snippets/qml/xmlrole.qml";
+    excludedFiles << "snippets/qml/xmlrole.qml";
+    excludedFiles << "particles/itemparticle/particleview.qml";
+    excludedFiles << "views/visualdatamodel/slideshow.qml";
 #endif
 
 }

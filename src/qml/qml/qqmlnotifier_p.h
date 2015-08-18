@@ -60,6 +60,8 @@ private:
 class QQmlEngine;
 class QQmlNotifierEndpoint
 {
+    QQmlNotifierEndpoint  *next;
+    QQmlNotifierEndpoint **prev;
 public:
     // QQmlNotifierEndpoint can only invoke one of a set of pre-defined callbacks.
     // To add another callback, extend this enum and add the callback to the top
@@ -103,9 +105,6 @@ private:
     // The index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
     signed int sourceSignal:28;
-
-    QQmlNotifierEndpoint  *next;
-    QQmlNotifierEndpoint **prev;
 };
 
 QQmlNotifier::QQmlNotifier()
@@ -137,7 +136,7 @@ void QQmlNotifier::notify()
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint(Callback callback)
-: senderPtr(0), callback(callback), sourceSignal(-1), next(0), prev(0)
+: next(0), prev(0), senderPtr(0), callback(callback), sourceSignal(-1)
 {
 }
 

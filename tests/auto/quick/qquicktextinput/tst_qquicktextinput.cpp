@@ -2419,7 +2419,7 @@ void tst_qquicktextinput::navigation()
     simulateKey(&window, Qt::Key_Left);
     QVERIFY(input->hasActiveFocus());
 
-    // Up and Down should NOT do Home/End, even on Mac OS X (QTBUG-10438).
+    // Up and Down should NOT do Home/End, even on OS X (QTBUG-10438).
     input->setCursorPosition(2);
     QCOMPARE(input->cursorPosition(),2);
     simulateKey(&window, Qt::Key_Up);

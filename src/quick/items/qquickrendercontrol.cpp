@@ -140,6 +140,10 @@ void QQuickRenderControlPrivate::cleanup()
     sg = 0;
 }
 
+/*!
+   Constructs a QQuickRenderControl object, with parent
+   object \a parent.
+*/
 QQuickRenderControl::QQuickRenderControl(QObject *parent)
     : QObject(*(new QQuickRenderControlPrivate), parent)
 {

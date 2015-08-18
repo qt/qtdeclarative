@@ -596,7 +596,6 @@ void QQuickTextNodeEngine::addGlyphsInRange(int rangeStart, int rangeLength,
             for (int j=0; j<glyphRuns.size(); ++j) {
                 const QGlyphRun &glyphRun = glyphRuns.at(j);
                 addSelectedGlyphs(glyphRun);
-                addUnselectedGlyphs(glyphRun);
             }
         }
 
@@ -762,11 +761,10 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
         parentNode->addRectangleNode(rect, color);
     }
 
-    // Add all unselected text first
+    // Add all text with unselected color first
     for (int i = 0; i < nodes.size(); ++i) {
         const BinaryTreeNode *node = nodes.at(i);
-        if (node->selectionState == Unselected)
-            parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
+        parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, 0);
     }
 
     for (int i = 0; i < imageNodes.size(); ++i) {
@@ -823,14 +821,14 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                 for (int i = 0; i < node->ranges.size(); ++i) {
                     const QPair<int, int> &range = node->ranges.at(i);
 
-                    int rangeLength = range.second - range.first + 1;
+                    int rangeLength = range.second - range.first;
                     if (previousNode != 0) {
                         for (int j = 0; j < previousNode->ranges.size(); ++j) {
                             const QPair<int, int> &otherRange = previousNode->ranges.at(j);
-                            if (range.first <= otherRange.second && range.second >= otherRange.first) {
+                            if (range.first < otherRange.second && range.second > otherRange.first) {
                                 int start = qMax(range.first, otherRange.first);
                                 int end = qMin(range.second, otherRange.second);
-                                rangeLength -= end - start + 1;
+                                rangeLength -= end - start;
                                 if (rangeLength == 0)
                                     break;
                             }
@@ -841,10 +839,10 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
                         for (int j = 0; j < nextNode->ranges.size(); ++j) {
                             const QPair<int, int> &otherRange = nextNode->ranges.at(j);
 
-                            if (range.first <= otherRange.second && range.second >= otherRange.first) {
+                            if (range.first < otherRange.second && range.second > otherRange.first) {
                                 int start = qMax(range.first, otherRange.first);
                                 int end = qMin(range.second, otherRange.second);
-                                rangeLength -= end - start + 1;
+                                rangeLength -= end - start;
                                 if (rangeLength == 0)
                                     break;
                             }

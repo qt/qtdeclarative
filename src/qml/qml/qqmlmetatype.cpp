@@ -225,6 +225,9 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         v4->pushGlobalContext();
         QObject *o = qobjectCallback(e, e);
         setQObjectApi(e, o);
+        if (!o) {
+            qFatal("qmlRegisterSingletonType(): \"%s\" is not available because the callback function returns a null pointer.", qPrintable(typeName));
+        }
         // if this object can use a property cache, create it now
         QQmlData::ensurePropertyCache(e, o);
         v4->popContext();
@@ -1510,7 +1513,7 @@ QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
 
     if (ok) *ok = true;
 
-    return *(QObject **)v.constData();
+    return *(QObject *const *)v.constData();
 }
 
 bool QQmlMetaType::isQObject(int userType)

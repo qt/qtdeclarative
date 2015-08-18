@@ -57,7 +57,11 @@ class QQuickCanvasNode : public QSGSimpleTextureNode
 public:
     QQuickCanvasNode() {
         qsgnode_set_description(this, QStringLiteral("canvasnode"));
-        setOwnsTexture(true);
+        setOwnsTexture(false);
+    }
+
+    ~QQuickCanvasNode() {
+        delete texture();
     }
 };
 
