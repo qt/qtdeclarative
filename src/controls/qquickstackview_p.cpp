@@ -171,7 +171,7 @@ void QQuickStackElement::initProperties()
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
         QV4::ScopedValue ipv(scope, properties.value());
-        d->initializeObjectWithInitialProperties(*qmlGlobal.valueRef(), ipv, item);
+        d->initializeObjectWithInitialProperties(ipv, item);
         properties.clear();
     }
 }
