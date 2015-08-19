@@ -165,7 +165,7 @@ public:
     \inqmlmodule QtQuick
     \brief Defines a set of objects to be used as a model
 
-    The VisualItemModel type encapsulates contains the objects to be used
+    The VisualItemModel type contains the objects to be used
     as a model.
 
     This element is now primarily available as ObjectModel in the QtQml.Models module.
