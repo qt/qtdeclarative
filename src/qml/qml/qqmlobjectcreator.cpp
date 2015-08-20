@@ -991,7 +991,6 @@ QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
         QV4::Scope valueScope(v4);
         QV4::ScopedContext global(valueScope, v4->rootContext());
         _qmlContext->setM(global->newQmlContext(context, _scopeObject));
-        v4->popContext();
     }
     return _qmlContext->d();
 }

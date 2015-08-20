@@ -111,7 +111,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     Scoped<QV4::QmlBindingWrapper> protectThis(s, this);
 
     this->scope = scope->newQmlContext(qml);
-    internalClass->engine->popContext();
 }
 
 ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
