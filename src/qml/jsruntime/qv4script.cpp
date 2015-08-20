@@ -130,10 +130,13 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
     return result->asReturnedValue();
 }
 
-Script::Script(ExecutionEngine *v4, Object *qml, CompiledData::CompilationUnit *compilationUnit)
+Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , qml(v4, qml), vmFunction(0), parseAsBinding(true)
+    , vmFunction(0), parseAsBinding(true)
 {
+    if (qml)
+        qmlContext.set(v4, *qml);
+
     parsed = true;
 
     vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
@@ -231,7 +234,7 @@ ReturnedValue Script::run()
     QV4::ExecutionEngine *engine = scope->engine();
     QV4::Scope valueScope(engine);
 
-    if (qml.isUndefined()) {
+    if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         ExecutionContextSaver ctxSaver(valueScope, scope);
@@ -242,9 +245,8 @@ ReturnedValue Script::run()
 
         return Q_V4_PROFILE(engine, vmFunction);
     } else {
-        Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
-        Scoped<QmlContext> qmlContext(valueScope, scope->newQmlContext(qmlObj));
-        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(qmlContext, vmFunction));
+        Scoped<QmlContext> qml(valueScope, qmlContext.value());
+        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(qml, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -321,16 +323,15 @@ ReturnedValue Script::qmlBinding()
         parse();
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
-    Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
-    Scoped<QmlContext> qmlContext(valueScope, scope->newQmlContext(qmlObj));
-    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(qmlContext, vmFunction));
+    Scoped<QmlContext> qml(valueScope, qmlContext.value());
+    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(qml, vmFunction));
     return v.asReturnedValue();
 }
 
-QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject)
+QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)
 {
     QV4::Scope scope(engine);
-    QV4::Script qmlScript(engine, scopeObject, script, QString());
+    QV4::Script qmlScript(engine, qmlContext, script, QString());
 
     qmlScript.parse();
     QV4::ScopedValue result(scope);

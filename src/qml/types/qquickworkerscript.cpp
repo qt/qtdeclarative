@@ -382,13 +382,14 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         return;
     script->source = url;
 
-    QV4::ScopedObject activation(scope, getWorker(script));
+    QV4::Scoped<QV4::QmlContextWrapper> activation(scope, getWorker(script));
     if (!activation)
         return;
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(activation));
 
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
         QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-        program.reset(new QV4::Script(v4, activation, jsUnit));
+        program.reset(new QV4::Script(v4, qmlContext, jsUnit));
     } else {
         QFile f(fileName);
         if (!f.open(QIODevice::ReadOnly)) {
@@ -400,7 +401,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         QString sourceCode = QString::fromUtf8(data);
         QmlIR::Document::removeScriptPragmas(sourceCode);
 
-        program.reset(new QV4::Script(v4, activation, sourceCode, url.toString()));
+        program.reset(new QV4::Script(v4, qmlContext, sourceCode, url.toString()));
         program->parse();
     }
 
