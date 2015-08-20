@@ -41,4 +41,6 @@
     \code
     import QtQuick.Controls 2.0
     \endcode
+
+    \section1 QML Types
 */

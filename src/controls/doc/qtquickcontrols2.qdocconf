@@ -30,7 +30,8 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs
 # is given as part of \example commands
 exampledirs += ../../../examples/quick/controls \
                ../../imports/controls \
-               ../../../tests/auto/snippets/data
+               ../../../tests/auto/snippets/data \
+               snippets
 examplesinstallpath = quick/controls
 
 headerdirs += ../

@@ -25,34 +25,19 @@
 **
 ****************************************************************************/
 
-/*!
-    \page qtquickcontrols2-overview.html
-    \title Qt Quick Controls 2 Overview
-    \brief A set of UI controls to create user interfaces in Qt Quick
+//! [0]
+import QtQuick 2.6
+import QtQuick.Controls 2.0
 
-    The Qt Quick Controls 2 provide a set of UI controls to create user interfaces
-    in Qt Quick.
+ApplicationWindow {
+    title: "My Application"
+    width: 640
+    height: 480
+    visible: true
 
-    \section1 Getting Started
-
-    TODO
-
-    \section1 Setting Up Controls from C++
-
-    TODO
-
-    \section2 Using C++ Data From QML
-
-    TODO
-
-    \section2 Deploying Qt Quick Controls 2
-
-    TODO
-
-    \section1 Related information
-
-     \list
-       \li \l{Qt Quick}
-       \li \l{Qt Quick Controls 2}
-    \endlist
-*/
+    Button {
+        text: "Push Me"
+        anchors.centerIn: parent
+    }
+}
+//! [0]
