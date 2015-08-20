@@ -65,7 +65,7 @@ struct CompilationUnitHolder : Object {
 };
 
 struct QmlBindingWrapper : FunctionObject {
-    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml);
+    QmlBindingWrapper(QV4::QmlContext *scope, Function *f);
 };
 
 }
@@ -98,7 +98,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QmlBindingWrapper);
 DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
-Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml)
+Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::QmlContext *scope, Function *f)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
 {
     Q_ASSERT(scope->inUse());
@@ -106,11 +106,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     function = f;
     if (function)
         function->compilationUnit->addref();
-
-    Scope s(scope);
-    Scoped<QV4::QmlBindingWrapper> protectThis(s, this);
-
-    this->scope = scope->newQmlContext(qml);
 }
 
 ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
@@ -248,7 +243,8 @@ ReturnedValue Script::run()
         return Q_V4_PROFILE(engine, vmFunction);
     } else {
         Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
-        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
+        Scoped<QmlContext> qmlContext(valueScope, scope->newQmlContext(qmlObj));
+        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(qmlContext, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -326,7 +322,8 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
     Scoped<QmlContextWrapper> qmlObj(valueScope, qml.value());
-    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(scope, vmFunction, qmlObj));
+    Scoped<QmlContext> qmlContext(valueScope, scope->newQmlContext(qmlObj));
+    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(qmlContext, vmFunction));
     return v.asReturnedValue();
 }
 
