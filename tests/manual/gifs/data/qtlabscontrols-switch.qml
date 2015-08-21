@@ -39,7 +39,16 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
-Switch {
+Window {
+    width: theSwitch.width
+    height: theSwitch.height
+    visible: true
+
+    Switch {
+        id: theSwitch
+        anchors.centerIn: parent
+    }
 }

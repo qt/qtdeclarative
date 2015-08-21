@@ -39,11 +39,13 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
-Item {
+Window {
     width: 200
     height: 200
+    visible: true
 
     Frame {
         padding: 0

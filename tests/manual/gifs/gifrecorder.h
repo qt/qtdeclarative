@@ -39,7 +39,8 @@
 
 #include <QObject>
 #include <QProcess>
-#include <QQuickView>
+#include <QQmlApplicationEngine>
+#include <QQuickWindow>
 #include <QDir>
 #include <QString>
 #include <QTimer>
@@ -57,8 +58,10 @@ public:
     void setOutputDir(const QDir &dir);
     void setOutputFileBaseName(const QString &fileBaseName);
     void setQmlFileName(const QString &fileName);
-    void setView(QQuickView *mView);
+    void setView(QQuickWindow *mWindow);
     void setHighQuality(bool highQuality);
+
+    QQuickWindow *window() const;
 
     void start();
     bool hasStarted() const;
@@ -75,7 +78,8 @@ private:
     QString mByzanzOutputFileName;
     QString mGifFileName;
     QString mQmlInputFileName;
-    QQuickView *mView;
+    QQmlApplicationEngine mEngine;
+    QQuickWindow *mWindow;
     bool mHighQuality;
     int mRecordingDuration;
     bool mRecordCursor;

@@ -39,9 +39,17 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
-Button {
-    text: pressed ? "Pressed" : "Normal"
-    width: 80
+Window {
+    width: button.width
+    height: button.height
+    visible: true
+
+    Button {
+        id: button
+        text: pressed ? "Pressed" : "Normal"
+        width: 80
+    }
 }
