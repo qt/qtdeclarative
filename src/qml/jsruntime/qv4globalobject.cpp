@@ -339,10 +339,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
 
     ScopedContext parentContext(scope, v4->currentContext());
-    ExecutionContextSaver ctxSaver(scope, parentContext);
-
     ScopedContext ctx(scope, parentContext.getPointer());
 
     if (!directCall) {

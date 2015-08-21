@@ -117,6 +117,8 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
+
     QV4::Function *f = This->function();
     if (!f)
         return QV4::Encode::undefined();
@@ -124,7 +126,6 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
     ScopedContext context(scope, v4->currentContext());
     Scoped<CallContext> ctx(scope, context->newCallContext(This, callData));
 
-    ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f));
 
     return result->asReturnedValue();
@@ -237,7 +238,7 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ExecutionContextSaver ctxSaver(valueScope, scope);
+        ExecutionContextSaver ctxSaver(valueScope);
         ContextStateSaver stateSaver(valueScope, scope);
         scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;

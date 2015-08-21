@@ -66,7 +66,7 @@ void Debugger::JavaScriptJob::run()
 {
     Scope scope(engine);
 
-    ExecutionContextSaver saver(scope, engine->currentContext());
+    ExecutionContextSaver saver(scope);
 
     if (frameNr > 0) {
         Value *savedContexts = scope.alloc(frameNr);

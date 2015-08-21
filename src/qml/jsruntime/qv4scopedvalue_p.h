@@ -416,20 +416,11 @@ struct ExecutionContextSaver
     ExecutionEngine *engine;
     Value *savedContext;
 
-    ExecutionContextSaver(Scope &scope, ExecutionContext *context)
-        : engine(context->d()->engine)
+    ExecutionContextSaver(Scope &scope)
+        : engine(scope.engine)
         , savedContext(scope.alloc(1))
     {
-        savedContext->setM(context->d());
-#if QT_POINTER_SIZE == 4
-        savedContext->setTag(QV4::Value::Managed_Type);
-#endif
-    }
-    ExecutionContextSaver(Scope &scope, Heap::ExecutionContext *context)
-        : engine(context->engine)
-        , savedContext(scope.alloc(1))
-    {
-        savedContext->setM(context);
+        savedContext->setM(scope.engine->currentContext());
 #if QT_POINTER_SIZE == 4
         savedContext->setTag(QV4::Value::Managed_Type);
 #endif

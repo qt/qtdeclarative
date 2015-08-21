@@ -348,6 +348,7 @@ public:
     void enableProfiler();
 
     Heap::ExecutionContext *pushGlobalContext();
+    void pushContext(Heap::ExecutionContext *context);
     void pushContext(CallContext *context);
     Heap::ExecutionContext *popContext();
 
@@ -441,12 +442,18 @@ public:
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 };
 
+inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
+{
+    Q_ASSERT(current && context);
+    context->parent = current;
+    current = context;
+}
+
 inline void ExecutionEngine::pushContext(CallContext *context)
 {
-    Q_ASSERT(current && context && context->d());
-    context->d()->parent = current;
-    current = context->d();
+    pushContext(context->d());
 }
+
 
 inline Heap::ExecutionContext *ExecutionEngine::popContext()
 {
@@ -467,7 +474,7 @@ Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     , strictMode(false)
     , lineNumber(-1)
 {
-    engine->current = this;
+    engine->pushContext(this);
 }
 
 

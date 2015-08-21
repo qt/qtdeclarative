@@ -483,7 +483,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     // some execution contexts are allocated on the stack, make sure we clear their markBit as well
     if (!lastSweep) {
-        Heap::ExecutionContext *ctx = engine()->current;
+        Heap::ExecutionContext *ctx = engine()->currentContext();
         while (ctx) {
             ctx->clearMarkBit();
             ctx = ctx->parent;

@@ -434,17 +434,19 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
+
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
     InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
 
+
     ScopedContext context(scope, v4->currentContext());
     callData->thisObject = obj.asReturnedValue();
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
-    ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
@@ -466,12 +468,12 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
+
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
     ScopedContext context(scope, v4->currentContext());
-
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
 
-    ExecutionContextSaver ctxSaver(scope, context);
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
     if (f->function()->compiledFunction->hasQmlDependencies())
@@ -522,13 +524,13 @@ ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *cal
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
+
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     InternalClass *ic = scope.engine->emptyClass;
     ScopedObject proto(scope, f->protoForConstructor());
     callData->thisObject = v4->newObject(ic, proto);
-
-    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
 
     CallContext::Data ctx(v4);
 #ifndef QT_NO_DEBUG
@@ -564,9 +566,9 @@ ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
+    ExecutionContextSaver ctxSaver(scope);
 
-    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
+    Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     CallContext::Data ctx(v4);
 #ifndef QT_NO_DEBUG
@@ -625,7 +627,7 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
+    ExecutionContextSaver ctxSaver(scope);
 
     CallContext::Data ctx(v4);
 #ifndef QT_NO_DEBUG
@@ -649,7 +651,7 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope, v4->currentContext());
+    ExecutionContextSaver ctxSaver(scope);
 
     CallContext::Data ctx(v4);
 #ifndef QT_NO_DEBUG
