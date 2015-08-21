@@ -7,4 +7,4 @@ RESOURCES += samegame.qrc
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/demos/samegame
 INSTALLS += target
 
-QTPLUGIN += qsqlite
+!contains(sql-drivers, sqlite): QTPLUGIN += qsqlite
