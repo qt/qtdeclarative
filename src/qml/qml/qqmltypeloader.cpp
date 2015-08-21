@@ -2539,8 +2539,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     }
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(ctxt, 0));
-    QV4::Scoped<QV4::QmlContextWrapper> w(scope, qmlContext->d()->qml);
-    w->takeContextOwnership();
+    qmlContext->takeContextOwnership();
 
     m_program->qmlContext.set(scope.engine, qmlContext);
     m_program->run();
@@ -2550,7 +2549,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
             ep->warning(error);
     }
 
-    rv.set(scope.engine, w);
+    rv.set(scope.engine, qmlContext->d()->qml);
     if (shared) {
         m_value = rv;
         m_loaded = true;

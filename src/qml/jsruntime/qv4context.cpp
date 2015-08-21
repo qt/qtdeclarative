@@ -570,3 +570,8 @@ QQmlContextData *QmlContext::qmlContext() const
 {
     return d()->qml->context;
 }
+
+void QmlContext::takeContextOwnership() {
+    d()->qml->ownsContext = true;
+}
+

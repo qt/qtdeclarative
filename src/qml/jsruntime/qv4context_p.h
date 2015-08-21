@@ -225,6 +225,8 @@ struct QmlContext : public ExecutionContext
 
     QObject *qmlScope() const;
     QQmlContextData *qmlContext() const;
+
+    void takeContextOwnership();
 };
 
 inline CallContext *ExecutionContext::asCallContext()
