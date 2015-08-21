@@ -148,6 +148,124 @@
 
     \b {* No hover support}
 
+    \section2 Porting Qt Quick Controls Code
+
+    The API of Qt Quick Controls 2 is very similar to Qt Quick Controls, but it
+    does come with some changes necessary to facilitate the improvements. The
+    majority of changes are to do with styling; all of a control's delegates
+    are now accessible in the control itself, instead of in a separate style
+    object.
+
+    For example, to style a button in Qt Quick Controls:
+
+    \badcode
+    Button {
+        style: ButtonStyle {
+            label: Label {
+                ...
+            }
+        }
+    }
+    \endcode
+
+    To style a button in Qt Quick Controls 2:
+
+    \qml
+    Button {
+        label: Label {
+            ...
+        }
+    }
+    \endqml
+
+    \section3 Type Changes
+
+    \table
+    \header
+        \li Qt Quick Controls
+        \li Qt Quick Controls 2
+    \row
+        \li \l [QtQuickControls] {Action}
+        \li \l No equivalent; see \l [QtQuick] {Shortcut} instead.
+    \row
+        \li \l [QtQuickControls] {ApplicationWindow}
+        \li \l [QtQuickControls2] {ApplicationWindow}
+    \row
+        \li \l [QtQuickControls] {BusyIndicator}
+        \li \l [QtQuickControls2] {BusyIndicator}
+    \row
+        \li \l [QtQuickControls] {Button}
+        \li \l [QtQuickControls2] {Button}
+    \row
+        \li \l [QtQuickControls] {Calendar}
+        \li No equivalent; see \l [QML] {CalendarView} instead.
+    \row
+        \li \l [QtQuickControls] {CheckBox}
+        \li \l [QtQuickControls2] {CheckBox}
+    \row
+        \li \l [QtQuickControls] {ExclusiveGroup}
+        \li \l [QtQuickControls2] {ExclusiveGroup}
+    \row
+        \li \l [QtQuickControls] {GroupBox}
+
+        \li \l [QtQuickControls2] {GroupBox}, or \l [QtQuickControls2] {Frame}
+            if a title is not required.
+
+    \row
+        \li \l [QtQuickControls] {Label}
+        \li \l [QtQuickControls2] {Label}
+    \row
+        \li \l [QtQuickControls] {ProgressBar}
+        \li \l [QtQuickControls2] {ProgressBar}
+    \row
+        \li \l [QtQuickControls] {RadioButton}
+        \li \l [QtQuickControls2] {RadioButton}
+    \row
+        \li \l [QtQuickControls] {ScrollView}
+        \li \l [QtQuickControls2] {ScrollBar},
+            \l [QtQuickControls2] {ScrollIndicator}
+    \row
+        \li \l [QtQuickControls] {Slider}
+        \li \l [QtQuickControls2] {Slider}
+    \row
+        \li \l [QtQuickControls] {SpinBox}
+        \li No equivalent; see \l [QtQuickExtras2] {Tumbler} instead.
+    \row
+        \li \l [QtQuickControls] {Stack},
+            \l [QtQuickControls] {StackView},
+            \l [QtQuickControls] {StackViewDelegate}
+        \li \l [QtQuickControls2] {StackView}
+    \row
+        \li \l [QtQuickControls] {StatusBar}
+        \li No equivalent
+    \row
+        \li \l [QtQuickControls] {Switch}
+        \li \l [QtQuickControls2] {Switch}
+    \row
+        \li \l [QtQuickControls] {Tab},
+            \l [QtQuickControls] {TabView}
+        \li \l [QtQuickControls2] {TabBar} in combination with, for example,
+            \l [QtQuickExtras2] {SwipeView}.
+    \row
+        \li \l [QtQuickControls] {TableView}
+        \li No equivalent
+    \row
+        \li \l [QtQuickControls] {TextArea}
+        \li \l [QtQuickControls2] {TextArea}
+    \row
+        \li \l [QtQuickControls] {TextField}
+        \li \l [QtQuickControls2] {TextField}
+    \row
+        \li \l [QtQuickControls] {ToolBar}
+        \li \l [QtQuickControls2] {ToolBar}
+    \row
+        \li \l [QtQuickControls] {ToolButton}
+        \li \l [QtQuickControls2] {ToolButton}
+    \row
+        \li \l [QtQuickControls] {TreeView}
+        \li No equivalent
+    \endtable
+
     \section1 Getting Started
 
     A basic example of a QML file that makes use of controls is shown here:
