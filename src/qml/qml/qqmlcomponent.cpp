@@ -42,7 +42,6 @@
 #include "qqml.h"
 #include "qqmlengine.h"
 #include "qqmlbinding_p.h"
-#include "qqmlglobal_p.h"
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include "qqmlincubator.h"
@@ -1064,7 +1063,6 @@ struct QmlIncubatorObject : Object {
     QScopedPointer<QQmlComponentIncubator> incubator;
     QPointer<QObject> parent;
     QV4::Value valuemap;
-    QV4::Value qmlGlobal;
     QV4::Value statusChanged;
 };
 
@@ -1380,10 +1378,8 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::ScopedObject p(scope, e->incubationProto.value());
     r->setPrototype(p);
 
-    if (!valuemap->isUndefined()) {
+    if (!valuemap->isUndefined())
         r->d()->valuemap = valuemap;
-        r->d()->qmlGlobal = args->qmlGlobal();
-    }
     r->d()->parent = parent;
 
     QQmlIncubator *incubator = r->d()->incubator.data();
@@ -1484,7 +1480,6 @@ QQmlComponentExtension::~QQmlComponentExtension()
 QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(ExecutionEngine *engine, QQmlIncubator::IncubationMode m)
     : QV4::Heap::Object(engine)
     , valuemap(QV4::Primitive::undefinedValue())
-    , qmlGlobal(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
 {
     incubator.reset(new QQmlComponentIncubator(this, m));
@@ -1506,7 +1501,6 @@ void QV4::QmlIncubatorObject::markObjects(QV4::Heap::Base *that, QV4::ExecutionE
 {
     QmlIncubatorObject::Data *o = static_cast<QmlIncubatorObject::Data *>(that);
     o->valuemap.mark(e);
-    o->qmlGlobal.mark(e);
     o->statusChanged.mark(e);
     Object::markObjects(that, e);
 }
