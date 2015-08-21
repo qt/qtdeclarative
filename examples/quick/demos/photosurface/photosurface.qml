@@ -37,7 +37,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.5
+import QtQuick 2.6
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 import Qt.labs.folderlistmodel 1.0
@@ -172,7 +172,7 @@ Window {
         height: flick.height * (flick.height / flick.contentHeight) - (width - anchors.margins) * 2
         y:  flick.contentY * (flick.height / flick.contentHeight)
         NumberAnimation on opacity { id: vfade; to: 0; duration: 500 }
-        onYChanged: { opacity = 1.0; fadeTimer.restart() }
+        onYChanged: { opacity = 1.0; scrollFadeTimer.restart() }
     }
 
     Rectangle {
@@ -188,10 +188,10 @@ Window {
         width: flick.width * (flick.width / flick.contentWidth) - (height - anchors.margins) * 2
         x:  flick.contentX * (flick.width / flick.contentWidth)
         NumberAnimation on opacity { id: hfade; to: 0; duration: 500 }
-        onXChanged: { opacity = 1.0; fadeTimer.restart() }
+        onXChanged: { opacity = 1.0; scrollFadeTimer.restart() }
     }
 
-    Timer { id: fadeTimer; interval: 1000; onTriggered: { hfade.start(); vfade.start() } }
+    Timer { id: scrollFadeTimer; interval: 1000; onTriggered: { hfade.start(); vfade.start() } }
 
     Image {
         anchors.top: parent.top
@@ -202,6 +202,42 @@ Window {
             anchors.fill: parent
             anchors.margins: -10
             onClicked: fileDialog.open()
+            hoverEnabled: true
+            onPositionChanged: {
+                tooltip.visible = false
+                hoverTimer.start()
+            }
+            onExited: {
+                tooltip.visible = false
+                hoverTimer.stop()
+            }
+            Timer {
+                id: hoverTimer
+                interval: 1000
+                onTriggered: {
+                    tooltip.x = parent.mouseX
+                    tooltip.y = parent.mouseY
+                    tooltip.visible = true
+                }
+            }
+            Rectangle {
+                id: tooltip
+                border.color: "black"
+                color: "beige"
+                width: tooltipText.implicitWidth + 8
+                height: tooltipText.implicitHeight + 8
+                visible: false
+                Text {
+                    id: tooltipText
+                    anchors.centerIn: parent
+                    text: "Open an image directory (" + openShortcut.sequenceString + ")"
+                }
+            }
+        }
+        Shortcut {
+            id: openShortcut
+            sequence: StandardKey.Open
+            onActivated: fileDialog.open()
         }
     }
 
@@ -216,6 +252,8 @@ Window {
         text: "On a touchscreen: use two fingers to zoom and rotate, one finger to drag\n" +
               "With a mouse: drag normally, use the vertical wheel to zoom, horizontal wheel to rotate, or hold Ctrl while using the vertical wheel to rotate"
     }
+
+    Shortcut { sequence: StandardKey.Quit; onActivated: Qt.quit() }
 
     Component.onCompleted: fileDialog.open()
 }
