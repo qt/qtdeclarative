@@ -54,6 +54,7 @@ private slots:
     void busyIndicator();
     void switchGif();
     void button();
+    void tabBar();
 
 private:
     QQuickView view;
@@ -331,6 +332,37 @@ void tst_Gifs::button()
 
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() / 2, view.height() / 2), 0);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() / 2, view.height() / 2), 700);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::tabBar()
+{
+    const QString qmlFileName = QStringLiteral("qtquickcontrols2-tabbar.qml");
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setQmlFileName(qmlFileName);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.6, view.height() / 2), 0);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.6, view.height() / 2), 50);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.9, view.height() / 2), 400);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.9, view.height() / 2), 50);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.6, view.height() / 2), 800);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.6, view.height() / 2), 50);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.3, view.height() / 2), 400);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(view.width() * 0.3, view.height() / 2), 50);
 
     gifRecorder.waitForFinish();
 }
