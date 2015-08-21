@@ -83,9 +83,9 @@ TestCase {
 
         // Long enough press duration => signal emitted
         mousePress(control, 10, 10)
-        // Add 10% extra time to allow the control to
+        // Add 20% extra time to allow the control to
         // receive the timer event before we come back here
-        wait(interval * 1.1)
+        wait(interval * 1.2)
         compare(pressAndHoldSpy.count, 1)
         mouseRelease(control)
         compare(pressAndHoldSpy.count, 1)
