@@ -39,6 +39,115 @@
 
     \generatelist {qmltypesbymodule QtQuick.Controls}
 
+    \section1 Differences between Qt Quick Controls
+
+    Qt Quick Controls were originally developed to support desktop platforms,
+    with mobile and embedded support coming shortly afterwards. They have a
+    very broad scope, in that they provide a styling system flexible enough to
+    allow the development of applications that have either a platform-dependent
+    or platform-independent style.
+
+    On embedded systems, where the hardware has limited resources, this approach
+    can be inefficient. Qt Quick Controls 2 were designed to solve this problem,
+    using
+    \l {https://blog.qt.io/blog/2015/03/31/qt-quick-controls-for-embedded/}{benchmarks}
+    to guide the development.
+
+    \section2 C++ and QML
+
+    In many cases, the internal state of a control can be more efficiently
+    processed in C++. For example, handling input events in C++ makes a
+    difference for controls that would otherwise need to create internal
+    MouseAreas and attached Keys objects.
+
+    \section2 Styles
+
+    Not only does handling events and logic in C++ increase performance, but it
+    allows the visual QML layer to be a simple, declarative layer on top. This
+    is reflected in the structure of the controls project: all visual
+    implementations sit in the \e imports folder, so that users who want to
+    create their own complete style can copy the folder and start tweaking.
+    Read more about implementing a style plugin \l {TODO}{here}.
+
+    In Qt Quick Controls 2, styles no longer provide components that are
+    dynamically instantiated by controls, but controls themselves consist of
+    item delegates that can be replaced. In effect, this means that delegates
+    are Qt Quick items that are instantiated on the spot, as properties of the
+    control, and are simply parented to the control.
+
+    Control-specific style objects have been replaced by a Theme object that
+    offers a simple set of themable attributes. Basic color adjustments can be
+    made by setting a few properties that are automatically inherited by the
+    hierarchy of children.
+
+    \section2 Modularity and Simplicity
+
+    When it comes to more complex controls, it is sometimes better to split
+    them up into separate building blocks. As an example, the complex
+    ScrollView control:
+
+    \qml
+    ScrollView {
+        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
+        Flickable {
+            ...
+        }
+    }
+    \endqml
+
+    Is replaced with simple ScrollBar/ScrollIndicator controls that can be
+    attached to any Flickable:
+
+    \qml
+    Flickable {
+        ...
+        ScrollBar.vertical: ScrollBar { }
+    }
+    \endqml
+
+    The API of Qt Quick Controls 2 aims to be clean and simple. Common
+    operations are easy, and more advanced ones are liberally documented with
+    snippets that can be copied into your code.
+
+    \section2 Feature Comparison Table
+
+    \table
+    \header
+        \li
+        \li Qt Quick Controls
+        \li Qt Quick Controls 2
+    \row
+        \li Stylable delegates
+        \li Yes
+        \li Yes
+    \row
+        \li Pre-built native styles
+        \li Yes
+        \li No
+    \row
+        \li Runtime style changes
+        \li Yes
+        \li Yes
+    \row
+        \li Can be used on Desktop
+        \li Yes
+        \li Yes \b *
+    \row
+        \li Can be used on Mobile
+        \li Yes
+        \li Yes
+    \row
+        \li Can be used on Embedded
+        \li Yes
+        \li Yes
+    \row
+        \li Internal event handling
+        \li QML
+        \li C++
+    \endtable
+
+    \b {* No hover support}
+
     \section1 Getting Started
 
     A basic example of a QML file that makes use of controls is shown here:

@@ -23,7 +23,7 @@ qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.indexTitle = Qt Quick 
 qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.selectors  = qmlclass
 qhp.QtQuickControls2.subprojects.qtquickcontrols2qmltypes.sortPages  = true
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs
+depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquickcontrols
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Examples will be installed under quick/controls - 'controls' subdirectory
