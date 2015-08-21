@@ -745,18 +745,13 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
     return static_cast<Heap::QmlContext *>(ctx);
 }
 
-Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
+QObject *ExecutionEngine::qmlScopeObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
         return 0;
-    Q_ASSERT(ctx->qml);
-    return ctx->qml;
-}
 
-QObject *ExecutionEngine::qmlScopeObject() const
-{
-    return qmlContextObject()->scopeObject;
+    return ctx->qml->scopeObject;
 }
 
 ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
@@ -782,9 +777,11 @@ ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
 
 QQmlContextData *ExecutionEngine::callingQmlContext() const
 {
-    Heap::QmlContextWrapper *w = qmlContextObject();
+    Heap::QmlContext *ctx = qmlContext();
+    if (!ctx)
+        return 0;
 
-    return w ? w->context.contextData() : 0;
+    return ctx->qml->context.contextData();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
