@@ -4889,7 +4889,6 @@ void tst_qquicktextedit::undo_data()
             insertString << " unique instance.";
 
             expectedString << "Ensuring a unique instance.";
-            expectedString << "Ensuring a ";    // ### Not present in TextEdit.
             expectedString << "Ensuring an instan";
             expectedString << "Ensuring instan";
             expectedString << "";
@@ -5177,8 +5176,6 @@ void tst_qquicktextedit::undo_keypressevents_data()
              << "ABC";
 
         expectedString << "ABC";
-        // ### One operation in TextEdit.
-        expectedString << "A";
         expectedString << "123";
 
         QTest::newRow("Inserts,moving,selection and overwriting") << keys << expectedString;
@@ -5210,7 +5207,6 @@ void tst_qquicktextedit::undo_keypressevents_data()
         QStringList expectedString = QStringList()
                 << "ABC123"
                 << "ABC"
-                << "A"
                 << "123";
         QTest::newRow("Copy,paste") << keys << expectedString;
     }
