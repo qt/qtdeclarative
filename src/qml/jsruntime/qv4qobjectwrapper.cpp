@@ -269,7 +269,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
 
     if (name->equals(scope.engine->id_destroy()) || name->equals(scope.engine->id_toString())) {
         int index = name->equals(scope.engine->id_destroy()) ? QV4::QObjectMethod::DestroyMethod : QV4::QObjectMethod::ToStringMethod;
-        ScopedContext global(scope, scope.engine->rootContext());
+        ExecutionContext *global = scope.engine->rootContext();
         QV4::ScopedValue method(scope, QV4::QObjectMethod::create(global, d()->object, index));
         if (hasProperty)
             *hasProperty = true;
@@ -345,7 +345,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
 
             return handler.asReturnedValue();
         } else {
-            ScopedContext global(scope, scope.engine->rootContext());
+            ExecutionContext *global = scope.engine->rootContext();
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
         }
     }

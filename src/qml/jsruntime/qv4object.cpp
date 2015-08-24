@@ -137,7 +137,7 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(Ca
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    ScopedContext global(scope, e->rootContext());
+    ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
     function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
@@ -147,7 +147,7 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(CallConte
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
-    ScopedContext global(scope, e->rootContext());
+    ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
     function->defineReadonlyProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
@@ -166,7 +166,7 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(CallCo
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);
     ScopedProperty p(scope);
-    ScopedContext global(scope, scope.engine->rootContext());
+    ExecutionContext *global = v4->rootContext();
     p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
     p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);

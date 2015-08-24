@@ -108,7 +108,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineGetter__"), method_defineGetter, 2);
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
-    ScopedContext global(scope, scope.engine->rootContext());
+    ExecutionContext *global = v4->rootContext();
     ScopedProperty p(scope);
     p->value = BuiltinFunction::create(global, v4->id___proto__(), method_get_proto);
     p->set = BuiltinFunction::create(global, v4->id___proto__(), method_set_proto);

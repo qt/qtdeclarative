@@ -350,7 +350,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Scope scope(this);
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype()));
 
-    ScopedContext global(scope, rootContext());
+    ExecutionContext *global = rootContext();
     jsObjects[Object_Ctor] = memoryManager->alloc<ObjectCtor>(global);
     jsObjects[String_Ctor] = memoryManager->alloc<StringCtor>(global);
     jsObjects[Number_Ctor] = memoryManager->alloc<NumberCtor>(global);
@@ -927,7 +927,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
             memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
             delete [] oldAccessors;
         }
-        ScopedContext global(scope, scope.engine->rootContext());
+        ExecutionContext *global = rootContext();
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
             argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(global, i));
             argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(global, i));

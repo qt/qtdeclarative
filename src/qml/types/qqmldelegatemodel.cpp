@@ -1717,7 +1717,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
 
     s = v4->newString(QStringLiteral("isUnresolved"));
     QV4::ScopedFunctionObject f(scope);
-    QV4::ScopedContext global(scope, scope.engine->rootContext());
+    QV4::ExecutionContext *global = scope.engine->rootContext();
     p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, 30, QQmlDelegateModelItem::get_member)));
     p->setSetter(0);
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);

@@ -210,7 +210,7 @@ Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlCont
 {
     ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(qmlContext->engine);
     QV4::Scope valueScope(engine);
-    ScopedContext global(valueScope, valueScope.engine->rootContext());
+    ExecutionContext *global = valueScope.engine->rootContext();
     QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlContext, scopeObject));
 
     if (!signalParameters.isEmpty()) {
@@ -299,7 +299,7 @@ ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = isel->compile();
     Function *vmf = compilationUnit->linkToEngine(scope.engine);
 
-    ScopedContext global(scope, scope.engine->rootContext());
+    ExecutionContext *global = scope.engine->rootContext();
     return FunctionObject::createScriptFunction(global, vmf)->asReturnedValue();
 }
 
@@ -415,7 +415,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
         memcpy(boundArgs->data(), ctx->args() + 1, (ctx->argc() - 1)*sizeof(Value));
     }
 
-    ScopedContext global(scope, scope.engine->rootContext());
+    ExecutionContext *global = scope.engine->rootContext();
     return BoundFunction::create(global, target, boundThis, boundArgs)->asReturnedValue();
 }
 

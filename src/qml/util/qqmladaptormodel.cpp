@@ -221,7 +221,7 @@ public:
             const QByteArray &propertyName = it.key();
 
             QV4::ScopedString name(scope, v4->newString(QString::fromUtf8(propertyName)));
-            QV4::ScopedContext global(scope, v4->rootContext());
+            QV4::ExecutionContext *global = v4->rootContext();
             QV4::ScopedFunctionObject g(scope, v4->memoryManager->alloc<QV4::IndexedBuiltinFunction>(global, propertyId, QQmlDMCachedModelData::get_property));
             QV4::ScopedFunctionObject s(scope, v4->memoryManager->alloc<QV4::IndexedBuiltinFunction>(global, propertyId, QQmlDMCachedModelData::set_property));
             p->setGetter(g);
