@@ -521,12 +521,12 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool) InternalClass(other);
 }
 
-Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
+ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
     pushContext(rootContext()->d());
 
-    Q_ASSERT(currentContext() == rootContext()->d());
-    return currentContext();
+    Q_ASSERT(current == rootContext()->d());
+    return currentExecutionContext;
 }
 
 ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
@@ -737,7 +737,7 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
-    Heap::ExecutionContext *ctx = currentContext();
+    Heap::ExecutionContext *ctx = current;
 
     // get the correct context when we're within a builtin function
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)

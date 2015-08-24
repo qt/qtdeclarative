@@ -383,7 +383,7 @@ void TypedArray::putIndexed(Managed *m, uint index, const Value &value)
     return;
 
 reject:
-  if (scope.engine->currentContext()->strictMode)
+  if (scope.engine->current->strictMode)
       scope.engine->throwTypeError();
 }
 

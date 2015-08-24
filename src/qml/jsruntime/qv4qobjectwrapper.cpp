@@ -433,8 +433,6 @@ bool QObjectWrapper::setQmlProperty(ExecutionEngine *engine, QQmlContextData *qm
             return false;
     }
 
-    Scope scope(engine);
-    ScopedContext ctx(scope, engine->currentContext());
     setProperty(engine, object, result, value);
     return true;
 }
@@ -1815,7 +1813,7 @@ ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
 ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
     Scope scope(engine());
-    ScopedContext context(scope, scope.engine->currentContext());
+    ExecutionContext *context = scope.engine->currentExecutionContext;
     if (d()->index == DestroyMethod)
         return method_destroy(context, callData->args, callData->argc);
     else if (d()->index == ToStringMethod)

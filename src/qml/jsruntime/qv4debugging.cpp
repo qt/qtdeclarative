@@ -68,15 +68,14 @@ void Debugger::JavaScriptJob::run()
 
     ExecutionContextSaver saver(scope);
 
+    ExecutionContext *ctx = engine->currentExecutionContext;
     if (frameNr > 0) {
-        Value *savedContexts = scope.alloc(frameNr);
         for (int i = 0; i < frameNr; ++i) {
-            savedContexts[i] = engine->currentContext();
-            engine->popContext();
+            ctx = engine->parentContext(ctx);
         }
+        engine->pushContext(ctx);
     }
 
-    ScopedContext ctx(scope, engine->currentContext());
     QV4::Script script(ctx, this->script);
     script.strictMode = ctx->d()->strictMode;
     // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
@@ -151,7 +150,7 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, Encode::undefined());
 
-    m_currentContext.set(m_engine, m_engine->currentContext());
+    m_currentContext.set(m_engine, *m_engine->currentExecutionContext);
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -181,7 +180,7 @@ Debugger::ExecutionState Debugger::currentExecutionState() const
 {
     ExecutionState state;
     state.fileName = getFunction()->sourceFile();
-    state.lineNumber = engine()->currentContext()->lineNumber;
+    state.lineNumber = engine()->current->lineNumber;
 
     return state;
 }
@@ -206,7 +205,7 @@ void Debugger::maybeBreakAtInstruction()
 
     switch (m_stepping) {
     case StepOver:
-        if (m_currentContext.asManaged()->d() != m_engine->currentContext())
+        if (m_currentContext.asManaged()->d() != m_engine->current)
             break;
         // fall through
     case StepIn:
@@ -222,7 +221,7 @@ void Debugger::maybeBreakAtInstruction()
         pauseAndWait(PauseRequest);
     } else if (m_haveBreakPoints) {
         if (Function *f = getFunction()) {
-            const int lineNumber = engine()->currentContext()->lineNumber;
+            const int lineNumber = engine()->current->lineNumber;
             if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
                 pauseAndWait(BreakPoint);
         }
@@ -236,7 +235,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, m_engine->currentContext());
+        m_currentContext.set(m_engine, *m_engine->currentExecutionContext);
     }
 }
 
@@ -248,7 +247,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()) {
+    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
         m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentExecutionContext));
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
@@ -270,7 +269,7 @@ void Debugger::aboutToThrow()
 Function *Debugger::getFunction() const
 {
     Scope scope(m_engine);
-    ScopedContext context(scope, m_engine->currentContext());
+    ExecutionContext *context = m_engine->currentExecutionContext;
     ScopedFunctionObject function(scope, context->getFunctionObject());
     if (function)
         return function->function();

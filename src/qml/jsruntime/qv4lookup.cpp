@@ -43,7 +43,7 @@ using namespace QV4;
 ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttributes *attrs)
 {
     ExecutionEngine *engine = o->engine();
-    Identifier *name = engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]->identifier;
+    Identifier *name = engine->current->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
     Heap::Object *obj = o->d();
     while (i < Size && obj) {
@@ -77,7 +77,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
 {
     Heap::Object *obj = thisObject->d();
     ExecutionEngine *engine = thisObject->engine();
-    Identifier *name = engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]->identifier;
+    Identifier *name = engine->current->compilationUnit->runtimeStrings[nameIndex]->identifier;
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass;
@@ -251,7 +251,7 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
         Q_ASSERT(object.isString());
         proto = engine->stringPrototype();
         Scope scope(engine);
-        ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+        ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[l->nameIndex]);
         if (name->equals(engine->id_length())) {
             // special case, as the property is on the object itself
             l->getter = stringLengthGetter;
@@ -329,7 +329,7 @@ ReturnedValue Lookup::getterFallback(Lookup *l, ExecutionEngine *engine, const V
     QV4::ScopedObject o(scope, object.toObject(scope.engine));
     if (!o)
         return Encode::undefined();
-    ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[l->nameIndex]);
     return o->get(name);
 }
 
@@ -603,7 +603,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
         }
     }
     Scope scope(engine);
-    ScopedString n(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString n(scope, engine->current->compilationUnit->runtimeStrings[l->nameIndex]);
     return engine->throwReferenceError(n);
 }
 
@@ -710,7 +710,7 @@ void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, co
         o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
             return;
-        ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+        ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[l->nameIndex]);
         o->put(name, value);
         return;
     }
@@ -741,7 +741,7 @@ void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, c
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, object.toObject(scope.engine));
     if (o) {
-        ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[l->nameIndex]);
+        ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[l->nameIndex]);
         o->put(name, value);
     }
 }

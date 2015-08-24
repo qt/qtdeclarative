@@ -78,7 +78,6 @@ private:
     friend struct Heap::ExecutionContext;
 public:
     Heap::ExecutionContext *current;
-    Heap::ExecutionContext *currentContext() const { return current; }
 
     Value *jsStackTop;
     quint32 hasException;
@@ -349,10 +348,10 @@ public:
     void enableDebugger();
     void enableProfiler();
 
-    Heap::ExecutionContext *pushGlobalContext();
+    ExecutionContext *pushGlobalContext();
     void pushContext(Heap::ExecutionContext *context);
-    void pushContext(CallContext *context);
-    Heap::ExecutionContext *popContext();
+    void pushContext(ExecutionContext *context);
+    void popContext();
     ExecutionContext *parentContext(ExecutionContext *context) const;
 
     Heap::Object *newObject();
@@ -455,13 +454,13 @@ inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
     current = currentExecutionContext->d();
 }
 
-inline void ExecutionEngine::pushContext(CallContext *context)
+inline void ExecutionEngine::pushContext(ExecutionContext *context)
 {
     pushContext(context->d());
 }
 
 
-inline Heap::ExecutionContext *ExecutionEngine::popContext()
+inline void ExecutionEngine::popContext()
 {
     Q_ASSERT(jsStackTop > currentExecutionContext);
     QV4::Value *offset = (currentExecutionContext + 1);
@@ -470,7 +469,6 @@ inline Heap::ExecutionContext *ExecutionEngine::popContext()
     Q_ASSERT(o);
     currentExecutionContext -= o;
     current = currentExecutionContext->d();
-    return current;
 }
 
 inline

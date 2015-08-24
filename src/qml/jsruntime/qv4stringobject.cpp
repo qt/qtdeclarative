@@ -109,7 +109,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Q_ASSERT(!!o);
 
     if (index < static_cast<uint>(o->d()->string->toQString().length())) {
-        if (v4->currentContext()->strictMode)
+        if (v4->current->strictMode)
             v4->throwTypeError();
         return false;
     }

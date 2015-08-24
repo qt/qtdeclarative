@@ -120,10 +120,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         pd->value = mappedArguments()->data[index];
     }
 
-    bool strict = engine->currentContext()->strictMode;
-    engine->currentContext()->strictMode = false;
+    bool strict = engine->current->strictMode;
+    engine->current->strictMode = false;
     bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    engine->currentContext()->strictMode = strict;
+    engine->current->strictMode = strict;
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
@@ -140,7 +140,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         }
     }
 
-    if (engine->currentContext()->strictMode && !result)
+    if (engine->current->strictMode && !result)
         return engine->throwTypeError();
     return result;
 }

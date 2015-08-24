@@ -123,8 +123,7 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
     if (!f)
         return QV4::Encode::undefined();
 
-    ScopedContext context(scope, v4->currentContext());
-    Scoped<CallContext> ctx(scope, context->newCallContext(This, callData));
+    Scoped<CallContext> ctx(scope, v4->currentExecutionContext->newCallContext(This, callData));
     v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f));

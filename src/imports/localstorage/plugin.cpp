@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     QV4::ScopedString v(scope, scope.engine->newString(desc)); \
     QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
     ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
-    args->setReturnValue(ctx->engine()->throwError(ex)); \
+    args->setReturnValue(scope.engine->throwError(ex)); \
     return; \
 }
 
@@ -659,7 +659,6 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #ifndef QT_NO_SETTINGS
     QV4::Scope scope(args->v4engine());
-    QV4::ScopedContext ctx(scope, args->v4engine()->currentContext());
     if (scope.engine->qmlEngine()->offlineStoragePath().isEmpty())
         V4THROW_SQL2(SQLEXCEPTION_DATABASE_ERR, QQmlEngine::tr("SQL: can't create database, offline storage is disabled."));
 
@@ -721,7 +720,6 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     db->d()->version = version;
 
     if (created && dbcreationCallback) {
-        Scope scope(ctx);
         ScopedCallData callData(scope, 1);
         callData->thisObject = scope.engine->globalObject;
         callData->args[0] = db;
