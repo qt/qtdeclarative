@@ -87,7 +87,7 @@ public:
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
 
-    ExecutionContext *currentExecutionContext;
+    ExecutionContext *currentContext;
 
     Value *jsStackLimit;
     quintptr cStackLimit;
@@ -446,12 +446,12 @@ public:
 
 inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
 {
-    Q_ASSERT(currentExecutionContext && context);
+    Q_ASSERT(currentContext && context);
     Value *v = jsAlloca(2);
     v[0] = Encode(context);
-    v[1] = Encode((int)(v - static_cast<Value *>(currentExecutionContext)));
-    currentExecutionContext = static_cast<ExecutionContext *>(v);
-    current = currentExecutionContext->d();
+    v[1] = Encode((int)(v - static_cast<Value *>(currentContext)));
+    currentContext = static_cast<ExecutionContext *>(v);
+    current = currentContext->d();
 }
 
 inline void ExecutionEngine::pushContext(ExecutionContext *context)
@@ -462,13 +462,13 @@ inline void ExecutionEngine::pushContext(ExecutionContext *context)
 
 inline void ExecutionEngine::popContext()
 {
-    Q_ASSERT(jsStackTop > currentExecutionContext);
-    QV4::Value *offset = (currentExecutionContext + 1);
+    Q_ASSERT(jsStackTop > currentContext);
+    QV4::Value *offset = (currentContext + 1);
     Q_ASSERT(offset->isInteger());
     int o = offset->integerValue();
     Q_ASSERT(o);
-    currentExecutionContext -= o;
-    current = currentExecutionContext->d();
+    currentContext -= o;
+    current = currentContext->d();
 }
 
 inline

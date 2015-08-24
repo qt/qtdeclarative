@@ -67,7 +67,7 @@ struct Scope {
     ~Scope() {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
-        Q_ASSERT(engine->currentExecutionContext < mark);
+        Q_ASSERT(engine->currentContext < mark);
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
 #ifdef V4_USE_VALGRIND
@@ -363,12 +363,12 @@ struct ExecutionContextSaver
     ExecutionContextSaver(Scope &scope)
         : engine(scope.engine)
     {
-        savedContext = engine->currentExecutionContext;
+        savedContext = engine->currentContext;
     }
     ~ExecutionContextSaver()
     {
-        Q_ASSERT(engine->jsStackTop > engine->currentExecutionContext);
-        engine->currentExecutionContext = savedContext;
+        Q_ASSERT(engine->jsStackTop > engine->currentContext);
+        engine->currentContext = savedContext;
         engine->current = savedContext->d();
     }
 };

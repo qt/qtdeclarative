@@ -341,7 +341,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     Scope scope(v4);
     ExecutionContextSaver ctxSaver(scope);
 
-    ExecutionContext *currentContext = v4->currentExecutionContext;
+    ExecutionContext *currentContext = v4->currentContext;
     ExecutionContext *ctx = currentContext;
 
     if (!directCall) {

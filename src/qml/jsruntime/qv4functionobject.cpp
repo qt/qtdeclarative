@@ -443,7 +443,7 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     ScopedObject obj(scope, v4->newObject(ic, proto));
 
     callData->thisObject = obj.asReturnedValue();
-    Scoped<CallContext> ctx(scope, v4->currentExecutionContext->newCallContext(f, callData));
+    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
     v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -470,7 +470,7 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope);
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
-    Scoped<CallContext> ctx(scope, v4->currentExecutionContext->newCallContext(f, callData));
+    Scoped<CallContext> ctx(scope, v4->currentContext->newCallContext(f, callData));
     v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -640,7 +640,7 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     v4->pushContext(&ctx);
     Q_ASSERT(v4->current == &ctx);
 
-    return f->d()->code(static_cast<QV4::CallContext *>(v4->currentExecutionContext));
+    return f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext));
 }
 
 ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callData)
@@ -664,7 +664,7 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     v4->pushContext(&ctx);
     Q_ASSERT(v4->current == &ctx);
 
-    return f->d()->code(static_cast<QV4::CallContext *>(v4->currentExecutionContext), f->d()->index);
+    return f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext), f->d()->index);
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 QV4::Heap::CallContext *QV4DataCollector::findContext(QV4::ExecutionEngine *engine, int frame)
 {
-    QV4::ExecutionContext *ctx = engine->currentExecutionContext;
+    QV4::ExecutionContext *ctx = engine->currentContext;
     while (ctx) {
         QV4::CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {

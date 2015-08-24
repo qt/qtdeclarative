@@ -1813,7 +1813,7 @@ ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
 ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
     Scope scope(engine());
-    ExecutionContext *context = scope.engine->currentExecutionContext;
+    ExecutionContext *context = scope.engine->currentContext;
     if (d()->index == DestroyMethod)
         return method_destroy(context, callData->args, callData->argc);
     else if (d()->index == ToStringMethod)

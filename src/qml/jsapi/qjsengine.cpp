@@ -319,7 +319,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::Scope scope(v4);
     QV4::ExecutionContextSaver saver(scope);
 
-    QV4::ExecutionContext *ctx = v4->currentExecutionContext;
+    QV4::ExecutionContext *ctx = v4->currentContext;
     if (ctx->d() != v4->rootContext()->d())
         ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);

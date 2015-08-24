@@ -200,7 +200,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
-    , currentExecutionContext(0)
+    , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)
@@ -512,8 +512,8 @@ void ExecutionEngine::initRootContext()
     jsObjects[RootContect] = r;
     jsObjects[IntegerNull] = Encode((int)0);
 
-    currentExecutionContext = static_cast<ExecutionContext *>(jsObjects + RootContect);
-    current = currentExecutionContext->d();
+    currentContext = static_cast<ExecutionContext *>(jsObjects + RootContect);
+    current = currentContext->d();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -526,7 +526,7 @@ ExecutionContext *ExecutionEngine::pushGlobalContext()
     pushContext(rootContext()->d());
 
     Q_ASSERT(current == rootContext()->d());
-    return currentExecutionContext;
+    return currentContext;
 }
 
 ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
@@ -741,7 +741,7 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
 
     // get the correct context when we're within a builtin function
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = parentContext(currentExecutionContext)->d();
+        ctx = parentContext(currentContext)->d();
 
     if (!ctx->outer)
         return 0;
@@ -801,7 +801,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    ExecutionContext *c = currentExecutionContext;
+    ExecutionContext *c = currentContext;
     ScopedFunctionObject function(scope);
     while (c && frameLimit) {
         function = c->getFunctionObject();
@@ -889,7 +889,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    ExecutionContext *c = currentExecutionContext;
+    ExecutionContext *c = currentContext;
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {

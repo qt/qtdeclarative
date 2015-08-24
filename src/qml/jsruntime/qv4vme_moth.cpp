@@ -375,7 +375,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    QV4::ExecutionContext *context = engine->currentExecutionContext;
+    QV4::ExecutionContext *context = engine->currentContext;
     engine->current->lineNumber = -1;
 
 #ifdef DO_TRACE_INSTR
@@ -650,18 +650,18 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
         Runtime::pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
-        context = engine->currentExecutionContext;
+        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         Runtime::pushWithScope(VALUE(instr.arg), engine);
-        context = engine->currentExecutionContext;
+        context = engine->currentContext;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
         Runtime::popScope(engine);
-        context = engine->currentExecutionContext;
+        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)

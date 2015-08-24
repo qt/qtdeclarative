@@ -68,7 +68,7 @@ void Debugger::JavaScriptJob::run()
 
     ExecutionContextSaver saver(scope);
 
-    ExecutionContext *ctx = engine->currentExecutionContext;
+    ExecutionContext *ctx = engine->currentContext;
     if (frameNr > 0) {
         for (int i = 0; i < frameNr; ++i) {
             ctx = engine->parentContext(ctx);
@@ -150,7 +150,7 @@ void Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, Encode::undefined());
 
-    m_currentContext.set(m_engine, *m_engine->currentExecutionContext);
+    m_currentContext.set(m_engine, *m_engine->currentContext);
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -235,7 +235,7 @@ void Debugger::enteringFunction()
     QMutexLocker locker(&m_lock);
 
     if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, *m_engine->currentExecutionContext);
+        m_currentContext.set(m_engine, *m_engine->currentContext);
     }
 }
 
@@ -248,7 +248,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
-        m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentExecutionContext));
+        m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentContext));
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }
@@ -269,7 +269,7 @@ void Debugger::aboutToThrow()
 Function *Debugger::getFunction() const
 {
     Scope scope(m_engine);
-    ExecutionContext *context = m_engine->currentExecutionContext;
+    ExecutionContext *context = m_engine->currentContext;
     ScopedFunctionObject function(scope, context->getFunctionObject());
     if (function)
         return function->function();

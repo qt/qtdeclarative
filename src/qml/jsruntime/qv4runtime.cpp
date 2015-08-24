@@ -270,7 +270,7 @@ ReturnedValue Runtime::closure(ExecutionEngine *engine, int functionId)
 {
     QV4::Function *clos = engine->current->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    return FunctionObject::createScriptFunction(engine->currentExecutionContext, clos)->asReturnedValue();
+    return FunctionObject::createScriptFunction(engine->currentContext, clos)->asReturnedValue();
 }
 
 ReturnedValue Runtime::deleteElement(ExecutionEngine *engine, const Value &base, const Value &index)
@@ -308,7 +308,7 @@ ReturnedValue Runtime::deleteName(ExecutionEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    return Encode(engine->currentExecutionContext->deleteProperty(name));
+    return Encode(engine->currentContext->deleteProperty(name));
 }
 
 QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
@@ -662,7 +662,7 @@ void Runtime::setActivationProperty(ExecutionEngine *engine, int nameIndex, cons
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    engine->currentExecutionContext->setProperty(name, value);
+    engine->currentContext->setProperty(name, value);
 }
 
 ReturnedValue Runtime::getProperty(ExecutionEngine *engine, const Value &object, int nameIndex)
@@ -689,7 +689,7 @@ ReturnedValue Runtime::getActivationProperty(ExecutionEngine *engine, int nameIn
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    return engine->currentExecutionContext->getProperty(name);
+    return engine->currentContext->getProperty(name);
 }
 
 #endif // V4_BOOTSTRAP
@@ -925,7 +925,7 @@ ReturnedValue Runtime::callActivationProperty(ExecutionEngine *engine, int nameI
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
 
     ScopedObject base(scope);
-    ScopedValue func(scope, engine->currentExecutionContext->getPropertyAndBase(name, base.getRef()));
+    ScopedValue func(scope, engine->currentContext->getPropertyAndBase(name, base.getRef()));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1054,7 +1054,7 @@ ReturnedValue Runtime::constructActivationProperty(ExecutionEngine *engine, int 
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedValue func(scope, engine->currentExecutionContext->getProperty(name));
+    ScopedValue func(scope, engine->currentContext->getProperty(name));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1140,7 +1140,7 @@ QV4::ReturnedValue Runtime::typeofName(ExecutionEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedValue prop(scope, engine->currentExecutionContext->getProperty(name));
+    ScopedValue prop(scope, engine->currentContext->getProperty(name));
     // typeof doesn't throw. clear any possible exception
     scope.engine->hasException = false;
     return Runtime::typeofValue(engine, prop);
@@ -1182,20 +1182,20 @@ ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
  */
 void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
 {
-    engine->pushContext(engine->currentExecutionContext->newWithContext(o.toObject(engine)));
-    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
+    engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
+    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
 }
 
 void Runtime::pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
-    ExecutionContext *c = engine->currentExecutionContext;
+    ExecutionContext *c = engine->currentContext;
     engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
-    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
+    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
 }
 
 void Runtime::popScope(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
+    Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
     engine->popContext();
     engine->jsStackTop -= 2;
 }
@@ -1204,7 +1204,7 @@ void Runtime::declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    engine->currentExecutionContext->createMutableBinding(name, deletable);
+    engine->currentContext->createMutableBinding(name, deletable);
 }
 
 ReturnedValue Runtime::arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
@@ -1265,7 +1265,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
 QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
-    QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentExecutionContext);
+    QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
     return engine->memoryManager->alloc<ArgumentsObject>(c)->asReturnedValue();
 }
 
