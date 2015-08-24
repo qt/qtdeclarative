@@ -73,6 +73,7 @@ struct Scope {
     ~Scope() {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
+        Q_ASSERT(engine->currentExecutionContext < mark);
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
 #ifdef V4_USE_VALGRIND
@@ -414,20 +415,18 @@ struct ScopedProperty
 struct ExecutionContextSaver
 {
     ExecutionEngine *engine;
-    Value *savedContext;
+    ExecutionContext *savedContext;
 
     ExecutionContextSaver(Scope &scope)
         : engine(scope.engine)
-        , savedContext(scope.alloc(1))
     {
-        savedContext->setM(scope.engine->currentContext());
-#if QT_POINTER_SIZE == 4
-        savedContext->setTag(QV4::Value::Managed_Type);
-#endif
+        savedContext = engine->currentExecutionContext;
     }
     ~ExecutionContextSaver()
     {
-        engine->current = static_cast<Heap::ExecutionContext *>(savedContext->heapObject());
+        Q_ASSERT(engine->jsStackTop > engine->currentExecutionContext);
+        engine->currentExecutionContext = savedContext;
+        engine->current = savedContext->d();
     }
 };
 

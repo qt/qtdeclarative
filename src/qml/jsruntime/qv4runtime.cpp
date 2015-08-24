@@ -1175,14 +1175,6 @@ QV4::ReturnedValue Runtime::typeofElement(ExecutionEngine *engine, const Value &
     return Runtime::typeofValue(engine, prop);
 }
 
-void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
-{
-    Scope scope(engine);
-    ScopedObject obj(scope, o.toObject(engine));
-    ScopedContext ctx(scope, engine->currentContext());
-    engine->pushContext(ctx->newWithContext(obj));
-}
-
 ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
 {
     if (!engine->hasException)
@@ -1190,18 +1182,29 @@ ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
     return engine->catchException(0);
 }
 
+/* The next three methods are a bit tricky. They can't open up a Scope, as that
+ * would mess up the pushing of the context.
+ *
+ * Instead the push/pop pair acts as a non local scope.
+ */
+void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
+{
+    engine->pushContext(engine->currentExecutionContext->newWithContext(o.toObject(engine)));
+    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
+}
+
 void Runtime::pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
-    Scope scope(engine);
-    ScopedValue v(scope, engine->catchException(0));
-    ScopedString exceptionVarName(scope, engine->currentContext()->compilationUnit->runtimeStrings[exceptionVarNameIndex]);
-    ScopedContext ctx(scope, engine->currentContext());
-    engine->pushContext(ctx->newCatchContext(exceptionVarName, v));
+    ExecutionContext *c = engine->currentExecutionContext;
+    engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
+    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
 }
 
 void Runtime::popScope(ExecutionEngine *engine)
 {
+    Q_ASSERT(engine->jsStackTop = engine->currentExecutionContext + 2);
     engine->popContext();
+    engine->jsStackTop -= 2;
 }
 
 void Runtime::declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)

@@ -83,14 +83,16 @@ Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *functi
     return c;
 }
 
-Heap::WithContext *ExecutionContext::newWithContext(Object *with)
+Heap::WithContext *ExecutionContext::newWithContext(Heap::Object *with)
 {
     return d()->engine->memoryManager->alloc<WithContext>(d(), with);
 }
 
-Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue)
 {
-    return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, exceptionValue);
+    Scope scope(this);
+    ScopedValue e(scope, exceptionValue);
+    return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
 }
 
 Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
@@ -150,7 +152,7 @@ Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
     global = eng->globalObject->d();
 }
 
-Heap::WithContext::WithContext(ExecutionContext *outerContext, QV4::Object *with)
+Heap::WithContext::WithContext(ExecutionContext *outerContext, Object *with)
     : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_WithContext)
 {
     outer = outerContext;
@@ -158,10 +160,10 @@ Heap::WithContext::WithContext(ExecutionContext *outerContext, QV4::Object *with
     lookups = outer->lookups;
     compilationUnit = outer->compilationUnit;
 
-    withObject = with ? with->d() : 0;
+    withObject = with;
 }
 
-Heap::CatchContext::CatchContext(ExecutionContext *outerContext, QV4::String *exceptionVarName, const Value &exceptionValue)
+Heap::CatchContext::CatchContext(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue)
     : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_CatchContext)
 {
     outer = outerContext;
@@ -170,7 +172,7 @@ Heap::CatchContext::CatchContext(ExecutionContext *outerContext, QV4::String *ex
     lookups = outer->lookups;
     compilationUnit = outer->compilationUnit;
 
-    this->exceptionVarName = exceptionVarName->d();
+    this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
 }
 

@@ -249,7 +249,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->currentContext()) {
-        m_currentContext.set(m_engine, m_engine->currentContext()->parent);
+        m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentExecutionContext));
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }

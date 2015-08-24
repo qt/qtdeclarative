@@ -200,6 +200,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
+    , currentExecutionContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)
@@ -508,9 +509,11 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
-    current = r->d();
-
     jsObjects[RootContect] = r;
+    jsObjects[IntegerNull] = Encode((int)0);
+
+    currentExecutionContext = static_cast<ExecutionContext *>(jsObjects + RootContect);
+    current = currentExecutionContext->d();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -520,13 +523,18 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    Scope scope(this);
-    Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
-    g->d()->callData = rootContext()->d()->callData;
-    pushContext(g->d());
+    pushContext(rootContext()->d());
 
-    Q_ASSERT(currentContext() == g->d());
-    return g->d();
+    Q_ASSERT(currentContext() == rootContext()->d());
+    return currentContext();
+}
+
+ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
+{
+    Value *offset = static_cast<Value *>(context) + 1;
+    Q_ASSERT(offset->isInteger());
+    int o = offset->integerValue();
+    return o ? context - o : 0;
 }
 
 
@@ -733,7 +741,7 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
 
     // get the correct context when we're within a builtin function
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = ctx->parent;
+        ctx = parentContext(currentExecutionContext)->d();
 
     if (!ctx->outer)
         return 0;
@@ -793,7 +801,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    ScopedContext c(scope, currentContext());
+    ExecutionContext *c = currentExecutionContext;
     ScopedFunctionObject function(scope);
     while (c && frameLimit) {
         function = c->getFunctionObject();
@@ -813,7 +821,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
             stack.append(frame);
             --frameLimit;
         }
-        c = c->d()->parent;
+        c = parentContext(c);
     }
 
     if (frameLimit && globalCode) {
@@ -881,8 +889,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    Scope scope(this);
-    ScopedContext c(scope, currentContext());
+    ExecutionContext *c = currentExecutionContext;
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {
@@ -890,7 +897,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
                 base.setUrl(callCtx->d()->function->function->sourceFile());
             break;
         }
-        c = c->d()->parent;
+        c = parentContext(c);
     }
 
     if (base.isEmpty() && globalCode)
@@ -938,16 +945,6 @@ void ExecutionEngine::markObjects()
             getter->mark(this);
         if (Heap::FunctionObject *setter = pd.setter())
             setter->mark(this);
-    }
-
-    Heap::ExecutionContext *c = currentContext();
-    while (c) {
-        Q_ASSERT(c->inUse());
-        if (!c->isMarked()) {
-            c->setMarkBit();
-            c->vtable()->markObjects(c, this);
-        }
-        c = c->parent;
     }
 
     classPool->markObjects(this);

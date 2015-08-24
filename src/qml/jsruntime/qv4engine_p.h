@@ -88,6 +88,7 @@ public:
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
 
+    ExecutionContext *currentExecutionContext;
 
     Value *jsStackLimit;
     quintptr cStackLimit;
@@ -128,6 +129,7 @@ public:
 
     enum JSObjects {
         RootContect,
+        IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
         ArrayProto,
         StringProto,
@@ -351,6 +353,7 @@ public:
     void pushContext(Heap::ExecutionContext *context);
     void pushContext(CallContext *context);
     Heap::ExecutionContext *popContext();
+    ExecutionContext *parentContext(ExecutionContext *context) const;
 
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
@@ -444,9 +447,12 @@ public:
 
 inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
 {
-    Q_ASSERT(current && context);
-    context->parent = current;
-    current = context;
+    Q_ASSERT(currentExecutionContext && context);
+    Value *v = jsAlloca(2);
+    v[0] = Encode(context);
+    v[1] = Encode((int)(v - static_cast<Value *>(currentExecutionContext)));
+    currentExecutionContext = static_cast<ExecutionContext *>(v);
+    current = currentExecutionContext->d();
 }
 
 inline void ExecutionEngine::pushContext(CallContext *context)
@@ -457,25 +463,15 @@ inline void ExecutionEngine::pushContext(CallContext *context)
 
 inline Heap::ExecutionContext *ExecutionEngine::popContext()
 {
-    Q_ASSERT(current->parent);
-    current = current->parent;
-    Q_ASSERT(current);
+    Q_ASSERT(jsStackTop > currentExecutionContext);
+    QV4::Value *offset = (currentExecutionContext + 1);
+    Q_ASSERT(offset->isInteger());
+    int o = offset->integerValue();
+    Q_ASSERT(o);
+    currentExecutionContext -= o;
+    current = currentExecutionContext->d();
     return current;
 }
-
-inline
-Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : engine(engine)
-    , parent(engine->currentContext())
-    , outer(0)
-    , lookups(0)
-    , compilationUnit(0)
-    , type(t)
-    , strictMode(false)
-    , lineNumber(-1)
-{
-}
-
 
 inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)

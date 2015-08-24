@@ -43,13 +43,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4::Heap::CallContext *QV4DataCollector::findContext(QV4::Heap::ExecutionContext *ctxt, int frame)
+QV4::Heap::CallContext *QV4DataCollector::findContext(QV4::ExecutionEngine *engine, int frame)
 {
-    if (!ctxt)
-        return 0;
-
-    QV4::Scope scope(ctxt->engine);
-    QV4::ScopedContext ctx(scope, ctxt);
+    QV4::ExecutionContext *ctx = engine->currentExecutionContext;
     while (ctx) {
         QV4::CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->function) {
@@ -57,7 +53,7 @@ QV4::Heap::CallContext *QV4DataCollector::findContext(QV4::Heap::ExecutionContex
                 return cCtxt->d();
             --frame;
         }
-        ctx = ctx->d()->parent;
+        ctx = engine->parentContext(ctx);
     }
 
     return 0;
@@ -82,7 +78,7 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
     QVector<QV4::Heap::ExecutionContext::ContextType> types;
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QV4::CallContext> sctxt(scope, findContext(engine->currentContext(), frame));
+    QV4::Scoped<QV4::CallContext> sctxt(scope, findContext(engine, frame));
     if (!sctxt || sctxt->d()->type < QV4::Heap::ExecutionContext::Type_QmlContext)
         return types;
 
@@ -384,7 +380,7 @@ void ArgumentCollectJob::run()
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::CallContext> ctxt(
                 scope, QV4DataCollector::findScope(
-                    QV4DataCollector::findContext(engine->currentContext(), frameNr), scopeNr));
+                    QV4DataCollector::findContext(engine, frameNr), scopeNr));
     if (!ctxt)
         return;
 
@@ -417,7 +413,7 @@ void LocalCollectJob::run()
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::CallContext> ctxt(
                 scope, QV4DataCollector::findScope(
-                    QV4DataCollector::findContext(engine->currentContext(), frameNr), scopeNr));
+                    QV4DataCollector::findContext(engine, frameNr), scopeNr));
     if (!ctxt)
         return;
 
@@ -448,8 +444,7 @@ void ThisCollectJob::run()
 bool ThisCollectJob::myRun()
 {
     QV4::Scope scope(engine);
-    QV4::ScopedContext ctxt(scope, QV4DataCollector::findContext(engine->currentContext(),
-                                                                 frameNr));
+    QV4::ScopedContext ctxt(scope, QV4DataCollector::findContext(engine, frameNr));
     while (ctxt) {
         if (QV4::CallContext *cCtxt = ctxt->asCallContext())
             if (cCtxt->d()->activation)
