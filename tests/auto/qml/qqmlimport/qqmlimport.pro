@@ -8,4 +8,3 @@ SOURCES += tst_qqmlimport.cpp
 include (../../shared/util.pri)
 
 CONFIG += parallel_test
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

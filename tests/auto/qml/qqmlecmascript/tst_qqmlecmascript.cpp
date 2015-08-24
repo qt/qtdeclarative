@@ -4911,7 +4911,7 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
     QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QMetaObject::invokeMethod(childObject, "constructQObject");    // creates a reference to a constructed QObject.
-    QWeakPointer<QObject> qobjectGuard(childObject->property("vp").value<QObject*>()); // get the pointer prior to processing deleteLater events.
+    QPointer<QObject> qobjectGuard(childObject->property("vp").value<QObject*>()); // get the pointer prior to processing deleteLater events.
     QVERIFY(!qobjectGuard.isNull());
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
     QCoreApplication::processEvents();
@@ -4934,9 +4934,9 @@ void tst_qqmlecmascript::propertyVarReparent()
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
-    QWeakPointer<QObject> rectGuard(rect);
-    QWeakPointer<QObject> textGuard(text);
-    QWeakPointer<QObject> text2Guard(text2);
+    QPointer<QObject> rectGuard(rect);
+    QPointer<QObject> textGuard(text);
+    QPointer<QObject> text2Guard(text2);
     QVERIFY(!rectGuard.isNull());
     QVERIFY(!textGuard.isNull());
     QVERIFY(!text2Guard.isNull());
@@ -4945,7 +4945,7 @@ void tst_qqmlecmascript::propertyVarReparent()
     // now construct an image which we will reparent.
     QMetaObject::invokeMethod(text2, "constructQObject");
     QObject *image = text2->property("vp").value<QObject*>();
-    QWeakPointer<QObject> imageGuard(image);
+    QPointer<QObject> imageGuard(image);
     QVERIFY(!imageGuard.isNull());
     QCOMPARE(image->property("imageCanary").toInt(), 13);
     // now reparent the "Image" object (currently, it has JS ownership)
@@ -4976,9 +4976,9 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     QObject *rect = object->property("vp").value<QObject*>();
     QObject *text = rect->findChild<QObject*>("textOne");
     QObject *text2 = rect->findChild<QObject*>("textTwo");
-    QWeakPointer<QObject> rectGuard(rect);
-    QWeakPointer<QObject> textGuard(text);
-    QWeakPointer<QObject> text2Guard(text2);
+    QPointer<QObject> rectGuard(rect);
+    QPointer<QObject> textGuard(text);
+    QPointer<QObject> text2Guard(text2);
     QVERIFY(!rectGuard.isNull());
     QVERIFY(!textGuard.isNull());
     QVERIFY(!text2Guard.isNull());
@@ -4987,7 +4987,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     // now construct an image which we will reparent.
     QMetaObject::invokeMethod(text2, "constructQObject");
     QObject *image = text2->property("vp").value<QObject*>();
-    QWeakPointer<QObject> imageGuard(image);
+    QPointer<QObject> imageGuard(image);
     QVERIFY(!imageGuard.isNull());
     QCOMPARE(image->property("imageCanary").toInt(), 13);
     // now reparent the "Image" object (currently, it has JS ownership)
@@ -5045,9 +5045,9 @@ void tst_qqmlecmascript::propertyVarCircular2()
     QVERIFY(rootObject != 0);
     QObject *childObject = rootObject->findChild<QObject*>("text");
     QVERIFY(childObject != 0);
-    QWeakPointer<QObject> rootObjectTracker(rootObject);
+    QPointer<QObject> rootObjectTracker(rootObject);
     QVERIFY(!rootObjectTracker.isNull());
-    QWeakPointer<QObject> childObjectTracker(childObject);
+    QPointer<QObject> childObjectTracker(childObject);
     QVERIFY(!childObjectTracker.isNull());
     gc(engine);
     QCOMPARE(rootObject->property("rectCanary").toInt(), 5);
@@ -6614,8 +6614,7 @@ void tst_qqmlecmascript::urlPropertyWithEncoding()
         MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
         QVERIFY(object != 0);
         object->setStringProperty("http://qt-project.org");
-        QUrl encoded;
-        encoded.setEncodedUrl("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
+        const QUrl encoded = QUrl::fromEncoded("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
         QCOMPARE(object->urlProperty(), encoded);
         QCOMPARE(object->value(), 0);   // Interpreting URL as string yields canonicalised version
         QCOMPARE(object->property("result").toBool(), true);
@@ -6633,8 +6632,7 @@ void tst_qqmlecmascript::urlListPropertyWithEncoding()
         MySequenceConversionObject *msco3 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco3"));
         MySequenceConversionObject *msco4 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco4"));
         QVERIFY(msco1 != 0 && msco2 != 0 && msco3 != 0 && msco4 != 0);
-        QUrl encoded;
-        encoded.setEncodedUrl("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
+        const QUrl encoded = QUrl::fromEncoded("http://qt-project.org/?get%3cDATA%3e", QUrl::TolerantMode);
         QCOMPARE(msco1->urlListProperty(), (QList<QUrl>() << encoded));
         QCOMPARE(msco2->urlListProperty(), (QList<QUrl>() << encoded));
         QCOMPARE(msco3->urlListProperty(), (QList<QUrl>() << encoded << encoded));
@@ -7331,7 +7329,7 @@ void tst_qqmlecmascript::sequenceSort_data()
                 QString fnName = QLatin1String("test_") + testName;
                 bool useComparer = c != 0;
                 testName += useComparer ? QLatin1String("[custom]") : QLatin1String("[default]");
-                QTest::newRow(testName.toAscii().constData()) << fnName << useComparer;
+                QTest::newRow(testName.toLatin1().constData()) << fnName << useComparer;
             }
         }
     }
@@ -7350,7 +7348,7 @@ void tst_qqmlecmascript::sequenceSort()
     QVERIFY(object != 0);
 
     QVariant q;
-    QMetaObject::invokeMethod(object, function.toAscii().constData(), Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
+    QMetaObject::invokeMethod(object, function.toLatin1().constData(), Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
     QVERIFY(q.toBool());
 
     delete object;

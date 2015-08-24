@@ -393,7 +393,7 @@ void tst_qquickwindow::openglContextCreatedSignal()
     QVERIFY(spy.size() > 0);
 
     QVariant ctx = spy.at(0).at(0);
-    QCOMPARE(qVariantValue<QOpenGLContext *>(ctx), window.openglContext());
+    QCOMPARE(qvariant_cast<QOpenGLContext *>(ctx), window.openglContext());
 }
 
 void tst_qquickwindow::aboutToStopSignal()

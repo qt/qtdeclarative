@@ -81,7 +81,7 @@ void tst_QQmlImport::testDesignerSupported()
     warningString.remove('\r');
 #endif
     warningString = warningString.arg(testFileUrl("testfile_unsupported.qml").toString());
-    QTest::ignoreMessage(QtWarningMsg, warningString.toAscii());
+    QTest::ignoreMessage(QtWarningMsg, warningString.toLocal8Bit());
     window->setSource(testFileUrl("testfile_unsupported.qml"));
     QVERIFY(!window->errors().isEmpty());
 

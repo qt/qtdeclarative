@@ -60,7 +60,7 @@ void tst_pointers::weakPointer()
 {
     QObject *obj = new QObject;
     QBENCHMARK {
-        QWeakPointer<QObject> guardedObject;
+        QPointer<QObject> guardedObject;
         guardedObject = obj;
     }
 }

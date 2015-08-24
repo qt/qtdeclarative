@@ -102,14 +102,19 @@ public:
     };
 
     SingleRoleModel(const QStringList &list = QStringList(), const QByteArray &role = "name", QObject *parent = 0)
-        : QAbstractItemModel(parent) {
-        QHash<int, QByteArray> roles;
-        roles.insert(Qt::DisplayRole , role);
-        setRoleNames(roles);
+        : QAbstractItemModel(parent), m_role(role)
+    {
         foreach (const QString &string, list)
             trunk.children.append(Node(string));
     }
     ~SingleRoleModel() {}
+
+    QHash<int,QByteArray> roleNames() const
+    {
+        QHash<int,QByteArray> roles;
+        roles.insert(Qt::DisplayRole, m_role);
+        return roles;
+    }
 
     Branch *branchForIndex(const QModelIndex &index) const {
         return index.isValid()
@@ -235,6 +240,7 @@ public slots:
     }
 
 private:
+    const QByteArray m_role;
     Branch trunk;
 };
 

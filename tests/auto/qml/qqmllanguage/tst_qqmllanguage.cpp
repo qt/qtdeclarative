@@ -673,8 +673,7 @@ void tst_qqmllanguage::assignBasicTypes()
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
     QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2f, 2.3f));
-    QUrl encoded;
-    encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
+    const QUrl encoded = QUrl::fromEncoded("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
     QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
     QVERIFY(object->objectProperty() != 0);
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
@@ -1152,8 +1151,7 @@ void tst_qqmllanguage::bindTypeToJSValue()
     } {
         MyQmlObject *object = root->findChild<MyQmlObject *>("urlProperty");
         QJSValue value = object->qjsvalue();
-        QUrl encoded;
-        encoded.setEncodedUrl("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
+        const QUrl encoded = QUrl::fromEncoded("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
         QCOMPARE(value.toString(), component.url().resolved(encoded).toString());
     } {
         MyQmlObject *object = root->findChild<MyQmlObject *>("objectProperty");

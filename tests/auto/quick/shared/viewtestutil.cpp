@@ -148,16 +148,20 @@ QList<int> QQuickViewTestUtil::adjustIndexesForRemoveDisplaced(const QList<int> 
 QQuickViewTestUtil::QaimModel::QaimModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    QHash<int, QByteArray> roles;
-    roles[Name] = "name";
-    roles[Number] = "number";
-    setRoleNames(roles);
 }
 
 int QQuickViewTestUtil::QaimModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     return list.count();
+}
+
+QHash<int,QByteArray> QQuickViewTestUtil::QaimModel::roleNames() const
+{
+    QHash<int,QByteArray> roles = QAbstractListModel::roleNames();
+    roles.insert(Name, "name");
+    roles.insert(Number, "number");
+    return roles;
 }
 
 QVariant QQuickViewTestUtil::QaimModel::data(const QModelIndex &index, int role) const
