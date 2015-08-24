@@ -54,18 +54,12 @@ struct ScopedValue;
 struct Scope {
     inline Scope(ExecutionContext *ctx)
         : engine(ctx->d()->engine)
-#ifndef QT_NO_DEBUG
-        , size(0)
-#endif
     {
         mark = engine->jsStackTop;
     }
 
     explicit Scope(ExecutionEngine *e)
         : engine(e)
-#ifndef QT_NO_DEBUG
-        , size(0)
-#endif
     {
         mark = engine->jsStackTop;
     }
@@ -83,9 +77,6 @@ struct Scope {
     }
 
     Value *alloc(int nValues) {
-#ifndef QT_NO_DEBUG
-        size += nValues;
-#endif
         return engine->jsAlloca(nValues);
     }
 
@@ -95,9 +86,6 @@ struct Scope {
 
     ExecutionEngine *engine;
     Value *mark;
-#ifndef QT_NO_DEBUG
-    mutable int size;
-#endif
 
 private:
     Q_DISABLE_COPY(Scope)
@@ -109,18 +97,12 @@ struct ScopedValue
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(0);
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     ScopedValue(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
         *ptr = v;
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     ScopedValue(const Scope &scope, Heap::Base *o)
@@ -130,27 +112,18 @@ struct ScopedValue
 #if QT_POINTER_SIZE == 4
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     ScopedValue(const Scope &scope, Managed *m)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(m->asReturnedValue());
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(v);
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     ScopedValue &operator=(const Value &v) {
@@ -214,18 +187,12 @@ struct Scoped
 #if QT_POINTER_SIZE == 4
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped(const Scope &scope, const Value &v)
     {
         ptr = scope.engine->jsStackTop++;
         setPointer(v.as<T>());
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
     Scoped(const Scope &scope, Heap::Base *o)
     {
@@ -233,69 +200,45 @@ struct Scoped
         v = o;
         ptr = scope.engine->jsStackTop++;
         setPointer(v.as<T>());
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
     Scoped(const Scope &scope, const ScopedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
         setPointer(v.ptr->as<T>());
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped(const Scope &scope, const Value &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(value_convert<T>(scope.engine, v));
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped(const Scope &scope, const Value *v)
     {
         ptr = scope.engine->jsStackTop++;
         setPointer(v ? v->as<T>() : 0);
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped(const Scope &scope, T *t)
     {
         ptr = scope.engine->jsStackTop++;
         setPointer(t);
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
     Scoped(const Scope &scope, typename T::Data *t)
     {
         ptr = scope.engine->jsStackTop++;
         *ptr = t;
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped(const Scope &scope, const ReturnedValue &v)
     {
         ptr = scope.engine->jsStackTop++;
         setPointer(QV4::Value::fromReturnedValue(v).as<T>());
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
     Scoped(const Scope &scope, const ReturnedValue &v, _Convert)
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setRawValue(value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));
-#ifndef QT_NO_DEBUG
-        ++scope.size;
-#endif
     }
 
     Scoped<T> &operator=(Heap::Base *o) {
