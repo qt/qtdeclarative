@@ -127,7 +127,7 @@ public:
     QV8Engine *v8Engine;
 
     enum JSObjects {
-        RootContect,
+        RootContext,
         IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
         ArrayProto,
@@ -175,7 +175,7 @@ public:
     Value *jsObjects;
     enum { NTypedArrayTypes = 9 }; // == TypedArray::NValues, avoid header dependency
 
-    GlobalContext *rootContext() const { return reinterpret_cast<GlobalContext *>(jsObjects + RootContect); }
+    GlobalContext *rootContext() const { return reinterpret_cast<GlobalContext *>(jsObjects + RootContext); }
     FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
     FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
     FunctionObject *numberCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Number_Ctor); }

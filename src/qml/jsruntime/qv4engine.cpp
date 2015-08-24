@@ -509,10 +509,10 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
-    jsObjects[RootContect] = r;
+    jsObjects[RootContext] = r;
     jsObjects[IntegerNull] = Encode((int)0);
 
-    currentContext = static_cast<ExecutionContext *>(jsObjects + RootContect);
+    currentContext = static_cast<ExecutionContext *>(jsObjects + RootContext);
     current = currentContext->d();
 }
 
