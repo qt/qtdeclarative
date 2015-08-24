@@ -195,6 +195,8 @@ public:
     virtual void setFormat(GLenum format) = 0;
     virtual void setHasMipmaps(bool mipmap) = 0;
     virtual void setDevicePixelRatio(qreal ratio) = 0;
+    virtual void setMirrorHorizontal(bool mirror) = 0;
+    virtual void setMirrorVertical(bool mirror) = 0;
     Q_SLOT virtual void markDirtyTexture() = 0;
     Q_SLOT virtual void invalidated() = 0;
 

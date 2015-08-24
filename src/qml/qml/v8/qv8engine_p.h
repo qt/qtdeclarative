@@ -63,6 +63,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
 #include <private/qv4identifier_p.h>
+#include <private/qqmlcontextwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -119,8 +120,8 @@ class QQmlV4Function
 public:
     int length() const { return callData->argc; }
     QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
-    QQmlContextData *context() { return ctx; }
-    QV4::ReturnedValue qmlGlobal() { return callData->thisObject.asReturnedValue(); }
+    QQmlContextData *context() { return e->qmlContextObject()->context.contextData(); }
+    QV4::ReturnedValue qmlGlobal() { return e->qmlContextObject()->asReturnedValue(); }
     void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:
@@ -129,16 +130,14 @@ private:
     QQmlV4Function(const QQmlV4Function &);
     QQmlV4Function &operator=(const QQmlV4Function &);
 
-    QQmlV4Function(QV4::CallData *callData, QV4::Value *retVal,
-                   const QV4::Value &global, QQmlContextData *c, QV4::ExecutionEngine *e)
-        : callData(callData), retVal(retVal), ctx(c), e(e)
+    QQmlV4Function(QV4::CallData *callData, QV4::Value *retVal, QV4::ExecutionEngine *e)
+        : callData(callData), retVal(retVal), e(e)
     {
-        callData->thisObject = QV4::Value::fromReturnedValue(global.asReturnedValue());
+        callData->thisObject = QV4::Encode::undefined();
     }
 
     QV4::CallData *callData;
     QV4::Value *retVal;
-    QQmlContextData *ctx;
     QV4::ExecutionEngine *e;
 };
 

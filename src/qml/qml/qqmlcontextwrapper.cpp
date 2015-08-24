@@ -93,19 +93,6 @@ ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
     return w.asReturnedValue();
 }
 
-QQmlContextData *QmlContextWrapper::getContext(const Value &value)
-{
-    if (!value.isObject())
-        return 0;
-
-    QV4::ExecutionEngine *v4 = value.as<Object>()->engine();
-    Scope scope(v4);
-    QV4::Scoped<QmlContextWrapper> c(scope, value);
-
-    return c ? c->getContext() : 0;
-}
-
-
 ReturnedValue QmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlContextWrapper>());
@@ -321,70 +308,6 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
     }
 
     Object::put(m, name, value);
-}
-
-void QmlContextWrapper::registerQmlDependencies(ExecutionEngine *engine, const CompiledData::Function *compiledFunction)
-{
-    // Let the caller check and avoid the function call :)
-    Q_ASSERT(compiledFunction->hasQmlDependencies());
-
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
-    if (!ep)
-        return;
-    QQmlPropertyCapture *capture = ep->propertyCapture;
-    if (!capture)
-        return;
-
-    QV4::Scope scope(engine);
-    QV4::Scoped<QmlContext> context(scope, engine->qmlContext());
-    QQmlContextData *qmlContext = context->qmlContext();
-
-    const quint32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
-    const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
-    for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
-        Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
-        capture->captureProperty(&qmlContext->idValues[*idObjectDependency].bindings);
-    }
-
-    Q_ASSERT(qmlContext->contextObject);
-    const quint32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
-    const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
-    for (int i = 0; i < contextPropertyDependencyCount; ++i) {
-        const int propertyIndex = *contextPropertyDependency++;
-        const int notifyIndex = *contextPropertyDependency++;
-        capture->captureProperty(qmlContext->contextObject, propertyIndex, notifyIndex);
-    }
-
-    QObject *scopeObject = context->qmlScope();
-    const quint32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
-    const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
-    for (int i = 0; i < scopePropertyDependencyCount; ++i) {
-        const int propertyIndex = *scopePropertyDependency++;
-        const int notifyIndex = *scopePropertyDependency++;
-        capture->captureProperty(scopeObject, propertyIndex, notifyIndex);
-    }
-
-}
-
-ReturnedValue QmlContextWrapper::qmlSingletonWrapper(ExecutionEngine *v4, String *name)
-{
-    if (!d()->context->imports)
-        return Encode::undefined();
-    // Search for attached properties, enums and imported scripts
-    QQmlTypeNameCache::Result r = d()->context->imports->query(name);
-
-    Q_ASSERT(r.isValid());
-    Q_ASSERT(r.type);
-    Q_ASSERT(r.type->isSingleton());
-    Q_ASSERT(v4);
-
-    QQmlEngine *e = v4->qmlEngine();
-    QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
-    siinfo->init(e);
-
-    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
-        return QV4::QObjectWrapper::wrap(engine(), qobjectSingleton);
-    return QJSValuePrivate::convertedToValue(engine(), siinfo->scriptApi(e));
 }
 
 QT_END_NAMESPACE

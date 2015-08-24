@@ -3941,12 +3941,12 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
         QV4::Scope scope(v4);
         QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts.value());
-        QV4::ScopedValue qml(scope);
+        QV4::Scoped<QV4::QmlContextWrapper> qml(scope);
         for (quint32 i = 0; i < scripts->getLength(); ++i) {
             QQmlContextData *scriptContext, *newContext;
             qml = scripts->getIndexed(i);
 
-            scriptContext = QV4::QmlContextWrapper::getContext(qml);
+            scriptContext = qml ? qml->getContext() : 0;
             qml = QV4::Encode::undefined();
 
             {
@@ -3957,7 +3957,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
 
             ctxt->engine->collectGarbage();
             qml = scripts->getIndexed(i);
-            newContext = QV4::QmlContextWrapper::getContext(qml);
+            newContext = qml ? qml->getContext() : 0;
             QCOMPARE(scriptContext, newContext);
         }
     }
@@ -5007,6 +5007,12 @@ void tst_qqmlecmascript::propertyVarCircular()
     QObject *object = component.create();
     QVERIFY(object != 0);
     QMetaObject::invokeMethod(object, "assignCircular");           // cause assignment and gc
+    {
+        QCOMPARE(object->property("canaryInt"), QVariant(5));
+        QVariant canaryResourceVariant = object->property("canaryResource");
+        QVERIFY(canaryResourceVariant.isValid());
+    }
+
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete); // process deleteLater() events from QV8QObjectWrapper.
     QCoreApplication::processEvents();
     QCOMPARE(object->property("canaryInt"), QVariant(5));
@@ -5703,9 +5709,10 @@ void tst_qqmlecmascript::deletedEngine()
 
     delete engine;
 
-    QCOMPARE(object->property("a").toInt(), 117);
+    QCOMPARE(object->property("a").toInt(), 0);
     object->setProperty("b", QVariant(10));
-    QCOMPARE(object->property("a").toInt(), 117);
+    object->setProperty("b", QVariant());
+    QCOMPARE(object->property("a").toInt(), 0);
 
     delete object;
 }

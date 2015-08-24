@@ -78,9 +78,17 @@ public:
 
     void setDevicePixelRatio(qreal ratio) Q_DECL_OVERRIDE { m_device_pixel_ratio = ratio; }
 
+    bool mirrorHorizontal() const { return bool(m_mirrorHorizontal); }
+    void setMirrorHorizontal(bool mirror) Q_DECL_OVERRIDE;
+
+    bool mirrorVertical() const { return bool(m_mirrorVertical); }
+    void setMirrorVertical(bool mirror) Q_DECL_OVERRIDE;
+
     void scheduleUpdate() Q_DECL_OVERRIDE;
 
     QImage toImage() const Q_DECL_OVERRIDE;
+
+    QRectF normalizedTextureSubRect() const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
     void markDirtyTexture() Q_DECL_OVERRIDE;
@@ -115,6 +123,8 @@ private:
     uint m_multisamplingChecked : 1;
     uint m_multisampling : 1;
     uint m_grab : 1;
+    uint m_mirrorHorizontal : 1;
+    uint m_mirrorVertical : 1;
 };
 
 #endif // QSGDEFAULTLAYER_P_H

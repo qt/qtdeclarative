@@ -102,6 +102,9 @@ QQmlFileSelector::QQmlFileSelector(QQmlEngine* engine, QObject* parent)
     d->engine->setUrlInterceptor(d->myInstance.data());
 }
 
+/*!
+   Destroys the QQmlFileSelector object.
+*/
 QQmlFileSelector::~QQmlFileSelector()
 {
     Q_D(QQmlFileSelector);

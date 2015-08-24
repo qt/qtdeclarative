@@ -44,6 +44,7 @@
 #include <private/qqmlcontextwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlvmemetaobject_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -253,6 +254,11 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
                 QUICK_STORE(QString, result.toQStringNoThrow())
             break;
         default:
+            if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
+                if (vtw->d()->valueType->typeId == core.propType) {
+                    return vtw->write(m_target.data(), core.coreIndex);
+                }
+            }
             break;
         }
     }
@@ -327,7 +333,7 @@ bool QQmlBinding::write(const QQmlPropertyData &core,
         const char *propertyType = 0;
 
         if (value.userType() == QMetaType::QObjectStar) {
-            if (QObject *o = *(QObject **)value.constData()) {
+            if (QObject *o = *(QObject *const *)value.constData()) {
                 valueType = o->metaObject()->className();
 
                 QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate::get(engine), type);

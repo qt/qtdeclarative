@@ -51,30 +51,52 @@ static Callback QQmlNotifier_callbacks[] = {
     QQmlVMEMetaObjectEndpoint_callback
 };
 
+namespace {
+    struct NotifyListTraversalData {
+        NotifyListTraversalData(QQmlNotifierEndpoint *ep = 0)
+            : originalSenderPtr(0)
+            , disconnectWatch(0)
+            , endpoint(ep)
+        {}
+
+        qintptr originalSenderPtr;
+        qintptr *disconnectWatch;
+        QQmlNotifierEndpoint *endpoint;
+    };
+}
+
 void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
 {
-    qintptr originalSenderPtr;
-    qintptr *disconnectWatch;
-
-    if (!endpoint->isNotifying()) {
-        originalSenderPtr = endpoint->senderPtr;
-        disconnectWatch = &originalSenderPtr;
-        endpoint->senderPtr = qintptr(disconnectWatch) | 0x1;
-    } else {
-        disconnectWatch = (qintptr *)(endpoint->senderPtr & ~0x1);
+    QVarLengthArray<NotifyListTraversalData> stack;
+    while (endpoint) {
+        stack.append(NotifyListTraversalData(endpoint));
+        endpoint = endpoint->next;
     }
 
-    if (endpoint->next)
-        emitNotify(endpoint->next, a);
+    int i = 0;
+    for (; i < stack.size(); ++i) {
+        NotifyListTraversalData &data = stack[i];
 
-    if (*disconnectWatch) {
+        if (!data.endpoint->isNotifying()) {
+            data.originalSenderPtr = data.endpoint->senderPtr;
+            data.disconnectWatch = &data.originalSenderPtr;
+            data.endpoint->senderPtr = qintptr(data.disconnectWatch) | 0x1;
+        } else {
+            data.disconnectWatch = (qintptr *)(data.endpoint->senderPtr & ~0x1);
+        }
+    }
 
-        Q_ASSERT(QQmlNotifier_callbacks[endpoint->callback]);
-        QQmlNotifier_callbacks[endpoint->callback](endpoint, a);
+    while (--i >= 0) {
+        const NotifyListTraversalData &data = stack.at(i);
+        if (*data.disconnectWatch) {
 
-        if (disconnectWatch == &originalSenderPtr && originalSenderPtr) {
-            // End of notifying, restore values
-            endpoint->senderPtr = originalSenderPtr;
+            Q_ASSERT(QQmlNotifier_callbacks[data.endpoint->callback]);
+            QQmlNotifier_callbacks[data.endpoint->callback](data.endpoint, a);
+
+            if (data.disconnectWatch == &data.originalSenderPtr && data.originalSenderPtr) {
+                // End of notifying, restore values
+                data.endpoint->senderPtr = data.originalSenderPtr;
+            }
         }
     }
 }

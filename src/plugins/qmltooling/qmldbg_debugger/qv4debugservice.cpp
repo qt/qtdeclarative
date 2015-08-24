@@ -549,31 +549,29 @@ public:
 
     virtual void handleRequest()
     {
-        //decypher the payload:
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        QString expression = arguments.value(QStringLiteral("expression")).toString();
-        const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
-
         QV4::Debugging::Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-        Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
+        if (debugger->state() == QV4::Debugging::Debugger::Paused) {
+            QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
+            QString expression = arguments.value(QStringLiteral("expression")).toString();
+            const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
 
-        QV4DataCollector *collector = debugService->collector();
-        QV4DataCollector::Refs refs;
-        RefHolder holder(collector, &refs);
-        Q_ASSERT(debugger->state() == QV4::Debugging::Debugger::Paused);
-
-        ExpressionEvalJob job(debugger->engine(), frame, expression, collector);
-        debugger->runInEngine(&job);
-
-        Q_ASSERT(refs.size() == 1);
-
-        // response:
-        addCommand();
-        addRequestSequence();
-        addSuccess(true);
-        addRunning();
-        addBody(collector->lookupRef(refs.first()));
-        addRefs();
+            QV4DataCollector *collector = debugService->collector();
+            RefHolder holder(collector, debugService->refs());
+            ExpressionEvalJob job(debugger->engine(), frame, expression, collector);
+            debugger->runInEngine(&job);
+            if (job.hasExeption()) {
+                createErrorResponse(job.exceptionMessage());
+            } else {
+                addCommand();
+                addRequestSequence();
+                addSuccess(true);
+                addRunning();
+                addBody(collector->lookupRef(debugService->refs()->last()));
+                addRefs();
+            }
+        } else {
+            createErrorResponse(QStringLiteral("Debugger has to be paused for evaluate to work."));
+        }
     }
 };
 } // anonymous namespace
@@ -892,6 +890,11 @@ QJsonValue QV4DebugServiceImpl::toRef(QV4DataCollector::Ref ref)
 QV4DataCollector *QV4DebugServiceImpl::collector() const
 {
     return theCollector.data();
+}
+
+QV4DataCollector::Refs *QV4DebugServiceImpl::refs()
+{
+    return &collectedRefs;
 }
 
 void QV4DebugServiceImpl::selectFrame(int frameNr)

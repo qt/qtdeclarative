@@ -92,16 +92,11 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return d()->context; }
-    static QQmlContextData *getContext(const Value &value);
 
     void setReadOnly(bool b) { d()->readOnly = b; }
 
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void put(Managed *m, String *name, const Value &value);
-
-    static void registerQmlDependencies(ExecutionEngine *context, const CompiledData::Function *compiledFunction);
-
-    ReturnedValue qmlSingletonWrapper(ExecutionEngine *e, String *name);
 };
 
 }

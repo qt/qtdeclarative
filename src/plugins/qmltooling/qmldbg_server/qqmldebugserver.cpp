@@ -112,7 +112,6 @@ private:
     QString m_pluginName;
     int m_portFrom;
     int m_portTo;
-    bool m_block;
     QString m_hostAddress;
     QString m_fileName;
 };

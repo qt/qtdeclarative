@@ -667,17 +667,14 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     }
 
     // First set up notify signals for properties - first normal, then var, then alias
-    enum { NSS_Normal = 0, NSS_Var = 1, NSS_Alias = 2 };
+    enum { NSS_Normal = 0, NSS_Alias = 1 };
     for (int ii = NSS_Normal; ii <= NSS_Alias; ++ii) { // 0 == normal, 1 == var, 2 == alias
 
-        if (ii == NSS_Var && varPropCount == 0) continue;
-        else if (ii == NSS_Alias && aliasCount == 0) continue;
+        if (ii == NSS_Alias && aliasCount == 0) continue;
 
         for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
-            if ((ii == NSS_Normal && (p->type == QV4::CompiledData::Property::Alias ||
-                                      p->type == QV4::CompiledData::Property::Var)) ||
-                ((ii == NSS_Var) && (p->type != QV4::CompiledData::Property::Var)) ||
-                ((ii == NSS_Alias) && (p->type != QV4::CompiledData::Property::Alias)))
+            if ((ii == NSS_Normal && p->type == QV4::CompiledData::Property::Alias) ||
+                (ii == NSS_Alias && p->type != QV4::CompiledData::Property::Alias))
                 continue;
 
             quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
@@ -780,15 +777,18 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     int propertyIdx = 0;
     for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
 
-        if (p->type == QV4::CompiledData::Property::Alias ||
-            p->type == QV4::CompiledData::Property::Var)
+        if (p->type == QV4::CompiledData::Property::Alias)
             continue;
 
         int propertyType = 0;
         int vmePropertyType = 0;
         quint32 propertyFlags = 0;
 
-        if (p->type < builtinTypeCount) {
+        if (p->type == QV4::CompiledData::Property::Var) {
+            propertyType = QMetaType::QVariant;
+            vmePropertyType = QQmlVMEMetaData::VarPropertyType;
+            propertyFlags = QQmlPropertyData::IsVarProperty;
+        } else if (p->type < builtinTypeCount) {
             propertyType = builtinTypes[p->type].metaType;
             vmePropertyType = propertyType;
 
@@ -836,7 +836,7 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
                 propertyFlags |= QQmlPropertyData::IsQList;
         }
 
-        if ((!p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
+        if (!(p->flags & QV4::CompiledData::Property::IsReadOnly) && p->type != QV4::CompiledData::Property::CustomList)
             propertyFlags |= QQmlPropertyData::IsWritable;
 
 
@@ -850,30 +850,6 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
         VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
         (vmd->propertyData() + vmd->propertyCount)->propertyType = vmePropertyType;
         vmd->propertyCount++;
-    }
-
-    // Now do var properties
-    propertyIdx = 0;
-    for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next, ++propertyIdx) {
-
-        if (p->type != QV4::CompiledData::Property::Var)
-            continue;
-
-        quint32 propertyFlags = QQmlPropertyData::IsVarProperty;
-        if (!p->flags & QV4::CompiledData::Property::IsReadOnly)
-            propertyFlags |= QQmlPropertyData::IsWritable;
-
-        VMD *vmd = (QQmlVMEMetaData *)dynamicData.data();
-        (vmd->propertyData() + vmd->propertyCount)->propertyType = QMetaType::QVariant;
-        vmd->propertyCount++;
-        ((QQmlVMEMetaData *)dynamicData.data())->varPropertyCount++;
-
-        QString propertyName = stringAt(p->nameIndex);
-        if (propertyIdx == obj->indexOfDefaultProperty) cache->_defaultPropertyName = propertyName;
-        cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                              QMetaType::QVariant, effectiveSignalIndex);
-
-        effectiveSignalIndex++;
     }
 
     // Alias property count.  Actual data is setup in buildDynamicMetaAliases
@@ -1067,16 +1043,29 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             paramList = paramList->finish();
 
         QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-        QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
-        QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
-        QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
-        elements = elements->finish();
+        QQmlJS::AST::FunctionDeclaration *functionDeclaration = 0;
+        if (QQmlJS::AST::ExpressionStatement *es = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(foe->node)) {
+            if (QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression*>(es->expression)) {
+                functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(fe->name, fe->formals, fe->body);
+                functionDeclaration->functionToken = fe->functionToken;
+                functionDeclaration->identifierToken = fe->identifierToken;
+                functionDeclaration->lparenToken = fe->lparenToken;
+                functionDeclaration->rparenToken = fe->rparenToken;
+                functionDeclaration->lbraceToken = fe->lbraceToken;
+                functionDeclaration->rbraceToken = fe->rbraceToken;
+            }
+        }
+        if (!functionDeclaration) {
+            QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
+            QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
+            QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
+            elements = elements->finish();
 
-        QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
+            QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
 
-        QQmlJS::AST::FunctionDeclaration *functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
-        functionDeclaration->functionToken = foe->node->firstSourceLocation();
-
+            functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
+            functionDeclaration->functionToken = foe->node->firstSourceLocation();
+        }
         foe->node = functionDeclaration;
         binding->propertyNameIndex = compiler->registerString(propertyName);
         binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;

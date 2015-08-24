@@ -390,6 +390,7 @@ public:
     Heap::QmlContext *qmlContext() const;
     QV4::Heap::QmlContextWrapper *qmlContextObject() const;
     QObject *qmlScopeObject() const;
+    ReturnedValue qmlSingletonWrapper(String *name);
     QQmlContextData *callingQmlContext() const;
 
 

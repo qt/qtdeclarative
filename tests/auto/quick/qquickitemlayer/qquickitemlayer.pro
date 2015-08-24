@@ -25,5 +25,6 @@ OTHER_FILES += \
     data/DisableLayer.qml \
     data/SamplerNameChange.qml \
     data/ItemEffect.qml \
-    data/RectangleEffect.qml
+    data/RectangleEffect.qml \
+    data/TextureMirroring.qml
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

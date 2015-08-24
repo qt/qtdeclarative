@@ -59,6 +59,7 @@ Debugger::JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr
     : engine(engine)
     , frameNr(frameNr)
     , script(script)
+    , resultIsException(false)
 {}
 
 void Debugger::JavaScriptJob::run()
@@ -85,9 +86,16 @@ void Debugger::JavaScriptJob::run()
     QV4::ScopedValue result(scope);
     if (!scope.engine->hasException)
         result = script.run();
-    if (scope.engine->hasException)
+    if (scope.engine->hasException) {
         result = scope.engine->catchException();
+        resultIsException = true;
+    }
     handleResult(result);
+}
+
+bool Debugger::JavaScriptJob::hasExeption() const
+{
+    return resultIsException;
 }
 
 class EvalJob: public Debugger::JavaScriptJob

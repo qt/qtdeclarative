@@ -524,7 +524,8 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
             return pright->asReturnedValue();
         if (!pright->stringValue()->d()->length())
             return pleft->asReturnedValue();
-        return (engine->memoryManager->alloc<String>(pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
+        MemoryManager *mm = engine->memoryManager;
+        return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -540,7 +541,8 @@ QV4::ReturnedValue Runtime::addString(ExecutionEngine *engine, const Value &left
             return right.asReturnedValue();
         if (!right.stringValue()->d()->length())
             return left.asReturnedValue();
-        return (engine->memoryManager->alloc<String>(left.stringValue()->d(), right.stringValue()->d()))->asReturnedValue();
+        MemoryManager *mm = engine->memoryManager;
+        return (mm->alloc<String>(mm, left.stringValue()->d(), right.stringValue()->d()))->asReturnedValue();
     }
 
     Scope scope(engine);
@@ -557,7 +559,8 @@ QV4::ReturnedValue Runtime::addString(ExecutionEngine *engine, const Value &left
         return pright->asReturnedValue();
     if (!pright->stringValue()->d()->length())
         return pleft->asReturnedValue();
-    return (engine->memoryManager->alloc<String>(pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
+    MemoryManager *mm = engine->memoryManager;
+    return (mm->alloc<String>(mm, pleft->stringValue()->d(), pright->stringValue()->d()))->asReturnedValue();
 }
 
 void Runtime::setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
@@ -1457,8 +1460,7 @@ QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowEngine *engine, int name
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentContext()->compilationUnit->runtimeStrings[nameIndex]);
-    Scoped<QmlContextWrapper> wrapper(scope, engine->qmlContextObject());
-    return wrapper->qmlSingletonWrapper(engine, name);
+    return engine->qmlSingletonWrapper(name);
 }
 
 void Runtime::convertThisToObject(ExecutionEngine *engine)

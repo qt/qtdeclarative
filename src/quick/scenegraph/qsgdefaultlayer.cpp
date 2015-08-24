@@ -97,6 +97,8 @@ QSGDefaultLayer::QSGDefaultLayer(QSGRenderContext *context)
     , m_multisamplingChecked(false)
     , m_multisampling(false)
     , m_grab(false)
+    , m_mirrorHorizontal(false)
+    , m_mirrorVertical(true)
 {
 }
 
@@ -259,6 +261,16 @@ void QSGDefaultLayer::setRecursive(bool recursive)
     m_recursive = recursive;
 }
 
+void QSGDefaultLayer::setMirrorHorizontal(bool mirror)
+{
+    m_mirrorHorizontal = mirror;
+}
+
+void QSGDefaultLayer::setMirrorVertical(bool mirror)
+{
+    m_mirrorVertical = mirror;
+}
+
 void QSGDefaultLayer::markDirtyTexture()
 {
     m_dirtyTexture = true;
@@ -365,7 +377,10 @@ void QSGDefaultLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
+    QRectF mirrored(m_mirrorHorizontal ? m_rect.right() : m_rect.left(),
+                    m_mirrorVertical ? m_rect.bottom() : m_rect.top(),
+                    m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
+                    m_mirrorVertical ? -m_rect.height() : m_rect.height());
     m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
@@ -427,4 +442,12 @@ QImage QSGDefaultLayer::toImage() const
         return m_fbo->toImage();
 
     return QImage();
+}
+
+QRectF QSGDefaultLayer::normalizedTextureSubRect() const
+{
+    return QRectF(m_mirrorHorizontal ? 1 : 0,
+                  m_mirrorVertical ? 0 : 1,
+                  m_mirrorHorizontal ? -1 : 1,
+                  m_mirrorVertical ? 1 : -1);
 }

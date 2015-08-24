@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2015 BasysKom GmbH.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -71,7 +72,6 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlVMEMetaData
 {
-    short varPropertyCount;
     short propertyCount;
     short aliasCount;
     short signalCount;
@@ -108,6 +108,10 @@ struct QQmlVMEMetaData
         }
     };
 
+    enum {
+        VarPropertyType = -1
+    };
+
     struct PropertyData {
         int propertyType;
     };
@@ -119,7 +123,7 @@ struct QQmlVMEMetaData
     };
 
     PropertyData *propertyData() const {
-        return (PropertyData *)(((const char *)this) + sizeof(QQmlVMEMetaData));
+        return (PropertyData *)(((char *)const_cast<QQmlVMEMetaData *>(this)) + sizeof(QQmlVMEMetaData));
     }
 
     AliasData *aliasData() const {
@@ -135,15 +139,14 @@ class QQmlVMEMetaObject;
 class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
-    inline QQmlVMEVariantQObjectPtr(bool isVar);
+    inline QQmlVMEVariantQObjectPtr();
     inline ~QQmlVMEVariantQObjectPtr();
 
     inline void objectDestroyed(QObject *);
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;
-    unsigned m_isVar : 1;
-    int m_index : 31;
+    int m_index;
 };
 
 class QQmlVMEVariant;
@@ -177,7 +180,7 @@ public:
     static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
 
 protected:
-    virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
+    virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
 
 public:
     friend class QQmlVMEMetaObjectEndpoint;
@@ -195,14 +198,37 @@ public:
     inline int signalCount() const;
 
     bool hasAssignedMetaObjectData;
-    QQmlVMEVariant *data;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
-    QV4::WeakValue varProperties;
-    int firstVarPropertyIndex;
-    bool varPropertiesInitialized;
-    inline void allocateVarPropertiesArray();
-    inline bool ensureVarPropertiesAllocated();
+    QV4::WeakValue properties;
+    bool propertiesInitialized;
+    inline void allocateProperties();
+    inline bool ensurePropertiesAllocated();
+    QV4::MemberData *propertiesAsMemberData();
+
+    int readPropertyAsInt(int id);
+    bool readPropertyAsBool(int id);
+    double readPropertyAsDouble(int id);
+    QString readPropertyAsString(int id);
+    QSizeF readPropertyAsSizeF(int id);
+    QPointF readPropertyAsPointF(int id);
+    QUrl readPropertyAsUrl(int id);
+    QDate readPropertyAsDate(int id);
+    QDateTime readPropertyAsDateTime(int id);
+    QRectF readPropertyAsRectF(int id);
+    QObject* readPropertyAsQObject(int id);
+
+    void writeProperty(int id, int v);
+    void writeProperty(int id, bool v);
+    void writeProperty(int id, double v);
+    void writeProperty(int id, const QString& v);
+    void writeProperty(int id, const QPointF& v);
+    void writeProperty(int id, const QSizeF& v);
+    void writeProperty(int id, const QUrl& v);
+    void writeProperty(int id, const QDate& v);
+    void writeProperty(int id, const QDateTime& v);
+    void writeProperty(int id, const QRectF& v);
+    void writeProperty(int id, QObject *v);
 
     void ensureQObjectWrapper();
 
@@ -213,7 +239,7 @@ public:
 
     QQmlPropertyValueInterceptor *interceptors;
 
-    QV4::PersistentValue *v8methods;
+    QV4::PersistentValue *methods;
     QV4::ReturnedValue method(int);
 
     QV4::ReturnedValue readVarProperty(int);

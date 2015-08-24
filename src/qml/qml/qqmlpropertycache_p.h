@@ -243,8 +243,8 @@ class QQmlPropertyCacheMethodArguments;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
 {
 public:
-    QQmlPropertyCache(QJSEngine *);
-    QQmlPropertyCache(QJSEngine *, const QMetaObject *);
+    QQmlPropertyCache(QV4::ExecutionEngine *);
+    QQmlPropertyCache(QV4::ExecutionEngine *, const QMetaObject *);
     virtual ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
@@ -377,8 +377,10 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
-    QJSEngine *engine;
+public:
+    QV4::ExecutionEngine *engine;
 
+private:
     QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
     int methodIndexCacheStart;

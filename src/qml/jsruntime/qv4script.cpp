@@ -90,7 +90,6 @@ DEFINE_OBJECT_VTABLE(CompilationUnitHolder);
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
-    , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
 
@@ -107,7 +106,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
 
 Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml)
     : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
-    , qml(qml->d())
 {
     Q_ASSERT(scope->inUse());
 
@@ -138,14 +136,6 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
     ScopedValue result(scope, Q_V4_PROFILE(v4, f));
 
     return result->asReturnedValue();
-}
-
-void QmlBindingWrapper::markObjects(Heap::Base *m, ExecutionEngine *e)
-{
-    QmlBindingWrapper::Data *wrapper = static_cast<QmlBindingWrapper::Data *>(m);
-    if (wrapper->qml)
-        wrapper->qml->mark(e);
-    FunctionObject::markObjects(m, e);
 }
 
 static ReturnedValue signalParameterGetter(QV4::CallContext *ctx, uint parameterIndex)
@@ -379,7 +369,7 @@ ReturnedValue Script::qmlBinding()
     return v.asReturnedValue();
 }
 
-QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine,  const QString &script, Object *scopeObject)
+QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject)
 {
     QV4::Scope scope(engine);
     QV4::Script qmlScript(engine, scopeObject, script, QString());

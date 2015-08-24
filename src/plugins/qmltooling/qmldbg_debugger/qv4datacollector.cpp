@@ -37,6 +37,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4identifier_p.h>
+#include <private/qv4runtime_p.h>
 
 #include <QtCore/qjsonarray.h>
 
@@ -109,6 +110,66 @@ void QV4DataCollector::collect(const QV4::ScopedValue &value)
         m_collectedRefs->append(addRef(value));
 }
 
+const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::ExecutionEngine *engine,
+                                   QJsonObject &dict)
+{
+    QV4::Scope scope(engine);
+    QV4::ScopedValue typeString(scope, QV4::Runtime::typeofValue(engine, value));
+    dict.insert(QStringLiteral("type"), typeString->toQStringNoThrow());
+
+    const QLatin1String valueKey("value");
+    switch (value->type()) {
+    case QV4::Value::Empty_Type:
+        Q_ASSERT(!"empty Value encountered");
+        return 0;
+    case QV4::Value::Undefined_Type:
+        dict.insert(valueKey, QJsonValue::Undefined);
+        return 0;
+    case QV4::Value::Null_Type:
+        // "null" is not the correct type, but we leave this in until QtC can deal with "object"
+        dict.insert(QStringLiteral("type"), QStringLiteral("null"));
+        dict.insert(valueKey, QJsonValue::Null);
+        return 0;
+    case QV4::Value::Boolean_Type:
+        dict.insert(valueKey, value->booleanValue());
+        return 0;
+    case QV4::Value::Managed_Type:
+        if (const QV4::String *s = value->as<QV4::String>()) {
+            dict.insert(valueKey, s->toQString());
+        } else if (const QV4::ArrayObject *a = value->as<QV4::ArrayObject>()) {
+            // size of an array is number of its numerical properties; We don't consider free form
+            // object properties here.
+            dict.insert(valueKey, qint64(a->getLength()));
+            return a;
+        } else if (const QV4::Object *o = value->as<QV4::Object>()) {
+            int numProperties = 0;
+            QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
+            QV4::PropertyAttributes attrs;
+            uint index;
+            QV4::ScopedProperty p(scope);
+            QV4::ScopedString name(scope);
+            while (true) {
+                it.next(name.getRef(), &index, p, &attrs);
+                if (attrs.isEmpty())
+                    break;
+                else
+                    ++numProperties;
+            }
+            dict.insert(valueKey, numProperties);
+            return o;
+        } else {
+            Q_UNREACHABLE();
+        }
+        return 0;
+    case QV4::Value::Integer_Type:
+        dict.insert(valueKey, value->integerValue());
+        return 0;
+    default: // double
+        dict.insert(valueKey, value->doubleValue());
+        return 0;
+    }
+}
+
 QJsonObject QV4DataCollector::lookupRef(Ref ref)
 {
     QJsonObject dict;
@@ -116,44 +177,11 @@ QJsonObject QV4DataCollector::lookupRef(Ref ref)
         return dict;
 
     dict.insert(QStringLiteral("handle"), qint64(ref));
-
     QV4::Scope scope(engine());
     QV4::ScopedValue value(scope, getValue(ref));
-    switch (value->type()) {
-    case QV4::Value::Empty_Type:
-        Q_ASSERT(!"empty Value encountered");
-        break;
-    case QV4::Value::Undefined_Type:
-        dict.insert(QStringLiteral("type"), QStringLiteral("undefined"));
-        break;
-    case QV4::Value::Null_Type:
-        dict.insert(QStringLiteral("type"), QStringLiteral("null"));
-        break;
-    case QV4::Value::Boolean_Type:
-        dict.insert(QStringLiteral("type"), QStringLiteral("boolean"));
-        dict.insert(QStringLiteral("value"), value->booleanValue() ? QStringLiteral("true")
-                                                                   : QStringLiteral("false"));
-        break;
-    case QV4::Value::Managed_Type:
-        if (QV4::String *s = value->as<QV4::String>()) {
-            dict.insert(QStringLiteral("type"), QStringLiteral("string"));
-            dict.insert(QStringLiteral("value"), s->toQString());
-        } else if (QV4::Object *o = value->as<QV4::Object>()) {
-            dict.insert(QStringLiteral("type"), QStringLiteral("object"));
-            dict.insert(QStringLiteral("properties"), collectProperties(o));
-        } else {
-            Q_UNREACHABLE();
-        }
-        break;
-    case QV4::Value::Integer_Type:
-        dict.insert(QStringLiteral("type"), QStringLiteral("number"));
-        dict.insert(QStringLiteral("value"), value->integerValue());
-        break;
-    default: // double
-        dict.insert(QStringLiteral("type"), QStringLiteral("number"));
-        dict.insert(QStringLiteral("value"), value->doubleValue());
-        break;
-    }
+
+    if (const QV4::Object *o = collectProperty(value, engine(), dict))
+        dict.insert(QStringLiteral("properties"), collectProperties(o));
 
     return dict;
 }
@@ -165,7 +193,6 @@ QV4DataCollector::Ref QV4DataCollector::addFunctionRef(const QString &functionNa
     QJsonObject dict;
     dict.insert(QStringLiteral("handle"), qint64(ref));
     dict.insert(QStringLiteral("type"), QStringLiteral("function"));
-    dict.insert(QStringLiteral("className"), QStringLiteral("Function"));
     dict.insert(QStringLiteral("name"), functionName);
     specialRefs.insert(ref, dict);
 
@@ -236,7 +263,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
     QV4::ScopedObject array(scope, values.value());
     if (deduplicate) {
         for (Ref i = 0; i < array->getLength(); ++i) {
-            if (array->getIndexed(i) == value.rawValue())
+            if (array->getIndexed(i) == value.rawValue() && !specialRefs.contains(i))
                 return i;
         }
     }
@@ -264,7 +291,7 @@ bool QV4DataCollector::lookupSpecialRef(Ref ref, QJsonObject *dict)
     return true;
 }
 
-QJsonArray QV4DataCollector::collectProperties(QV4::Object *object)
+QJsonArray QV4DataCollector::collectProperties(const QV4::Object *object)
 {
     QJsonArray res;
 
@@ -290,20 +317,14 @@ QJsonObject QV4DataCollector::collectAsJson(const QString &name, const QV4::Scop
     QJsonObject dict;
     if (!name.isNull())
         dict.insert(QStringLiteral("name"), name);
-    Ref ref = addRef(value);
-    dict.insert(QStringLiteral("ref"), qint64(ref));
-    if (m_collectedRefs)
-        m_collectedRefs->append(ref);
-
-    // TODO: enable this when creator can handle it.
-    if (false) {
-        if (value->isManaged() && !value->isString()) {
-            QV4::Scope scope(engine());
-            QV4::ScopedObject obj(scope, value->as<QV4::Object>());
-            dict.insert(QStringLiteral("propertycount"), qint64(obj->getLength()));
-        }
+    if (value->isManaged() && !value->isString()) {
+        Ref ref = addRef(value);
+        dict.insert(QStringLiteral("ref"), qint64(ref));
+        if (m_collectedRefs)
+            m_collectedRefs->append(ref);
     }
 
+    collectProperty(value, engine(), dict);
     return dict;
 }
 
@@ -317,7 +338,14 @@ ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
 
 void ExpressionEvalJob::handleResult(QV4::ScopedValue &result)
 {
+    if (hasExeption())
+        exception = result->toQStringNoThrow();
     collector->collect(result);
+}
+
+const QString &ExpressionEvalJob::exceptionMessage() const
+{
+    return exception;
 }
 
 GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine, int seq)

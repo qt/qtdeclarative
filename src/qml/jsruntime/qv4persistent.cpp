@@ -93,6 +93,43 @@ Page *allocatePage(PersistentValueStorage *storage)
 }
 
 
+PersistentValueStorage::Iterator::Iterator(void *p, int idx)
+    : p(p), index(idx)
+{
+    Page *page = static_cast<Page *>(p);
+    if (page)
+        ++page->header.refCount;
+}
+
+PersistentValueStorage::Iterator::Iterator(const PersistentValueStorage::Iterator &o)
+    : p(o.p), index(o.index)
+{
+    Page *page = static_cast<Page *>(p);
+    if (page)
+        ++page->header.refCount;
+}
+
+PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator=(const PersistentValueStorage::Iterator &o)
+{
+    Page *page = static_cast<Page *>(p);
+    if (page && !--page->header.refCount)
+        freePage(p);
+    p = o.p;
+    index = o.index;
+    page = static_cast<Page *>(p);
+    if (page)
+        ++page->header.refCount;
+
+    return *this;
+}
+
+PersistentValueStorage::Iterator::~Iterator()
+{
+    Page *page = static_cast<Page *>(p);
+    if (page && !--page->header.refCount)
+        freePage(page);
+}
+
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++() {
     while (p) {
         while (index < kEntriesPerPage - 1) {
@@ -101,7 +138,12 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
                 return *this;
         }
         index = -1;
-        p = static_cast<Page *>(p)->header.next;
+        Page *next = static_cast<Page *>(p)->header.next;
+        if (!--static_cast<Page *>(p)->header.refCount)
+            freePage(p);
+        p = next;
+        if (next)
+            ++next->header.refCount;
     }
     index = 0;
     return *this;
@@ -165,13 +207,8 @@ void PersistentValueStorage::free(Value *v)
     v->setTag(QV4::Value::Empty_Type);
     v->setInt_32(p->header.freeList);
     p->header.freeList = v - p->values;
-    if (!--p->header.refCount) {
-        if (p->header.prev)
-            *p->header.prev = p->header.next;
-        if (p->header.next)
-            p->header.next->header.prev = p->header.prev;
-        p->header.alloc.deallocate();
-    }
+    if (!--p->header.refCount)
+        freePage(p);
 }
 
 static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
@@ -202,6 +239,16 @@ void PersistentValueStorage::mark(ExecutionEngine *e)
 ExecutionEngine *PersistentValueStorage::getEngine(Value *v)
 {
     return getPage(v)->header.engine;
+}
+
+void PersistentValueStorage::freePage(void *page)
+{
+    Page *p = static_cast<Page *>(page);
+    if (p->header.prev)
+        *p->header.prev = p->header.next;
+    if (p->header.next)
+        p->header.next->header.prev = p->header.prev;
+    p->header.alloc.deallocate();
 }
 
 

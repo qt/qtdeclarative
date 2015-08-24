@@ -72,7 +72,7 @@ private:
     QV4::ReturnedValue getValue(Ref ref);
     bool lookupSpecialRef(Ref ref, QJsonObject *dict);
 
-    QJsonArray collectProperties(QV4::Object *object);
+    QJsonArray collectProperties(const QV4::Object *object);
     QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
     void collectArgumentsInContext();
 
@@ -104,11 +104,13 @@ private:
 class ExpressionEvalJob: public QV4::Debugging::Debugger::JavaScriptJob
 {
     QV4DataCollector *collector;
+    QString exception;
 
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
                       QV4DataCollector *collector);
     virtual void handleResult(QV4::ScopedValue &result);
+    const QString &exceptionMessage() const;
 };
 
 class GatherSourcesJob: public QV4::Debugging::Debugger::Job

@@ -549,6 +549,9 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     return node;
 }
 
+/*!
+   \reimp
+*/
 void QQuickPaintedItem::releaseResources()
 {
     Q_D(QQuickPaintedItem);
@@ -567,11 +570,17 @@ void QQuickPaintedItem::invalidateSceneGraph()
     d->node = 0; // Managed by the scene graph, just clear the pointer
 }
 
+/*!
+   \reimp
+*/
 bool QQuickPaintedItem::isTextureProvider() const
 {
     return true;
 }
 
+/*!
+   \reimp
+*/
 QSGTextureProvider *QQuickPaintedItem::textureProvider() const
 {
     Q_D(const QQuickPaintedItem);

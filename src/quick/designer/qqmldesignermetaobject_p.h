@@ -68,8 +68,8 @@ protected:
     static QQmlDesignerMetaObject* getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine);
 
     void createNewDynamicProperty(const QString &name);
-    int openMetaCall(QMetaObject::Call _c, int _id, void **_a);
-    int metaCall(QMetaObject::Call _c, int _id, void **_a);
+    int openMetaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
+    int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
     void notifyPropertyChange(int id);
     void setValue(int id, const QVariant &value);
     QVariant propertyWriteValue(int, const QVariant &);

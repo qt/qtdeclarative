@@ -58,7 +58,7 @@
  To implement support for a custom networked scheme, see setNetworkAccessManagerFactory.
 */
 
-/*
+/*!
  \enum QQmlAbstractUrlInterceptor::DataType
 
  Specifies where URL interception is taking place.

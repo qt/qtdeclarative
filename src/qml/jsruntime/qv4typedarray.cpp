@@ -85,7 +85,7 @@ void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Val
         return;
     }
     if (d >= 255) {
-        data[index] = (unsigned char)(255);
+        data[index] = (char)(255);
         return;
     }
     double f = std::floor(d);
@@ -107,7 +107,7 @@ void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Val
 
 ReturnedValue Int16ArrayRead(const char *data, int index)
 {
-    return Encode((int)*(short *)(data + index));
+    return Encode((int)*(const short *)(data + index));
 }
 
 void Int16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
@@ -120,7 +120,7 @@ void Int16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &val
 
 ReturnedValue UInt16ArrayRead(const char *data, int index)
 {
-    return Encode((int)*(unsigned short *)(data + index));
+    return Encode((int)*(const unsigned short *)(data + index));
 }
 
 void UInt16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
@@ -133,7 +133,7 @@ void UInt16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &va
 
 ReturnedValue Int32ArrayRead(const char *data, int index)
 {
-    return Encode(*(int *)(data + index));
+    return Encode(*(const int *)(data + index));
 }
 
 void Int32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
@@ -146,7 +146,7 @@ void Int32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &val
 
 ReturnedValue UInt32ArrayRead(const char *data, int index)
 {
-    return Encode(*(unsigned int *)(data + index));
+    return Encode(*(const unsigned int *)(data + index));
 }
 
 void UInt32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
@@ -159,7 +159,7 @@ void UInt32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &va
 
 ReturnedValue Float32ArrayRead(const char *data, int index)
 {
-    return Encode(*(float *)(data + index));
+    return Encode(*(const float *)(data + index));
 }
 
 void Float32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
@@ -172,7 +172,7 @@ void Float32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &v
 
 ReturnedValue Float64ArrayRead(const char *data, int index)
 {
-    return Encode(*(double *)(data + index));
+    return Encode(*(const double *)(data + index));
 }
 
 void Float64ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)

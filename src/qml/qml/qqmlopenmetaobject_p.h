@@ -54,6 +54,7 @@ public:
     QQmlOpenMetaObjectType(const QMetaObject *base, QQmlEngine *engine);
     ~QQmlOpenMetaObjectType();
 
+    void createProperties(const QVector<QByteArray> &names);
     int createProperty(const QByteArray &name);
 
     int propertyOffset() const;
@@ -100,6 +101,8 @@ public:
     void setCached(bool);
 
     QQmlOpenMetaObjectType *type() const;
+
+    void emitPropertyNotification(const QByteArray &propertyName);
 
 protected:
     virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);

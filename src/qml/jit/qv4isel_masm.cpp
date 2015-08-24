@@ -45,6 +45,7 @@
 #include "qv4binop_p.h"
 
 #include <QtCore/QBuffer>
+#include <QtCore/QCoreApplication>
 
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
@@ -120,6 +121,19 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput, const Q
     qDebug("%s", processedOutput.constData());
 }
 
+#if defined(Q_OS_LINUX)
+static FILE *pmap;
+
+static void qt_closePmap()
+{
+    if (pmap) {
+        fclose(pmap);
+        pmap = 0;
+    }
+}
+
+#endif
+
 JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 {
     Label endOfCode = label();
@@ -167,6 +181,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     *codeSize = linkBuffer.offsetOf(endOfCode);
 
+    QByteArray name;
+
     JSC::MacroAssemblerCodeRef codeRef;
 
     static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
@@ -175,7 +191,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         buf.open(QIODevice::WriteOnly);
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
-        QByteArray name = _function->name->toUtf8();
+        name = _function->name->toUtf8();
         if (name.isEmpty()) {
             name = QByteArray::number(quintptr(_function), 16);
             name.prepend("IR::Function(0x");
@@ -188,6 +204,50 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     } else {
         codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
+
+#if defined(Q_OS_LINUX)
+    // This implements writing of JIT'd addresses so that perf can find the
+    // symbol names.
+    //
+    // Perf expects the mapping to be in a certain place and have certain
+    // content, for more information, see:
+    // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
+    static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
+    static bool profileInitialized = false;
+    if (doProfile && !profileInitialized) {
+        profileInitialized = true;
+
+        char pname[PATH_MAX];
+        snprintf(pname, PATH_MAX - 1, "/tmp/perf-%lu.map",
+                                      (unsigned long)QCoreApplication::applicationPid());
+
+        pmap = fopen(pname, "w");
+        if (!pmap)
+            qWarning("QV4: Can't write %s, call stacks will not contain JavaScript function names", pname);
+
+        // make sure we clean up nicely
+        std::atexit(qt_closePmap);
+    }
+
+    if (pmap) {
+        // this may have been pre-populated, if QV4_SHOW_ASM was on
+        if (name.isEmpty()) {
+            name = _function->name->toUtf8();
+            if (name.isEmpty()) {
+                name = QByteArray::number(quintptr(_function), 16);
+                name.prepend("IR::Function(0x");
+                name.append(")");
+            }
+        }
+
+        fprintf(pmap, "%llx %x %.*s\n",
+                      (long long unsigned int)codeRef.code().executableAddress(),
+                      *codeSize,
+                      name.length(),
+                      name.constData());
+        fflush(pmap);
+    }
+#endif
 
     return codeRef;
 }

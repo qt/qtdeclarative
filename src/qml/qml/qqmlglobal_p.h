@@ -224,9 +224,7 @@ public:
 
     const QMetaObject *metaObjectForMetaType(int);
 
-    bool initValueType(int, void *, size_t);
-    bool destroyValueType(int, void *, size_t);
-    bool copyValueType(int, const void *, void *, size_t);
+    bool initValueType(int, QVariant&);
 
     QVariant createValueType(int, int, const void *[]);
     bool createValueFromString(int, const QString &, void *, size_t);
@@ -236,16 +234,14 @@ public:
     QVariant createVariantFromString(int, const QString &, bool *);
     QVariant createVariantFromJsObject(int, QQmlV4Handle, QV4::ExecutionEngine *, bool*);
 
-    bool equalValueType(int, const void *, const void *, size_t);
+    bool equalValueType(int, const void *, const QVariant&);
     bool storeValueType(int, const void *, void *, size_t);
-    bool readValueType(int, const void *, size_t, int, void *);
-    bool writeValueType(int, const void *, void *, size_t);
+    bool readValueType(const QVariant&, void *, int);
+    bool writeValueType(int, const void *, QVariant&);
 
 private:
     virtual const QMetaObject *getMetaObjectForMetaType(int);
-    virtual bool init(int, void *, size_t);
-    virtual bool destroy(int, void *, size_t);
-    virtual bool copy(int, const void *, void *, size_t);
+    virtual bool init(int, QVariant&);
 
     virtual bool create(int, int, const void *[], QVariant *);
     virtual bool createFromString(int, const QString &, void *, size_t);
@@ -255,10 +251,10 @@ private:
     virtual bool variantFromString(int, const QString &, QVariant *);
     virtual bool variantFromJsObject(int, QQmlV4Handle, QV4::ExecutionEngine *, QVariant *);
 
-    virtual bool equal(int, const void *, const void *, size_t);
+    virtual bool equal(int, const void *, const QVariant&);
     virtual bool store(int, const void *, void *, size_t);
-    virtual bool read(int, const void *, size_t, int, void *);
-    virtual bool write(int, const void *, void *, size_t);
+    virtual bool read(const QVariant&, void *, int);
+    virtual bool write(int, const void *, QVariant&);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
     friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);

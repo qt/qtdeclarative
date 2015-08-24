@@ -579,6 +579,7 @@ void QQuickPixmapReader::processJobs()
                     if (asyncResponse) {
                         asyncResponses.remove(asyncResponse);
                         asyncResponse->cancel();
+                        asyncResponse->deleteLater();
                     }
                 }
                 PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));

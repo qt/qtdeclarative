@@ -34,6 +34,7 @@
 #include <qtest.h>
 #include <private/qqmlpropertycache_p.h>
 #include <QtQml/qqmlengine.h>
+#include <private/qv8engine_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmlpropertycache : public QObject
@@ -102,10 +103,11 @@ QQmlPropertyData *cacheProperty(QQmlPropertyCache *cache, const char *name)
 void tst_qqmlpropertycache::properties()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(&engine, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "propertyA"));
@@ -124,10 +126,11 @@ void tst_qqmlpropertycache::properties()
 void tst_qqmlpropertycache::propertiesDerived()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
@@ -147,10 +150,11 @@ void tst_qqmlpropertycache::propertiesDerived()
 void tst_qqmlpropertycache::methods()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(&engine, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "slotA"));
@@ -181,10 +185,11 @@ void tst_qqmlpropertycache::methods()
 void tst_qqmlpropertycache::methodsDerived()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 
@@ -216,10 +221,11 @@ void tst_qqmlpropertycache::methodsDerived()
 void tst_qqmlpropertycache::signalHandlers()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(&engine, metaObject));
+    QQmlRefPointer<QQmlPropertyCache> cache(new QQmlPropertyCache(v4, metaObject));
     QQmlPropertyData *data;
 
     QVERIFY(data = cacheProperty(cache, "onSignalA"));
@@ -244,10 +250,11 @@ void tst_qqmlpropertycache::signalHandlers()
 void tst_qqmlpropertycache::signalHandlersDerived()
 {
     QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(&engine, &BaseObject::staticMetaObject));
+    QQmlRefPointer<QQmlPropertyCache> parentCache(new QQmlPropertyCache(v4, &BaseObject::staticMetaObject));
     QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()));
     QQmlPropertyData *data;
 

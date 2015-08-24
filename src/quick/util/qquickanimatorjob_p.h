@@ -63,7 +63,7 @@ public:
     QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObject *item);
     ~QQuickAnimatorProxyJob();
 
-    int duration() const { return m_duration; }
+    int duration() const Q_DECL_OVERRIDE { return m_duration; }
 
     QAbstractAnimationJob *job() const { return m_job; }
 
@@ -72,8 +72,8 @@ public:
     void markJobManagedByController() { m_jobManagedByController = true; }
 
 protected:
-    void updateCurrentTime(int);
-    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
+    void updateCurrentTime(int) Q_DECL_OVERRIDE;
+    void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) Q_DECL_OVERRIDE;
     void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
 public Q_SLOTS:
@@ -116,7 +116,7 @@ public:
     qreal to() const { return m_to; }
 
     void setDuration(int duration) { m_duration = duration; }
-    int duration() const { return m_duration; }
+    int duration() const Q_DECL_OVERRIDE { return m_duration; }
 
     QEasingCurve easingCurve() const { return m_easing; }
     void setEasingCurve(const QEasingCurve &curve) { m_easing = curve; }

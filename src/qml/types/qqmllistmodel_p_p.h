@@ -111,55 +111,71 @@ private:
     friend class DynamicRoleModelNodeMetaObject;
 };
 
-class ModelObject;
-
 class ModelNodeMetaObject : public QQmlOpenMetaObject
 {
 public:
-    ModelNodeMetaObject(ModelObject *object);
+    ModelNodeMetaObject(QObject *object, QQmlListModel *model, int elementIndex);
     ~ModelNodeMetaObject();
 
+    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *object);
+
+    static ModelNodeMetaObject *get(QObject *obj);
+
     bool m_enabled;
+    QQmlListModel *m_model;
+    int m_elementIndex;
+
+    void updateValues();
+    void updateValues(const QVector<int> &roles);
+
+    bool initialized() const { return m_initialized; }
 
 protected:
     void propertyWritten(int index);
 
 private:
-
-    ModelObject *m_obj;
-};
-
-class ModelObject : public QObject
-{
-    Q_OBJECT
-public:
-    ModelObject(QQmlListModel *model, int elementIndex);
-
+    using QQmlOpenMetaObject::setValue;
     void setValue(const QByteArray &name, const QVariant &val, bool force)
     {
         if (force) {
-            QVariant existingValue = m_meta->value(name);
+            QVariant existingValue = value(name);
             if (existingValue.isValid()) {
-                (*m_meta)[name] = QVariant();
+                (*this)[name] = QVariant();
             }
         }
-        m_meta->setValue(name, val);
+        setValue(name, val);
     }
 
-    void setNodeUpdatesEnabled(bool enable)
-    {
-        m_meta->m_enabled = enable;
-    }
+    void initialize();
+    bool m_initialized;
+};
 
-    void updateValues();
-    void updateValues(const QVector<int> &roles);
+namespace QV4 {
 
+namespace Heap {
+
+struct ModelObject : public QObjectWrapper {
+    ModelObject(QV4::ExecutionEngine *engine, QObject *object, QQmlListModel *model, int elementIndex)
+        : QObjectWrapper(engine, object)
+        , m_model(model)
+        , m_elementIndex(elementIndex)
+    {}
     QQmlListModel *m_model;
     int m_elementIndex;
-
-private:
-    ModelNodeMetaObject *m_meta;
 };
+
+}
+
+struct ModelObject : public QObjectWrapper
+{
+    static void put(Managed *m, String *name, const Value& value);
+    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+
+    V4_OBJECT2(ModelObject, QObjectWrapper)
+};
+
+} // namespace QV4
 
 class ListLayout
 {
@@ -236,7 +252,7 @@ public:
 
     enum
     {
-        BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelObject *)
+        BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelNodeMetaObject *)
     };
 
 private:
@@ -278,11 +294,13 @@ private:
 
     int getUid() const { return uid; }
 
+    ModelNodeMetaObject *objectCache();
+
     char data[BLOCK_SIZE];
     ListElement *next;
 
     int uid;
-    ModelObject *m_objectCache;
+    QObject *m_objectCache;
 
     friend class ListModel;
 };
@@ -315,6 +333,11 @@ public:
         return m_layout->getExistingRole(index);
     }
 
+    const ListLayout::Role *getExistingRole(QV4::String *key)
+    {
+        return m_layout->getExistingRole(key);
+    }
+
     const ListLayout::Role &getOrCreateListRole(const QString &name)
     {
         return m_layout->getRoleOrCreate(name, ListLayout::Role::List);
@@ -343,7 +366,7 @@ public:
 
     static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
 
-    ModelObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
+    QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
 private:
     QPODVector<ListElement *, 4> elements;

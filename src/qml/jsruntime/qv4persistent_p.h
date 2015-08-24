@@ -51,8 +51,10 @@ struct Q_QML_EXPORT PersistentValueStorage
     void mark(ExecutionEngine *e);
 
     struct Iterator {
-        Q_DECL_CONSTEXPR Iterator(void *p, int idx)
-            : p(p), index(idx) {}
+        Iterator(void *p, int idx);
+        Iterator(const Iterator &o);
+        Iterator & operator=(const Iterator &o);
+        ~Iterator();
         void *p;
         int index;
         Iterator &operator++();
@@ -68,6 +70,8 @@ struct Q_QML_EXPORT PersistentValueStorage
 
     ExecutionEngine *engine;
     void *firstPage;
+private:
+    static void freePage(void *page);
 };
 
 class Q_QML_EXPORT PersistentValue

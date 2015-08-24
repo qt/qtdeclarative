@@ -54,6 +54,10 @@ class QQmlListModelWorkerAgent;
 class ListModel;
 class ListLayout;
 
+namespace QV4 {
+struct ModelObject;
+}
+
 class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -94,6 +98,7 @@ private:
     friend class QQmlListModelParser;
     friend class QQmlListModelWorkerAgent;
     friend class ModelObject;
+    friend struct QV4::ModelObject;
     friend class ModelNodeMetaObject;
     friend class ListModel;
     friend class ListElement;

@@ -321,7 +321,7 @@ int QQmlInstantiator::count() const
 
     Note that an extra variable, index, will be available inside instances of the
     delegate. This variable refers to the index of the instance inside the Instantiator,
-    and can be used to obtain the object through the itemAt method of the Instantiator.
+    and can be used to obtain the object through the objectAt method of the Instantiator.
 
     If this property is changed, all instances using the old delegate will be destroyed
     and new instances will be created using the new delegate.

@@ -143,6 +143,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
     Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QQmlComponent *effect READ effect WRITE setEffect NOTIFY effectChanged)
+    Q_PROPERTY(QQuickShaderEffectSource::TextureMirroring textureMirroring READ textureMirroring WRITE setTextureMirroring NOTIFY textureMirroringChanged)
 public:
     QQuickItemLayer(QQuickItem *item);
     ~QQuickItemLayer();
@@ -177,6 +178,9 @@ public:
     QQmlComponent *effect() const { return m_effectComponent; }
     void setEffect(QQmlComponent *effect);
 
+    QQuickShaderEffectSource::TextureMirroring textureMirroring() const { return m_textureMirroring; }
+    void setTextureMirroring(QQuickShaderEffectSource::TextureMirroring mirroring);
+
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
     void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
@@ -200,6 +204,7 @@ Q_SIGNALS:
     void smoothChanged(bool smooth);
     void formatChanged(QQuickShaderEffectSource::Format format);
     void sourceRectChanged(const QRectF &sourceRect);
+    void textureMirroringChanged(QQuickShaderEffectSource::TextureMirroring mirroring);
 
 private:
     friend class QQuickTransformAnimatorJob;
@@ -223,6 +228,7 @@ private:
     QQmlComponent *m_effectComponent;
     QQuickItem *m_effect;
     QQuickShaderEffectSource *m_effectSource;
+    QQuickShaderEffectSource::TextureMirroring m_textureMirroring;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickItemPrivate : public QObjectPrivate
@@ -421,6 +427,12 @@ public:
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
     bool antialiasingValid:1;
+    // isTabFence: When true, the item acts as a fence within the tab focus chain.
+    // This means that the item and its children will be skipped from the tab focus
+    // chain when navigating from its parent or any of its siblings. Similarly,
+    // when any of the item's descendants gets focus, the item constrains the tab
+    // focus chain and prevents tabbing outside.
+    bool isTabFence:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -492,6 +504,8 @@ public:
     void itemToParentTransform(QTransform &) const;
 
     static bool focusNextPrev(QQuickItem *item, bool forward);
+    static QQuickItem *nextTabChildItem(const QQuickItem *item, int start);
+    static QQuickItem *prevTabChildItem(const QQuickItem *item, int start);
     static QQuickItem *nextPrevItemInTabFocusChain(QQuickItem *item, bool forward);
 
     static bool canAcceptTabFocus(QQuickItem *item);

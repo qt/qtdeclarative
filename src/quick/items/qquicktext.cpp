@@ -100,6 +100,7 @@ QQuickTextPrivate::ExtraData::ExtraData()
     , minimumPointSize(12)
     , nbActiveDownloads(0)
     , maximumLineCount(INT_MAX)
+    , lineHeightValid(false)
     , lineHeightMode(QQuickText::ProportionalHeight)
     , fontSizeMode(QQuickText::FixedSize)
 {
@@ -421,7 +422,7 @@ void QQuickTextPrivate::updateLayout()
             }
             textHasChanged = false;
         }
-    } else {
+    } else if (extra.isAllocated() && extra->lineHeightValid) {
         ensureDoc();
         QTextBlockFormat::LineHeightTypes type;
         type = lineHeightMode() == QQuickText::FixedHeight ? QTextBlockFormat::FixedHeight : QTextBlockFormat::ProportionalHeight;
@@ -2480,6 +2481,7 @@ void QQuickText::setLineHeight(qreal lineHeight)
     if ((d->lineHeight() == lineHeight) || (lineHeight < 0.0))
         return;
 
+    d->extra.value().lineHeightValid = true;
     d->extra.value().lineHeight = lineHeight;
     d->implicitHeightValid = false;
     d->updateLayout();
@@ -2511,6 +2513,7 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
         return;
 
     d->implicitHeightValid = false;
+    d->extra.value().lineHeightValid = true;
     d->extra.value().lineHeightMode = mode;
     d->updateLayout();
 
