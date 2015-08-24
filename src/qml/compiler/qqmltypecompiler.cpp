@@ -667,17 +667,14 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
     }
 
     // First set up notify signals for properties - first normal, then var, then alias
-    enum { NSS_Normal = 0, NSS_Var = 1, NSS_Alias = 2 };
+    enum { NSS_Normal = 0, NSS_Alias = 1 };
     for (int ii = NSS_Normal; ii <= NSS_Alias; ++ii) { // 0 == normal, 1 == var, 2 == alias
 
-        if (ii == NSS_Var && varPropCount == 0) continue;
-        else if (ii == NSS_Alias && aliasCount == 0) continue;
+        if (ii == NSS_Alias && aliasCount == 0) continue;
 
         for (const QmlIR::Property *p = obj->firstProperty(); p; p = p->next) {
-            if ((ii == NSS_Normal && (p->type == QV4::CompiledData::Property::Alias ||
-                                      p->type == QV4::CompiledData::Property::Var)) ||
-                ((ii == NSS_Var) && (p->type != QV4::CompiledData::Property::Var)) ||
-                ((ii == NSS_Alias) && (p->type != QV4::CompiledData::Property::Alias)))
+            if ((ii == NSS_Normal && p->type == QV4::CompiledData::Property::Alias) ||
+                (ii == NSS_Alias && p->type != QV4::CompiledData::Property::Alias))
                 continue;
 
             quint32 flags = QQmlPropertyData::IsSignal | QQmlPropertyData::IsFunction |
