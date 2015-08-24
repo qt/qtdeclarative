@@ -119,20 +119,20 @@ struct GlobalContext : ExecutionContext {
 };
 
 struct CatchContext : ExecutionContext {
-    CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue);
+    CatchContext(ExecutionContext *outerContext, QV4::String *exceptionVarName, const Value &exceptionValue);
     Pointer<String> exceptionVarName;
     Value exceptionValue;
 };
 
 struct WithContext : ExecutionContext {
-    WithContext(ExecutionEngine *engine, QV4::Object *with);
+    WithContext(ExecutionContext *outerContext, QV4::Object *with);
     Pointer<Object> withObject;
 };
 
 struct QmlContextWrapper;
 
 struct QmlContext : ExecutionContext {
-    QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml);
+    QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
     Pointer<QmlContextWrapper> qml;
 };
 

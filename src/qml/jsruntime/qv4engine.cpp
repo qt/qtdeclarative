@@ -731,6 +731,7 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
     Heap::ExecutionContext *ctx = currentContext();
 
+    // get the correct context when we're within a builtin function
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
         ctx = ctx->parent;
 
