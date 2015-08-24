@@ -125,6 +125,7 @@ ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
 
     ScopedContext context(scope, v4->currentContext());
     Scoped<CallContext> ctx(scope, context->newCallContext(This, callData));
+    v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f));
 

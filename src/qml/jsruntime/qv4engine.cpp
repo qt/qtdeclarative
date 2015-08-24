@@ -508,6 +508,7 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
+    current = r->d();
 
     jsObjects[RootContect] = r;
 }
@@ -522,6 +523,7 @@ Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
     Scope scope(this);
     Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
     g->d()->callData = rootContext()->d()->callData;
+    pushContext(g->d());
 
     Q_ASSERT(currentContext() == g->d());
     return g->d();

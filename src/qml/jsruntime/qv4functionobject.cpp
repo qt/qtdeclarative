@@ -442,10 +442,10 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     ScopedObject proto(scope, f->protoForConstructor());
     ScopedObject obj(scope, v4->newObject(ic, proto));
 
-
     ScopedContext context(scope, v4->currentContext());
     callData->thisObject = obj.asReturnedValue();
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
+    v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
@@ -473,6 +473,7 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
     ScopedContext context(scope, v4->currentContext());
     Scoped<CallContext> ctx(scope, context->newCallContext(f, callData));
+    v4->pushContext(ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
 
@@ -546,6 +547,7 @@ ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *cal
     ctx.locals = scope.alloc(f->varCount());
     for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
         callData->args[i] = Encode::undefined();
+    v4->pushContext(&ctx);
     Q_ASSERT(v4->currentContext() == &ctx);
 
     ScopedObject result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -584,6 +586,7 @@ ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData
     ctx.locals = scope.alloc(f->varCount());
     for (int i = callData->argc; i < (int)f->formalParameterCount(); ++i)
         callData->args[i] = Encode::undefined();
+    v4->pushContext(&ctx);
     Q_ASSERT(v4->currentContext() == &ctx);
 
     ScopedValue result(scope, Q_V4_PROFILE(v4, f->function()));
@@ -636,6 +639,7 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
+    v4->pushContext(&ctx);
     Q_ASSERT(v4->currentContext() == &ctx);
     Scoped<CallContext> sctx(scope, &ctx);
 
@@ -660,6 +664,7 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
+    v4->pushContext(&ctx);
     Q_ASSERT(v4->currentContext() == &ctx);
     Scoped<CallContext> sctx(scope, &ctx);
 

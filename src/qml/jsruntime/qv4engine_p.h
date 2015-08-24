@@ -474,7 +474,6 @@ Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
     , strictMode(false)
     , lineNumber(-1)
 {
-    engine->pushContext(this);
 }
 
 

@@ -1180,7 +1180,7 @@ void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
     Scope scope(engine);
     ScopedObject obj(scope, o.toObject(engine));
     ScopedContext ctx(scope, engine->currentContext());
-    ctx->newWithContext(obj);
+    engine->pushContext(ctx->newWithContext(obj));
 }
 
 ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
@@ -1196,7 +1196,7 @@ void Runtime::pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
     ScopedValue v(scope, engine->catchException(0));
     ScopedString exceptionVarName(scope, engine->currentContext()->compilationUnit->runtimeStrings[exceptionVarNameIndex]);
     ScopedContext ctx(scope, engine->currentContext());
-    ctx->newCatchContext(exceptionVarName, v);
+    engine->pushContext(ctx->newCatchContext(exceptionVarName, v));
 }
 
 void Runtime::popScope(ExecutionEngine *engine)

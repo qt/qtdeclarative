@@ -96,7 +96,6 @@ Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, 
 Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
 {
     Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    d()->engine->popContext();
     return c;
 }
 
@@ -105,7 +104,6 @@ Heap::QmlContext *ExecutionContext::newQmlContext(QQmlContextData *context, QObj
     Scope scope(this);
     Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
     Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
-    d()->engine->popContext();
     return c;
 }
 
