@@ -553,7 +553,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 
     Creates a QJSValue with the given \a value.
 
-    \sa fromScriptValue(), newVariant()
+    \sa fromScriptValue()
 */
 
 /*! \fn T QJSEngine::fromScriptValue(const QJSValue &value)

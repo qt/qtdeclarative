@@ -172,8 +172,7 @@ int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *valu
     modify or clear its associated value.
 
     \note When deriving a class from QQmlPropertyMap, use the
-    \l {QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)}
-    {protected two-argument constructor}
+    \l {QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)} {protected two-argument constructor}
     which ensures that the class is correctly registered with the Qt \l {Meta-Object System}.
 */
 
