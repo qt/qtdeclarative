@@ -26,7 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \chapter QModelIndex & Co. in QML
+    \page qmodelindex-and-related-classes-in-qml.html
+    \title QModelIndex and related Classes in QML
 
     Since Qt 5.5, QModelIndex and QPersistentModelIndex are exposed in QML as
     value-based types. Also exposed in a similar fashion are QModelIndexList,
@@ -34,15 +35,14 @@
     be passed back and forth between QML and C++ as \c var properties or plain
     JavaScript variables.
 
-    We detail here which API all these classes get exposed in QML. Please refer
-    to the C++ documentation for more information.
+    Below you will find an overview of the API exposed to QML for these classes.
+    For more information, refer to their C++ documentation.
 
-    \note Since all these types are exposed as gadgets, there are no property
+    \note Since all these types are exposed as \l{Q_GADGET}{gadgets}, there are no property
     change notification signals emitted. Therefore binding to their properties
     may not give the expected results. This is especially true for QPersistentModelIndex.
-    It is perfectly possible to bind to properties holding any of those types.
 
-    \section1 \l QModelIndex and \l QPersistentModelIndex
+    \section1 QModelIndex and QPersistentModelIndex Types
 
     \list
     \li \b row : int
@@ -53,25 +53,25 @@
     \li \b internalId : quint64
     \endlist
 
-    All these properties are read-only, as their C++ counterpart.
+    All these properties are read-only, as are their C++ counterparts.
 
     \note The usual caveats apply to QModelIndex in QML. If the underlying model changes
     or gets deleted, it may become dangerous to access its properties. Therefore, you
-    should not store any QModelIndex. You can, however, store QPersistentModelIndexes
-    in a safe way.
+    should not store any QModelIndex objects. You can, however, store QPersistentModelIndexe
+    objects in a safe way.
 
-    \section1 QModelIndexList
+    \section1 QModelIndexList Type
 
     \l QModelIndexList is exposed in QML as a JavaScript array. Conversions are
     automatically made from and to C++. In fact, any JavaScript array can be
     converted back to QModelIndexList, with non-QModelIndex objects replaced by
-    invalid QModelIndexes.
+    invalid \l{QModelIndex}es.
 
     \note QModelIndex to QPersistentModelIndex conversion happens when accessing
     the array elements because any QModelIndexList property retains reference
     semantics when exposed this way.
 
-    \section1 \l QItemSelectionRange
+    \section1 \l QItemSelectionRange Type
 
     \list
     \li \b top : int
@@ -88,22 +88,22 @@
     \li \b model : QAbstractItemModel
     \endlist
 
-    All these properties are read-only, as their C++ counterpart. In addition,
+    All these properties are read-only, as are their C++ counterparts. In addition,
     we also expose the following functions:
 
     \list
-    \li bool \b{contains}(QModelIndex index)
-    \li bool \b{contains}(int row, int column, QModelIndex parentIndex)
-    \li bool \b{intersects}(QItemSelectionRange other)
-    \li QItemSelectionRange \b{intersected}(QItemSelectionRange other)
+    \li bool \b{contains}(QModelIndex \e index)
+    \li bool \b{contains}(int \e row, int \e column, QModelIndex \e parentIndex)
+    \li bool \b{intersects}(QItemSelectionRange \e other)
+    \li QItemSelectionRange \b{intersected}(QItemSelectionRange \e other)
     \endlist
 
-    \section1 QItemSelection
+    \section1 QItemSelection Type
 
     Similarly to QModelIndexList, \l QItemSelection is exposed in QML as a JavaScript
-    array of QItemSelectionRanges. Conversions are automatically made from and to C++.
+    array of QItemSelectionRange objects. Conversions are automatically made from and to C++.
     In fact, any JavaScript array can be converted back to QItemSelection, with
-    non-QItemSelectionRange objects replaced by empty QItemSelectionRanges.
+    non-QItemSelectionRange objects replaced by empty \l {QItemSelectionRange}s.
 
 
     \sa ItemSelectionModel
