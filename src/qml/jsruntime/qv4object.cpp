@@ -100,10 +100,13 @@ ReturnedValue Object::getValue(const Value &thisObject, const Property *p, Prope
     return getter->call(callData);
 }
 
-void Object::putValue(Property *pd, PropertyAttributes attrs, const Value &value)
+void Object::putValue(uint memberIndex, const Value &value)
 {
     if (internalClass()->engine->hasException)
         return;
+
+    Property *pd = propertyAt(memberIndex);
+    PropertyAttributes attrs = internalClass()->propertyData[memberIndex];
 
     if (attrs.isAccessor()) {
         if (Heap::FunctionObject *set = pd->setter()) {
@@ -483,7 +486,7 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
         }
 
         if (idx != UINT_MAX) {
-            o->putValue(o->propertyAt(idx), o->internalClass()->propertyData[idx], value);
+            o->putValue(idx, value);
             return;
         }
     }

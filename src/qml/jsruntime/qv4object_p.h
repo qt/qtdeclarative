@@ -177,7 +177,7 @@ struct Q_QML_EXPORT Object: Managed {
         return getValue(t, p, attrs);
     }
 
-    void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
+    void putValue(uint memberIndex, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, const Value &value) {

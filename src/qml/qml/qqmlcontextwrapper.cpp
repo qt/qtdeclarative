@@ -240,7 +240,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     uint member = wrapper->internalClass()->find(name);
     if (member < UINT_MAX) {
-        wrapper->putValue(wrapper->propertyAt(member), wrapper->internalClass()->propertyData[member], value);
+        wrapper->putValue(member, value);
         return;
     }
 

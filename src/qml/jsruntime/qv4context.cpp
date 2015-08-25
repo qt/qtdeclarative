@@ -372,7 +372,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         if (activation) {
             uint member = activation->internalClass()->find(name);
             if (member < UINT_MAX) {
-                activation->putValue(activation->propertyAt(member), activation->internalClass()->propertyData[member], value);
+                activation->putValue(member, value);
                 return;
             }
         }
