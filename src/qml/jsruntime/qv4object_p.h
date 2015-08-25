@@ -50,8 +50,10 @@ struct Object : Base {
     inline Object(ExecutionEngine *engine);
     Object(InternalClass *internal, QV4::Object *prototype);
 
-    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData->data + index); }
-    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData->data + index); }
+    const Value *propertyData(uint index) const { return memberData->data + index; }
+    Value *propertyData(uint index) { return memberData->data + index; }
+    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(propertyData(index)); }
+    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(propertyData(index)); }
 
     InternalClass *internalClass;
     Pointer<Object> prototype;
@@ -130,7 +132,10 @@ struct Q_QML_EXPORT Object: Managed {
     };
 
     InternalClass *internalClass() const { return d()->internalClass; }
-    void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
+    void setInternalClass(InternalClass *ic);
+
+    const Value *propertyData(uint index) const { return d()->propertyData(index); }
+    Value *propertyData(uint index) { return d()->propertyData(index); }
 
     Heap::MemberData *memberData() { return d()->memberData; }
     const Heap::MemberData *memberData() const { return d()->memberData; }
@@ -188,10 +193,6 @@ struct Q_QML_EXPORT Object: Managed {
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
-
-    void ensureMemberIndex(QV4::ExecutionEngine *e, uint idx) {
-        d()->memberData = MemberData::reallocate(e, d()->memberData, idx);
-    }
 
     void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
@@ -269,7 +270,6 @@ public:
 
         return false;
     }
-    void ensureMemberIndex(uint idx);
 
     inline ReturnedValue get(String *name, bool *hasProperty = 0) const
     { return vtable()->get(this, name, hasProperty); }
@@ -315,6 +315,8 @@ protected:
     static void setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
+
+    void ensureMemberData();
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
@@ -379,7 +381,7 @@ struct ArrayObject : Object {
         : Heap::Object(ic, prototype)
     { init(); }
     void init()
-    { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
+    { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
 };
 
 }
@@ -415,7 +417,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        memberData()->data[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
+        *propertyData(Heap::ArrayObject::LengthPropertyIndex) = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const Value &v)

@@ -132,10 +132,8 @@ Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
     , scope(ic->engine->rootContext()->d())
     , function(Q_NULLPTR)
 {
-    Scope scope(ic->engine);
-    ScopedObject o(scope, this);
-    o->ensureMemberIndex(ic->engine, Index_Prototype);
-    memberData->data[Index_Prototype] = Encode::undefined();
+    Q_ASSERT(ic && ic->find(ic->engine->id_prototype()) == Index_Prototype);
+    *propertyData(Index_Prototype) = Encode::undefined();
 }
 
 
@@ -150,14 +148,14 @@ void FunctionObject::init(String *n, bool createProto)
     Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
 
-    ensureMemberIndex(s.engine, Heap::FunctionObject::Index_Prototype);
+    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()) == Heap::FunctionObject::Index_Prototype);
     if (createProto) {
         ScopedObject proto(s, scope()->engine->newObject(s.engine->protoClass, s.engine->objectPrototype()));
-        proto->ensureMemberIndex(s.engine, Heap::FunctionObject::Index_ProtoConstructor);
-        proto->memberData()->data[Heap::FunctionObject::Index_ProtoConstructor] = this->asReturnedValue();
-        memberData()->data[Heap::FunctionObject::Index_Prototype] = proto.asReturnedValue();
+        Q_ASSERT(s.engine->protoClass->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
+        *proto->propertyData(Heap::FunctionObject::Index_ProtoConstructor) = this->asReturnedValue();
+        *propertyData(Heap::FunctionObject::Index_Prototype) = proto.asReturnedValue();
     } else {
-        memberData()->data[Heap::FunctionObject::Index_Prototype] = Encode::undefined();
+        *propertyData(Heap::FunctionObject::Index_Prototype) = Encode::undefined();
     }
 
     ScopedValue v(s, n);
@@ -501,9 +499,10 @@ Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, F
         f->init(name, createProto);
         f->defineReadonlyProperty(scope->d()->engine->id_length(), Primitive::fromInt32(f->formalParameterCount()));
     } else {
-        f->ensureMemberIndex(s.engine, Index_Length);
-        memberData->data[Index_Name] = function->name();
-        memberData->data[Index_Length] = Primitive::fromInt32(f->formalParameterCount());
+        Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
+        Q_ASSERT(internalClass && internalClass->find(s.engine->id_name()) == Index_Name);
+        *propertyData(Index_Name) = function->name();
+        *propertyData(Index_Length) = Primitive::fromInt32(f->formalParameterCount());
     }
 
     if (scope->d()->strictMode) {

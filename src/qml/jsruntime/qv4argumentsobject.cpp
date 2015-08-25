@@ -66,10 +66,10 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
         args->d()->fullyCreated = true;
     } else {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
-        args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
+        *args->propertyData(CalleePropertyIndex) = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length()));
-    args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->callData->argc);
+    *args->propertyData(LengthPropertyIndex) = Primitive::fromInt32(context->d()->callData->argc);
 }
 
 void ArgumentsObject::fullyCreate()

@@ -137,7 +137,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static Heap::FunctionObject *createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
                                                    const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
 
-    ReturnedValue protoProperty() { return memberData()->data[Heap::FunctionObject::Index_Prototype].asReturnedValue(); }
+    ReturnedValue protoProperty() { return propertyData(Heap::FunctionObject::Index_Prototype)->asReturnedValue(); }
 
     bool needsActivation() const { return d()->needsActivation(); }
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }

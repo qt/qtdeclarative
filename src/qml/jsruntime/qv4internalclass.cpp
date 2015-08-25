@@ -137,18 +137,19 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
-    InternalClass *newClass = object->internalClass()->changeMember(string->identifier(), data, &idx);
+    InternalClass *oldClass = object->internalClass();
+    InternalClass *newClass = oldClass->changeMember(string->identifier(), data, &idx);
     if (index)
         *index = idx;
 
-    if (newClass->size > object->internalClass()->size) {
-        Q_ASSERT(newClass->size == object->internalClass()->size + 1);
-        memmove(object->memberData()->data + idx + 2, object->memberData()->data + idx + 1, (object->internalClass()->size - idx - 1)*sizeof(Value));
-    } else if (newClass->size < object->internalClass()->size) {
-        Q_ASSERT(newClass->size == object->internalClass()->size - 1);
-        memmove(object->memberData()->data + idx + 1, object->memberData()->data + idx + 2, (object->internalClass()->size - idx - 2)*sizeof(Value));
-    }
     object->setInternalClass(newClass);
+    if (newClass->size > oldClass->size) {
+        Q_ASSERT(newClass->size == oldClass->size + 1);
+        memmove(object->memberData()->data + idx + 2, object->memberData()->data + idx + 1, (object->internalClass()->size - idx - 1)*sizeof(Value));
+    } else if (newClass->size < oldClass->size) {
+        Q_ASSERT(newClass->size == oldClass->size - 1);
+        memmove(object->memberData()->data + idx + 1, object->memberData()->data + idx + 2, (object->internalClass()->size - idx - 1)*sizeof(Value));
+    }
 }
 
 InternalClassTransition &InternalClass::lookupOrInsertTransition(const InternalClassTransition &t)
