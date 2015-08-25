@@ -134,6 +134,16 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     Q_ASSERT(extensible);
 }
 
+static void insertHoleIntoPropertyData(Object *object, int idx)
+{
+    memmove(object->d()->memberData->data + idx + 1, object->d()->memberData->data + idx, (object->internalClass()->size - idx - 1)*sizeof(Value));
+}
+
+static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
+{
+    memmove(object->d()->memberData->data + idx, object->d()->memberData->data + idx + (accessor ? 2 : 1), (object->internalClass()->size - idx)*sizeof(Value));
+}
+
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
@@ -145,10 +155,10 @@ void InternalClass::changeMember(Object *object, String *string, PropertyAttribu
     object->setInternalClass(newClass);
     if (newClass->size > oldClass->size) {
         Q_ASSERT(newClass->size == oldClass->size + 1);
-        memmove(object->memberData()->data + idx + 2, object->memberData()->data + idx + 1, (object->internalClass()->size - idx - 1)*sizeof(Value));
+        insertHoleIntoPropertyData(object, idx + 1);
     } else if (newClass->size < oldClass->size) {
         Q_ASSERT(newClass->size == oldClass->size - 1);
-        memmove(object->memberData()->data + idx + 1, object->memberData()->data + idx + 2, (object->internalClass()->size - idx - 1)*sizeof(Value));
+        removeFromPropertyData(object, idx + 1);
     }
 }
 
@@ -287,6 +297,8 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     Transition temp = { id, 0, -1 };
     Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
 
+    bool accessor = oldClass->propertyData.at(propIdx).isAccessor();
+
     if (t.lookup) {
         object->setInternalClass(t.lookup);
     } else {
@@ -301,8 +313,10 @@ void InternalClass::removeMember(Object *object, Identifier *id)
         object->setInternalClass(newClass);
     }
 
-    // remove the entry in memberdata
-    memmove(object->memberData()->data + propIdx, object->memberData()->data + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
+    Q_ASSERT(object->internalClass()->size == oldClass->size - (accessor ? 2 : 1));
+
+    // remove the entry in the property data
+    removeFromPropertyData(object, propIdx, accessor);
 
     t.lookup = object->internalClass();
     Q_ASSERT(t.lookup);
