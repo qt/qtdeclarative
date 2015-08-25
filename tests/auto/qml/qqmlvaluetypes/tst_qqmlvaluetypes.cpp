@@ -36,6 +36,7 @@
 #include <QQmlComponent>
 #include <QDebug>
 #include <private/qquickvaluetypes_p.h>
+#include <private/qqmlglobal_p.h>
 #include "../../shared/util.h"
 #include "testtypes.h"
 
@@ -67,6 +68,7 @@ private slots:
     void font();
     void color();
     void variant();
+    void locale();
 
     void bindingAssignment();
     void bindingRead();
@@ -313,6 +315,42 @@ void tst_qqmlvaluetypes::variant()
     QVERIFY(object->property("complete").toBool());
     QVERIFY(object->property("success").toBool());
     delete object;
+    }
+}
+
+void tst_qqmlvaluetypes::locale()
+{
+    {
+        QQmlComponent component(&engine, testFileUrl("locale_read.qml"));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QVERIFY(QQml_guiProvider()->inputMethod());
+        QInputMethod *inputMethod = qobject_cast<QInputMethod*>(QQml_guiProvider()->inputMethod());
+        QLocale locale = inputMethod->locale();
+
+        QCOMPARE(object->property("amText").toString(), locale.amText());
+        QCOMPARE(object->property("decimalPoint").toString().at(0), locale.decimalPoint());
+        QCOMPARE(object->property("exponential").toString().at(0), locale.exponential());
+        // Sunday is 0 in JavaScript.
+        QCOMPARE(object->property("firstDayOfWeek").toInt(), int(locale.firstDayOfWeek() == Qt::Sunday ? 0 : locale.firstDayOfWeek()));
+        QCOMPARE(object->property("groupSeparator").toString().at(0), locale.groupSeparator());
+        QCOMPARE(object->property("measurementSystem").toInt(), int(locale.measurementSystem()));
+        QCOMPARE(object->property("name").toString(), locale.name());
+        QCOMPARE(object->property("nativeCountryName").toString(), locale.nativeCountryName());
+        QCOMPARE(object->property("nativeLanguageName").toString(), locale.nativeLanguageName());
+        QCOMPARE(object->property("negativeSign").toString().at(0), locale.negativeSign());
+        QCOMPARE(object->property("percent").toString().at(0), locale.percent());
+        QCOMPARE(object->property("pmText").toString(), locale.pmText());
+        QCOMPARE(object->property("positiveSign").toString().at(0), locale.positiveSign());
+        QCOMPARE(object->property("textDirection").toInt(), int(locale.textDirection()));
+        QCOMPARE(object->property("uiLanguages").toStringList(), locale.uiLanguages());
+        QList<Qt::DayOfWeek> weekDays;
+        foreach (const QVariant &weekDay, object->property("weekDays").toList()) {
+            weekDays.append(Qt::DayOfWeek(weekDay.toInt()));
+        }
+        QCOMPARE(weekDays, locale.weekdays());
+        QCOMPARE(object->property("zeroDigit").toString().at(0), locale.zeroDigit());
     }
 }
 
