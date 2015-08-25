@@ -394,7 +394,8 @@ void tst_qquickdesignersupport::statesPropertyChanges()
     //Create new PropertyChanges
     QQuickPropertyChanges *newPropertyChange = new QQuickPropertyChanges();
     newPropertyChange->setParent(state01);
-    QQuickStatePrivate::operations_append(&state01->changes(), newPropertyChange);
+    QQmlListProperty<QQuickStateOperation> changes = state01->changes();
+    QQuickStatePrivate::operations_append(&changes, newPropertyChange);
 
     newPropertyChange->setObject(rootItem);
 
