@@ -51,11 +51,12 @@ QT_BEGIN_NAMESPACE
 class QQmlConnectionsPrivate : public QObjectPrivate
 {
 public:
-    QQmlConnectionsPrivate() : target(0), targetSet(false), ignoreUnknownSignals(false), componentcomplete(true) {}
+    QQmlConnectionsPrivate() : target(0), enabled(true), targetSet(false), ignoreUnknownSignals(false), componentcomplete(true) {}
 
     QList<QQmlBoundSignal*> boundsignals;
     QObject *target;
 
+    bool enabled;
     bool targetSet;
     bool ignoreUnknownSignals;
     bool componentcomplete;
@@ -174,6 +175,34 @@ void QQmlConnections::setTarget(QObject *obj)
     d->target = obj;
     connectSignals();
     emit targetChanged();
+}
+
+/*!
+    \qmlproperty bool QtQml::Connections::enabled
+    \since 5.7
+
+    This property holds whether the item accepts change events.
+
+    By default, this property is \c true.
+*/
+bool QQmlConnections::isEnabled() const
+{
+    Q_D(const QQmlConnections);
+    return d->enabled;
+}
+
+void QQmlConnections::setEnabled(bool enabled)
+{
+    Q_D(QQmlConnections);
+    if (d->enabled == enabled)
+        return;
+
+    d->enabled = enabled;
+
+    foreach (QQmlBoundSignal *s, d->boundsignals)
+        s->setEnabled(d->enabled);
+
+    emit enabledChanged();
 }
 
 /*!

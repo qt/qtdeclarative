@@ -56,6 +56,7 @@ private slots:
     void errors();
     void rewriteErrors();
     void singletonTypeTarget();
+    void enableDisable_QTBUG_36350();
 
 private:
     QQmlEngine engine;
@@ -327,6 +328,33 @@ void tst_qqmlconnections::singletonTypeTarget()
     QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 1);
 
     delete object;
+}
+
+void tst_qqmlconnections::enableDisable_QTBUG_36350()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("test-connection.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item != 0);
+
+    QQmlConnections *connections = item->findChild<QQmlConnections*>("connections");
+    QVERIFY(connections);
+
+    connections->setEnabled(false);
+    QCOMPARE(item->property("tested").toBool(), false);
+    QCOMPARE(item->width(), 50.);
+    emit item->setWidth(100.);
+    QCOMPARE(item->width(), 100.);
+    QCOMPARE(item->property("tested").toBool(), false); //Should not have received signal to change property
+
+    connections->setEnabled(true); //Re-enable the connectSignals()
+    QCOMPARE(item->property("tested").toBool(), false);
+    QCOMPARE(item->width(), 100.);
+    emit item->setWidth(50.);
+    QCOMPARE(item->width(), 50.);
+    QCOMPARE(item->property("tested").toBool(), true); //Should have received signal to change property
+
+    delete item;
 }
 
 QTEST_MAIN(tst_qqmlconnections)

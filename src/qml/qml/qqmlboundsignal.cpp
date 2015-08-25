@@ -250,7 +250,7 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
       m_prevSignal(0), m_nextSignal(0),
-      m_expression(0)
+      m_enabled(true), m_expression(0)
 {
     addToObject(owner);
 
@@ -313,11 +313,26 @@ void QQmlBoundSignal::takeExpression(QQmlBoundSignalExpression *e)
         m_expression->setNotifyOnValueChanged(false);
 }
 
+/*!
+    This property holds whether the item will emit signals.
+
+    The QQmlBoundSignal callback will only emit a signal if this property is set to true.
+
+    By default, this property is true.
+ */
+void QQmlBoundSignal::setEnabled(bool enabled)
+{
+    if (m_enabled == enabled)
+        return;
+
+    m_enabled = enabled;
+}
+
 void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 {
     QQmlBoundSignal *s = static_cast<QQmlBoundSignal*>(e);
 
-    if (!s->m_expression)
+    if (!s->m_expression || !s->m_enabled)
         return;
 
     QV4DebugService *service = QQmlDebugConnector::service<QV4DebugService>();

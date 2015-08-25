@@ -6,5 +6,5 @@ Item {
     property bool tested: false
     signal testMe
 
-    Connections { target: screen; onWidthChanged: screen.tested = true }
+    Connections { objectName: "connections"; target: screen; onWidthChanged: screen.tested = true }
 }

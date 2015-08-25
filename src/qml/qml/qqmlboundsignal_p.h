@@ -108,6 +108,8 @@ public:
     QQmlBoundSignalExpression *expression() const;
     void takeExpression(QQmlBoundSignalExpression *);
 
+    void setEnabled(bool enabled);
+
 private:
     friend void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlPropertyPrivate;
@@ -118,6 +120,8 @@ private:
 
     QQmlBoundSignal **m_prevSignal;
     QQmlBoundSignal  *m_nextSignal;
+
+    bool m_enabled;
 
     QQmlBoundSignalExpressionPointer m_expression;
 };

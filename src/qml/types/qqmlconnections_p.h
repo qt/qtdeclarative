@@ -52,6 +52,7 @@ class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatu
 
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QObject *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_REVISION(1) Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
 
 public:
@@ -61,11 +62,15 @@ public:
     QObject *target() const;
     void setTarget(QObject *);
 
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
+
     bool ignoreUnknownSignals() const;
     void setIgnoreUnknownSignals(bool ignore);
 
 Q_SIGNALS:
     void targetChanged();
+    Q_REVISION(1) void enabledChanged();
 
 private:
     void connectSignals();
