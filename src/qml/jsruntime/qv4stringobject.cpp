@@ -511,7 +511,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global())
-            regExp->lastIndexProperty()->value = Primitive::fromUInt32(0);
+            *regExp->lastIndexProperty() = Primitive::fromUInt32(0);
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

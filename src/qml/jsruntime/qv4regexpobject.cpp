@@ -172,10 +172,10 @@ void RegExpObject::markObjects(Heap::Base *that, ExecutionEngine *e)
     Object::markObjects(that, e);
 }
 
-Property *RegExpObject::lastIndexProperty()
+Value *RegExpObject::lastIndexProperty()
 {
     Q_ASSERT(0 == internalClass()->find(engine()->id_lastIndex()));
-    return propertyAt(0);
+    return propertyData(0);
 }
 
 // Converts a JS RegExp to a QRegExp.
@@ -353,9 +353,9 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
         return Encode::undefined();
     QString s = arg->stringValue()->toQString();
 
-    int offset = r->global() ? r->lastIndexProperty()->value.toInt32() : 0;
+    int offset = r->global() ? r->lastIndexProperty()->toInt32() : 0;
     if (offset < 0 || offset > s.length()) {
-        r->lastIndexProperty()->value = Primitive::fromInt32(0);
+        *r->lastIndexProperty() = Primitive::fromInt32(0);
         return Encode::null();
     }
 
@@ -366,7 +366,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
-        r->lastIndexProperty()->value = Primitive::fromInt32(0);
+        *r->lastIndexProperty() = Primitive::fromInt32(0);
         return Encode::null();
     }
 
@@ -392,7 +392,7 @@ ReturnedValue RegExpPrototype::method_exec(CallContext *ctx)
     dd->lastMatchEnd = matchOffsets[1];
 
     if (r->global())
-        r->lastIndexProperty()->value = Primitive::fromInt32(matchOffsets[1]);
+        *r->lastIndexProperty() = Primitive::fromInt32(matchOffsets[1]);
 
     return array.asReturnedValue();
 }
