@@ -128,7 +128,9 @@ struct Q_QML_EXPORT Object: Managed {
     Q_MANAGED_TYPE(Object)
 
     enum {
-        IsObject = true
+        IsObject = true,
+        GetterOffset = 0,
+        SetterOffset = 1
     };
 
     InternalClass *internalClass() const { return d()->internalClass; }

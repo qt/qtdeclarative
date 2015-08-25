@@ -102,15 +102,16 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
 
 void Object::putValue(uint memberIndex, const Value &value)
 {
-    if (internalClass()->engine->hasException)
+    QV4::InternalClass *ic = internalClass();
+    if (ic->engine->hasException)
         return;
 
-    Property *pd = propertyAt(memberIndex);
-    PropertyAttributes attrs = internalClass()->propertyData[memberIndex];
+    PropertyAttributes attrs = ic->propertyData[memberIndex];
 
     if (attrs.isAccessor()) {
-        if (Heap::FunctionObject *set = pd->setter()) {
-            Scope scope(set->internalClass->engine);
+        FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
+        if (set) {
+            Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
             ScopedCallData callData(scope, 1);
             callData->args[0] = value;
@@ -124,7 +125,7 @@ void Object::putValue(uint memberIndex, const Value &value)
     if (!attrs.isWritable())
         goto reject;
 
-    pd->value = value;
+    *propertyData(memberIndex) = value;
     return;
 
   reject:
@@ -217,11 +218,10 @@ void Object::insertMember(String *s, const Property *p, PropertyAttributes attri
     InternalClass::addMember(this, s, attributes, &idx);
 
     if (attributes.isAccessor()) {
-        Property *pp = propertyAt(idx);
-        pp->value = p->value;
-        pp->set = p->set;
+        *propertyData(idx + GetterOffset) = p->value;
+        *propertyData(idx + SetterOffset) = p->set;
     } else {
-        d()->memberData->data[idx] = p->value;
+        *propertyData(idx) = p->value;
     }
 }
 
@@ -235,8 +235,11 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
     uint member = internalClass()->find(name);
     if (member < UINT_MAX) {
         *attrs = internalClass()->propertyData[member];
-        if (p)
-            p->copy(propertyAt(member), *attrs);
+        if (p) {
+            p->value = *propertyData(member);
+            if (attrs->isAccessor())
+                p->set = *propertyData(member + SetterOffset);
+        }
         return;
     }
 
@@ -574,13 +577,15 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
             continue;
         }
 
-        Property *p = o->propertyAt(it->memberIndex);
+        int idx = it->memberIndex;
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
             name->setM(o->engine()->newString(n->string));
             *attrs = a;
-            pd->copy(p, a);
+            pd->value = *o->propertyData(idx);
+            if (a.isAccessor())
+                pd->set = *o->propertyData(idx + SetterOffset);
             return;
         }
     }
@@ -859,7 +864,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     Scope scope(engine);
     name->makeIdentifier(scope.engine);
 
-    Property *current;
     PropertyAttributes *cattrs;
     uint memberIndex;
 
@@ -891,10 +895,9 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
 
     // Clause 1
     memberIndex = internalClass()->find(name);
-    current = (memberIndex < UINT_MAX) ? propertyAt(memberIndex) : 0;
     cattrs = internalClass()->propertyData.constData() + memberIndex;
 
-    if (!current) {
+    if (memberIndex == UINT_MAX) {
         // clause 3
         if (!isExtensible())
             goto reject;
