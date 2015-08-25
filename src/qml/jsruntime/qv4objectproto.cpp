@@ -222,7 +222,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
         if (attrs.isEmpty())
             break;
         PropertyAttributes nattrs;
-        val = o->getValue(pd, attrs);
+        val = o->getValue(pd->value, attrs);
         toPropertyDescriptor(scope.engine, val, n, &nattrs);
         if (scope.engine->hasException)
             return Encode::undefined();

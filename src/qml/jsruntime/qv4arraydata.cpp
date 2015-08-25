@@ -584,7 +584,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
             ScopedValue v(scope);
             for (const SparseArrayNode *it = os->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode()) {
-                v = otherObj->getValue(reinterpret_cast<Property *>(os->arrayData + it->value), other->d()->attrs[it->value]);
+                v = otherObj->getValue(os->arrayData[it->value], other->d()->attrs[it->value]);
                 obj->arraySet(oldSize + it->key(), v);
             }
         } else {
@@ -769,7 +769,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
                     break;
 
                 PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
-                d->data(i) = thisObject->getValue(reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
+                d->data(i) = thisObject->getValue(sparse->arrayData()[n->value], a);
                 d->attrs[i] = a.isAccessor() ? Attr_Data : a;
 
                 n = n->nextNode();

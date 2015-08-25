@@ -144,7 +144,7 @@ ReturnedValue ObjectIterator::nextPropertyName(Value *value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    *value = object->objectValue()->getValue(p, attrs);
+    *value = object->objectValue()->getValue(p->value, attrs);
 
     if (!!name)
         return name->asReturnedValue();
@@ -166,7 +166,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
     if (attrs.isEmpty())
         return Encode::null();
 
-    *value = object->objectValue()->getValue(p, attrs);
+    *value = object->objectValue()->getValue(p->value, attrs);
 
     if (!!name)
         return name->asReturnedValue();

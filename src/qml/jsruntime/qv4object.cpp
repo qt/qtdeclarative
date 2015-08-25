@@ -86,18 +86,18 @@ void Object::put(ExecutionEngine *engine, const QString &name, const Value &valu
     put(n, value);
 }
 
-ReturnedValue Object::getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs)
+ReturnedValue Object::getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
-        return p->value.asReturnedValue();
-    if (!p->getter())
+        return v.asReturnedValue();
+    const QV4::FunctionObject *f = v.as<FunctionObject>();
+    if (!f)
         return Encode::undefined();
 
-    Scope scope(p->getter()->internalClass->engine);
-    ScopedFunctionObject getter(scope, p->getter());
+    Scope scope(f->engine());
     ScopedCallData callData(scope);
     callData->thisObject = thisObject;
-    return getter->call(callData);
+    return f->call(callData);
 }
 
 void Object::putValue(uint memberIndex, const Value &value)
@@ -604,7 +604,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(o->propertyAt(idx), o->internalClass()->propertyData.at(idx));
+            return getValue(*o->propertyData(idx), o->internalClass()->propertyData.at(idx));
         }
 
         o = o->prototype();
@@ -643,7 +643,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
     if (pd) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(pd, attrs);
+        return getValue(pd->value, attrs);
     }
 
     if (hasProperty)

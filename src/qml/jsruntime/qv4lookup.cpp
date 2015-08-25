@@ -53,7 +53,8 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->propertyData(index)->asReturnedValue() : Object::getValue(thisObject, obj->propertyAt(index), *attrs);
+            Value *v = obj->propertyData(index);
+            return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
         obj = obj->prototype;
@@ -65,7 +66,8 @@ ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttribu
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->propertyData(index)->asReturnedValue() : Object::getValue(thisObject, obj->propertyAt(index), *attrs);
+            Value *v = obj->propertyData(index);
+            return !attrs->isAccessor() ? v->asReturnedValue() : Object::getValue(thisObject, *v, *attrs);
         }
 
         obj = obj->prototype;
@@ -86,7 +88,8 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         if (index != UINT_MAX) {
             level = i;
             *attrs = obj->internalClass->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->propertyData(index)->asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
+            Value *v = obj->propertyData(index);
+            return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
         obj = obj->prototype;
@@ -98,7 +101,8 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
         index = obj->internalClass->find(name);
         if (index != UINT_MAX) {
             *attrs = obj->internalClass->propertyData.at(index);
-            return !attrs->isAccessor() ? obj->propertyData(index)->asReturnedValue() : thisObject->getValue(obj->propertyAt(index), *attrs);
+            Value *v = obj->propertyData(index);
+            return !attrs->isAccessor() ? v->asReturnedValue() : thisObject->getValue(*v, *attrs);
         }
 
         obj = obj->prototype;

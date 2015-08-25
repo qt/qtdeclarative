@@ -170,11 +170,11 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionEngine *engine, const QString &name, const Value &value);
 
-    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
-    ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
+    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
+    ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
         Scope scope(this->engine());
         ScopedValue t(scope, const_cast<Object *>(this));
-        return getValue(t, p, attrs);
+        return getValue(t, v, attrs);
     }
 
     void putValue(uint memberIndex, const Value &value);
