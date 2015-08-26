@@ -102,6 +102,7 @@ struct ArrayData : public Base {
         return vtable()->get(this, i);
     }
     inline Property *getProperty(uint index);
+    inline Value *getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
 
     bool isEmpty(uint i) const {
@@ -283,6 +284,19 @@ inline PropertyAttributes ArrayData::attributes(uint i) const
         return static_cast<const SparseArrayData *>(this)->attributes(i);
     return static_cast<const SimpleArrayData *>(this)->attributes(i);
 }
+
+Value *ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
+{
+    Property *p = getProperty(index);
+    if (!p) {
+        *attrs = Attr_Invalid;
+        return 0;
+    }
+
+    *attrs = attributes(index);
+    return attrs->isAccessor() ? &p->set : &p->value;
+}
+
 
 
 }

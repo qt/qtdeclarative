@@ -270,47 +270,44 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 }
 
 // Section 8.12.2
-Property *Object::__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const
+Value *Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
-    const Heap::Object *o = d();
+    Heap::Object *o = d();
     while (o) {
         uint idx = o->internalClass->find(name);
         if (idx < UINT_MAX) {
-            if (attrs)
-                *attrs = o->internalClass->propertyData[idx];
-            return const_cast<Property *>(o->propertyAt(idx));
+            *attrs = o->internalClass->propertyData[idx];
+            return o->propertyData(attrs->isAccessor() ? idx + SetterOffset : idx);
         }
 
         o = o->prototype;
     }
-    if (attrs)
-        *attrs = Attr_Invalid;
+    *attrs = Attr_Invalid;
     return 0;
 }
 
-Property *Object::__getPropertyDescriptor__(uint index, PropertyAttributes *attrs) const
+Value *Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
-    const Heap::Object *o = d();
+    Heap::Object *o = d();
     while (o) {
         Property *p = o->arrayData ? o->arrayData->getProperty(index) : 0;
         if (p) {
             *attrs = o->arrayData->attributes(index);
-            return p;
+            return attrs->isAccessor() ? &p->set : &p->value;
         }
         if (o->vtable()->type == Type_StringObject) {
             if (index < static_cast<const Heap::StringObject *>(o)->length()) {
                 // this is an evil hack, but it works, as the method is only ever called from putIndexed,
                 // where we don't use the returned pointer there for non writable attributes
                 *attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                return reinterpret_cast<Property *>(0x1);
+                return reinterpret_cast<Value *>(0x1);
             }
         }
         o = o->prototype;
     }
-    if (attrs)
-        *attrs = Attr_Invalid;
+    *attrs = Attr_Invalid;
     return 0;
 }
 
@@ -670,17 +667,17 @@ void Object::internalPut(String *name, const Value &value)
     name->makeIdentifier(engine());
 
     uint member = internalClass()->find(name);
-    Property *pd = 0;
+    Value *v = 0;
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
-        pd = propertyAt(member);
         attrs = internalClass()->propertyData[member];
+        v = propertyData(attrs.isAccessor() ? member + SetterOffset : member);
     }
 
     // clause 1
-    if (pd) {
+    if (v) {
         if (attrs.isAccessor()) {
-            if (pd->setter())
+            if (v->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
@@ -696,7 +693,7 @@ void Object::internalPut(String *name, const Value &value)
             if (!ok)
                 goto reject;
         } else {
-            pd->value = value;
+            *v = value;
         }
         return;
     } else if (!prototype()) {
@@ -705,9 +702,9 @@ void Object::internalPut(String *name, const Value &value)
     } else {
         // clause 4
         Scope scope(engine());
-        if ((pd = ScopedObject(scope, prototype())->__getPropertyDescriptor__(name, &attrs))) {
+        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs))) {
             if (attrs.isAccessor()) {
-                if (!pd->setter())
+                if (!v->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -720,11 +717,11 @@ void Object::internalPut(String *name, const Value &value)
     cont:
 
     // Clause 5
-    if (pd && attrs.isAccessor()) {
-        Q_ASSERT(pd->setter() != 0);
+    if (v && attrs.isAccessor()) {
+        Q_ASSERT(v->as<FunctionObject>());
 
         Scope scope(engine());
-        ScopedFunctionObject setter(scope, pd->setter());
+        ScopedFunctionObject setter(scope, *v);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
@@ -751,26 +748,24 @@ void Object::internalPutIndexed(uint index, const Value &value)
 
     PropertyAttributes attrs;
 
-    Property *pd = arrayData() ? arrayData()->getProperty(index) : 0;
-    if (pd)
-        attrs = arrayData()->attributes(index);
+    Value *v = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : 0;
 
-    if (!pd && isStringObject()) {
+    if (!v && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
             // not writable
             goto reject;
     }
 
     // clause 1
-    if (pd) {
+    if (v) {
         if (attrs.isAccessor()) {
-            if (pd->setter())
+            if (v->as<FunctionObject>())
                 goto cont;
             goto reject;
         } else if (!attrs.isWritable())
             goto reject;
         else
-            pd->value = value;
+            *v = value;
         return;
     } else if (!prototype()) {
         if (!isExtensible())
@@ -778,9 +773,9 @@ void Object::internalPutIndexed(uint index, const Value &value)
     } else {
         // clause 4
         Scope scope(engine());
-        if ((pd = ScopedObject(scope, prototype())->__getPropertyDescriptor__(index, &attrs))) {
+        if ((v = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs))) {
             if (attrs.isAccessor()) {
-                if (!pd->setter())
+                if (!v->as<FunctionObject>())
                     goto reject;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 goto reject;
@@ -793,11 +788,11 @@ void Object::internalPutIndexed(uint index, const Value &value)
     cont:
 
     // Clause 5
-    if (pd && attrs.isAccessor()) {
-        Q_ASSERT(pd->setter() != 0);
+    if (v && attrs.isAccessor()) {
+        Q_ASSERT(v->as<FunctionObject>());
 
         Scope scope(engine());
-        ScopedFunctionObject setter(scope, pd->setter());
+        ScopedFunctionObject setter(scope, *v);
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
