@@ -301,7 +301,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[ObjectProto] = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
 
     arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
-    jsObjects[ArrayProto] = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype());
+    jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(arrayClass, objectPrototype());
 
     InternalClass *argsClass = emptyClass->addMember(id_length(), Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
@@ -540,16 +540,12 @@ ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) cons
 
 Heap::Object *ExecutionEngine::newObject()
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<Object>(this));
-    return object->d();
+    return memoryManager->allocObject<Object>(emptyClass, objectPrototype());
 }
 
 Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Object *prototype)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<Object>(internalClass, prototype));
-    return object->d();
+    return memoryManager->allocObject<Object>(internalClass, prototype);
 }
 
 Heap::String *ExecutionEngine::newString(const QString &s)
@@ -587,7 +583,7 @@ Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(arrayClass, arrayPrototype()));
 
     if (count) {
         if (count < 0x1000)
@@ -600,14 +596,14 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this, list));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(arrayClass, arrayPrototype(), list));
     return object->d();
 }
 
-Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic, Object *prototype)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass, Object *prototype)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(ic, prototype));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(internalClass, prototype));
     return object->d();
 }
 

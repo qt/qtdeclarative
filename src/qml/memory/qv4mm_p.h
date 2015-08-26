@@ -37,6 +37,7 @@
 #include <private/qv4global_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4object_p.h>
 
 //#define DETAILED_MM_STATS
 
@@ -91,6 +92,57 @@ public:
         return static_cast<typename ManagedType::Data *>(o);
     }
 
+    template <typename ManagedType, typename Arg1>
+    typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
+    {
+        Scope scope(engine());
+        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
+        (void)new (t->d()) typename ManagedType::Data(this, arg1);
+        return t->d();
+    }
+
+    template <typename ObjectType>
+    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype)
+    {
+        Scope scope(engine());
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
+        t->d()->internalClass = ic;
+        t->d()->prototype = prototype->d();
+        t->d()->inlineMemberSize = ic->size;
+        t->d()->inlineMemberOffset = size/sizeof(Value);
+        (void)new (t->d()) typename ObjectType::Data();
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1>
+    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1)
+    {
+        Scope scope(engine());
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
+        t->d()->internalClass = ic;
+        t->d()->prototype = prototype->d();
+        t->d()->inlineMemberSize = ic->size;
+        t->d()->inlineMemberOffset = size/sizeof(Value);
+        (void)new (t->d()) typename ObjectType::Data(arg1);
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1, typename Arg2>
+    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2)
+    {
+        Scope scope(engine());
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
+        t->d()->internalClass = ic;
+        t->d()->prototype = prototype->d();
+        t->d()->inlineMemberSize = ic->size;
+        t->d()->inlineMemberOffset = size/sizeof(Value);
+        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        return t->d();
+    }
+
     template <typename ManagedType>
     typename ManagedType::Data *alloc()
     {
@@ -106,15 +158,6 @@ public:
         Scope scope(engine());
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
         (void)new (t->d()) typename ManagedType::Data(arg1);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1>
-    typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
-    {
-        Scope scope(engine());
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data), unmanagedSize));
-        (void)new (t->d()) typename ManagedType::Data(this, arg1);
         return t->d();
     }
 

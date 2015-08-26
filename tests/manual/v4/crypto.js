@@ -1710,3 +1710,4 @@ if (typeof(print) === "undefined")
     print = console.log;
 
 print("done in", new Date - d1)
+gc()

@@ -213,6 +213,13 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     Heap::Object *o = static_cast<Heap::Object *>(that);
 
+    if (o->inlineMemberSize) {
+        Value *v = o->propertyData(0);
+        Q_ASSERT(((char *)v) - ((char *)that) == sizeof(Heap::Object));
+        for (uint i = 0; i < o->inlineMemberSize; ++i)
+            v[i].mark(e);
+    }
+
     if (o->memberData)
         o->memberData->mark(e);
     if (o->arrayData)
@@ -224,7 +231,8 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 void Object::ensureMemberData()
 {
     QV4::InternalClass *ic = internalClass();
-    d()->memberData = MemberData::reallocate(ic->engine, d()->memberData, ic->size);
+    if (ic->size > d()->inlineMemberSize)
+        d()->memberData = MemberData::reallocate(ic->engine, d()->memberData, ic->size - d()->inlineMemberSize);
 }
 
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
@@ -1156,11 +1164,11 @@ void Object::initSparseArray()
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
-Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
-    : Heap::Object(engine->arrayClass, engine->arrayPrototype())
+Heap::ArrayObject::ArrayObject(const QStringList &list)
+    : Heap::Object()
 {
     init();
-    Scope scope(engine);
+    Scope scope(internalClass->engine);
     ScopedObject a(scope, this);
 
     // Converts a QStringList to JS.
@@ -1171,7 +1179,7 @@ Heap::ArrayObject::ArrayObject(ExecutionEngine *engine, const QStringList &list)
     a->arrayReserve(len);
     ScopedValue v(scope);
     for (int ii = 0; ii < len; ++ii)
-        a->arrayPut(ii, (v = engine->newString(list.at(ii))));
+        a->arrayPut(ii, (v = scope.engine->newString(list.at(ii))));
     a->setArrayLengthUnchecked(len);
 }
 

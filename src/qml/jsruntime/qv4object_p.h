@@ -47,12 +47,15 @@ namespace QV4 {
 namespace Heap {
 
 struct Object : Base {
+    inline Object() {}
     inline Object(ExecutionEngine *engine);
     Object(InternalClass *internal, QV4::Object *prototype);
 
-    const Value *propertyData(uint index) const { return memberData->data + index; }
-    Value *propertyData(uint index) { return memberData->data + index; }
+    const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
+    Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
 
+    uint inlineMemberOffset;
+    uint inlineMemberSize;
     InternalClass *internalClass;
     Pointer<Object> prototype;
     Pointer<MemberData> memberData;
@@ -371,13 +374,10 @@ struct ArrayObject : Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject(ExecutionEngine *engine)
-        : Heap::Object(engine->arrayClass, engine->arrayPrototype())
+    ArrayObject()
+        : Heap::Object()
     { init(); }
-    ArrayObject(ExecutionEngine *engine, const QStringList &list);
-    ArrayObject(InternalClass *ic, QV4::Object *prototype)
-        : Heap::Object(ic, prototype)
-    { init(); }
+    ArrayObject(const QStringList &list);
     void init()
     { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
 };
