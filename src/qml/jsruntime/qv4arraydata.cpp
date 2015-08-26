@@ -607,7 +607,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
     return oldSize + n;
 }
 
-Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
+void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
 {
     if (!isAccessor && o->d()->arrayData->type != Heap::ArrayData::Sparse) {
         Heap::SimpleArrayData *d = o->d()->arrayData.cast<Heap::SimpleArrayData>();
@@ -622,7 +622,8 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
                     d->data(i) = Primitive::emptyValue();
                 d->len = index + 1;
             }
-            return reinterpret_cast<Property *>(d->arrayData + d->mappedIndex(index));
+            d->arrayData[d->mappedIndex(index)] = *v;
+            return;
         }
     }
 
@@ -632,7 +633,9 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
     if (n->value == UINT_MAX)
         n->value = SparseArrayData::allocate(o, isAccessor);
     s = o->d()->arrayData.cast<Heap::SparseArrayData>();
-    return reinterpret_cast<Property *>(s->arrayData + n->value);
+    s->arrayData[n->value] = *v;
+    if (isAccessor)
+        s->arrayData[n->value + Object::SetterOffset] = v[Object::SetterOffset];
 }
 
 

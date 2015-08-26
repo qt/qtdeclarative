@@ -205,7 +205,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
 
     static void sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint dataLen);
     static uint append(Object *obj, ArrayObject *otherObj, uint n);
-    static Property *insert(Object *o, uint index, bool isAccessor = false);
+    static void insert(Object *o, uint index, const Value *v, bool isAccessor = false);
 };
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData

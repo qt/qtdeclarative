@@ -440,10 +440,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
         arrayData()->vtable()->reallocate(this, index + 1, false);
     }
     setArrayAttributes(index, attributes);
-    Property *pd = ArrayData::insert(this, index, attributes.isAccessor());
-    pd->value = p->value;
-    if (attributes.isAccessor())
-        pd->set = p->set;
+    ArrayData::insert(this, index, &p->value, attributes.isAccessor());
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }
@@ -455,8 +452,7 @@ inline void Object::arraySet(uint index, const Value &value)
     if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
         initSparseArray();
     }
-    Property *pd = ArrayData::insert(this, index);
-    pd->value = value;
+    ArrayData::insert(this, index, &value);
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }
