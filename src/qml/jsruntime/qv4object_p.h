@@ -52,8 +52,6 @@ struct Object : Base {
 
     const Value *propertyData(uint index) const { return memberData->data + index; }
     Value *propertyData(uint index) { return memberData->data + index; }
-    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(propertyData(index)); }
-    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(propertyData(index)); }
 
     InternalClass *internalClass;
     Pointer<Object> prototype;
@@ -142,8 +140,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
 
-    const Property *propertyAt(uint index) const { return d()->propertyAt(index); }
-    Property *propertyAt(uint index) { return d()->propertyAt(index); }
+    void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
+    void setProperty(uint index, const Property *p);
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
     Heap::Object *prototype() const { return d()->prototype; }

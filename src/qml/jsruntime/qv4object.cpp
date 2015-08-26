@@ -67,6 +67,21 @@ void Object::setInternalClass(InternalClass *ic)
     ensureMemberData();
 }
 
+void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
+{
+    p->value = *propertyData(index);
+    *attrs = internalClass()->propertyData.at(index);
+    if (attrs->isAccessor())
+        p->set = *propertyData(index + SetterOffset);
+}
+
+void Object::setProperty(uint index, const Property *p)
+{
+    *propertyData(index) = p->value;
+    if (internalClass()->propertyData.at(index).isAccessor())
+        *propertyData(index + SetterOffset) = p->set;
+}
+
 bool Object::setPrototype(Object *proto)
 {
     Heap::Object *pp = proto ? proto->d() : 0;
@@ -859,16 +874,16 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     Scope scope(engine);
     name->makeIdentifier(scope.engine);
 
-    PropertyAttributes *cattrs;
     uint memberIndex;
 
     if (isArrayObject() && name->equals(engine->id_length())) {
         Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()));
-        Property *lp = propertyAt(Heap::ArrayObject::LengthPropertyIndex);
-        cattrs = internalClass()->propertyData.constData() + Heap::ArrayObject::LengthPropertyIndex;
-        if (attrs.isEmpty() || p->isSubset(attrs, lp, *cattrs))
+        ScopedProperty lp(scope);
+        PropertyAttributes cattrs;
+        getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
+        if (attrs.isEmpty() || p->isSubset(attrs, lp, cattrs))
             return true;
-        if (!cattrs->isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
+        if (!cattrs.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
             goto reject;
         bool succeeded = true;
         if (attrs.type() == PropertyAttributes::Data) {
@@ -881,8 +896,10 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
             }
             succeeded = setArrayLength(l);
         }
-        if (attrs.hasWritable() && !attrs.isWritable())
-            cattrs->setWritable(false);
+        if (attrs.hasWritable() && !attrs.isWritable()) {
+            cattrs.setWritable(false);
+            InternalClass::changeMember(this, engine->id_length(), cattrs);
+        }
         if (!succeeded)
             goto reject;
         return true;
@@ -890,7 +907,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
 
     // Clause 1
     memberIndex = internalClass()->find(name);
-    cattrs = internalClass()->propertyData.constData() + memberIndex;
 
     if (memberIndex == UINT_MAX) {
         // clause 3
@@ -969,13 +985,14 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     if (attrs.isEmpty())
         return true;
 
-    Property *current = 0;
+    Scope scope(engine);
+    ScopedProperty current(scope);
     PropertyAttributes cattrs;
     if (member) {
-        current = propertyAt(index);
+        getProperty(index, current, &cattrs);
         cattrs = internalClass()->propertyData[index];
     } else if (arrayData()) {
-        current = arrayData()->getProperty(index);
+        arrayData()->getProperty(index, current, &cattrs);
         cattrs = arrayData()->attributes(index);
     }
 
@@ -1009,7 +1026,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
                 initSparseArray();
                 Q_ASSERT(arrayData());
                 setArrayAttributes(index, cattrs);
-                current = arrayData()->getProperty(index);
             }
             current->setGetter(0);
             current->setSetter(0);
@@ -1020,7 +1036,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
             if (!member) {
                 // need to convert the array and the slot
                 setArrayAttributes(index, cattrs);
-                current = arrayData()->getProperty(index);
             }
             current->value = Primitive::undefinedValue();
         }
@@ -1044,8 +1059,10 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     current->merge(cattrs, p, attrs);
     if (member) {
         InternalClass::changeMember(this, member, cattrs);
+        setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);
+        arrayData()->setProperty(index, current);
     }
     return true;
   reject:

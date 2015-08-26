@@ -101,6 +101,8 @@ struct ArrayData : public Base {
     inline ReturnedValue get(uint i) const {
         return vtable()->get(this, i);
     }
+    inline void getProperty(uint index, Property *p, PropertyAttributes *attrs);
+    inline void setProperty(uint index, const Property *p);
     inline Property *getProperty(uint index);
     inline Value *getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
@@ -269,6 +271,25 @@ namespace Heap {
 inline SparseArrayData::~SparseArrayData()
 {
     delete sparse;
+}
+
+void ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
+{
+    Property *pd = getProperty(index);
+    Q_ASSERT(pd);
+    *attrs = attributes(index);
+    p->value = pd->value;
+    if (attrs->isAccessor())
+        p->set = pd->set;
+}
+
+void ArrayData::setProperty(uint index, const Property *p)
+{
+    Property *pd = getProperty(index);
+    Q_ASSERT(pd);
+    pd->value = p->value;
+    if (attributes(index).isAccessor())
+        pd->set = p->set;
 }
 
 inline Property *ArrayData::getProperty(uint index)
