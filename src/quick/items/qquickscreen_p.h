@@ -102,7 +102,7 @@ protected Q_SLOTS:
     void screenChanged(QScreen*);
 
 private:
-    QScreen* m_screen;
+    QPointer<QScreen> m_screen;
     QQuickWindow* m_window;
     QQuickItem* m_attachee;
     Qt::ScreenOrientations m_updateMask;
