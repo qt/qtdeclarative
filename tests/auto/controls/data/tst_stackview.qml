@@ -402,4 +402,30 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_visibility_data() {
+        return [
+            {tag:"default transitions", properties: {}},
+            {tag:"null transitions", properties: {pushEnter: null, pushExit: null, popEnter: null, popExit: null}}
+        ]
+    }
+
+    function test_visibility(data) {
+        var control = stackView.createObject(testCase, data.properties)
+
+        var item1 = component.createObject(control)
+        control.push(item1, AbstractStackView.Immediate)
+        verify(item1.visible)
+
+        var item2 = component.createObject(control)
+        control.push(item2)
+        tryCompare(item1, "visible", false)
+        verify(item2.visible)
+
+        control.pop()
+        verify(item1.visible)
+        tryCompare(item2, "visible", false)
+
+        control.destroy()
+    }
 }

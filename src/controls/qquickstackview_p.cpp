@@ -489,8 +489,8 @@ void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQu
             QQuickAbstractAnimation *anim = animations.at(&animations, i);
             anim->complete();
         }
-        viewItemTransitionFinished(element);
     }
+    viewItemTransitionFinished(element);
 }
 
 void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitionableItem *transitionable)
@@ -500,17 +500,14 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         element->setStatus(QQuickStackView::Active);
     } else if (element->status == QQuickStackView::Deactivating) {
         element->setStatus(QQuickStackView::Inactive);
+        if (element->item)
+            element->item->setVisible(false);
         if (element->removal || element->isPendingRemoval())
             delete element;
     }
 
-    if (transitioner->runningJobs.isEmpty()) {
-        int i = elements.count() - 1;
-        while (--i >= 0)
-            if (QQuickItem *item = elements[i]->item)
-                item->setVisible(false);
+    if (transitioner->runningJobs.isEmpty())
         setBusy(false);
-    }
 }
 
 void QQuickStackViewPrivate::setBusy(bool busy)
