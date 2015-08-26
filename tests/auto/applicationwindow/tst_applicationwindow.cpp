@@ -247,9 +247,7 @@ void tst_applicationwindow::implicitFill()
     QVERIFY(nextItem);
 
     QVERIFY(QMetaObject::invokeMethod(window, "pushNextItem"));
-    QEXPECT_FAIL("", "QTBUG-47318", Continue);
     QCOMPARE(nextItem->width(), 400.0);
-    QEXPECT_FAIL("", "QTBUG-47318", Continue);
     QCOMPARE(nextItem->height(), 400.0);
 }
 
