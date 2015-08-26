@@ -141,9 +141,9 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
-    Property desc;
-    O->getOwnProperty(name, &attrs, &desc);
-    return fromPropertyDescriptor(scope.engine, &desc, attrs);
+    ScopedProperty desc(scope);
+    O->getOwnProperty(name, &attrs, desc);
+    return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
@@ -630,7 +630,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
 
 ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs)
 {
-    if (!desc)
+    if (attrs.isEmpty())
         return Encode::undefined();
 
     Scope scope(engine);
