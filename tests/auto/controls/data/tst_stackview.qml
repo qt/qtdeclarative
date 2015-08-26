@@ -428,4 +428,51 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: transitionView
+        StackView {
+            property int popEnterRuns
+            property int popExitRuns
+            property int pushEnterRuns
+            property int pushExitRuns
+            popEnter: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++popEnterRuns
+            }
+            popExit: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++popExitRuns
+            }
+            pushEnter: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++pushEnterRuns
+            }
+            pushExit: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++pushExitRuns
+            }
+        }
+    }
+
+    function test_transitions() {
+        var control = transitionView.createObject(testCase)
+
+        control.push(component)
+        verify(!control.busy)
+        compare(control.pushEnterRuns, 0)
+        compare(control.pushExitRuns, 0)
+
+        control.push(component)
+        tryCompare(control, "busy", false)
+        compare(control.pushEnterRuns, 1)
+        compare(control.pushExitRuns, 1)
+
+        control.pop()
+        tryCompare(control, "busy", false)
+        compare(control.popEnterRuns, 1)
+        compare(control.popExitRuns, 1)
+
+        control.destroy()
+    }
 }

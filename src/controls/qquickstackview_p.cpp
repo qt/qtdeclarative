@@ -403,7 +403,7 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->prepareTransition(transitioner, QRectF()))
             completeTransition(enter, transitioner->removeDisplacedTransition);
         else
             enter->startTransition(transitioner);
@@ -434,7 +434,7 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
@@ -466,7 +466,7 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
