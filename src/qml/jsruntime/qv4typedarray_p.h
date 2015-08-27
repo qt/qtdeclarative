@@ -69,7 +69,7 @@ struct TypedArray : Object {
         NTypes
     };
 
-    TypedArray(ExecutionEngine *e, Type t);
+    TypedArray(Type t);
 
     const TypedArrayOperations *type;
     Pointer<ArrayBuffer> buffer;
@@ -95,6 +95,8 @@ struct TypedArrayPrototype : Object {
 struct Q_QML_PRIVATE_EXPORT TypedArray : Object
 {
     V4_OBJECT2(TypedArray, Object)
+
+    static Heap::TypedArray *create(QV4::ExecutionEngine *e, Heap::TypedArray::Type t);
 
     uint byteLength() const {
         return d()->byteLength;

@@ -223,6 +223,7 @@ public:
     InternalClass *emptyClass;
 
     InternalClass *arrayClass;
+    InternalClass *stringClass;
 
     InternalClass *functionClass;
     InternalClass *simpleScriptFunctionClass;
@@ -369,6 +370,7 @@ public:
     Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
     Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
+    Heap::ArrayBuffer *newArrayBuffer(size_t length);
 
     Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);

@@ -340,32 +340,18 @@ inline Object::Object(ExecutionEngine *engine)
 }
 
 struct BooleanObject : Object {
-    BooleanObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype),
-          b(false)
-    {
-    }
-
-    BooleanObject(ExecutionEngine *engine, bool b)
-        : Object(engine->emptyClass, engine->booleanPrototype()),
-          b(b)
-    {
-    }
+    BooleanObject() {}
+    BooleanObject(bool b)
+        : b(b)
+    {}
     bool b;
 };
 
 struct NumberObject : Object {
-    NumberObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype),
-          value(0)
-    {
-    }
-
-    NumberObject(ExecutionEngine *engine, double val)
-        : Object(engine->emptyClass, engine->numberPrototype()),
-          value(val)
-    {
-    }
+    NumberObject() {}
+    NumberObject(double val)
+        : value(val)
+    {}
     double value;
 };
 
@@ -375,7 +361,6 @@ struct ArrayObject : Object {
     };
 
     ArrayObject()
-        : Heap::Object()
     { init(); }
     ArrayObject(const QStringList &list);
     void init()

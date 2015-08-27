@@ -67,25 +67,17 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
-    : Heap::Object(ic, prototype)
+Heap::StringObject::StringObject()
 {
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
-    string = ic->engine->newString();
-
-    Scope scope(ic->engine);
-    ScopedObject s(scope, this);
-    s->defineReadonlyProperty(ic->engine->id_length(), Primitive::fromInt32(0));
+    string = internalClass->engine->id_empty()->d();
+    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
 }
 
-Heap::StringObject::StringObject(ExecutionEngine *engine, const QV4::String *str)
-    : Heap::Object(engine->emptyClass, engine->stringPrototype())
+Heap::StringObject::StringObject(const QV4::String *str)
 {
     string = str->d();
-
-    Scope scope(engine);
-    ScopedObject s(scope, this);
-    s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(length()));
+    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
 }
 
 Heap::String *Heap::StringObject::getIndex(uint index) const

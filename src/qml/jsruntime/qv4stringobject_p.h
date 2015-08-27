@@ -44,8 +44,12 @@ namespace QV4 {
 namespace Heap {
 
 struct StringObject : Object {
-    StringObject(InternalClass *ic, QV4::Object *prototype);
-    StringObject(ExecutionEngine *engine, const QV4::String *string);
+    enum {
+        LengthPropertyIndex = 0
+    };
+
+    StringObject();
+    StringObject(const QV4::String *string);
     String *string;
 
     Heap::String *getIndex(uint index) const;

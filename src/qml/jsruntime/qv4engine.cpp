@@ -312,10 +312,12 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Q_ASSERT(globalObject->d()->vtable());
     initRootContext();
 
-    jsObjects[StringProto] = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype());
-    jsObjects[NumberProto] = memoryManager->alloc<NumberPrototype>(emptyClass, objectPrototype());
-    jsObjects[BooleanProto] = memoryManager->alloc<BooleanPrototype>(emptyClass, objectPrototype());
-    jsObjects[DateProto] = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype());
+    stringClass = emptyClass->addMember(id_length(), Attr_ReadOnly);
+    Q_ASSERT(stringClass->find(id_length()) == Heap::StringObject::LengthPropertyIndex);
+    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(stringClass, objectPrototype());
+    jsObjects[NumberProto] = memoryManager->allocObject<NumberPrototype>(emptyClass, objectPrototype());
+    jsObjects[BooleanProto] = memoryManager->allocObject<BooleanPrototype>(emptyClass, objectPrototype());
+    jsObjects[DateProto] = memoryManager->allocObject<DatePrototype>(emptyClass, objectPrototype());
 
     uint index;
     InternalClass *functionProtoClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable, &index);
@@ -561,23 +563,17 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 
 Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
-    Scope scope(this);
-    Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, string));
-    return object->d();
+    return memoryManager->allocObject<StringObject>(stringClass, stringPrototype(), string);
 }
 
 Heap::Object *ExecutionEngine::newNumberObject(double value)
 {
-    Scope scope(this);
-    Scoped<NumberObject> object(scope, memoryManager->alloc<NumberObject>(this, value));
-    return object->d();
+    return memoryManager->allocObject<NumberObject>(emptyClass, numberPrototype(), value);
 }
 
 Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, b));
-    return object->d();
+    return memoryManager->allocObject<BooleanObject>(emptyClass, booleanPrototype(), b);
 }
 
 Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
@@ -609,23 +605,24 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass,
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
-    Scope scope(this);
-    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array));
-    return object->d();
+    return memoryManager->allocObject<ArrayBuffer>(emptyClass, arrayBufferPrototype(), array);
+}
+
+Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(size_t length)
+{
+    return memoryManager->allocObject<ArrayBuffer>(emptyClass, arrayBufferPrototype(), length);
 }
 
 
 Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
-    Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, value));
-    return object->d();
+    return memoryManager->allocObject<DateObject>(emptyClass, datePrototype(), value);
 }
 
 Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, dt));
+    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(emptyClass, datePrototype(), dt));
     return object->d();
 }
 
