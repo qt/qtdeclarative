@@ -332,7 +332,20 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     protoClass = emptyClass->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
-    jsObjects[RegExpProto] = memoryManager->alloc<RegExpPrototype>(this);
+    Scope scope(this);
+    ScopedString str(scope);
+    regExpObjectClass = emptyClass->addMember(id_lastIndex(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    Q_ASSERT(index == RegExpObject::Index_LastIndex);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("source"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Source);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("global"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Global);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("ignoreCase"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_IgnoreCase);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("multiline"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Multiline);
+
+    jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(regExpObjectClass, objectPrototype());
     regExpExecArrayClass = arrayClass->addMember(id_index(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input(), Attr_Data, &index);
@@ -349,7 +362,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[VariantProto] = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype());
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
 
-    Scope scope(this);
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype()));
 
     ExecutionContext *global = rootContext();
@@ -431,7 +443,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
-    ScopedString str(scope);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
@@ -643,16 +654,12 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
-    Scope scope(this);
-    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re, global));
-    return object->d();
+    return memoryManager->allocObject<RegExpObject>(regExpObjectClass, regExpPrototype(), re, global);
 }
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
-    Scope scope(this);
-    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re));
-    return object->d();
+    return memoryManager->allocObject<RegExpObject>(regExpObjectClass, regExpPrototype(), re);
 }
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)

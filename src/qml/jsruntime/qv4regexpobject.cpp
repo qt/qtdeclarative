@@ -62,35 +62,30 @@ Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyn
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(RegExpObject);
-DEFINE_OBJECT_VTABLE(RegExpPrototype);
 
-Heap::RegExpObject::RegExpObject(InternalClass *ic, QV4::Object *prototype)
-    : Heap::Object(ic, prototype)
+Heap::RegExpObject::RegExpObject()
 {
-    Scope scope(ic->engine);
+    Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value = QV4::RegExp::create(ic->engine, QString(), false, false);
+    o->d()->value = QV4::RegExp::create(scope.engine, QString(), false, false);
     o->d()->global = false;
-    o->init(ic->engine);
+    o->initProperties();
 }
 
-Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, QV4::RegExp *value, bool global)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype())
-    , value(value->d())
+Heap::RegExpObject::RegExpObject(QV4::RegExp *value, bool global)
+    : value(value->d())
     , global(global)
 {
-    Scope scope(engine);
+    Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->init(engine);
+    o->initProperties();
 }
 
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
-Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re)
-    : Heap::Object(engine->emptyClass, engine->regExpPrototype())
+Heap::RegExpObject::RegExpObject(const QRegExp &re)
 {
-    value = 0;
     global = false;
 
     // Convert the pattern to a ECMAScript pattern.
@@ -130,26 +125,21 @@ Heap::RegExpObject::RegExpObject(QV4::ExecutionEngine *engine, const QRegExp &re
         pattern = ecmaPattern;
     }
 
-    Scope scope(engine);
+    Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value = QV4::RegExp::create(engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
+    o->d()->value = QV4::RegExp::create(scope.engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false);
 
-    o->init(engine);
+    o->initProperties();
 }
 
-void RegExpObject::init(ExecutionEngine *engine)
+void RegExpObject::initProperties()
 {
-    Scope scope(engine);
-    ScopedObject protectThis(scope, this);
+    *propertyData(Index_LastIndex) = Primitive::fromInt32(0);
 
-    ScopedString lastIndex(scope, engine->newIdentifier(QStringLiteral("lastIndex")));
-    ScopedValue v(scope, Primitive::fromInt32(0));
-    insertMember(lastIndex, v, Attr_NotEnumerable|Attr_NotConfigurable);
-    if (!this->value())
-        return;
+    Q_ASSERT(value());
 
-    QString p = this->value()->pattern;
+    QString p = value()->pattern;
     if (p.isEmpty()) {
         p = QStringLiteral("(?:)");
     } else {
@@ -157,10 +147,10 @@ void RegExpObject::init(ExecutionEngine *engine)
         p.replace('/', QLatin1String("\\/"));
     }
 
-    defineReadonlyProperty(QStringLiteral("source"), (v = engine->newString(p)));
-    defineReadonlyProperty(QStringLiteral("global"), Primitive::fromBoolean(global()));
-    defineReadonlyProperty(QStringLiteral("ignoreCase"), Primitive::fromBoolean(this->value()->ignoreCase));
-    defineReadonlyProperty(QStringLiteral("multiline"), Primitive::fromBoolean(this->value()->multiLine));
+    *propertyData(Index_Source) = engine()->newString(p);
+    *propertyData(Index_Global) = Primitive::fromBoolean(global());
+    *propertyData(Index_IgnoreCase) = Primitive::fromBoolean(value()->ignoreCase);
+    *propertyData(Index_Multiline) = Primitive::fromBoolean(value()->multiLine);
 }
 
 

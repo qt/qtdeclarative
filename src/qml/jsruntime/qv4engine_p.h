@@ -230,6 +230,7 @@ public:
     InternalClass *protoClass;
 
     InternalClass *regExpExecArrayClass;
+    InternalClass *regExpObjectClass;
 
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;

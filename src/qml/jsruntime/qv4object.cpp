@@ -215,7 +215,6 @@ void Object::markObjects(Heap::Base *that, ExecutionEngine *e)
 
     if (o->inlineMemberSize) {
         Value *v = o->propertyData(0);
-        Q_ASSERT(((char *)v) - ((char *)that) == sizeof(Heap::Object));
         for (uint i = 0; i < o->inlineMemberSize; ++i)
             v[i].mark(e);
     }
