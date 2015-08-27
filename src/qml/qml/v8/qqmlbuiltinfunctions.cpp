@@ -900,7 +900,7 @@ ReturnedValue QtObject::method_btoa(CallContext *ctx)
 
 /*!
 \qmlmethod string Qt::atob(data)
-ASCII to binary - this function returns a base64 decoding of \c data.
+ASCII to binary - this function decodes the base64 encoded \a data string and returns it.
 */
 ReturnedValue QtObject::method_atob(CallContext *ctx)
 {
