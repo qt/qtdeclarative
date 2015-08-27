@@ -102,6 +102,19 @@ public:
     }
 
     template <typename ObjectType>
+    typename ObjectType::Data *allocObject(InternalClass *ic)
+    {
+        Scope scope(engine());
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
+        t->d()->internalClass = ic;
+        t->d()->inlineMemberSize = ic->size;
+        t->d()->inlineMemberOffset = size/sizeof(Value);
+        (void)new (t->d()) typename ObjectType::Data();
+        return t->d();
+    }
+
+    template <typename ObjectType>
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype)
     {
         Scope scope(engine());

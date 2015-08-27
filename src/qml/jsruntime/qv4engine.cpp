@@ -298,7 +298,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
-    jsObjects[ObjectProto] = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
+    jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(emptyClass);
 
     arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
     jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(arrayClass, objectPrototype());
@@ -359,10 +359,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[TypeErrorProto] = memoryManager->alloc<TypeErrorPrototype>(emptyClass, errorPrototype());
     jsObjects[URIErrorProto] = memoryManager->alloc<URIErrorPrototype>(emptyClass, errorPrototype());
 
-    jsObjects[VariantProto] = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype());
+    jsObjects[VariantProto] = memoryManager->allocObject<VariantPrototype>(emptyClass, objectPrototype());
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
 
-    jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype()));
+    jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(arrayClass, arrayPrototype()));
 
     ExecutionContext *global = rootContext();
     jsObjects[Object_Ctor] = memoryManager->alloc<ObjectCtor>(global);
@@ -723,9 +723,7 @@ Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<VariantObject>(this, v));
-    return o->d();
+    return memoryManager->allocObject<VariantObject>(emptyClass, variantPrototype(), v);
 }
 
 Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
