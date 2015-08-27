@@ -55,10 +55,10 @@ struct ErrorObject : Object {
         URIError
     };
 
-    ErrorObject(InternalClass *ic, QV4::Object *prototype);
-    ErrorObject(InternalClass *ic, QV4::Object *prototype, const Value &message, ErrorType t = Error);
-    ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, ErrorType t = Error);
-    ErrorObject(InternalClass *ic, QV4::Object *prototype, const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
+    ErrorObject();
+    ErrorObject(const Value &message, ErrorType t = Error);
+    ErrorObject(const QString &message, ErrorType t = Error);
+    ErrorObject(const QString &message, const QString &fileName, int line, int column, ErrorType t = Error);
 
     ErrorType errorType;
     StackTrace stackTrace;
@@ -66,32 +66,32 @@ struct ErrorObject : Object {
 };
 
 struct EvalErrorObject : ErrorObject {
-    EvalErrorObject(ExecutionEngine *engine, const Value &message);
+    EvalErrorObject(const Value &message);
 };
 
 struct RangeErrorObject : ErrorObject {
-    RangeErrorObject(ExecutionEngine *engine, const Value &message);
-    RangeErrorObject(ExecutionEngine *engine, const QString &msg);
+    RangeErrorObject(const Value &message);
+    RangeErrorObject(const QString &msg);
 };
 
 struct ReferenceErrorObject : ErrorObject {
-    ReferenceErrorObject(ExecutionEngine *engine, const Value &message);
-    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg);
-    ReferenceErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
+    ReferenceErrorObject(const Value &message);
+    ReferenceErrorObject(const QString &msg);
+    ReferenceErrorObject(const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct SyntaxErrorObject : ErrorObject {
-    SyntaxErrorObject(ExecutionEngine *engine, const Value &message);
-    SyntaxErrorObject(ExecutionEngine *engine, const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
+    SyntaxErrorObject(const Value &message);
+    SyntaxErrorObject(const QString &msg, const QString &fileName, int lineNumber, int columnNumber);
 };
 
 struct TypeErrorObject : ErrorObject {
-    TypeErrorObject(ExecutionEngine *engine, const Value &message);
-    TypeErrorObject(ExecutionEngine *engine, const QString &msg);
+    TypeErrorObject(const Value &message);
+    TypeErrorObject(const QString &msg);
 };
 
 struct URIErrorObject : ErrorObject {
-    URIErrorObject(ExecutionEngine *engine, const Value &message);
+    URIErrorObject(const Value &message);
 };
 
 struct ErrorCtor : Heap::FunctionObject {
@@ -128,6 +128,14 @@ struct URIErrorCtor : ErrorCtor {
 struct ErrorObject: Object {
     enum {
         IsErrorObject = true
+    };
+
+    enum {
+        Index_Stack = 0, // Accessor Property
+        Index_Message = 2,
+        Index_Name = 3,
+        Index_FileName = 4,
+        Index_LineNumber = 5
     };
 
     V4_OBJECT2(ErrorObject, Object)

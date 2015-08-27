@@ -169,6 +169,7 @@ public:
         DataView_Ctor,
 
         Eval_Function,
+        GetStack_Function,
         ThrowerObject,
         NJSObjects
     };
@@ -235,7 +236,10 @@ public:
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
 
+    InternalClass *errorClass;
+
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
+    FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
     Property *argumentsAccessors;
