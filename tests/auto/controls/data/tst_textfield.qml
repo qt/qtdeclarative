@@ -67,6 +67,9 @@ TestCase {
     }
 
     function test_pressAndHold() {
+        if (Qt.platform === "osx")
+            skip("QTBUG-47963");
+
         var control = textField.createObject(testCase)
         control.width = 200
         pressAndHoldSpy.target = control
