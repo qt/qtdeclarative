@@ -85,7 +85,7 @@ struct TypedArrayCtor : FunctionObject {
 };
 
 struct TypedArrayPrototype : Object {
-    inline TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t);
+    inline TypedArrayPrototype(TypedArray::Type t);
     TypedArray::Type type;
 };
 
@@ -144,9 +144,8 @@ struct TypedArrayPrototype : Object
 };
 
 inline
-Heap::TypedArrayPrototype::TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t)
-    : Heap::Object(e)
-    , type(t)
+Heap::TypedArrayPrototype::TypedArrayPrototype(TypedArray::Type t)
+    : type(t)
 {
 }
 

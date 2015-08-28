@@ -125,7 +125,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlLocaleData : Object {
-    inline QQmlLocaleData(ExecutionEngine *engine);
+    inline QQmlLocaleData() {}
     QLocale locale;
 };
 
@@ -174,11 +174,6 @@ struct QQmlLocaleData : public QV4::Object
     static QV4::ReturnedValue method_get_amText(QV4::CallContext *ctx);
     static QV4::ReturnedValue method_get_pmText(QV4::CallContext *ctx);
 };
-
-Heap::QQmlLocaleData::QQmlLocaleData(ExecutionEngine *engine)
-    : Heap::Object(engine)
-{
-}
 
 }
 

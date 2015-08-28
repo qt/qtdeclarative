@@ -55,7 +55,7 @@ namespace Heap {
 
 struct QQmlValueTypeReference : QQmlValueTypeWrapper
 {
-    QQmlValueTypeReference(ExecutionEngine *engine);
+    QQmlValueTypeReference() {}
     QPointer<QObject> object;
     int property;
 };
@@ -76,11 +76,6 @@ struct QQmlValueTypeReference : public QQmlValueTypeWrapper
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeReference);
 
 using namespace QV4;
-
-Heap::QQmlValueTypeWrapper::QQmlValueTypeWrapper(ExecutionEngine *engine)
-    : Heap::Object(engine)
-{
-}
 
 Heap::QQmlValueTypeWrapper::~QQmlValueTypeWrapper()
 {
@@ -106,11 +101,6 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
     return QVariant(valueType->typeId, gadgetPtr);
 }
 
-
-Heap::QQmlValueTypeReference::QQmlValueTypeReference(ExecutionEngine *engine)
-    : Heap::QQmlValueTypeWrapper(engine)
-{
-}
 
 bool QQmlValueTypeReference::readReferenceValue() const
 {
@@ -178,7 +168,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->alloc<QQmlValueTypeReference>(engine));
+    Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->allocObject<QQmlValueTypeReference>());
     ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
     r->setPrototype(proto);
     r->d()->object = object; r->d()->property = property;
@@ -193,7 +183,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->alloc<QQmlValueTypeWrapper>(engine));
+    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocObject<QQmlValueTypeWrapper>());
     ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
     r->setPrototype(proto);
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);

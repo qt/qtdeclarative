@@ -1059,7 +1059,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlIncubatorObject : Object {
-    QmlIncubatorObject(QV4::ExecutionEngine *engine, QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
+    QmlIncubatorObject(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
     QScopedPointer<QQmlComponentIncubator> incubator;
     QPointer<QObject> parent;
     QV4::Value valuemap;
@@ -1374,7 +1374,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QQmlComponentExtension *e = componentExtension(args->v4engine());
 
-    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->alloc<QV4::QmlIncubatorObject>(args->v4engine(), mode));
+    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->allocObject<QV4::QmlIncubatorObject>(mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
     r->setPrototype(p);
 
@@ -1477,9 +1477,8 @@ QQmlComponentExtension::~QQmlComponentExtension()
 {
 }
 
-QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(ExecutionEngine *engine, QQmlIncubator::IncubationMode m)
-    : QV4::Heap::Object(engine)
-    , valuemap(QV4::Primitive::undefinedValue())
+QV4::Heap::QmlIncubatorObject::QmlIncubatorObject(QQmlIncubator::IncubationMode m)
+    : valuemap(QV4::Primitive::undefinedValue())
     , statusChanged(QV4::Primitive::undefinedValue())
 {
     incubator.reset(new QQmlComponentIncubator(this, m));

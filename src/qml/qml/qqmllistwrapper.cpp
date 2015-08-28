@@ -45,10 +45,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-Heap::QmlListWrapper::QmlListWrapper(ExecutionEngine *engine)
-    : Heap::Object(engine)
+Heap::QmlListWrapper::QmlListWrapper()
 {
-    QV4::Scope scope(engine);
+    QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
 }
@@ -64,7 +63,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
 
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->alloc<QmlListWrapper>(engine));
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
     void *args[] = { &r->d()->property, 0 };
@@ -76,7 +75,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProp
 {
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->alloc<QmlListWrapper>(engine));
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = prop.object;
     r->d()->property = prop;
     r->d()->propertyType = propType;

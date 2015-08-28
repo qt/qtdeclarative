@@ -51,16 +51,6 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Object);
 
-Heap::Object::Object(InternalClass *internalClass, QV4::Object *prototype)
-    : prototype(prototype ? prototype->d() : 0)
-{
-    if (internalClass) {
-        Scope scope(internalClass->engine);
-        ScopedObject o(scope, this);
-        o->setInternalClass(internalClass);
-    }
-}
-
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;

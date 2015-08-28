@@ -66,7 +66,7 @@ struct QmlContextWrapper;
 namespace Heap {
 
 struct QmlContextWrapper : Object {
-    QmlContextWrapper(ExecutionEngine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
     ~QmlContextWrapper();
     bool readOnly;
     bool ownsContext;

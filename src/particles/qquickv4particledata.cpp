@@ -266,9 +266,8 @@ QT_BEGIN_NAMESPACE
 struct QV4ParticleData : public QV4::Object
 {
     struct Data : QV4::Object::Data {
-        Data(QV4::ExecutionEngine *engine, QQuickParticleData *datum)
-            : QV4::Heap::Object(engine)
-            , datum(datum)
+        Data(QQuickParticleData *datum)
+            : datum(datum)
         {
         }
         QQuickParticleData* datum;//TODO: Guard needed?
@@ -506,7 +505,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4ParticleDataDeletable *d = particleV4Data(scope.engine);
-    QV4::ScopedObject o(scope, v4->memoryManager->alloc<QV4ParticleData>(v4, datum));
+    QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QV4ParticleData>(datum));
     QV4::ScopedObject p(scope, d->proto.value());
     o->setPrototype(p);
     m_v4Value = o;

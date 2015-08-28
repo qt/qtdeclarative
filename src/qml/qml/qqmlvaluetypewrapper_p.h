@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
-    QQmlValueTypeWrapper(ExecutionEngine *engine);
+    QQmlValueTypeWrapper() {}
     ~QQmlValueTypeWrapper();
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     mutable void *gadgetPtr;

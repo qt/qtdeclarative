@@ -428,7 +428,7 @@ public:
         }
         QV4::Scope scope(v4);
         QV4::ScopedObject proto(scope, type->prototype.value());
-        QV4::ScopedObject o(scope, proto->engine()->memoryManager->alloc<QQmlDelegateModelItemObject>(proto->engine(), this));
+        QV4::ScopedObject o(scope, proto->engine()->memoryManager->allocObject<QQmlDelegateModelItemObject>(this));
         o->setPrototype(proto);
         ++scriptRef;
         return o.asReturnedValue();
@@ -606,7 +606,7 @@ public:
     {
         QQmlAdaptorModelEngineData *data = engineData(v4);
         QV4::Scope scope(v4);
-        QV4::ScopedObject o(scope, v4->memoryManager->alloc<QQmlDelegateModelItemObject>(v4, this));
+        QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QQmlDelegateModelItemObject>(this));
         QV4::ScopedObject p(scope, data->listItemProto.value());
         o->setPrototype(p);
         ++scriptRef;

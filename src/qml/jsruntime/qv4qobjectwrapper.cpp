@@ -228,9 +228,8 @@ static QV4::ReturnedValue LoadProperty(QV4::ExecutionEngine *v4, QObject *object
     }
 }
 
-Heap::QObjectWrapper::QObjectWrapper(ExecutionEngine *engine, QObject *object)
-    : Heap::Object(engine)
-    , object(object)
+Heap::QObjectWrapper::QObjectWrapper(QObject *object)
+    : object(object)
 {
 }
 
@@ -336,7 +335,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
             ScopedContext global(scope, scope.engine->qmlContext());
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
         } else if (property->isSignalHandler()) {
-            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, scope.engine->memoryManager->alloc<QV4::QmlSignalHandler>(engine, object, property->coreIndex));
+            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, scope.engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex));
 
             QV4::ScopedString connect(scope, engine->newIdentifier(QStringLiteral("connect")));
             QV4::ScopedString disconnect(scope, engine->newIdentifier(QStringLiteral("disconnect")));
@@ -684,7 +683,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
     if (engine->jsEngine())
         QQmlData::ensurePropertyCache(engine->jsEngine(), object);
-    return (engine->memoryManager->alloc<QV4::QObjectWrapper>(engine, object))->asReturnedValue();
+    return (engine->memoryManager->allocObject<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *hasProperty)
@@ -1884,9 +1883,8 @@ void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
 
-Heap::QmlSignalHandler::QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *object, int signalIndex)
-    : Heap::Object(engine)
-    , object(object)
+Heap::QmlSignalHandler::QmlSignalHandler(QObject *object, int signalIndex)
+    : object(object)
     , signalIndex(signalIndex)
 {
 }

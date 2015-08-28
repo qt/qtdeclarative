@@ -66,7 +66,7 @@ struct QmlTypeWrapper : Object {
         ExcludeEnums
     };
 
-    QmlTypeWrapper(QV4::ExecutionEngine *engine);
+    QmlTypeWrapper();
     ~QmlTypeWrapper();
     TypeNameMode mode;
     QPointer<QObject> object;

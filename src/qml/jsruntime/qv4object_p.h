@@ -49,8 +49,6 @@ namespace Heap {
 
 struct Object : Base {
     inline Object() {}
-    inline Object(ExecutionEngine *engine);
-    Object(InternalClass *internal, QV4::Object *prototype);
 
     const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
     Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
@@ -342,12 +340,6 @@ private:
 };
 
 namespace Heap {
-
-inline Object::Object(ExecutionEngine *engine)
-    : internalClass(engine->emptyClass),
-      prototype(static_cast<Object *>(engine->objectPrototype()->m()))
-{
-}
 
 struct BooleanObject : Object {
     BooleanObject() {}

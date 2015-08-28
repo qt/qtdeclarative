@@ -59,7 +59,7 @@ namespace QV4 {
 namespace Heap {
 
 struct CompilationUnitHolder : Object {
-    inline CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit);
+    inline CompilationUnitHolder(CompiledData::CompilationUnit *unit);
 
     QQmlRefPointer<CompiledData::CompilationUnit> unit;
 };
@@ -77,9 +77,8 @@ struct CompilationUnitHolder : public Object
 };
 
 inline
-Heap::CompilationUnitHolder::CompilationUnitHolder(ExecutionEngine *engine, CompiledData::CompilationUnit *unit)
-    : Heap::Object(engine)
-    , unit(unit)
+Heap::CompilationUnitHolder::CompilationUnitHolder(CompiledData::CompilationUnit *unit)
+    : unit(unit)
 {
 }
 
@@ -143,7 +142,7 @@ Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUn
     vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
     if (vmFunction) {
         Scope valueScope(v4);
-        ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
+        ScopedObject holder(valueScope, v4->memoryManager->allocObject<CompilationUnitHolder>(compilationUnit));
         compilationUnitHolder.set(v4, holder);
     }
 }
@@ -214,7 +213,7 @@ void Script::parse()
             isel->setUseFastLookups(false);
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = isel->compile();
         vmFunction = compilationUnit->linkToEngine(v4);
-        ScopedObject holder(valueScope, v4->memoryManager->alloc<CompilationUnitHolder>(v4, compilationUnit));
+        ScopedObject holder(valueScope, v4->memoryManager->allocObject<CompilationUnitHolder>(compilationUnit));
         compilationUnitHolder.set(v4, holder);
     }
 

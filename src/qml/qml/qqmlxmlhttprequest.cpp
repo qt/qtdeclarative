@@ -170,7 +170,7 @@ public:
 namespace Heap {
 
 struct NamedNodeMap : Object {
-    NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list);
+    NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list);
     ~NamedNodeMap() {
         if (d)
             d->release();
@@ -180,7 +180,7 @@ struct NamedNodeMap : Object {
 };
 
 struct NodeList : Object {
-    NodeList(ExecutionEngine *engine, NodeImpl *data);
+    NodeList(NodeImpl *data);
     ~NodeList() {
         if (d)
             d->release();
@@ -189,11 +189,11 @@ struct NodeList : Object {
 };
 
 struct NodePrototype : Object {
-    NodePrototype(ExecutionEngine *engine);
+    NodePrototype();
 };
 
 struct Node : Object {
-    Node(ExecutionEngine *engine, NodeImpl *data);
+    Node(NodeImpl *data);
     ~Node() {
         if (d)
             d->release();
@@ -217,9 +217,8 @@ public:
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
-Heap::NamedNodeMap::NamedNodeMap(ExecutionEngine *engine, NodeImpl *data, const QList<NodeImpl *> &list)
-    : Heap::Object(engine)
-    , list(list)
+Heap::NamedNodeMap::NamedNodeMap(NodeImpl *data, const QList<NodeImpl *> &list)
+    : list(list)
     , d(data)
 {
     if (d)
@@ -243,9 +242,8 @@ public:
 
 };
 
-Heap::NodeList::NodeList(ExecutionEngine *engine, NodeImpl *data)
-    : Heap::Object(engine)
-    , d(data)
+Heap::NodeList::NodeList(NodeImpl *data)
+    : d(data)
 {
     if (d)
         d->addref();
@@ -285,10 +283,9 @@ public:
 
 };
 
-Heap::NodePrototype::NodePrototype(ExecutionEngine *engine)
-    : Heap::Object(engine)
+Heap::NodePrototype::NodePrototype()
 {
-    Scope scope(engine);
+    Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
     o->defineAccessorProperty(QStringLiteral("nodeName"), QV4::NodePrototype::method_get_nodeName, 0);
@@ -323,9 +320,8 @@ private:
     Node(const Node &o);
 };
 
-Heap::Node::Node(ExecutionEngine *engine, NodeImpl *data)
-    : Heap::Object(engine)
-    , d(data)
+Heap::Node::Node(NodeImpl *data)
+    : d(data)
 {
     if (d)
         d->addref();
@@ -584,7 +580,7 @@ ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
     Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4);
     if (d->nodePrototype.isUndefined()) {
-        ScopedObject p(scope, v4->memoryManager->alloc<NodePrototype>(v4));
+        ScopedObject p(scope, v4->memoryManager->allocObject<NodePrototype>());
         d->nodePrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -595,7 +591,7 @@ ReturnedValue Node::create(ExecutionEngine *v4, NodeImpl *data)
 {
     Scope scope(v4);
 
-    Scoped<Node> instance(scope, v4->memoryManager->alloc<Node>(v4, data));
+    Scoped<Node> instance(scope, v4->memoryManager->allocObject<Node>(data));
     ScopedObject p(scope);
 
     switch (data->type) {
@@ -863,7 +859,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
         return Encode::null();
     }
 
-    ScopedObject instance(scope, v4->memoryManager->alloc<Node>(v4, document));
+    ScopedObject instance(scope, v4->memoryManager->allocObject<Node>(document));
     ScopedObject p(scope);
     instance->setPrototype((p = Document::prototype(v4)));
     return instance.asReturnedValue();
@@ -916,7 +912,7 @@ ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasPropert
 
 ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QList<NodeImpl *> &list)
 {
-    return (v4->memoryManager->alloc<NamedNodeMap>(v4, data, list))->asReturnedValue();
+    return (v4->memoryManager->allocObject<NamedNodeMap>(data, list))->asReturnedValue();
 }
 
 ReturnedValue NodeList::getIndexed(const Managed *m, uint index, bool *hasProperty)
@@ -950,7 +946,7 @@ ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
 
 ReturnedValue NodeList::create(ExecutionEngine *v4, NodeImpl *data)
 {
-    return (v4->memoryManager->alloc<NodeList>(v4, data))->asReturnedValue();
+    return (v4->memoryManager->allocObject<NodeList>(data))->asReturnedValue();
 }
 
 ReturnedValue Document::method_documentElement(CallContext *ctx)
@@ -1588,7 +1584,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlXMLHttpRequestWrapper : Object {
-    QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request);
+    QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request);
     ~QQmlXMLHttpRequestWrapper() {
         delete request;
     }
@@ -1609,9 +1605,8 @@ struct QQmlXMLHttpRequestWrapper : public Object
     V4_NEEDS_DESTROY
 };
 
-Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(ExecutionEngine *engine, QQmlXMLHttpRequest *request)
-    : Heap::Object(engine)
-    , request(request)
+Heap::QQmlXMLHttpRequestWrapper::QQmlXMLHttpRequestWrapper(QQmlXMLHttpRequest *request)
+    : request(request)
 {
 }
 
@@ -1632,7 +1627,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
             return scope.engine->throwTypeError();
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager());
-        Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->alloc<QQmlXMLHttpRequestWrapper>(scope.engine, r));
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
         return w.asReturnedValue();

@@ -97,7 +97,10 @@ namespace QV4 {
 namespace Heap {
     struct QQmlSqlDatabaseWrapper : public Object {
         enum Type { Database, Query, Rows };
-        QQmlSqlDatabaseWrapper(ExecutionEngine *e);
+        QQmlSqlDatabaseWrapper()
+        {
+            type = Database;
+        }
 
         Type type;
         QSqlDatabase database;
@@ -120,7 +123,7 @@ public:
 
     static Heap::QQmlSqlDatabaseWrapper *create(QV4::ExecutionEngine *engine)
     {
-        return engine->memoryManager->alloc<QQmlSqlDatabaseWrapper>(engine);
+        return engine->memoryManager->allocObject<QQmlSqlDatabaseWrapper>();
     }
 
     ~QQmlSqlDatabaseWrapper() {
@@ -135,11 +138,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QV4::QQmlSqlDatabaseWrapper);
 
-QV4::Heap::QQmlSqlDatabaseWrapper::QQmlSqlDatabaseWrapper(ExecutionEngine *e)
-    : QV4::Heap::Object(e)
-{
-    type = Database;
-}
+
 
 static ReturnedValue qmlsqldatabase_version(CallContext *ctx)
 {

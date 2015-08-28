@@ -2276,7 +2276,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
             result = QV4::QObjectWrapper::wrap(scope.engine, object);
         } else {
             QObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
-            result = scope.engine->memoryManager->alloc<QV4::ModelObject>(scope.engine, object, const_cast<QQmlListModel *>(this), index);
+            result = scope.engine->memoryManager->allocObject<QV4::ModelObject>(object, const_cast<QQmlListModel *>(this), index);
         }
     }
 

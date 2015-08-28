@@ -428,7 +428,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
-        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocObject<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
 
@@ -742,7 +742,7 @@ Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(this, o));
+    ScopedObject obj(scope, memoryManager->allocObject<ForEachIteratorObject>(o));
     return obj->d();
 }
 

@@ -70,7 +70,7 @@ struct QObjectSlotDispatcher;
 namespace Heap {
 
 struct QObjectWrapper : Object {
-    QObjectWrapper(QV4::ExecutionEngine *engine, QObject *object);
+    QObjectWrapper(QObject *object);
     QPointer<QObject> object;
 };
 
@@ -86,7 +86,7 @@ struct QObjectMethod : FunctionObject {
 };
 
 struct QmlSignalHandler : Object {
-    QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *object, int signalIndex);
+    QmlSignalHandler(QObject *object, int signalIndex);
     QPointer<QObject> object;
     int signalIndex;
 };
