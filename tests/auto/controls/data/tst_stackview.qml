@@ -475,4 +475,52 @@ TestCase {
 
         control.destroy()
     }
+
+    TestItem {
+        id: indestructibleItem
+    }
+
+    Component {
+        id: destructibleComponent
+        TestItem { }
+    }
+
+    function test_ownership_data() {
+        return [
+            {tag:"item, transition", arg: indestructibleItem, operation: AbstractStackView.Transition, destroyed: false},
+            {tag:"item, immediate", arg: indestructibleItem, operation: AbstractStackView.Immediate, destroyed: false},
+            {tag:"component, transition", arg: destructibleComponent, operation: AbstractStackView.Transition, destroyed: true},
+            {tag:"component, immediate", arg: destructibleComponent, operation: AbstractStackView.Immediate, destroyed: true},
+            {tag:"url, transition", arg: Qt.resolvedUrl("TestItem.qml"), operation: AbstractStackView.Transition, destroyed: true},
+            {tag:"url, immediate", arg: Qt.resolvedUrl("TestItem.qml"), operation: AbstractStackView.Immediate, destroyed: true}
+        ]
+    }
+
+    function test_ownership(data) {
+        var control = transitionView.createObject(testCase, {initialItem: component})
+
+        // push-pop
+        control.push(data.arg, AbstractStackView.Immediate)
+        verify(control.currentItem)
+        verify(control.currentItem.hasOwnProperty("destroyedCallback"))
+        var destroyed = false
+        control.currentItem.destroyedCallback = function() { destroyed = true }
+        control.pop(data.operation)
+        tryCompare(control, "busy", false)
+        wait(0) // deferred delete
+        compare(destroyed, data.destroyed)
+
+        // push-replace
+        control.push(data.arg, AbstractStackView.Immediate)
+        verify(control.currentItem)
+        verify(control.currentItem.hasOwnProperty("destroyedCallback"))
+        destroyed = false
+        control.currentItem.destroyedCallback = function() { destroyed = true }
+        control.replace(component, data.operation)
+        tryCompare(control, "busy", false)
+        wait(0) // deferred delete
+        compare(destroyed, data.destroyed)
+
+        control.destroy()
+    }
 }

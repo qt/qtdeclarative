@@ -135,6 +135,7 @@ public:
 
     QVariant initialItem;
     QQuickItem *currentItem;
+    QList<QQuickStackElement*> removals;
     QStack<QQuickStackElement *> elements;
     QQuickItemViewTransitioner *transitioner;
 };
