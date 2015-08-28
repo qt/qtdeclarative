@@ -117,19 +117,18 @@ qreal QQuickSliderPrivate::positionAt(const QPoint &point) const
     if (orientation == Qt::Horizontal) {
         const qreal hw = handle ? handle->width() : 0;
         const qreal offset = hw / 2;
-        const qreal extent = q->width() - hw;
+        const qreal extent = q->availableWidth() - hw;
         if (!qFuzzyIsNull(extent)) {
-            const qreal pos = (point.x() - offset) / extent;
-            if (isMirrored())
-                return 1.0 - pos;
-            return pos;
+            if (q->isMirrored())
+                return (q->width() - point.x() - q->rightPadding() - offset) / extent;
+            return (point.x() - q->leftPadding() - offset) / extent;
         }
     } else {
         const qreal hh = handle ? handle->height() : 0;
         const qreal offset = hh / 2;
-        const qreal extent = q->height() - hh;
+        const qreal extent = q->availableHeight() - hh;
         if (!qFuzzyIsNull(extent))
-            return 1.0 - (point.y() - offset) / extent;
+            return (q->height() - point.y() - q->bottomPadding() - offset) / extent;
     }
     return 0;
 }
