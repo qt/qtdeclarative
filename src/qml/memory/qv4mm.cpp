@@ -219,7 +219,8 @@ bool sweepChunk(MemoryManager::Data::ChunkHeader *header, uint *itemsInUse, Exec
 } // namespace
 
 MemoryManager::MemoryManager(ExecutionEngine *engine)
-    : m_d(new Data)
+    : engine(engine)
+    , m_d(new Data)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
 {
@@ -265,7 +266,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
 
         // we use malloc for this
         MemoryManager::Data::LargeItem *item = static_cast<MemoryManager::Data::LargeItem *>(
-                malloc(Q_V4_PROFILE_ALLOC(m_d->engine, size + sizeof(MemoryManager::Data::LargeItem),
+                malloc(Q_V4_PROFILE_ALLOC(engine, size + sizeof(MemoryManager::Data::LargeItem),
                                           Profiling::LargeItem)));
         memset(item, 0, size + sizeof(MemoryManager::Data::LargeItem));
         item->next = m_d->largeItems;
@@ -301,7 +302,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
         std::size_t allocSize = m_d->maxChunkSize*(size_t(1) << shift);
         allocSize = roundUpToMultipleOf(WTF::pageSize(), allocSize);
         PageAllocation allocation = PageAllocation::allocate(
-                    Q_V4_PROFILE_ALLOC(m_d->engine, allocSize, Profiling::HeapPage),
+                    Q_V4_PROFILE_ALLOC(engine, allocSize, Profiling::HeapPage),
                     OSAllocator::JSGCHeapPages);
         m_d->heapChunks.append(allocation);
 
@@ -335,7 +336,7 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
 #ifdef V4_USE_VALGRIND
     VALGRIND_MEMPOOL_ALLOC(this, m, size);
 #endif
-    Q_V4_PROFILE_ALLOC(m_d->engine, size, Profiling::SmallItem);
+    Q_V4_PROFILE_ALLOC(engine, size, Profiling::SmallItem);
 
     ++m_d->allocCount[pos];
     ++m_d->totalAlloc;
@@ -356,11 +357,11 @@ static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
 
 void MemoryManager::mark()
 {
-    Value *markBase = m_d->engine->jsStackTop;
+    Value *markBase = engine->jsStackTop;
 
-    m_d->engine->markObjects();
+    engine->markObjects();
 
-    m_persistentValues->mark(m_d->engine);
+    m_persistentValues->mark(engine);
 
     collectFromJSStack();
 
@@ -391,13 +392,13 @@ void MemoryManager::mark()
         }
 
         if (keepAlive)
-            qobjectWrapper->mark(m_d->engine);
+            qobjectWrapper->mark(engine);
 
-        if (m_d->engine->jsStackTop >= m_d->engine->jsStackLimit)
-            drainMarkStack(m_d->engine, markBase);
+        if (engine->jsStackTop >= engine->jsStackLimit)
+            drainMarkStack(engine, markBase);
     }
 
-    drainMarkStack(m_d->engine, markBase);
+    drainMarkStack(engine, markBase);
 }
 
 void MemoryManager::sweep(bool lastSweep)
@@ -416,7 +417,7 @@ void MemoryManager::sweep(bool lastSweep)
         (*it) = Primitive::undefinedValue();
     }
 
-    if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = m_d->engine->m_multiplyWrappedQObjects) {
+    if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = engine->m_multiplyWrappedQObjects) {
         for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {
             if (!it.value().isNullOrUndefined())
                 it = multiplyWrappedQObjects->erase(it);
@@ -432,7 +433,7 @@ void MemoryManager::sweep(bool lastSweep)
 
     for (int i = 0; i < m_d->heapChunks.size(); ++i) {
         Data::ChunkHeader *header = reinterpret_cast<Data::ChunkHeader *>(m_d->heapChunks[i].base());
-        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], m_d->engine, &m_d->unmanagedHeapSize);
+        chunkIsEmpty[i] = sweepChunk(header, &itemsInUse[header->itemSize >> 4], engine, &m_d->unmanagedHeapSize);
     }
 
     QVector<PageAllocation>::iterator chunkIter = m_d->heapChunks.begin();
@@ -444,7 +445,7 @@ void MemoryManager::sweep(bool lastSweep)
 
         // Release that chunk if it could have been spared since the last GC run without any difference.
         if (chunkIsEmpty[i] && m_d->availableItems[pos] - decrease >= itemsInUse[pos]) {
-            Q_V4_PROFILE_DEALLOC(m_d->engine, 0, chunkIter->size(), Profiling::HeapPage);
+            Q_V4_PROFILE_DEALLOC(engine, 0, chunkIter->size(), Profiling::HeapPage);
 #ifdef V4_USE_VALGRIND
             VALGRIND_MEMPOOL_FREE(this, header);
 #endif
@@ -476,17 +477,17 @@ void MemoryManager::sweep(bool lastSweep)
             m->vtable()->destroy(m);
 
         *last = i->next;
-        free(Q_V4_PROFILE_DEALLOC(m_d->engine, i, i->size + sizeof(Data::LargeItem),
+        free(Q_V4_PROFILE_DEALLOC(engine, i, i->size + sizeof(Data::LargeItem),
                                   Profiling::LargeItem));
         i = *last;
     }
 
     // some execution contexts are allocated on the stack, make sure we clear their markBit as well
     if (!lastSweep) {
-        QV4::ExecutionContext *ctx = engine()->currentContext;
+        QV4::ExecutionContext *ctx = engine->currentContext;
         while (ctx) {
             ctx->d()->clearMarkBit();
-            ctx = engine()->parentContext(ctx);
+            ctx = engine->parentContext(ctx);
         }
     }
 }
@@ -594,10 +595,7 @@ MemoryManager::~MemoryManager()
 #endif
 }
 
-ExecutionEngine *MemoryManager::engine() const
-{
-    return m_d->engine;
-}
+
 
 void MemoryManager::dumpStats() const
 {
@@ -627,13 +625,13 @@ void MemoryManager::willAllocate(std::size_t size)
 
 void MemoryManager::collectFromJSStack() const
 {
-    Value *v = m_d->engine->jsStackBase;
-    Value *top = m_d->engine->jsStackTop;
+    Value *v = engine->jsStackBase;
+    Value *top = engine->jsStackTop;
     while (v < top) {
         Managed *m = v->as<Managed>();
         if (m && m->inUse())
             // Skip pointers to already freed objects, they are bogus as well
-            m->mark(m_d->engine);
+            m->mark(engine);
         ++v;
     }
 }
