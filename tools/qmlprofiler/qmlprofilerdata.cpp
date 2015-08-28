@@ -127,18 +127,6 @@ Q_DECLARE_TYPEINFO(QmlRangeEventData, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(QmlRangeEventStartInstance, Q_MOVABLE_TYPE);
 QT_END_NAMESPACE
 
-struct QV8EventInfo {
-    QString displayName;
-    QString eventHashStr;
-    QString functionName;
-    QString fileName;
-    int line;
-    qint64 totalTime;
-    qint64 selfTime;
-
-    QHash<QString, qint64> v8children;
-};
-
 /////////////////////////////////////////////////////////////////
 class QmlProfilerDataPrivate
 {
@@ -148,18 +136,12 @@ public:
     // data storage
     QHash<QString, QmlRangeEventData *> eventDescriptions;
     QVector<QmlRangeEventStartInstance> startInstanceList;
-    QHash<QString, QV8EventInfo *> v8EventHash;
 
     qint64 traceStartTime;
     qint64 traceEndTime;
 
     // internal state while collecting events
     qint64 qmlMeasuredTime;
-    qint64 v8MeasuredTime;
-    QHash<int, QV8EventInfo *> v8parents;
-    void clearV8RootEvent();
-    QV8EventInfo v8RootEvent;
-
     QmlProfilerData::State state;
 };
 
@@ -183,12 +165,6 @@ void QmlProfilerData::clear()
     d->eventDescriptions.clear();
     d->startInstanceList.clear();
 
-    qDeleteAll(d->v8EventHash);
-    d->v8EventHash.clear();
-    d->v8parents.clear();
-    d->clearV8RootEvent();
-    d->v8MeasuredTime = 0;
-
     d->traceEndTime = std::numeric_limits<qint64>::min();
     d->traceStartTime = std::numeric_limits<qint64>::max();
     d->qmlMeasuredTime = 0;
@@ -203,11 +179,6 @@ QString QmlProfilerData::getHashStringForQmlEvent(const QmlEventLocation &locati
                 QString::number(location.line),
                 QString::number(location.column),
                 QString::number(eventType));
-}
-
-QString QmlProfilerData::getHashStringForV8Event(const QString &displayName, const QString &function)
-{
-    return QString(QStringLiteral("%1:%2")).arg(displayName, function);
 }
 
 QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type)
@@ -414,76 +385,6 @@ void QmlProfilerData::addInputEvent(QQmlProfilerDefinitions::EventType type, qin
     d->startInstanceList.append(QmlRangeEventStartInstance(time, -1, 0, 0, 0, newEvent));
 }
 
-QString QmlProfilerData::rootEventName()
-{
-    return tr("<program>");
-}
-
-QString QmlProfilerData::rootEventDescription()
-{
-    return tr("Main Program");
-}
-
-void QmlProfilerDataPrivate::clearV8RootEvent()
-{
-    v8RootEvent.displayName = QmlProfilerData::rootEventName();
-    v8RootEvent.eventHashStr = QmlProfilerData::rootEventName();
-    v8RootEvent.functionName = QmlProfilerData::rootEventDescription();
-    v8RootEvent.line = -1;
-    v8RootEvent.totalTime = 0;
-    v8RootEvent.selfTime = 0;
-    v8RootEvent.v8children.clear();
-}
-
-void QmlProfilerData::addV8Event(int depth, const QString &function, const QString &filename,
-                                 int lineNumber, double totalTime, double selfTime)
-{
-    QString displayName = filename.mid(filename.lastIndexOf(QLatin1Char('/')) + 1) +
-            QLatin1Char(':') + QString::number(lineNumber);
-    QString hashStr = getHashStringForV8Event(displayName, function);
-
-    setState(AcquiringData);
-
-    // time is given in milliseconds, but internally we store it in microseconds
-    totalTime *= 1e6;
-    selfTime *= 1e6;
-
-    // accumulate information
-    QV8EventInfo *eventData = d->v8EventHash[hashStr];
-    if (!eventData) {
-        eventData = new QV8EventInfo;
-        eventData->displayName = displayName;
-        eventData->eventHashStr = hashStr;
-        eventData->fileName = filename;
-        eventData->functionName = function;
-        eventData->line = lineNumber;
-        eventData->totalTime = totalTime;
-        eventData->selfTime = selfTime;
-        d->v8EventHash[hashStr] = eventData;
-    } else {
-        eventData->totalTime += totalTime;
-        eventData->selfTime += selfTime;
-    }
-    d->v8parents[depth] = eventData;
-
-    QV8EventInfo *parentEvent = 0;
-    if (depth == 0) {
-        parentEvent = &d->v8RootEvent;
-        d->v8MeasuredTime += totalTime;
-    }
-    if (depth > 0 && d->v8parents.contains(depth-1)) {
-        parentEvent = d->v8parents.value(depth-1);
-    }
-
-    if (parentEvent != 0) {
-        if (!parentEvent->v8children.contains(eventData->eventHashStr)) {
-            parentEvent->v8children[eventData->eventHashStr] = totalTime;
-        } else {
-            parentEvent->v8children[eventData->eventHashStr] += totalTime;
-        }
-    }
-}
-
 void QmlProfilerData::computeQmlTime()
 {
     // compute levels
@@ -567,7 +468,7 @@ void QmlProfilerData::complete()
 
 bool QmlProfilerData::isEmpty() const
 {
-    return d->startInstanceList.isEmpty() && d->v8EventHash.isEmpty();
+    return d->startInstanceList.isEmpty();
 }
 
 bool QmlProfilerData::save(const QString &filename)
@@ -708,52 +609,11 @@ bool QmlProfilerData::save(const QString &filename)
     }
     stream.writeEndElement(); // profilerDataModel
 
-    stream.writeStartElement(QStringLiteral("v8profile")); // v8 profiler output
-    stream.writeAttribute(QStringLiteral("totalTime"), QString::number(d->v8MeasuredTime));
-    foreach (QV8EventInfo *v8event, d->v8EventHash.values()) {
-        stream.writeStartElement(QStringLiteral("event"));
-        stream.writeAttribute(QStringLiteral("index"),QString::number(
-                                  d->v8EventHash.keys().indexOf(v8event->eventHashStr)));
-        stream.writeTextElement(QStringLiteral("displayname"), v8event->displayName);
-        stream.writeTextElement(QStringLiteral("functionname"), v8event->functionName);
-        if (!v8event->fileName.isEmpty()) {
-            stream.writeTextElement(QStringLiteral("filename"), v8event->fileName);
-            stream.writeTextElement(QStringLiteral("line"), QString::number(v8event->line));
-        }
-        stream.writeTextElement(QStringLiteral("totalTime"), QString::number(v8event->totalTime));
-        stream.writeTextElement(QStringLiteral("selfTime"), QString::number(v8event->selfTime));
-        if (!v8event->v8children.isEmpty()) {
-            stream.writeStartElement(QStringLiteral("childrenEvents"));
-            QStringList childrenIndexes;
-            QStringList childrenTimes;
-            foreach (const QString &childHash, v8event->v8children.keys()) {
-                childrenIndexes << QString::number(v8EventIndex(childHash));
-                childrenTimes << QString::number(v8event->v8children[childHash]);
-            }
-
-            stream.writeAttribute(QStringLiteral("list"), childrenIndexes.join(QString(", ")));
-            stream.writeAttribute(QStringLiteral("childrenTimes"),
-                                  childrenTimes.join(QString(", ")));
-            stream.writeEndElement();
-        }
-        stream.writeEndElement();
-    }
-    stream.writeEndElement(); // v8 profiler output
-
     stream.writeEndElement(); // trace
     stream.writeEndDocument();
 
     file.close();
     return true;
-}
-
-int QmlProfilerData::v8EventIndex(const QString &hashStr)
-{
-    if (!d->v8EventHash.contains(hashStr)) {
-        emit error("Trying to index nonexisting v8 event");
-        return -1;
-    }
-    return d->v8EventHash.keys().indexOf( hashStr );
 }
 
 void QmlProfilerData::setState(QmlProfilerData::State state)

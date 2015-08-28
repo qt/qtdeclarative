@@ -55,11 +55,8 @@ public:
     ~QmlProfilerData();
 
     static QString getHashStringForQmlEvent(const QmlEventLocation &location, int eventType);
-    static QString getHashStringForV8Event(const QString &displayName, const QString &function);
     static QString qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type);
     static QString qmlMessageAsString(QQmlProfilerDefinitions::Message type);
-    static QString rootEventName();
-    static QString rootEventDescription();
 
     qint64 traceStartTime() const;
     qint64 traceEndTime() const;
@@ -79,8 +76,6 @@ public slots:
                      QQmlProfilerDefinitions::BindingType bindingType,
                      qint64 startTime, qint64 duration, const QStringList &data,
                      const QmlEventLocation &location);
-    void addV8Event(int depth, const QString &function, const QString &filename,
-                    int lineNumber, double totalTime, double selfTime);
     void addFrameEvent(qint64 time, int framerate, int animationcount, int threadId);
     void addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                                  qint64 numericData1, qint64 numericData2, qint64 numericData3,
@@ -95,7 +90,6 @@ public slots:
 
 private:
     void sortStartTimes();
-    int v8EventIndex(const QString &hashStr);
     void computeQmlTime();
     void setState(QmlProfilerData::State state);
 

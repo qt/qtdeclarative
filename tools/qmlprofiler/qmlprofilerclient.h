@@ -104,30 +104,4 @@ private:
     class QmlProfilerClientPrivate *d;
 };
 
-class V8ProfilerClient : public ProfilerClient
-{
-    Q_OBJECT
-
-public:
-    enum Message {
-        V8Entry,
-        V8Complete,
-
-        V8MaximumMessage
-    };
-
-    V8ProfilerClient(QQmlDebugConnection *client);
-    ~V8ProfilerClient();
-
-public slots:
-    void sendRecordingStatus(bool record);
-
-signals:
-    void range(int depth, const QString &function, const QString &filename,
-               int lineNumber, double totalTime, double selfTime);
-
-protected:
-    virtual void messageReceived(const QByteArray &);
-};
-
 #endif // QMLPROFILERCLIENT_H

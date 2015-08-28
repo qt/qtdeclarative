@@ -84,10 +84,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_recording(true),
     m_interactive(false),
     m_qmlProfilerClient(&m_connection),
-    m_v8profilerClient(&m_connection),
-    m_connectionAttempts(0),
-    m_qmlDataReady(false),
-    m_v8DataReady(false)
+    m_connectionAttempts(0)
 {
     m_connectTimer.setInterval(1000);
     connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(tryToConnect()));
@@ -118,12 +115,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerDefinitions::EventType,qint64)),
             &m_profilerData, SLOT(addInputEvent(QQmlProfilerDefinitions::EventType,qint64)));
 
-    connect(&m_qmlProfilerClient, SIGNAL(complete()), this, SLOT(qmlComplete()));
-
-    connect(&m_v8profilerClient, SIGNAL(enabledChanged()), this, SLOT(profilerClientEnabled()));
-    connect(&m_v8profilerClient, SIGNAL(range(int,QString,QString,int,double,double)),
-            &m_profilerData, SLOT(addV8Event(int,QString,QString,int,double,double)));
-    connect(&m_v8profilerClient, SIGNAL(complete()), this, SLOT(v8Complete()));
+    connect(&m_qmlProfilerClient, SIGNAL(complete()), &m_profilerData, SLOT(complete()));
 
     connect(&m_profilerData, SIGNAL(error(QString)), this, SLOT(logError(QString)));
     connect(&m_profilerData, SIGNAL(dataReady()), this, SLOT(traceFinished()));
@@ -316,7 +308,6 @@ void QmlProfilerApplication::flush()
     if (m_recording) {
         m_pendingRequest = REQUEST_FLUSH;
         m_qmlProfilerClient.sendRecordingStatus(false);
-        m_v8profilerClient.sendRecordingStatus(false);
     } else {
         if (m_profilerData.save(m_interactiveOutputFile)) {
             m_profilerData.clear();
@@ -407,7 +398,6 @@ void QmlProfilerApplication::userCommand(const QString &command)
     if (cmd == Constants::CMD_RECORD || cmd == Constants::CMD_RECORD2) {
         m_pendingRequest = REQUEST_TOGGLE_RECORDING;
         m_qmlProfilerClient.sendRecordingStatus(!m_recording);
-        m_v8profilerClient.sendRecordingStatus(!m_recording);
     } else if (cmd == Constants::CMD_QUIT || cmd == Constants::CMD_QUIT2) {
         m_pendingRequest = REQUEST_QUIT;
         if (m_recording) {
@@ -570,7 +560,6 @@ void QmlProfilerApplication::traceClientEnabled()
     // blocked server is waiting for recording message from both clients
     // once the last one is connected, both messages should be sent
     m_qmlProfilerClient.sendRecordingStatus(m_recording);
-    m_v8profilerClient.sendRecordingStatus(m_recording);
 }
 
 void QmlProfilerApplication::profilerClientEnabled()
@@ -580,16 +569,11 @@ void QmlProfilerApplication::profilerClientEnabled()
     // blocked server is waiting for recording message from both clients
     // once the last one is connected, both messages should be sent
     m_qmlProfilerClient.sendRecordingStatus(m_recording);
-    m_v8profilerClient.sendRecordingStatus(m_recording);
 }
 
 void QmlProfilerApplication::traceFinished()
 {
     m_recording = false; // only on "Complete" we know that the trace is really finished.
-
-    // after receiving both notifications, reset the flags
-    m_qmlDataReady = false;
-    m_v8DataReady = false;
 
     if (m_pendingRequest == REQUEST_FLUSH) {
         flush();
@@ -625,22 +609,4 @@ void QmlProfilerApplication::logStatus(const QString &status)
         return;
     QTextStream err(stderr);
     err << status << endl;
-}
-
-void QmlProfilerApplication::qmlComplete()
-{
-    m_qmlDataReady = true;
-    if (m_v8profilerClient.state() != QQmlDebugClient::Enabled ||
-            m_v8DataReady) {
-        m_profilerData.complete();
-    }
-}
-
-void QmlProfilerApplication::v8Complete()
-{
-    m_v8DataReady = true;
-    if (m_qmlProfilerClient.state() != QQmlDebugClient::Enabled ||
-            m_qmlDataReady) {
-        m_profilerData.complete();
-    }
 }

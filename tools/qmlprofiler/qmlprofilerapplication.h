@@ -86,9 +86,6 @@ private slots:
     void logError(const QString &error);
     void logStatus(const QString &status);
 
-    void qmlComplete();
-    void v8Complete();
-
 private:
     quint64 parseFeatures(const QStringList &featureList, const QString &values, bool exclude);
     bool checkOutputFile(PendingRequest pending);
@@ -117,13 +114,9 @@ private:
 
     QQmlDebugConnection m_connection;
     QmlProfilerClient m_qmlProfilerClient;
-    V8ProfilerClient m_v8profilerClient;
     QmlProfilerData m_profilerData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
-
-    bool m_qmlDataReady;
-    bool m_v8DataReady;
 };
 
 #endif // QMLPROFILERAPPLICATION_H
