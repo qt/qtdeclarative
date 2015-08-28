@@ -1262,7 +1262,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    return (ctx->d()->engine->memoryManager->alloc<QQmlBindingFunction>(f))->asReturnedValue();
+    return (ctx->d()->engine->memoryManager->allocObject<QQmlBindingFunction>(f))->asReturnedValue();
 }
 
 

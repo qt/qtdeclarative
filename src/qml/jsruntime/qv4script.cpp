@@ -247,7 +247,7 @@ ReturnedValue Script::run()
         return Q_V4_PROFILE(engine, vmFunction);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        ScopedFunctionObject f(valueScope, engine->memoryManager->alloc<QmlBindingWrapper>(qml, vmFunction));
+        ScopedFunctionObject f(valueScope, engine->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
         return f->call(callData);
@@ -325,7 +325,7 @@ ReturnedValue Script::qmlBinding()
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
     Scoped<QmlContext> qml(valueScope, qmlContext.value());
-    ScopedObject v(valueScope, v4->memoryManager->alloc<QmlBindingWrapper>(qml, vmFunction));
+    ScopedObject v(valueScope, v4->memoryManager->allocObject<QmlBindingWrapper>(qml, vmFunction));
     return v.asReturnedValue();
 }
 

@@ -83,7 +83,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 
     static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
     {
-        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
+        return scope->engine()->memoryManager->allocObject<DelegateModelGroupFunction>(scope, flag, code);
     }
 
     static QV4::ReturnedValue call(const QV4::Managed *that, QV4::CallData *callData)

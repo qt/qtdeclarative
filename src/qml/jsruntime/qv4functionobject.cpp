@@ -63,8 +63,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype())
-    , scope(scope->d())
+    : scope(scope->d())
     , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
@@ -73,8 +72,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, QV4::String *
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype())
-    , scope(scope->d())
+    : scope(scope->d())
     , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
@@ -84,8 +82,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, Function *fun
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype())
-    , scope(scope->d())
+    : scope(scope->d())
     , function(Q_NULLPTR)
 {
     Scope s(scope->engine());
@@ -95,8 +92,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const QString
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &name, bool createProto)
-    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype())
-    , scope(scope)
+    : scope(scope)
     , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
@@ -106,8 +102,7 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const QString &nam
 }
 
 Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->d()->engine->functionClass, scope->d()->engine->functionPrototype())
-    , scope(scope->d())
+    : scope(scope->d())
     , function(Q_NULLPTR)
 {
     Scope s(scope);
@@ -117,8 +112,7 @@ Heap::FunctionObject::FunctionObject(QV4::ExecutionContext *scope, const Returne
 }
 
 Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValue name)
-    : Heap::Object(scope->engine->functionClass, scope->engine->functionPrototype())
-    , scope(scope)
+    : scope(scope)
     , function(Q_NULLPTR)
 {
     Scope s(scope->engine);
@@ -127,12 +121,11 @@ Heap::FunctionObject::FunctionObject(ExecutionContext *scope, const ReturnedValu
     f->init(n, false);
 }
 
-Heap::FunctionObject::FunctionObject(InternalClass *ic, QV4::Object *prototype)
-    : Heap::Object(ic, prototype)
-    , scope(ic->engine->rootContext()->d())
+Heap::FunctionObject::FunctionObject()
+    : scope(internalClass->engine->rootContext()->d())
     , function(Q_NULLPTR)
 {
-    Q_ASSERT(ic && ic->find(ic->engine->id_prototype()) == Index_Prototype);
+    Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
     *propertyData(Index_Prototype) = Encode::undefined();
 }
 
@@ -200,8 +193,8 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
         function->compiledFunction->flags & CompiledData::Function::HasCatchOrWith ||
         function->compiledFunction->nFormals > QV4::Global::ReservedArgumentCount ||
         function->isNamedExpression())
-        return scope->d()->engine->memoryManager->alloc<ScriptFunction>(scope, function);
-    return scope->d()->engine->memoryManager->alloc<SimpleScriptFunction>(scope, function, createProto);
+        return scope->d()->engine->memoryManager->allocObject<ScriptFunction>(scope, function);
+    return scope->d()->engine->memoryManager->allocObject<SimpleScriptFunction>(scope, function, createProto);
 }
 
 Heap::FunctionObject *FunctionObject::createQmlFunction(QQmlContextData *qmlContext, QObject *scopeObject, Function *runtimeFunction, const QList<QByteArray> &signalParameters, QString *error)
@@ -309,8 +302,7 @@ ReturnedValue FunctionCtor::call(const Managed *that, CallData *callData)
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
 
-Heap::FunctionPrototype::FunctionPrototype(InternalClass *ic, QV4::Object *prototype)
-    : Heap::FunctionObject(ic, prototype)
+Heap::FunctionPrototype::FunctionPrototype()
 {
 }
 
@@ -482,7 +474,6 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
 DEFINE_OBJECT_VTABLE(SimpleScriptFunction);
 
 Heap::SimpleScriptFunction::SimpleScriptFunction(QV4::ExecutionContext *scope, Function *function, bool createProto)
-    : Heap::FunctionObject(function->compilationUnit->engine->simpleScriptFunctionClass, function->compilationUnit->engine->functionPrototype())
 {
     this->scope = scope->d();
 

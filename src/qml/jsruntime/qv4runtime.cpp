@@ -1266,7 +1266,8 @@ QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
     QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
-    return engine->memoryManager->alloc<ArgumentsObject>(c)->asReturnedValue();
+    QV4::InternalClass *ic = c->d()->strictMode ? engine->strictArgumentsObjectClass : engine->argumentsObjectClass;
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c)->asReturnedValue();
 }
 
 #endif // V4_BOOTSTRAP

@@ -322,7 +322,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     uint index;
     InternalClass *functionProtoClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    jsObjects[FunctionProto] = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype());
+    jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(functionProtoClass, objectPrototype());
     functionClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     simpleScriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
@@ -379,21 +379,21 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(arrayClass, arrayPrototype()));
 
     ExecutionContext *global = rootContext();
-    jsObjects[Object_Ctor] = memoryManager->alloc<ObjectCtor>(global);
-    jsObjects[String_Ctor] = memoryManager->alloc<StringCtor>(global);
-    jsObjects[Number_Ctor] = memoryManager->alloc<NumberCtor>(global);
-    jsObjects[Boolean_Ctor] = memoryManager->alloc<BooleanCtor>(global);
-    jsObjects[Array_Ctor] = memoryManager->alloc<ArrayCtor>(global);
-    jsObjects[Function_Ctor] = memoryManager->alloc<FunctionCtor>(global);
-    jsObjects[Date_Ctor] = memoryManager->alloc<DateCtor>(global);
-    jsObjects[RegExp_Ctor] = memoryManager->alloc<RegExpCtor>(global);
-    jsObjects[Error_Ctor] = memoryManager->alloc<ErrorCtor>(global);
-    jsObjects[EvalError_Ctor] = memoryManager->alloc<EvalErrorCtor>(global);
-    jsObjects[RangeError_Ctor] = memoryManager->alloc<RangeErrorCtor>(global);
-    jsObjects[ReferenceError_Ctor] = memoryManager->alloc<ReferenceErrorCtor>(global);
-    jsObjects[SyntaxError_Ctor] = memoryManager->alloc<SyntaxErrorCtor>(global);
-    jsObjects[TypeError_Ctor] = memoryManager->alloc<TypeErrorCtor>(global);
-    jsObjects[URIError_Ctor] = memoryManager->alloc<URIErrorCtor>(global);
+    jsObjects[Object_Ctor] = memoryManager->allocObject<ObjectCtor>(global);
+    jsObjects[String_Ctor] = memoryManager->allocObject<StringCtor>(global);
+    jsObjects[Number_Ctor] = memoryManager->allocObject<NumberCtor>(global);
+    jsObjects[Boolean_Ctor] = memoryManager->allocObject<BooleanCtor>(global);
+    jsObjects[Array_Ctor] = memoryManager->allocObject<ArrayCtor>(global);
+    jsObjects[Function_Ctor] = memoryManager->allocObject<FunctionCtor>(global);
+    jsObjects[Date_Ctor] = memoryManager->allocObject<DateCtor>(global);
+    jsObjects[RegExp_Ctor] = memoryManager->allocObject<RegExpCtor>(global);
+    jsObjects[Error_Ctor] = memoryManager->allocObject<ErrorCtor>(global);
+    jsObjects[EvalError_Ctor] = memoryManager->allocObject<EvalErrorCtor>(global);
+    jsObjects[RangeError_Ctor] = memoryManager->allocObject<RangeErrorCtor>(global);
+    jsObjects[ReferenceError_Ctor] = memoryManager->allocObject<ReferenceErrorCtor>(global);
+    jsObjects[SyntaxError_Ctor] = memoryManager->allocObject<SyntaxErrorCtor>(global);
+    jsObjects[TypeError_Ctor] = memoryManager->allocObject<TypeErrorCtor>(global);
+    jsObjects[URIError_Ctor] = memoryManager->allocObject<URIErrorCtor>(global);
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
@@ -417,17 +417,17 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // typed arrays
 
-    jsObjects[ArrayBuffer_Ctor] = memoryManager->alloc<ArrayBufferCtor>(global);
-    jsObjects[ArrayBufferProto] = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype());
+    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocObject<ArrayBufferCtor>(global);
+    jsObjects[ArrayBufferProto] = memoryManager->allocObject<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
 
-    jsObjects[DataView_Ctor] = memoryManager->alloc<DataViewCtor>(global);
-    jsObjects[DataViewProto] = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype());
+    jsObjects[DataView_Ctor] = memoryManager->allocObject<DataViewCtor>(global);
+    jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) 0;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
@@ -460,15 +460,15 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(this)));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocObject<MathObject>()));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocObject<JsonObject>()));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    jsObjects[Eval_Function] = memoryManager->alloc<EvalFunction>(global);
+    jsObjects[Eval_Function] = memoryManager->allocObject<EvalFunction>(global);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
@@ -940,8 +940,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         }
         ExecutionContext *global = rootContext();
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(global, i));
-            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(global, i));
+            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->allocObject<ArgumentsGetterFunction>(global, i));
+            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->allocObject<ArgumentsSetterFunction>(global, i));
         }
     }
 }

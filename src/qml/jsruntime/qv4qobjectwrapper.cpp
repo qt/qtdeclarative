@@ -1726,7 +1726,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->object = object;
 
     if (QQmlData *ddata = QQmlData::get(object))
@@ -1740,7 +1740,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->alloc<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->propertyCache = valueType->d()->propertyCache;
     method->d()->index = index;
     method->d()->valueTypeWrapper = *valueType;

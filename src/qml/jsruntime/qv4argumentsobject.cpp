@@ -40,9 +40,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
-    : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass,
-                   context->d()->engine->objectPrototype())
-    , context(context->d())
+    : context(context->d())
     , fullyCreated(false)
 {
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());

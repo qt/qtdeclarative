@@ -2034,7 +2034,7 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 {
     Scope scope(v4);
 
-    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->alloc<QQmlXMLHttpRequestCtor>(v4));
+    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->allocObject<QQmlXMLHttpRequestCtor>(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
     v4->globalObject->defineReadonlyProperty(s, ctor);
 

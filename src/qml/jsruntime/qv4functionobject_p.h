@@ -58,7 +58,7 @@ struct Q_QML_PRIVATE_EXPORT FunctionObject : Object {
     FunctionObject(ExecutionContext *scope, const QString &name = QString(), bool createProto = false);
     FunctionObject(QV4::ExecutionContext *scope, const ReturnedValue name);
     FunctionObject(ExecutionContext *scope, const ReturnedValue name);
-    FunctionObject(InternalClass *ic, QV4::Object *prototype);
+    FunctionObject();
     ~FunctionObject();
 
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
@@ -74,7 +74,7 @@ struct FunctionCtor : FunctionObject {
 };
 
 struct FunctionPrototype : FunctionObject {
-    FunctionPrototype(InternalClass *ic, QV4::Object *prototype);
+    FunctionPrototype();
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
@@ -115,6 +115,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     };
     V4_OBJECT2(FunctionObject, Object)
     Q_MANAGED_TYPE(FunctionObject)
+    V4_INTERNALCLASS(functionClass)
+    V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
 
     Heap::ExecutionContext *scope() const { return d()->scope; }
@@ -180,7 +182,7 @@ struct Q_QML_EXPORT BuiltinFunction: FunctionObject {
 
     static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(CallContext *))
     {
-        return scope->engine()->memoryManager->alloc<BuiltinFunction>(scope, name, code);
+        return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }
 
     static ReturnedValue construct(const Managed *, CallData *);
@@ -210,6 +212,7 @@ Heap::IndexedBuiltinFunction::IndexedBuiltinFunction(QV4::ExecutionContext *scop
 
 struct SimpleScriptFunction: FunctionObject {
     V4_OBJECT2(SimpleScriptFunction, FunctionObject)
+    V4_INTERNALCLASS(simpleScriptFunctionClass)
 
     static ReturnedValue construct(const Managed *, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
@@ -230,7 +233,7 @@ struct BoundFunction: FunctionObject {
 
     static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs)
     {
-        return scope->engine()->memoryManager->alloc<BoundFunction>(scope, target, boundThis, boundArgs);
+        return scope->engine()->memoryManager->allocObject<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     Heap::FunctionObject *target() const { return d()->target; }
