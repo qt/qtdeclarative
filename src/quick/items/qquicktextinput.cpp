@@ -813,7 +813,14 @@ QRectF QQuickTextInput::cursorRectangle() const
         return QRectF();
     qreal x = l.cursorToX(c) - d->hscroll + leftPadding();
     qreal y = l.y() - d->vscroll + topPadding();
-    return QRectF(x, y, 1, l.height());
+    qreal w = 1;
+    if (d->overwriteMode) {
+        if (c < text().length())
+            w = l.cursorToX(c + 1) - x;
+        else
+            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+    }
+    return QRectF(x, y, w, l.height());
 }
 
 /*!
@@ -1263,7 +1270,14 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         return QRectF();
     qreal x = l.cursorToX(pos) - d->hscroll;
     qreal y = l.y() - d->vscroll;
-    return QRectF(x, y, 1, l.height());
+    qreal w = 1;
+    if (d->overwriteMode) {
+        if (pos < text().length())
+            w = l.cursorToX(pos + 1) - x;
+        else
+            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+    }
+    return QRectF(x, y, w, l.height());
 }
 
 /*!
@@ -1343,6 +1357,36 @@ int QQuickTextInputPrivate::positionAt(qreal x, qreal y, QTextLine::CursorPositi
         line = nextLine;
     }
     return line.isValid() ? line.xToCursor(x, position) : 0;
+}
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::overwriteMode
+    \since 5.8
+
+    Whether text entered by the user will overwrite existing text.
+
+    As with many text editors, the text editor widget can be configured
+    to insert or overwrite existing text with new text entered by the user.
+
+    If this property is \c true, existing text is overwritten, character-for-character
+    by new text; otherwise, text is inserted at the cursor position, displacing
+    existing text.
+
+    By default, this property is \c false (new text does not overwrite existing text).
+*/
+bool QQuickTextInput::overwriteMode() const
+{
+    Q_D(const QQuickTextInput);
+    return d->overwriteMode;
+}
+
+void QQuickTextInput::setOverwriteMode(bool overwrite)
+{
+    Q_D(QQuickTextInput);
+    if (d->overwriteMode == overwrite)
+        return;
+    d->overwriteMode = overwrite;
+    emit overwriteModeChanged(overwrite);
 }
 
 void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
@@ -4409,6 +4453,14 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     if (unknown && !m_readOnly) {
         QString t = event->text();
         if (!t.isEmpty() && t.at(0).isPrint()) {
+            if (overwriteMode
+                // no need to call del() if we have a selection, insert
+                // does it already
+                && !hasSelectedText()
+                && !(m_cursor == q_func()->text().length())) {
+                del();
+            }
+
             insert(t);
             event->accept();
             return;

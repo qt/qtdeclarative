@@ -79,6 +79,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
     Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
     Q_PROPERTY(QQmlComponent *cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged)
+    Q_PROPERTY(bool overwriteMode READ overwriteMode WRITE setOverwriteMode NOTIFY overwriteModeChanged)
     Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged)
     Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged)
     Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged)
@@ -245,6 +246,9 @@ public:
     QQmlComponent* cursorDelegate() const;
     void setCursorDelegate(QQmlComponent*);
 
+    bool overwriteMode() const;
+    void setOverwriteMode(bool overwrite);
+
     bool focusOnPress() const;
     void setFocusOnPress(bool);
 
@@ -325,6 +329,7 @@ Q_SIGNALS:
     void readOnlyChanged(bool isReadOnly);
     void cursorVisibleChanged(bool isCursorVisible);
     void cursorDelegateChanged();
+    void overwriteModeChanged(bool overwriteMode);
     void maximumLengthChanged(int maximumLength);
     void validatorChanged();
     void inputMaskChanged(const QString &inputMask);

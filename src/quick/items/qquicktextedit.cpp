@@ -1584,6 +1584,32 @@ bool QQuickTextEdit::event(QEvent *event)
 }
 
 /*!
+    \qmlproperty bool QtQuick::TextEdit::overwriteMode
+    \since 5.8
+    Whether text entered by the user will overwrite existing text.
+
+    As with many text editors, the text editor widget can be configured
+    to insert or overwrite existing text with new text entered by the user.
+
+    If this property is \c true, existing text is overwritten, character-for-character
+    by new text; otherwise, text is inserted at the cursor position, displacing
+    existing text.
+
+    By default, this property is \c false (new text does not overwrite existing text).
+*/
+bool QQuickTextEdit::overwriteMode() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->control->overwriteMode();
+}
+
+void QQuickTextEdit::setOverwriteMode(bool overwrite)
+{
+    Q_D(QQuickTextEdit);
+    d->control->setOverwriteMode(overwrite);
+}
+
+/*!
 \overload
 Handles the given key \a event.
 */
@@ -2186,6 +2212,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorRectangleChanged()), q, QQuickTextEdit, SLOT(moveCursorDelegate()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkHovered(QString)), q, QQuickTextEdit, SIGNAL(linkHovered(QString)));
+    qmlobject_connect(control, QQuickTextControl, SIGNAL(overwriteModeChanged(bool)), q, QQuickTextEdit, SIGNAL(overwriteModeChanged(bool)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(preeditTextChanged()), q, QQuickTextEdit, SIGNAL(preeditTextChanged()));
 #ifndef QT_NO_CLIPBOARD

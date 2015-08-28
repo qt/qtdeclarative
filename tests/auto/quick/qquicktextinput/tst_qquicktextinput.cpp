@@ -105,6 +105,7 @@ private slots:
     void wrap();
     void selection();
     void persistentSelection();
+    void overwriteMode();
     void isRightToLeft_data();
     void isRightToLeft();
     void moveCursorSelection_data();
@@ -775,6 +776,48 @@ void tst_qquicktextinput::persistentSelection()
 
     input->setFocus(true);
     QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
+}
+
+void tst_qquicktextinput::overwriteMode()
+{
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QSignalSpy spy(textInput, SIGNAL(overwriteModeChanged(bool)));
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QVERIFY(textInput->hasActiveFocus());
+
+    textInput->setOverwriteMode(true);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(true, textInput->overwriteMode());
+    textInput->setOverwriteMode(false);
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(false, textInput->overwriteMode());
+
+    QVERIFY(!textInput->overwriteMode());
+    QString insertString = "Some first text";
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+
+    QCOMPARE(textInput->text(), QString("Some first text"));
+
+    textInput->setOverwriteMode(true);
+    QCOMPARE(spy.count(), 3);
+    textInput->setCursorPosition(5);
+
+    insertString = "shiny";
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+    QCOMPARE(textInput->text(), QString("Some shiny text"));
 }
 
 void tst_qquicktextinput::isRightToLeft_data()

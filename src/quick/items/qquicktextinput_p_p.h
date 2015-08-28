@@ -158,6 +158,7 @@ public:
         , m_passwordEchoEditing(false)
         , inLayout(false)
         , requireImplicitWidth(false)
+        , overwriteMode(false)
     {
     }
 
@@ -299,6 +300,7 @@ public:
     bool m_passwordEchoEditing : 1;
     bool inLayout:1;
     bool requireImplicitWidth:1;
+    bool overwriteMode:1;
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();

@@ -94,6 +94,8 @@ public:
 #endif
 
     bool hasImState() const;
+    bool overwriteMode() const;
+    void setOverwriteMode(bool overwrite);
     bool cursorVisible() const;
     void setCursorVisible(bool visible);
     QRectF cursorRect(const QTextCursor &cursor) const;
@@ -148,6 +150,7 @@ Q_SIGNALS:
     void copyAvailable(bool b);
     void selectionChanged();
     void cursorPositionChanged();
+    void overwriteModeChanged(bool overwriteMode);
 
     // control signals
     void updateCursorRequest();

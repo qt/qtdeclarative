@@ -108,6 +108,7 @@ private slots:
     void selectionOnFocusOut();
     void focusOnPress();
     void selection();
+    void overwriteMode();
     void isRightToLeft_data();
     void isRightToLeft();
     void keySelection();
@@ -1464,6 +1465,74 @@ void tst_qquicktextedit::selection()
     QCOMPARE(textEditObject->selectedText().size(), 10);
     textEditObject->deselect();
     QVERIFY(textEditObject->selectedText().isNull());
+}
+
+void tst_qquicktextedit::overwriteMode()
+{
+    QString componentStr = "import QtQuick 2.0\nTextEdit { focus: true; }";
+    QQmlComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
+
+    QSignalSpy spy(textEdit, SIGNAL(overwriteModeChanged(bool)));
+
+    QQuickWindow window;
+    textEdit->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+
+    QVERIFY(textEdit->hasActiveFocus());
+
+    textEdit->setOverwriteMode(true);
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(true, textEdit->overwriteMode());
+    textEdit->setOverwriteMode(false);
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(false, textEdit->overwriteMode());
+
+    QVERIFY(!textEdit->overwriteMode());
+    QString insertString = "Some first text";
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+
+    QCOMPARE(textEdit->text(), QString("Some first text"));
+
+    textEdit->setOverwriteMode(true);
+    QCOMPARE(spy.count(), 3);
+    textEdit->setCursorPosition(5);
+
+    insertString = "shiny";
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+    QCOMPARE(textEdit->text(), QString("Some shiny text"));
+
+    textEdit->setCursorPosition(textEdit->text().length());
+    QTest::keyClick(&window, Qt::Key_Enter);
+
+    textEdit->setOverwriteMode(false);
+    QCOMPARE(spy.count(), 4);
+
+    insertString = "Second paragraph";
+
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+    QCOMPARE(textEdit->lineCount(), 2);
+
+    textEdit->setCursorPosition(15);
+
+    QCOMPARE(textEdit->cursorPosition(), 15);
+
+    textEdit->setOverwriteMode(true);
+    QCOMPARE(spy.count(), 5);
+
+    insertString = " blah";
+    for (int j = 0; j < insertString.length(); j++)
+        QTest::keyClick(&window, insertString.at(j).toLatin1());
+    QCOMPARE(textEdit->lineCount(), 2);
+
+    QCOMPARE(textEdit->text(), QString("Some shiny text blah\nSecond paragraph"));
 }
 
 void tst_qquicktextedit::isRightToLeft_data()
