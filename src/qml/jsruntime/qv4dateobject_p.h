@@ -69,6 +69,7 @@ struct DateCtor : FunctionObject {
 struct DateObject: Object {
     V4_OBJECT2(DateObject, Object)
     Q_MANAGED_TYPE(DateObject)
+    V4_PROTOTYPE(datePrototype)
 
 
     double date() const { return d()->date; }

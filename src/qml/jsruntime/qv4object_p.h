@@ -42,6 +42,7 @@
 
 QT_BEGIN_NAMESPACE
 
+
 namespace QV4 {
 
 namespace Heap {
@@ -82,6 +83,13 @@ struct Object : Base {
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+
+#define V4_INTERNALCLASS(c) \
+    static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
+    { return e->c; }
+#define V4_PROTOTYPE(p) \
+    static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
+    { return e->p(); }
 
 struct ObjectVTable
 {
@@ -127,6 +135,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
+    V4_INTERNALCLASS(emptyClass)
+    V4_PROTOTYPE(objectPrototype)
 
     enum {
         IsObject = true,
@@ -372,6 +382,7 @@ struct ArrayObject : Object {
 struct BooleanObject: Object {
     V4_OBJECT2(BooleanObject, Object)
     Q_MANAGED_TYPE(BooleanObject)
+    V4_PROTOTYPE(booleanPrototype)
 
     bool value() const { return d()->b; }
 
@@ -380,6 +391,7 @@ struct BooleanObject: Object {
 struct NumberObject: Object {
     V4_OBJECT2(NumberObject, Object)
     Q_MANAGED_TYPE(NumberObject)
+    V4_PROTOTYPE(numberPrototype)
 
     double value() const { return d()->value; }
 };
@@ -387,6 +399,8 @@ struct NumberObject: Object {
 struct ArrayObject: Object {
     V4_OBJECT2(ArrayObject, Object)
     Q_MANAGED_TYPE(ArrayObject)
+    V4_INTERNALCLASS(arrayClass)
+    V4_PROTOTYPE(arrayPrototype)
 
     void init(ExecutionEngine *engine);
 

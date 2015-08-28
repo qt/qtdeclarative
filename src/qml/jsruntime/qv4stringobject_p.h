@@ -65,6 +65,8 @@ struct StringCtor : FunctionObject {
 struct StringObject: Object {
     V4_OBJECT2(StringObject, Object)
     Q_MANAGED_TYPE(StringObject)
+    V4_INTERNALCLASS(stringClass)
+    V4_PROTOTYPE(stringPrototype)
 
     Heap::String *getIndex(uint index) const {
         return d()->getIndex(index);

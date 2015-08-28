@@ -75,6 +75,7 @@ struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 struct VariantObject : Object
 {
     V4_OBJECT2(VariantObject, Object)
+    V4_PROTOTYPE(variantPrototype)
     V4_NEEDS_DESTROY
 
     void addVmePropertyReference();

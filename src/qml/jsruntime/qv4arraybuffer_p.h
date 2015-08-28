@@ -72,6 +72,7 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object
 {
     V4_OBJECT2(ArrayBuffer, Object)
     V4_NEEDS_DESTROY
+    V4_PROTOTYPE(arrayBufferPrototype)
 
     QByteArray asByteArray() const;
     uint byteLength() const { return d()->byteLength(); }

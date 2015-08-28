@@ -567,7 +567,7 @@ ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) cons
 
 Heap::Object *ExecutionEngine::newObject()
 {
-    return memoryManager->allocObject<Object>(emptyClass, objectPrototype());
+    return memoryManager->allocObject<Object>();
 }
 
 Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Object *prototype)
@@ -588,23 +588,23 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 
 Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
-    return memoryManager->allocObject<StringObject>(stringClass, stringPrototype(), string);
+    return memoryManager->allocObject<StringObject>(string);
 }
 
 Heap::Object *ExecutionEngine::newNumberObject(double value)
 {
-    return memoryManager->allocObject<NumberObject>(emptyClass, numberPrototype(), value);
+    return memoryManager->allocObject<NumberObject>(value);
 }
 
 Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 {
-    return memoryManager->allocObject<BooleanObject>(emptyClass, booleanPrototype(), b);
+    return memoryManager->allocObject<BooleanObject>(b);
 }
 
 Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(arrayClass, arrayPrototype()));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>());
 
     if (count) {
         if (count < 0x1000)
@@ -617,7 +617,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(arrayClass, arrayPrototype(), list));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(list));
     return object->d();
 }
 
@@ -630,24 +630,24 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass,
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
-    return memoryManager->allocObject<ArrayBuffer>(emptyClass, arrayBufferPrototype(), array);
+    return memoryManager->allocObject<ArrayBuffer>(array);
 }
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(size_t length)
 {
-    return memoryManager->allocObject<ArrayBuffer>(emptyClass, arrayBufferPrototype(), length);
+    return memoryManager->allocObject<ArrayBuffer>(length);
 }
 
 
 Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
-    return memoryManager->allocObject<DateObject>(emptyClass, datePrototype(), value);
+    return memoryManager->allocObject<DateObject>(value);
 }
 
 Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(emptyClass, datePrototype(), dt));
+    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(dt));
     return object->d();
 }
 
@@ -668,18 +668,18 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
-    return memoryManager->allocObject<RegExpObject>(regExpObjectClass, regExpPrototype(), re, global);
+    return memoryManager->allocObject<RegExpObject>(re, global);
 }
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
-    return memoryManager->allocObject<RegExpObject>(regExpObjectClass, regExpPrototype(), re);
+    return memoryManager->allocObject<RegExpObject>(re);
 }
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     Scope scope(this);
-    ScopedObject object(scope, memoryManager->allocObject<ErrorObject>(errorClass, errorPrototype(), value));
+    ScopedObject object(scope, memoryManager->allocObject<ErrorObject>(value));
     return object->d();
 }
 
@@ -687,13 +687,13 @@ Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
     Scope scope(this);
     ScopedString s(scope, newString(message));
-    return memoryManager->allocObject<SyntaxErrorObject>(errorClass, syntaxErrorPrototype(), s);
+    return memoryManager->allocObject<SyntaxErrorObject>(s);
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
     Scope scope(this);
-    ScopedObject error(scope, memoryManager->allocObject<SyntaxErrorObject>(errorClass, syntaxErrorPrototype(), message, fileName, line, column));
+    ScopedObject error(scope, memoryManager->allocObject<SyntaxErrorObject>(message, fileName, line, column));
     return error->d();
 }
 
@@ -701,14 +701,14 @@ Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, cons
 Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(errorClass, referenceErrorPrototype(), message));
+    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(message));
     return o->d();
 }
 
 Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
 {
     Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(errorClass, referenceErrorPrototype(), message, fileName, lineNumber, columnNumber));
+    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(message, fileName, lineNumber, columnNumber));
     return o->d();
 }
 
@@ -716,27 +716,27 @@ Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, c
 Heap::Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<TypeErrorObject>(errorClass, typeErrorPrototype(), message));
+    ScopedObject o(scope, memoryManager->allocObject<TypeErrorObject>(message));
     return o->d();
 }
 
 Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<RangeErrorObject>(errorClass, rangeErrorPrototype(), message));
+    ScopedObject o(scope, memoryManager->allocObject<RangeErrorObject>(message));
     return o->d();
 }
 
 Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 {
     Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<URIErrorObject>(errorClass, uRIErrorPrototype(), message));
+    ScopedObject o(scope, memoryManager->allocObject<URIErrorObject>(message));
     return o->d();
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    return memoryManager->allocObject<VariantObject>(emptyClass, variantPrototype(), v);
+    return memoryManager->allocObject<VariantObject>(v);
 }
 
 Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)

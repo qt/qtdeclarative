@@ -92,6 +92,31 @@ public:
         return static_cast<typename ManagedType::Data *>(o);
     }
 
+    template <typename ObjectType>
+    typename ObjectType::Data *allocateObject(InternalClass *ic)
+    {
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        o->internalClass = ic;
+        o->inlineMemberSize = ic->size;
+        o->inlineMemberOffset = size/sizeof(Value);
+        return o;
+    }
+
+    template <typename ObjectType>
+    typename ObjectType::Data *allocateObject()
+    {
+        InternalClass *ic = ObjectType::defaultInternalClass(engine());
+        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
+        typename ObjectType::Data *o = allocManaged<ObjectType>(size + ic->size*sizeof(Value));
+        Object *prototype = ObjectType::defaultPrototype(engine());
+        o->internalClass = ic;
+        o->prototype = prototype->d();
+        o->inlineMemberSize = ic->size;
+        o->inlineMemberOffset = size/sizeof(Value);
+        return o;
+    }
+
     template <typename ManagedType, typename Arg1>
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
@@ -105,11 +130,7 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         (void)new (t->d()) typename ObjectType::Data();
         return t->d();
     }
@@ -118,12 +139,8 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         t->d()->prototype = prototype->d();
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
         (void)new (t->d()) typename ObjectType::Data();
         return t->d();
     }
@@ -132,12 +149,8 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         t->d()->prototype = prototype->d();
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
         (void)new (t->d()) typename ObjectType::Data(arg1);
         return t->d();
     }
@@ -146,12 +159,8 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         t->d()->prototype = prototype->d();
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
         (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
         return t->d();
     }
@@ -160,12 +169,8 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         t->d()->prototype = prototype->d();
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
         (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
         return t->d();
     }
@@ -174,15 +179,57 @@ public:
     typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
     {
         Scope scope(engine());
-        const int size = (sizeof(typename ObjectType::Data) + (sizeof(Value) - 1)) & ~(sizeof(Value) - 1);
-        Scoped<ObjectType> t(scope, allocManaged<ObjectType>(size + ic->size*sizeof(Value)));
-        t->d()->internalClass = ic;
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         t->d()->prototype = prototype->d();
-        t->d()->inlineMemberSize = ic->size;
-        t->d()->inlineMemberOffset = size/sizeof(Value);
         (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
         return t->d();
     }
+
+    template <typename ObjectType>
+    typename ObjectType::Data *allocObject()
+    {
+        Scope scope(engine());
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
+        (void)new (t->d()) typename ObjectType::Data();
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1>
+    typename ObjectType::Data *allocObject(Arg1 arg1)
+    {
+        Scope scope(engine());
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
+        (void)new (t->d()) typename ObjectType::Data(arg1);
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1, typename Arg2>
+    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2)
+    {
+        Scope scope(engine());
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
+        (void)new (t->d()) typename ObjectType::Data(arg1, arg2);
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3>
+    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3)
+    {
+        Scope scope(engine());
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
+        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3);
+        return t->d();
+    }
+
+    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
+    {
+        Scope scope(engine());
+        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
+        (void)new (t->d()) typename ObjectType::Data(arg1, arg2, arg3, arg4);
+        return t->d();
+    }
+
 
     template <typename ManagedType>
     typename ManagedType::Data *alloc()

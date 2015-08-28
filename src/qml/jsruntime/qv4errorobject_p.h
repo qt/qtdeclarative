@@ -140,6 +140,8 @@ struct ErrorObject: Object {
 
     V4_OBJECT2(ErrorObject, Object)
     Q_MANAGED_TYPE(ErrorObject)
+    V4_INTERNALCLASS(errorClass)
+    V4_PROTOTYPE(errorPrototype)
     V4_NEEDS_DESTROY
 
     SyntaxErrorObject *asSyntaxError();
@@ -155,34 +157,40 @@ inline const ErrorObject *Value::as() const {
 
 struct EvalErrorObject: ErrorObject {
     typedef Heap::EvalErrorObject Data;
+    V4_PROTOTYPE(evalErrorPrototype)
     const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
     Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct RangeErrorObject: ErrorObject {
     typedef Heap::RangeErrorObject Data;
+    V4_PROTOTYPE(rangeErrorPrototype)
     const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
     Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct ReferenceErrorObject: ErrorObject {
     typedef Heap::ReferenceErrorObject Data;
+    V4_PROTOTYPE(referenceErrorPrototype)
     const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
     Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct SyntaxErrorObject: ErrorObject {
     V4_OBJECT2(SyntaxErrorObject, ErrorObject)
+    V4_PROTOTYPE(syntaxErrorPrototype)
 };
 
 struct TypeErrorObject: ErrorObject {
     typedef Heap::TypeErrorObject Data;
+    V4_PROTOTYPE(typeErrorPrototype)
     const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
     Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
 
 struct URIErrorObject: ErrorObject {
     typedef Heap::URIErrorObject Data;
+    V4_PROTOTYPE(uRIErrorPrototype)
     const Data *d() const { return static_cast<const Data *>(ErrorObject::d()); }
     Data *d() { return static_cast<Data *>(ErrorObject::d()); }
 };
