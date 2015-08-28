@@ -67,7 +67,7 @@ TestCase {
     }
 
     function test_pressAndHold() {
-        if (Qt.platform === "osx")
+        if (Qt.platform.os === "osx")
             skip("QTBUG-47963");
 
         var control = textField.createObject(testCase)
