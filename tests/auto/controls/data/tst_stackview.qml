@@ -78,6 +78,7 @@ TestCase {
 
     function test_currentItem() {
         var control = stackView.createObject(testCase, {initialItem: item})
+        verify(control)
         compare(control.currentItem, item)
         control.push(component)
         verify(control.currentItem !== item)
@@ -88,6 +89,7 @@ TestCase {
 
     function test_busy() {
         var control = stackView.createObject(testCase)
+        verify(control)
         compare(control.busy, false)
         control.push(component)
         compare(control.busy, false)
@@ -102,6 +104,7 @@ TestCase {
 
     function test_status() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         var item1 = component.createObject(control)
         compare(item1.AbstractStackView.status, AbstractStackView.Inactive)
@@ -127,6 +130,7 @@ TestCase {
 
     function test_index() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         var item1 = component.createObject(control)
         compare(item1.AbstractStackView.index, -1)
@@ -148,6 +152,7 @@ TestCase {
 
     function test_view() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         var item1 = component.createObject(control)
         compare(item1.AbstractStackView.view, null)
@@ -169,6 +174,7 @@ TestCase {
 
     function test_depth() {
         var control = stackView.createObject(testCase)
+        verify(control)
         compare(control.depth, 0)
         control.push(item, AbstractStackView.Immediate)
         compare(control.depth, 1)
@@ -189,7 +195,9 @@ TestCase {
 
     function test_size() {
         var container = component.createObject(testCase, {width: 200, height: 200})
+        verify(container)
         var control = stackView.createObject(container, {width: 100, height: 100})
+        verify(control)
         container.width += 10
         container.height += 20
         compare(control.width, 100)
@@ -199,6 +207,7 @@ TestCase {
 
     function test_focus() {
         var control = stackView.createObject(testCase, {initialItem: item, width: 200, height: 200})
+        verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
@@ -218,6 +227,7 @@ TestCase {
 
     function test_find() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         var item1 = component.createObject(control, {objectName: "1"})
         var item2 = component.createObject(control, {objectName: "2"})
@@ -244,6 +254,7 @@ TestCase {
 
     function test_get() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         control.push([item, component, component], AbstractStackView.Immediate)
 
@@ -260,6 +271,7 @@ TestCase {
 
     function test_push() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         // missing arguments
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: push: missing arguments")
@@ -312,6 +324,7 @@ TestCase {
 
     function test_pop() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         var items = []
         for (var i = 0; i < 7; ++i)
@@ -353,6 +366,7 @@ TestCase {
 
     function test_replace() {
         var control = stackView.createObject(testCase)
+        verify(control)
 
         // missing arguments
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: replace: missing arguments")
@@ -412,6 +426,7 @@ TestCase {
 
     function test_visibility(data) {
         var control = stackView.createObject(testCase, data.properties)
+        verify(control)
 
         var item1 = component.createObject(control)
         control.push(item1, AbstractStackView.Immediate)
@@ -457,6 +472,7 @@ TestCase {
 
     function test_transitions() {
         var control = transitionView.createObject(testCase)
+        verify(control)
 
         control.push(component)
         verify(!control.busy)
@@ -498,6 +514,7 @@ TestCase {
 
     function test_ownership(data) {
         var control = transitionView.createObject(testCase, {initialItem: component})
+        verify(control)
 
         // push-pop
         control.push(data.arg, AbstractStackView.Immediate)
