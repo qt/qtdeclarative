@@ -46,20 +46,30 @@ void MemberData::markObjects(Heap::Base *that, ExecutionEngine *e)
         m->data[i].mark(e);
 }
 
-Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *old, uint idx)
+static Heap::MemberData *reallocateHelper(ExecutionEngine *e, Heap::MemberData *old, uint n)
 {
-    uint s = old ? old->size : 0;
-    if (idx < s)
-        return old;
-
-    int newAlloc = qMax((uint)4, 2*idx);
-    uint alloc = sizeof(Heap::MemberData) + (newAlloc)*sizeof(Value);
+    uint alloc = sizeof(Heap::MemberData) + (n)*sizeof(Value);
     Scope scope(e);
     Scoped<MemberData> newMemberData(scope, e->memoryManager->allocManaged<MemberData>(alloc));
     if (old)
-        memcpy(newMemberData->d(), old, sizeof(Heap::MemberData) + s*sizeof(Value));
+        memcpy(newMemberData->d(), old, sizeof(Heap::MemberData) + old->size * sizeof(Value));
     else
         new (newMemberData->d()) Heap::MemberData;
-    newMemberData->d()->size = newAlloc;
+    newMemberData->d()->size = n;
     return newMemberData->d();
+}
+
+Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n)
+{
+    return reallocateHelper(e, 0, n);
+}
+
+Heap::MemberData *MemberData::reallocate(ExecutionEngine *e, Heap::MemberData *old, uint n)
+{
+    uint s = old ? old->size : 0;
+    if (n < s)
+        return old;
+
+    // n is multiplied by two to leave room for growth
+    return reallocateHelper(e, old, qMax((uint)4, 2*n));
 }
