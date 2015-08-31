@@ -374,6 +374,7 @@ void QQuickAnimatedSprite::stop()
         return;
     m_pauseOffset = 0;
     emit runningChanged(false);
+    update();
 }
 
 /*!
@@ -391,6 +392,7 @@ void QQuickAnimatedSprite::advance(int frames)
         m_curFrame += m_spriteEngine->maxFrames();
     m_curFrame = m_curFrame % m_spriteEngine->maxFrames();
     emit currentFrameChanged(m_curFrame);
+    update();
 }
 
 /*!
@@ -408,6 +410,7 @@ void QQuickAnimatedSprite::pause()
     m_pauseOffset = m_timestamp.elapsed();
     m_paused = true;
     emit pausedChanged(true);
+    update();
 }
 
 /*!
@@ -425,6 +428,7 @@ void QQuickAnimatedSprite::resume()
     m_pauseOffset = m_pauseOffset - m_timestamp.elapsed();
     m_paused = false;
     emit pausedChanged(false);
+    update();
 }
 
 void QQuickAnimatedSprite::createEngine()
@@ -436,6 +440,7 @@ void QQuickAnimatedSprite::createEngine()
     m_spriteEngine = new QQuickSpriteEngine(QList<QQuickSprite*>(spriteList), this);
     m_spriteEngine->startAssemblingImage();
     reset();
+    update();
 }
 
 static QSGGeometry::Attribute AnimatedSprite_Attributes[] = {
@@ -555,9 +560,12 @@ QSGNode *QQuickAnimatedSprite::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
     prepareNextFrame();
 
     if (m_running) {
-        update();
-        if (m_node)
+        if (!m_paused)
+            update();
+
+        if (m_node) {
             m_node->markDirty(QSGNode::DirtyMaterial);
+        }
     }
 
     return m_node;
@@ -614,12 +622,16 @@ void QQuickAnimatedSprite::prepareNextFrame()
             frameAt = 0;
             m_running = false;
             emit runningChanged(false);
+            update();
         }
     } else {
         frameAt = m_curFrame;
     }
-    if (m_curFrame != lastFrame && isCurrentFrameChangedConnected())
-        emit currentFrameChanged(m_curFrame);
+    if (m_curFrame != lastFrame) {
+        if (isCurrentFrameChangedConnected())
+            emit currentFrameChanged(m_curFrame);
+        update();
+    }
 
     qreal frameCount = m_spriteEngine->spriteFrames();
     bool reverse = m_spriteEngine->sprite()->reverse();
