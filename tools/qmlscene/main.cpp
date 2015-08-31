@@ -358,6 +358,7 @@ static void usage()
     puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
     puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
     puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --no-scaling.......................Disable High DPI scaling (AA_NoHighDpiScaling)");
     puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
@@ -455,6 +456,8 @@ int main(int argc, char ** argv)
                 options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
             else if (lowerArgument == QLatin1String("--desktop"))
                 options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
+            else if (lowerArgument == QLatin1String("--no-scaling"))
+                options.applicationAttributes.append(Qt::AA_NoHighDpiScaling);
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
