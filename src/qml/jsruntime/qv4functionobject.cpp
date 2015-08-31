@@ -408,7 +408,7 @@ ReturnedValue FunctionPrototype::method_bind(CallContext *ctx)
     ScopedValue boundThis(scope, ctx->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
     if (ctx->argc() > 1) {
-        boundArgs = MemberData::reallocate(scope.engine, 0, ctx->argc() - 1);
+        boundArgs = MemberData::allocate(scope.engine, ctx->argc() - 1);
         boundArgs->d()->size = ctx->argc() - 1;
         memcpy(boundArgs->data(), ctx->args() + 1, (ctx->argc() - 1)*sizeof(Value));
     }
