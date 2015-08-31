@@ -86,7 +86,7 @@ void ArgumentsObject::fullyCreate()
     Scoped<MemberData> md(scope, d()->mappedArguments);
     d()->mappedArguments = md->allocate(engine(), numAccessors);
     for (uint i = 0; i < numAccessors; ++i) {
-        mappedArguments()->data[i] = context()->callData->args[i];
+        d()->mappedArguments->data[i] = context()->callData->args[i];
         arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
@@ -116,7 +116,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         map->copy(pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData()->getProperty(index);
-        pd->value = mappedArguments()->data[index];
+        pd->value = d()->mappedArguments->data[index];
     }
 
     bool strict = engine->current->strictMode;

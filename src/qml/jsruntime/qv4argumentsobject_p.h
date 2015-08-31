@@ -103,7 +103,6 @@ struct ArgumentsObject: Object {
 
     Heap::CallContext *context() const { return d()->context; }
     bool fullyCreated() const { return d()->fullyCreated; }
-    Heap::MemberData *mappedArguments() { return d()->mappedArguments; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->d()->vtable()->type == Type_ArgumentsObject &&
