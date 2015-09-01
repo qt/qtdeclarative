@@ -237,6 +237,8 @@ public:
     InternalClass *strictArgumentsObjectClass;
 
     InternalClass *errorClass;
+    InternalClass *errorClassWithMessage;
+    InternalClass *errorProtoClass;
 
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
@@ -388,7 +390,7 @@ public:
     Heap::Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newSyntaxErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message);
-    Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
+    Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newTypeErrorObject(const QString &message);
     Heap::Object *newRangeErrorObject(const QString &message);
     Heap::Object *newURIErrorObject(const Value &message);

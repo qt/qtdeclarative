@@ -353,25 +353,29 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     errorClass = emptyClass->addMember((str = newIdentifier(QStringLiteral("stack"))), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_Stack);
-    errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorObject::Index_Message);
-    errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("name"))), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorObject::Index_Name);
     errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("fileName"))), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_FileName);
     errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("lineNumber"))), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_LineNumber);
+    errorClassWithMessage = errorClass->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorObject::Index_Message);
+    errorProtoClass = emptyClass->addMember(id_constructor(), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Constructor);
+    errorProtoClass = errorProtoClass->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Message);
+    errorProtoClass = errorProtoClass->addMember(id_name(), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Name);
 
     jsObjects[GetStack_Function] = BuiltinFunction::create(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
     getStackFunction()->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
 
-    jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(errorClass, objectPrototype());
-    jsObjects[EvalErrorProto] = memoryManager->allocObject<EvalErrorPrototype>(errorClass, errorPrototype());
-    jsObjects[RangeErrorProto] = memoryManager->allocObject<RangeErrorPrototype>(errorClass, errorPrototype());
-    jsObjects[ReferenceErrorProto] = memoryManager->allocObject<ReferenceErrorPrototype>(errorClass, errorPrototype());
-    jsObjects[SyntaxErrorProto] = memoryManager->allocObject<SyntaxErrorPrototype>(errorClass, errorPrototype());
-    jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(errorClass, errorPrototype());
-    jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(errorClass, errorPrototype());
+    jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(errorProtoClass, objectPrototype());
+    jsObjects[EvalErrorProto] = memoryManager->allocObject<EvalErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[RangeErrorProto] = memoryManager->allocObject<RangeErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[ReferenceErrorProto] = memoryManager->allocObject<ReferenceErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[SyntaxErrorProto] = memoryManager->allocObject<SyntaxErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(errorProtoClass, errorPrototype());
 
     jsObjects[VariantProto] = memoryManager->allocObject<VariantPrototype>(emptyClass, objectPrototype());
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
@@ -678,60 +682,44 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->allocObject<ErrorObject>(value));
-    return object->d();
+    return ErrorObject::create<ErrorObject>(this, value);
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedString s(scope, newString(message));
-    return memoryManager->allocObject<SyntaxErrorObject>(s);
+    return ErrorObject::create<SyntaxErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    Scope scope(this);
-    ScopedObject error(scope, memoryManager->allocObject<SyntaxErrorObject>(message, fileName, line, column));
-    return error->d();
+    return ErrorObject::create<SyntaxErrorObject>(this, message, fileName, line, column);
 }
 
 
 Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(message));
-    return o->d();
+    return ErrorObject::create<ReferenceErrorObject>(this, message);
 }
 
-Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
+Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<ReferenceErrorObject>(message, fileName, lineNumber, columnNumber));
-    return o->d();
+    return ErrorObject::create<ReferenceErrorObject>(this, message, fileName, line, column);
 }
 
 
 Heap::Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<TypeErrorObject>(message));
-    return o->d();
+    return ErrorObject::create<TypeErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<RangeErrorObject>(message));
-    return o->d();
+    return ErrorObject::create<RangeErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->allocObject<URIErrorObject>(message));
-    return o->d();
+    return ErrorObject::create<URIErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
