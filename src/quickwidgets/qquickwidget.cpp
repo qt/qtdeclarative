@@ -566,7 +566,7 @@ QList<QQmlError> QQuickWidget::errors() const
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid qml engine."));
         errs << error;
-    } else if (d->component->status() == QQmlComponent::Ready && !d->root) {
+    } else if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickWidget: invalid root object."));
         errs << error;

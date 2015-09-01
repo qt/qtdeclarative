@@ -223,6 +223,7 @@ void tst_qquickwidget::errors()
 {
     QQuickWidget *view = new QQuickWidget;
     QScopedPointer<QQuickWidget> cleanupView(view);
+    QVERIFY(view->errors().isEmpty()); // don't crash
 
     QQmlTestMessageHandler messageHandler;
     view->setSource(testFileUrl("error1.qml"));
