@@ -11,4 +11,3 @@ IMPORT_FILES = \
         MyQmlFile.qml
 
 include (../../../shared/imports.pri)
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

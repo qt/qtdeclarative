@@ -12,4 +12,3 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_compile.cpp
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

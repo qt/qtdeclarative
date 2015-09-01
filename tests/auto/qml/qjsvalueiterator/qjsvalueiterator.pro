@@ -6,4 +6,3 @@ QT = core qml testlib
 SOURCES  += tst_qjsvalueiterator.cpp
 
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

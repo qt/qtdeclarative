@@ -8,4 +8,3 @@ CONFIG += release
 SOURCES += tst_qjsvalue.cpp
 
 QT += core-private  qml-private testlib
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

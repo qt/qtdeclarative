@@ -9,4 +9,3 @@ SOURCES += tst_qqmlimage.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

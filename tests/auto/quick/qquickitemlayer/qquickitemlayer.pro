@@ -27,4 +27,3 @@ OTHER_FILES += \
     data/ItemEffect.qml \
     data/RectangleEffect.qml \
     data/TextureMirroring.qml
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

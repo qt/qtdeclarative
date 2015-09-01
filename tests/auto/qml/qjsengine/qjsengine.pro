@@ -7,4 +7,3 @@ SOURCES += tst_qjsengine.cpp
 RESOURCES += qjsengine.qrc
 
 TESTDATA = script/*
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

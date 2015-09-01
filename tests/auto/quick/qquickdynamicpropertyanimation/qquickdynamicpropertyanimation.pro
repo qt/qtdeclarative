@@ -11,4 +11,3 @@ TESTDATA = data/*
 CONFIG += parallel_test
 
 QT += core gui qml quick testlib
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

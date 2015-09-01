@@ -29,5 +29,4 @@ OTHER_FILES += \
     data/tst_context.qml
 
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 CONFIG += insignificant_test # QTBUG-41043

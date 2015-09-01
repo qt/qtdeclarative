@@ -16,4 +16,3 @@ OTHER_FILES += \
     rectangle.qml  \
     resizemodeitem.qml
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

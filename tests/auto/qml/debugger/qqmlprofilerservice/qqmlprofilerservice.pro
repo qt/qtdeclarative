@@ -11,7 +11,6 @@ include(../shared/debugutil.pri)
 TESTDATA = data/*
 
 QT += core qml testlib gui-private core-private
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 OTHER_FILES += \
     data/pixmapCacheTest.qml \

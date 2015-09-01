@@ -16,4 +16,3 @@ OTHER_FILES += \
     data/MessUpState.qml \
     data/matrix.qml
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

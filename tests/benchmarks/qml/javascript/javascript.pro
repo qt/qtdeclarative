@@ -9,4 +9,3 @@ HEADERS += testtypes.h
 
 # Define SRCDIR equal to test's source directory
 DEFINES += SRCDIR=\\\"$$PWD\\\"
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

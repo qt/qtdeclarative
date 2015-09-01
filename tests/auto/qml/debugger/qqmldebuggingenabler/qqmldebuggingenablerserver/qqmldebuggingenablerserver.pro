@@ -3,7 +3,7 @@ osx:CONFIG -= app_bundle
 CONFIG -= debug_and_release_target
 INCLUDEPATH += ../../shared
 SOURCES += qqmldebuggingenablerserver.cpp
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0 QT_QML_DEBUG_NO_WARNING
+DEFINES += QT_QML_DEBUG_NO_WARNING
 
 DESTDIR = ../qqmldebuggingenabler
 

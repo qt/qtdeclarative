@@ -13,4 +13,3 @@ include(../shared/qqmlenginedebugclient.pri)
 include(../shared/debugutil.pri)
 
 TESTDATA = data/*
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
