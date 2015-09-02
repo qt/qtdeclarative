@@ -44,8 +44,6 @@ T.BusyIndicator {
     implicitWidth: indicator.implicitWidth + leftPadding + rightPadding
     implicitHeight: indicator.implicitHeight + topPadding + bottomPadding
 
-    Accessible.role: Accessible.Indicator
-
     padding: 6
 
     //! [indicator]

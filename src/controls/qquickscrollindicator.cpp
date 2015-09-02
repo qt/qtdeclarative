@@ -93,6 +93,7 @@ public:
 QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
 {
+    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObject *object)

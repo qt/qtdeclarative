@@ -51,14 +51,18 @@
 #include <QtQuick/private/qquicktextedit_p_p.h>
 #include <QtQuickControls/private/qquickpressandholdhelper_p.h>
 
+#include "qquicktextarea_p.h"
+
 QT_BEGIN_NAMESPACE
+
+class QQuickAccessibleAttached;
 
 class QQuickTextAreaPrivate : public QQuickTextEditPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTextArea)
 
 public:
-    QQuickTextAreaPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
+    QQuickTextAreaPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR), accessibleAttached(Q_NULLPTR) { }
 
     static QQuickTextAreaPrivate *get(QQuickTextArea *item) {
         return static_cast<QQuickTextAreaPrivate *>(QObjectPrivate::get(item)); }
@@ -73,9 +77,13 @@ public:
     }
     void resolveFont();
 
+    void _q_readOnlyChanged(bool isReadOnly);
+    void _q_placeholderTextChanged(const QString &text);
+
     QQuickItem *background;
     QQuickText *placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
+    QQuickAccessibleAttached *accessibleAttached;
 };
 
 Q_DECLARE_TYPEINFO(QQuickTextAreaPrivate, Q_COMPLEX_TYPE);

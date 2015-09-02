@@ -47,8 +47,6 @@ T.ToolBar {
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
-    Accessible.role: Accessible.ToolBar
-
     //! [contentItem]
     contentItem: Item { }
     //! [contentItem]

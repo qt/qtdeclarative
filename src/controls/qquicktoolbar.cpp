@@ -92,6 +92,7 @@ QT_BEGIN_NAMESPACE
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :
     QQuickFrame(parent)
 {
+    setAccessibleRole(0x00000016); //QAccessible::ToolBar
 }
 
 QT_END_NAMESPACE

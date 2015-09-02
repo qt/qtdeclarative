@@ -79,6 +79,7 @@ public:
 QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickBusyIndicatorPrivate), parent)
 {
+    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 /*!

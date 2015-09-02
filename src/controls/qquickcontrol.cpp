@@ -45,6 +45,10 @@
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -60,7 +64,8 @@ QT_BEGIN_NAMESPACE
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
-    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR)
+    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR),
+    accessibleAttached(Q_NULLPTR), accessibleRole(0) // QAccessible::NoRole
 {
 }
 
@@ -224,6 +229,70 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *i, const QFont &f)
             QQuickControlPrivate::updateFontRecur(child, f);
         }
     }
+}
+
+int QQuickControl::accessibleRole() const
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(const QQuickControl);
+    if (d->accessibleAttached)
+        return d->accessibleAttached->role();
+#endif
+    return 0; // QAccessible::NoRole
+}
+
+void QQuickControl::setAccessibleRole(int role)
+{
+    Q_D(QQuickControl);
+    d->accessibleRole = role;
+#ifndef QT_NO_ACCESSIBILITY
+    if (d->accessibleAttached)
+        d->accessibleAttached->setRole((QAccessible::Role)role);
+#endif
+}
+
+QString QQuickControl::accessibleName() const
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(const QQuickControl);
+    if (d->accessibleAttached)
+        return d->accessibleAttached->name();
+#endif
+    return QString();
+}
+
+void QQuickControl::setAccessibleName(const QString &name)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        d->accessibleAttached->setName(name);
+#else
+    Q_UNUSED(name)
+#endif
+}
+
+QVariant QQuickControl::accessibleProperty(const char *propertyName)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        return QQuickAccessibleAttached::property(this, propertyName);
+#endif
+    Q_UNUSED(propertyName)
+    return QVariant();
+}
+
+bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickControl);
+    if (d->accessibleAttached)
+        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
+#endif
+    Q_UNUSED(propertyName)
+    Q_UNUSED(value)
+    return false;
 }
 
 QQuickControl::QQuickControl(QQuickItem *parent) :
@@ -594,6 +663,19 @@ void QQuickControl::setContentItem(QQuickItem *item)
         }
         emit contentItemChanged();
     }
+}
+
+void QQuickControl::classBegin()
+{
+    QQuickItem::classBegin();
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickControl);
+    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    if (d->accessibleAttached)
+        d->accessibleAttached->setRole((QAccessible::Role)(d->accessibleRole));
+    else
+        qWarning() << "QQuickControl: QQuickAccessibleAttached object creation failed!";
+#endif
 }
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)

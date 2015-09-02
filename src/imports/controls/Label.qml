@@ -41,9 +41,6 @@ import QtQuick.Templates 2.0 as T
 T.Label {
     id: control
 
-    Accessible.name: text
-    Accessible.role: Accessible.StaticText
-
     color: Theme.textColor
     linkColor: Theme.focusColor // TODO
 }

@@ -91,6 +91,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
+    void classBegin() Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickTextArea)
     Q_DECLARE_PRIVATE(QQuickTextArea)

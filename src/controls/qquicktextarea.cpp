@@ -44,6 +44,10 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -85,8 +89,11 @@ void QQuickTextAreaPrivate::resizeBackground()
 QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
     QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
+    Q_D(QQuickTextArea);
     setActiveFocusOnTab(true);
-    d_func()->pressAndHoldHelper.control = this;
+    d->pressAndHoldHelper.control = this;
+    QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
+                            d, &QQuickTextAreaPrivate::_q_readOnlyChanged);
 }
 
 QQuickTextArea::~QQuickTextArea()
@@ -107,6 +114,27 @@ void QQuickTextAreaPrivate::resolveFont()
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
     QFont resolvedFont = sourceFont.resolve(naturalFont);
     setFont_helper(resolvedFont);
+}
+
+void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    Q_Q(QQuickTextArea);
+    if (accessibleAttached)
+        QQuickAccessibleAttached::setProperty(q, "readOnly", isReadOnly);
+#else
+    Q_UNUSED(isReadOnly)
+#endif
+}
+
+void QQuickTextAreaPrivate::_q_placeholderTextChanged(const QString &text)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    if (accessibleAttached)
+        accessibleAttached->setDescription(text);
+#else
+    Q_UNUSED(text)
+#endif
 }
 
 QFont QQuickTextArea::font() const
@@ -185,10 +213,22 @@ void QQuickTextArea::setPlaceholder(QQuickText *placeholder)
 {
     Q_D(QQuickTextArea);
     if (d->placeholder != placeholder) {
-        delete d->placeholder;
+        if (d->placeholder) {
+            QObjectPrivate::disconnect(d->placeholder, &QQuickText::textChanged,
+                                       d, &QQuickTextAreaPrivate::_q_placeholderTextChanged);
+            delete d->placeholder;
+        }
         d->placeholder = placeholder;
-        if (placeholder && !placeholder->parentItem())
+        if (placeholder && !placeholder->parentItem()) {
             placeholder->setParentItem(this);
+            QObjectPrivate::connect(d->placeholder, &QQuickText::textChanged,
+                                    d, &QQuickTextAreaPrivate::_q_placeholderTextChanged);
+        } else {
+#ifndef QT_NO_ACCESSIBILITY
+            if (d->accessibleAttached)
+                d->accessibleAttached->setDescription(QLatin1Literal(""));
+#endif
+        }
         emit placeholderChanged();
     }
 }
@@ -247,6 +287,21 @@ void QQuickTextArea::timerEvent(QTimerEvent *event)
     } else {
         QQuickTextEdit::timerEvent(event);
     }
+}
+
+void QQuickTextArea::classBegin()
+{
+    QQuickTextEdit::classBegin();
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickTextArea);
+    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    if (d->accessibleAttached) {
+        d->accessibleAttached->setRole((QAccessible::Role)(0x0000002A)); // Accessible.EditableText
+        QQuickAccessibleAttached::setProperty(this, "multiLine", true);
+    } else {
+        qWarning() << "QQuickTextArea: QQuickAccessibleAttached object creation failed!";
+    }
+#endif
 }
 
 QT_END_NAMESPACE

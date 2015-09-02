@@ -52,12 +52,14 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAccessibleAttached;
+
 class QQuickLabelPrivate : public QQuickTextPrivate
 {
     Q_DECLARE_PUBLIC(QQuickLabel)
 
 public:
-    QQuickLabelPrivate() : background(Q_NULLPTR) { }
+    QQuickLabelPrivate() : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR) { }
 
     static QQuickLabelPrivate *get(QQuickLabel *item) {
         return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item)); }
@@ -72,7 +74,10 @@ public:
     }
     void resolveFont();
 
+    void _q_textChanged(const QString &text);
+
     QQuickItem *background;
+    QQuickAccessibleAttached *accessibleAttached;
 };
 
 Q_DECLARE_TYPEINFO(QQuickLabelPrivate, Q_COMPLEX_TYPE);

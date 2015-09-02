@@ -46,11 +46,6 @@ T.TabButton {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
 
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.selected: checked
-    Accessible.role: Accessible.PageTab
-
     padding: 6
 
     //! [label]

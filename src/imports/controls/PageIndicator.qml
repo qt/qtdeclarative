@@ -41,8 +41,6 @@ import QtQuick.Templates 2.0 as T
 T.PageIndicator {
     id: control
 
-    Accessible.role: Accessible.Indicator
-
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,

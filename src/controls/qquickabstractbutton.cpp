@@ -83,6 +83,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+    setAccessibleRole(0x0000002B); //QAccessible::Button
 }
 
 QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent) :
@@ -90,6 +91,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+    setAccessibleRole(0x0000002B); //QAccessible::Button
 }
 
 /*!
@@ -113,6 +115,7 @@ void QQuickAbstractButton::setText(const QString &text)
     Q_D(QQuickAbstractButton);
     if (d->text != text) {
         d->text = text;
+        setAccessibleName(text);
         emit textChanged();
     }
 }
@@ -133,6 +136,7 @@ void QQuickAbstractButton::setPressed(bool isPressed)
     Q_D(QQuickAbstractButton);
     if (d->pressed != isPressed) {
         d->pressed = isPressed;
+        setAccessibleProperty("pressed", isPressed);
         emit pressedChanged();
     }
 }

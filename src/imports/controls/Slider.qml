@@ -48,9 +48,6 @@ T.Slider {
                              Math.max(track ? track.implicitHeight : 0,
                                       handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Slider
-
     padding: 6
 
     //! [handle]

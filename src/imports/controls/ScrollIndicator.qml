@@ -46,8 +46,6 @@ T.ScrollIndicator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              indicator.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.role: Accessible.Indicator
-
     padding: 2
 
     //! [indicator]

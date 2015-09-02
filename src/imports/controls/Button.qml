@@ -46,10 +46,6 @@ T.Button {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
 
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Button
-
     padding: 6
     leftPadding: 8
     rightPadding: 8

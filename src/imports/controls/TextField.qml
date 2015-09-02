@@ -41,12 +41,6 @@ import QtQuick.Templates 2.0 as T
 T.TextField {
     id: control
 
-    Accessible.name: text
-    Accessible.role: Accessible.EditableText
-    Accessible.readOnly: readOnly
-    Accessible.description: placeholder ? placeholder.text : ""
-    Accessible.passwordEdit: echoMode === TextInput.Password || echoMode === TextInput.PasswordEchoOnEdit
-
     padding: 6
 
     color: enabled ? Theme.textColor : Theme.disabledColor

@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
     QQuickCheckable(parent)
 {
+    setAccessibleRole(0x0000002C); //QAccessible::CheckBox
 }
 
 QT_END_NAMESPACE

@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAccessibleAttached;
+
 class Q_QUICKCONTROLS_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickControl)
@@ -93,6 +95,8 @@ public:
     Qt::LayoutDirection layoutDirection;
     QQuickItem *background;
     QQuickItem *contentItem;
+    QQuickAccessibleAttached *accessibleAttached;
+    int accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);

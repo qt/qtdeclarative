@@ -41,12 +41,6 @@ import QtQuick.Templates 2.0 as T
 T.TextArea {
     id: control
 
-    Accessible.name: text
-    Accessible.multiLine: true
-    Accessible.role: Accessible.EditableText
-    Accessible.readOnly: readOnly
-    Accessible.description: placeholder ? placeholder.text : ""
-
     color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor

@@ -46,9 +46,6 @@ T.ScrollBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              handle.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.ScrollBar
-
     padding: 2
 
     //! [handle]

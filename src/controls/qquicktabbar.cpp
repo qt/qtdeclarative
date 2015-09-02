@@ -177,6 +177,7 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
     Q_D(QQuickTabBar);
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
+    setAccessibleRole(0x0000003C); //QAccessible::PageTabList
 
     d->group = new QQuickExclusiveGroup(this);
     connect(d->group, &QQuickExclusiveGroup::currentChanged, this, &QQuickTabBar::currentItemChanged);

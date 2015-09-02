@@ -85,6 +85,8 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
+    void classBegin() Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickCheckable)
     Q_DECLARE_PRIVATE(QQuickCheckable)

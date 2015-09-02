@@ -149,6 +149,17 @@ protected:
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 
+    void classBegin() Q_DECL_OVERRIDE;
+
+    int accessibleRole() const; // int for QAccessible::Role
+    void setAccessibleRole(int role); // int for QAccessible::Role
+
+    QString accessibleName() const;
+    void setAccessibleName(const QString &name);
+
+    QVariant accessibleProperty(const char *propertyName);
+    bool setAccessibleProperty(const char *propertyName, const QVariant &value);
+
 private:
     Q_DISABLE_COPY(QQuickControl)
     Q_DECLARE_PRIVATE(QQuickControl)

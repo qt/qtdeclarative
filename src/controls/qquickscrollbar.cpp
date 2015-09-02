@@ -105,6 +105,7 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
 {
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+    setAccessibleRole(0x00000003); //QAccessible::ScrollBar
 }
 
 QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
@@ -198,6 +199,7 @@ void QQuickScrollBar::setPressed(bool pressed)
     Q_D(QQuickScrollBar);
     if (d->pressed != pressed) {
         d->pressed = pressed;
+        setAccessibleProperty("pressed", pressed);
         setActive(d->pressed || d->moving);
         emit pressedChanged();
     }

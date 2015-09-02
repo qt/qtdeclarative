@@ -80,6 +80,7 @@ public:
 QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
     QQuickControl(*(new QQuickProgressBarPrivate), parent)
 {
+    setAccessibleRole(0x00000030); //QAccessible::ProgressBar
 }
 
 /*!

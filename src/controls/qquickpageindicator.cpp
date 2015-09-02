@@ -79,6 +79,7 @@ public:
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickPageIndicatorPrivate), parent)
 {
+    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 /*!

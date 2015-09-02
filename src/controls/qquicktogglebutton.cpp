@@ -78,6 +78,7 @@ QT_BEGIN_NAMESPACE
 QQuickToggleButton::QQuickToggleButton(QQuickItem *parent) :
     QQuickSwitch(parent)
 {
+    setAccessibleRole(0x0000002B); //QAccessible::Button
 }
 
 QT_END_NAMESPACE

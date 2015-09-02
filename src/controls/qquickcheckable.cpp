@@ -79,6 +79,7 @@ void QQuickCheckable::setChecked(bool checked)
     Q_D(QQuickCheckable);
     if (d->checked != checked) {
         d->checked = checked;
+        setAccessibleProperty("checked", checked);
         emit checkedChanged();
     }
 }
@@ -146,6 +147,12 @@ void QQuickCheckable::mouseReleaseEvent(QMouseEvent *event)
     QQuickAbstractButton::mouseReleaseEvent(event);
     if (contains(event->pos()))
         setChecked(d->exclusive || !d->checked);
+}
+
+void QQuickCheckable::classBegin()
+{
+    QQuickAbstractButton::classBegin();
+    setAccessibleProperty("checkable", true);
 }
 
 QT_END_NAMESPACE

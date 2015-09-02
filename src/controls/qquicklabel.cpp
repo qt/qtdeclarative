@@ -43,11 +43,18 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QQuickLabel::QQuickLabel(QQuickItem *parent) :
     QQuickText(*(new QQuickLabelPrivate), parent)
 {
+    Q_D(const QQuickLabel);
+    QObjectPrivate::connect(this, &QQuickText::textChanged,
+                            d, &QQuickLabelPrivate::_q_textChanged);
 }
 
 QQuickLabel::~QQuickLabel()
@@ -68,6 +75,16 @@ void QQuickLabelPrivate::resolveFont()
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
     QFont resolvedFont = sourceFont.resolve(naturalFont);
     setFont_helper(resolvedFont);
+}
+
+void QQuickLabelPrivate::_q_textChanged(const QString &text)
+{
+#ifndef QT_NO_ACCESSIBILITY
+    if (accessibleAttached)
+        accessibleAttached->setName(text);
+#else
+    Q_UNUSED(text)
+#endif
 }
 
 QFont QQuickLabel::font() const
@@ -93,6 +110,19 @@ void QQuickLabel::setFont(const QFont &font)
     QQuickText::setFont(font);
 
     emit fontChanged();
+}
+
+void QQuickLabel::classBegin()
+{
+    QQuickText::classBegin();
+#ifndef QT_NO_ACCESSIBILITY
+    Q_D(QQuickLabel);
+    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    if (d->accessibleAttached)
+        d->accessibleAttached->setRole((QAccessible::Role)0x00000029); // Accessible.StaticText
+    else
+        qWarning() << "QQuickLabel: QQuickAccessibleAttached object creation failed!";
+#endif
 }
 
 QQuickItem *QQuickLabel::background() const

@@ -87,6 +87,7 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
     QQuickCheckable(parent)
 {
     setExclusive(true);
+    setAccessibleRole(0x0000002D); //QAccessible::RadioButton
 }
 
 QT_END_NAMESPACE

@@ -49,11 +49,6 @@ T.CheckBox {
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
 
-    Accessible.name: text
-    Accessible.checked: checked
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.CheckBox
-
     padding: 6
     spacing: 6
 

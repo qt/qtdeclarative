@@ -51,7 +51,11 @@
 #include <QtQuick/private/qquicktextinput_p_p.h>
 #include <QtQuickControls/private/qquickpressandholdhelper_p.h>
 
+#include "qquicktextfield_p.h"
+
 QT_BEGIN_NAMESPACE
+
+class QQuickAccessibleAttached;
 
 class QQuickTextFieldPrivate : public QQuickTextInputPrivate
 {
@@ -76,9 +80,14 @@ public:
     }
     void resolveFont();
 
+    void _q_readOnlyChanged(bool isReadOnly);
+    void _q_placeholderTextChanged(const QString &text);
+    void _q_echoModeChanged(QQuickTextField::EchoMode echoMode);
+
     QQuickItem *background;
     QQuickText *placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
+    QQuickAccessibleAttached *accessibleAttached;
 };
 
 Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);

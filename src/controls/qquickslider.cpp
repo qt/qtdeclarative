@@ -158,6 +158,7 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+    setAccessibleRole(0x00000033); //QAccessible::Slider
 }
 
 /*!
@@ -348,6 +349,7 @@ void QQuickSlider::setPressed(bool pressed)
     Q_D(QQuickSlider);
     if (d->pressed != pressed) {
         d->pressed = pressed;
+        setAccessibleProperty("pressed", pressed);
         emit pressedChanged();
     }
 }

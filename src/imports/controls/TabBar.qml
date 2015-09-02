@@ -46,8 +46,6 @@ T.TabBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.role: Accessible.PageTabList
-
     spacing: 1
 
     //! [contentItem]
