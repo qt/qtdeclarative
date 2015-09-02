@@ -60,8 +60,6 @@ class Q_QUICKCONTROLS_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_OBJECT
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
@@ -73,17 +71,9 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
 Q_SIGNALS:
     void headerChanged();
     void footerChanged();
-    void contentWidthChanged();
-    void contentHeightChanged();
 
 protected:
     bool isComponentComplete() const;
