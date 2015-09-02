@@ -208,8 +208,8 @@ item and then transfer the item to the items group before moving it to the pre-d
 repeat until the unsorted group is empty.
 
 To find the insert position for an item we request a handle for the item from the unsorted group
-with the \l {DelegateModel::}{get} function.  Through the model property on this
-handle we can access the same model data that is available in a delegate instance of that item and
+with the \l {DelegateModelGroup::}{get()} function. Through the model property on this handle we can
+access the same model data that is available in a delegate instance of that item and
 compare against other items to determine relative position.
 
 \snippet tutorials/dynamicview/dynamicview4/dynamicview.qml 3
