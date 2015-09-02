@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTEXTAREA_P_H
-#define QQUICKTEXTAREA_P_H
+#ifndef QQUICKTEXTFIELD_P_P_H
+#define QQUICKTEXTFIELD_P_P_H
 
 //
 //  W A R N I N G
@@ -48,56 +48,41 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuick/private/qquicktextinput_p_p.h>
+#include <QtQuickControls/private/qquickpressandholdhelper_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickText;
-class QQuickTextAreaPrivate;
-class QQuickMouseEvent;
-
-class Q_QUICKCONTROLS_EXPORT QQuickTextArea : public QQuickTextEdit
+class QQuickTextFieldPrivate : public QQuickTextInputPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
-    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickTextField)
 
 public:
-    explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
-    ~QQuickTextArea();
+    QQuickTextFieldPrivate()
+        : background(Q_NULLPTR)
+        , placeholder(Q_NULLPTR)
+    { }
 
-    QFont font() const;
-    void setFont(const QFont &font);
+    static QQuickTextFieldPrivate *get(QQuickTextField *item) {
+        return static_cast<QQuickTextFieldPrivate *>(QObjectPrivate::get(item)); }
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
+    void resizeBackground();
 
-    QQuickText *placeholder() const;
-    void setPlaceholder(QQuickText *placeholder);
+    inline void setFont_helper(const QFont &f) {
+        // In QQuickTextInputPrivate, sourceFont was used, instead of font...
+        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
+            return;
+        sourceFont = f;
+    }
+    void resolveFont();
 
-Q_SIGNALS:
-    void fontChanged();
-    void backgroundChanged();
-    void placeholderChanged();
-    void pressAndHold(QQuickMouseEvent *event);
-
-protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickTextArea)
-    Q_DECLARE_PRIVATE(QQuickTextArea)
+    QQuickItem *background;
+    QQuickText *placeholder;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
 };
 
-Q_DECLARE_TYPEINFO(QQuickTextArea, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKTEXTAREA_P_H
+#endif // QQUICKTEXTFIELD_P_P_H

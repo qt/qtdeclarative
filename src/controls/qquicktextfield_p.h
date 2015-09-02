@@ -60,12 +60,16 @@ class QQuickMouseEvent;
 class Q_QUICKCONTROLS_EXPORT QQuickTextField : public QQuickTextInput
 {
     Q_OBJECT
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
 
 public:
     explicit QQuickTextField(QQuickItem *parent = Q_NULLPTR);
     ~QQuickTextField();
+
+    QFont font() const;
+    void setFont(const QFont &font);
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
@@ -74,6 +78,7 @@ public:
     void setPlaceholder(QQuickText *placeholder);
 
 Q_SIGNALS:
+    void fontChanged();
     void backgroundChanged();
     void placeholderChanged();
     void pressAndHold(QQuickMouseEvent *mouse);

@@ -35,13 +35,14 @@
 ****************************************************************************/
 
 #include "qquicktextfield_p.h"
-#include "qquickpressandholdhelper_p.h"
+#include "qquicktextfield_p_p.h"
+#include "qquickcontrol_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtCore/qbasictimer.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
-#include <QtQuick/private/qquicktextinput_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,23 +83,6 @@ QT_BEGIN_NAMESPACE
     position of the press, and which button is pressed.
 */
 
-class QQuickTextFieldPrivate : public QQuickTextInputPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickTextField)
-
-public:
-    QQuickTextFieldPrivate()
-        : background(Q_NULLPTR)
-        , placeholder(Q_NULLPTR)
-    { }
-
-    void resizeBackground();
-
-    QQuickItem *background;
-    QQuickText *placeholder;
-    QQuickPressAndHoldHelper pressAndHoldHelper;
-};
-
 void QQuickTextFieldPrivate::resizeBackground()
 {
     Q_Q(QQuickTextField);
@@ -124,6 +108,47 @@ QQuickTextField::QQuickTextField(QQuickItem *parent) :
 
 QQuickTextField::~QQuickTextField()
 {
+}
+
+/*!
+    \internal
+
+    Determine which font is implicitly imposed on this control by its ancestors
+    and QGuiApplication::font, resolve this against its own font (attributes from
+    the implicit font are copied over). Then propagate this font to this
+    control's children.
+*/
+void QQuickTextFieldPrivate::resolveFont()
+{
+    Q_Q(QQuickTextField);
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
+    QFont resolvedFont = sourceFont.resolve(naturalFont);
+    setFont_helper(resolvedFont);
+}
+
+QFont QQuickTextField::font() const
+{
+    Q_D(const QQuickTextField);
+    return d->sourceFont;
+}
+
+void QQuickTextField::setFont(const QFont &font)
+{
+    Q_D(QQuickTextField);
+    if (d->sourceFont == font)
+        return;
+
+    // Determine which font is inherited from this control's ancestors and
+    // QGuiApplication::font, resolve this against \a font (attributes from the
+    // inherited font are copied over). Then propagate this font to this
+    // control's children.
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
+    QFont resolvedFont = font.resolve(naturalFont);
+    d->setFont_helper(resolvedFont);
+
+    QQuickTextInput::setFont(font);
+
+    emit fontChanged();
 }
 
 /*!

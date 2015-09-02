@@ -58,6 +58,7 @@ class QQuickControlPrivate;
 class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 {
     Q_OBJECT
+    Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
@@ -74,6 +75,10 @@ class Q_QUICKCONTROLS_EXPORT QQuickControl : public QQuickItem
 
 public:
     explicit QQuickControl(QQuickItem *parent = Q_NULLPTR);
+
+    QFont font() const;
+    void setFont(const QFont &);
+    void resetFont();
 
     qreal availableWidth() const;
     qreal availableHeight() const;
@@ -115,6 +120,7 @@ public:
     void setContentItem(QQuickItem *item);
 
 Q_SIGNALS:
+    void fontChanged();
     void availableWidthChanged();
     void availableHeightChanged();
     void paddingChanged();
@@ -131,6 +137,8 @@ Q_SIGNALS:
 
 protected:
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
+
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
 
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

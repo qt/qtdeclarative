@@ -37,6 +37,12 @@
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtGui/qguiapplication.h>
+#include "qquicktextarea_p.h"
+#include "qquicktextarea_p_p.h"
+#include "qquicktextfield_p.h"
+#include "qquicktextfield_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -143,6 +149,78 @@ void QQuickControlPrivate::resizeContent()
     }
 }
 
+/*!
+    \internal
+
+    Returns the font that the control w inherits from its ancestors and
+    QGuiApplication::font.
+*/
+QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
+{
+    QFont naturalFont = QGuiApplication::font();
+    QQuickItem *p = q->parentItem();
+    while (p) {
+        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
+            naturalFont = qc->font();
+            break;
+        }
+
+        p = p->parentItem();
+    }
+
+    naturalFont.resolve(0);
+    return naturalFont;
+}
+
+/*!
+    \internal
+
+    Determine which font is implicitly imposed on this control by its ancestors
+    and QGuiApplication::font, resolve this against its own font (attributes from
+    the implicit font are copied over). Then propagate this font to this
+    control's children.
+*/
+void QQuickControlPrivate::resolveFont()
+{
+    Q_Q(const QQuickControl);
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
+    QFont resolvedFont = font.resolve(naturalFont);
+    setFont_helper(resolvedFont);
+}
+
+/*!
+    \internal
+
+    Assign \a font to this control, and propagate it to all children.
+*/
+void QQuickControlPrivate::updateFont(const QFont &f)
+{
+    Q_Q(QQuickControl);
+    font = f;
+
+    QQuickControlPrivate::updateFontRecur(q, f);
+
+    emit q->fontChanged();
+}
+
+void QQuickControlPrivate::updateFontRecur(QQuickItem *i, const QFont &f)
+{
+    foreach (QQuickItem *child, i->childItems()) {
+        if (QQuickControl *qc = qobject_cast<QQuickControl *>(child)) {
+            QQuickControlPrivate *qcp = qc->d_func();
+            qcp->resolveFont();
+        } else if (QQuickTextArea *qta = qobject_cast<QQuickTextArea *>(child)) {
+            QQuickTextAreaPrivate *qtap = QQuickTextAreaPrivate::get(qta);
+            qtap->resolveFont();
+        } else if (QQuickTextField *qtf = qobject_cast<QQuickTextField *>(child)) {
+            QQuickTextFieldPrivate *qtfp = QQuickTextFieldPrivate::get(qtf);
+            qtfp->resolveFont();
+        } else {
+            QQuickControlPrivate::updateFontRecur(child, f);
+        }
+    }
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent) :
     QQuickItem(*(new QQuickControlPrivate), parent)
 {
@@ -151,6 +229,40 @@ QQuickControl::QQuickControl(QQuickItem *parent) :
 QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
     QQuickItem(dd, parent)
 {
+}
+
+void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickControl);
+    QQuickItem::itemChange(change, value);
+    if (change == ItemParentHasChanged)
+        d->resolveFont();
+}
+
+QFont QQuickControl::font() const
+{
+    Q_D(const QQuickControl);
+    return d->font;
+}
+
+void QQuickControl::setFont(const QFont &f)
+{
+    Q_D(QQuickControl);
+    if (d->font == f)
+        return;
+
+    // Determine which font is inherited from this control's ancestors and
+    // QGuiApplication::font, resolve this against \a font (attributes from the
+    // inherited font are copied over). Then propagate this font to this
+    // control's children.
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
+    QFont resolvedFont = f.resolve(naturalFont);
+    d->setFont_helper(resolvedFont);
+}
+
+void QQuickControl::resetFont()
+{
+    setFont(QFont());
 }
 
 /*!
