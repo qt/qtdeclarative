@@ -60,7 +60,7 @@
 
     \section1 Available Fonts
 
-    \e{Available Fonts} shows how to use the QML \l{QtQml::Qt}{Qt} global object
+    \e{Available Fonts} shows how to use the \l [QML] {Qt} global object
     and a list view to display all the fonts available on the system.
     The \l ListView type uses the list of fonts available as its model:
     \snippet text/fonts/availableFonts.qml model

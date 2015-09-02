@@ -235,7 +235,7 @@ QString QQuickTextInputPrivate::realText() const
     Sets the style name of the font.
 
     The style name is case insensitive. If set, the font will be matched against style name instead
-    of the font properties \l weight, \l bold and \l italic.
+    of the font properties \l font.weight, \l font.bold and \l font.italic.
 */
 
 /*!
