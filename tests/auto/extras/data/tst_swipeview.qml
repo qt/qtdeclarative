@@ -60,8 +60,20 @@ TestCase {
         Text { }
     }
 
+    SignalSpy {
+        id: currentItemChangedSpy
+        signalName: "currentItemChanged"
+    }
+
+    function cleanup() {
+        currentItemChangedSpy.clear()
+        currentItemChangedSpy.target = null
+    }
+
     function test_current() {
         var control = swipeView.createObject(testCase)
+
+        currentItemChangedSpy.target = control
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)
@@ -71,24 +83,29 @@ TestCase {
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(currentItemChangedSpy.count, 1);
 
         control.addItem(page.createObject(control, {text: "1"}))
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(currentItemChangedSpy.count, 1);
 
         control.addItem(page.createObject(control, {text: "2"}))
         compare(control.count, 3)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(currentItemChangedSpy.count, 1);
 
         control.currentIndex = 1
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "1")
+        compare(currentItemChangedSpy.count, 2);
 
         control.currentIndex = 2
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
+        compare(currentItemChangedSpy.count, 3);
 
         control.destroy()
     }
@@ -129,20 +146,26 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
+        currentItemChangedSpy.target = control;
+
         compare(control.count, 0)
         compare(control.currentIndex, -1)
+        compare(control.currentItem, null)
         control.addItem(page.createObject(control, {text: "1"}))
         compare(control.count, 1)
         compare(control.currentIndex, 0)
+        compare(currentItemChangedSpy.count, 1)
         compare(control.currentItem.text, "1")
         control.addItem(page.createObject(control, {text: "2"}))
         compare(control.count, 2)
         compare(control.currentIndex, 0)
+        compare(currentItemChangedSpy.count, 1)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "2")
 
         control.currentIndex = 1
+        compare(currentItemChangedSpy.count, 2)
 
         control.insertItem(1, page.createObject(control, {text: "3"}))
         compare(control.count, 3)
@@ -195,15 +218,19 @@ TestCase {
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "2")
 
+        currentItemChangedSpy.clear()
+
         control.removeItem(1)
         compare(control.count, 1)
         compare(control.currentIndex, 0)
+        compare(currentItemChangedSpy.count, 1)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
 
         control.removeItem(0)
         compare(control.count, 0)
         compare(control.currentIndex, -1)
+        compare(currentItemChangedSpy.count, 2)
 
         control.destroy()
     }

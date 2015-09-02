@@ -156,6 +156,7 @@ void QQuickSwipeView::setCurrentIndex(int index)
     if (d->currentIndex != index) {
         d->currentIndex = index;
         emit currentIndexChanged();
+        emit currentItemChanged();
     }
 }
 
