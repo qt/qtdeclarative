@@ -72,6 +72,9 @@ struct Object : Base {
         Data *d() const { return static_cast<Data *>(m); }
 
 #define V4_OBJECT2(DataClass, superClass) \
+    private: \
+        DataClass() Q_DECL_EQ_DELETE; \
+        Q_DISABLE_COPY(DataClass) \
     public: \
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \

@@ -324,10 +324,6 @@ struct Node : public Object
     static ReturnedValue create(ExecutionEngine *v4, NodeImpl *);
 
     bool isNull() const;
-
-private:
-    Node &operator=(const Node &);
-    Node(const Node &o);
 };
 
 Heap::Node::Node(ExecutionEngine *engine, NodeImpl *data)
