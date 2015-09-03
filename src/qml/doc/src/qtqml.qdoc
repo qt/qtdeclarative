@@ -140,8 +140,6 @@ Further information for writing QML applications:
     - essential information for application development with QML and Qt Quick
 \li \l{Qt Quick} - a module which provides a set of QML types and C++ classes
     for building user interfaces and applications with QML
-\li \l{Qt QML Release Notes} - list of changes and
-    additions in the Qt QML module
 \endlist
 
 \section2 Reference

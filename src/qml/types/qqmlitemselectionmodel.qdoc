@@ -38,7 +38,7 @@
     This page only enumerates the properties, methods, and signals available in QML.
     See \l QItemSelectionModel for the actual documentation of this class.
 
-    \sa ItemModels
+    \sa QItemSelectionModel, {Models and Views in Qt Quick}
 */
 
 
