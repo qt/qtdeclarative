@@ -93,6 +93,33 @@ TestCase {
         control.destroy()
     }
 
+    Component {
+        id: initialCurrentSwipeView
+        SwipeView {
+            currentIndex: 1
+
+            property alias item0: item0
+            property alias item1: item1
+
+            Item {
+                id: item0
+            }
+            Item {
+                id: item1
+            }
+        }
+    }
+
+    function test_initialCurrent() {
+        var control = initialCurrentSwipeView.createObject(testCase)
+
+        compare(control.count, 2)
+        compare(control.currentIndex, 1)
+        compare(control.currentItem, control.item1)
+
+        control.destroy()
+    }
+
     function test_addRemove() {
         var control = swipeView.createObject(testCase)
 
