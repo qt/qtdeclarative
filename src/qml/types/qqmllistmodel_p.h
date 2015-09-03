@@ -71,6 +71,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent) const;
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
     QHash<int,QByteArray> roleNames() const;
 
     QVariant data(int index, int role) const;

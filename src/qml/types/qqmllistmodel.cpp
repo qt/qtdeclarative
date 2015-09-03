@@ -1875,6 +1875,30 @@ QVariant QQmlListModel::data(const QModelIndex &index, int role) const
     return data(index.row(), role);
 }
 
+bool QQmlListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    const int row = index.row();
+    if (row >= count() || row < 0)
+        return false;
+
+    if (m_dynamicRoles) {
+        const QByteArray property = m_roles.at(role).toUtf8();
+        if (m_modelObjects[row]->setValue(property, value)) {
+            emitItemsChanged(row, 1, QVector<int>() << role);
+            return true;
+        }
+    } else {
+        const ListLayout::Role &r = m_listModel->getExistingRole(role);
+        const int roleIndex = m_listModel->setOrCreateProperty(row, r.name, value);
+        if (roleIndex != -1) {
+            emitItemsChanged(row, 1, QVector<int>() << role);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QVariant QQmlListModel::data(int index, int role) const
 {
     QVariant v;

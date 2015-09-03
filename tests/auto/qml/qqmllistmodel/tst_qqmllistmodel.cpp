@@ -125,6 +125,7 @@ private slots:
     void datetime();
     void datetime_data();
     void about_to_be_signals();
+    void modify_through_delegate();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1425,6 +1426,36 @@ void tst_qqmllistmodel::about_to_be_signals()
     QCOMPARE(tester.rowsAboutToBeRemovedCount, 2);
     QCOMPARE(tester.rowsRemovedCalls, 1);
     QCOMPARE(tester.rowsRemovedCount, 0);
+}
+
+void tst_qqmllistmodel::modify_through_delegate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+        "import QtQuick 2.0\n"
+        "Item {\n"
+        "   ListModel {\n"
+        "       id: testModel\n"
+        "       objectName: \"testModel\"\n"
+        "       ListElement { name: \"Joe\"; age: 22 }\n"
+        "       ListElement { name: \"Doe\"; age: 33 }\n"
+        "   }\n"
+        "   ListView {\n"
+        "       model: testModel\n"
+        "       delegate: Item {\n"
+        "           Component.onCompleted: model.age = 18;\n"
+        "       }\n"
+        "   }\n"
+        "}\n", QUrl());
+
+    QObject *scene = component.create();
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("age")).toInt(), 18);
+    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("age")).toInt(), 18);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
