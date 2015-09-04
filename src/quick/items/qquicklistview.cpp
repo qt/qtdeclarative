@@ -1401,6 +1401,15 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &
     if (!q->isComponentComplete())
         return;
 
+    if (currentItem && currentItem->item == item) {
+        const bool contentFlowReversed = isContentFlowReversed();
+        const qreal pos = position();
+        const qreal sz = size();
+        const qreal from = contentFlowReversed ? -pos - displayMarginBeginning - sz : pos - displayMarginBeginning;
+        const qreal to = contentFlowReversed ? -pos + displayMarginEnd : pos + sz + displayMarginEnd;
+        QQuickItemPrivate::get(currentItem->item)->setCulled(currentItem->endPosition() < from || currentItem->position() > to);
+    }
+
     if (item != contentItem && (!highlight || item != highlight->item)) {
         if ((orient == QQuickListView::Vertical && newGeometry.height() != oldGeometry.height())
             || (orient == QQuickListView::Horizontal && newGeometry.width() != oldGeometry.width())) {

@@ -247,6 +247,8 @@ private slots:
     void contentHeightWithDelayRemove();
     void contentHeightWithDelayRemove_data();
 
+    void QTBUG_48044_currentItemNotVisibleAfterTransition();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8229,6 +8231,41 @@ void tst_QQuickListView::contentHeightWithDelayRemove()
     }
 
     delete window;
+}
+
+void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("qtbug48044.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
+    QTRY_VERIFY(listview != 0);
+
+    // Expand 2nd header
+    listview->setProperty("transitionsDone", QVariant(false));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, 75));
+    QTRY_VERIFY(listview->property("transitionsDone").toBool());
+
+    // Flick listview to the bottom
+    flick(window, QPoint(window->width() / 2, 400), QPoint(window->width() / 2, 0), 100);
+    QTRY_VERIFY(!listview->isMoving());
+
+    // Expand 3rd header
+    listview->setProperty("transitionsDone", QVariant(false));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() / 2, window->height() - 25));
+    QTRY_VERIFY(listview->property("transitionsDone").toBool());
+
+    // Check current item is what we expect
+    QCOMPARE(listview->currentIndex(), 2);
+    QQuickItem *currentItem = listview->currentItem();
+    QVERIFY(currentItem);
+    QVERIFY(currentItem->isVisible());
+
+    // This is the actual test
+    QQuickItemPrivate *currentPriv = QQuickItemPrivate::get(currentItem);
+    QVERIFY(!currentPriv->culled);
 }
 
 QTEST_MAIN(tst_QQuickListView)
