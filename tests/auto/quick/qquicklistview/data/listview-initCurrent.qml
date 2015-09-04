@@ -6,6 +6,7 @@ Rectangle {
     property int current: list.currentIndex
     property bool showHeader: false
     property bool showFooter: false
+    property int currentItemChangedCount: 0
 
     width: 240
     height: 320
@@ -60,5 +61,7 @@ Rectangle {
         model: testModel
         header: root.showHeader ? headerFooter : null
         footer: root.showFooter ? headerFooter : null
+
+        onCurrentItemChanged: { root.currentItemChangedCount++ }
     }
 }
