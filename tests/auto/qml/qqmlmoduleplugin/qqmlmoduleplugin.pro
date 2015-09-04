@@ -22,6 +22,4 @@ SUBDIRS =\
 tst_qqmlmoduleplugin_pro.depends += plugin
 SUBDIRS += tst_qqmlmoduleplugin.pro
 
-CONFIG += parallel_test
-
 QT += core-private gui-private qml-private

@@ -5,5 +5,3 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qrcqml.cpp
 RESOURCES = qrcqml.qrc
-
-CONFIG += parallel_test

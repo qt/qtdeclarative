@@ -16,8 +16,6 @@ OTHER_FILES += data/checkbuttons.qml \
     data/statictext.qml \
     data/ignored.qml \
 
-CONFIG += parallel_test
-
 wince*: {
     accessneeded.files = $$QT.widgets.plugins/accessible/*.dll
     accessneeded.path = accessible

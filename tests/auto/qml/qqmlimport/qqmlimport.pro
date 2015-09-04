@@ -6,5 +6,3 @@ osx:CONFIG -= app_bundle
 SOURCES += tst_qqmlimport.cpp
 
 include (../../shared/util.pri)
-
-CONFIG += parallel_test

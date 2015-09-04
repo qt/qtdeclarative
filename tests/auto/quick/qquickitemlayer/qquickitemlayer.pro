@@ -8,7 +8,6 @@ TESTDATA = data/*
 
 include(../../shared/util.pri)
 
-CONFIG += parallel_test
 QT += core-private gui-private  qml-private quick-private testlib
 
 OTHER_FILES += \

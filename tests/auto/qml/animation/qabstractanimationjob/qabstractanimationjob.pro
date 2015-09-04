@@ -1,4 +1,4 @@
-CONFIG += testcase parallel_test
+CONFIG += testcase
 macx:CONFIG -= app_bundle
 TARGET = tst_qabstractanimationjob
 QT = core-private qml-private testlib

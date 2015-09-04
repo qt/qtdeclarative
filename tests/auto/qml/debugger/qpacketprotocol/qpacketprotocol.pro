@@ -7,5 +7,4 @@ SOURCES += tst_qpacketprotocol.cpp
 INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
 
-CONFIG += parallel_test
 QT += qml network testlib gui-private core-private

@@ -1,5 +1,4 @@
 CONFIG += testcase
-CONFIG += parallel_test
 TARGET = tst_qjsengine
 QT +=  qml qml-private widgets testlib gui-private
 macx:CONFIG -= app_bundle
