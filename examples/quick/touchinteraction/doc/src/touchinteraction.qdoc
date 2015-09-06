@@ -36,7 +36,7 @@
 
     \include examples-run.qdocinc
 
-    \section1 Multipoint Flames
+    \section1 Multipoint Flames Example
 
     \e{Multipoint Flames} demonstrates distinguishing different fingers in a
     \l MultiPointTouchArea, by assigning a different colored flame to each touch
@@ -49,7 +49,7 @@
     whether it is currently pressed, as follows:
     \snippet touchinteraction/multipointtouch/multiflame.qml 1
 
-    \section1 Bear-Whack
+    \section1 Bear-Whack Example
 
     \e{Bear-Whack} demonstrates using \l MultiPointTouchArea to add multiple
     finger support to a simple game. The interaction with the game
@@ -58,19 +58,19 @@
     embedded into it:
     \snippet touchinteraction/multipointtouch/content/AugmentedTouchPoint.qml 0
 
-    \section1 Flick Resize
+    \section1 Flick Resize Example
 
     \e{Flick Resize} uses a \l PinchArea to implement a \e{pinch-to-resize}
     behavior. This is easily achieved by listening to the PinchArea signals and
     responding to user input.
     \snippet touchinteraction/pincharea/flickresize.qml 0
 
-    \section1 Flickable
+    \section1 Flickable Example
 
     \e Flickable is a simple example demonstrating the \l Flickable type.
     \snippet touchinteraction/flickable/basic-flickable.qml 0
 
-    \section1 Corkboards
+    \section1 Corkboards Example
 
     \e Corkboards shows another use for \l Flickable, with QML types within the
     flickable object that respond to mouse and keyboard interaction. This

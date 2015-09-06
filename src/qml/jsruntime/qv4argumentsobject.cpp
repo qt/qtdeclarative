@@ -77,8 +77,8 @@ void ArgumentsObject::fullyCreate()
     if (fullyCreated())
         return;
 
-    uint numAccessors = qMin((int)context()->function->formalParameterCount(), context()->callData->argc);
     uint argCount = context()->callData->argc;
+    uint numAccessors = qMin(context()->function->formalParameterCount(), argCount);
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     context()->engine->requireArgumentsAccessors(numAccessors);
 
@@ -86,7 +86,7 @@ void ArgumentsObject::fullyCreate()
     Scoped<MemberData> md(scope, d()->mappedArguments);
     if (!md || md->size() < numAccessors)
         d()->mappedArguments = md->reallocate(engine(), d()->mappedArguments, numAccessors);
-    for (uint i = 0; i < (uint)numAccessors; ++i) {
+    for (uint i = 0; i < numAccessors; ++i) {
         mappedArguments()->data[i] = context()->callData->args[i];
         arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
     }

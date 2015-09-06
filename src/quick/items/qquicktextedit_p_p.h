@@ -94,6 +94,7 @@ public:
         bool explicitLeftPadding : 1;
         bool explicitRightPadding : 1;
         bool explicitBottomPadding : 1;
+        bool explicitImplicitSize : 1;
     };
     QLazilyAllocated<ExtraData> extra;
 

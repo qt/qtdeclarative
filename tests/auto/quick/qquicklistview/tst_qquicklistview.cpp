@@ -2718,9 +2718,12 @@ void tst_QQuickListView::currentIndex()
     QTRY_COMPARE(listview->highlightItem()->y(), hlPos);
 
     // insert item before currentIndex
+    window->rootObject()->setProperty("currentItemChangedCount", QVariant(0));
     listview->setCurrentIndex(28);
+    QTRY_COMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
     model.insertItem(0, "Foo", "1111");
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 29);
+    QCOMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
 
     // check removing highlight by setting currentIndex to -1;
     listview->setCurrentIndex(-1);

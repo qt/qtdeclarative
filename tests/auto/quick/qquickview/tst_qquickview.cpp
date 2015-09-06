@@ -182,6 +182,10 @@ void tst_QQuickView::errors()
 {
     {
         QQuickView view;
+        QVERIFY(view.errors().isEmpty()); // don't crash
+    }
+    {
+        QQuickView view;
         QQmlTestMessageHandler messageHandler;
         view.setSource(testFileUrl("error1.qml"));
         QCOMPARE(view.status(), QQuickView::Error);

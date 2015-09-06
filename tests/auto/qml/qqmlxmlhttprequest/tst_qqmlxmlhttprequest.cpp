@@ -989,6 +989,7 @@ void tst_qqmlxmlhttprequest::responseText_data()
     QTest::newRow("empty body") << testFileUrl("status.200.reply") << QUrl() << "";
     QTest::newRow("Not Found") << testFileUrl("status.404.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
     QTest::newRow("Bad Request") << testFileUrl("status.400.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
+    QTest::newRow("Internal server error") << testFileUrl("status.500.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
 }
 
 void tst_qqmlxmlhttprequest::nonUtf8()

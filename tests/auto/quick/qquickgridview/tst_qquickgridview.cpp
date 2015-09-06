@@ -1886,9 +1886,12 @@ void tst_QQuickGridView::currentIndex()
     QTRY_COMPARE(gridview->highlightItem()->y(), hlPosY);
 
     // insert item before currentIndex
+    window->rootObject()->setProperty("currentItemChangedCount", QVariant(0));
     gridview->setCurrentIndex(28);
+    QTRY_COMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
     model.insertItem(0, "Foo", "1111");
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 29);
+    QCOMPARE(window->rootObject()->property("currentItemChangedCount").toInt(), 1);
 
     // check removing highlight by setting currentIndex to -1;
     gridview->setCurrentIndex(-1);

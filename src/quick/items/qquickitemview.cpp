@@ -1699,7 +1699,8 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     updateHighlight();
     if (oldCurrentIndex != currentIndex)
         emit q->currentIndexChanged();
-    if (oldCurrentItem != currentItem)
+    if (oldCurrentItem != currentItem
+            && (!oldCurrentItem || !currentItem || oldCurrentItem->item != currentItem->item))
         emit q->currentItemChanged();
     releaseItem(oldCurrentItem);
 }

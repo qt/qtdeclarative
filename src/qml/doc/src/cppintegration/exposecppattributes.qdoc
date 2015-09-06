@@ -328,11 +328,11 @@ public:
         : QObject(parent), m_author(new MessageAuthor(this))
     {
     }
-    Message *author() const {
+    MessageAuthor *author() const {
         return m_author;
     }
 private:
-    Message *m_author;
+    MessageAuthor *m_author;
 };
 \endcode
 

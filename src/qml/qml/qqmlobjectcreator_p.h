@@ -107,7 +107,7 @@ private:
 
     void registerObjectWithContextById(int objectIndex, QObject *instance) const;
 
-    QV4::Heap::ExecutionContext *currentQmlContext();
+    QV4::Heap::QmlContext *currentQmlContext();
 
     enum Phase {
         Startup,
@@ -143,7 +143,7 @@ private:
     QQmlRefPointer<QQmlPropertyCache> _propertyCache;
     QQmlVMEMetaObject *_vmeMetaObject;
     QQmlListProperty<void> _currentList;
-    QV4::Value *_qmlBindingWrapper;
+    QV4::QmlContext *_qmlContext;
 
     friend struct QQmlObjectCreatorRecursionWatcher;
 };

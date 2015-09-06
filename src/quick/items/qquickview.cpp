@@ -370,7 +370,7 @@ QList<QQmlError> QQuickView::errors() const
         QQmlError error;
         error.setDescription(QLatin1String("QQuickView: invalid qml engine."));
         errs << error;
-    } else if (d->component->status() == QQmlComponent::Ready && !d->root) {
+    } else if (d->component && d->component->status() == QQmlComponent::Ready && !d->root) {
         QQmlError error;
         error.setDescription(QLatin1String("QQuickView: invalid root object."));
         errs << error;

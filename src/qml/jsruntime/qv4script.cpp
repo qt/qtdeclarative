@@ -104,18 +104,6 @@ Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, Functio
     internalClass->engine->popContext();
 }
 
-Heap::QmlBindingWrapper::QmlBindingWrapper(QV4::ExecutionContext *scope, QV4::QmlContextWrapper *qml)
-    : Heap::FunctionObject(scope, scope->d()->engine->id_eval(), /*createProto = */ false)
-{
-    Q_ASSERT(scope->inUse());
-
-    Scope s(scope);
-    Scoped<QV4::QmlBindingWrapper> protectThis(s, this);
-
-    this->scope = scope->newQmlContext(qml);
-    internalClass->engine->popContext();
-}
-
 ReturnedValue QmlBindingWrapper::call(const Managed *that, CallData *callData)
 {
     const QmlBindingWrapper *This = static_cast<const QmlBindingWrapper *>(that);
@@ -152,8 +140,8 @@ Heap::FunctionObject *QmlBindingWrapper::createQmlCallableForFunction(QQmlContex
     QV4::Scope valueScope(engine);
     QV4::Scoped<QmlContextWrapper> qmlScopeObject(valueScope, QV4::QmlContextWrapper::qmlScope(engine, qmlContext, scopeObject));
     ScopedContext global(valueScope, valueScope.engine->rootContext());
-    QV4::Scoped<QV4::QmlBindingWrapper> wrapper(valueScope, engine->memoryManager->alloc<QV4::QmlBindingWrapper>(global, qmlScopeObject));
-    QV4::Scoped<QmlContext> wrapperContext(valueScope, wrapper->context());
+    QV4::Scoped<QmlContext> wrapperContext(valueScope, global->newQmlContext(qmlScopeObject));
+    engine->popContext();
 
     if (!signalParameters.isEmpty()) {
         if (error)
