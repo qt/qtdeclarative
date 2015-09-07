@@ -1651,8 +1651,6 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
   \header \li Platform \li Valid suffixes
   \row \li Windows     \li \c .dll
   \row \li Unix/Linux  \li \c .so
-  \row \li AIX  \li \c .a
-  \row \li HP-UX       \li \c .sl, \c .so (HP-UXi)
   \row \li OS X    \li \c .dylib, \c .bundle, \c .so
   \endtable
 
@@ -1669,9 +1667,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                          << QLatin1String("d.dll") // try a qmake-style debug build first
 # endif
                          << QLatin1String(".dll"));
-#else
-
-# if defined(Q_OS_DARWIN)
+#elif defined(Q_OS_DARWIN)
 
     return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName,
                          QStringList()
@@ -1685,31 +1681,8 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                          << QLatin1String(".so")
                          << QLatin1String(".bundle"),
                          QLatin1String("lib"));
-# else  // Generic Unix
-    QStringList validSuffixList;
-
-#  if defined(Q_OS_HPUX)
-/*
-    See "HP-UX Linker and Libraries User's Guide", section "Link-time Differences between PA-RISC and IPF":
-    "In PA-RISC (PA-32 and PA-64) shared libraries are suffixed with .sl. In IPF (32-bit and 64-bit),
-    the shared libraries are suffixed with .so. For compatibility, the IPF linker also supports the .sl suffix."
- */
-    validSuffixList << QLatin1String(".sl");
-#   if defined __ia64
-    validSuffixList << QLatin1String(".so");
-#   endif
-#  elif defined(Q_OS_AIX)
-    validSuffixList << QLatin1String(".a") << QLatin1String(".so");
-#  elif defined(Q_OS_UNIX)
-    validSuffixList << QLatin1String(".so");
-#  endif
-
-    // Examples of valid library names:
-    //  libfoo.so
-
-    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, validSuffixList, QLatin1String("lib"));
-# endif
-
+# else  // Unix
+    return resolvePlugin(typeLoader, qmldirPath, qmldirPluginPath, baseName, QStringList() << QLatin1String(".so"), QLatin1String("lib"));
 #endif
 }
 
