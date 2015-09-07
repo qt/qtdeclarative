@@ -852,6 +852,11 @@ likelihood of glitches in animation.  When loading asynchronously the status
 will change to Loader.Loading.  Once the entire component has been created, the
 \l item will be available and the status will change to Loader.Ready.
 
+Changing the value of this property to \c false while an asynchronous load is in
+progress will force immediate, synchronous completion.  This allows beginning an
+asynchronous load and then forcing completion if the Loader content must be
+accessed before the asynchronous load has completed.
+
 To avoid seeing the items loading progressively set \c visible appropriately, e.g.
 
 \code
@@ -878,6 +883,19 @@ void QQuickLoader::setAsynchronous(bool a)
         return;
 
     d->asynchronous = a;
+
+    if (isComponentComplete() && d->active) {
+        if (d->loadingFromSource && d->component && d->component->isLoading()) {
+            // Force a synchronous component load
+            QUrl currentSource = d->source;
+            d->clear();
+            d->source = currentSource;
+            loadFromSource();
+        } else if (d->incubator && d->incubator->isLoading()) {
+            d->incubator->forceCompletion();
+        }
+    }
+
     emit asynchronousChanged();
 }
 

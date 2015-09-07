@@ -111,6 +111,8 @@ private slots:
     void asynchronous();
     void asynchronous_clear();
     void simultaneousSyncAsync();
+    void asyncToSync1();
+    void asyncToSync2();
     void loadedSignal();
 
     void parented();
@@ -1038,6 +1040,73 @@ void tst_QQuickLoader::simultaneousSyncAsync()
     QTRY_VERIFY(asyncLoader->item());
     QCOMPARE(asyncLoader->progress(), 1.0);
     QCOMPARE(asyncLoader->status(), QQuickLoader::Ready);
+
+    delete root;
+}
+
+void tst_QQuickLoader::asyncToSync1()
+{
+    QQmlEngine engine;
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
+    QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(root);
+
+    QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
+    QVERIFY(loader);
+
+    QVERIFY(!loader->item());
+    root->setProperty("comp", "BigComponent.qml");
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+
+    controller->start();
+    QCOMPARE(loader->status(), QQuickLoader::Loading);
+    QCOMPARE(engine.incubationController()->incubatingObjectCount(), 0);
+
+    // force completion before component created
+    loader->setAsynchronous(false);
+    QVERIFY(loader->item());
+    QCOMPARE(loader->progress(), 1.0);
+    QCOMPARE(loader->status(), QQuickLoader::Ready);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+
+    delete root;
+}
+
+void tst_QQuickLoader::asyncToSync2()
+{
+    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QQmlIncubationController *previous = engine.incubationController();
+    engine.setIncubationController(controller);
+    delete previous;
+
+    QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
+    QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
+    QVERIFY(root);
+
+    QQuickLoader *loader = root->findChild<QQuickLoader*>("loader");
+    QVERIFY(loader);
+
+    QVERIFY(!loader->item());
+    root->setProperty("comp", "BigComponent.qml");
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+
+    controller->start();
+    QCOMPARE(loader->status(), QQuickLoader::Loading);
+    QTRY_COMPARE(engine.incubationController()->incubatingObjectCount(), 1);
+
+    // force completion after component created but before incubation complete
+    loader->setAsynchronous(false);
+    QVERIFY(loader->item());
+    QCOMPARE(loader->progress(), 1.0);
+    QCOMPARE(loader->status(), QQuickLoader::Ready);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
     delete root;
 }
