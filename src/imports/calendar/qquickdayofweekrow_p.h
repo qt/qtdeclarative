@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWEEKNUMBERMODEL_P_H
-#define QQUICKWEEKNUMBERMODEL_P_H
+#ifndef QQUICKDAYOFWEEKROW_P_H
+#define QQUICKDAYOFWEEKROW_P_H
 
 //
 //  W A R N I N G
@@ -48,57 +48,49 @@
 // We mean it.
 //
 
-#include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qlocale.h>
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWeekNumberModelPrivate;
+class QQmlComponent;
+class QQuickDayOfWeekRowPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberModel : public QAbstractListModel
+class QQuickDayOfWeekRow : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
-    Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
+    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickWeekNumberModel(QObject *parent = Q_NULLPTR);
-
-    int month() const;
-    void setMonth(int month);
-
-    int year() const;
-    void setYear(int year);
+    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
 
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
-    Q_INVOKABLE int weekNumberAt(int index) const;
-    Q_INVOKABLE int indexOf(int weekNumber) const;
+    QVariant source() const;
+    void setSource(const QVariant &source);
 
-    enum {
-        WeekNumberRole = Qt::UserRole + 1
-    };
-
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
-    void monthChanged();
-    void yearChanged();
     void localeChanged();
+    void sourceChanged();
+    void delegateChanged();
+
+protected:
+    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickWeekNumberModel)
-    Q_DECLARE_PRIVATE(QQuickWeekNumberModel)
+    Q_DISABLE_COPY(QQuickDayOfWeekRow)
+    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
 };
 
-Q_DECLARE_TYPEINFO(QQuickWeekNumberModel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKWEEKNUMBERMODEL_P_H
+#endif // QQUICKDAYOFWEEKROW_P_H

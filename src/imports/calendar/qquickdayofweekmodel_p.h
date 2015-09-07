@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCALENDARMODEL_P_H
-#define QQUICKCALENDARMODEL_P_H
+#ifndef QQUICKDAYOFWEEKMODEL_P_H
+#define QQUICKDAYOFWEEKMODEL_P_H
 
 //
 //  W A R N I N G
@@ -49,39 +49,31 @@
 //
 
 #include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qdatetime.h>
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCalendarModelPrivate;
+class QQuickDayOfWeekModelPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickCalendarModel : public QAbstractListModel, public QQmlParserStatus
+class QQuickDayOfWeekModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(QDate from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(QDate to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
 
 public:
-    explicit QQuickCalendarModel(QObject *parent = Q_NULLPTR);
+    explicit QQuickDayOfWeekModel(QObject *parent = Q_NULLPTR);
 
-    QDate from() const;
-    void setFrom(const QDate &from);
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
 
-    QDate to() const;
-    void setTo(const QDate &to);
-
-    Q_INVOKABLE int monthAt(int index) const;
-    Q_INVOKABLE int yearAt(int index) const;
-    Q_INVOKABLE int indexOf(const QDate &date) const;
-    Q_INVOKABLE int indexOf(int year, int month) const;
+    Q_INVOKABLE int dayAt(int index) const;
 
     enum {
-        MonthRole,
-        YearRole
+        DayRole = Qt::UserRole + 1,
+        LongNameRole,
+        ShortNameRole,
+        NarrowNameRole
     };
 
     QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
@@ -89,21 +81,15 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
-    void fromChanged();
-    void toChanged();
-    void countChanged();
-
-protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void localeChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickCalendarModel)
-    Q_DECLARE_PRIVATE(QQuickCalendarModel)
+    Q_DISABLE_COPY(QQuickDayOfWeekModel)
+    Q_DECLARE_PRIVATE(QQuickDayOfWeekModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCalendarModel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickDayOfWeekModel, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCALENDARMODEL_P_H
+#endif // QQUICKDAYOFWEEKMODEL_P_H

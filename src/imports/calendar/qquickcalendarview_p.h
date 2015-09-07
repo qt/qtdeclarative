@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKCALENDARVIEW_P_H
+#define QQUICKCALENDARVIEW_P_H
 
 //
 //  W A R N I N G
@@ -48,23 +48,31 @@
 // We mean it.
 //
 
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
 #include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
+class QQuickCalendarViewPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickControl
+class QQuickCalendarView : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
+    Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickCalendarView(QQuickItem *parent = Q_NULLPTR);
+
+    int month() const;
+    void setMonth(int month);
+
+    int year() const;
+    void setYear(int year);
 
     QLocale locale() const;
     void setLocale(const QLocale &locale);
@@ -72,26 +80,44 @@ public:
     QVariant source() const;
     void setSource(const QVariant &source);
 
+    QString title() const;
+    void setTitle(const QString &title);
+
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
+    void monthChanged();
+    void yearChanged();
     void localeChanged();
     void sourceChanged();
+    void titleChanged();
     void delegateChanged();
+
+    void pressed(const QDate &date);
+    void released(const QDate &date);
+    void clicked(const QDate &date);
+    void pressAndHold(const QDate &date);
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    void updatePolish() Q_DECL_OVERRIDE;
+
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    Q_DISABLE_COPY(QQuickCalendarView)
+    Q_DECLARE_PRIVATE(QQuickCalendarView)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickCalendarView, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKCALENDARVIEW_P_H

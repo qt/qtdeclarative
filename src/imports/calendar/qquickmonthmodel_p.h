@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCALENDARVIEW_P_H
-#define QQUICKCALENDARVIEW_P_H
+#ifndef QQUICKMONTHMODEL_P_H
+#define QQUICKMONTHMODEL_P_H
 
 //
 //  W A R N I N G
@@ -48,26 +48,25 @@
 // We mean it.
 //
 
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickCalendarViewPrivate;
+class QQuickMonthModelPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickCalendarView : public QQuickControl
+class QQuickMonthModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
     Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
 
 public:
-    explicit QQuickCalendarView(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickMonthModel(QObject *parent = Q_NULLPTR);
 
     int month() const;
     void setMonth(int month);
@@ -78,47 +77,38 @@ public:
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
-    QVariant source() const;
-    void setSource(const QVariant &source);
-
     QString title() const;
     void setTitle(const QString &title);
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    Q_INVOKABLE QDate dateAt(int index) const;
+    Q_INVOKABLE int indexOf(const QDate &date) const;
+
+    enum {
+        DateRole = Qt::UserRole + 1,
+        DayRole,
+        TodayRole,
+        WeekNumberRole,
+        MonthRole,
+        YearRole
+    };
+
+    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void monthChanged();
     void yearChanged();
     void localeChanged();
-    void sourceChanged();
     void titleChanged();
-    void delegateChanged();
-
-    void pressed(const QDate &date);
-    void released(const QDate &date);
-    void clicked(const QDate &date);
-    void pressAndHold(const QDate &date);
-
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
-    void updatePolish() Q_DECL_OVERRIDE;
-
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickCalendarView)
-    Q_DECLARE_PRIVATE(QQuickCalendarView)
+    Q_DISABLE_COPY(QQuickMonthModel)
+    Q_DECLARE_PRIVATE(QQuickMonthModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCalendarView, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickMonthModel, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCALENDARVIEW_P_H
+#endif // QQUICKMONTHMODEL_P_H
