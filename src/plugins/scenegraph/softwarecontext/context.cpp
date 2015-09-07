@@ -121,6 +121,8 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
 
 PixmapRenderer::PixmapRenderer(QSGRenderContext *context)
     : QSGRenderer(context)
+    , m_mirrorHorizontal(false)
+    , m_mirrorVertical(false)
 {
 
 }
@@ -146,6 +148,12 @@ void PixmapRenderer::render(QPixmap *target)
     QPainter painter(target);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setWindow(m_projectionRect);
+
+    if (m_mirrorHorizontal || m_mirrorVertical) {
+        QMatrix mirroringMatrix;
+        mirroringMatrix.scale(m_mirrorHorizontal ? -1 : 1, m_mirrorVertical ? -1 : 1);
+        painter.setMatrix(mirroringMatrix);
+    }
 
     RenderingVisitor(&painter).visitChildren(rootNode());
 }

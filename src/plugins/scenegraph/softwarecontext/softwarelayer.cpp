@@ -26,6 +26,8 @@ SoftwareLayer::SoftwareLayer(QSGRenderContext *renderContext)
     , m_context(renderContext)
     , m_renderer(0)
     , m_device_pixel_ratio(1)
+    , m_mirrorHorizontal(false)
+    , m_mirrorVertical(false)
     , m_live(true)
     , m_grab(true)
     , m_recursive(false)
@@ -151,6 +153,22 @@ void SoftwareLayer::setDevicePixelRatio(qreal ratio)
     m_device_pixel_ratio = ratio;
 }
 
+void SoftwareLayer::setMirrorHorizontal(bool mirror)
+{
+    if (m_mirrorHorizontal == mirror)
+        return;
+    m_mirrorHorizontal = mirror;
+    markDirtyTexture();
+}
+
+void SoftwareLayer::setMirrorVertical(bool mirror)
+{
+    if (m_mirrorVertical == mirror)
+        return;
+    m_mirrorVertical = mirror;
+    markDirtyTexture();
+}
+
 void SoftwareLayer::markDirtyTexture()
 {
     m_dirtyTexture = true;
@@ -198,6 +216,8 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
+    m_renderer->m_mirrorHorizontal = m_mirrorHorizontal;
+    m_renderer->m_mirrorVertical = m_mirrorVertical;
     m_renderer->m_projectionRect = QRect(m_rect.x() * m_device_pixel_ratio,
                                          m_rect.y() * m_device_pixel_ratio,
                                          m_rect.width() * m_device_pixel_ratio,
