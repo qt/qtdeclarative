@@ -474,7 +474,7 @@ public:
     QQmlTypeNameCache *importCache;
     QList<QQmlScriptBlob *> scripts;
 
-    QV4::PersistentValue scriptValueForContext(QQmlContextData *parentCtxt);
+    QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
 protected:
     virtual void clear(); // From QQmlCleanup

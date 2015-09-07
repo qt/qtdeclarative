@@ -2471,12 +2471,10 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     addref();
 }
 
-QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentCtxt)
+QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentCtxt)
 {
     if (m_loaded)
-        return m_value;
-
-    QV4::PersistentValue rv;
+        return m_value.value();
 
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
@@ -2526,8 +2524,9 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     } else {
         scriptsArray = ctxt->importedScripts.valueRef();
     }
+    QV4::ScopedValue v(scope);
     for (int ii = 0; ii < scripts.count(); ++ii)
-        scriptsArray->putIndexed(ii, *scripts.at(ii)->scriptData()->scriptValueForContext(ctxt).valueRef());
+        scriptsArray->putIndexed(ii, (v = scripts.at(ii)->scriptData()->scriptValueForContext(ctxt)));
 
     if (!hasEngine())
         initialize(parentCtxt->engine);
@@ -2535,7 +2534,7 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
     if (!m_program) {
         if (shared)
             m_loaded = true;
-        return QV4::PersistentValue();
+        return QV4::Encode::undefined();
     }
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->rootContext()->newQmlContext(ctxt, 0));
@@ -2549,13 +2548,13 @@ QV4::PersistentValue QQmlScriptData::scriptValueForContext(QQmlContextData *pare
             ep->warning(error);
     }
 
-    rv.set(scope.engine, qmlContext->d()->qml);
+    QV4::ScopedValue retval(scope, qmlContext->d()->qml);
     if (shared) {
-        m_value = rv;
+        m_value.set(scope.engine, retval);
         m_loaded = true;
     }
 
-    return rv;
+    return retval->asReturnedValue();
 }
 
 void QQmlScriptData::clear()

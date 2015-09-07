@@ -185,9 +185,10 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
         context->importedScripts.set(v4, scripts);
+        QV4::ScopedValue v(scope);
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
             QQmlScriptData *s = compiledData->scripts.at(i);
-            scripts->putIndexed(i, *s->scriptValueForContext(context).valueRef());
+            scripts->putIndexed(i, (v = s->scriptValueForContext(context)));
         }
     } else if (sharedState->creationContext) {
         context->importedScripts = sharedState->creationContext->importedScripts;
