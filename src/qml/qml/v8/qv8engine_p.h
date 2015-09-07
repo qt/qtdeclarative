@@ -217,8 +217,6 @@ protected:
 
     QV4::ExecutionEngine *m_v4Engine;
 
-    QV4::PersistentValue m_freezeObject;
-
     void *m_xmlHttpRequestData;
 
     QVector<Deletable *> m_extensionData;

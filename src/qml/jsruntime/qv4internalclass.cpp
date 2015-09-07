@@ -399,20 +399,26 @@ InternalClass *InternalClass::frozen()
     if (m_frozen)
         return m_frozen;
 
-    m_frozen = engine->emptyClass;
+    m_frozen = propertiesFrozen();
+    m_frozen = m_frozen->nonExtensible();
+
+    m_frozen->m_frozen = m_frozen;
+    m_frozen->m_sealed = m_frozen;
+    return m_frozen;
+}
+
+InternalClass *InternalClass::propertiesFrozen() const
+{
+    InternalClass *frozen = engine->emptyClass;
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
             continue;
         attrs.setWritable(false);
         attrs.setConfigurable(false);
-        m_frozen = m_frozen->addMember(nameMap.at(i), attrs);
+        frozen = frozen->addMember(nameMap.at(i), attrs);
     }
-    m_frozen = m_frozen->nonExtensible();
-
-    m_frozen->m_frozen = m_frozen;
-    m_frozen->m_sealed = m_frozen;
-    return m_frozen;
+    return frozen;
 }
 
 void InternalClass::destroy()

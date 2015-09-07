@@ -233,6 +233,7 @@ struct InternalClass : public QQmlJS::Managed {
 
     InternalClass *sealed();
     InternalClass *frozen();
+    InternalClass *propertiesFrozen() const;
 
     void destroy();
 
