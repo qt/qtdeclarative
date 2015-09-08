@@ -149,6 +149,22 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
+Heap::String *IdentifierTable::stringFromIdentifier(Identifier *i)
+{
+    if (!i)
+        return 0;
+
+    uint idx = i->hashValue % alloc;
+    while (1) {
+        Heap::String *e = entries[idx];
+        Q_ASSERT(e);
+        if (e->identifier == i)
+            return e;
+        ++idx;
+        idx %= alloc;
+    }
+}
+
 Identifier *IdentifierTable::identifier(const QString &s)
 {
     return insertString(s)->identifier;

@@ -44,6 +44,7 @@
 #include "qv4objectiterator_p.h"
 #include "qv4identifier_p.h"
 #include "qv4string_p.h"
+#include "qv4identifiertable_p.h"
 
 #include <stdint.h>
 
@@ -590,7 +591,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            name->setM(o->engine()->newString(n->string));
+            name->setM(o->engine()->identifierTable->stringFromIdentifier(n));
             *attrs = a;
             pd->value = *o->propertyData(idx);
             if (a.isAccessor())
