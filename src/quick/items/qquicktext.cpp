@@ -1371,6 +1371,13 @@ QQuickText::QQuickText(QQuickItem *parent)
     d->init();
 }
 
+QQuickText::QQuickText(QQuickTextPrivate &dd, QQuickItem *parent)
+: QQuickImplicitSizeItem(dd, parent)
+{
+    Q_D(QQuickText);
+    d->init();
+}
+
 QQuickText::~QQuickText()
 {
 }
