@@ -1209,15 +1209,7 @@ void Runtime::declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 
 ReturnedValue Runtime::arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
 {
-    Scope scope(engine);
-    ScopedArrayObject a(scope, engine->newArrayObject());
-
-    if (length) {
-        a->arrayReserve(length);
-        a->arrayPut(0, values, length);
-        a->setArrayLengthUnchecked(length);
-    }
-    return a.asReturnedValue();
+    return engine->newArrayObject(values, length)->asReturnedValue();
 }
 
 ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)

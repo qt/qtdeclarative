@@ -618,6 +618,26 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
     return object->d();
 }
 
+Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int length)
+{
+    Scope scope(this);
+    ScopedArrayObject a(scope, memoryManager->allocObject<ArrayObject>());
+
+    if (length) {
+        size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
+        Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
+        new (d) Heap::SimpleArrayData;
+        d->alloc = length;
+        d->type = Heap::ArrayData::Simple;
+        d->offset = 0;
+        d->len = length;
+        memcpy(&d->arrayData, values, length*sizeof(Value));
+        a->d()->arrayData = d;
+        a->setArrayLengthUnchecked(length);
+    }
+    return a->d();
+}
+
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);

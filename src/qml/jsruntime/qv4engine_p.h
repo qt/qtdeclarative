@@ -373,6 +373,7 @@ public:
     Heap::Object *newBooleanObject(bool b);
 
     Heap::ArrayObject *newArrayObject(int count = 0);
+    Heap::ArrayObject *newArrayObject(const Value *values, int length);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
     Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
