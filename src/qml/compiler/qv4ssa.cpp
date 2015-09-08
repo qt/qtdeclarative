@@ -3504,7 +3504,7 @@ void checkCriticalEdges(QVector<BasicBlock *> basicBlocks) {
 }
 #endif
 
-void cleanupBasicBlocks(IR::Function *function)
+static void cleanupBasicBlocks(IR::Function *function)
 {
     showMeTheCode(function, "Before basic block cleanup");
 
