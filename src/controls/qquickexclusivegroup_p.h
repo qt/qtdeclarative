@@ -62,6 +62,8 @@ class Q_QUICKCONTROLS_EXPORT QQuickExclusiveGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QObject *current READ current WRITE setCurrent NOTIFY currentChanged)
+    Q_PROPERTY(QQmlListProperty<QObject> checkables READ checkables NOTIFY checkablesChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "checkables")
 
 public:
     explicit QQuickExclusiveGroup(QObject *parent = Q_NULLPTR);
@@ -71,12 +73,15 @@ public:
     QObject *current() const;
     void setCurrent(QObject *current);
 
+    QQmlListProperty<QObject> checkables();
+
 public Q_SLOTS:
     void addCheckable(QObject *object);
     void removeCheckable(QObject *object);
 
 Q_SIGNALS:
     void currentChanged();
+    void checkablesChanged();
 
 private:
     Q_DISABLE_COPY(QQuickExclusiveGroup)

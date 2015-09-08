@@ -51,15 +51,53 @@ QT_BEGIN_NAMESPACE
     \brief An exclusive group of checkable controls.
 
     ExclusiveGroup is a non-visual, mutually exclusive group of checkable
-    controls and objects. It is used with controls such as RadioButton, where only one of the options can be selected at a time.
+    controls and objects. It is used with controls such as RadioButton,
+    where only one of the options can be selected at a time.
 
     Any control or object that has a \c checked property, and either a
     \c checkedChanged(), \c toggled(), or \c toggled(bool) signal, can be
-    attached to an ExclusiveGroup.
+    added to an ExclusiveGroup.
+
+    The most straight-forward way to use ExclusiveGroup is to assign
+    a list of checkable items. For example, the list of children of a
+    \l{Item Positioners}{positioner} or a \l{Qt Quick Layouts}{layout}
+    that manages a group of mutually exclusive controls.
 
     \code
+    ExclusiveGroup {
+        checkables: column.children
+    }
+
     Column {
-        ExclusiveGroup { id: radioGroup }
+        id: column
+
+        RadioButton {
+            checked: true
+            text: qsTr("DAB")
+        }
+
+        RadioButton {
+            text: qsTr("FM")
+        }
+
+        RadioButton {
+            text: qsTr("AM")
+        }
+    }
+    \endcode
+
+    Mutually exclusive controls do not always share the same parent item,
+    or the parent layout may sometimes contain items that should not be
+    included to the exclusive group. Such cases are best handled using
+    the \l group attached property.
+
+    \code
+    ExclusiveGroup { id: radioGroup }
+
+    Column {
+        Label {
+            text: qsTr("Radio:")
+        }
 
         RadioButton {
             checked: true
@@ -78,6 +116,9 @@ QT_BEGIN_NAMESPACE
         }
     }
     \endcode
+
+    More advanced use cases can be handled using the addCheckable() and
+    removeCheckable() methods.
 
     \sa RadioButton
 */
@@ -119,7 +160,13 @@ public:
 
     void _q_updateCurrent();
 
+    static void checkables_append(QQmlListProperty<QObject> *prop, QObject *obj);
+    static int checkables_count(QQmlListProperty<QObject> *prop);
+    static QObject *checkables_at(QQmlListProperty<QObject> *prop, int index);
+    static void checkables_clear(QQmlListProperty<QObject> *prop);
+
     QObject *current;
+    QObjectList checkables;
     QMetaMethod updateCurrentMethod;
 };
 
@@ -129,6 +176,35 @@ void QQuickExclusiveGroupPrivate::_q_updateCurrent()
     QObject *object = q->sender();
     if (isChecked(object))
         q->setCurrent(object);
+}
+
+void QQuickExclusiveGroupPrivate::checkables_append(QQmlListProperty<QObject> *prop, QObject *obj)
+{
+    QQuickExclusiveGroup *q = static_cast<QQuickExclusiveGroup *>(prop->object);
+    q->addCheckable(obj);
+}
+
+int QQuickExclusiveGroupPrivate::checkables_count(QQmlListProperty<QObject> *prop)
+{
+    QQuickExclusiveGroupPrivate *p = static_cast<QQuickExclusiveGroupPrivate *>(prop->data);
+    return p->checkables.count();
+}
+
+QObject *QQuickExclusiveGroupPrivate::checkables_at(QQmlListProperty<QObject> *prop, int index)
+{
+    QQuickExclusiveGroupPrivate *p = static_cast<QQuickExclusiveGroupPrivate *>(prop->data);
+    return p->checkables.value(index);
+}
+
+void QQuickExclusiveGroupPrivate::checkables_clear(QQmlListProperty<QObject> *prop)
+{
+    QQuickExclusiveGroupPrivate *p = static_cast<QQuickExclusiveGroupPrivate *>(prop->data);
+    if (!p->checkables.isEmpty()) {
+        p->checkables.clear();
+        QQuickExclusiveGroup *q = static_cast<QQuickExclusiveGroup *>(prop->object);
+        q->setCurrent(0);
+        emit q->checkablesChanged();
+    }
 }
 
 QQuickExclusiveGroup::QQuickExclusiveGroup(QObject *parent)
@@ -149,7 +225,7 @@ QQuickExclusiveGroupAttached *QQuickExclusiveGroup::qmlAttachedProperties(QObjec
 
     This property holds the currently selected object or \c null if there is none.
 
-    By default, it is the first checked object attached to the exclusive group.
+    By default, it is the first checked object added to the exclusive group.
 */
 QObject *QQuickExclusiveGroup::current() const
 {
@@ -171,19 +247,57 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
 }
 
 /*!
+    \qmlproperty list<Object> QtQuickControls2::ExclusiveGroup::checkables
+    \default
+
+    This property holds the list of checkables.
+
+    \code
+    ExclusiveGroup {
+        checkables: column.children
+    }
+
+    Column {
+        id: column
+
+        RadioButton {
+            checked: true
+            text: qsTr("Option A")
+        }
+
+        RadioButton {
+            text: qsTr("Option B")
+        }
+    }
+    \endcode
+
+    \sa group
+*/
+QQmlListProperty<QObject> QQuickExclusiveGroup::checkables()
+{
+    Q_D(QQuickExclusiveGroup);
+    return QQmlListProperty<QObject>(this, d,
+                                     QQuickExclusiveGroupPrivate::checkables_append,
+                                     QQuickExclusiveGroupPrivate::checkables_count,
+                                     QQuickExclusiveGroupPrivate::checkables_at,
+                                     QQuickExclusiveGroupPrivate::checkables_clear);
+}
+
+/*!
     \qmlmethod void QtQuickControls2::ExclusiveGroup::addCheckable(QtObject object)
 
     Adds an \a object to the exclusive group.
 
     \note Manually adding objects to an exclusive group is typically unnecessary.
-          The \l group attached property provides a convenient and declarative syntax.
+          The \l checkables property and the \l group attached property provide a
+          convenient and declarative syntax.
 
-    \sa group
+    \sa checkables, group
 */
 void QQuickExclusiveGroup::addCheckable(QObject *object)
 {
     Q_D(QQuickExclusiveGroup);
-    if (!object)
+    if (!object || d->checkables.contains(object))
         return;
 
     QMetaMethod signal = checkableSignal(object);
@@ -193,6 +307,9 @@ void QQuickExclusiveGroup::addCheckable(QObject *object)
 
         if (isChecked(object))
             setCurrent(object);
+
+        d->checkables.append(object);
+        emit checkablesChanged();
     } else {
         qmlInfo(this) << "The object has no checkedChanged() or toggled() signal.";
     }
@@ -204,14 +321,15 @@ void QQuickExclusiveGroup::addCheckable(QObject *object)
     Removes an \a object from the exclusive group.
 
     \note Manually removing objects from an exclusive group is typically unnecessary.
-          The \l group attached property provides a convenient and declarative syntax.
+          The \l checkables property and the \l group attached property provide a
+          convenient and declarative syntax.
 
-    \sa group
+    \sa checkables, group
 */
 void QQuickExclusiveGroup::removeCheckable(QObject *object)
 {
     Q_D(QQuickExclusiveGroup);
-    if (!object)
+    if (!object || !d->checkables.contains(object))
         return;
 
     QMetaMethod signal = checkableSignal(object);
@@ -222,6 +340,9 @@ void QQuickExclusiveGroup::removeCheckable(QObject *object)
 
     if (d->current == object)
         setCurrent(Q_NULLPTR);
+
+    d->checkables.removeOne(object);
+    emit checkablesChanged();
 }
 
 class QQuickExclusiveGroupAttachedPrivate : public QObjectPrivate
@@ -256,6 +377,8 @@ QQuickExclusiveGroupAttached::QQuickExclusiveGroupAttached(QObject *parent) :
         ExclusiveGroup.group: group
     }
     \endcode
+
+    \sa checkables
 */
 QQuickExclusiveGroup *QQuickExclusiveGroupAttached::group() const
 {

@@ -50,24 +50,45 @@ TestCase {
     when: windowShown
     name: "ExclusiveGroup"
 
-    SignalSpy {
-        id: currentSpy
-        signalName: "currentChanged"
-    }
-
     Component {
         id: exclusiveGroup
         ExclusiveGroup { }
     }
 
+    Component {
+        id: checkableGroup
+        ExclusiveGroup {
+            QtObject { objectName: "non-checkable" }
+            QtObject { objectName: "checkable1"; property bool checked: false }
+            QtObject { objectName: "checkable2"; property bool checked: true }
+            QtObject { objectName: "checkable3"; property bool checked: false }
+        }
+    }
+
+    SignalSpy {
+        id: currentSpy
+        signalName: "currentChanged"
+    }
+
+    SignalSpy {
+        id: checkablesSpy
+        signalName: "checkablesChanged"
+    }
+
     function init() {
         verify(!currentSpy.target)
         compare(currentSpy.count, 0)
+
+        verify(!checkablesSpy.target)
+        compare(checkablesSpy.count, 0)
     }
 
     function cleanup() {
         currentSpy.target = null
         currentSpy.clear()
+
+        checkablesSpy.target = null
+        checkablesSpy.clear()
     }
 
     function test_null() {
@@ -156,6 +177,55 @@ TestCase {
         group.destroy()
     }
 
+    function test_checkables() {
+        ignoreWarning(Qt.resolvedUrl("tst_exclusivegroup.qml") + ":60:9: QML ExclusiveGroup: The object has no checkedChanged() or toggled() signal.")
+        var group = checkableGroup.createObject(testCase)
+        verify(group)
+
+        checkablesSpy.target = group
+        verify(checkablesSpy.valid)
+
+        compare(group.checkables.length, 3)
+        compare(group.checkables[0].objectName, "checkable1")
+        compare(group.checkables[1].objectName, "checkable2")
+        compare(group.checkables[2].objectName, "checkable3")
+        compare(group.current, group.checkables[1])
+
+        var checkable4 = checkable.createObject(testCase, {checked: true})
+        var checkable5 = checkable.createObject(testCase, {checked: false})
+
+        group.checkables = [checkable4, checkable5]
+        compare(group.checkables.length, 2)
+        compare(group.checkables[0], checkable4)
+        compare(group.checkables[1], checkable5)
+        compare(group.current, checkable4)
+        compare(checkablesSpy.count, 3) // clear + 2 * append :/
+
+        var checkable6 = checkable.createObject(testCase, {checked: true})
+
+        group.addCheckable(checkable6)
+        compare(group.checkables.length, 3)
+        compare(group.checkables[0], checkable4)
+        compare(group.checkables[1], checkable5)
+        compare(group.checkables[2], checkable6)
+        compare(group.current, checkable6)
+        compare(checkablesSpy.count, 4)
+
+        group.removeCheckable(checkable4)
+        compare(group.checkables.length, 2)
+        compare(group.checkables[0], checkable5)
+        compare(group.checkables[1], checkable6)
+        compare(group.current, checkable6)
+        compare(checkablesSpy.count, 5)
+
+        group.checkables = []
+        compare(group.checkables.length, 0)
+        compare(group.current, null)
+        compare(checkablesSpy.count, 6)
+
+        group.destroy()
+    }
+
     Component {
         id: checkBoxes
         Item {
@@ -196,12 +266,27 @@ TestCase {
         }
     }
 
+    Component {
+        id: childControls
+        Item {
+            id: container
+            property ExclusiveGroup group: ExclusiveGroup { id: group; checkables: container.children }
+            property alias control1: control1
+            property alias control2: control2
+            property alias control3: control3
+            CheckBox { id: control1 }
+            RadioButton { id: control2 }
+            Switch { id: control3 }
+        }
+    }
+
     function test_controls_data() {
         return [
             { tag: "CheckBox", component: checkBoxes },
             { tag: "RadioButton", component: radioButtons },
             { tag: "Switch", component: switches },
-            { tag: "ToggleButton", component: toggleButtons }
+            { tag: "ToggleButton", component: toggleButtons },
+            { tag: "Children", component: childControls }
         ]
     }
 
