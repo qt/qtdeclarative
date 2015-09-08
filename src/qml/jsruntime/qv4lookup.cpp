@@ -169,7 +169,7 @@ ReturnedValue Lookup::indexedGetterObjectInt(Lookup *l, const Value &object, con
 {
     uint idx = index.asArrayIndex();
     if (idx == UINT_MAX || !object.isObject())
-        return indexedGetterGeneric(l, object, index);
+        return indexedGetterFallback(l, object, index);
 
     Object *o = object.objectValue();
     if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
