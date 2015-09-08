@@ -64,6 +64,8 @@
 #include <pthread_np.h>
 #endif
 
+#define MIN_UNMANAGED_HEAPSIZE_GC_LIMIT (std::size_t)128*1024
+
 using namespace WTF;
 
 QT_BEGIN_NAMESPACE
@@ -124,7 +126,7 @@ struct MemoryManager::Data
         , maxShift(6)
         , maxChunkSize(32*1024)
         , unmanagedHeapSize(0)
-        , unmanagedHeapSizeGCLimit(64 * 1024)
+        , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
         , largeItems(0)
         , totalLargeItemsAllocated(0)
     {
@@ -247,13 +249,12 @@ Heap::Base *MemoryManager::allocData(std::size_t size, std::size_t unmanagedSize
     if (m_d->unmanagedHeapSize > m_d->unmanagedHeapSizeGCLimit) {
         runGC();
 
-        if (m_d->unmanagedHeapSizeGCLimit <= m_d->unmanagedHeapSize)
+        if (3*m_d->unmanagedHeapSizeGCLimit <= 4*m_d->unmanagedHeapSize)
+            // more than 75% full, raise limit
             m_d->unmanagedHeapSizeGCLimit = std::max(m_d->unmanagedHeapSizeGCLimit, m_d->unmanagedHeapSize) * 2;
         else if (m_d->unmanagedHeapSize * 4 <= m_d->unmanagedHeapSizeGCLimit)
-            m_d->unmanagedHeapSizeGCLimit /= 2;
-        else if (m_d->unmanagedHeapSizeGCLimit - m_d->unmanagedHeapSize < 5 * unmanagedSize)
-            // try preventing running the GC all the time when we're just below the threshold limit and manage to collect just enough to do this one allocation
-            m_d->unmanagedHeapSizeGCLimit += std::max(std::size_t(8 * 1024), 5 * unmanagedSize);
+            // less than 25% full, lower limit
+            m_d->unmanagedHeapSizeGCLimit = qMax(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT, m_d->unmanagedHeapSizeGCLimit/2);
         didGCRun = true;
     }
 
