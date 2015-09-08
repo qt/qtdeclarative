@@ -361,9 +361,9 @@ void MemoryManager::mark()
 
     engine->markObjects();
 
-    m_persistentValues->mark(engine);
-
     collectFromJSStack();
+
+    m_persistentValues->mark(engine);
 
     // Preserve QObject ownership rules within JavaScript: A parent with c++ ownership
     // keeps all of its children alive in JavaScript.
