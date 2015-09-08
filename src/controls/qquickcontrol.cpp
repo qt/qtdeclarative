@@ -38,6 +38,8 @@
 #include "qquickcontrol_p_p.h"
 
 #include <QtGui/qguiapplication.h>
+#include "qquicklabel_p.h"
+#include "qquicklabel_p_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
@@ -209,6 +211,9 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *i, const QFont &f)
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(child)) {
             QQuickControlPrivate *qcp = qc->d_func();
             qcp->resolveFont();
+        } else if (QQuickLabel *ql = qobject_cast<QQuickLabel *>(child)) {
+            QQuickLabelPrivate *qlp = QQuickLabelPrivate::get(ql);
+            qlp->resolveFont();
         } else if (QQuickTextArea *qta = qobject_cast<QQuickTextArea *>(child)) {
             QQuickTextAreaPrivate *qtap = QQuickTextAreaPrivate::get(qta);
             qtap->resolveFont();

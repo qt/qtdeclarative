@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLABEL_P_H
-#define QQUICKLABEL_P_H
+#ifndef QQUICKLABEL_P_P_H
+#define QQUICKLABEL_P_P_H
 
 //
 //  W A R N I N G
@@ -48,43 +48,35 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquicktext_p.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuick/private/qquicktext_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickLabelPrivate;
-
-class Q_QUICKCONTROLS_EXPORT QQuickLabel : public QQuickText
+class QQuickLabelPrivate : public QQuickTextPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
-    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickLabel)
 
 public:
-    explicit QQuickLabel(QQuickItem *parent = Q_NULLPTR);
-    ~QQuickLabel();
+    QQuickLabelPrivate() : background(Q_NULLPTR) { }
 
-    QFont font() const;
-    void setFont(const QFont &font);
+    static QQuickLabelPrivate *get(QQuickLabel *item) {
+        return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item)); }
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
+    void resizeBackground();
 
-Q_SIGNALS:
-    void fontChanged();
-    void backgroundChanged();
+    inline void setFont_helper(const QFont &f) {
+        // In QQuickTextPrivate, sourceFont was used, instead of font...
+        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
+            return;
+        sourceFont = f;
+    }
+    void resolveFont();
 
-protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickLabel)
-    Q_DECLARE_PRIVATE(QQuickLabel)
+    QQuickItem *background;
 };
 
-Q_DECLARE_TYPEINFO(QQuickLabel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickLabelPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKLABEL_P_H
+#endif // QQUICKLABEL_P_P_H

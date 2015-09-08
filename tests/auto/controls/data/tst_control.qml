@@ -275,6 +275,7 @@ TestCase {
             property alias item2_3: _item2_3;
             property alias item2_4: _item2_4;
             property alias item2_5: _item2_5;
+            property alias item2_6: _item2_6;
             font.family: "Arial"
             T.Control {
                 id: _item2_2
@@ -294,6 +295,11 @@ TestCase {
                 objectName: "_item2_5"
                 text: "Text Field"
             }
+            Label {
+                id: _item2_6
+                objectName: "_item2_6"
+                text: "Label"
+            }
         }
     }
 
@@ -304,6 +310,7 @@ TestCase {
         verify(control2.item2_3)
         verify(control2.item2_4)
         verify(control2.item2_5)
+        verify(control2.item2_6)
 
         compare(control2.font.family, "Arial")
         compare(control2.item2_2.font.family, control2.font.family)
@@ -318,6 +325,9 @@ TestCase {
         compare(control2.item2_5.font.family, control2.font.family)
         compare(control2.item2_5.font.pointSize, control2.font.pointSize)
         compare(control2.item2_5.font.weight, control2.font.weight)
+        compare(control2.item2_6.font.family, control2.font.family)
+        compare(control2.item2_6.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_6.font.weight, control2.font.weight)
 
         control2.font.pointSize = 48
         compare(control2.item2_2.font.pointSize, 48)
@@ -348,6 +358,7 @@ TestCase {
         compare(control2.item2_3.font.pointSize, 36)
         compare(control2.item2_4.font.pointSize, 50)
         compare(control2.item2_5.font.pointSize, 50)
+        compare(control2.item2_6.font.pointSize, 50)
 
         control2.item2_3.font.pointSize = 60
         compare(control2.item2_3.font.pointSize, 60)
@@ -366,6 +377,12 @@ TestCase {
 
         control2.item2_5.font.weight = Font.DemiBold
         compare(control2.item2_5.font.weight, Font.DemiBold)
+
+        control2.item2_6.font.pointSize = 36
+        compare(control2.item2_6.font.pointSize, 36)
+
+        control2.item2_6.font.weight = Font.Black
+        compare(control2.item2_6.font.weight, Font.Black)
 
         compare(control2.font.family, "Arial")
         compare(control2.font.pointSize, 50)
@@ -387,6 +404,10 @@ TestCase {
         compare(control2.item2_5.font.pointSize, 32)
         compare(control2.item2_5.font.weight, Font.DemiBold)
 
+        compare(control2.item2_6.font.family, "Arial")
+        compare(control2.item2_6.font.pointSize, 36)
+        compare(control2.item2_6.font.weight, Font.Black)
+
         control2.destroy()
     }
 
@@ -401,6 +422,7 @@ TestCase {
             property alias item3_5: _item3_5;
             property alias item3_6: _item3_6;
             property alias item3_7: _item3_7;
+            property alias item3_8: _item3_8;
             font.family: "Arial"
             Item {
                 id: _item3_2
@@ -427,6 +449,11 @@ TestCase {
                     objectName: "_item3_5"
                     text: "Text Field"
                 }
+                Label {
+                    id: _item3_8
+                    objectName: "_item3_8"
+                    text: "Label"
+                }
             }
         }
     }
@@ -438,6 +465,9 @@ TestCase {
         verify(control3.item3_3)
         verify(control3.item3_4)
         verify(control3.item3_5)
+        verify(control3.item3_6)
+        verify(control3.item3_7)
+        verify(control3.item3_8)
 
         compare(control3.font.family, "Arial")
         compare(control3.item3_3.font.family, control3.font.family)
@@ -452,6 +482,9 @@ TestCase {
         compare(control3.item3_7.font.family, control3.font.family)
         compare(control3.item3_7.font.pointSize, control3.font.pointSize)
         compare(control3.item3_7.font.weight, control3.font.weight)
+        compare(control3.item3_8.font.family, control3.font.family)
+        compare(control3.item3_8.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_8.font.weight, control3.font.weight)
 
         control3.font.pointSize = 48
         compare(control3.item3_3.font.pointSize, 48)
@@ -488,11 +521,18 @@ TestCase {
         control3.item3_5.font.weight = Font.DemiBold
         compare(control3.item3_5.font.weight, Font.DemiBold)
 
+        control3.item3_8.font.pointSize = 36
+        compare(control3.item3_8.font.pointSize, 36)
+
+        control3.item3_8.font.weight = Font.Black
+        compare(control3.item3_8.font.weight, Font.Black)
+
         control3.font.pointSize = 100
         compare(control3.font.pointSize, 100)
         compare(control3.item3_3.font.pointSize, 60)
         compare(control3.item3_4.font.pointSize, 16)
         compare(control3.item3_5.font.pointSize, 32)
+        compare(control3.item3_8.font.pointSize, 36)
 
         compare(control3.font.family, "Arial")
         compare(control3.font.pointSize, 100)
@@ -512,6 +552,10 @@ TestCase {
         compare(control3.item3_5.font.family, "Arial")
         compare(control3.item3_5.font.pointSize, 32)
         compare(control3.item3_5.font.weight, Font.DemiBold)
+
+        compare(control3.item3_8.font.family, "Arial")
+        compare(control3.item3_8.font.pointSize, 36)
+        compare(control3.item3_8.font.weight, Font.Black)
 
         control3.destroy()
     }

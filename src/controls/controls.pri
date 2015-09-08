@@ -18,6 +18,7 @@ HEADERS += \
     $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \
     $$PWD/qquicklabel_p.h \
+    $$PWD/qquicklabel_p_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpressandholdhelper_p.h \
     $$PWD/qquickprogressbar_p.h \

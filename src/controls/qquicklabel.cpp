@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquicklabel_p.h"
+#include "qquicklabel_p_p.h"
+#include "qquickcontrol_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
@@ -42,26 +45,54 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickLabelPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickLabel)
-
-public:
-    QQuickLabelPrivate() : background(Q_NULLPTR) { }
-
-    QQuickItem *background;
-    QQuickLabel *q_ptr;
-};
-
 QQuickLabel::QQuickLabel(QQuickItem *parent) :
-    QQuickText(parent), d_ptr(new QQuickLabelPrivate)
+    QQuickText(*(new QQuickLabelPrivate), parent)
 {
-    Q_D(QQuickLabel);
-    d->q_ptr = this;
 }
 
 QQuickLabel::~QQuickLabel()
 {
+}
+
+/*!
+    \internal
+
+    Determine which font is implicitly imposed on this control by its ancestors
+    and QGuiApplication::font, resolve this against its own font (attributes from
+    the implicit font are copied over). Then propagate this font to this
+    control's children.
+*/
+void QQuickLabelPrivate::resolveFont()
+{
+    Q_Q(const QQuickLabel);
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
+    QFont resolvedFont = sourceFont.resolve(naturalFont);
+    setFont_helper(resolvedFont);
+}
+
+QFont QQuickLabel::font() const
+{
+    Q_D(const QQuickLabel);
+    return d->sourceFont;
+}
+
+void QQuickLabel::setFont(const QFont &font)
+{
+    Q_D(QQuickLabel);
+    if (d->sourceFont == font)
+        return;
+
+    // Determine which font is inherited from this control's ancestors and
+    // QGuiApplication::font, resolve this against \a font (attributes from the
+    // inherited font are copied over). Then propagate this font to this
+    // control's children.
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
+    QFont resolvedFont = font.resolve(naturalFont);
+    d->setFont_helper(resolvedFont);
+
+    QQuickText::setFont(font);
+
+    emit fontChanged();
 }
 
 QQuickItem *QQuickLabel::background() const
