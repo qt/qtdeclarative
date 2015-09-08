@@ -1,4 +1,8 @@
-INCLUDEPATH += $$PWD
+QML_FILES = \
+    Dial.qml \
+    Drawer.qml \
+    SwipeView.qml \
+    Tumbler.qml
 
 HEADERS += \
     $$PWD/qquickdial_p.h \

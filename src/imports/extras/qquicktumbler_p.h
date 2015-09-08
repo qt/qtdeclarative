@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSWIPEVIEW_P_H
-#define QQUICKSWIPEVIEW_P_H
+#ifndef QQUICKTUMBLER_H
+#define QQUICKTUMBLER_H
 
 //
 //  W A R N I N G
@@ -48,45 +48,99 @@
 // We mean it.
 //
 
-#include <QtQuickExtras/private/qtquickextrasglobal_p.h>
-#include <QtQuickControls/private/qquickcontainer_p.h>
+#include <QtCore/qvariant.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSwipeViewPrivate;
+class QQuickTumblerAttached;
+class QQuickTumblerPrivate;
 
-class Q_QUICKEXTRAS_EXPORT QQuickSwipeView : public QQuickContainer
+class QQuickTumbler : public QQuickControl
 {
     Q_OBJECT
+    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
 
 public:
-    explicit QQuickSwipeView(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickTumbler(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickTumbler();
+
+    QVariant model() const;
+    void setModel(const QVariant &model);
+
+    int count() const;
 
     int currentIndex() const;
+    void setCurrentIndex(int currentIndex);
     QQuickItem *currentItem() const;
 
-public Q_SLOTS:
-    void setCurrentIndex(int index);
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
+
+    int visibleItemCount() const;
+    void setVisibleItemCount(int visibleItemCount);
+
+    static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
+    void modelChanged();
+    void countChanged();
     void currentIndexChanged();
     void currentItemChanged();
+    void delegateChanged();
+    void visibleItemCountChanged();
 
 protected:
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickSwipeView)
-    Q_DECLARE_PRIVATE(QQuickSwipeView)
+    Q_DISABLE_COPY(QQuickTumbler)
+    Q_DECLARE_PRIVATE(QQuickTumbler)
 
-    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
+    Q_PRIVATE_SLOT(d_func(), void _q_updateItemWidths())
+    Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
 };
 
-Q_DECLARE_TYPEINFO(QQuickSwipeView, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickTumbler, Q_COMPLEX_TYPE);
+
+class QQuickTumblerAttachedPrivate;
+
+class QQuickTumblerAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT)
+    Q_PROPERTY(qreal displacement READ displacement NOTIFY displacementChanged FINAL)
+
+public:
+    explicit QQuickTumblerAttached(QQuickItem *delegateItem);
+    ~QQuickTumblerAttached();
+
+    QQuickTumbler *tumbler() const;
+    qreal displacement() const;
+
+Q_SIGNALS:
+    void displacementChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickTumblerAttached)
+    Q_DECLARE_PRIVATE(QQuickTumblerAttached)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_calculateDisplacement())
+};
+
+Q_DECLARE_TYPEINFO(QQuickTumblerAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKSWIPEVIEW_P_H
+QML_DECLARE_TYPEINFO(QQuickTumbler, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKTUMBLER_H

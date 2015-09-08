@@ -51,14 +51,13 @@
 #include <QtCore/qvariant.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls/private/qquickcontrol_p.h>
-#include <QtQuickExtras/private/qtquickextrasglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickDialAttached;
 class QQuickDialPrivate;
 
-class Q_QUICKEXTRAS_EXPORT QQuickDial : public QQuickControl
+class QQuickDial : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
