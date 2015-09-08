@@ -57,6 +57,7 @@ void QQuickContainerPrivate::init()
     Q_Q(QQuickContainer);
     contentModel = new QQmlObjectModel(q);
     QObject::connect(contentModel, &QQmlObjectModel::countChanged, q, &QQuickContainer::countChanged);
+    QObject::connect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
 }
 
 void QQuickContainerPrivate::cleanup()

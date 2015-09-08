@@ -61,7 +61,7 @@ class Q_QUICKCONTROLS_EXPORT QQuickContainer : public QQuickControl
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -81,6 +81,7 @@ public:
 
 Q_SIGNALS:
     void countChanged();
+    void contentChildrenChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
