@@ -169,10 +169,13 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 struct QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
+    V4_PROTOTYPE(signalHandlerPrototype)
     V4_NEEDS_DESTROY
 
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object.data(); }
+
+    static void initProto(ExecutionEngine *v4);
 };
 
 class MultiplyWrappedQObjectMap : public QObject,

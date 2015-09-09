@@ -335,14 +335,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
             ScopedContext global(scope, scope.engine->qmlContext());
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
         } else if (property->isSignalHandler()) {
-            QV4::Scoped<QV4::QmlSignalHandler> handler(scope, scope.engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex));
-
-            QV4::ScopedString connect(scope, engine->newIdentifier(QStringLiteral("connect")));
-            QV4::ScopedString disconnect(scope, engine->newIdentifier(QStringLiteral("disconnect")));
-            handler->put(connect, QV4::ScopedValue(scope, engine->functionPrototype()->get(connect)));
-            handler->put(disconnect, QV4::ScopedValue(scope, engine->functionPrototype()->get(disconnect)));
-
-            return handler.asReturnedValue();
+            QmlSignalHandler::initProto(engine);
+            return engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex)->asReturnedValue();
         } else {
             ExecutionContext *global = scope.engine->rootContext();
             return QV4::QObjectMethod::create(global, object, property->coreIndex);
@@ -1890,6 +1884,21 @@ Heap::QmlSignalHandler::QmlSignalHandler(QObject *object, int signalIndex)
 }
 
 DEFINE_OBJECT_VTABLE(QmlSignalHandler);
+
+void QmlSignalHandler::initProto(ExecutionEngine *engine)
+{
+    if (engine->signalHandlerPrototype()->d())
+        return;
+
+    Scope scope(engine);
+    ScopedObject o(scope, engine->newObject());
+    QV4::ScopedString connect(scope, engine->newIdentifier(QStringLiteral("connect")));
+    QV4::ScopedString disconnect(scope, engine->newIdentifier(QStringLiteral("disconnect")));
+    o->put(connect, QV4::ScopedValue(scope, engine->functionPrototype()->get(connect)));
+    o->put(disconnect, QV4::ScopedValue(scope, engine->functionPrototype()->get(disconnect)));
+
+    engine->jsObjects[QV4::ExecutionEngine::SignalHandlerProto] = o->d();
+}
 
 void MultiplyWrappedQObjectMap::insert(QObject *key, Heap::Object *value)
 {

@@ -429,6 +429,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) 0;
+    jsObjects[SignalHandlerProto] = (Heap::Base *) 0;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));

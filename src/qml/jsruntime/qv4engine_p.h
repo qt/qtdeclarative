@@ -149,6 +149,7 @@ public:
         ArrayBufferProto,
         DataViewProto,
         ValueTypeProto,
+        SignalHandlerProto,
 
         Object_Ctor,
         String_Ctor,
@@ -219,6 +220,7 @@ public:
     Object *typedArrayPrototype;
 
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
+    Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
