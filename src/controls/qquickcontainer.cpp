@@ -134,14 +134,14 @@ void QQuickContainerPrivate::itemDestroyed(QQuickItem *item)
 void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
     QQuickContainerPrivate *p = static_cast<QQuickContainerPrivate *>(prop->data);
-    QQuickContainer *bar = static_cast<QQuickContainer *>(prop->object);
+    QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     QQuickItem *item = qobject_cast<QQuickItem *>(obj);
     if (item) {
         if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
             QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
             item->setParentItem(p->contentItem);
         } else if (p->contentModel->indexOf(item, Q_NULLPTR) == -1) {
-            bar->addItem(item);
+            q->addItem(item);
         }
     } else {
         p->contentData.append(obj);
@@ -168,8 +168,8 @@ void QQuickContainerPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 
 void QQuickContainerPrivate::contentChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *item)
 {
-    QQuickContainer *bar = static_cast<QQuickContainer *>(prop->object);
-    bar->addItem(item);
+    QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
+    q->addItem(item);
 }
 
 int QQuickContainerPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *prop)
@@ -180,8 +180,8 @@ int QQuickContainerPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *
 
 QQuickItem *QQuickContainerPrivate::contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index)
 {
-    QQuickContainer *bar = static_cast<QQuickContainer *>(prop->object);
-    return bar->itemAt(index);
+    QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
+    return q->itemAt(index);
 }
 
 void QQuickContainerPrivate::contentChildren_clear(QQmlListProperty<QQuickItem> *prop)
