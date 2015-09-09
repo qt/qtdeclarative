@@ -94,6 +94,9 @@ public:
     void setFastFBOResizing(bool dynamic);
     bool fastFBOResizing() const { return m_fastFBOResizing; }
 
+    void setTextureSize(const QSize &textureSize);
+    QSize textureSize() const { return m_textureSize; }
+
     QImage toImage() const;
     void update();
 
@@ -126,8 +129,12 @@ private:
 
     QSize m_size;
     QSize m_fboSize;
+    QSize m_textureSize;
     QRect m_dirtyRect;
     QColor m_fillColor;
+#if QT_VERSION >= 0x060000
+#warning "Remove m_contentsScale and assume 1 everywhere"
+#endif
     qreal m_contentsScale;
 
     bool m_dirtyContents : 1;

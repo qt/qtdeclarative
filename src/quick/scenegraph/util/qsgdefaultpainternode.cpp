@@ -136,18 +136,35 @@ void QSGDefaultPainterNode::paint()
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     }
 
-    painter.scale(m_contentsScale, m_contentsScale);
+    QRect clipRect;
+    QRect dirtyTextureRect;
 
-    QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
-                qFloor(dirtyRect.y()/m_contentsScale),
-                qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
-                qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+    if (m_contentsScale == 1) {
+        qreal scaleX = m_textureSize.width() / (qreal) m_size.width();
+        qreal scaleY = m_textureSize.height() / (qreal) m_size.height();
+        painter.scale(scaleX, scaleY);
+        clipRect = dirtyRect;
+        dirtyTextureRect = QRectF(dirtyRect.x() * scaleX,
+                                  dirtyRect.y() * scaleY,
+                                  dirtyRect.width() * scaleX,
+                                  dirtyRect.height() * scaleY).toAlignedRect();
+    } else {
+        painter.scale(m_contentsScale, m_contentsScale);
+        QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
+                    qFloor(dirtyRect.y()/m_contentsScale),
+                    qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
+                    qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+        clipRect = sclip;
+        dirtyTextureRect = dirtyRect;
+    }
 
-    if (!m_dirtyRect.isNull())
-        painter.setClipRect(sclip);
+    // only clip if we were originally updating only a subrect
+    if (!m_dirtyRect.isNull()) {
+        painter.setClipRect(clipRect);
+    }
 
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(sclip, m_fillColor);
+    painter.fillRect(clipRect, m_fillColor);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     m_item->paint(&painter);
@@ -155,9 +172,9 @@ void QSGDefaultPainterNode::paint()
 
     if (m_actualRenderTarget == QQuickPaintedItem::Image) {
         m_texture->setImage(m_image);
-        m_texture->setDirtyRect(dirtyRect);
+        m_texture->setDirtyRect(dirtyTextureRect);
     } else if (m_multisampledFbo) {
-        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, dirtyRect, m_multisampledFbo, dirtyRect);
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, dirtyTextureRect, m_multisampledFbo, dirtyTextureRect);
     }
 
     if (m_multisampledFbo)
@@ -276,7 +293,7 @@ void QSGDefaultPainterNode::updateRenderTarget()
         if (!m_image.isNull() && !m_dirtyGeometry)
             return;
 
-        m_image = QImage(m_size, QImage::Format_ARGB32_Premultiplied);
+        m_image = QImage(m_textureSize, QImage::Format_ARGB32_Premultiplied);
         m_image.fill(Qt::transparent);
     }
 
@@ -302,12 +319,12 @@ void QSGDefaultPainterNode::updateFBOSize()
     int fboWidth;
     int fboHeight;
     if (m_fastFBOResizing) {
-        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_size.width() - 1));
-        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_size.height() - 1));
+        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_textureSize.width() - 1));
+        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_textureSize.height() - 1));
     } else {
         QSize minimumFBOSize = m_context->sceneGraphContext()->minimumFBOSize();
-        fboWidth = qMax(minimumFBOSize.width(), m_size.width());
-        fboHeight = qMax(minimumFBOSize.height(), m_size.height());
+        fboWidth = qMax(minimumFBOSize.width(), m_textureSize.width());
+        fboHeight = qMax(minimumFBOSize.height(), m_textureSize.height());
     }
 
     m_fboSize = QSize(fboWidth, fboHeight);
@@ -331,6 +348,15 @@ void QSGDefaultPainterNode::setSize(const QSize &size)
         return;
 
     m_size = size;
+    m_dirtyGeometry = true;
+}
+
+void QSGDefaultPainterNode::setTextureSize(const QSize &size)
+{
+    if (size == m_textureSize)
+        return;
+
+    m_textureSize = size;
     updateFBOSize();
 
     if (m_fbo)
