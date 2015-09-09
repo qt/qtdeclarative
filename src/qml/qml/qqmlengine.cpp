@@ -912,7 +912,7 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 
   Note that the \l {Qt Quick 1} version is called QDeclarativeEngine.
 
-  \sa QQmlComponent, QQmlContext
+  \sa QQmlComponent, QQmlContext, {QML Global Object}
 */
 
 /*!

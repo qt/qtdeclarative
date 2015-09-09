@@ -45,7 +45,9 @@ additional imports:
 \li \l{XMLHttpRequest}, DOMException: These objects implement a subset of the \l{http://www.w3.org/TR/XMLHttpRequest/}{W3C XMLHttpRequest specification}.
 \endlist
 
-
+\note The \l {QJSEngine::}{globalObject()} function cannot be used to modify
+the global object of a \l QQmlEngine by setting properties on it
+(via \l {QJSValue::}{setProperty()}).
 
 \keyword XMLHttpRequest
 \section1 XMLHttpRequest
