@@ -783,6 +783,12 @@ bool QQuickCanvasItem::isTextureProvider() const
 
 QSGTextureProvider *QQuickCanvasItem::textureProvider() const
 {
+    // When Item::layer::enabled == true, QQuickItem will be a texture
+    // provider. In this case we should prefer to return the layer rather
+    // than the canvas itself.
+    if (QQuickItem::isTextureProvider())
+        return QQuickItem::textureProvider();
+
     Q_D(const QQuickCanvasItem);
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
