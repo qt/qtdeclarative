@@ -315,6 +315,8 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         return 1;
     }
 
+    qputenv("QT_QTESTLIB_RUNNING", "1");
+
     // Register the test object
     qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
     // Scan through all of the "tst_*.qml" files and run each of them
