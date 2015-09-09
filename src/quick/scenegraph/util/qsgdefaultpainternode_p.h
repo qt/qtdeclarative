@@ -126,21 +126,21 @@ private:
 
     QSize m_size;
     QSize m_fboSize;
-    bool m_dirtyContents;
     QRect m_dirtyRect;
-    bool m_opaquePainting;
-    bool m_linear_filtering;
-    bool m_mipmapping;
-    bool m_smoothPainting;
-    bool m_extensionsChecked;
-    bool m_multisamplingSupported;
-    bool m_fastFBOResizing;
     QColor m_fillColor;
     qreal m_contentsScale;
 
-    bool m_dirtyGeometry;
-    bool m_dirtyRenderTarget;
-    bool m_dirtyTexture;
+    bool m_dirtyContents : 1;
+    bool m_opaquePainting : 1;
+    bool m_linear_filtering : 1;
+    bool m_mipmapping : 1;
+    bool m_smoothPainting : 1;
+    bool m_extensionsChecked : 1;
+    bool m_multisamplingSupported : 1;
+    bool m_fastFBOResizing : 1;
+    bool m_dirtyGeometry : 1;
+    bool m_dirtyRenderTarget : 1;
+    bool m_dirtyTexture : 1;
 };
 
 QT_END_NAMESPACE
