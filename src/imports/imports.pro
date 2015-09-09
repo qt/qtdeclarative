@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 SUBDIRS += \
     controls \
     calendar \
-    extras
+    extras \
+    templates
