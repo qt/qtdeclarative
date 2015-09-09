@@ -1732,7 +1732,6 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
         method->d()->propertyCache = ddata->propertyCache;
 
     method->d()->index = index;
-    method->d()->valueTypeWrapper = Primitive::undefinedValue();
     return method.asReturnedValue();
 }
 
@@ -1742,7 +1741,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueType
     Scoped<QObjectMethod> method(valueScope, scope->d()->engine->memoryManager->allocObject<QObjectMethod>(scope));
     method->d()->propertyCache = valueType->d()->propertyCache;
     method->d()->index = index;
-    method->d()->valueTypeWrapper = *valueType;
+    method->d()->valueTypeWrapper = valueType->d();
     return method.asReturnedValue();
 }
 
@@ -1811,8 +1810,8 @@ ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
 
 ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
-    Scope scope(engine());
-    ExecutionContext *context = scope.engine->currentContext;
+    ExecutionEngine *v4 = engine();
+    ExecutionContext *context = v4->currentContext;
     if (d()->index == DestroyMethod)
         return method_destroy(context, callData->args, callData->argc);
     else if (d()->index == ToStringMethod)
@@ -1820,11 +1819,10 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 
     QQmlObjectOrGadget object(d()->object.data());
     if (!d()->object) {
-        Scoped<QQmlValueTypeWrapper> wrapper(scope, d()->valueTypeWrapper);
-        if (!wrapper)
+        if (!d()->valueTypeWrapper)
             return Encode::undefined();
 
-        object = QQmlObjectOrGadget(d()->propertyCache.data(), wrapper->d()->gadgetPtr);
+        object = QQmlObjectOrGadget(d()->propertyCache.data(), d()->valueTypeWrapper->gadgetPtr);
     }
 
     QQmlPropertyData method;
@@ -1856,8 +1854,9 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
     }
 
     if (method.isV4Function()) {
+        Scope scope(v4);
         QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
-        QQmlV4Function func(callData, rv, scope.engine);
+        QQmlV4Function func(callData, rv, v4);
         QQmlV4Function *funcptr = &func;
 
         void *args[] = { 0, &funcptr };
@@ -1867,16 +1866,17 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
     }
 
     if (!method.isOverload()) {
-        return CallPrecise(object, method, scope.engine, callData);
+        return CallPrecise(object, method, v4, callData);
     } else {
-        return CallOverloaded(object, method, scope.engine, callData, d()->propertyCache);
+        return CallOverloaded(object, method, v4, callData, d()->propertyCache);
     }
 }
 
 void QObjectMethod::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     QObjectMethod::Data *This = static_cast<QObjectMethod::Data*>(that);
-    This->valueTypeWrapper.mark(e);
+    if (This->valueTypeWrapper)
+        This->valueTypeWrapper->mark(e);
 
     FunctionObject::markObjects(that, e);
 }

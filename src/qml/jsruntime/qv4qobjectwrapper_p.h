@@ -69,6 +69,8 @@ struct QObjectSlotDispatcher;
 
 namespace Heap {
 
+struct QQmlValueTypeWrapper;
+
 struct QObjectWrapper : Object {
     QObjectWrapper(QObject *object);
     QPointer<QObject> object;
@@ -80,7 +82,7 @@ struct QObjectMethod : FunctionObject {
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     int index;
 
-    Value valueTypeWrapper;
+    Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
 
     const QMetaObject *metaObject();
 };
