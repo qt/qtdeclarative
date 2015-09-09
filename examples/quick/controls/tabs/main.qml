@@ -42,6 +42,7 @@ import QtQuick 2.6
 import QtQuick.Extras 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 import QtQuick.XmlListModel 2.0
 
 ApplicationWindow {
@@ -180,7 +181,7 @@ ApplicationWindow {
                     }
                 }
 
-                AbstractScrollIndicator.vertical: ScrollIndicator { }
+                T.ScrollIndicator.vertical: ScrollIndicator { }
             }
 
             BusyIndicator {
@@ -272,7 +273,7 @@ ApplicationWindow {
                     }
                 }
 
-                AbstractScrollIndicator.vertical: ScrollIndicator { }
+                T.ScrollIndicator.vertical: ScrollIndicator { }
             }
 
             BusyIndicator {

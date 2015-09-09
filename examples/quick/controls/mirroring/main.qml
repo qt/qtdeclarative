@@ -41,6 +41,7 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 ApplicationWindow {
     id: window
@@ -221,7 +222,7 @@ ApplicationWindow {
                         }
                         Slider {
                             width: parent.width
-                            snapMode: AbstractSlider.SnapAlways
+                            snapMode: T.Slider.SnapAlways
                             stepSize: 0.2
                             value: 0.8
                         }
@@ -232,6 +233,6 @@ ApplicationWindow {
             Item { width: 1; height: 12 }
         }
 
-        AbstractScrollIndicator.vertical: ScrollIndicator { anchors.right: parent.right }
+        T.ScrollIndicator.vertical: ScrollIndicator { anchors.right: parent.right }
     }
 }

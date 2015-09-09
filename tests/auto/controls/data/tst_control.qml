@@ -41,6 +41,7 @@
 import QtQuick 2.2
 import QtTest 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 TestCase {
     id: testCase
@@ -52,7 +53,7 @@ TestCase {
 
     Component {
         id: component
-        Control { }
+        T.Control { }
     }
 
     SignalSpy {
@@ -267,7 +268,7 @@ TestCase {
 
     Component {
         id: component2
-        Control {
+        T.Control {
             id: item2
             objectName: "item2"
             property alias item2_2: _item2_2;
@@ -275,10 +276,10 @@ TestCase {
             property alias item2_4: _item2_4;
             property alias item2_5: _item2_5;
             font.family: "Arial"
-            Control {
+            T.Control {
                 id: _item2_2
                 objectName: "_item2_2"
-                Control {
+                T.Control {
                     id: _item2_3
                     objectName: "_item2_3"
                 }
@@ -391,7 +392,7 @@ TestCase {
 
     Component {
         id: component3
-        Control {
+        T.Control {
             id: item3
             objectName: "item3"
             property alias item3_2: _item3_2;
@@ -404,13 +405,13 @@ TestCase {
             Item {
                 id: _item3_2
                 objectName: "_item3_2"
-                Control {
+                T.Control {
                     id: _item3_3
                     objectName: "_item3_3"
                     Item {
                         id: _item3_6
                         objectName: "_item3_6"
-                        Control {
+                        T.Control {
                             id: _item3_7
                             objectName: "_item3_7"
                         }

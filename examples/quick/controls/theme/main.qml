@@ -40,6 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 ApplicationWindow {
     id: window
@@ -71,7 +72,7 @@ ApplicationWindow {
 
     Component {
         id: pageComponent
-        Control {
+        T.Control {
             id: page
             Theme.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
             Theme.backgroundColor: darkButton.checked ? "#444" : "#fff"
@@ -169,7 +170,7 @@ ApplicationWindow {
                     }
                 }
 
-                AbstractScrollIndicator.vertical: ScrollIndicator { }
+                T.ScrollIndicator.vertical: ScrollIndicator { }
             }
         }
     }

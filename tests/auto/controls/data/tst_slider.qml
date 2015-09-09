@@ -41,6 +41,7 @@
 import QtQuick 2.2
 import QtTest 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 TestCase {
     id: testCase
@@ -75,7 +76,7 @@ TestCase {
         verify(control)
 
         compare(control.stepSize, 0)
-        compare(control.snapMode, AbstractSlider.NoSnap)
+        compare(control.snapMode, T.Slider.NoSnap)
         compare(control.orientation, Qt.Horizontal)
 
         control.destroy()

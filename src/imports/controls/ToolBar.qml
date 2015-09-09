@@ -36,8 +36,9 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
-AbstractToolBar {
+T.ToolBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
