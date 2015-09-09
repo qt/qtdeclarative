@@ -107,9 +107,9 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
 
     if (!QQmlEnginePrivate::qml_debugging_enabled) {
         if (!params->arguments.isEmpty()) {
-            qWarning() << QString::fromLatin1(
-                              "QML Debugger: Ignoring \"-qmljsdebugger=%1\". Debugging has not "
-                              "been enabled.").arg(params->arguments);
+            qWarning().noquote() << QString::fromLatin1(
+                                        "QML Debugger: Ignoring \"-qmljsdebugger=%1\". Debugging "
+                                        "has not been enabled.").arg(params->arguments);
             params->arguments.clear();
         }
         return 0;
