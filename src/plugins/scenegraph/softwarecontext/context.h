@@ -68,8 +68,6 @@ public:
     void render(QPixmap *target);
 
     QRect m_projectionRect;
-    bool m_mirrorHorizontal;
-    bool m_mirrorVertical;
 };
 
 class RenderContext : public QSGRenderContext

@@ -216,12 +216,11 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    m_renderer->m_mirrorHorizontal = m_mirrorHorizontal;
-    m_renderer->m_mirrorVertical = m_mirrorVertical;
-    m_renderer->m_projectionRect = QRect(m_rect.x() * m_device_pixel_ratio,
-                                         m_rect.y() * m_device_pixel_ratio,
-                                         m_rect.width() * m_device_pixel_ratio,
-                                         m_rect.height() * m_device_pixel_ratio);
+    QRect mirrored(m_mirrorHorizontal ? m_rect.right() * m_device_pixel_ratio : m_rect.left() * m_device_pixel_ratio,
+                   m_mirrorVertical ? m_rect.top() * m_device_pixel_ratio : m_rect.bottom() * m_device_pixel_ratio,
+                   m_mirrorHorizontal ? -m_rect.width() * m_device_pixel_ratio : m_rect.width() * m_device_pixel_ratio,
+                   m_mirrorVertical ? m_rect.height() * m_device_pixel_ratio : -m_rect.height() * m_device_pixel_ratio);
+    m_renderer->m_projectionRect = mirrored;
     m_renderer->setClearColor(Qt::transparent);
 
     m_renderer->renderScene();
