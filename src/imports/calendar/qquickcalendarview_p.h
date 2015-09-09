@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTEXTAREA_P_H
-#define QQUICKTEXTAREA_P_H
+#ifndef QQUICKCALENDARVIEW_P_H
+#define QQUICKCALENDARVIEW_P_H
 
 //
 //  W A R N I N G
@@ -48,56 +48,77 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuickControls/private/qtquickcontrolsglobal_p.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickText;
-class QQuickTextAreaPrivate;
-class QQuickMouseEvent;
+class QQmlComponent;
+class QQuickCalendarViewPrivate;
 
-class Q_QUICKCONTROLS_EXPORT QQuickTextArea : public QQuickTextEdit
+class QQuickCalendarView : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
-    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
+    Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
+    Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
-    ~QQuickTextArea();
+    explicit QQuickCalendarView(QQuickItem *parent = Q_NULLPTR);
 
-    QFont font() const;
-    void setFont(const QFont &font);
+    int month() const;
+    void setMonth(int month);
 
-    QQuickItem *background() const;
-    void setBackground(QQuickItem *background);
+    int year() const;
+    void setYear(int year);
 
-    QQuickText *placeholder() const;
-    void setPlaceholder(QQuickText *placeholder);
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+
+    QVariant source() const;
+    void setSource(const QVariant &source);
+
+    QString title() const;
+    void setTitle(const QString &title);
+
+    QQmlComponent *delegate() const;
+    void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
-    void fontChanged();
-    void backgroundChanged();
-    void placeholderChanged();
-    void pressAndHold(QQuickMouseEvent *event);
+    void monthChanged();
+    void yearChanged();
+    void localeChanged();
+    void sourceChanged();
+    void titleChanged();
+    void delegateChanged();
+
+    void pressed(const QDate &date);
+    void released(const QDate &date);
+    void clicked(const QDate &date);
+    void pressAndHold(const QDate &date);
 
 protected:
+    void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
+    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    void updatePolish() Q_DECL_OVERRIDE;
+
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickTextArea)
-    Q_DECLARE_PRIVATE(QQuickTextArea)
+    Q_DISABLE_COPY(QQuickCalendarView)
+    Q_DECLARE_PRIVATE(QQuickCalendarView)
 };
 
-Q_DECLARE_TYPEINFO(QQuickTextArea, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickCalendarView, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKTEXTAREA_P_H
+#endif // QQUICKCALENDARVIEW_P_H

@@ -36,13 +36,13 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <QtQuickCalendar/private/qquickcalendarview_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekrow_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbercolumn_p.h>
-#include <QtQuickCalendar/private/qquickcalendarmodel_p.h>
-#include <QtQuickCalendar/private/qquickdayofweekmodel_p.h>
-#include <QtQuickCalendar/private/qquickmonthmodel_p.h>
-#include <QtQuickCalendar/private/qquickweeknumbermodel_p.h>
+#include "qquickcalendarview_p.h"
+#include "qquickdayofweekrow_p.h"
+#include "qquickweeknumbercolumn_p.h"
+#include "qquickcalendarmodel_p.h"
+#include "qquickdayofweekmodel_p.h"
+#include "qquickmonthmodel_p.h"
+#include "qquickweeknumbermodel_p.h"
 
 QT_BEGIN_NAMESPACE
 

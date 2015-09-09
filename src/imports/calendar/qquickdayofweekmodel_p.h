@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKDAYOFWEEKMODEL_P_H
+#define QQUICKDAYOFWEEKMODEL_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,48 @@
 // We mean it.
 //
 
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
+class QQuickDayOfWeekModelPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekRow : public QQuickControl
+class QQuickDayOfWeekModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickDayOfWeekModel(QObject *parent = Q_NULLPTR);
 
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
-    QVariant source() const;
-    void setSource(const QVariant &source);
+    Q_INVOKABLE int dayAt(int index) const;
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    enum {
+        DayRole = Qt::UserRole + 1,
+        LongNameRole,
+        ShortNameRole,
+        NarrowNameRole
+    };
+
+    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
 Q_SIGNALS:
     void localeChanged();
-    void sourceChanged();
-    void delegateChanged();
-
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    Q_DISABLE_COPY(QQuickDayOfWeekModel)
+    Q_DECLARE_PRIVATE(QQuickDayOfWeekModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickDayOfWeekModel, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKDAYOFWEEKMODEL_P_H

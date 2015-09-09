@@ -42,13 +42,4 @@ AbstractApplicationWindow {
     id: window
 
     color: Theme.backgroundColor
-
-    contentWidth: contentItem.children.length === 1 ? contentItem.children[0].implicitWidth : 0
-    contentHeight: contentItem.children.length === 1 ? contentItem.children[0].implicitHeight : 0
-
-    minimumWidth: Math.max(contentWidth,
-                           (header ? header.implicitWidth : 0),
-                           (footer ? footer.implicitWidth : 0))
-    minimumHeight: contentHeight + (header ? header.implicitHeight : 0)
-                                 + (footer ? footer.implicitHeight : 0)
 }

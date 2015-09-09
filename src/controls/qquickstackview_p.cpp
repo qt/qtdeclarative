@@ -58,14 +58,14 @@ public:
     QQuickStackIncubator(QQuickStackElement *element) : QQmlIncubator(Synchronous), element(element) { }
 
 protected:
-    void setInitialState(QObject *object) Q_DECL_OVERRIDE { element->initItem(object); }
+    void setInitialState(QObject *object) Q_DECL_OVERRIDE { element->incubate(object); }
 
 private:
     QQuickStackElement *element;
 };
 
 QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(Q_NULLPTR),
-    index(-1), removal(false), ownItem(false), ownComponent(false),
+    index(-1), init(false), removal(false), ownItem(false), ownComponent(false),
     context(Q_NULLPTR), component(Q_NULLPTR), incubator(Q_NULLPTR), view(Q_NULLPTR),
     status(QQuickStackView::Inactive)
 {
@@ -114,11 +114,8 @@ QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackV
         element->ownComponent = true;
     }
     element->item = qobject_cast<QQuickItem *>(object);
-    if (element->item) {
+    if (element->item)
         element->originalParent = element->item->parentItem();
-        element->item->setParentItem(view);
-        QQuickItemPrivate::get(element->item)->addItemChangeListener(element, QQuickItemPrivate::Destroyed);
-    }
     return element;
 }
 
@@ -138,32 +135,34 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         incubator = new QQuickStackIncubator(this);
         component->create(*incubator, context);
     }
-    initProperties();
+    initialize();
     return item;
 }
 
-void QQuickStackElement::initItem(QObject *object)
+void QQuickStackElement::incubate(QObject *object)
 {
     item = qmlobject_cast<QQuickItem *>(object);
-    if (item) {
+    if (item)
         QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
-        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        if (!p->widthValid) {
-            item->setWidth(view->width());
-            p->widthValid = true;
-        }
-        if (!p->heightValid) {
-            item->setHeight(view->height());
-            p->heightValid = true;
-        }
-        item->setParentItem(view);
-        p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
-    }
-    initProperties();
 }
 
-void QQuickStackElement::initProperties()
+void QQuickStackElement::initialize()
 {
+    if (!item || init)
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (!p->widthValid) {
+        item->setWidth(view->width());
+        p->widthValid = false;
+    }
+    if (!p->heightValid) {
+        item->setHeight(view->height());
+        p->heightValid = false;
+    }
+    item->setParentItem(view);
+    p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
+
     if (!properties.isUndefined()) {
         QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
         Q_ASSERT(d && d->engine);
@@ -174,6 +173,8 @@ void QQuickStackElement::initProperties()
         d->initializeObjectWithInitialProperties(ipv, item);
         properties.clear();
     }
+
+    init = true;
 }
 
 void QQuickStackElement::setIndex(int value)
@@ -388,6 +389,7 @@ void QQuickStackViewPrivate::ensureTransitioner()
 void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
 {
     if (exit) {
+        exit->removal = true;
         exit->setStatus(QQuickStackView::Deactivating);
         exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, true);
     }
@@ -403,7 +405,7 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->prepareTransition(transitioner, QRectF()))
             completeTransition(enter, transitioner->removeDisplacedTransition);
         else
             enter->startTransition(transitioner);
@@ -434,7 +436,7 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
@@ -466,7 +468,7 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
@@ -489,8 +491,8 @@ void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQu
             QQuickAbstractAnimation *anim = animations.at(&animations, i);
             anim->complete();
         }
-        viewItemTransitionFinished(element);
     }
+    viewItemTransitionFinished(element);
 }
 
 void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitionableItem *transitionable)
@@ -500,15 +502,15 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         element->setStatus(QQuickStackView::Active);
     } else if (element->status == QQuickStackView::Deactivating) {
         element->setStatus(QQuickStackView::Inactive);
+        if (element->item)
+            element->item->setVisible(false);
         if (element->removal || element->isPendingRemoval())
-            delete element;
+            removals += element;
     }
 
     if (transitioner->runningJobs.isEmpty()) {
-        int i = elements.count() - 1;
-        while (--i >= 0)
-            if (QQuickItem *item = elements[i]->item)
-                item->setVisible(false);
+        qDeleteAll(removals);
+        removals.clear();
         setBusy(false);
     }
 }

@@ -3,18 +3,19 @@ TARGETPATH = QtQuick/Calendar.2
 IMPORT_VERSION = 2.0
 
 QT += qml quick
-QT += core-private gui-private qml-private quick-private quickcontrols2-private quickcalendar2-private
+QT += core-private gui-private qml-private quick-private quickcontrols2-private
+
+DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
+
+INCLUDEPATH += $$PWD
 
 OTHER_FILES += \
     qmldir
 
-QML_FILES = \
-    CalendarView.qml \
-    DayOfWeekRow.qml \
-    WeekNumberColumn.qml
-
 SOURCES += \
     $$PWD/qtquickcalendar2plugin.cpp
+
+include(calendar.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)

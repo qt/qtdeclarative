@@ -269,6 +269,7 @@ QQuickStackView::~QQuickStackView()
         d->transitioner->setChangeListener(Q_NULLPTR);
         delete d->transitioner;
     }
+    qDeleteAll(d->removals);
     qDeleteAll(d->elements);
 }
 

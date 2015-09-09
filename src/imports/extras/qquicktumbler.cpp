@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Tumbler
-    \inherits Container
+    \inherits Control
     \instantiates QQuickTumbler
     \inqmlmodule QtQuick.Extras
     \ingroup containers

@@ -96,7 +96,7 @@ void QQuickSwipeViewPrivate::insertItem(int index, QQuickItem *item)
 
     QQuickContainerPrivate::insertItem(index, item);
 
-    if (contentModel->count() == 1)
+    if (contentModel->count() == 1 && currentIndex == -1)
         q->setCurrentIndex(index);
 }
 
@@ -156,6 +156,7 @@ void QQuickSwipeView::setCurrentIndex(int index)
     if (d->currentIndex != index) {
         d->currentIndex = index;
         emit currentIndexChanged();
+        emit currentItemChanged();
     }
 }
 

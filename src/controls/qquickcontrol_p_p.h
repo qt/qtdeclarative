@@ -69,6 +69,17 @@ public:
     void resizeBackground();
     void resizeContent();
 
+    void updateFont(const QFont &);
+    static void updateFontRecur(QQuickItem *item, const QFont &);
+    inline void setFont_helper(const QFont &f) {
+        if (font.resolve() == f.resolve() && font == f)
+            return;
+        updateFont(f);
+    }
+    void resolveFont();
+    static QFont naturalControlFont(const QQuickItem *);
+
+    QFont font;
     bool hasTopPadding;
     bool hasLeftPadding;
     bool hasRightPadding;

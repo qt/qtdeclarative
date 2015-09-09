@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,15 +38,12 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
+import QtQuick 2.5
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication app(argc, argv);
-    QQmlApplicationEngine engine;
-    engine.load(QUrl("qrc:/main.qml"));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-    return app.exec();
+Item {
+    id: item
+    property var createdCallback
+    property var destroyedCallback
+    Component.onCompleted: if (createdCallback) createdCallback(item)
+    Component.onDestruction: if (destroyedCallback) destroyedCallback(item)
 }

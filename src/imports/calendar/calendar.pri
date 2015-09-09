@@ -1,4 +1,7 @@
-INCLUDEPATH += $$PWD
+QML_FILES = \
+    CalendarView.qml \
+    DayOfWeekRow.qml \
+    WeekNumberColumn.qml
 
 HEADERS += \
     $$PWD/qquickcalendarmodel_p.h \

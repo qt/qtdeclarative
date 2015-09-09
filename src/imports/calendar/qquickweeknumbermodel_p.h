@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKMONTHMODEL_P_H
-#define QQUICKMONTHMODEL_P_H
+#ifndef QQUICKWEEKNUMBERMODEL_P_H
+#define QQUICKWEEKNUMBERMODEL_P_H
 
 //
 //  W A R N I N G
@@ -49,25 +49,22 @@
 //
 
 #include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qdatetime.h>
 #include <QtCore/qlocale.h>
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMonthModelPrivate;
+class QQuickWeekNumberModelPrivate;
 
-class Q_QUICKCALENDAR_EXPORT QQuickMonthModel : public QAbstractListModel
+class QQuickWeekNumberModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
     Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
 
 public:
-    explicit QQuickMonthModel(QObject *parent = Q_NULLPTR);
+    explicit QQuickWeekNumberModel(QObject *parent = Q_NULLPTR);
 
     int month() const;
     void setMonth(int month);
@@ -78,19 +75,11 @@ public:
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
-    QString title() const;
-    void setTitle(const QString &title);
-
-    Q_INVOKABLE QDate dateAt(int index) const;
-    Q_INVOKABLE int indexOf(const QDate &date) const;
+    Q_INVOKABLE int weekNumberAt(int index) const;
+    Q_INVOKABLE int indexOf(int weekNumber) const;
 
     enum {
-        DateRole = Qt::UserRole + 1,
-        DayRole,
-        TodayRole,
-        WeekNumberRole,
-        MonthRole,
-        YearRole
+        WeekNumberRole = Qt::UserRole + 1
     };
 
     QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
@@ -101,15 +90,14 @@ Q_SIGNALS:
     void monthChanged();
     void yearChanged();
     void localeChanged();
-    void titleChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickMonthModel)
-    Q_DECLARE_PRIVATE(QQuickMonthModel)
+    Q_DISABLE_COPY(QQuickWeekNumberModel)
+    Q_DECLARE_PRIVATE(QQuickWeekNumberModel)
 };
 
-Q_DECLARE_TYPEINFO(QQuickMonthModel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickWeekNumberModel, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKMONTHMODEL_P_H
+#endif // QQUICKWEEKNUMBERMODEL_P_H

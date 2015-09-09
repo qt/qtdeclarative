@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKMODEL_P_H
-#define QQUICKDAYOFWEEKMODEL_P_H
+#ifndef QQUICKTEXTFIELD_P_P_H
+#define QQUICKTEXTFIELD_P_P_H
 
 //
 //  W A R N I N G
@@ -48,49 +48,41 @@
 // We mean it.
 //
 
-#include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qlocale.h>
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
+#include <QtQuick/private/qquicktextinput_p_p.h>
+#include <QtQuickControls/private/qquickpressandholdhelper_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDayOfWeekModelPrivate;
-
-class Q_QUICKCALENDAR_EXPORT QQuickDayOfWeekModel : public QAbstractListModel
+class QQuickTextFieldPrivate : public QQuickTextInputPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
+    Q_DECLARE_PUBLIC(QQuickTextField)
 
 public:
-    explicit QQuickDayOfWeekModel(QObject *parent = Q_NULLPTR);
+    QQuickTextFieldPrivate()
+        : background(Q_NULLPTR)
+        , placeholder(Q_NULLPTR)
+    { }
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
+    static QQuickTextFieldPrivate *get(QQuickTextField *item) {
+        return static_cast<QQuickTextFieldPrivate *>(QObjectPrivate::get(item)); }
 
-    Q_INVOKABLE int dayAt(int index) const;
+    void resizeBackground();
 
-    enum {
-        DayRole = Qt::UserRole + 1,
-        LongNameRole,
-        ShortNameRole,
-        NarrowNameRole
-    };
+    inline void setFont_helper(const QFont &f) {
+        // In QQuickTextInputPrivate, sourceFont was used, instead of font...
+        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
+            return;
+        sourceFont = f;
+    }
+    void resolveFont();
 
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
-
-Q_SIGNALS:
-    void localeChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickDayOfWeekModel)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekModel)
+    QQuickItem *background;
+    QQuickText *placeholder;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekModel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKMODEL_P_H
+#endif // QQUICKTEXTFIELD_P_P_H

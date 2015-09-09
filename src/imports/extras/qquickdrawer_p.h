@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTQUICKEXTRASGLOBAL_P_H
-#define QTQUICKEXTRASGLOBAL_P_H
+#ifndef QQUICKDRAWER_P_H
+#define QQUICKDRAWER_P_H
 
 //
 //  W A R N I N G
@@ -48,20 +48,67 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
+#include <QtQuickControls/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKEXTRAS2_LIB)
-#    define Q_QUICKEXTRAS_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKEXTRAS_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKEXTRAS_EXPORT
-#endif
+class QQuickPropertyAnimation;
+class QQuickDrawerPrivate;
+
+class QQuickDrawer : public QQuickControl
+{
+    Q_OBJECT
+    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    // TODO: make this a proper transition
+    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentItem")
+
+public:
+    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+
+    Qt::Edge edge() const;
+    void setEdge(Qt::Edge edge);
+
+    qreal position() const;
+    void setPosition(qreal position);
+
+    QQuickItem *contentItem() const;
+    void setContentItem(QQuickItem *item);
+
+    QQuickPropertyAnimation *animation() const;
+    void setAnimation(QQuickPropertyAnimation *animation);
+
+public Q_SLOTS:
+    void open();
+    void close();
+
+Q_SIGNALS:
+    void clicked();
+    void edgeChanged();
+    void positionChanged();
+    void contentItemChanged();
+    void animationChanged();
+
+protected:
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void componentComplete() Q_DECL_OVERRIDE;
+
+    virtual qreal positionAt(const QPointF &point) const;
+
+private:
+    Q_DISABLE_COPY(QQuickDrawer)
+    Q_DECLARE_PRIVATE(QQuickDrawer)
+};
+
+Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QTQUICKEXTRASGLOBAL_P_H
+#endif // QQUICKDRAWER_P_H

@@ -37,6 +37,8 @@
 #include "gifrecorder.h"
 
 #include <QLoggingCategory>
+#include <QQmlComponent>
+#include <QQuickItem>
 #include <QtTest>
 
 /*!
@@ -228,6 +230,17 @@ void GifRecorder::waitForFinish()
     }
 
     if (mHighQuality) {
+        // Indicate the end of recording and the beginning of conversion.
+        QQmlComponent busyComponent(mView->engine());
+        busyComponent.setData("import QtQuick 2.6; import QtQuick.Controls 2.0; Rectangle { anchors.fill: parent; " \
+            "BusyIndicator { width: 32; height: 32; anchors.centerIn: parent } }", QUrl());
+        QCOMPARE(busyComponent.status(), QQmlComponent::Ready);
+        QQuickItem *busyRect = qobject_cast<QQuickItem*>(busyComponent.create());
+        QVERIFY(busyRect);
+        busyRect->setParentItem(mView->rootObject());
+        QSignalSpy spy(mView, SIGNAL(frameSwapped()));
+        QVERIFY(spy.wait());
+
         QProcess avconvProcess;
         QProcess convertProcess;
         avconvProcess.setStandardOutputProcess(&convertProcess);

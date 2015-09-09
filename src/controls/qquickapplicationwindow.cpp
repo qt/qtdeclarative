@@ -60,7 +60,7 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
-    QQuickApplicationWindowPrivate() : complete(false), contentWidth(0), contentHeight(0), header(Q_NULLPTR), footer(Q_NULLPTR) { }
+    QQuickApplicationWindowPrivate() : complete(false), header(Q_NULLPTR), footer(Q_NULLPTR) { }
 
     void relayout();
 
@@ -68,8 +68,6 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
 
     bool complete;
-    qreal contentWidth;
-    qreal contentHeight;
     QQuickItem *header;
     QQuickItem *footer;
     QQuickApplicationWindow *q_ptr;
@@ -194,54 +192,6 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
                 d->relayout();
         }
         emit footerChanged();
-    }
-}
-
-/*!
-    \qmlproperty real QtQuickControls2::ApplicationWindow::contentWidth
-
-    This property is the width of the window content without header and footer.
-    Setting it will resize the window accordingly.
-    By default the implicit width of the child items is used.
-
-    \sa contentHeight
-*/
-qreal QQuickApplicationWindow::contentWidth() const
-{
-    Q_D(const QQuickApplicationWindow);
-    return d->contentWidth;
-}
-
-void QQuickApplicationWindow::setContentWidth(qreal width)
-{
-    Q_D(QQuickApplicationWindow);
-    if (d->contentWidth != width) {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
-}
-
-/*!
-    \qmlproperty real QtQuickControls2::ApplicationWindow::contentHeight
-
-    This property is the height of the window content without header and footer.
-    Setting it will resize the window accordingly.
-    By default the implicit height of the child items is used.
-
-    \sa contentWidth
-*/
-qreal QQuickApplicationWindow::contentHeight() const
-{
-    Q_D(const QQuickApplicationWindow);
-    return d->contentHeight;
-}
-
-void QQuickApplicationWindow::setContentHeight(qreal height)
-{
-    Q_D(QQuickApplicationWindow);
-    if (d->contentHeight != height) {
-        d->contentHeight = height;
-        emit contentHeightChanged();
     }
 }
 

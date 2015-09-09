@@ -71,8 +71,8 @@ public:
     static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view);
 
     bool load(QQuickStackView *parent);
-    void initItem(QObject *object);
-    void initProperties();
+    void incubate(QObject *object);
+    void initialize();
 
     void setIndex(int index);
     void setView(QQuickStackView *view);
@@ -85,6 +85,7 @@ public:
     void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
 
     int index;
+    bool init;
     bool removal;
     bool ownItem;
     bool ownComponent;
@@ -134,6 +135,7 @@ public:
 
     QVariant initialItem;
     QQuickItem *currentItem;
+    QList<QQuickStackElement*> removals;
     QStack<QQuickStackElement *> elements;
     QQuickItemViewTransitioner *transitioner;
 };

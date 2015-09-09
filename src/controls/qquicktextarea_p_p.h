@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKWEEKNUMBERMODEL_P_H
-#define QQUICKWEEKNUMBERMODEL_P_H
+#ifndef QQUICKTEXTAREA_P_P_H
+#define QQUICKTEXTAREA_P_P_H
 
 //
 //  W A R N I N G
@@ -48,57 +48,38 @@
 // We mean it.
 //
 
-#include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qlocale.h>
-#include <QtQuickCalendar/private/qtquickcalendarglobal_p.h>
+#include <QtQuick/private/qquicktextedit_p_p.h>
+#include <QtQuickControls/private/qquickpressandholdhelper_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWeekNumberModelPrivate;
-
-class Q_QUICKCALENDAR_EXPORT QQuickWeekNumberModel : public QAbstractListModel
+class QQuickTextAreaPrivate : public QQuickTextEditPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
-    Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(int count READ rowCount CONSTANT FINAL)
+    Q_DECLARE_PUBLIC(QQuickTextArea)
 
 public:
-    explicit QQuickWeekNumberModel(QObject *parent = Q_NULLPTR);
+    QQuickTextAreaPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
 
-    int month() const;
-    void setMonth(int month);
+    static QQuickTextAreaPrivate *get(QQuickTextArea *item) {
+        return static_cast<QQuickTextAreaPrivate *>(QObjectPrivate::get(item)); }
 
-    int year() const;
-    void setYear(int year);
+    void resizeBackground();
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
+    inline void setFont_helper(const QFont &f) {
+        // In QQuickTextEditPrivate, sourceFont was used, instead of font...
+        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
+            return;
+        sourceFont = f;
+    }
+    void resolveFont();
 
-    Q_INVOKABLE int weekNumberAt(int index) const;
-    Q_INVOKABLE int indexOf(int weekNumber) const;
-
-    enum {
-        WeekNumberRole = Qt::UserRole + 1
-    };
-
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
-
-Q_SIGNALS:
-    void monthChanged();
-    void yearChanged();
-    void localeChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickWeekNumberModel)
-    Q_DECLARE_PRIVATE(QQuickWeekNumberModel)
+    QQuickItem *background;
+    QQuickText *placeholder;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
 };
 
-Q_DECLARE_TYPEINFO(QQuickWeekNumberModel, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickTextAreaPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKWEEKNUMBERMODEL_P_H
+#endif // QQUICKTEXTAREA_P_P_H

@@ -36,10 +36,10 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <QtQuickExtras/private/qquickdial_p.h>
-#include <QtQuickExtras/private/qquickdrawer_p.h>
-#include <QtQuickExtras/private/qquickswipeview_p.h>
-#include <QtQuickExtras/private/qquicktumbler_p.h>
+#include "qquickdial_p.h"
+#include "qquickdrawer_p.h"
+#include "qquickswipeview_p.h"
+#include "qquicktumbler_p.h"
 
 QT_BEGIN_NAMESPACE
 

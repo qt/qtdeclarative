@@ -225,6 +225,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<SqlEventModel>("io.qt.examples.calendar", 1, 0, "SqlEventModel");
     QQmlApplicationEngine engine;
     engine.load(QUrl("qrc:/main.qml"));
+    if (engine.rootObjects().isEmpty())
+        return -1;
     return app.exec();
 }
 

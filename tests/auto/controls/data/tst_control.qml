@@ -264,4 +264,254 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: component2
+        Control {
+            id: item2
+            objectName: "item2"
+            property alias item2_2: _item2_2;
+            property alias item2_3: _item2_3;
+            property alias item2_4: _item2_4;
+            property alias item2_5: _item2_5;
+            font.family: "Arial"
+            Control {
+                id: _item2_2
+                objectName: "_item2_2"
+                Control {
+                    id: _item2_3
+                    objectName: "_item2_3"
+                }
+            }
+            TextArea {
+                id: _item2_4
+                objectName: "_item2_4"
+                text: "Text Area"
+            }
+            TextField {
+                id: _item2_5
+                objectName: "_item2_5"
+                text: "Text Field"
+            }
+        }
+    }
+
+    function test_font() {
+        var control2 = component2.createObject(testCase)
+        verify(control2)
+        verify(control2.item2_2)
+        verify(control2.item2_3)
+        verify(control2.item2_4)
+        verify(control2.item2_5)
+
+        compare(control2.font.family, "Arial")
+        compare(control2.item2_2.font.family, control2.font.family)
+        compare(control2.item2_2.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_2.font.weight, control2.font.weight)
+        compare(control2.item2_3.font.family, control2.font.family)
+        compare(control2.item2_3.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_3.font.weight, control2.font.weight)
+        compare(control2.item2_4.font.family, control2.font.family)
+        compare(control2.item2_4.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_4.font.weight, control2.font.weight)
+        compare(control2.item2_5.font.family, control2.font.family)
+        compare(control2.item2_5.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_5.font.weight, control2.font.weight)
+
+        control2.font.pointSize = 48
+        compare(control2.item2_2.font.pointSize, 48)
+        compare(control2.item2_3.font.pointSize, 48)
+        compare(control2.item2_4.font.pointSize, 48)
+        compare(control2.item2_5.font.pointSize, 48)
+
+        control2.font.bold = true
+        compare(control2.item2_2.font.weight, Font.Bold)
+        compare(control2.item2_3.font.weight, Font.Bold)
+        compare(control2.item2_4.font.weight, Font.Bold)
+        compare(control2.item2_5.font.weight, Font.Bold)
+
+        control2.item2_2.font.pointSize = 36
+        compare(control2.item2_2.font.pointSize, 36)
+        compare(control2.item2_3.font.pointSize, 36)
+
+        control2.item2_2.font.weight = Font.Light
+        compare(control2.item2_2.font.pointSize, 36)
+        compare(control2.item2_3.font.pointSize, 36)
+
+        compare(control2.item2_3.font.family, control2.item2_2.font.family)
+        compare(control2.item2_3.font.pointSize, control2.item2_2.font.pointSize)
+        compare(control2.item2_3.font.weight, control2.item2_2.font.weight)
+
+        control2.font.pointSize = 50
+        compare(control2.item2_2.font.pointSize, 36)
+        compare(control2.item2_3.font.pointSize, 36)
+        compare(control2.item2_4.font.pointSize, 50)
+        compare(control2.item2_5.font.pointSize, 50)
+
+        control2.item2_3.font.pointSize = 60
+        compare(control2.item2_3.font.pointSize, 60)
+
+        control2.item2_3.font.weight = Font.Normal
+        compare(control2.item2_3.font.weight, Font.Normal)
+
+        control2.item2_4.font.pointSize = 16
+        compare(control2.item2_4.font.pointSize, 16)
+
+        control2.item2_4.font.weight = Font.Normal
+        compare(control2.item2_4.font.weight, Font.Normal)
+
+        control2.item2_5.font.pointSize = 32
+        compare(control2.item2_5.font.pointSize, 32)
+
+        control2.item2_5.font.weight = Font.DemiBold
+        compare(control2.item2_5.font.weight, Font.DemiBold)
+
+        compare(control2.font.family, "Arial")
+        compare(control2.font.pointSize, 50)
+        compare(control2.font.weight, Font.Bold)
+
+        compare(control2.item2_2.font.family, "Arial")
+        compare(control2.item2_2.font.pointSize, 36)
+        compare(control2.item2_2.font.weight, Font.Light)
+
+        compare(control2.item2_3.font.family, "Arial")
+        compare(control2.item2_3.font.pointSize, 60)
+        compare(control2.item2_3.font.weight, Font.Normal)
+
+        compare(control2.item2_4.font.family, "Arial")
+        compare(control2.item2_4.font.pointSize, 16)
+        compare(control2.item2_4.font.weight, Font.Normal)
+
+        compare(control2.item2_5.font.family, "Arial")
+        compare(control2.item2_5.font.pointSize, 32)
+        compare(control2.item2_5.font.weight, Font.DemiBold)
+
+        control2.destroy()
+    }
+
+    Component {
+        id: component3
+        Control {
+            id: item3
+            objectName: "item3"
+            property alias item3_2: _item3_2;
+            property alias item3_3: _item3_3;
+            property alias item3_4: _item3_4;
+            property alias item3_5: _item3_5;
+            property alias item3_6: _item3_6;
+            property alias item3_7: _item3_7;
+            font.family: "Arial"
+            Item {
+                id: _item3_2
+                objectName: "_item3_2"
+                Control {
+                    id: _item3_3
+                    objectName: "_item3_3"
+                    Item {
+                        id: _item3_6
+                        objectName: "_item3_6"
+                        Control {
+                            id: _item3_7
+                            objectName: "_item3_7"
+                        }
+                    }
+                }
+                TextArea {
+                    id: _item3_4
+                    objectName: "_item3_4"
+                    text: "Text Area"
+                }
+                TextField {
+                    id: _item3_5
+                    objectName: "_item3_5"
+                    text: "Text Field"
+                }
+            }
+        }
+    }
+
+    function test_font_2() {
+        var control3 = component3.createObject(testCase)
+        verify(control3)
+        verify(control3.item3_2)
+        verify(control3.item3_3)
+        verify(control3.item3_4)
+        verify(control3.item3_5)
+
+        compare(control3.font.family, "Arial")
+        compare(control3.item3_3.font.family, control3.font.family)
+        compare(control3.item3_3.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_3.font.weight, control3.font.weight)
+        compare(control3.item3_4.font.family, control3.font.family)
+        compare(control3.item3_4.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_4.font.weight, control3.font.weight)
+        compare(control3.item3_5.font.family, control3.font.family)
+        compare(control3.item3_5.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_5.font.weight, control3.font.weight)
+        compare(control3.item3_7.font.family, control3.font.family)
+        compare(control3.item3_7.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_7.font.weight, control3.font.weight)
+
+        control3.font.pointSize = 48
+        compare(control3.item3_3.font.pointSize, 48)
+        compare(control3.item3_4.font.pointSize, 48)
+        compare(control3.item3_5.font.pointSize, 48)
+
+        control3.font.bold = true
+        compare(control3.item3_3.font.weight, Font.Bold)
+        compare(control3.item3_4.font.weight, Font.Bold)
+        compare(control3.item3_5.font.weight, Font.Bold)
+
+        compare(control3.item3_3.font.family, control3.font.family)
+        compare(control3.item3_3.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_3.font.weight, control3.font.weight)
+        compare(control3.item3_7.font.family, control3.font.family)
+        compare(control3.item3_7.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_7.font.weight, control3.font.weight)
+
+        control3.item3_3.font.pointSize = 60
+        compare(control3.item3_3.font.pointSize, 60)
+
+        control3.item3_3.font.weight = Font.Normal
+        compare(control3.item3_3.font.weight, Font.Normal)
+
+        control3.item3_4.font.pointSize = 16
+        compare(control3.item3_4.font.pointSize, 16)
+
+        control3.item3_4.font.weight = Font.Normal
+        compare(control3.item3_4.font.weight, Font.Normal)
+
+        control3.item3_5.font.pointSize = 32
+        compare(control3.item3_5.font.pointSize, 32)
+
+        control3.item3_5.font.weight = Font.DemiBold
+        compare(control3.item3_5.font.weight, Font.DemiBold)
+
+        control3.font.pointSize = 100
+        compare(control3.font.pointSize, 100)
+        compare(control3.item3_3.font.pointSize, 60)
+        compare(control3.item3_4.font.pointSize, 16)
+        compare(control3.item3_5.font.pointSize, 32)
+
+        compare(control3.font.family, "Arial")
+        compare(control3.font.pointSize, 100)
+        compare(control3.font.weight, Font.Bold)
+
+        compare(control3.item3_3.font.family, "Arial")
+        compare(control3.item3_3.font.pointSize, 60)
+        compare(control3.item3_3.font.weight, Font.Normal)
+        compare(control3.item3_7.font.family, control3.item3_3.font.family)
+        compare(control3.item3_7.font.pointSize, control3.item3_3.font.pointSize)
+        compare(control3.item3_7.font.weight, control3.item3_3.font.weight)
+
+        compare(control3.item3_4.font.family, "Arial")
+        compare(control3.item3_4.font.pointSize, 16)
+        compare(control3.item3_4.font.weight, Font.Normal)
+
+        compare(control3.item3_5.font.family, "Arial")
+        compare(control3.item3_5.font.pointSize, 32)
+        compare(control3.item3_5.font.weight, Font.DemiBold)
+
+        control3.destroy()
+    }
 }

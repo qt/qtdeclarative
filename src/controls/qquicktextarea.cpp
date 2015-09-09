@@ -35,12 +35,14 @@
 ****************************************************************************/
 
 #include "qquicktextarea_p.h"
-#include "qquickpressandholdhelper_p.h"
+#include "qquicktextarea_p_p.h"
+#include "qquickcontrol_p.h"
+#include "qquickcontrol_p_p.h"
 
+#include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickclipnode_p.h>
-#include <QtQuick/private/qquicktextedit_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,20 +65,6 @@ QT_BEGIN_NAMESPACE
 
     \sa TextField, {Customizing TextArea}
 */
-
-class QQuickTextAreaPrivate : public QQuickTextEditPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickTextArea)
-
-public:
-    QQuickTextAreaPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR) { }
-
-    void resizeBackground();
-
-    QQuickItem *background;
-    QQuickText *placeholder;
-    QQuickPressAndHoldHelper pressAndHoldHelper;
-};
 
 void QQuickTextAreaPrivate::resizeBackground()
 {
@@ -103,6 +91,47 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent) :
 
 QQuickTextArea::~QQuickTextArea()
 {
+}
+
+/*!
+    \internal
+
+    Determine which font is implicitly imposed on this control by its ancestors
+    and QGuiApplication::font, resolve this against its own font (attributes from
+    the implicit font are copied over). Then propagate this font to this
+    control's children.
+*/
+void QQuickTextAreaPrivate::resolveFont()
+{
+    Q_Q(const QQuickTextArea);
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
+    QFont resolvedFont = sourceFont.resolve(naturalFont);
+    setFont_helper(resolvedFont);
+}
+
+QFont QQuickTextArea::font() const
+{
+    Q_D(const QQuickTextArea);
+    return d->sourceFont;
+}
+
+void QQuickTextArea::setFont(const QFont &font)
+{
+    Q_D(QQuickTextArea);
+    if (d->sourceFont == font)
+        return;
+
+    // Determine which font is inherited from this control's ancestors and
+    // QGuiApplication::font, resolve this against \a font (attributes from the
+    // inherited font are copied over). Then propagate this font to this
+    // control's children.
+    QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
+    QFont resolvedFont = font.resolve(naturalFont);
+    d->setFont_helper(resolvedFont);
+
+    QQuickTextEdit::setFont(font);
+
+    emit fontChanged();
 }
 
 /*!
