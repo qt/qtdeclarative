@@ -76,6 +76,7 @@ struct QQmlValueTypeWrapper : Object {
 struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 {
     V4_OBJECT2(QQmlValueTypeWrapper, Object)
+    V4_PROTOTYPE(valueTypeWrapperPrototype)
     static void destroy(Heap::Base *b);
 
 public:

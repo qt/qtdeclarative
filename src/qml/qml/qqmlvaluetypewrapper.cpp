@@ -154,7 +154,7 @@ bool QQmlValueTypeReference::readReferenceValue() const
 
 void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (v4->valueTypeWrapperPrototype()->as<Object>())
+    if (v4->valueTypeWrapperPrototype()->d())
         return;
 
     Scope scope(v4);
@@ -169,9 +169,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     initProto(engine);
 
     Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->allocObject<QQmlValueTypeReference>());
-    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
-    r->setPrototype(proto);
-    r->d()->object = object; r->d()->property = property;
+    r->d()->object = object;
+    r->d()->property = property;
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
     r->d()->gadgetPtr = 0;
@@ -184,8 +183,6 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     initProto(engine);
 
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocObject<QQmlValueTypeWrapper>());
-    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
-    r->setPrototype(proto);
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
     r->d()->gadgetPtr = 0;
