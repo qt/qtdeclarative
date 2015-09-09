@@ -84,7 +84,9 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
+#ifndef QT_NO_CONTEXTMENU
     void contextMenuEvent(QContextMenuEvent *);
+#endif // QT_NO_CONTEXTMENU
 
     void invalidate();
     void invalidateSmoothList();
