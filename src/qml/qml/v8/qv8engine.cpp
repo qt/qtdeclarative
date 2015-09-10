@@ -174,7 +174,10 @@ const QSet<QString> &QV8Engine::illegalNames() const
 void QV8Engine::initializeGlobal()
 {
     QV4::Scope scope(m_v4Engine);
-    QV4::GlobalExtensions::init(m_engine, m_v4Engine->globalObject);
+    QV4::GlobalExtensions::init(m_v4Engine->globalObject, QJSEngine::AllExtensions);
+
+    QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocObject<QV4::QtObject>(m_engine));
+    m_v4Engine->globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);

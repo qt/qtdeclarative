@@ -47,6 +47,7 @@
 
 #include <private/qqmlglobal_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qjsengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -142,7 +143,7 @@ struct ConsoleObject : Object
 };
 
 struct GlobalExtensions {
-    static void init(QQmlEngine *qmlEngine, Object *globalObject);
+    static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
 #ifndef QT_NO_TRANSLATION
     static ReturnedValue method_qsTranslate(CallContext *ctx);
