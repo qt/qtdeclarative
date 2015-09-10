@@ -788,8 +788,11 @@ public:
         m_type->release();
     }
 
-    int metaCall(QMetaObject::Call call, int id, void **arguments)
+    int metaCall(QObject *o, QMetaObject::Call call, int id, void **arguments)
     {
+        Q_ASSERT(o == m_data);
+        Q_UNUSED(o);
+
         static const int objectPropertyOffset = QObject::staticMetaObject.propertyCount();
         if (id >= m_type->propertyOffset
                 && (call == QMetaObject::ReadProperty

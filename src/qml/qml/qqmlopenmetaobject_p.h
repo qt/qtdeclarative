@@ -105,7 +105,7 @@ public:
     void emitPropertyNotification(const QByteArray &propertyName);
 
 protected:
-    virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
+    virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
     virtual int createProperty(const char *, const char *);
 
     virtual void propertyRead(int);
