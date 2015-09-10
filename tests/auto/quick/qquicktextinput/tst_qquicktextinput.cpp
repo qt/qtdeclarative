@@ -3092,14 +3092,16 @@ void tst_qquicktextinput::cursorRectangle()
     } else {
         QCOMPARE(r.left(), input.width());
     }
-    QVERIFY(r.top() >= line.height() - 1);
+    // we can't be exact here, as the space character can have a different ascent/descent from the arabic chars
+    // this then leads to different line heights between the wrapped and non wrapped texts
+    QVERIFY(r.top() >= line.height() - 5);
     COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(11), r);
 
     for (int i = wrapPosition + 1; i < text.length(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
-        QVERIFY(r.top() >= line.height() - 1);
+        QVERIFY(r.top() >= line.height() - 5);
         COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
