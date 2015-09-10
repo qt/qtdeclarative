@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIAL_H
-#define QQUICKDIAL_H
+#ifndef QQUICKSCROLLBAR_P_H
+#define QQUICKSCROLLBAR_P_H
 
 //
 //  W A R N I N G
@@ -48,95 +48,100 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
-#include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDialAttached;
-class QQuickDialPrivate;
+class QQuickFlickable;
+class QQuickScrollBarAttached;
+class QQuickScrollBarPrivate;
 
-class QQuickDial : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
-    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
-    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
-    Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
+    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
 
 public:
-    explicit QQuickDial(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickScrollBar(QQuickItem *parent = Q_NULLPTR);
 
-    qreal from() const;
-    void setFrom(qreal from);
+    static QQuickScrollBarAttached *qmlAttachedProperties(QObject *object);
 
-    qreal to() const;
-    void setTo(qreal to);
-
-    qreal value() const;
-    void setValue(qreal value);
-
+    qreal size() const;
     qreal position() const;
 
-    qreal angle() const;
-
-    qreal stepSize() const;
-    void setStepSize(qreal step);
-
-    enum SnapMode {
-        NoSnap,
-        SnapAlways,
-        SnapOnRelease
-    };
-    Q_ENUM(SnapMode)
-
-    SnapMode snapMode() const;
-    void setSnapMode(SnapMode mode);
+    bool isActive() const;
+    void setActive(bool active);
 
     bool isPressed() const;
     void setPressed(bool pressed);
+
+    Qt::Orientation orientation() const;
+    void setOrientation(Qt::Orientation orientation);
 
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
 public Q_SLOTS:
-    void increase();
-    void decrease();
+    void setSize(qreal size);
+    void setPosition(qreal position);
 
 Q_SIGNALS:
-    void fromChanged();
-    void toChanged();
-    void valueChanged();
+    void sizeChanged();
     void positionChanged();
-    void angleChanged();
-    void stepSizeChanged();
-    void snapModeChanged();
+    void activeChanged();
     void pressedChanged();
+    void orientationChanged();
     void handleChanged();
 
 protected:
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void mirrorChange() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+
+    virtual qreal positionAt(const QPoint &point) const;
 
 private:
-    Q_DISABLE_COPY(QQuickDial)
-    Q_DECLARE_PRIVATE(QQuickDial)
+    Q_DISABLE_COPY(QQuickScrollBar)
+    Q_DECLARE_PRIVATE(QQuickScrollBar)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDial, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickScrollBar, Q_COMPLEX_TYPE);
+
+class QQuickScrollBarAttachedPrivate;
+
+class Q_QUICKTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickScrollBar *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)
+    Q_PROPERTY(QQuickScrollBar *vertical READ vertical WRITE setVertical NOTIFY verticalChanged FINAL)
+
+public:
+    explicit QQuickScrollBarAttached(QQuickFlickable *flickable);
+
+    QQuickScrollBar *horizontal() const;
+    void setHorizontal(QQuickScrollBar *horizontal);
+
+    QQuickScrollBar *vertical() const;
+    void setVertical(QQuickScrollBar *vertical);
+
+Q_SIGNALS:
+    void horizontalChanged();
+    void verticalChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickScrollBarAttached)
+    Q_DECLARE_PRIVATE(QQuickScrollBarAttached)
+};
+
+Q_DECLARE_TYPEINFO(QQuickScrollBarAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDIAL_H
+QML_DECLARE_TYPEINFO(QQuickScrollBar, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKSCROLLBAR_P_H

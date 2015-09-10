@@ -39,7 +39,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
-#include <QtQuickControls/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

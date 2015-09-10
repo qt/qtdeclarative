@@ -1,5 +1,5 @@
 %modules = ( # path to module name map
-    "QtQuickControls" => "$basedir/src/controls",
+    "QtQuickTemplates" => "$basedir/src/templates",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );

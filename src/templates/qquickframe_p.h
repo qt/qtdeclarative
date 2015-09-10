@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKFRAME_P_H
+#define QQUICKFRAME_P_H
 
 //
 //  W A R N I N G
@@ -49,66 +49,55 @@
 //
 
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickFramePrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickFrame : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
+    Q_PROPERTY(QQuickItem *frame READ frame WRITE setFrame NOTIFY frameChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickFrame(QQuickItem *parent = Q_NULLPTR);
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
 
-    qreal position() const;
-    void setPosition(qreal position);
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
+    QQuickItem *frame() const;
+    void setFrame(QQuickItem *frame);
 
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void contentWidthChanged();
+    void contentHeightChanged();
+    void contentChildrenChanged();
+    void frameChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent);
 
-    virtual qreal positionAt(const QPointF &point) const;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickFrame)
+    Q_DECLARE_PRIVATE(QQuickFrame)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickFrame, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKFRAME_P_H

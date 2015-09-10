@@ -40,7 +40,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
-#include <QtQuickControls/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

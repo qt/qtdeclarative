@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKSWITCH_P_H
+#define QQUICKSWITCH_P_H
 
 //
 //  W A R N I N G
@@ -48,67 +48,48 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcheckable_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickSwitchPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickSwitch : public QQuickCheckable
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
-
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    explicit QQuickSwitch(QQuickItem *parent = Q_NULLPTR);
 
     qreal position() const;
     void setPosition(qreal position);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
+    qreal visualPosition() const;
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
     void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void visualPositionChanged();
 
 protected:
+    void mirrorChange() Q_DECL_OVERRIDE;
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
 
-    virtual qreal positionAt(const QPointF &point) const;
+    bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseUngrabEvent(QQuickItem *child);
+
+    virtual qreal positionAt(const QPoint &point) const;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickSwitch)
+    Q_DECLARE_PRIVATE(QQuickSwitch)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickSwitch, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKSWITCH_P_H

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKCONTAINER_P_P_H
+#define QQUICKCONTAINER_P_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,48 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
+#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQml/private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
-
-class QQuickDayOfWeekRow : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
-    Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickContainer)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    QQuickContainerPrivate();
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
+    void init();
+    void cleanup();
 
-    QVariant source() const;
-    void setSource(const QVariant &source);
+    QQuickItem *itemAt(int index) const;
+    virtual void insertItem(int index, QQuickItem *item);
+    virtual void moveItem(int from, int to);
+    virtual void removeItem(int index, QQuickItem *item);
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
+    void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
 
-Q_SIGNALS:
-    void localeChanged();
-    void sourceChanged();
-    void delegateChanged();
+    static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
+    static int contentData_count(QQmlListProperty<QObject> *prop);
+    static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
+    static void contentData_clear(QQmlListProperty<QObject> *prop);
 
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
+    static void contentChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *obj);
+    static int contentChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
+    static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
-private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    QObjectList contentData;
+    QQmlObjectModel *contentModel;
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickContainerPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKCONTAINER_P_P_H

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIAL_H
-#define QQUICKDIAL_H
+#ifndef QQUICKSLIDER_P_H
+#define QQUICKSLIDER_P_H
 
 //
 //  W A R N I N G
@@ -48,30 +48,29 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
-#include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDialAttached;
-class QQuickDialPrivate;
+class QQuickSliderPrivate;
 
-class QQuickDial : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickSlider : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
     Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
-    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
+    Q_PROPERTY(QQuickItem *track READ track WRITE setTrack NOTIFY trackChanged FINAL)
 
 public:
-    explicit QQuickDial(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickSlider(QQuickItem *parent = Q_NULLPTR);
 
     qreal from() const;
     void setFrom(qreal from);
@@ -83,8 +82,7 @@ public:
     void setValue(qreal value);
 
     qreal position() const;
-
-    qreal angle() const;
+    qreal visualPosition() const;
 
     qreal stepSize() const;
     void setStepSize(qreal step);
@@ -102,8 +100,14 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
+    Qt::Orientation orientation() const;
+    void setOrientation(Qt::Orientation orientation);
+
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
+
+    QQuickItem *track() const;
+    void setTrack(QQuickItem *track);
 
 public Q_SLOTS:
     void increase();
@@ -114,11 +118,13 @@ Q_SIGNALS:
     void toChanged();
     void valueChanged();
     void positionChanged();
-    void angleChanged();
+    void visualPositionChanged();
     void stepSizeChanged();
     void snapModeChanged();
     void pressedChanged();
+    void orientationChanged();
     void handleChanged();
+    void trackChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
@@ -131,12 +137,12 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDial)
-    Q_DECLARE_PRIVATE(QQuickDial)
+    Q_DISABLE_COPY(QQuickSlider)
+    Q_DECLARE_PRIVATE(QQuickSlider)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDial, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickSlider, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDIAL_H
+#endif // QQUICKSLIDER_P_H

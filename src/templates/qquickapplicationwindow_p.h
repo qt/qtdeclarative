@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKAPPLICATIONWINDOW_P_H
+#define QQUICKAPPLICATIONWINDOW_P_H
 
 //
 //  W A R N I N G
@@ -48,67 +48,46 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuick/private/qquickwindowmodule_p.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickApplicationWindowPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
+    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
+    ~QQuickApplicationWindow();
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    QQuickItem *header() const;
+    void setHeader(QQuickItem *header);
 
-    qreal position() const;
-    void setPosition(qreal position);
-
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
+    QQuickItem *footer() const;
+    void setFooter(QQuickItem *footer);
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void headerChanged();
+    void footerChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    bool isComponentComplete() const;
     void componentComplete() Q_DECL_OVERRIDE;
-
-    virtual qreal positionAt(const QPointF &point) const;
+    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickApplicationWindow)
+    Q_DECLARE_PRIVATE(QQuickApplicationWindow)
+    QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKAPPLICATIONWINDOW_P_H

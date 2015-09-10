@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKCHECKABLE_P_H
+#define QQUICKCHECKABLE_P_H
 
 //
 //  W A R N I N G
@@ -48,67 +48,52 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickCheckablePrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickCheckable : public QQuickAbstractButton
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
+    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickCheckable(QQuickItem *parent = Q_NULLPTR);
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    bool isChecked() const;
+    void setChecked(bool checked);
 
-    qreal position() const;
-    void setPosition(qreal position);
+    bool isExclusive() const;
+    void setExclusive(bool exclusive);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
+    QQuickItem *indicator() const;
+    void setIndicator(QQuickItem *indicator);
 
 public Q_SLOTS:
-    void open();
-    void close();
+    void toggle();
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void checkedChanged();
+    void indicatorChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent);
 
-    virtual qreal positionAt(const QPointF &point) const;
+    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+
+    void classBegin() Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickCheckable)
+    Q_DECLARE_PRIVATE(QQuickCheckable)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickCheckable, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKCHECKABLE_P_H

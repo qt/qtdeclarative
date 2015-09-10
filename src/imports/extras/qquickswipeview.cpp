@@ -36,7 +36,7 @@
 
 #include "qquickswipeview_p.h"
 
-#include <QtQuickControls/private/qquickcontainer_p_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKCONTROL_P_P_H
+#define QQUICKCONTROL_P_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,59 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
+class QQuickAccessibleAttached;
 
-class QQuickDayOfWeekRow : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickControl)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    QQuickControlPrivate();
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
+    void mirrorChange() Q_DECL_OVERRIDE;
 
-    QVariant source() const;
-    void setSource(const QVariant &source);
+    void setTopPadding(qreal value, bool reset = false);
+    void setLeftPadding(qreal value, bool reset = false);
+    void setRightPadding(qreal value, bool reset = false);
+    void setBottomPadding(qreal value, bool reset = false);
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    void resizeBackground();
+    void resizeContent();
 
-Q_SIGNALS:
-    void localeChanged();
-    void sourceChanged();
-    void delegateChanged();
+    void updateFont(const QFont &);
+    static void updateFontRecur(QQuickItem *item, const QFont &);
+    inline void setFont_helper(const QFont &f) {
+        if (font.resolve() == f.resolve() && font == f)
+            return;
+        updateFont(f);
+    }
+    void resolveFont();
+    static QFont naturalControlFont(const QQuickItem *);
 
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    QFont font;
+    bool hasTopPadding;
+    bool hasLeftPadding;
+    bool hasRightPadding;
+    bool hasBottomPadding;
+    qreal padding;
+    qreal topPadding;
+    qreal leftPadding;
+    qreal rightPadding;
+    qreal bottomPadding;
+    qreal spacing;
+    Qt::LayoutDirection layoutDirection;
+    QQuickItem *background;
+    QQuickItem *contentItem;
+    QQuickAccessibleAttached *accessibleAttached;
+    int accessibleRole;
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKCONTROL_P_P_H

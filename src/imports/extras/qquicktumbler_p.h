@@ -50,7 +50,7 @@
 
 #include <QtCore/qvariant.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 

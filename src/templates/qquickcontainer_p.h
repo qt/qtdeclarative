@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKCONTAINER_P_H
+#define QQUICKCONTAINER_P_H
 
 //
 //  W A R N I N G
@@ -49,66 +49,53 @@
 //
 
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickContainerPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickContainer : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickContainer(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickContainer();
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    int count() const;
+    Q_INVOKABLE QQuickItem *itemAt(int index) const;
+    Q_INVOKABLE void addItem(QQuickItem *item);
+    Q_INVOKABLE void insertItem(int index, QQuickItem *item);
+    Q_INVOKABLE void moveItem(int from, int to);
+    Q_INVOKABLE void removeItem(int index);
 
-    qreal position() const;
-    void setPosition(qreal position);
-
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
+    QVariant contentModel() const;
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void countChanged();
+    void contentChildrenChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
 
-    virtual qreal positionAt(const QPointF &point) const;
+    void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickContainer)
+    Q_DECLARE_PRIVATE(QQuickContainer)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickContainer, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKCONTAINER_P_H

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKTEXTAREA_P_P_H
+#define QQUICKTEXTAREA_P_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,46 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
+#include <QtQuick/private/qquicktextedit_p_p.h>
+#include <QtQuickTemplates/private/qquickpressandholdhelper_p.h>
+
+#include "qquicktextarea_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
+class QQuickAccessibleAttached;
 
-class QQuickDayOfWeekRow : public QQuickControl
+class QQuickTextAreaPrivate : public QQuickTextEditPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_DECLARE_PUBLIC(QQuickTextArea)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
+    QQuickTextAreaPrivate() : background(Q_NULLPTR), placeholder(Q_NULLPTR), accessibleAttached(Q_NULLPTR) { }
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
+    static QQuickTextAreaPrivate *get(QQuickTextArea *item) {
+        return static_cast<QQuickTextAreaPrivate *>(QObjectPrivate::get(item)); }
 
-    QVariant source() const;
-    void setSource(const QVariant &source);
+    void resizeBackground();
 
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
+    inline void setFont_helper(const QFont &f) {
+        // In QQuickTextEditPrivate, sourceFont was used, instead of font...
+        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
+            return;
+        sourceFont = f;
+    }
+    void resolveFont();
 
-Q_SIGNALS:
-    void localeChanged();
-    void sourceChanged();
-    void delegateChanged();
+    void _q_readOnlyChanged(bool isReadOnly);
+    void _q_placeholderTextChanged(const QString &text);
 
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    QQuickItem *background;
+    QQuickText *placeholder;
+    QQuickPressAndHoldHelper pressAndHoldHelper;
+    QQuickAccessibleAttached *accessibleAttached;
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickTextAreaPrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKTEXTAREA_P_P_H

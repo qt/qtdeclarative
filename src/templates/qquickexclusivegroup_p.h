@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKEXCLUSIVEGROUP_P_H
+#define QQUICKEXCLUSIVEGROUP_P_H
 
 //
 //  W A R N I N G
@@ -48,67 +48,71 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtCore/qobject.h>
+#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickExclusiveGroupPrivate;
+class QQuickExclusiveGroupAttached;
+class QQuickExclusiveGroupAttachedPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickExclusiveGroup : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(QObject *current READ current WRITE setCurrent NOTIFY currentChanged)
+    Q_PROPERTY(QQmlListProperty<QObject> checkables READ checkables NOTIFY checkablesChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "checkables")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickExclusiveGroup(QObject *parent = Q_NULLPTR);
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    static QQuickExclusiveGroupAttached *qmlAttachedProperties(QObject *object);
 
-    qreal position() const;
-    void setPosition(qreal position);
+    QObject *current() const;
+    void setCurrent(QObject *current);
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
+    QQmlListProperty<QObject> checkables();
 
 public Q_SLOTS:
-    void open();
-    void close();
+    void addCheckable(QObject *object);
+    void removeCheckable(QObject *object);
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
-
-protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-
-    virtual qreal positionAt(const QPointF &point) const;
+    void currentChanged();
+    void checkablesChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickExclusiveGroup)
+    Q_DECLARE_PRIVATE(QQuickExclusiveGroup)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+class Q_QUICKTEMPLATES_EXPORT QQuickExclusiveGroupAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickExclusiveGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
+
+public:
+    explicit QQuickExclusiveGroupAttached(QObject *parent = Q_NULLPTR);
+
+    QQuickExclusiveGroup *group() const;
+    void setGroup(QQuickExclusiveGroup *group);
+
+Q_SIGNALS:
+    void groupChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickExclusiveGroupAttached)
+    Q_DECLARE_PRIVATE(QQuickExclusiveGroupAttached)
+};
+
+Q_DECLARE_TYPEINFO(QQuickExclusiveGroup, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+QML_DECLARE_TYPEINFO(QQuickExclusiveGroup, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKEXCLUSIVEGROUP_H

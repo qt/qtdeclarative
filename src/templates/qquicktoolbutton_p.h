@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDAYOFWEEKROW_P_H
-#define QQUICKDAYOFWEEKROW_P_H
+#ifndef QQUICKTOOLBUTTON_P_H
+#define QQUICKTOOLBUTTON_P_H
 
 //
 //  W A R N I N G
@@ -48,50 +48,20 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
+#include <QtQuickTemplates/private/qquickbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlComponent;
-class QQuickDayOfWeekRowPrivate;
-
-class QQuickDayOfWeekRow : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickToolButton : public QQuickButton
 {
     Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
-
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
-
-    QVariant source() const;
-    void setSource(const QVariant &source);
-
-    QQmlComponent *delegate() const;
-    void setDelegate(QQmlComponent *delegate);
-
-Q_SIGNALS:
-    void localeChanged();
-    void sourceChanged();
-    void delegateChanged();
-
-protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
-
-private:
-    Q_DISABLE_COPY(QQuickDayOfWeekRow)
-    Q_DECLARE_PRIVATE(QQuickDayOfWeekRow)
+    explicit QQuickToolButton(QQuickItem *parent = Q_NULLPTR);
 };
 
-Q_DECLARE_TYPEINFO(QQuickDayOfWeekRow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickToolButton, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDAYOFWEEKROW_P_H
+#endif // QQUICKTOOLBUTTON_P_H

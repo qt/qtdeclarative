@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKPROGRESSBAR_P_H
+#define QQUICKPROGRESSBAR_P_H
 
 //
 //  W A R N I N G
@@ -52,63 +52,60 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickProgressBarPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickProgressBar : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
+    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
+    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
+    Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
+    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickProgressBar(QQuickItem *parent = Q_NULLPTR);
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
+    qreal from() const;
+    void setFrom(qreal from);
+
+    qreal to() const;
+    void setTo(qreal to);
+
+    qreal value() const;
+    void setValue(qreal value);
 
     qreal position() const;
-    void setPosition(qreal position);
+    qreal visualPosition() const;
 
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
+    bool isIndeterminate() const;
+    void setIndeterminate(bool indeterminate);
 
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
+    QQuickItem *indicator() const;
+    void setIndicator(QQuickItem *indicator);
 
 Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
+    void fromChanged();
+    void toChanged();
+    void valueChanged();
     void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    void visualPositionChanged();
+    void indeterminateChanged();
+    void indicatorChanged();
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void mirrorChange() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
 
-    virtual qreal positionAt(const QPointF &point) const;
-
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickProgressBar)
+    Q_DECLARE_PRIVATE(QQuickProgressBar)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickProgressBar, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+#endif // QQUICKPROGRESSBAR_P_H
