@@ -2321,7 +2321,7 @@ QQuickItem::~QQuickItem()
 
     // XXX todo - optimize
     while (!d->childItems.isEmpty())
-        d->childItems.first()->setParentItem(0);
+        d->childItems.constFirst()->setParentItem(0);
 
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         QQuickAnchorsPrivate *anchor = d->changeListeners.at(ii).listener->anchorPrivate();
@@ -2483,7 +2483,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
        from = item->parentItem();
     } else {
         if (!item->childItems().isEmpty())
-            from = item->childItems().first();
+            from = item->d_func()->childItems.constFirst();
         else
             from = item->parentItem();
     }
