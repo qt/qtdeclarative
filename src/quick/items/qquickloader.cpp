@@ -884,7 +884,7 @@ void QQuickLoader::setAsynchronous(bool a)
 
     d->asynchronous = a;
 
-    if (isComponentComplete() && d->active) {
+    if (!d->asynchronous && isComponentComplete() && d->active) {
         if (d->loadingFromSource && d->component && d->component->isLoading()) {
             // Force a synchronous component load
             QUrl currentSource = d->source;
