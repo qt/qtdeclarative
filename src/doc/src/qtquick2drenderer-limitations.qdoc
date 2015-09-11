@@ -54,4 +54,8 @@
     The quality is similar to choosing \l {QtQuick::Text::renderType}
     {Text.NativeRendering} with \l {QtQuick::}{Text} items.
 
+    \section1 Render Control
+    QQuickRenderControl depends on OpenGL to function and will not function
+    with \RENDERER.  Using QQuickRenderControl can lead to unexpected behavior
+    and crashes.
 */
