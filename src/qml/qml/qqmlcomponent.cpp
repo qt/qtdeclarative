@@ -794,8 +794,8 @@ QObject *QQmlComponent::create(QQmlContext *context)
 
 /*!
     This method provides advanced control over component instance creation.
-    In general, programmers should use QQmlComponent::create() to create a
-    component.
+    In general, programmers should use QQmlComponent::create() to create object
+    instances.
 
     Create an object instance from this component. Returns 0 if creation
     failed. \a publicContext specifies the context within which to create the object
