@@ -41,7 +41,6 @@
 import QtQuick 2.2
 import QtTest 1.0
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 TestCase {
     id: testCase
@@ -108,23 +107,23 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.T.StackView.status, StackView.Inactive)
+        compare(item1.StackView.status, StackView.Inactive)
         control.push(item1)
-        compare(item1.T.StackView.status, StackView.Active)
+        compare(item1.StackView.status, StackView.Active)
 
         var item2 = component.createObject(control)
-        compare(item2.T.StackView.status, StackView.Inactive)
+        compare(item2.StackView.status, StackView.Inactive)
         control.push(item2)
-        compare(item2.T.StackView.status, StackView.Activating)
-        compare(item1.T.StackView.status, StackView.Deactivating)
-        tryCompare(item2.T.StackView, "status", StackView.Active)
-        tryCompare(item1.T.StackView, "status", StackView.Inactive)
+        compare(item2.StackView.status, StackView.Activating)
+        compare(item1.StackView.status, StackView.Deactivating)
+        tryCompare(item2.StackView, "status", StackView.Active)
+        tryCompare(item1.StackView, "status", StackView.Inactive)
 
         control.pop()
-        compare(item2.T.StackView.status, StackView.Deactivating)
-        compare(item1.T.StackView.status, StackView.Activating)
-        tryCompare(item2.T.StackView, "status", StackView.Inactive)
-        tryCompare(item1.T.StackView, "status", StackView.Active)
+        compare(item2.StackView.status, StackView.Deactivating)
+        compare(item1.StackView.status, StackView.Activating)
+        tryCompare(item2.StackView, "status", StackView.Inactive)
+        tryCompare(item1.StackView, "status", StackView.Active)
 
         control.destroy()
     }
@@ -134,19 +133,19 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.T.StackView.index, -1)
+        compare(item1.StackView.index, -1)
         control.push(item1, StackView.Immediate)
-        compare(item1.T.StackView.index, 0)
+        compare(item1.StackView.index, 0)
 
         var item2 = component.createObject(control)
-        compare(item2.T.StackView.index, -1)
+        compare(item2.StackView.index, -1)
         control.push(item2, StackView.Immediate)
-        compare(item2.T.StackView.index, 1)
-        compare(item1.T.StackView.index, 0)
+        compare(item2.StackView.index, 1)
+        compare(item1.StackView.index, 0)
 
         control.pop(StackView.Immediate)
-        compare(item2.T.StackView.index, -1)
-        compare(item1.T.StackView.index, 0)
+        compare(item2.StackView.index, -1)
+        compare(item1.StackView.index, 0)
 
         control.destroy()
     }
@@ -156,19 +155,19 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.T.StackView.view, null)
+        compare(item1.StackView.view, null)
         control.push(item1, StackView.Immediate)
-        compare(item1.T.StackView.view, control)
+        compare(item1.StackView.view, control)
 
         var item2 = component.createObject(control)
-        compare(item2.T.StackView.view, null)
+        compare(item2.StackView.view, null)
         control.push(item2, StackView.Immediate)
-        compare(item2.T.StackView.view, control)
-        compare(item1.T.StackView.view, control)
+        compare(item2.StackView.view, control)
+        compare(item1.StackView.view, control)
 
         control.pop(StackView.Immediate)
-        compare(item2.T.StackView.view, null)
-        compare(item1.T.StackView.view, control)
+        compare(item2.StackView.view, null)
+        compare(item1.StackView.view, control)
 
         control.destroy()
     }
@@ -275,11 +274,11 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: push: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: missing arguments")
         compare(control.push(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: push: nothing to push")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: nothing to push")
         compare(control.push(StackView.Immediate), null)
 
         // push(item)
@@ -333,7 +332,7 @@ TestCase {
 
         control.push(items, StackView.Immediate)
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: pop: too many arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: too many arguments")
         compare(control.pop(1, 2, 3), null)
 
         // pop the top most item
@@ -352,7 +351,7 @@ TestCase {
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: pop: unknown argument: " + testCase)
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: unknown argument: " + testCase)
         compare(control.pop(testCase, StackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
@@ -370,11 +369,11 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: replace: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: missing arguments")
         compare(control.replace(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":60:9: QML StackView: replace: nothing to push")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: nothing to push")
         compare(control.replace(StackView.Immediate), null)
 
         // replace(item)

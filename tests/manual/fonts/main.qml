@@ -87,6 +87,6 @@ ApplicationWindow {
             }
         }
 
-        T.ScrollBar.vertical: ScrollBar { }
+        ScrollBar.vertical: ScrollBar { }
     }
 }

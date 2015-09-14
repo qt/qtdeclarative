@@ -41,7 +41,6 @@
 import QtQuick 2.2
 import QtTest 1.0
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 TestCase {
     id: testCase
@@ -80,7 +79,7 @@ TestCase {
         compare(vertical.active, false)
         compare(vertical.orientation, Qt.Vertical)
 
-        container.T.ScrollIndicator.vertical = vertical
+        container.ScrollIndicator.vertical = vertical
         compare(vertical.parent, container)
         compare(vertical.orientation, Qt.Vertical)
         compare(vertical.size, container.visibleArea.heightRatio)
@@ -93,7 +92,7 @@ TestCase {
         compare(horizontal.active, false)
         compare(horizontal.orientation, Qt.Vertical)
 
-        container.T.ScrollIndicator.horizontal = horizontal
+        container.ScrollIndicator.horizontal = horizontal
         compare(horizontal.parent, container)
         compare(horizontal.orientation, Qt.Horizontal)
         compare(horizontal.size, container.visibleArea.widthRatio)

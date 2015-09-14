@@ -40,7 +40,6 @@
 
 import QtQuick 2.6
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 Item {
     width: 200
@@ -62,7 +61,7 @@ Item {
             Text {
                 text: modelData.toString().length < 2 ? "0" + modelData : modelData
                 color: "#666666"
-                opacity: 0.4 + Math.max(0, 1 - Math.abs(T.Tumbler.displacement)) * 0.6
+                opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: fontMetrics.font.pixelSize * 1.25
@@ -78,7 +77,7 @@ Item {
                 delegate: Text {
                     text: (modelData.toString().length < 2 ? "0" : "") + (modelData + 1)
                     color: "#666666"
-                    opacity: 0.4 + Math.max(0, 1 - Math.abs(T.Tumbler.displacement)) * 0.6
+                    opacity: 0.4 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.6
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: fontMetrics.font.pixelSize * 1.25

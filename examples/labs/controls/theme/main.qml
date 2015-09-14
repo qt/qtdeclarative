@@ -40,7 +40,6 @@
 
 import QtQuick 2.6
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 ApplicationWindow {
     id: window
@@ -168,7 +167,7 @@ ApplicationWindow {
                     }
                 }
 
-                T.ScrollIndicator.vertical: ScrollIndicator { }
+                ScrollIndicator.vertical: ScrollIndicator { }
             }
         }
     }

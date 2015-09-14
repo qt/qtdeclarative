@@ -41,7 +41,6 @@
 import QtQuick 2.6
 import Qt.labs.calendar 1.0
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 Item {
     id: dateTimePicker
@@ -86,7 +85,7 @@ Item {
 
                     delegate: TumblerDelegate {
                         text: modelData
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
 
                     function updateModel() {
@@ -107,7 +106,7 @@ Item {
                     model: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
                     delegate: TumblerDelegate {
                         text: modelData
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
                     onCurrentIndexChanged: dayTumbler.updateModel()
                 }
@@ -123,7 +122,7 @@ Item {
                     }
                     delegate: TumblerDelegate {
                         text: modelData
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
                 }
             }
@@ -138,7 +137,7 @@ Item {
                     model: 12
                     delegate: TumblerDelegate {
                         text: modelData.toString().length < 2 ? "0" + modelData : modelData
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
                 }
 
@@ -147,7 +146,7 @@ Item {
                     model: 60
                     delegate: TumblerDelegate {
                         text: modelData.toString().length < 2 ? "0" + modelData : modelData
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
                 }
 
@@ -155,7 +154,7 @@ Item {
                     id: amPmTumbler
                     model: ["AM", "PM"]
                     delegate: TumblerDelegate {
-                        font.pixelSize: fontMetrics.font.pixelSize * (T.Tumbler.tumbler.activeFocus ? 2 : 1.25)
+                        font.pixelSize: fontMetrics.font.pixelSize * (Tumbler.tumbler.activeFocus ? 2 : 1.25)
                     }
 
                     contentItem: ListView {

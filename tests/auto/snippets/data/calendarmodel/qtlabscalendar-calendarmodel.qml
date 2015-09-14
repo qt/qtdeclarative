@@ -1,7 +1,6 @@
 import QtQuick 2.0
 import Qt.labs.calendar 1.0
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 //! [1]
 ListView {
@@ -26,6 +25,6 @@ ListView {
         locale: Qt.locale("en_US")
     }
 
-    T.ScrollIndicator.horizontal: ScrollIndicator { }
+    ScrollIndicator.horizontal: ScrollIndicator { }
 }
 //! [1]

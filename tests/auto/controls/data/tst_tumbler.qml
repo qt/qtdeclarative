@@ -41,7 +41,6 @@
 import QtQuick 2.2
 import QtTest 1.0
 import Qt.labs.controls 1.0
-import Qt.labs.templates 1.0 as T
 
 TestCase {
     id: testCase
@@ -287,7 +286,7 @@ TestCase {
     property Component displacementDelegate: Text {
         objectName: "delegate" + index
         text: modelData
-        opacity: 0.2 + Math.max(0, 1 - Math.abs(T.Tumbler.displacement)) * 0.8
+        opacity: 0.2 + Math.max(0, 1 - Math.abs(Tumbler.displacement)) * 0.8
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
@@ -296,7 +295,7 @@ TestCase {
             anchors.right: parent.right
         }
 
-        property real displacement: T.Tumbler.displacement
+        property real displacement: Tumbler.displacement
     }
 
     function test_displacement(data) {
@@ -532,16 +531,16 @@ TestCase {
     }
 
     property Component wrongDelegateTypeComponent: QtObject {
-        property real displacement: T.Tumbler.displacement
+        property real displacement: Tumbler.displacement
     }
 
     property Component noParentDelegateComponent: Item {
-        property real displacement: T.Tumbler.displacement
+        property real displacement: Tumbler.displacement
     }
 
     property Component gridViewComponent: GridView {}
     property Component simpleDisplacementDelegate: Text {
-        property real displacement: T.Tumbler.displacement
+        property real displacement: Tumbler.displacement
         property int index: -1
     }
 

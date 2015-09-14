@@ -41,7 +41,6 @@
 import QtQuick 2.6
 import Qt.labs.controls 1.0
 import Qt.labs.calendar 1.0
-import Qt.labs.templates 1.0 as T
 import QtQuick.Layouts 1.0
 import io.qt.examples.calendar 1.0
 
@@ -182,7 +181,7 @@ ApplicationWindow {
 
         ColumnLayout {
             spacing: 10
-            visible: T.StackView.index === stackView.currentIndex
+            visible: StackView.index === stackView.currentIndex
 
             DateTimePicker {
                 id: dateTimePicker
