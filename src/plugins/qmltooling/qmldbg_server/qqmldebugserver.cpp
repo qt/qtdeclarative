@@ -646,8 +646,6 @@ bool QQmlDebugServerImpl::removeService(const QString &name)
     disconnect(service, SIGNAL(messageToClient(QString,QByteArray)),
                this, SLOT(sendMessage(QString,QByteArray)));
 
-    m_plugins.remove(service->name());
-
     return true;
 }
 
