@@ -11,6 +11,7 @@
 /examples/quick/controls/tabs/tabs
 /examples/quick/extras/drawer/drawer
 
+/tests/auto/accessibility/tst_accessibility
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/controls/tst_controls
 /tests/auto/extras/tst_extras
