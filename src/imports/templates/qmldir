@@ -1,3 +1,3 @@
 module QtQuick.Templates
 plugin qtquicktemplates2plugin
-classname QtQuickTempletes2Plugin
+classname QtQuickTemplates2Plugin
