@@ -54,8 +54,8 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 /*!
  * \enum QQmlDebuggingEnabler::StartMode
  *
- * Defines the debug server's start behavior. You can interrupt QML engines starting while a debug
- * client is connecting, in order to set breakpoints in or profile startup code.
+ * Defines the debug connector's start behavior. You can interrupt QML engines starting while a
+ * debug client is connecting, in order to set breakpoints in or profile startup code.
  *
  * \value DoNotWaitForClient Run any QML engines as usual while the debug services are connecting.
  * \value WaitForClient      If a QML engine starts while the debug services are connecting,
@@ -63,13 +63,13 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
  */
 
 /*!
- * Enables debugging for QML engines created after calling this function. The debug server will
+ * Enables debugging for QML engines created after calling this function. The debug connector will
  * listen on \a port at \a hostName and block the QML engine until it receives a connection if
  * \a mode is \c WaitForClient. If \a mode is not specified it won't block and if \a hostName is not
- * specified it will listen on all available interfaces. You can only start one debug server at a
- * time. A debug server may have already been started if the -qmljsdebugger= command line argument
- * was given. This method returns \c true if a new debug server was successfully started, or
- * \c false otherwise.
+ * specified it will listen on all available interfaces. You can only start one debug connector at a
+ * time. A debug connector may have already been started if the -qmljsdebugger= command line
+ * argument was given. This method returns \c true if a new debug connector was successfully
+ * started, or \c false otherwise.
  */
 bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const QString &hostName)
 {
@@ -85,19 +85,19 @@ bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const Q
     }
 #else
     Q_UNUSED(port);
-    Q_UNUSED(block);
+    Q_UNUSED(mode);
     Q_UNUSED(hostName);
 #endif
     return false;
 }
 
 /*!
- * Enables debugging for QML engines created after calling this function. The debug server will
+ * Enables debugging for QML engines created after calling this function. The debug connector will
  * connect to a debugger waiting on a local socket at the given \a socketFileName and block the QML
  * engine until the connection is established if \a mode is \c WaitForClient. If \a mode is not
- * specified it will not block. You can only start one debug server at a time. A debug server may
- * have already been started if the -qmljsdebugger= command line argument was given. This method
- * returns \c true if a new debug server was successfully started, or \c false otherwise.
+ * specified it will not block. You can only start one debug connector at a time. A debug connector
+ * may have already been started if the -qmljsdebugger= command line argument was given. This method
+ * returns \c true if a new debug connector was successfully started, or \c false otherwise.
  */
 bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName, StartMode mode)
 {
@@ -112,7 +112,7 @@ bool QQmlDebuggingEnabler::connectToLocalDebugger(const QString &socketFileName,
     }
 #else
     Q_UNUSED(fileName);
-    Q_UNUSED(block);
+    Q_UNUSED(mode);
 #endif
     return false;
 }
