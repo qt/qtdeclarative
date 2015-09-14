@@ -212,21 +212,16 @@ void tst_QDebugMessageService::retrieveDebugOutput()
 {
     init();
 
-    int maxTries = 2;
-    while ((m_client->logBuffer.size() < 2)
-           || (maxTries-- > 0))
-        QQmlDebugTest::waitForSignal(m_client, SIGNAL(debugOutput()), 1000);
-
-    QVERIFY(m_client->logBuffer.size() >= 2);
+    QTRY_VERIFY(m_client->logBuffer.size() >= 2);
 
     const QString path =
             QUrl::fromLocalFile(QQmlDataTest::instance()->testFile(QMLFILE)).toString();
     LogEntry entry1(QtDebugMsg, QLatin1String("console.log"));
-    entry1.line = 48;
+    entry1.line = 40;
     entry1.file = path;
     entry1.function = QLatin1String("onCompleted");
     LogEntry entry2(QtDebugMsg, QLatin1String("console.count: 1"));
-    entry2.line = 49;
+    entry2.line = 41;
     entry2.file = path;
     entry2.function = QLatin1String("onCompleted");
 

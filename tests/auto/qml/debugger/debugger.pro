@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 
 PUBLICTESTS += \
+    qdebugmessageservice \
     qqmlenginedebugservice \
     qqmldebugjs \
     qqmlinspector \
