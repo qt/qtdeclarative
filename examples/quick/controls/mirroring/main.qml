@@ -222,7 +222,7 @@ ApplicationWindow {
                         }
                         Slider {
                             width: parent.width
-                            snapMode: T.Slider.SnapAlways
+                            snapMode: Slider.SnapAlways
                             stepSize: 0.2
                             value: 0.8
                         }
