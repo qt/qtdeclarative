@@ -72,7 +72,7 @@ ApplicationWindow {
 
     Component {
         id: pageComponent
-        T.Control {
+        Rectangle {
             id: page
             Theme.accentColor: Qt.hsla(colorSlider.position, 0.5, 0.5, 1.0)
             Theme.backgroundColor: darkButton.checked ? "#444" : "#fff"
@@ -80,9 +80,7 @@ ApplicationWindow {
             Theme.textColor: darkButton.checked ? "#eee" : "#111"
             Theme.pressColor: darkButton.checked ? "#33ffffff" : "#33333333"
             Theme.baseColor: darkButton.checked ? "#444" : "#eee"
-            background: Rectangle {
-                color: Theme.backgroundColor
-            }
+            color: Theme.backgroundColor
             Flickable {
                 anchors.fill: parent
                 contentHeight: column.height + 48
