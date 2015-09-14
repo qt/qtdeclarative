@@ -169,7 +169,9 @@ public:
 private:
     bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlIR::Object *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
 
+    QQmlEnginePrivate *enginePrivate;
     const QList<QmlIR::Object*> &qmlObjects;
+    const QQmlImports *imports;
     const QHash<int, QQmlCustomParser*> &customParsers;
     const QHash<int, QQmlCompiledData::TypeReference*> &resolvedTypes;
     const QSet<QString> &illegalNames;

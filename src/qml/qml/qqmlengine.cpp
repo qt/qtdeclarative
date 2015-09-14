@@ -1434,7 +1434,8 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
     if (rv || !create)
         return rv;
 
-    QQmlAttachedPropertiesFunc pf = QQmlMetaType::attachedPropertiesFuncById(id);
+    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
+    QQmlAttachedPropertiesFunc pf = QQmlMetaType::attachedPropertiesFuncById(engine, id);
     if (!pf)
         return 0;
 
@@ -1449,8 +1450,10 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
 QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
                                      const QMetaObject *attachedMetaObject, bool create)
 {
-    if (*idCache == -1)
-        *idCache = QQmlMetaType::attachedPropertiesFuncId(attachedMetaObject);
+    if (*idCache == -1) {
+        QQmlEngine *engine = object ? qmlEngine(object) : 0;
+        *idCache = QQmlMetaType::attachedPropertiesFuncId(engine ? QQmlEnginePrivate::get(engine) : 0, attachedMetaObject);
+    }
 
     if (*idCache == -1 || !object)
         return 0;

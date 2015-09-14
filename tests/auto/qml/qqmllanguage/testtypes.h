@@ -1086,6 +1086,7 @@ class MyCompositeBaseType : public QObject
 
 public:
     enum CompositeEnum { EnumValue0, EnumValue42 = 42 };
+    static QObject *qmlAttachedProperties(QObject *parent) { return new QObject(parent); }
 };
 
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
@@ -1100,6 +1101,7 @@ QML_DECLARE_TYPE(MyRevisionedSubclass)
 QML_DECLARE_TYPE(MySubclass)
 QML_DECLARE_TYPE(MyReceiversTestObject)
 QML_DECLARE_TYPE(MyCompositeBaseType)
+QML_DECLARE_TYPEINFO(MyCompositeBaseType, QML_HAS_ATTACHED_PROPERTIES)
 
 class CustomBinding : public QObject, public QQmlParserStatus
 {

@@ -160,6 +160,7 @@ private slots:
     void receivers();
     void registeredCompositeType();
     void registeredCompositeTypeWithEnum();
+    void registeredCompositeTypeWithAttachedProperty();
     void implicitImportsLast();
 
     void basicRemote_data();
@@ -3176,6 +3177,7 @@ void tst_qqmllanguage::initTestCase()
     qmlRegisterType(testFileUrl("CompositeType.DoesNotExist.qml"), "Test", 1, 0, "RegisteredCompositeType2");
     qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "Test", 1, 0, "RegisteredCompositeType3");
     qmlRegisterType(testFileUrl("CompositeTypeWithEnum.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithEnum");
+    qmlRegisterType(testFileUrl("CompositeTypeWithAttachedProperty.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithAttachedProperty");
 
     // Registering the TestType class in other modules should have no adverse effects
     qmlRegisterType<TestType>("org.qtproject.TestPre", 1, 0, "Test");
@@ -3363,6 +3365,20 @@ void tst_qqmllanguage::registeredCompositeTypeWithEnum()
 
     QCOMPARE(o->property("enumValue0").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue0));
     QCOMPARE(o->property("enumValue42").toInt(), static_cast<int>(MyCompositeBaseType::EnumValue42));
+
+    delete o;
+}
+
+// QTBUG-43581
+void tst_qqmllanguage::registeredCompositeTypeWithAttachedProperty()
+{
+    QQmlComponent component(&engine, testFileUrl("registeredCompositeTypeWithAttachedProperty.qml"));
+
+    VERIFY_ERRORS(0);
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("attachedProperty").toString(), QStringLiteral("test"));
 
     delete o;
 }

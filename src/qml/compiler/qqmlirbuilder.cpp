@@ -1615,10 +1615,10 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
             member->kind = QV4::IR::Member::MemberOfSingletonObject;
             return resolver->resolveMember(qmlEngine, resolver, member);
         }
-    } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType()) {
+    } else if (const QMetaObject *attachedMeta = type->attachedPropertiesType(qmlEngine)) {
         QQmlPropertyCache *cache = qmlEngine->cache(attachedMeta);
         initMetaObjectResolver(resolver, cache);
-        member->setAttachedPropertiesId(type->attachedPropertiesId());
+        member->setAttachedPropertiesId(type->attachedPropertiesId(qmlEngine));
         return resolver->resolveMember(qmlEngine, resolver, member);
     }
 

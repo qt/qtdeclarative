@@ -474,18 +474,24 @@ QQmlType *QQmlType::superType() const
     return d->superType;
 }
 
+QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
+{
+    Q_ASSERT(isComposite());
+    if (!engine)
+        return 0;
+    QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
+    if (!td || !td->isComplete())
+        return 0;
+    QQmlCompiledData *cd = td->compiledData();
+    const QMetaObject *mo = cd->rootPropertyCache->firstCppMetaObject();
+    return QQmlMetaType::qmlType(mo);
+}
+
 int QQmlType::resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
 {
     Q_ASSERT(isComposite());
     *ok = false;
-    if (!engine)
-        return -1;
-    QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
-    if (!td || !td->isComplete())
-        return -1;
-    QQmlCompiledData *cd = td->compiledData();
-    const QMetaObject *mo = cd->rootPropertyCache->firstCppMetaObject();
-    QQmlType *type = QQmlMetaType::qmlType(mo);
+    QQmlType *type = resolveCompositeBaseType(engine);
     if (!type)
         return -1;
     return type->enumValue(engine, name, ok);
@@ -856,18 +862,26 @@ int QQmlType::metaObjectRevision() const
     return d->revision;
 }
 
-QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction() const
+QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
-    if (d->regType != CppType)
-        return 0;
-    return d->extraData.cd->attachedPropertiesFunc;
+    if (d->regType == CppType)
+        return d->extraData.cd->attachedPropertiesFunc;
+
+    QQmlType *base = 0;
+    if (d->regType == CompositeType)
+        base = resolveCompositeBaseType(engine);
+    return base ? base->attachedPropertiesFunction(engine) : 0;
 }
 
-const QMetaObject *QQmlType::attachedPropertiesType() const
+const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
-    if (d->regType != CppType)
-        return 0;
-    return d->extraData.cd->attachedPropertiesType;
+    if (d->regType == CppType)
+        return d->extraData.cd->attachedPropertiesType;
+
+    QQmlType *base = 0;
+    if (d->regType == CompositeType)
+        base = resolveCompositeBaseType(engine);
+    return base ? base->attachedPropertiesType(engine) : 0;
 }
 
 /*
@@ -875,11 +889,15 @@ This is the id passed to qmlAttachedPropertiesById().  This is different from th
 for the case that a single class is registered under two or more names (eg. Item in
 Qt 4.7 and QtQuick 1.0).
 */
-int QQmlType::attachedPropertiesId() const
+int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
 {
-    if (d->regType != CppType)
-        return 0;
-    return d->extraData.cd->attachedPropertiesId;
+    if (d->regType == CppType)
+        return d->extraData.cd->attachedPropertiesId;
+
+    QQmlType *base = 0;
+    if (d->regType == CompositeType)
+        base = resolveCompositeBaseType(engine);
+    return base ? base->attachedPropertiesId(engine) : 0;
 }
 
 int QQmlType::parserStatusCast() const
@@ -1560,25 +1578,25 @@ int QQmlMetaType::listType(int id)
         return 0;
 }
 
-int QQmlMetaType::attachedPropertiesFuncId(const QMetaObject *mo)
+int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *mo)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     QQmlType *type = data->metaObjectToType.value(mo);
-    if (type && type->attachedPropertiesFunction())
-        return type->attachedPropertiesId();
+    if (type && type->attachedPropertiesFunction(engine))
+        return type->attachedPropertiesId(engine);
     else
         return -1;
 }
 
-QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(int id)
+QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePrivate *engine, int id)
 {
     if (id < 0)
         return 0;
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    return data->types.at(id)->attachedPropertiesFunction();
+    return data->types.at(id)->attachedPropertiesFunction(engine);
 }
 
 QMetaProperty QQmlMetaType::defaultProperty(const QMetaObject *metaObject)
