@@ -95,6 +95,7 @@ void QQuickContainerPrivate::moveItem(int from, int to)
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 {
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+    item->setParentItem(Q_NULLPTR);
     contentData.removeOne(item);
     contentModel->remove(index);
 }

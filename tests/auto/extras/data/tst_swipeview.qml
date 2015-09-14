@@ -400,6 +400,16 @@ TestCase {
         ]
     }
 
+    Component {
+        id: pageAttached
+
+        Text {
+            property int index: AbstractSwipeView.index
+            property SwipeView view: AbstractSwipeView.view
+            property bool isCurrentItem: AbstractSwipeView.isCurrentItem
+        }
+    }
+
     function test_move(data) {
         var control = swipeView.createObject(testCase)
 
@@ -407,14 +417,23 @@ TestCase {
         var titles = ["1", "2", "3"]
 
         var i = 0;
-        for (i = 0; i < titles.length; ++i)
-            control.addItem(page.createObject(control, {text: titles[i]}))
+        for (i = 0; i < titles.length; ++i) {
+            var item = pageAttached.createObject(control, {text: titles[i]})
+            control.addItem(item)
+        }
 
         compare(control.count, titles.length)
-        for (i = 0; i < control.count; ++i)
+        for (i = 0; i < control.count; ++i) {
             compare(control.itemAt(i).text, titles[i])
+            compare(control.itemAt(i).AbstractSwipeView.index, i)
+            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === 0)
+        }
 
         control.currentIndex = data.currentBefore
+        for (i = 0; i < control.count; ++i) {
+            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === data.currentBefore)
+        }
+
         control.moveItem(data.from, data.to)
 
         compare(control.count, titles.length)
@@ -425,8 +444,11 @@ TestCase {
         titles.splice(data.to, 0, title)
 
         compare(control.count, titles.length)
-        for (i = 0; i < control.count; ++i)
+        for (i = 0; i < control.count; ++i) {
             compare(control.itemAt(i).text, titles[i])
+            compare(control.itemAt(i).AbstractSwipeView.index, i);
+            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === data.currentAfter)
+        }
 
         control.destroy()
     }
@@ -461,5 +483,36 @@ TestCase {
 //        compare(control.count, 4)
 
         control.destroy()
+    }
+
+    function test_attachedParent() {
+        var control = swipeView.createObject(testCase);
+
+        var page = pageAttached.createObject(testCase);
+        compare(page.view, null);
+        compare(page.index, -1);
+        compare(page.isCurrentItem, false);
+        page.destroy();
+
+        page = pageAttached.createObject(null);
+        compare(page.view, null);
+        compare(page.index, -1);
+        compare(page.isCurrentItem, false);
+
+        control.insertItem(0, page);
+        compare(control.count, 1);
+        compare(page.parent, control.contentItem.contentItem);
+        compare(page.view, control);
+        compare(page.index, 0);
+        compare(page.isCurrentItem, true);
+
+        control.removeItem(0);
+        compare(control.count, 0);
+        compare(page.parent, null);
+        compare(page.view, null);
+        compare(page.index, -1);
+        compare(page.isCurrentItem, false);
+
+        control.destroy();
     }
 }

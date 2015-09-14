@@ -66,6 +66,8 @@ public:
     void moveItem(int from, int to) Q_DECL_OVERRIDE;
     void removeItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
 
+    static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
+
     int currentIndex;
     bool updatingCurrent;
 };
@@ -132,6 +134,11 @@ void QQuickSwipeViewPrivate::removeItem(int index, QQuickItem *item)
         emit q->currentIndexChanged();
 }
 
+QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
+{
+    return view->d_func();
+}
+
 QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
     QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
 {
@@ -171,6 +178,17 @@ QQuickItem *QQuickSwipeView::currentItem() const
     return itemAt(d->currentIndex);
 }
 
+QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
+{
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!item) {
+        qWarning() << "SwipeView: attached properties must be accessed from within a child item";
+        return Q_NULLPTR;
+    }
+
+    return new QQuickSwipeViewAttached(item);
+}
+
 void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeView);
@@ -185,6 +203,199 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
         disconnect(oldItem, SIGNAL(currentIndexChanged()), this, SLOT(_q_updateCurrent()));
     if (newItem)
         connect(newItem, SIGNAL(currentIndexChanged()), this, SLOT(_q_updateCurrent()));
+}
+
+/*!
+    \qmlattachedproperty int QtQuickExtras2::SwipeView::index
+
+    This attached property holds the index of each child item in the SwipeView.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
+    \qmlattachedproperty bool QtQuickExtras2::SwipeView::isCurrentItem
+
+    This attached property is \c true if this child is the current item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
+    \qmlattachedproperty SwipeView QtQuickExtras2::SwipeView::view
+
+    This attached property holds the view that manages this child item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+class QQuickSwipeViewAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+{
+    Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
+public:
+    QQuickSwipeViewAttachedPrivate(QQuickItem *item) :
+        item(item),
+        swipeView(Q_NULLPTR),
+        index(-1),
+        isCurrent(false)
+    {
+    }
+
+    ~QQuickSwipeViewAttachedPrivate() {
+    }
+
+    void updateView(QQuickItem *parent);
+
+    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+
+    void updateIndex();
+    void updateIsCurrent();
+
+    void setView(QQuickSwipeView *view);
+    void setIndex(int i);
+    void setIsCurrent(bool current);
+
+    QQuickItem *item;
+    QQuickSwipeView *swipeView;
+    int index;
+    // Better to store this so that we don't need to lump its calculation
+    // together with index's calculation, as it would otherwise need to know
+    // the old index to know if it should emit the change signal.
+    bool isCurrent;
+};
+
+void QQuickSwipeViewAttachedPrivate::updateIndex()
+{
+    setIndex(swipeView ? QQuickSwipeViewPrivate::get(swipeView)->contentModel->indexOf(item, Q_NULLPTR) : -1);
+}
+
+void QQuickSwipeViewAttachedPrivate::updateIsCurrent()
+{
+    setIsCurrent(swipeView ? swipeView->currentIndex() == index : false);
+}
+
+void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
+{
+    if (view == swipeView)
+        return;
+
+    if (swipeView) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(swipeView);
+        p->removeItemChangeListener(this, QQuickItemPrivate::Children);
+
+        disconnect(swipeView, &QQuickSwipeView::currentIndexChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+        disconnect(swipeView, &QQuickSwipeView::contentChildrenChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIndex);
+    }
+
+    swipeView = view;
+
+    if (swipeView) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(swipeView);
+        p->addItemChangeListener(this, QQuickItemPrivate::Children);
+
+        connect(swipeView, &QQuickSwipeView::currentIndexChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+        connect(swipeView, &QQuickSwipeView::contentChildrenChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIndex);
+    }
+
+    Q_Q(QQuickSwipeViewAttached);
+    emit q->viewChanged();
+
+    updateIndex();
+    updateIsCurrent();
+}
+
+void QQuickSwipeViewAttachedPrivate::setIsCurrent(bool current)
+{
+    if (current != isCurrent) {
+        isCurrent = current;
+        Q_Q(QQuickSwipeViewAttached);
+        emit q->isCurrentItemChanged();
+    }
+}
+
+void QQuickSwipeViewAttachedPrivate::setIndex(int i)
+{
+    if (i != index) {
+        index = i;
+        Q_Q(QQuickSwipeViewAttached);
+        emit q->indexChanged();
+    }
+}
+
+void QQuickSwipeViewAttachedPrivate::updateView(QQuickItem *parent)
+{
+    // parent can be, e.g.:
+    // - The contentItem of a ListView (typically the case)
+    // - A non-visual or weird type like TestCase, when child items are created from components
+    //   wherein the attached properties are used
+    // - null, when the item was removed with removeItem()
+    QQuickSwipeView *view = Q_NULLPTR;
+    if (parent) {
+        view = qobject_cast<QQuickSwipeView*>(parent);
+        if (!view) {
+            if (parent->parentItem() && parent->parentItem()->property("contentItem").isValid()) {
+                // The parent is the contentItem of some kind of view.
+                view = qobject_cast<QQuickSwipeView*>(parent->parentItem()->parentItem());
+            }
+        }
+    }
+
+    setView(view);
+}
+
+void QQuickSwipeViewAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
+{
+    updateIndex();
+}
+
+void QQuickSwipeViewAttachedPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
+{
+    updateIndex();
+}
+
+void QQuickSwipeViewAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *parent)
+{
+    updateView(parent);
+}
+
+QQuickSwipeViewAttached::QQuickSwipeViewAttached(QQuickItem *item) :
+    QObject(*(new QQuickSwipeViewAttachedPrivate(item)), item)
+{
+    Q_D(QQuickSwipeViewAttached);
+    if (item->parentItem()) {
+        d->updateView(item->parentItem());
+    } else {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+        p->addItemChangeListener(d, QQuickItemPrivate::Parent);
+    }
+}
+
+QQuickSwipeViewAttached::~QQuickSwipeViewAttached()
+{
+}
+
+QQuickSwipeView *QQuickSwipeViewAttached::view() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView;
+}
+
+int QQuickSwipeViewAttached::index() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->index;
+}
+
+bool QQuickSwipeViewAttached::isCurrentItem() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView ? d->swipeView->currentIndex() == d->index : false;
 }
 
 QT_END_NAMESPACE

@@ -52,6 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickSwipeViewAttached;
 class QQuickSwipeViewPrivate;
 
 class QQuickSwipeView : public QQuickContainer
@@ -65,6 +66,8 @@ public:
 
     int currentIndex() const;
     QQuickItem *currentItem() const;
+
+    static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
@@ -84,8 +87,37 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
+class QQuickSwipeViewAttachedPrivate;
+
+class QQuickSwipeViewAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
+    Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
+
+public:
+    explicit QQuickSwipeViewAttached(QQuickItem *delegateItem);
+    ~QQuickSwipeViewAttached();
+
+    int index() const;
+    bool isCurrentItem() const;
+    QQuickSwipeView *view() const;
+
+Q_SIGNALS:
+    void indexChanged();
+    void isCurrentItemChanged();
+    void viewChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickSwipeViewAttached)
+    Q_DECLARE_PRIVATE(QQuickSwipeViewAttached)
+};
+
 Q_DECLARE_TYPEINFO(QQuickSwipeView, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPEINFO(QQuickSwipeView, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKSWIPEVIEW_P_H

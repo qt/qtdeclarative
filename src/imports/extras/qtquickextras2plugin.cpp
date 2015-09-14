@@ -58,6 +58,7 @@ void QtQuickExtras2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDial>(uri, 2, 0, "AbstractDial");
     qmlRegisterType<QQuickDrawer>(uri, 2, 0, "AbstractDrawer");
     qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "AbstractSwipeView");
+    qmlRegisterType<QQuickSwipeViewAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "AbstractTumbler");
     qmlRegisterType<QQuickTumblerAttached>();
 
