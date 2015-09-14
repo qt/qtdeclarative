@@ -98,7 +98,7 @@ Heap::String *Heap::StringObject::getIndex(uint index) const
 
 uint Heap::StringObject::length() const
 {
-    return string->toQString().length();
+    return string->len;
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
