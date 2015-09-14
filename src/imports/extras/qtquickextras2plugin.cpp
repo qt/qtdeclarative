@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtCore/qdir.h>
 
 #include "qquickdial_p.h"
 #include "qquickdrawer_p.h"
@@ -59,6 +60,12 @@ void QtQuickExtras2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "AbstractSwipeView");
     qmlRegisterType<QQuickTumbler>(uri, 2, 0, "AbstractTumbler");
     qmlRegisterType<QQuickTumblerAttached>();
+
+    QDir baseDir(baseUrl().toLocalFile());
+    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Dial.qml"))), uri, 2, 0, "Dial");
+    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Drawer.qml"))), uri, 2, 0, "Drawer");
+    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("SwipeView.qml"))), uri, 2, 0, "SwipeView");
+    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Tumbler.qml"))), uri, 2, 0, "Tumbler");
 }
 
 QT_END_NAMESPACE
