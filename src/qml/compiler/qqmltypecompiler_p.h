@@ -273,6 +273,7 @@ public:
     bool validate();
 
     const QQmlImports &imports() const;
+    QQmlEnginePrivate *engine() const { return enginePrivate; }
 
 private:
     bool validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty = false) const;

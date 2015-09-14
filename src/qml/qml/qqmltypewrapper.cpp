@@ -182,7 +182,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 
             if (name->startsWithUpper()) {
                 bool ok = false;
-                int value = type->enumValue(name, &ok);
+                int value = type->enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
                 if (ok)
                     return QV4::Primitive::fromInt32(value).asReturnedValue();
 

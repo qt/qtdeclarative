@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlType;
 class QQmlEngine;
+class QQmlEnginePrivate;
 class QQmlCustomParser;
 class QQmlTypePrivate;
 class QQmlTypeModule;
@@ -204,11 +205,12 @@ public:
 
     QUrl sourceUrl() const;
 
-    int enumValue(const QHashedStringRef &, bool *ok) const;
-    int enumValue(const QHashedCStringRef &, bool *ok) const;
-    int enumValue(const QV4::String *, bool *ok) const;
+    int enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, bool *ok) const;
+    int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
+    int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
 private:
     QQmlType *superType() const;
+    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
     friend class QQmlTypePrivate;
     friend struct QQmlMetaTypeData;
 

@@ -91,6 +91,8 @@ void registerTypes()
     qmlRegisterCustomExtendedType<SimpleObjectWithCustomParser, SimpleObjectExtension>("Test", 1, 0, "SimpleExtendedObjectWithCustomParser", new SimpleObjectCustomParser);
 
     qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
+
+    qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

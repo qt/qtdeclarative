@@ -1101,6 +1101,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (customParser) {
         QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.constFind(index);
         if (customParserBindings != compiledData->customParserBindings.constEnd()) {
+            customParser->engine = QQmlEnginePrivate::get(engine);
             customParser->imports = compiledData->importCache;
 
             QList<const QV4::CompiledData::Binding *> bindings;
@@ -1110,6 +1111,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                     bindings << obj->bindingTable() + i;
             customParser->applyBindings(instance, compiledData, bindings);
 
+            customParser->engine = 0;
             customParser->imports = (QQmlTypeNameCache*)0;
             bindingsToSkip = *customParserBindings;
         }
