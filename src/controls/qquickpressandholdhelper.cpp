@@ -45,17 +45,22 @@
 QT_BEGIN_NAMESPACE
 
 QQuickPressAndHoldHelper::QQuickPressAndHoldHelper()
-    : control(Q_NULLPTR), longPress(false), pressAndHoldSignalIndex(-1)
+    : control(Q_NULLPTR)
+    , longPress(false)
+    , pressAndHoldSignalIndex(-1)
+    , delayedMousePressEvent(Q_NULLPTR)
 { }
 
 void QQuickPressAndHoldHelper::mousePressEvent(QMouseEvent *event)
 {
     longPress = false;
     pressPos = event->localPos();
-    if (Qt::LeftButton == (event->buttons() & Qt::LeftButton))
+    if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         timer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), control);
-    else
+        delayedMousePressEvent = new QMouseEvent(event->type(), event->pos(), event->button(), event->buttons(), event->modifiers());
+    } else {
         timer.stop();
+    }
 }
 
 void QQuickPressAndHoldHelper::mouseMoveEvent(QMouseEvent *event)
@@ -73,6 +78,7 @@ void QQuickPressAndHoldHelper::mouseReleaseEvent(QMouseEvent *)
 void QQuickPressAndHoldHelper::timerEvent(QTimerEvent *)
 {
     timer.stop();
+    clearDelayedMouseEvent();
 
     if (pressAndHoldSignalIndex == -1)
         pressAndHoldSignalIndex = control->metaObject()->indexOfSignal("pressAndHold(QQuickMouseEvent*)");
@@ -90,6 +96,19 @@ void QQuickPressAndHoldHelper::timerEvent(QTimerEvent *)
         if (!mev.isAccepted())
             longPress = false;
     }
+}
+
+void QQuickPressAndHoldHelper::clearDelayedMouseEvent()
+{
+    if (delayedMousePressEvent) {
+        delete delayedMousePressEvent;
+        delayedMousePressEvent = 0;
+    }
+}
+
+bool QQuickPressAndHoldHelper::isActive()
+{
+    return !(timer.isActive() || longPress);
 }
 
 QT_END_NAMESPACE

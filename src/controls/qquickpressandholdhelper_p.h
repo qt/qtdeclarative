@@ -55,11 +55,15 @@ struct QQuickPressAndHoldHelper
     void mouseReleaseEvent(QMouseEvent *event);
     void timerEvent(QTimerEvent *event);
 
+    void clearDelayedMouseEvent();
+    bool isActive();
+
     QQuickItem *control;
     QBasicTimer timer;
     QPointF pressPos;
     bool longPress;
     int pressAndHoldSignalIndex;
+    QMouseEvent *delayedMousePressEvent;
 };
 
 QT_END_NAMESPACE

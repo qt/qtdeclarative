@@ -292,23 +292,39 @@ void QQuickTextField::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
     d->pressAndHoldHelper.mousePressEvent(event);
-    QQuickTextInput::mousePressEvent(event);
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
+        QQuickTextInput::mousePressEvent(event);
+    }
 }
 
 void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
     d->pressAndHoldHelper.mouseMoveEvent(event);
-    if (!d->pressAndHoldHelper.timer.isActive())
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
         QQuickTextInput::mouseMoveEvent(event);
+    }
 }
 
 void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
     d->pressAndHoldHelper.mouseReleaseEvent(event);
-    if (!d->pressAndHoldHelper.longPress)
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextInput::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
         QQuickTextInput::mouseReleaseEvent(event);
+    }
 }
 
 void QQuickTextField::timerEvent(QTimerEvent *event)

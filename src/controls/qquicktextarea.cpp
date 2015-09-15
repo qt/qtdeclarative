@@ -260,23 +260,39 @@ void QQuickTextArea::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
     d->pressAndHoldHelper.mousePressEvent(event);
-    QQuickTextEdit::mousePressEvent(event);
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
+        QQuickTextEdit::mousePressEvent(event);
+    }
 }
 
 void QQuickTextArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
     d->pressAndHoldHelper.mouseMoveEvent(event);
-    if (!d->pressAndHoldHelper.timer.isActive())
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
         QQuickTextEdit::mouseMoveEvent(event);
+    }
 }
 
 void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
     d->pressAndHoldHelper.mouseReleaseEvent(event);
-    if (!d->pressAndHoldHelper.longPress)
+    if (d->pressAndHoldHelper.isActive()) {
+        if (d->pressAndHoldHelper.delayedMousePressEvent) {
+            QQuickTextEdit::mousePressEvent(d->pressAndHoldHelper.delayedMousePressEvent);
+            d->pressAndHoldHelper.clearDelayedMouseEvent();
+        }
         QQuickTextEdit::mouseReleaseEvent(event);
+    }
 }
 
 void QQuickTextArea::timerEvent(QTimerEvent *event)

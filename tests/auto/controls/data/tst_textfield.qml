@@ -61,58 +61,20 @@ TestCase {
         control.destroy()
     }
 
-    SignalSpy {
-        id: pressAndHoldSpy
-        signalName: "pressAndHold"
-    }
+    PressAndHoldTests { id: pah }
 
     function test_pressAndHold() {
         if (Qt.platform.os === "osx")
             skip("QTBUG-47963");
 
         var control = textField.createObject(testCase)
-        control.width = 200
-        pressAndHoldSpy.target = control
+        pah.basicPressAndHold(control)
+        control.destroy()
+    }
 
-        mouseClick(control)
-        compare(pressAndHoldSpy.count, 0)
-        var interval = Qt.styleHints.mousePressAndHoldInterval
-
-        // Short press duration => nothing happens
-        mousePress(control)
-        wait(interval * 0.3)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 0)
-
-        // Long enough press duration => signal emitted
-        mousePress(control, 10, 10)
-        // Add 20% extra time to allow the control to
-        // receive the timer event before we come back here
-        wait(interval * 1.2)
-        compare(pressAndHoldSpy.count, 1)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 1)
-
-        // Long enough, but move in between => nothing happens
-        pressAndHoldSpy.clear()
-        mousePress(control)
-        wait(interval * 0.6)
-        mouseMove(control, 5, 5, Qt.LeftButton)
-        wait(interval * 0.6)
-        compare(pressAndHoldSpy.count, 0)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 0)
-
-        // Long enough, but 2nd press in between => nothing happens
-        pressAndHoldSpy.clear()
-        mousePress(control, 10, 10)
-        wait(interval * 0.6)
-        mousePress(control, 10, 10, Qt.RightButton)
-        wait(interval * 0.6)
-        compare(pressAndHoldSpy.count, 0)
-        mouseRelease(control, 10, 10, Qt.LeftButton|Qt.RightButton)
-        compare(pressAndHoldSpy.count, 0)
-
+    function test_pressAndHoldKeepsSelection() {
+        var control = textField.createObject(testCase)
+        pah.pressAndHoldKeepsSelection(control)
         control.destroy()
     }
 }
