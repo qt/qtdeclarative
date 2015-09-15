@@ -451,6 +451,12 @@ void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
         }
         break;
     }
+    case QEvent::TouchCancel:
+        _stealMouse = false;
+        setKeepMouseGrab(false);
+        setKeepTouchGrab(false);
+        ungrabTouchPoints();
+        break;
     default:
         QQuickItem::touchEvent(event);
         break;
