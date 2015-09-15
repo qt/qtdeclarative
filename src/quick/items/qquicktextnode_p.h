@@ -57,7 +57,7 @@ class QSGTexture;
 
 class QQuickTextNodeEngine;
 
-class QQuickTextNode : public QSGTransformNode
+class Q_QUICK_PRIVATE_EXPORT QQuickTextNode : public QSGTransformNode
 {
 public:
     enum Decoration {
