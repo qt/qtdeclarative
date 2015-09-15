@@ -553,6 +553,8 @@ void QmlProfilerApplication::processFinished()
     }
     if (!m_interactive)
         exit(exitCode);
+    else
+        m_qmlProfilerClient.clearData();
 }
 
 void QmlProfilerApplication::traceClientEnabledChanged(bool enabled)
@@ -577,6 +579,8 @@ void QmlProfilerApplication::traceFinished()
     } else {
         prompt(tr("Application stopped recording."), false);
     }
+
+    m_qmlProfilerClient.clearData();
 }
 
 void QmlProfilerApplication::prompt(const QString &line, bool ready)
