@@ -95,6 +95,7 @@ T.ToggleButton {
         height: control.availableHeight
 
         text: control.text
+        font: control.font
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         visible: control.text

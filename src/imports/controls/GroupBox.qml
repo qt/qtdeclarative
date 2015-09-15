@@ -61,6 +61,7 @@ T.GroupBox {
         width: control.availableWidth
 
         text: control.title
+        font: control.font
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft

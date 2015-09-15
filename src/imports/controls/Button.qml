@@ -58,6 +58,7 @@ T.Button {
         height: control.availableHeight
 
         text: control.text
+        font: control.font
         color: control.Theme.selectedTextColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

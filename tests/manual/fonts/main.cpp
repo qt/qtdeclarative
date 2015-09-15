@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,43 +34,16 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-T.TabButton {
-    id: control
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-    padding: 6
-
-    font.pointSize: 10
-
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        color: !control.enabled ? control.Theme.disabledColor : control.pressed ? control.Theme.accentColor : control.Theme.textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [label]
-
-    //! [background]
-    background: Rectangle {
-        height: parent.height - 1
-        implicitHeight: 26
-        color: control.Theme.backgroundColor
-    }
-    //! [background]
+    return app.exec();
 }
+
