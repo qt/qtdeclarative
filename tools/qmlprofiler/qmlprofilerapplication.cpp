@@ -93,7 +93,8 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_connection, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(connectionStateChanged(QAbstractSocket::SocketState)));
     connect(&m_connection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(connectionError(QAbstractSocket::SocketError)));
 
-    connect(&m_qmlProfilerClient, SIGNAL(enabledChanged()), this, SLOT(traceClientEnabled()));
+    connect(&m_qmlProfilerClient, SIGNAL(enabledChanged(bool)),
+            this, SLOT(traceClientEnabledChanged(bool)));
     connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
             &m_profilerData, SLOT(addQmlEvent(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
     connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
@@ -554,21 +555,14 @@ void QmlProfilerApplication::processFinished()
         exit(exitCode);
 }
 
-void QmlProfilerApplication::traceClientEnabled()
+void QmlProfilerApplication::traceClientEnabledChanged(bool enabled)
 {
-    logStatus("Trace client is attached.");
-    // blocked server is waiting for recording message from both clients
-    // once the last one is connected, both messages should be sent
-    m_qmlProfilerClient.sendRecordingStatus(m_recording);
-}
-
-void QmlProfilerApplication::profilerClientEnabled()
-{
-    logStatus("Profiler client is attached.");
-
-    // blocked server is waiting for recording message from both clients
-    // once the last one is connected, both messages should be sent
-    m_qmlProfilerClient.sendRecordingStatus(m_recording);
+    if (enabled) {
+        logStatus("Trace client is attached.");
+        // blocked server is waiting for recording message from both clients
+        // once the last one is connected, both messages should be sent
+        m_qmlProfilerClient.sendRecordingStatus(m_recording);
+    }
 }
 
 void QmlProfilerApplication::traceFinished()

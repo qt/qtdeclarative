@@ -39,42 +39,11 @@
 
 #include <limits>
 
-ProfilerClient::ProfilerClient(const QString &clientName,
-                             QQmlDebugConnection *client)
-    : QQmlDebugClient(clientName, client),
-      m_enabled(false)
-{
-}
-
-ProfilerClient::~ProfilerClient()
-{
-}
-
-void ProfilerClient::clearData()
-{
-    emit cleared();
-}
-
-bool ProfilerClient::isEnabled() const
-{
-    return m_enabled;
-}
-
-void ProfilerClient::stateChanged(State status)
-{
-    if ((m_enabled && status != Enabled) ||
-            (!m_enabled && status == Enabled))
-        emit enabledChanged();
-
-    m_enabled = status == Enabled;
-
-}
-
 class QmlProfilerClientPrivate
 {
 public:
     QmlProfilerClientPrivate()
-        : inProgressRanges(0) , features(std::numeric_limits<quint64>::max())
+        : inProgressRanges(0) , features(std::numeric_limits<quint64>::max()), enabled(false)
     {
         ::memset(rangeCount, 0, QQmlProfilerDefinitions::MaximumRangeType * sizeof(int));
     }
@@ -87,11 +56,11 @@ public:
     int rangeCount[QQmlProfilerDefinitions::MaximumRangeType];
 
     quint64 features;
+    bool enabled;
 };
 
-QmlProfilerClient::QmlProfilerClient(
-        QQmlDebugConnection *client)
-    : ProfilerClient(QStringLiteral("CanvasFrameRate"), client),
+QmlProfilerClient::QmlProfilerClient(QQmlDebugConnection *client)
+    : QQmlDebugClient(QStringLiteral("CanvasFrameRate"), client),
       d(new QmlProfilerClientPrivate)
 {
 }
@@ -108,9 +77,12 @@ void QmlProfilerClient::setFeatures(quint64 features)
 
 void QmlProfilerClient::clearData()
 {
-    ::memset(d->rangeCount, 0, QQmlProfilerDefinitions::MaximumRangeType * sizeof(int));
+    for (int i = 0; i < QQmlProfilerDefinitions::MaximumRangeType; ++i) {
+        d->rangeCount[i] = 0;
+        d->rangeDatas[i].clear();
+        d->rangeLocations[i].clear();
+    }
     d->bindingTypes.clear();
-    ProfilerClient::clearData();
 }
 
 void QmlProfilerClient::sendRecordingStatus(bool record)
@@ -139,6 +111,14 @@ inline QQmlProfilerDefinitions::ProfileFeature featureFromRangeType(
             return QQmlProfilerDefinitions::ProfileJavaScript;
         default:
             return QQmlProfilerDefinitions::MaximumProfileFeature;
+    }
+}
+
+void QmlProfilerClient::stateChanged(State state)
+{
+    if ((d->enabled && state != Enabled) || (!d->enabled && state == Enabled)) {
+        d->enabled = (state == Enabled);
+        emit enabledChanged(d->enabled);
     }
 }
 

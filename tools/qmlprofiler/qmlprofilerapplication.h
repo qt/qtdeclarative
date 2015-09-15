@@ -78,8 +78,7 @@ private slots:
     void processHasOutput();
     void processFinished();
 
-    void traceClientEnabled();
-    void profilerClientEnabled();
+    void traceClientEnabledChanged(bool enabled);
     void traceFinished();
 
     void prompt(const QString &line = QString(), bool ready = true);

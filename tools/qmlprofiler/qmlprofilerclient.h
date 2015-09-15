@@ -38,35 +38,7 @@
 #include "qmlprofilereventlocation.h"
 #include <QtQml/private/qqmlprofilerdefinitions_p.h>
 
-class ProfilerClientPrivate;
-class ProfilerClient : public QQmlDebugClient
-{
-    Q_OBJECT
-
-    Q_PROPERTY(bool enabled READ isEnabled NOTIFY enabledChanged)
-public:
-    ProfilerClient(const QString &clientName,
-                  QQmlDebugConnection *client);
-    ~ProfilerClient();
-
-    bool isEnabled() const;
-
-public slots:
-    virtual void clearData();
-
-signals:
-    void complete();
-    void enabledChanged();
-    void cleared();
-
-protected:
-    virtual void stateChanged(State);
-
-protected:
-    bool m_enabled;
-};
-
-class QmlProfilerClient : public ProfilerClient
+class QmlProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
 
@@ -75,9 +47,9 @@ public:
     ~QmlProfilerClient();
 
     void setFeatures(quint64 features);
+    void clearData();
 
 public slots:
-    void clearData();
     void sendRecordingStatus(bool record);
 
 signals:
@@ -96,8 +68,11 @@ signals:
                      const QmlEventLocation &location, int width, int height, int refCount);
     void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
     void inputEvent(QQmlProfilerDefinitions::EventType, qint64 time);
+    void complete();
+    void enabledChanged(bool enabled);
 
 protected:
+    virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &);
 
 private:
