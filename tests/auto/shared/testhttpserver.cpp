@@ -81,15 +81,14 @@ The following request urls will then result in the appropriate action:
 \endtable
 */
 TestHTTPServer::TestHTTPServer()
-: m_state(AwaitingHeader)
+    : m_state(AwaitingHeader)
 {
-    QObject::connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
-
+    QObject::connect(&m_server, &QTcpServer::newConnection, this, &TestHTTPServer::newConnection);
 }
 
 bool TestHTTPServer::listen()
 {
-    return server.listen(QHostAddress::LocalHost, 0);
+    return m_server.listen(QHostAddress::LocalHost, 0);
 }
 
 QUrl TestHTTPServer::baseUrl() const
@@ -97,7 +96,7 @@ QUrl TestHTTPServer::baseUrl() const
     QUrl url;
     url.setScheme(QStringLiteral("http"));
     url.setHost(QStringLiteral("127.0.0.1"));
-    url.setPort(server.serverPort());
+    url.setPort(m_server.serverPort());
     return url;
 }
 
@@ -113,12 +112,12 @@ QString TestHTTPServer::urlString(const QString &documentPath) const
 
 QString TestHTTPServer::errorString() const
 {
-    return server.errorString();
+    return m_server.errorString();
 }
 
 bool TestHTTPServer::serveDirectory(const QString &dir, Mode mode)
 {
-    dirs.append(qMakePair(dir, mode));
+    m_directories.append(qMakePair(dir, mode));
     return true;
 }
 
@@ -128,17 +127,17 @@ bool TestHTTPServer::serveDirectory(const QString &dir, Mode mode)
 */
 void TestHTTPServer::addAlias(const QString &filename, const QString &alias)
 {
-    aliases.insert(filename, alias);
+    m_aliases.insert(filename, alias);
 }
 
 void TestHTTPServer::addRedirect(const QString &filename, const QString &redirectName)
 {
-    redirects.insert(filename, redirectName);
+    m_redirects.insert(filename, redirectName);
 }
 
 void TestHTTPServer::registerFileNameForContentSubstitution(const QString &fileName)
 {
-    contentSubstitutedFileNames.insert(fileName);
+    m_contentSubstitutedFileNames.insert(fileName);
 }
 
 bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &body)
@@ -147,19 +146,23 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
     m_data.clear();
 
     QFile expectFile(expect.toLocalFile());
-    if (!expectFile.open(QIODevice::ReadOnly)) return false;
+    if (!expectFile.open(QIODevice::ReadOnly))
+        return false;
 
     QFile replyFile(reply.toLocalFile());
-    if (!replyFile.open(QIODevice::ReadOnly)) return false;
+    if (!replyFile.open(QIODevice::ReadOnly))
+        return false;
 
-    bodyData = QByteArray();
+    m_bodyData = QByteArray();
     if (body.isValid()) {
         QFile bodyFile(body.toLocalFile());
-        if (!bodyFile.open(QIODevice::ReadOnly)) return false;
-        bodyData = bodyFile.readAll();
+        if (!bodyFile.open(QIODevice::ReadOnly))
+            return false;
+        m_bodyData = bodyFile.readAll();
     }
 
-    const QByteArray serverHostUrl = QByteArrayLiteral("127.0.0.1:") + QByteArray::number(server.serverPort());
+    const QByteArray serverHostUrl
+        = QByteArrayLiteral("127.0.0.1:")+ QByteArray::number(m_server.serverPort());
 
     QByteArray line;
     bool headers_done = false;
@@ -170,10 +173,10 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
             continue;
         }
         if (headers_done) {
-            waitData.body.append(line);
+            m_waitData.body.append(line);
         } else {
             line.replace("{{ServerHostUrl}}", serverHostUrl);
-            waitData.headers.append(line);
+            m_waitData.headers.append(line);
         }
     }
     /*
@@ -181,20 +184,21 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
         waitData = waitData.left(waitData.count() - 1);
         */
 
-    replyData = replyFile.readAll();
+    m_replyData = replyFile.readAll();
 
-    if (!replyData.endsWith('\n'))
-        replyData.append("\n");
-    replyData.append("Content-length: " + QByteArray::number(bodyData.length()));
-    replyData .append("\n\n");
+    if (!m_replyData.endsWith('\n'))
+        m_replyData.append('\n');
+    m_replyData.append("Content-length: ");
+    m_replyData.append(QByteArray::number(m_bodyData.length()));
+    m_replyData.append("\n\n");
 
-    for (int ii = 0; ii < replyData.count(); ++ii) {
-        if (replyData.at(ii) == '\n' && (!ii || replyData.at(ii - 1) != '\r')) {
-            replyData.insert(ii, '\r');
+    for (int ii = 0; ii < m_replyData.count(); ++ii) {
+        if (m_replyData.at(ii) == '\n' && (!ii || m_replyData.at(ii - 1) != '\r')) {
+            m_replyData.insert(ii, '\r');
             ++ii;
         }
     }
-    replyData.append(bodyData);
+    m_replyData.append(m_bodyData);
 
     return true;
 }
@@ -206,25 +210,27 @@ bool TestHTTPServer::hasFailed() const
 
 void TestHTTPServer::newConnection()
 {
-    QTcpSocket *socket = server.nextPendingConnection();
-    if (!socket) return;
+    QTcpSocket *socket = m_server.nextPendingConnection();
+    if (!socket)
+        return;
 
-    if (!dirs.isEmpty())
-        dataCache.insert(socket, QByteArray());
+    if (!m_directories.isEmpty())
+        m_dataCache.insert(socket, QByteArray());
 
-    QObject::connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
-    QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    QObject::connect(socket, &QAbstractSocket::disconnected, this, &TestHTTPServer::disconnected);
+    QObject::connect(socket, &QIODevice::readyRead, this, &TestHTTPServer::readyRead);
 }
 
 void TestHTTPServer::disconnected()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
-    if (!socket) return;
+    if (!socket)
+        return;
 
-    dataCache.remove(socket);
-    for (int ii = 0; ii < toSend.count(); ++ii) {
-        if (toSend.at(ii).first == socket) {
-            toSend.removeAt(ii);
+    m_dataCache.remove(socket);
+    for (int ii = 0; ii < m_toSend.count(); ++ii) {
+        if (m_toSend.at(ii).first == socket) {
+            m_toSend.removeAt(ii);
             --ii;
         }
     }
@@ -235,14 +241,15 @@ void TestHTTPServer::disconnected()
 void TestHTTPServer::readyRead()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
-    if (!socket || socket->state() == QTcpSocket::ClosingState) return;
+    if (!socket || socket->state() == QTcpSocket::ClosingState)
+        return;
 
-    if (!dirs.isEmpty()) {
+    if (!m_directories.isEmpty()) {
         serveGET(socket, socket->readAll());
         return;
     }
 
-    if (m_state == Failed || (waitData.body.isEmpty() && waitData.headers.count() == 0)) {
+    if (m_state == Failed || (m_waitData.body.isEmpty() && m_waitData.headers.count() == 0)) {
         qWarning() << "TestHTTPServer: Unexpected data" << socket->readAll();
         return;
     }
@@ -256,8 +263,9 @@ void TestHTTPServer::readyRead()
                 m_data += socket->readAll();
                 break;
             } else {
-                if (!waitData.headers.contains(line)) {
-                    qWarning() << "TestHTTPServer: Unexpected header:" << line << "\nExpected headers: " << waitData.headers;
+                if (!m_waitData.headers.contains(line)) {
+                    qWarning() << "TestHTTPServer: Unexpected header:" << line
+                        << "\nExpected headers: " << m_waitData.headers;
                     m_state = Failed;
                     socket->disconnectFromHost();
                     return;
@@ -268,34 +276,38 @@ void TestHTTPServer::readyRead()
         m_data += socket->readAll();
     }
 
-    if (!m_data.isEmpty() || waitData.body.isEmpty()) {
-        if (waitData.body != m_data) {
-            qWarning() << "TestHTTPServer: Unexpected data" << m_data << "\nExpected: " << waitData.body;
+    if (!m_data.isEmpty() || m_waitData.body.isEmpty()) {
+        if (m_waitData.body != m_data) {
+            qWarning() << "TestHTTPServer: Unexpected data" << m_data << "\nExpected: " << m_waitData.body;
             m_state = Failed;
         } else {
-            socket->write(replyData);
+            socket->write(m_replyData);
         }
         socket->disconnectFromHost();
     }
 }
 
-bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
+bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileNameIn)
 {
-    if (redirects.contains(fileName)) {
-        QByteArray response = "HTTP/1.1 302 Found\r\nContent-length: 0\r\nContent-type: text/html; charset=UTF-8\r\nLocation: " + redirects[fileName].toUtf8() + "\r\n\r\n";
+    const QString fileName = QLatin1String(fileNameIn);
+    if (m_redirects.contains(fileName)) {
+        const QByteArray response
+            = "HTTP/1.1 302 Found\r\nContent-length: 0\r\nContent-type: text/html; charset=UTF-8\r\nLocation: "
+              + m_redirects.value(fileName).toUtf8() + "\r\n\r\n";
         socket->write(response);
         return true;
     }
 
-    for (int ii = 0; ii < dirs.count(); ++ii) {
-        QString dir = dirs.at(ii).first;
-        Mode mode = dirs.at(ii).second;
+    for (int ii = 0; ii < m_directories.count(); ++ii) {
+        const QString &dir = m_directories.at(ii).first;
+        const Mode mode = m_directories.at(ii).second;
 
-        QString dirFile = dir + QLatin1String("/") + QLatin1String(fileName);
+        QString dirFile = dir + QLatin1Char('/') + fileName;
 
         if (!QFile::exists(dirFile)) {
-            if (aliases.contains(fileName))
-                dirFile = dir + QLatin1String("/") + aliases.value(fileName);
+            const QHash<QString, QString>::const_iterator it = m_aliases.constFind(fileName);
+            if (it != m_aliases.constEnd())
+                dirFile = dir + QLatin1Char('/') + it.value();
         }
 
         QFile file(dirFile);
@@ -305,18 +317,18 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
                 return true;
 
             QByteArray data = file.readAll();
-            if (contentSubstitutedFileNames.contains("/" + fileName)) {
+            if (m_contentSubstitutedFileNames.contains(QLatin1Char('/') + fileName))
                 data.replace(QByteArrayLiteral("{{ServerBaseUrl}}"), baseUrl().toString().toUtf8());
-            }
 
-            QByteArray response = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
+            QByteArray response
+                = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
             response += QByteArray::number(data.count());
             response += "\r\n\r\n";
             response += data;
 
             if (mode == Delay) {
-                toSend.append(qMakePair(socket, response));
-                QTimer::singleShot(500, this, SLOT(sendOne()));
+                m_toSend.append(qMakePair(socket, response));
+                QTimer::singleShot(500, this, &TestHTTPServer::sendOne);
                 return false;
             } else {
                 socket->write(response);
@@ -325,9 +337,7 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileName)
         }
     }
 
-
-    QByteArray response = "HTTP/1.0 404 Not found\r\nContent-type: text/html; charset=UTF-8\r\n\r\n";
-    socket->write(response);
+    socket->write("HTTP/1.0 404 Not found\r\nContent-type: text/html; charset=UTF-8\r\n\r\n");
 
     return true;
 }
@@ -339,39 +349,31 @@ void TestHTTPServer::sendDelayedItem()
 
 void TestHTTPServer::sendOne()
 {
-    if (!toSend.isEmpty()) {
-        toSend.first().first->write(toSend.first().second);
-        toSend.first().first->close();
-        toSend.removeFirst();
+    if (!m_toSend.isEmpty()) {
+        m_toSend.first().first->write(m_toSend.first().second);
+        m_toSend.first().first->close();
+        m_toSend.removeFirst();
     }
 }
 
 void TestHTTPServer::serveGET(QTcpSocket *socket, const QByteArray &data)
 {
-    if (!dataCache.contains(socket))
+    const QHash<QTcpSocket *, QByteArray>::iterator it = m_dataCache.find(socket);
+    if (it == m_dataCache.end())
         return;
 
-    QByteArray total = dataCache[socket] + data;
-    dataCache[socket] = total;
+    QByteArray &total = it.value();
+    total.append(data);
 
     if (total.contains("\n\r\n")) {
-
         bool close = true;
-
         if (total.startsWith("GET /")) {
-
-            int space = total.indexOf(' ', 4);
-            if (space != -1) {
-
-                QByteArray req = total.mid(5, space - 5);
-                close = reply(socket, req);
-
-            }
+            const int space = total.indexOf(' ', 4);
+            if (space != -1)
+                close = reply(socket, total.mid(5, space - 5));
         }
-        dataCache.remove(socket);
-
+        m_dataCache.erase(it);
         if (close)
             socket->disconnectFromHost();
     }
 }
-

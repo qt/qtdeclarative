@@ -34,7 +34,6 @@
 #ifndef TESTHTTPSERVER_H
 #define TESTHTTPSERVER_H
 
-#include <QObject>
 #include <QTcpServer>
 #include <QUrl>
 #include <QPair>
@@ -81,24 +80,24 @@ private:
     void serveGET(QTcpSocket *, const QByteArray &);
     bool reply(QTcpSocket *, const QByteArray &);
 
-    QList<QPair<QString, Mode> > dirs;
-    QHash<QTcpSocket *, QByteArray> dataCache;
-    QList<QPair<QTcpSocket *, QByteArray> > toSend;
-    QSet<QString> contentSubstitutedFileNames;
+    QList<QPair<QString, Mode> > m_directories;
+    QHash<QTcpSocket *, QByteArray> m_dataCache;
+    QList<QPair<QTcpSocket *, QByteArray> > m_toSend;
+    QSet<QString> m_contentSubstitutedFileNames;
 
     struct WaitData {
         QList <QByteArray>headers;
         QByteArray body;
-    } waitData;
-    QByteArray replyData;
-    QByteArray bodyData;
+    } m_waitData;
+    QByteArray m_replyData;
+    QByteArray m_bodyData;
     QByteArray m_data;
     State m_state;
 
-    QHash<QString,QString> aliases;
-    QHash<QString,QString> redirects;
+    QHash<QString, QString> m_aliases;
+    QHash<QString, QString> m_redirects;
 
-    QTcpServer server;
+    QTcpServer m_server;
 };
 
 #endif // TESTHTTPSERVER_H
