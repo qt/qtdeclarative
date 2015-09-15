@@ -41,6 +41,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQml/private/qqmlcomponent_p.h>
+#include <QtQml/private/qqmlengine_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
@@ -166,7 +167,7 @@ void QQuickStackElement::initialize()
     if (!properties.isUndefined()) {
         QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
         Q_ASSERT(d && d->engine);
-        QV4::ExecutionEngine *v4 = qmlGlobal.engine();
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(d->engine);
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
         QV4::ScopedValue ipv(scope, properties.value());
@@ -258,7 +259,6 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
         if (!wrapper) {
             QV4::ExecutionEngine *v4 = args->v4engine();
             element->properties.set(v4, props);
-            element->qmlGlobal.set(v4, args->qmlGlobal());
             return true;
         }
     }

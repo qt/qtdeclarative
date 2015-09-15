@@ -96,7 +96,6 @@ public:
     QPointer<QQuickItem> originalParent;
     QQuickStackView::Status status;
     QV4::PersistentValue properties;
-    QV4::PersistentValue qmlGlobal;
 };
 
 Q_DECLARE_TYPEINFO(QQuickStackElement, Q_COMPLEX_TYPE);
