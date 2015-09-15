@@ -46,7 +46,6 @@ AbstractCalendarView {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.name: title
     spacing: 6
 
     //! [delegate]

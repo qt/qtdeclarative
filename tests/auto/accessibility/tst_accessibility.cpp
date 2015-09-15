@@ -90,6 +90,10 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToggleButton") << "togglebutton" << 0x0000002B << "ToggleButton"; //QAccessible::Button
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
+
+    QTest::newRow("CalendarView") << "calendarview" << 0x0 << "CalendarView"; //QAccessible::NoRole
+    QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
+    QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
 }
 
 void tst_accessibility::a11y()
@@ -101,7 +105,11 @@ void tst_accessibility::a11y()
     QQmlComponent component(&engine);
     QString fn = name;
 #ifdef QT_NO_ACCESSIBILITY
-    if (name == QLatin1Literal("textarea") || name == QLatin1Literal("textfield"))
+    if (name == QLatin1Literal("textarea")
+            || name == QLatin1Literal("textfield")
+            || name == QLatin1Literal("calendarview")
+            || name == QLatin1Literal("dayofweekrow")
+            || name == QLatin1Literal("weeknumbercolumn"))
         fn += QLatin1Literal("-2");
 #endif
     component.loadUrl(testFileUrl(fn + ".qml"));
