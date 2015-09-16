@@ -63,18 +63,19 @@ QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
 
 void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
 {
-    if (m_target && m_index >= 0) {
-        if (m_target->propertiesInitialized && !m_target->properties.isUndefined()) {
-            QV4::ExecutionEngine *v4 = m_target->cache->engine;
-            if (v4) {
-                QV4::Scope scope(v4);
-                QV4::Scoped<QV4::MemberData> sp(scope, m_target->properties.value());
+    if (!m_target || QQmlData::wasDeleted(m_target->object))
+        return;
+
+    if (m_index >= 0) {
+        QV4::ExecutionEngine *v4 = m_target->properties.engine();
+        if (v4) {
+            QV4::Scope scope(v4);
+            QV4::Scoped<QV4::MemberData> sp(scope, m_target->properties.value());
+            if (sp)
                 *(sp->data() + m_index) = QV4::Primitive::nullValue();
-            }
         }
 
-        if (!QQmlData::wasDeleted(m_target->object))
-            m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
+        m_target->activate(m_target->object, m_target->methodOffset() + m_index, 0);
     }
 }
 
@@ -148,10 +149,10 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
                                      const QQmlVMEMetaData *meta, QV4::ExecutionContext *qmlBindingContext, QQmlCompiledData *compiledData)
-: object(obj),
-  ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
-  hasAssignedMetaObjectData(false), aliasEndpoints(0),
-  propertiesInitialized(false), interceptors(0), methods(0)
+    : object(obj),
+      ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
+      hasAssignedMetaObjectData(false), aliasEndpoints(0),
+      interceptors(0), methods(0)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
@@ -215,8 +216,15 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
 
 QV4::MemberData *QQmlVMEMetaObject::propertiesAsMemberData()
 {
-    if (!ensurePropertiesAllocated())
-        return 0;
+    if (properties.isUndefined()) {
+        if (properties.valueRef())
+            // in some situations, the QObject wrapper (and associated data,
+            // such as the varProperties array) will have been cleaned up, but the
+            // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
+            // In this situation, return 0.
+            return 0;
+        allocateProperties();
+    }
 
     return static_cast<QV4::MemberData*>(properties.asManaged());
 }
@@ -1050,19 +1058,6 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
     return writeVarProperty(index - propOffset(), v);
 }
 
-bool QQmlVMEMetaObject::ensurePropertiesAllocated()
-{
-    if (!propertiesInitialized)
-        allocateProperties();
-
-    // in some situations, the QObject's v8object (and associated v8 data,
-    // such as the varProperties array) will have been cleaned up, but the
-    // QObject ptr will not yet have been deleted (eg, waiting on deleteLater).
-    // In this situation, the varProperties handle will be (and should remain)
-    // empty.
-    return !properties.isUndefined();
-}
-
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     Q_ASSERT(cache && cache->engine);
@@ -1085,12 +1080,12 @@ void QQmlVMEMetaObject::mark(QV4::ExecutionEngine *e)
 void QQmlVMEMetaObject::allocateProperties()
 {
     Q_ASSERT(cache && cache->engine);
+    Q_ASSERT(!properties.valueRef());
     QV4::ExecutionEngine *v4 = cache->engine;
     QV4::Heap::MemberData *data = QV4::MemberData::allocate(v4, metaData->propertyCount);
     properties.set(v4, data);
     for (uint i = 0; i < data->size; ++i)
         data->data[i] = QV4::Encode::undefined();
-    propertiesInitialized = true;
 }
 
 bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const

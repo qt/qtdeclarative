@@ -7119,6 +7119,7 @@ void tst_qqmlecmascript::onDestruction()
         QObject *obj = c.create();
         QVERIFY(obj != 0);
         delete obj;
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 
     {
@@ -7130,6 +7131,7 @@ void tst_qqmlecmascript::onDestruction()
         QQmlComponent c(&engine, testFileUrl("onDestruction.qml"));
         QObject *obj = c.create();
         QVERIFY(obj != 0);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 }
 

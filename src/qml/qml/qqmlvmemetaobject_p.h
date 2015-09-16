@@ -201,9 +201,7 @@ public:
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue properties;
-    bool propertiesInitialized;
     inline void allocateProperties();
-    inline bool ensurePropertiesAllocated();
     QV4::MemberData *propertiesAsMemberData();
 
     int readPropertyAsInt(int id);
