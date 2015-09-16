@@ -65,9 +65,12 @@ public:
     void cleanup();
 
     QQuickItem *itemAt(int index) const;
-    virtual void insertItem(int index, QQuickItem *item);
-    virtual void moveItem(int from, int to);
-    virtual void removeItem(int index, QQuickItem *item);
+    void insertItem(int index, QQuickItem *item);
+    virtual void itemInserted(int index, QQuickItem *item);
+    void moveItem(int from, int to);
+    virtual void itemMoved(int from, int to);
+    void removeItem(int index, QQuickItem *item);
+    virtual void itemRemoved(QQuickItem *item);
 
     void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
     void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
@@ -86,6 +89,7 @@ public:
 
     QObjectList contentData;
     QQmlObjectModel *contentModel;
+    int currentIndex;
 };
 
 Q_DECLARE_TYPEINFO(QQuickContainerPrivate, Q_COMPLEX_TYPE);

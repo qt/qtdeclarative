@@ -58,23 +58,11 @@ class QQuickSwipeViewPrivate;
 class QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
-    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = Q_NULLPTR);
 
-    int currentIndex() const;
-    QQuickItem *currentItem() const;
-
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
-
-public Q_SLOTS:
-    void setCurrentIndex(int index);
-
-Q_SIGNALS:
-    void currentIndexChanged();
-    void currentItemChanged();
 
 protected:
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;

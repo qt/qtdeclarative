@@ -56,19 +56,17 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate() : currentIndex(-1), updatingCurrent(false) { }
+    QQuickSwipeViewPrivate() : updatingCurrent(false) { }
 
     void resizeItem(QQuickItem *item);
     void resizeItems();
     void _q_updateCurrent();
 
-    void insertItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void moveItem(int from, int to) Q_DECL_OVERRIDE;
-    void removeItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemInserted(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemMoved(int from, int to) Q_DECL_OVERRIDE;
 
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
 
-    int currentIndex;
     bool updatingCurrent;
 };
 
@@ -90,23 +88,16 @@ void QQuickSwipeViewPrivate::_q_updateCurrent()
         q->setCurrentIndex(contentItem ? contentItem->property("currentIndex").toInt() : -1);
 }
 
-void QQuickSwipeViewPrivate::insertItem(int index, QQuickItem *item)
+void QQuickSwipeViewPrivate::itemInserted(int, QQuickItem *item)
 {
     Q_Q(QQuickSwipeView);
     if (q->isComponentComplete())
         item->setSize(QSizeF(contentItem->width(), contentItem->height()));
-
-    QQuickContainerPrivate::insertItem(index, item);
-
-    if (contentModel->count() == 1 && currentIndex == -1)
-        q->setCurrentIndex(index);
 }
 
-void QQuickSwipeViewPrivate::moveItem(int from, int to)
+void QQuickSwipeViewPrivate::itemMoved(int from, int to)
 {
     Q_Q(QQuickSwipeView);
-    QQuickContainerPrivate::moveItem(from, to);
-
     updatingCurrent = true;
     if (from == currentIndex)
         q->setCurrentIndex(to);
@@ -117,22 +108,6 @@ void QQuickSwipeViewPrivate::moveItem(int from, int to)
     updatingCurrent = false;
 }
 
-void QQuickSwipeViewPrivate::removeItem(int index, QQuickItem *item)
-{
-    Q_Q(QQuickSwipeView);
-    bool currentChanged = false;
-    if (index == currentIndex) {
-        q->setCurrentIndex(currentIndex - 1);
-    } else if (index < currentIndex) {
-        --currentIndex;
-        currentChanged = true;
-    }
-
-    QQuickContainerPrivate::removeItem(index, item);
-
-    if (currentChanged)
-        emit q->currentIndexChanged();
-}
 
 QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
 {
@@ -144,38 +119,6 @@ QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
 {
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
-}
-
-/*!
-    \qmlproperty int QtQuickControls2::SwipeView::currentIndex
-
-    TODO
-*/
-int QQuickSwipeView::currentIndex() const
-{
-    Q_D(const QQuickSwipeView);
-    return d->currentIndex;
-}
-
-void QQuickSwipeView::setCurrentIndex(int index)
-{
-    Q_D(QQuickSwipeView);
-    if (d->currentIndex != index) {
-        d->currentIndex = index;
-        emit currentIndexChanged();
-        emit currentItemChanged();
-    }
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::SwipeView::currentItem
-
-    TODO
-*/
-QQuickItem *QQuickSwipeView::currentItem() const
-{
-    Q_D(const QQuickSwipeView);
-    return itemAt(d->currentIndex);
 }
 
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)

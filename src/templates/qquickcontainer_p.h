@@ -62,6 +62,8 @@ class Q_QUICKTEMPLATES_EXPORT QQuickContainer : public QQuickControl
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -79,9 +81,17 @@ public:
     QQmlListProperty<QObject> contentData();
     QQmlListProperty<QQuickItem> contentChildren();
 
+    int currentIndex() const;
+    QQuickItem *currentItem() const;
+
+public Q_SLOTS:
+    void setCurrentIndex(int index);
+
 Q_SIGNALS:
     void countChanged();
     void contentChildrenChanged();
+    void currentIndexChanged();
+    void currentItemChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);

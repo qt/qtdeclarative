@@ -57,21 +57,9 @@ class QQuickTabBarPrivate;
 class Q_QUICKTEMPLATES_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
-    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
 
 public:
     explicit QQuickTabBar(QQuickItem *parent = Q_NULLPTR);
-
-    int currentIndex() const;
-    QQuickItem *currentItem() const;
-
-public Q_SLOTS:
-    void setCurrentIndex(int index);
-
-Q_SIGNALS:
-    void currentIndexChanged();
-    void currentItemChanged();
 
 protected:
     void updatePolish() Q_DECL_OVERRIDE;

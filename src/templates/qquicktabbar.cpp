@@ -96,16 +96,17 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
-    QQuickTabBarPrivate() : currentIndex(0), group(Q_NULLPTR) { }
+    QQuickTabBarPrivate() : group(Q_NULLPTR) { }
 
     void updateLayout();
     void updateCurrent();
 
-    void insertItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void moveItem(int from, int to) Q_DECL_OVERRIDE;
-    void removeItem(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+    void itemInserted(int index, QQuickItem *item)  Q_DECL_OVERRIDE;
+    void itemMoved(int from, int to) Q_DECL_OVERRIDE;
+    void itemRemoved(QQuickItem *item) Q_DECL_OVERRIDE;
 
-    int currentIndex;
+    void onCurrentIndexChanged();
+
     QQuickExclusiveGroup *group;
 };
 
@@ -135,40 +136,26 @@ void QQuickTabBarPrivate::updateCurrent()
     q->setCurrentIndex(contentModel->indexOf(group->current(), Q_NULLPTR));
 }
 
-void QQuickTabBarPrivate::insertItem(int index, QQuickItem *item)
+void QQuickTabBarPrivate::itemInserted(int, QQuickItem *item)
 {
-    QQuickContainerPrivate::insertItem(index, item);
-
     group->addCheckable(item);
-    if (contentModel->count() == 1 || currentIndex == index)
-        group->setCurrent(item);
-    else
-        updateCurrent();
 }
 
-void QQuickTabBarPrivate::moveItem(int from, int to)
+void QQuickTabBarPrivate::itemMoved(int, int)
 {
-    QQuickContainerPrivate::moveItem(from, to);
-
     updateCurrent();
 }
 
-void QQuickTabBarPrivate::removeItem(int index, QQuickItem *item)
+void QQuickTabBarPrivate::itemRemoved(QQuickItem *item)
+{
+    group->removeCheckable(item);
+}
+
+void QQuickTabBarPrivate::onCurrentIndexChanged()
 {
     Q_Q(QQuickTabBar);
-    bool currentChanged = false;
-    if (index == currentIndex) {
-        group->setCurrent(contentModel->get(index - 1));
-    } else if (index < currentIndex) {
-        --currentIndex;
-        currentChanged = true;
-    }
-    group->removeCheckable(item);
-
-    QQuickContainerPrivate::removeItem(index, item);
-
-    if (currentChanged)
-        emit q->currentIndexChanged();
+    if (q->isComponentComplete())
+        group->setCurrent(contentModel->get(currentIndex));
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
@@ -182,40 +169,8 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
     d->group = new QQuickExclusiveGroup(this);
     connect(d->group, &QQuickExclusiveGroup::currentChanged, this, &QQuickTabBar::currentItemChanged);
     QObjectPrivate::connect(d->group, &QQuickExclusiveGroup::currentChanged, d, &QQuickTabBarPrivate::updateCurrent);
-}
 
-/*!
-    \qmlproperty int QtQuickControls2::TabBar::currentIndex
-
-    This property holds the current index.
-*/
-int QQuickTabBar::currentIndex() const
-{
-    Q_D(const QQuickTabBar);
-    return d->currentIndex;
-}
-
-void QQuickTabBar::setCurrentIndex(int index)
-{
-    Q_D(QQuickTabBar);
-    if (d->currentIndex != index) {
-        d->currentIndex = index;
-        emit currentIndexChanged();
-        if (isComponentComplete())
-            d->group->setCurrent(d->contentModel->get(index));
-    }
-}
-
-/*!
-    \qmlproperty Item QtQuickControls2::TabBar::currentItem
-    \readonly
-
-    This property holds the current item.
-*/
-QQuickItem *QQuickTabBar::currentItem() const
-{
-    Q_D(const QQuickTabBar);
-    return qobject_cast<QQuickItem *>(d->group->current());
+    QObjectPrivate::connect(this, &QQuickContainer::currentIndexChanged, d, &QQuickTabBarPrivate::onCurrentIndexChanged);
 }
 
 void QQuickTabBar::updatePolish()

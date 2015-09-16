@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \internal
 */
 
-QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR)
+QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1)
 {
 }
 
@@ -85,19 +85,53 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentData.append(item);
     contentModel->insert(index, item);
+
+    itemInserted(index, item);
+
+    if (contentModel->count() == 1 && currentIndex == -1) {
+        Q_Q(QQuickContainer);
+        q->setCurrentIndex(index);
+    }
+}
+
+void QQuickContainerPrivate::itemInserted(int, QQuickItem *)
+{
 }
 
 void QQuickContainerPrivate::moveItem(int from, int to)
 {
     contentModel->move(from, to);
+    itemMoved(from, to);
+}
+
+void QQuickContainerPrivate::itemMoved(int, int)
+{
 }
 
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 {
+    Q_Q(QQuickContainer);
+    bool currentChanged = false;
+    if (index == currentIndex) {
+        q->setCurrentIndex(currentIndex - 1);
+    } else if (index < currentIndex) {
+        --currentIndex;
+        currentChanged = true;
+    }
+
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     item->setParentItem(Q_NULLPTR);
     contentData.removeOne(item);
     contentModel->remove(index);
+
+    itemRemoved(item);
+
+    if (currentChanged)
+        emit q->currentIndexChanged();
+}
+
+void QQuickContainerPrivate::itemRemoved(QQuickItem *)
+{
 }
 
 void QQuickContainerPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
@@ -353,6 +387,38 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
                                         QQuickContainerPrivate::contentChildren_count,
                                         QQuickContainerPrivate::contentChildren_at,
                                         QQuickContainerPrivate::contentChildren_clear);
+}
+
+/*!
+    \qmlproperty int QtQuickControls2::Container::currentIndex
+
+    TODO
+*/
+int QQuickContainer::currentIndex() const
+{
+    Q_D(const QQuickContainer);
+    return d->currentIndex;
+}
+
+void QQuickContainer::setCurrentIndex(int index)
+{
+    Q_D(QQuickContainer);
+    if (d->currentIndex != index) {
+        d->currentIndex = index;
+        emit currentIndexChanged();
+        emit currentItemChanged();
+    }
+}
+
+/*!
+    \qmlproperty Item QtQuickControls2::Container::currentItem
+
+    TODO
+*/
+QQuickItem *QQuickContainer::currentItem() const
+{
+    Q_D(const QQuickContainer);
+    return itemAt(d->currentIndex);
 }
 
 void QQuickContainer::itemChange(ItemChange change, const ItemChangeData &data)
