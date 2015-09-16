@@ -31,19 +31,21 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QtCore/QProcess>
-#include <QtCore/QTimer>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
-#include <QtCore/QMutex>
-#include <QtCore/QLibraryInfo>
-#include <QtQml/QJSEngine>
-
 //QQmlDebugTest
 #include "debugutil_p.h"
-#include "qqmldebugclient.h"
 #include "../../../shared/util.h"
+
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtCore/qprocess.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtQml/qjsengine.h>
 
 #if defined (Q_OS_WINCE)
 #undef IN
@@ -831,7 +833,7 @@ void tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode, bool restrict
     connection = new QQmlDebugConnection();
     process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     client = new QJSDebugClient(connection);
-    QList<QQmlDebugClient *> others = connection->createOtherClients();
+    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(connection);
 
     const char *args = 0;
     if (blockMode)

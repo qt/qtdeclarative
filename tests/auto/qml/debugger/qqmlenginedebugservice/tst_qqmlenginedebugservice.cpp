@@ -30,13 +30,20 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
-#include <QSignalSpy>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDebug>
-#include <QThread>
-#include <QModelIndex>
+
+#include "qqmlenginedebugclient.h"
+#include "debugutil_p.h"
+#include "../../../shared/util.h"
+
+#include <private/qqmlbinding_p.h>
+#include <private/qqmlboundsignal_p.h>
+#include <private/qqmldebugservice_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmlproperty_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -45,16 +52,11 @@
 #include <QtQml/qqmlproperty.h>
 #include <QtQuick/qquickitem.h>
 
-#include <private/qqmlbinding_p.h>
-#include <private/qqmlboundsignal_p.h>
-#include <private/qqmldebugservice_p.h>
-#include <private/qqmlmetatype_p.h>
-#include <private/qqmlproperty_p.h>
-
-#include "debugutil_p.h"
-#include "qqmlenginedebugclient.h"
-
-#include "../../../shared/util.h"
+#include <QtNetwork/qhostaddress.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qabstractitemmodel.h>
 
 #define QVERIFYOBJECT(statement) \
     do {\
@@ -352,7 +354,7 @@ void tst_QQmlEngineDebugService::initTestCase()
     bool ok = m_conn->waitForConnected();
     QVERIFY(ok);
     m_dbg = new QQmlEngineDebugClient(m_conn);
-    QList<QQmlDebugClient *> others = m_conn->createOtherClients();
+    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_conn);
     QTRY_COMPARE(m_dbg->state(), QQmlEngineDebugClient::Enabled);
     foreach (QQmlDebugClient *other, others)
         QCOMPARE(other->state(), QQmlDebugClient::Unavailable);

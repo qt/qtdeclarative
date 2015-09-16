@@ -31,17 +31,19 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QtCore/QProcess>
-#include <QtCore/QTimer>
-#include <QtCore/QFileInfo>
-#include <QtCore/QDir>
-#include <QtCore/QMutex>
-#include <QtCore/QLibraryInfo>
-
 #include "debugutil_p.h"
-#include "qqmldebugclient.h"
 #include "../../../shared/util.h"
+
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtCore/qprocess.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qlibraryinfo.h>
 
 class tst_QQmlDebuggingEnabler : public QQmlDataTest
 {
@@ -176,7 +178,7 @@ void tst_QQmlDebuggingEnabler::qmlscene()
     QFETCH(QStringList, services);
 
     connection = new QQmlDebugConnection();
-    QList<QQmlDebugClient *> clients = connection->createOtherClients();
+    QList<QQmlDebugClient *> clients = QQmlDebugTest::createOtherClients(connection);
     process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
                                    this);
     process->setMaximumBindErrors(1);
@@ -208,7 +210,7 @@ void tst_QQmlDebuggingEnabler::custom()
     const int portTo = 5565;
 
     connection = new QQmlDebugConnection();
-    QList<QQmlDebugClient *> clients = connection->createOtherClients();
+    QList<QQmlDebugClient *> clients = QQmlDebugTest::createOtherClients(connection);
     process = new QQmlDebugProcess(QCoreApplication::applicationDirPath() +
                                    QLatin1String("/qqmldebuggingenablerserver"), this);
     process->setMaximumBindErrors(portTo - portFrom);

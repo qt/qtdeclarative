@@ -31,18 +31,20 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QSignalSpy>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDebug>
-#include <QThread>
-#include <QtCore/QLibraryInfo>
-
-#include "../shared/debugutil_p.h"
-#include "../../../shared/util.h"
 #include "qqmlinspectorclient.h"
 #include "qqmlenginedebugclient.h"
+#include "../shared/debugutil_p.h"
+#include "../../../shared/util.h"
+
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
+#include <QtNetwork/qhostaddress.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qlibraryinfo.h>
 
 #define STR_PORT_FROM "3776"
 #define STR_PORT_TO "3786"
@@ -111,7 +113,7 @@ void tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
     QQmlDebugConnection *m_connection = new QQmlDebugConnection(this);
     m_inspectorClient = new QQmlInspectorClient(m_connection);
     m_engineDebugClient = new QQmlEngineDebugClient(m_connection);
-    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
+    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
     QVERIFY(m_connection->waitForConnected());

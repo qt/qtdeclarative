@@ -90,8 +90,6 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(tryToConnect()));
 
     connect(&m_connection, SIGNAL(connected()), this, SLOT(connected()));
-    connect(&m_connection, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(connectionStateChanged(QAbstractSocket::SocketState)));
-    connect(&m_connection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(connectionError(QAbstractSocket::SocketError)));
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged(bool)),
             this, SLOT(traceClientEnabledChanged(bool)));
@@ -500,7 +498,7 @@ void QmlProfilerApplication::tryToConnect()
                          QString::number(m_connectionAttempts)));
     }
 
-    if (m_connection.state() == QAbstractSocket::UnconnectedState) {
+    if (!m_connection.isConnected()) {
         logStatus(QString("Connecting to %1:%2 ...").arg(m_hostName,
                                                          QString::number(m_port)));
         m_connection.connectToHost(m_hostName, m_port);
@@ -513,19 +511,6 @@ void QmlProfilerApplication::connected()
     prompt(tr("Connected to host:port %1:%2. Wait for profile data or type a command (type 'help' "
               "to show list of commands).\nRecording Status: %3")
            .arg(m_hostName).arg((m_port)).arg(m_recording ? tr("on") : tr("off")));
-}
-
-void QmlProfilerApplication::connectionStateChanged(
-        QAbstractSocket::SocketState state)
-{
-    if (m_verbose)
-        qDebug() << state;
-}
-
-void QmlProfilerApplication::connectionError(QAbstractSocket::SocketError error)
-{
-    if (m_verbose)
-        qDebug() << error;
 }
 
 void QmlProfilerApplication::processHasOutput()

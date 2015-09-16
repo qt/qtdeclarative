@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,45 +31,36 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorclient.h"
-#include "qdatastream.h"
+#ifndef QQMLDEBUGCLIENT_P_P_H
+#define QQMLDEBUGCLIENT_P_P_H
 
-#include <QtCore/qdebug.h>
+#include "qqmldebugclient_p.h"
+#include <private/qobject_p.h>
 
-void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+QT_BEGIN_NAMESPACE
+
+class QQmlDebugClientPrivate : public QObjectPrivate
 {
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-    ds << QByteArray("request") << m_requestId++
-       << QByteArray("showAppOnTop") << showOnTop;
+    Q_DECLARE_PUBLIC(QQmlDebugClient)
+public:
+    QQmlDebugClientPrivate(const QString &name, QQmlDebugConnection *connection);
+    void addToConnection();
 
-    sendMessage(message);
-}
+    QString name;
+    QPointer<QQmlDebugConnection> connection;
+};
 
-void QQmlInspectorClient::reloadQml(const QHash<QString, QByteArray> &changesHash)
-{
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
-    m_reloadRequestId = m_requestId;
+QT_END_NAMESPACE
 
-    ds << QByteArray("request") << m_requestId++
-       << QByteArray("reload") << changesHash;
-
-    sendMessage(message);
-}
-
-void QQmlInspectorClient::messageReceived(const QByteArray &message)
-{
-    QDataStream ds(message);
-    QByteArray type;
-    ds >> type;
-
-    if (type != QByteArray("response")) {
-        qDebug() << "Unhandled message of type" << type;
-        return;
-    }
-
-    m_requestResult = false;
-    ds >> m_responseId >> m_requestResult;
-    emit responseReceived();
-}
+#endif // QQMLDEBUGCLIENT_P_P_H

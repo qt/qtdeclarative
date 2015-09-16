@@ -31,14 +31,16 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugclient.h"
-
 //QQmlDebugTest
 #include "debugutil_p.h"
 #include "../../../shared/util.h"
 
-#include <QtCore/QString>
-#include <QtTest/QtTest>
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtCore/qstring.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtTest/qtest.h>
 
 const char *NORMALMODE = "-qmljsdebugger=port:3777,3787,block";
 const char *QMLFILE = "test.qml";

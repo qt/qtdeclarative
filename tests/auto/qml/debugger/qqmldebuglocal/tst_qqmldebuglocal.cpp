@@ -31,18 +31,20 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QSignalSpy>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDebug>
-#include <QThread>
-#include <ctime>
-
-#include "debugutil_p.h"
 #include "qqmldebugtestservice.h"
+#include "debugutil_p.h"
 
 #include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
+#include <QtNetwork/qhostaddress.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qthread.h>
+
+#include <ctime>
 
 QString fileName;
 

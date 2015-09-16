@@ -32,8 +32,8 @@
 **
 ****************************************************************************/
 
-#ifndef DEBUGUTIL_H
-#define DEBUGUTIL_H
+#ifndef DEBUGUTIL_P_H
+#define DEBUGUTIL_P_H
 
 //
 //  W A R N I N G
@@ -46,21 +46,23 @@
 // We mean it.
 //
 
-#include <QEventLoop>
-#include <QTimer>
-#include <QThread>
-#include <QTest>
-#include <QProcess>
-#include <QMutex>
+#include <private/qqmldebugclient_p.h>
 
+#include <QtCore/qeventloop.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qprocess.h>
+#include <QtCore/qmutex.h>
+#include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
-
-#include "qqmldebugclient.h"
 
 class QQmlDebugTest
 {
 public:
     static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
+    static QList<QQmlDebugClient *> createOtherClients(QQmlDebugConnection *connection);
+    static QString clientStateString(const QQmlDebugClient *client);
+    static QString connectionStateString(const QQmlDebugConnection *connection);
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient
@@ -128,4 +130,4 @@ private:
     int m_receivedBindErrors;
 };
 
-#endif // DEBUGUTIL_H
+#endif // DEBUGUTIL_P_H

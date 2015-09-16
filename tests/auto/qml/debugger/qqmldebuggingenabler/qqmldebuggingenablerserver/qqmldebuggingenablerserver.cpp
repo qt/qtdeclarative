@@ -31,8 +31,10 @@
 **
 ****************************************************************************/
 
-#include "debugutil_p.h"
-#include <QtCore/QCoreApplication>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtQml/qqmldebug.h>
+#include <QtQml/qqmlengine.h>
 
 int main(int argc, char *argv[])
 {

@@ -1,10 +1,9 @@
-QT = qml qml-private network core-private packetprotocol-private
+QT = qml-private network core qmldebug-private
 CONFIG += no_import_scan
 
 SOURCES += main.cpp \
     qmlprofilerapplication.cpp \
     commandlistener.cpp \
-    qqmldebugclient.cpp \
     qmlprofilerdata.cpp \
     qmlprofilerclient.cpp
 
@@ -14,7 +13,6 @@ HEADERS += \
     constants.h \
     qmlprofilerdata.h \
     qmlprofilerclient.h \
-    qmlprofilereventlocation.h \
-    qqmldebugclient.h
+    qmlprofilereventlocation.h
 
 load(qt_tool)

@@ -31,71 +31,53 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGCLIENT_H
-#define QQMLDEBUGCLIENT_H
+#ifndef QQMLDEBUGCLIENT_P_H
+#define QQMLDEBUGCLIENT_P_H
 
-#include <QtNetwork/qtcpsocket.h>
+#include <QtCore/qobject.h>
 
-class QQmlDebugConnectionPrivate;
-class QQmlDebugConnection : public QIODevice
-{
-    Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugConnection)
-public:
-    QQmlDebugConnection(QObject * = 0);
-    ~QQmlDebugConnection();
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    void connectToHost(const QString &hostName, quint16 port);
+QT_BEGIN_NAMESPACE
 
-    qint64 bytesAvailable() const;
-    bool isConnected() const;
-    QAbstractSocket::SocketState state() const;
-    void flush();
-    bool isSequential() const;
-    void close();
-    bool waitForConnected(int msecs = 30000);
-
-signals:
-    void connected();
-    void stateChanged(QAbstractSocket::SocketState socketState);
-    void error(QAbstractSocket::SocketError socketError);
-
-protected:
-    qint64 readData(char *data, qint64 maxSize);
-    qint64 writeData(const char *data, qint64 maxSize);
-
-private:
-    QQmlDebugConnectionPrivate *d;
-    friend class QQmlDebugClient;
-    friend class QQmlDebugClientPrivate;
-};
-
+class QQmlDebugConnection;
 class QQmlDebugClientPrivate;
 class QQmlDebugClient : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(QQmlDebugClient)
+    Q_DECLARE_PRIVATE(QQmlDebugClient)
 
 public:
     enum State { NotConnected, Unavailable, Enabled };
 
-    QQmlDebugClient(const QString &, QQmlDebugConnection *parent);
+    QQmlDebugClient(const QString &name, QQmlDebugConnection *parent);
     ~QQmlDebugClient();
 
     QString name() const;
     float serviceVersion() const;
     State state() const;
-
-    virtual void sendMessage(const QByteArray &);
+    void sendMessage(const QByteArray &message);
 
 protected:
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
+    QQmlDebugClient(QQmlDebugClientPrivate &dd);
 
 private:
-    QQmlDebugClientPrivate *d;
     friend class QQmlDebugConnection;
-    friend class QQmlDebugConnectionPrivate;
+
+    virtual void stateChanged(State state);
+    virtual void messageReceived(const QByteArray &message);
 };
 
-#endif // QQMLDEBUGCLIENT_H
+QT_END_NAMESPACE
+
+#endif // QQMLDEBUGCLIENT_P_H

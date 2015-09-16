@@ -30,21 +30,24 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
-#include <QSignalSpy>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDebug>
-#include <QThread>
-#include <QLibraryInfo>
 
-#include <QtQml/qqmlengine.h>
 
-#include "../../../shared/util.h"
-#include "debugutil_p.h"
-#include "qqmldebugclient.h"
 #include "qqmldebugtestservice.h"
+#include "debugutil_p.h"
+#include "../../../shared/util.h"
+
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmldebugconnection_p.h>
 #include <private/qqmldebugconnector_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
+#include <QtNetwork/qhostaddress.h>
+#include <QtQml/qqmlengine.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qlibraryinfo.h>
 
 #define PORT 3769
 #define STR_PORT "3769"

@@ -34,6 +34,8 @@
 #include "qqmlenginedebugclient.h"
 #include "qdatastream.h"
 
+#include <private/qqmldebugconnection_p.h>
+
 struct QmlObjectData {
     QUrl url;
     int lineNumber;

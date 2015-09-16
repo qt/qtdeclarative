@@ -34,12 +34,15 @@
 #ifndef QMLPROFILERAPPLICATION_H
 #define QMLPROFILERAPPLICATION_H
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QProcess>
-#include <QtCore/QTimer>
-
 #include "qmlprofilerclient.h"
 #include "qmlprofilerdata.h"
+
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qprocess.h>
+#include <QtCore/qtimer.h>
+#include <QtNetwork/qabstractsocket.h>
 
 enum PendingRequest {
     REQUEST_QUIT,
@@ -73,8 +76,6 @@ private slots:
     void run();
     void tryToConnect();
     void connected();
-    void connectionStateChanged(QAbstractSocket::SocketState state);
-    void connectionError(QAbstractSocket::SocketError error);
     void processHasOutput();
     void processFinished();
 

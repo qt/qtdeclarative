@@ -33,7 +33,7 @@
 #ifndef QQMLINSPECTORCLIENT_H
 #define QQMLINSPECTORCLIENT_H
 
-#include "qqmldebugclient.h"
+#include <private/qqmldebugclient_p.h>
 
 class QQmlInspectorClient : public QQmlDebugClient
 {

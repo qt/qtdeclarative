@@ -31,19 +31,33 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGCLIENT_H
-#define QQMLDEBUGCLIENT_H
+#ifndef QQMLDEBUGCONNECTION_P_H
+#define QQMLDEBUGCONNECTION_P_H
 
-#include <QtNetwork/qtcpsocket.h>
+#include <QtCore/qobject.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+QT_BEGIN_NAMESPACE
 
 class QQmlDebugClient;
 class QQmlDebugConnectionPrivate;
-class QQmlDebugConnection : public QIODevice
+class QQmlDebugConnection : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(QQmlDebugConnection)
+    Q_DECLARE_PRIVATE(QQmlDebugConnection)
 public:
-    QQmlDebugConnection(QObject * = 0);
+    QQmlDebugConnection(QObject *parent = 0);
     ~QQmlDebugConnection();
 
     void connectToHost(const QString &hostName, quint16 port);
@@ -52,61 +66,28 @@ public:
     void setDataStreamVersion(int dataStreamVersion);
     int dataStreamVersion();
 
-    qint64 bytesAvailable() const;
     bool isConnected() const;
-    QAbstractSocket::SocketState state() const;
-    void flush();
-    bool isSequential() const;
     void close();
     bool waitForConnected(int msecs = 30000);
 
-    QString stateString() const;
-    QList<QQmlDebugClient *> createOtherClients();
+    QQmlDebugClient *client(const QString &name) const;
+    bool addClient(const QString &name, QQmlDebugClient *client);
+    bool removeClient(const QString &name);
+
+    float serviceVersion(const QString &serviceName) const;
+    bool sendMessage(const QString &name, const QByteArray &message);
 
 signals:
     void connected();
-    void stateChanged(QAbstractSocket::SocketState socketState);
-    void error(QAbstractSocket::SocketError socketError);
 
-protected:
-    qint64 readData(char *data, qint64 maxSize);
-    qint64 writeData(const char *data, qint64 maxSize);
-
-private:
-    QQmlDebugConnectionPrivate *d;
-    int m_dataStreamVersion;
-    friend class QQmlDebugClient;
-    friend class QQmlDebugClientPrivate;
-    friend class QQmlDebugConnectionPrivate;
+private Q_SLOTS:
+    void newConnection();
+    void socketConnected();
+    void socketDisconnected();
+    void protocolReadyRead();
+    void handshakeTimeout();
 };
 
-class QQmlDebugClientPrivate;
-class QQmlDebugClient : public QObject
-{
-    Q_OBJECT
-    Q_DISABLE_COPY(QQmlDebugClient)
+QT_END_NAMESPACE
 
-public:
-    enum State { NotConnected, Unavailable, Enabled };
-
-    QQmlDebugClient(const QString &, QQmlDebugConnection *parent);
-    ~QQmlDebugClient();
-
-    QString name() const;
-    float serviceVersion() const;
-    State state() const;
-    QString stateString() const;
-
-    virtual void sendMessage(const QByteArray &);
-
-protected:
-    virtual void stateChanged(State);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    QQmlDebugClientPrivate *d;
-    friend class QQmlDebugConnection;
-    friend class QQmlDebugConnectionPrivate;
-};
-
-#endif // QQMLDEBUGCLIENT_H
+#endif // QQMLDEBUGCONNECTION_P_H

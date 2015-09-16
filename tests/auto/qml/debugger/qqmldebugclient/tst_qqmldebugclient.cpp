@@ -30,19 +30,20 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
-#include <QSignalSpy>
-#include <QTimer>
-#include <QHostAddress>
-#include <QDebug>
-#include <QThread>
-
-#include <QtQml/qqmlengine.h>
 
 #include "debugutil_p.h"
 #include "qqmldebugtestservice.h"
 
 #include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qthread.h>
+#include <QtNetwork/qhostaddress.h>
+#include <QtQml/qqmlengine.h>
 
 #define PORT 13770
 #define STR_PORT "13770"
@@ -154,7 +155,9 @@ void tst_QQmlDebugClient::parallelConnect()
     QTest::ignoreMessage(QtWarningMsg, "QML Debugger: Another client is already connected.");
     // will connect & immediately disconnect
     connection2.connectToHost("127.0.0.1", PORT);
-    QTRY_COMPARE(connection2.state(), QAbstractSocket::UnconnectedState);
+    QTest::ignoreMessage(QtWarningMsg, "QQmlDebugConnection: Did not get handshake answer in time");
+    QVERIFY(!connection2.waitForConnected(1000));
+    QVERIFY(!connection2.isConnected());
     QVERIFY(m_conn->isConnected());
 }
 
@@ -165,7 +168,6 @@ void tst_QQmlDebugClient::sequentialConnect()
 
     m_conn->close();
     QVERIFY(!m_conn->isConnected());
-    QCOMPARE(m_conn->state(), QAbstractSocket::UnconnectedState);
 
     // Make sure that the disconnect is actually delivered to the server
     QTest::qWait(100);

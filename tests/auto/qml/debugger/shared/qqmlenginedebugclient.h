@@ -34,12 +34,10 @@
 #ifndef QQMLENGINEDEBUGCLIENT_H
 #define QQMLENGINEDEBUGCLIENT_H
 
-#include "qqmldebugclient.h"
+#include <private/qqmldebugclient_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
-
-class QQmlDebugConnection;
 
 struct QmlDebugPropertyReference
 {

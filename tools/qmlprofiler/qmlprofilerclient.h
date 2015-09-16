@@ -34,9 +34,10 @@
 #ifndef QMLPROFILERCLIENT_H
 #define QMLPROFILERCLIENT_H
 
-#include "qqmldebugclient.h"
 #include "qmlprofilereventlocation.h"
-#include <QtQml/private/qqmlprofilerdefinitions_p.h>
+
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmlprofilerdefinitions_p.h>
 
 class QmlProfilerClient : public QQmlDebugClient
 {

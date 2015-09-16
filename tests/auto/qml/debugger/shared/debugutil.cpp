@@ -33,10 +33,12 @@
 
 #include "debugutil_p.h"
 
-#include <QEventLoop>
-#include <QTimer>
-#include <QFileInfo>
-#include <QDir>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtCore/qeventloop.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
 
 bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;
@@ -49,6 +51,46 @@ bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int tim
     if (!timer.isActive())
         qWarning("waitForSignal %s timed out after %d ms", member, timeout);
     return timer.isActive();
+}
+
+QList<QQmlDebugClient *> QQmlDebugTest::createOtherClients(QQmlDebugConnection *connection)
+{
+    QList<QQmlDebugClient *> ret;
+    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices()) {
+        if (!connection->client(service))
+            ret << new QQmlDebugClient(service, connection);
+    }
+    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices()) {
+        if (!connection->client(service))
+            ret << new QQmlDebugClient(service, connection);
+    }
+    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices()) {
+        if (!connection->client(service))
+            ret << new QQmlDebugClient(service, connection);
+    }
+    return ret;
+}
+
+QString QQmlDebugTest::clientStateString(const QQmlDebugClient *client)
+{
+    if (!client)
+        return QLatin1String("null");
+
+    switch (client->state()) {
+    case QQmlDebugClient::NotConnected: return QLatin1String("Not connected");
+    case QQmlDebugClient::Unavailable: return QLatin1String("Unavailable");
+    case QQmlDebugClient::Enabled: return QLatin1String("Enabled");
+    default: return QLatin1String("Invalid");
+    }
+
+}
+
+QString QQmlDebugTest::connectionStateString(const QQmlDebugConnection *connection)
+{
+    if (!connection)
+        return QLatin1String("null");
+
+    return connection->isConnected() ? QLatin1String("connected") : QLatin1String("not connected");
 }
 
 QQmlDebugTestClient::QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c)

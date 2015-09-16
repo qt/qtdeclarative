@@ -31,12 +31,14 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
-#include <QLibraryInfo>
-
 #include "debugutil_p.h"
-#include "qqmldebugclient.h"
 #include "../../../shared/util.h"
+
+#include <private/qqmldebugclient_p.h>
+#include <private/qqmldebugconnection_p.h>
+
+#include <QtTest/qtest.h>
+#include <QtCore/qlibraryinfo.h>
 
 #define STR_PORT_FROM "13773"
 #define STR_PORT_TO "13783"
@@ -167,7 +169,7 @@ void tst_QQmlEngineControl::connect(const QString &testFile, bool restrictServic
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlEngineControlClient(m_connection);
-    QList<QQmlDebugClient *> others = m_connection->createOtherClients();
+    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
@@ -184,8 +186,8 @@ void tst_QQmlEngineControl::cleanup()
     if (QTest::currentTestFailed()) {
         qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
         qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
-        qDebug() << "Connection State:" << (m_connection ? m_connection->stateString() : QLatin1String("null"));
-        qDebug() << "Client State:" << (m_client ? m_client->stateString() : QLatin1String("null"));
+        qDebug() << "Connection State:" << QQmlDebugTest::connectionStateString(m_connection);
+        qDebug() << "Client State:" << QQmlDebugTest::clientStateString(m_client);
     }
     delete m_process;
     m_process = 0;
