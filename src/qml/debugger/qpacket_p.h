@@ -31,81 +31,46 @@
 **
 ****************************************************************************/
 
-#ifndef QPACKETPROTOCOL_H
-#define QPACKETPROTOCOL_H
+#ifndef QPACKET_P_H
+#define QPACKET_P_H
 
-#include <QtCore/qobject.h>
 #include <QtCore/qdatastream.h>
+#include <QtCore/qbuffer.h>
+#include <QtQml/private/qtqmlglobal_p.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-class QIODevice;
-class QBuffer;
-class QPacket;
-class QPacketAutoSend;
-class QPacketProtocolPrivate;
-
-class QPacketProtocol : public QObject
-{
-    Q_OBJECT
-public:
-    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
-    virtual ~QPacketProtocol();
-
-    qint32 maximumPacketSize() const;
-    qint32 setMaximumPacketSize(qint32);
-
-    QPacketAutoSend send();
-    void send(const QPacket &);
-
-    qint64 packetsAvailable() const;
-    QPacket read();
-
-    bool waitForReadyRead(int msecs = 3000);
-
-    void clear();
-
-    QIODevice *device();
-
-Q_SIGNALS:
-    void readyRead();
-    void invalidPacket();
-    void packetWritten();
-
-private:
-    QPacketProtocolPrivate *d;
-};
-
-
-class QPacket : public QDataStream
+class Q_QML_PRIVATE_EXPORT QPacket : public QDataStream
 {
 public:
     QPacket();
-    QPacket(const QPacket &);
-    virtual ~QPacket();
+    QPacket(const QPacket &other);
+    explicit QPacket(const QByteArray &ba);
+    QPacket &operator=(const QPacket &other);
 
-    void clear();
-    bool isEmpty() const;
     QByteArray data() const;
 
-protected:
-    friend class QPacketProtocol;
-    QPacket(const QByteArray &ba);
-    QByteArray b;
-    QBuffer *buf;
-};
-
-class QPacketAutoSend : public QPacket
-{
-public:
-    virtual ~QPacketAutoSend();
+    static int dataStreamVersion();
+    static void setDataStreamVersion(int dataStreamVersion);
 
 private:
-    friend class QPacketProtocol;
-    QPacketAutoSend(QPacketProtocol *);
-    QPacketProtocol *p;
+    static int s_dataStreamVersion;
+    void init(QIODevice::OpenMode mode);
+    void assign(const QPacket &other);
+    QBuffer buf;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QPACKET_P_H

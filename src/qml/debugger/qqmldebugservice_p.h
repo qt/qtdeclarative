@@ -96,17 +96,6 @@ signals:
     void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugStream : public QDataStream
-{
-public:
-    static int s_dataStreamVersion;
-
-    QQmlDebugStream();
-    explicit QQmlDebugStream(QIODevice *d);
-    QQmlDebugStream(QByteArray *ba, QIODevice::OpenMode flags);
-    QQmlDebugStream(const QByteArray &ba);
-};
-
 QT_END_NAMESPACE
 
 #endif // QQMLDEBUGSERVICE_H

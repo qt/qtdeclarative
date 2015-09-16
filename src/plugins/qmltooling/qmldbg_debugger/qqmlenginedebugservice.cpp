@@ -45,6 +45,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlexpression_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
@@ -440,14 +441,13 @@ QList<QObject*> QQmlEngineDebugServiceImpl::objectForLocationInfo(const QString 
 
 void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 {
-    QQmlDebugStream ds(message);
+    QPacket ds(message);
 
     QByteArray type;
     int queryId;
     ds >> type >> queryId;
 
-    QByteArray reply;
-    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
+    QPacket rs;
 
     if (type == "LIST_ENGINES") {
         rs << QByteArray("LIST_ENGINES_R");
@@ -617,7 +617,7 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
         rs << QByteArray("SET_METHOD_BODY_R") << queryId << ok;
 
     }
-    emit messageToClient(name(), reply);
+    emit messageToClient(name(), rs.data());
 }
 
 bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
@@ -769,12 +769,9 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
 
 void QQmlEngineDebugServiceImpl::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
 {
-    QByteArray reply;
-    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
-
+    QPacket rs;
     rs << QByteArray("UPDATE_WATCH") << id << objectId << QByteArray(property.name()) << valueContents(value);
-
-    emit messageToClient(name(), reply);
+    emit messageToClient(name(), rs.data());
 }
 
 void QQmlEngineDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
@@ -804,12 +801,11 @@ void QQmlEngineDebugServiceImpl::objectCreated(QQmlEngine *engine, QObject *obje
     int objectId = QQmlDebugService::idForObject(object);
     int parentId = QQmlDebugService::idForObject(object->parent());
 
-    QByteArray reply;
-    QQmlDebugStream rs(&reply, QIODevice::WriteOnly);
+    QPacket rs;
 
     //unique queryId -1
     rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId << parentId;
-    emit messageToClient(name(), reply);
+    emit messageToClient(name(), rs.data());
 }
 
 void QQmlEngineDebugServiceImpl::setStatesDelegate(QQmlDebugStatesDelegate *delegate)

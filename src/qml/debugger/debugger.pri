@@ -6,7 +6,8 @@ SOURCES += \
     $$PWD/qqmldebugservice.cpp \
     $$PWD/qqmldebugserviceinterfaces.cpp \
     $$PWD/qqmlabstractprofileradapter.cpp \
-    $$PWD/qqmlprofiler.cpp
+    $$PWD/qqmlprofiler.cpp \
+    $$PWD/qpacket.cpp
 
 HEADERS += \
     $$PWD/qqmldebugconnector_p.h \
@@ -18,6 +19,7 @@ HEADERS += \
     $$PWD/qqmldebug.h \
     $$PWD/qqmlprofilerdefinitions_p.h \
     $$PWD/qqmlabstractprofileradapter_p.h \
-    $$PWD/qqmlprofiler_p.h
+    $$PWD/qqmlprofiler_p.h \
+    $$PWD/qpacket_p.h
 
 INCLUDEPATH += $$PWD

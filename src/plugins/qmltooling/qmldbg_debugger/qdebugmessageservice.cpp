@@ -33,6 +33,7 @@
 
 #include "qdebugmessageservice.h"
 #include <private/qqmldebugconnector_p.h>
+#include <private/qpacket_p.h>
 
 #include <QDataStream>
 
@@ -63,13 +64,12 @@ void QDebugMessageServiceImpl::sendDebugMessage(QtMsgType type,
     //We do not want to alter the message handling mechanism
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
-    QByteArray message;
-    QQmlDebugStream ws(&message, QIODevice::WriteOnly);
+    QPacket ws;
     ws << QByteArray("MESSAGE") << type << buf.toUtf8();
     ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
 
-    emit messageToClient(name(), message);
+    emit messageToClient(name(), ws.data());
     if (oldMsgHandler)
         (*oldMsgHandler)(type, ctxt, buf);
 }

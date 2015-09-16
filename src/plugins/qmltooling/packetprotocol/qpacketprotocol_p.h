@@ -31,79 +31,50 @@
 **
 ****************************************************************************/
 
-#ifndef QPACKETPROTOCOL_H
-#define QPACKETPROTOCOL_H
+#ifndef QPACKETPROTOCOL_P_H
+#define QPACKETPROTOCOL_P_H
 
 #include <QtCore/qobject.h>
-#include <QtCore/qdatastream.h>
+#include <private/qpacket_p.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
-class QIODevice;
-class QBuffer;
-QT_END_NAMESPACE
-class QPacket;
-class QPacketAutoSend;
-class QPacketProtocolPrivate;
 
+class QIODevice;
+
+class QPacketProtocolPrivate;
 class QPacketProtocol : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QPacketProtocol)
 public:
     explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
-    virtual ~QPacketProtocol();
 
-    qint32 maximumPacketSize() const;
-    qint32 setMaximumPacketSize(qint32);
-
-    QPacketAutoSend send();
     void send(const QPacket &);
-
     qint64 packetsAvailable() const;
     QPacket read();
-
     bool waitForReadyRead(int msecs = 3000);
-
-    void clear();
-
-    QIODevice *device();
 
 Q_SIGNALS:
     void readyRead();
     void invalidPacket();
-    void packetWritten();
 
-private:
-    QPacketProtocolPrivate *d;
+private Q_SLOTS:
+    void aboutToClose();
+    void bytesWritten(qint64 bytes);
+    void readyToRead();
 };
 
+QT_END_NAMESPACE
 
-class QPacket : public QDataStream
-{
-public:
-    QPacket();
-    QPacket(const QPacket &);
-    virtual ~QPacket();
-
-    void clear();
-    bool isEmpty() const;
-    QByteArray data() const;
-
-protected:
-    friend class QPacketProtocol;
-    QPacket(const QByteArray &ba);
-    QByteArray b;
-    QBuffer *buf;
-};
-
-class QPacketAutoSend : public QPacket
-{
-public:
-    virtual ~QPacketAutoSend();
-
-private:
-    friend class QPacketProtocol;
-    QPacketAutoSend(QPacketProtocol *);
-    QPacketProtocol *p;
-};
-
-#endif
+#endif // QPACKETPROTOCOL_P_H

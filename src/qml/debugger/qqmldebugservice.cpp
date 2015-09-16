@@ -200,32 +200,6 @@ void QQmlDebugService::engineRemoved(QQmlEngine *)
 {
 }
 
-int QQmlDebugStream::s_dataStreamVersion = QDataStream::Qt_4_7;
-
-QQmlDebugStream::QQmlDebugStream()
-    : QDataStream()
-{
-    setVersion(s_dataStreamVersion);
-}
-
-QQmlDebugStream::QQmlDebugStream(QIODevice *d)
-    : QDataStream(d)
-{
-    setVersion(s_dataStreamVersion);
-}
-
-QQmlDebugStream::QQmlDebugStream(QByteArray *ba, QIODevice::OpenMode flags)
-    : QDataStream(ba, flags)
-{
-    setVersion(s_dataStreamVersion);
-}
-
-QQmlDebugStream::QQmlDebugStream(const QByteArray &ba)
-    : QDataStream(ba)
-{
-    setVersion(s_dataStreamVersion);
-}
-
 QT_END_NAMESPACE
 
 #include "qqmldebugservice.moc"

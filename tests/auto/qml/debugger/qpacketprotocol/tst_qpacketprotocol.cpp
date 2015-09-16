@@ -38,7 +38,8 @@
 #include <QDebug>
 #include <QBuffer>
 
-#include "../../../../../src/plugins/qmltooling/shared/qpacketprotocol.h"
+#include <private/qpacketprotocol_p.h>
+#include <private/qpacket_p.h>
 
 #include "debugutil_p.h"
 
@@ -55,18 +56,10 @@ private slots:
     void init();
     void cleanup();
 
-    void maximumPacketSize();
-    void setMaximumPacketSize();
-    void setMaximumPacketSize_data();
     void send();
-    void send_data();
     void packetsAvailable();
     void packetsAvailable_data();
-    void clear();
     void read();
-    void device();
-
-    void tst_QPacket_clear();
 };
 
 void tst_QPacketProtocol::init()
@@ -95,48 +88,17 @@ void tst_QPacketProtocol::cleanup()
     delete m_server;
 }
 
-void tst_QPacketProtocol::maximumPacketSize()
-{
-    QPacketProtocol p(m_client);
-    QCOMPARE(p.maximumPacketSize(), 0x7FFFFFFF);
-}
-
-void tst_QPacketProtocol::setMaximumPacketSize()
-{
-    QFETCH(qint32, size);
-    QFETCH(qint32, expected);
-
-    QPacketProtocol out(m_serverConn);
-    QCOMPARE(out.setMaximumPacketSize(size), expected);
-}
-
-void tst_QPacketProtocol::setMaximumPacketSize_data()
-{
-    QTest::addColumn<int>("size");
-    QTest::addColumn<int>("expected");
-
-    QTest::newRow("invalid") << qint32(sizeof(qint32) - 1) << qint32(0x7FFFFFFF);
-    QTest::newRow("still invalid") << qint32(sizeof(qint32)) << qint32(0x7FFFFFFF);
-    QTest::newRow("valid") << qint32(sizeof(qint32) + 1) << qint32(sizeof(qint32) + 1);
-}
-
 void tst_QPacketProtocol::send()
 {
-    QFETCH(bool, useAutoSend);
-
     QPacketProtocol in(m_client);
     QPacketProtocol out(m_serverConn);
 
     QByteArray ba;
     int num;
 
-    if (useAutoSend) {
-        out.send() << "Hello world" << 123;
-    } else {
-        QPacket packet;
-        packet << "Hello world" << 123;
-        out.send(packet);
-    }
+    QPacket packet;
+    packet << "Hello world" << 123;
+    out.send(packet);
 
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
 
@@ -144,14 +106,6 @@ void tst_QPacketProtocol::send()
     p >> ba >> num;
     QCOMPARE(ba, QByteArray("Hello world") + '\0');
     QCOMPARE(num, 123);
-}
-
-void tst_QPacketProtocol::send_data()
-{
-    QTest::addColumn<bool>("useAutoSend");
-
-    QTest::newRow("auto send") << true;
-    QTest::newRow("no auto send") << false;
 }
 
 void tst_QPacketProtocol::packetsAvailable()
@@ -164,8 +118,11 @@ void tst_QPacketProtocol::packetsAvailable()
     QCOMPARE(out.packetsAvailable(), qint64(0));
     QCOMPARE(in.packetsAvailable(), qint64(0));
 
-    for (int i=0; i<packetCount; i++)
-        out.send() << "Hello";
+    for (int i=0; i<packetCount; i++) {
+        QPacket packet;
+        packet << "Hello";
+        out.send(packet);
+    }
 
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
     QCOMPARE(in.packetsAvailable(), qint64(packetCount));
@@ -180,79 +137,35 @@ void tst_QPacketProtocol::packetsAvailable_data()
     QTest::newRow("10") << 10;
 }
 
-void tst_QPacketProtocol::clear()
-{
-    QPacketProtocol in(m_client);
-    QPacketProtocol out(m_serverConn);
-
-    out.send() << 123;
-    out.send() << 456;
-    QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
-
-    in.clear();
-    QVERIFY(in.read().isEmpty());
-}
-
 void tst_QPacketProtocol::read()
 {
     QPacketProtocol in(m_client);
     QPacketProtocol out(m_serverConn);
 
-    QVERIFY(in.read().isEmpty());
+    QVERIFY(in.read().atEnd());
 
-    out.send() << 123;
-    out.send() << 456;
+    QPacket packet;
+    packet << 123;
+    out.send(packet);
+
+    QPacket packet2;
+    packet2 << 456;
+    out.send(packet2);
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
 
     int num;
 
     QPacket p1 = in.read();
-    QVERIFY(!p1.isEmpty());
+    QVERIFY(!p1.atEnd());
     p1 >> num;
     QCOMPARE(num, 123);
 
     QPacket p2 = in.read();
-    QVERIFY(!p2.isEmpty());
+    QVERIFY(!p2.atEnd());
     p2 >> num;
     QCOMPARE(num, 456);
 
-    QVERIFY(in.read().isEmpty());
-}
-
-void tst_QPacketProtocol::device()
-{
-    QPacketProtocol p(m_client);
-    QCOMPARE(p.device(), m_client);
-}
-
-void tst_QPacketProtocol::tst_QPacket_clear()
-{
-    QPacketProtocol protocol(m_client);
-
-    QPacket packet;
-
-    packet << "Hello world!" << 123;
-    protocol.send(packet);
-
-    packet.clear();
-    QVERIFY(packet.isEmpty());
-    packet << "Goodbyte world!" << 789;
-    protocol.send(packet);
-
-    QByteArray ba;
-    int num;
-    QPacketProtocol in(m_serverConn);
-    QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
-
-    QPacket p1 = in.read();
-    p1 >> ba >> num;
-    QCOMPARE(ba, QByteArray("Hello world!") + '\0');
-    QCOMPARE(num, 123);
-
-    QPacket p2 = in.read();
-    p2 >> ba >> num;
-    QCOMPARE(ba, QByteArray("Goodbyte world!") + '\0');
-    QCOMPARE(num, 789);
+    QVERIFY(in.read().atEnd());
 }
 
 QTEST_MAIN(tst_QPacketProtocol)

@@ -33,6 +33,7 @@
 
 #include "qqmlprofileradapter.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,7 +73,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                 continue;
 
             //### using QDataStream is relatively expensive
-            QQmlDebugStream ds(&data, QIODevice::WriteOnly);
+            QPacket ds;
             ds << d->time << decodedMessageType << decodedDetailType;
 
             switch (decodedMessageType) {
@@ -92,8 +93,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                 Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
                 break;
             }
-            messages << data;
-            data.clear();
+            messages << ds.data();
         }
     }
 }

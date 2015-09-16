@@ -34,6 +34,8 @@
 #include "qv4profileradapter.h"
 #include "qqmlprofilerservice.h"
 
+#include <private/qpacket_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine) :
@@ -62,13 +64,12 @@ QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::Execut
 
 qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &messages)
 {
-    QByteArray message;
     while (m_memoryData.length() > m_memoryPos && m_memoryData[m_memoryPos].timestamp <= until) {
-        QQmlDebugStream d(&message, QIODevice::WriteOnly);
+        QPacket d;
         QV4::Profiling::MemoryAllocationProperties &props = m_memoryData[m_memoryPos];
         d << props.timestamp << MemoryAllocation << props.type << props.size;
         ++m_memoryPos;
-        messages.append(message);
+        messages.append(d.data());
     }
     return m_memoryData.length() == m_memoryPos ? -1 : m_memoryData[m_memoryPos].timestamp;
 }
@@ -94,7 +95,6 @@ qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &mes
 
 qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
-    QByteArray message;
     while (true) {
         while (!m_stack.isEmpty() &&
                (m_functionCallPos == m_functionCallData.length() ||
@@ -103,9 +103,9 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
                 return finalizeMessages(until, messages, m_stack.top());
 
             appendMemoryEvents(m_stack.top(), messages);
-            QQmlDebugStream d(&message, QIODevice::WriteOnly);
+            QPacket d;
             d << m_stack.pop() << RangeEnd << Javascript;
-            messages.append(message);
+            messages.append(d.data());
         }
         while (m_functionCallPos != m_functionCallData.length() &&
                (m_stack.empty() || m_functionCallData[m_functionCallPos].start < m_stack.top())) {
@@ -116,19 +116,16 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
 
             appendMemoryEvents(props.start, messages);
 
-            QQmlDebugStream d_start(&message, QIODevice::WriteOnly);
+            QPacket d_start;
             d_start << props.start << RangeStart << Javascript;
-            messages.push_back(message);
-            message.clear();
-            QQmlDebugStream d_location(&message, QIODevice::WriteOnly);
+            messages.push_back(d_start.data());
+            QPacket d_location;
             d_location << props.start << RangeLocation << Javascript << props.file << props.line
                        << props.column;
-            messages.push_back(message);
-            message.clear();
-            QQmlDebugStream d_data(&message, QIODevice::WriteOnly);
+            messages.push_back(d_location.data());
+            QPacket d_data;
             d_data << props.start << RangeData << Javascript << props.name;
-            messages.push_back(message);
-            message.clear();
+            messages.push_back(d_data.data());
             m_stack.push(props.end);
             ++m_functionCallPos;
         }

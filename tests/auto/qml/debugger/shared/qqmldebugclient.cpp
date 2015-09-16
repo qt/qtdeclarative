@@ -32,7 +32,9 @@
 ****************************************************************************/
 
 #include "qqmldebugclient.h"
-#include "../../../../../src/plugins/qmltooling/shared/qpacketprotocol.h"
+
+#include <private/qpacketprotocol_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qeventloop.h>
@@ -138,7 +140,7 @@ void QQmlDebugConnectionPrivate::readyRead()
                     QStringList pluginNames;
                     QList<float> pluginVersions;
                     pack >> pluginNames;
-                    if (!pack.isEmpty())
+                    if (!pack.atEnd())
                         pack >> pluginVersions;
 
                     const int pluginNamesSize = pluginNames.size();
@@ -192,7 +194,7 @@ void QQmlDebugConnectionPrivate::readyRead()
                 QStringList pluginNames;
                 QList<float> pluginVersions;
                 pack >> pluginNames;
-                if (!pack.isEmpty())
+                if (!pack.atEnd())
                     pack >> pluginVersions;
 
                 const int pluginNamesSize = pluginNames.size();

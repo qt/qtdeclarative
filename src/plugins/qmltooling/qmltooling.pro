@@ -8,7 +8,10 @@ SUBDIRS += \
 
 # Services
 SUBDIRS += \
+    packetprotocol \
     qmldbg_debugger \
     qmldbg_profiler
+
+qmldbg_server.depends = packetprotocol
 
 qtHaveModule(quick): SUBDIRS += qmldbg_inspector

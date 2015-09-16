@@ -36,6 +36,7 @@
 #include "qqmlprofileradapter.h"
 #include "qqmlprofilerservicefactory.h"
 #include <private/qqmlengine_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
@@ -202,8 +203,7 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
 {
     QMutexLocker lock(&m_configMutex);
 
-    QByteArray message;
-    QQmlDebugStream d(&message, QIODevice::WriteOnly);
+    QPacket d;
 
     d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;
     bool startedAny = false;
@@ -239,7 +239,7 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
         emit startFlushTimer();
     }
 
-    emit messageToClient(name(), message);
+    emit messageToClient(name(), d.data());
 }
 
 /*!
@@ -299,10 +299,8 @@ void QQmlProfilerServiceImpl::sendMessages()
 {
     QList<QByteArray> messages;
 
-    QByteArray data;
-
+    QPacket traceEnd;
     if (m_waitingForStop) {
-        QQmlDebugStream traceEnd(&data, QIODevice::WriteOnly);
         traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
 
         QSet<QQmlEngine *> seen;
@@ -331,12 +329,11 @@ void QQmlProfilerServiceImpl::sendMessages()
 
     if (m_waitingForStop) {
         //indicate completion
-        messages << data;
-        data.clear();
+        messages << traceEnd.data();
 
-        QQmlDebugStream ds(&data, QIODevice::WriteOnly);
+        QPacket ds;
         ds << (qint64)-1 << (int)Complete;
-        messages << data;
+        messages << ds.data();
         m_waitingForStop = false;
     }
 
@@ -369,8 +366,7 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&m_configMutex);
 
-    QByteArray rwData = message;
-    QQmlDebugStream stream(&rwData, QIODevice::ReadOnly);
+    QPacket stream(message);
 
     int engineId = -1;
     quint64 features = std::numeric_limits<quint64>::max();

@@ -34,6 +34,7 @@
 #include "qquickprofiler_p.h"
 #include <QCoreApplication>
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,7 +47,6 @@ quint64 QQuickProfiler::featuresEnabled = 0;
 //     (see tst_qqmldebugtrace::trace() benchmark)
 void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
 {
-    QByteArray data;
     Q_ASSERT_X(((messageType | detailType) & (1 << 31)) == 0, Q_FUNC_INFO, "You can use at most 31 message types and 31 detail types.");
     for (uint decodedMessageType = 0; (messageType >> decodedMessageType) != 0; ++decodedMessageType) {
         if ((messageType & (1 << decodedMessageType)) == 0)
@@ -57,7 +57,7 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
                 continue;
 
             //### using QDataStream is relatively expensive
-            QQmlDebugStream ds(&data, QIODevice::WriteOnly);
+            QPacket ds;
             ds << time << decodedMessageType << decodedDetailType;
 
             switch (decodedMessageType) {
@@ -103,8 +103,7 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
                 Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
                 break;
             }
-            messages << data;
-            data.clear();
+            messages << ds.data();
         }
     }
 }

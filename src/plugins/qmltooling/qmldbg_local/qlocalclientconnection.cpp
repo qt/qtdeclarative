@@ -32,7 +32,6 @@
 ****************************************************************************/
 
 #include "qlocalclientconnectionfactory.h"
-#include "qpacketprotocol.h"
 #include "qqmldebugserver.h"
 
 #include <QtCore/qplugin.h>
