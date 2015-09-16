@@ -54,6 +54,7 @@
 #include <QtCore/QLibraryInfo>
 
 #include <iostream>
+#include <algorithm>
 
 QT_USE_NAMESPACE
 
@@ -343,10 +344,35 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
     if (qmlDir.isEmpty())
         return ret;
 
-    QDirIterator iterator(qmlDir, QDirIterator::Subdirectories);
+    QDirIterator iterator(qmlDir, QDir::AllDirs | QDir::NoDotDot, QDirIterator::Subdirectories);
+    QStringList blacklist;
+    struct isMetainfo {
+        bool operator() (const QFileInfo &x) const {
+            return x.suffix() == QLatin1String("metainfo");
+        }
+    };
+    struct pathStartsWith {
+        pathStartsWith(const QString &path) : _path(path) {}
+        bool operator() (const QString &x) const {
+            return _path.startsWith(x);
+        }
+        const QString _path;
+    };
+
+
     while (iterator.hasNext()) {
         iterator.next();
-        QString path = iterator.filePath();
+        const QString path = iterator.filePath();
+        const QFileInfoList entries = QDir(path).entryInfoList();
+
+        // Skip designer related stuff
+        if (std::find_if(entries.cbegin(), entries.cend(), isMetainfo()) != entries.cend()) {
+            blacklist << path;
+            continue;
+        }
+
+        if (std::find_if(blacklist.cbegin(), blacklist.cend(), pathStartsWith(path)) != blacklist.cend())
+            continue;
 
         // skip obvious build output directories
         if (path.contains(QStringLiteral("Debug-iphoneos")) || path.contains(QStringLiteral("Release-iphoneos")) ||
@@ -358,8 +384,9 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
             continue;
         }
 
-        QVariantList imports = findQmlImportsInFile(path);
-        ret = mergeImports(ret, imports);
+        foreach (const QFileInfo &x, entries)
+            if (x.isFile())
+                ret = mergeImports(ret, findQmlImportsInFile(x.absoluteFilePath()));
      }
      return ret;
 }
