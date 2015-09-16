@@ -41,6 +41,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDebug>
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QTemporaryFile>
 
 static const char commandTextC[] =
         "The following commands are available:\n"
@@ -78,7 +79,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_runMode(LaunchMode),
     m_process(0),
     m_hostName(QLatin1String("127.0.0.1")),
-    m_port(3768),
+    m_port(0),
     m_pendingRequest(REQUEST_NONE),
     m_verbose(false),
     m_recording(true),
@@ -219,6 +220,7 @@ void QmlProfilerApplication::parseArguments()
     if (parser.isSet(attach)) {
         m_hostName = parser.value(attach);
         m_runMode = AttachMode;
+        m_port = 3768;
     }
 
     if (parser.isSet(port)) {
@@ -228,6 +230,10 @@ void QmlProfilerApplication::parseArguments()
             logError(tr("'%1' is not a valid port.").arg(parser.value(port)));
             parser.showHelp(1);
         }
+    } else if (m_port == 0) {
+        QTemporaryFile file;
+        if (file.open())
+            m_socketFile = file.fileName();
     }
 
     m_outputFile = parser.value(output);
@@ -463,10 +469,15 @@ void QmlProfilerApplication::outputData()
 void QmlProfilerApplication::run()
 {
     if (m_runMode == LaunchMode) {
+        if (!m_socketFile.isEmpty()) {
+            logStatus(QString::fromLatin1("Listening on %1 ...").arg(m_socketFile));
+            m_connection.startLocalServer(m_socketFile);
+        }
         m_process = new QProcess(this);
         QStringList arguments;
-        arguments << QString::fromLatin1("-qmljsdebugger=port:%1,block,services:CanvasFrameRate")
-                     .arg(m_port);
+        arguments << QString::fromLatin1("-qmljsdebugger=%1:%2,block,services:CanvasFrameRate")
+                     .arg(QLatin1String(m_socketFile.isEmpty() ? "port" : "file"))
+                     .arg(m_socketFile.isEmpty() ? QString::number(m_port) : m_socketFile);
         arguments << m_programArguments;
 
         m_process->setProcessChannelMode(QProcess::MergedChannels);
@@ -481,7 +492,6 @@ void QmlProfilerApplication::run()
                                                            m_process->errorString()));
             exit(1);
         }
-
     }
     m_connectTimer.start();
 }
@@ -492,15 +502,18 @@ void QmlProfilerApplication::tryToConnect()
     ++ m_connectionAttempts;
 
     if (!m_verbose && !(m_connectionAttempts % 5)) {// print every 5 seconds
-        if (!m_verbose)
-            logError(QString("Could not connect to %1:%2 for %3 seconds ...").arg(
-                         m_hostName, QString::number(m_port),
-                         QString::number(m_connectionAttempts)));
+        if (m_verbose) {
+            if (m_socketFile.isEmpty())
+                logError(QString::fromLatin1("Could not connect to %1:%2 for %3 seconds ...")
+                         .arg(m_hostName).arg(m_port).arg(m_connectionAttempts));
+            else
+                logError(QString::fromLatin1("No connection received on %1 for %2 seconds ...")
+                         .arg(m_socketFile).arg(m_connectionAttempts));
+        }
     }
 
-    if (!m_connection.isConnected()) {
-        logStatus(QString("Connecting to %1:%2 ...").arg(m_hostName,
-                                                         QString::number(m_port)));
+    if (m_socketFile.isEmpty()) {
+        logStatus(QString::fromLatin1("Connecting to %1:%2 ...").arg(m_hostName).arg(m_port));
         m_connection.connectToHost(m_hostName, m_port);
     }
 }
@@ -508,9 +521,12 @@ void QmlProfilerApplication::tryToConnect()
 void QmlProfilerApplication::connected()
 {
     m_connectTimer.stop();
-    prompt(tr("Connected to host:port %1:%2. Wait for profile data or type a command (type 'help' "
-              "to show list of commands).\nRecording Status: %3")
-           .arg(m_hostName).arg((m_port)).arg(m_recording ? tr("on") : tr("off")));
+    QString endpoint = m_socketFile.isEmpty() ?
+                QString::fromLatin1("%1:%2").arg(m_hostName).arg(m_port) :
+                m_socketFile;
+    prompt(tr("Connected to %1. Wait for profile data or type a command (type 'help' to show list "
+              "of commands).\nRecording Status: %2")
+           .arg(endpoint).arg(m_recording ? tr("on") : tr("off")));
 }
 
 void QmlProfilerApplication::processHasOutput()

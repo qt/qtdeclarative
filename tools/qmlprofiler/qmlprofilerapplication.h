@@ -102,6 +102,7 @@ private:
     QStringList m_programArguments;
     QProcess *m_process;
 
+    QString m_socketFile;
     QString m_hostName;
     quint16 m_port;
     QString m_outputFile;
