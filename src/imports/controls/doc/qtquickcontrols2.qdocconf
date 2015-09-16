@@ -28,14 +28,15 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquick
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Examples will be installed under quick/controls - 'controls' subdirectory
 # is given as part of \example commands
-exampledirs += ../../../examples/quick/controls \
-               ../../imports/controls \
-               ../../../tests/auto/snippets/data \
+exampledirs += ../../../../examples/quick/controls \
+               ../ \
+               ../../../templates \
+               ../../../../tests/auto/snippets/data \
                snippets
 examplesinstallpath = quick/controls
 
-headerdirs += ../
-sourcedirs += ../
+headerdirs += ../../../templates
+sourcedirs += ../../../templates
 
 imagedirs += images
 
