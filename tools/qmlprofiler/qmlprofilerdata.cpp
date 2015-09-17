@@ -73,14 +73,14 @@ Q_STATIC_ASSERT(sizeof(MESSAGE_STRINGS) ==
 struct QmlRangeEventData {
     QmlRangeEventData() {} // never called
     QmlRangeEventData(const QString &_displayName, int _detailType, const QString &_eventHashStr,
-                      const QmlEventLocation &_location, const QString &_details,
+                      const QQmlEventLocation &_location, const QString &_details,
                       QQmlProfilerDefinitions::Message _message,
                       QQmlProfilerDefinitions::RangeType _rangeType)
         : displayName(_displayName), eventHashStr(_eventHashStr), location(_location),
           details(_details), message(_message), rangeType(_rangeType), detailType(_detailType) {}
     QString displayName;
     QString eventHashStr;
-    QmlEventLocation location;
+    QQmlEventLocation location;
     QString details;
     QQmlProfilerDefinitions::Message message;
     QQmlProfilerDefinitions::RangeType rangeType;
@@ -175,7 +175,7 @@ void QmlProfilerData::clear()
     setState(Empty);
 }
 
-QString QmlProfilerData::getHashStringForQmlEvent(const QmlEventLocation &location, int eventType)
+QString QmlProfilerData::getHashStringForQmlEvent(const QQmlEventLocation &location, int eventType)
 {
     return QString(QStringLiteral("%1:%2:%3:%4")).arg(
                 location.filename,
@@ -227,7 +227,7 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
                                   qint64 startTime,
                                   qint64 duration,
                                   const QStringList &data,
-                                  const QmlEventLocation &location)
+                                  const QQmlEventLocation &location)
 {
     setState(AcquiringData);
 
@@ -247,7 +247,7 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
             details = details.mid(details.lastIndexOf(QLatin1Char('/')) + 1);
     }
 
-    QmlEventLocation eventLocation = location;
+    QQmlEventLocation eventLocation = location;
     QString displayName, eventHashStr;
     // generate hash
     if (eventLocation.filename.isEmpty()) {
@@ -289,7 +289,7 @@ void QmlProfilerData::addFrameEvent(qint64 time, int framerate, int animationcou
     } else {
         newEvent = new QmlRangeEventData(displayName, QQmlProfilerDefinitions::AnimationFrame,
                                          eventHashStr,
-                                         QmlEventLocation(), details,
+                                         QQmlEventLocation(), details,
                                          QQmlProfilerDefinitions::Event,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
@@ -314,7 +314,7 @@ void QmlProfilerData::addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGrap
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
         newEvent = new QmlRangeEventData(QStringLiteral("<SceneGraph>"), type, eventHashStr,
-                                         QmlEventLocation(), QString(),
+                                         QQmlEventLocation(), QString(),
                                          QQmlProfilerDefinitions::SceneGraphFrame,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
@@ -327,12 +327,12 @@ void QmlProfilerData::addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGrap
 }
 
 void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type,
-                                          qint64 time, const QmlEventLocation &location,
-                                          int width, int height, int refcount)
+                                          qint64 time, const QString &location,
+                                          int numericData1, int numericData2)
 {
     setState(AcquiringData);
 
-    QString filePath = QUrl(location.filename).path();
+    QString filePath = QUrl(location).path();
 
     QString eventHashStr = filePath.mid(filePath.lastIndexOf(QLatin1Char('/')) + 1) +
             QStringLiteral(":") + QString::number(type);
@@ -340,13 +340,14 @@ void QmlProfilerData::addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventTy
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr, location, QString(),
+        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr,
+                                         QQmlEventLocation(location, -1, -1), QString(),
                                          QQmlProfilerDefinitions::PixmapCacheEvent,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
-    QmlRangeEventStartInstance rangeEventStartInstance(time, width, height, refcount, 0, 0,
+    QmlRangeEventStartInstance rangeEventStartInstance(time, numericData1, numericData2, 0, 0, 0,
                                                        newEvent);
     d->startInstanceList.append(rangeEventStartInstance);
 }
@@ -360,7 +361,7 @@ void QmlProfilerData::addMemoryEvent(QQmlProfilerDefinitions::MemoryType type, q
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr, QmlEventLocation(),
+        newEvent = new QmlRangeEventData(eventHashStr, type, eventHashStr, QQmlEventLocation(),
                                          QString(), QQmlProfilerDefinitions::MemoryAllocation,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
@@ -392,7 +393,7 @@ void QmlProfilerData::addInputEvent(QQmlProfilerDefinitions::InputEventType type
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(QString(), eventType, eventHashStr, QmlEventLocation(),
+        newEvent = new QmlRangeEventData(QString(), eventType, eventHashStr, QQmlEventLocation(),
                                          QString(), QQmlProfilerDefinitions::Event,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
@@ -612,7 +613,7 @@ bool QmlProfilerData::save(const QString &filename)
                     event.data->detailType ==
                        QQmlProfilerDefinitions::PixmapCacheCountChanged) {
                 stream.writeAttribute(QStringLiteral("refCount"),
-                                      QString::number(event.numericData3));
+                                      QString::number(event.numericData1));
             }
         } else if (event.data->message == QQmlProfilerDefinitions::SceneGraphFrame) {
             // special: scenegraph frame events

@@ -84,7 +84,7 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     m_verbose(false),
     m_recording(true),
     m_interactive(false),
-    m_qmlProfilerClient(&m_connection),
+    m_qmlProfilerClient(&m_connection, &m_profilerData),
     m_connectionAttempts(0)
 {
     m_connectTimer.setInterval(1000);
@@ -94,30 +94,8 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
 
     connect(&m_qmlProfilerClient, SIGNAL(enabledChanged(bool)),
             this, SLOT(traceClientEnabledChanged(bool)));
-    connect(&m_qmlProfilerClient, SIGNAL(range(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)),
-            &m_profilerData, SLOT(addQmlEvent(QQmlProfilerDefinitions::RangeType,QQmlProfilerDefinitions::BindingType,qint64,qint64,QStringList,QmlEventLocation)));
-    connect(&m_qmlProfilerClient, SIGNAL(traceFinished(qint64)), &m_profilerData, SLOT(setTraceEndTime(qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), &m_profilerData, SLOT(setTraceStartTime(qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(traceStarted(qint64)), this, SLOT(notifyTraceStarted()));
-    connect(&m_qmlProfilerClient, SIGNAL(frame(qint64,int,int,int)), &m_profilerData, SLOT(addFrameEvent(qint64,int,int,int)));
-    connect(&m_qmlProfilerClient, SIGNAL(sceneGraphFrame(QQmlProfilerDefinitions::SceneGraphFrameType,
-                                         qint64,qint64,qint64,qint64,qint64,qint64)),
-            &m_profilerData, SLOT(addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType,
-                                  qint64,qint64,qint64,qint64,qint64,qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(pixmapCache(QQmlProfilerDefinitions::PixmapEventType,qint64,
-                                                     QmlEventLocation,int,int,int)),
-            &m_profilerData, SLOT(addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType,qint64,
-                                                      QmlEventLocation,int,int,int)));
-    connect(&m_qmlProfilerClient, SIGNAL(memoryAllocation(QQmlProfilerDefinitions::MemoryType,qint64,
-                                                          qint64)),
-            &m_profilerData, SLOT(addMemoryEvent(QQmlProfilerDefinitions::MemoryType,qint64,
-                                                 qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerDefinitions::InputEventType,qint64,
-                                                    int,int)),
-            &m_profilerData, SLOT(addInputEvent(QQmlProfilerDefinitions::InputEventType,qint64,int,
-                                                int)));
-
-    connect(&m_qmlProfilerClient, SIGNAL(complete()), &m_profilerData, SLOT(complete()));
+    connect(&m_qmlProfilerClient, SIGNAL(recordingStarted()), this, SLOT(notifyTraceStarted()));
+    connect(&m_qmlProfilerClient, SIGNAL(error(QString)), this, SLOT(logError(QString)));
 
     connect(&m_profilerData, SIGNAL(error(QString)), this, SLOT(logError(QString)));
     connect(&m_profilerData, SIGNAL(dataReady()), this, SLOT(traceFinished()));
@@ -557,7 +535,7 @@ void QmlProfilerApplication::processFinished()
     if (!m_interactive)
         exit(exitCode);
     else
-        m_qmlProfilerClient.clearData();
+        m_qmlProfilerClient.clearPendingData();
 }
 
 void QmlProfilerApplication::traceClientEnabledChanged(bool enabled)
@@ -583,7 +561,7 @@ void QmlProfilerApplication::traceFinished()
         prompt(tr("Application stopped recording."), false);
     }
 
-    m_qmlProfilerClient.clearData();
+    m_qmlProfilerClient.clearPendingData();
 }
 
 void QmlProfilerApplication::prompt(const QString &line, bool ready)

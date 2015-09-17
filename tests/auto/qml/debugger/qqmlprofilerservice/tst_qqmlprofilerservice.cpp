@@ -34,7 +34,7 @@
 #include "debugutil_p.h"
 #include "../../../shared/util.h"
 
-#include <private/qqmldebugclient_p.h>
+#include <private/qqmlprofilerclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
@@ -45,8 +45,11 @@
 
 struct QQmlProfilerData
 {
-    QQmlProfilerData(int messageType = 0, int detailType = 0, const QString &detailData = QString())
-        : messageType(messageType), detailType(detailType), detailData(detailData) {}
+    QQmlProfilerData(qint64 time = -2, int messageType = -1, int detailType = -1,
+                     const QString &detailData = QString()) :
+        time(time), messageType(messageType), detailType(detailType), detailData(detailData),
+        line(-1), column(-1), framerate(-1), animationcount(-1), amount(-1)
+    {}
 
     qint64 time;
     int messageType;
@@ -59,87 +62,14 @@ struct QQmlProfilerData
     int framerate;      //used by animation events
     int animationcount; //used by animation events
     qint64 amount;      //used by heap events
-
-    QByteArray toByteArray() const;
 };
 
-class QQmlProfilerClient : public QQmlDebugClient
+class QQmlProfilerTestClient : public QQmlProfilerClient
 {
     Q_OBJECT
 
 public:
-    enum Message {
-        Event,
-        RangeStart,
-        RangeData,
-        RangeLocation,
-        RangeEnd,
-        Complete, // end of transmission
-        PixmapCacheEvent,
-        SceneGraphFrame,
-        MemoryAllocation,
-
-        MaximumMessage
-    };
-
-    enum EventType {
-        FramePaint,
-        Mouse,
-        Key,
-        AnimationFrame,
-        EndTrace,
-        StartTrace,
-
-        MaximumEventType
-    };
-
-    enum RangeType {
-        Painting,
-        Compiling,
-        Creating,
-        Binding,            //running a binding
-        HandlingSignal,     //running a signal handler
-        Javascript,
-
-        MaximumRangeType
-    };
-
-    enum PixmapEventType {
-        PixmapSizeKnown,
-        PixmapReferenceCountChanged,
-        PixmapCacheCountChanged,
-        PixmapLoadingStarted,
-        PixmapLoadingFinished,
-        PixmapLoadingError,
-
-        MaximumPixmapEventType
-    };
-
-    enum SceneGraphFrameType {
-        SceneGraphRendererFrame,
-        SceneGraphAdaptationLayerFrame,
-        SceneGraphContextFrame,
-        SceneGraphRenderLoopFrame,
-        SceneGraphTexturePrepare,
-        SceneGraphTextureDeletion,
-        SceneGraphPolishAndSync,
-        SceneGraphWindowsRenderShow,
-        SceneGraphWindowsAnimations,
-        SceneGraphWindowsPolishFrame,
-
-        MaximumSceneGraphFrameType
-    };
-
-    enum MemoryType {
-        HeapPage,
-        LargeItem,
-        SmallItem
-    };
-
-    QQmlProfilerClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("CanvasFrameRate"), connection)
-    {
-    }
+    QQmlProfilerTestClient(QQmlDebugConnection *connection) : QQmlProfilerClient(connection) {}
 
     QVector<QQmlProfilerData> qmlMessages;
     QVector<QQmlProfilerData> javascriptMessages;
@@ -147,21 +77,169 @@ public:
     QVector<QQmlProfilerData> asynchronousMessages;
     QVector<QQmlProfilerData> pixmapMessages;
 
-    void setTraceState(bool enabled, quint32 flushInterval = 0) {
-        QByteArray message;
-        QDataStream stream(&message, QIODevice::WriteOnly);
-        stream << enabled;
-        if (enabled && flushInterval)
-            stream << -1 << std::numeric_limits<quint64>::max() << flushInterval;
-        sendMessage(message);
-    }
-
 signals:
+    void recordingFinished();
+
+private:
+    void traceStarted(qint64 time, int engineId);
+    void traceFinished(qint64 time, int engineId);
+    void rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime);
+    void rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time, const QString &data);
+    void rangeLocation(QQmlProfilerDefinitions::RangeType type, qint64 time,
+                       const QQmlEventLocation &location);
+    void rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime);
+    void animationFrame(qint64 time, int frameRate, int animationCount, int threadId);
+    void sceneGraphEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
+                         qint64 numericData1, qint64 numericData2, qint64 numericData3,
+                         qint64 numericData4, qint64 numericData5);
+    void pixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
+                          const QString &url, int numericData1, int numericData2);
+    void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
+    void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b);
     void complete();
 
-protected:
-    void messageReceived(const QByteArray &message);
+    void unknownEvent(QQmlProfilerDefinitions::Message messageType, qint64 time, int detailType);
+    void unknownData(QDataStream &stream);
 };
+
+void QQmlProfilerTestClient::traceStarted(qint64 time, int engineId)
+{
+    asynchronousMessages.append(QQmlProfilerData(time, QQmlProfilerDefinitions::Event,
+                                        QQmlProfilerDefinitions::StartTrace,
+                                        QString::number(engineId)));
+}
+
+void QQmlProfilerTestClient::traceFinished(qint64 time, int engineId)
+{
+    asynchronousMessages.append(QQmlProfilerData(time, QQmlProfilerDefinitions::Event,
+                                        QQmlProfilerDefinitions::EndTrace,
+                                        QString::number(engineId)));
+}
+
+void QQmlProfilerTestClient::rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime)
+{
+    QVERIFY(type >= 0 && type < QQmlProfilerDefinitions::MaximumRangeType);
+    QQmlProfilerData data(startTime, QQmlProfilerDefinitions::RangeStart, type);
+    if (type == QQmlProfilerDefinitions::Javascript)
+        javascriptMessages.append(data);
+    else
+        qmlMessages.append(data);
+}
+
+void QQmlProfilerTestClient::rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time,
+                                      const QString &string)
+{
+    QVERIFY(type >= 0 && type < QQmlProfilerDefinitions::MaximumRangeType);
+    QQmlProfilerData data(time, QQmlProfilerDefinitions::RangeData, type, string);
+    if (type == QQmlProfilerDefinitions::Javascript)
+        javascriptMessages.append(data);
+    else
+        qmlMessages.append(data);
+}
+
+void QQmlProfilerTestClient::rangeLocation(QQmlProfilerDefinitions::RangeType type, qint64 time,
+                                          const QQmlEventLocation &location)
+{
+    QVERIFY(type >= 0 && type < QQmlProfilerDefinitions::MaximumRangeType);
+    QVERIFY(location.line >= -2);
+    QQmlProfilerData data(time, QQmlProfilerDefinitions::RangeLocation, type, location.filename);
+    data.line = location.line;
+    data.column = location.column;
+    if (type == QQmlProfilerDefinitions::Javascript)
+        javascriptMessages.append(data);
+    else
+        qmlMessages.append(data);
+}
+
+void QQmlProfilerTestClient::rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime)
+{
+    QVERIFY(type >= 0 && type < QQmlProfilerDefinitions::MaximumRangeType);
+    QQmlProfilerData data(endTime, QQmlProfilerDefinitions::RangeEnd, type);
+    if (type == QQmlProfilerDefinitions::Javascript)
+        javascriptMessages.append(data);
+    else
+        qmlMessages.append(data);
+}
+
+void QQmlProfilerTestClient::animationFrame(qint64 time, int frameRate, int animationCount, int threadId)
+{
+    QVERIFY(threadId >= 0);
+    QVERIFY(frameRate != -1);
+    QVERIFY(animationCount != -1);
+    QQmlProfilerData data(time, QQmlProfilerDefinitions::Event,
+                          QQmlProfilerDefinitions::AnimationFrame);
+    data.framerate = frameRate;
+    data.animationcount = animationCount;
+    asynchronousMessages.append(data);
+}
+
+void QQmlProfilerTestClient::sceneGraphEvent(QQmlProfilerDefinitions::SceneGraphFrameType type,
+                                            qint64 time, qint64 numericData1, qint64 numericData2,
+                                            qint64 numericData3, qint64 numericData4,
+                                            qint64 numericData5)
+{
+    Q_UNUSED(numericData1);
+    Q_UNUSED(numericData2);
+    Q_UNUSED(numericData3);
+    Q_UNUSED(numericData4);
+    Q_UNUSED(numericData5);
+    asynchronousMessages.append(QQmlProfilerData(time, QQmlProfilerDefinitions::SceneGraphFrame,
+                                                 type));
+}
+
+void QQmlProfilerTestClient::pixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type,
+                                             qint64 time, const QString &url, int numericData1,
+                                             int numericData2)
+{
+    QQmlProfilerData data(time, QQmlProfilerDefinitions::PixmapCacheEvent, type, url);
+    switch (type) {
+    case QQmlProfilerDefinitions::PixmapSizeKnown:
+        data.line = numericData1;
+        data.column = numericData2;
+        break;
+    case QQmlProfilerDefinitions::PixmapReferenceCountChanged:
+    case QQmlProfilerDefinitions::PixmapCacheCountChanged:
+        data.animationcount = numericData1;
+        break;
+    default:
+        break;
+    }
+    pixmapMessages.append(data);
+}
+
+void QQmlProfilerTestClient::memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time,
+                                             qint64 amount)
+{
+    QQmlProfilerData data(time, QQmlProfilerDefinitions::MemoryAllocation, type);
+    data.amount = amount;
+    jsHeapMessages.append(data);
+}
+
+void QQmlProfilerTestClient::inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time,
+                                        int a, int b)
+{
+    qmlMessages.append(QQmlProfilerData(time, QQmlProfilerDefinitions::Event, type,
+                                        QString::number(a) + QLatin1Char('x') +
+                                        QString::number(b)));
+}
+
+void QQmlProfilerTestClient::unknownEvent(QQmlProfilerDefinitions::Message messageType, qint64 time,
+                                         int detailType)
+{
+    QFAIL(qPrintable(QString::fromLatin1("Unknown event %1 with detail type %2 received at %3.")
+                     .arg(messageType).arg(detailType).arg(time)));
+}
+
+void QQmlProfilerTestClient::unknownData(QDataStream &stream)
+{
+    QFAIL(qPrintable(QString::fromLatin1("%1 bytes of extra data after receiving message.")
+                     .arg(stream.device()->bytesAvailable())));
+}
+
+void QQmlProfilerTestClient::complete()
+{
+    emit recordingFinished();
+}
 
 class tst_QQmlProfilerService : public QQmlDataTest
 {
@@ -179,7 +257,7 @@ public:
 private:
     QQmlDebugProcess *m_process;
     QQmlDebugConnection *m_connection;
-    QQmlProfilerClient *m_client;
+    QQmlProfilerTestClient *m_client;
 
     enum MessageListType {
         MessageListQML,
@@ -221,143 +299,6 @@ private slots:
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
 
-void QQmlProfilerClient::messageReceived(const QByteArray &message)
-{
-    QByteArray msg = message;
-    QDataStream stream(&msg, QIODevice::ReadOnly);
-
-
-    QQmlProfilerData data;
-    data.time = -2;
-    data.messageType = -1;
-    data.detailType = -1;
-    data.line = -1;
-    data.framerate = -1;
-    data.animationcount = -1;
-
-    stream >> data.time >> data.messageType;
-
-    switch (data.messageType) {
-    case (QQmlProfilerClient::Event): {
-        stream >> data.detailType;
-
-        switch (data.detailType) {
-        case QQmlProfilerClient::AnimationFrame: {
-            int threadId;
-            stream >> data.framerate >> data.animationcount >> threadId;
-            QVERIFY(threadId >= 0);
-            QVERIFY(data.framerate != -1);
-            QVERIFY(data.animationcount != -1);
-            break;
-        }
-        case QQmlProfilerClient::FramePaint:
-        case QQmlProfilerClient::Mouse:
-        case QQmlProfilerClient::Key:
-            break;
-        case QQmlProfilerClient::EndTrace:
-        case QQmlProfilerClient::StartTrace: {
-            int engineId = -1;
-            if (!stream.atEnd()) {
-                stream >> engineId;
-                QVERIFY(engineId >= 0);
-            }
-            break;
-        }
-        default: {
-            QString failMsg = QString("Unknown event type:") + data.detailType;
-            QFAIL(qPrintable(failMsg));
-            break;
-        }
-        }
-        break;
-    }
-    case QQmlProfilerClient::Complete: {
-        emit complete();
-        return;
-    }
-    case QQmlProfilerClient::RangeStart: {
-        stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
-        break;
-    }
-    case QQmlProfilerClient::RangeEnd: {
-        stream >> data.detailType;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
-        break;
-    }
-    case QQmlProfilerClient::RangeData: {
-        stream >> data.detailType >> data.detailData;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
-        break;
-    }
-    case QQmlProfilerClient::RangeLocation: {
-        stream >> data.detailType >> data.detailData >> data.line >> data.column;
-        QVERIFY(data.detailType >= 0 && data.detailType < QQmlProfilerClient::MaximumRangeType);
-        QVERIFY(data.line >= -2);
-        break;
-    }
-    case QQmlProfilerClient::PixmapCacheEvent: {
-        stream >> data.detailType >> data.detailData;
-        if (data.detailType == QQmlProfilerClient::PixmapSizeKnown)
-            stream >> data.line >> data.column;
-        if (data.detailType == QQmlProfilerClient::PixmapReferenceCountChanged)
-            stream >> data.animationcount;
-        if (data.detailType == QQmlProfilerClient::PixmapCacheCountChanged)
-            stream >> data.animationcount;
-        break;
-    }
-    case QQmlProfilerClient::SceneGraphFrame: {
-        stream >> data.detailType;
-        qint64 subtime_1, subtime_2, subtime_3, subtime_4, subtime_5;
-        int glyphCount;
-        switch (data.detailType) {
-        // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
-        case QQmlProfilerClient::SceneGraphRendererFrame: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4; break;
-            // AdaptationLayerFrame: glyphCount, glyphRenderTime, glyphStoreTime
-        case QQmlProfilerClient::SceneGraphAdaptationLayerFrame: stream >> glyphCount >> subtime_2 >> subtime_3; break;
-            // ContextFrame: compiling material time
-        case QQmlProfilerClient::SceneGraphContextFrame: stream >> subtime_1; break;
-            // RenderLoop: syncTime, renderTime, swapTime
-        case QQmlProfilerClient::SceneGraphRenderLoopFrame: stream >> subtime_1 >> subtime_2 >> subtime_3; break;
-            // TexturePrepare: bind, convert, swizzle, upload, mipmap
-        case QQmlProfilerClient::SceneGraphTexturePrepare: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4 >> subtime_5; break;
-            // TextureDeletion: deletionTime
-        case QQmlProfilerClient::SceneGraphTextureDeletion: stream >> subtime_1; break;
-            // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
-        case QQmlProfilerClient::SceneGraphPolishAndSync: stream >> subtime_1 >> subtime_2 >> subtime_3 >> subtime_4; break;
-            // WindowsRenderLoop: GL time, make current time, SceneGraph time
-        case QQmlProfilerClient::SceneGraphWindowsRenderShow: stream >> subtime_1 >> subtime_2 >> subtime_3; break;
-            // WindowsAnimations: update time
-        case QQmlProfilerClient::SceneGraphWindowsAnimations: stream >> subtime_1; break;
-            // WindowsRenderWindow: polish time
-        case QQmlProfilerClient::SceneGraphWindowsPolishFrame: stream >> subtime_1; break;
-        }
-        break;
-    }
-    case QQmlProfilerClient::MemoryAllocation: {
-        stream >> data.detailType;
-        stream >> data.amount;
-        break;
-    }
-    default:
-        QString failMsg = QString("Unknown message type:") + data.messageType;
-        QFAIL(qPrintable(failMsg));
-        break;
-    }
-    QVERIFY(stream.atEnd());
-    if (data.messageType == QQmlProfilerClient::PixmapCacheEvent)
-        pixmapMessages.append(data);
-    else if (data.messageType == QQmlProfilerClient::SceneGraphFrame ||
-            data.messageType == QQmlProfilerClient::Event)
-        asynchronousMessages.append(data);
-    else if (data.messageType == QQmlProfilerClient::MemoryAllocation)
-        jsHeapMessages.append(data);
-    else if (data.detailType == QQmlProfilerClient::Javascript)
-        javascriptMessages.append(data);
-    else
-        qmlMessages.append(data);
-}
-
 void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool restrictServices)
 {
     // ### Still using qmlscene due to QTBUG-33377
@@ -374,7 +315,7 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool 
     QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
 
     m_connection = new QQmlDebugConnection();
-    m_client = new QQmlProfilerClient(m_connection);
+    m_client = new QQmlProfilerTestClient(m_connection);
     QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
 
     const int port = m_process->debugPort();
@@ -390,14 +331,16 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool 
 
 void tst_QQmlProfilerService::checkTraceReceived()
 {
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(complete())), "No trace received in time.");
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(recordingFinished())),
+             "No trace received in time.");
 
     // must start with "StartTrace"
-    QQmlProfilerData expected(QQmlProfilerClient::Event, QQmlProfilerClient::StartTrace);
+    QQmlProfilerData expected(0, QQmlProfilerDefinitions::Event,
+                              QQmlProfilerDefinitions::StartTrace);
     VERIFY(MessageListAsynchronous, 0, expected, CheckMessageType | CheckDetailType);
 
     // must end with "EndTrace"
-    expected.detailType = QQmlProfilerClient::EndTrace;
+    expected.detailType = QQmlProfilerDefinitions::EndTrace;
     VERIFY(MessageListAsynchronous, m_client->asynchronousMessages.length() - 1, expected,
            CheckMessageType | CheckDetailType);
 }
@@ -414,15 +357,15 @@ void tst_QQmlProfilerService::checkJsHeap()
     qint64 lastTimestamp = -1;
     foreach (const QQmlProfilerData &message, m_client->jsHeapMessages) {
         switch (message.detailType) {
-        case QQmlProfilerClient::HeapPage:
+        case QV4::Profiling::HeapPage:
             allocated += message.amount;
             seen_alloc = true;
             break;
-        case QQmlProfilerClient::SmallItem:
+        case QV4::Profiling::SmallItem:
             used += message.amount;
             seen_small = true;
             break;
-        case QQmlProfilerClient::LargeItem:
+        case QV4::Profiling::LargeItem:
             allocated += message.amount;
             used += message.amount;
             seen_large = true;
@@ -593,9 +536,9 @@ void tst_QQmlProfilerService::connect()
 
     // if the engine is waiting, then the first message determines if it starts with trace enabled
     if (!traceEnabled)
-        m_client->setTraceState(false);
-    m_client->setTraceState(true);
-    m_client->setTraceState(false);
+        m_client->sendRecordingStatus(false);
+    m_client->sendRecordingStatus(true);
+    m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
 }
@@ -604,36 +547,36 @@ void tst_QQmlProfilerService::pixmapCacheData()
 {
     connect(true, "pixmapCacheTest.qml");
 
-    m_client->setTraceState(true);
+    m_client->sendRecordingStatus(true);
     QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
 
     while (m_process->output().indexOf(QLatin1String("image loaded")) == -1 &&
            m_process->output().indexOf(QLatin1String("image error")) == -1)
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
 
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
 
     checkTraceReceived();
     checkJsHeap();
 
-    QQmlProfilerData expected(QQmlProfilerClient::PixmapCacheEvent);
+    QQmlProfilerData expected(0, QQmlProfilerDefinitions::PixmapCacheEvent);
 
     // image starting to load
-    expected.detailType = QQmlProfilerClient::PixmapLoadingStarted;
+    expected.detailType = QQmlProfilerDefinitions::PixmapLoadingStarted;
     VERIFY(MessageListPixmap, 0, expected, CheckMessageType | CheckDetailType);
 
     // image size
-    expected.detailType = QQmlProfilerClient::PixmapSizeKnown;
+    expected.detailType = QQmlProfilerDefinitions::PixmapSizeKnown;
     expected.line = expected.column = 2; // width and height, in fact
     VERIFY(MessageListPixmap, 1, expected,
            CheckMessageType | CheckDetailType | CheckLine | CheckColumn);
 
     // image loaded
-    expected.detailType = QQmlProfilerClient::PixmapLoadingFinished;
+    expected.detailType = QQmlProfilerDefinitions::PixmapLoadingFinished;
     VERIFY(MessageListPixmap, 2, expected, CheckMessageType | CheckDetailType);
 
     // cache size
-    expected.detailType = QQmlProfilerClient::PixmapCacheCountChanged;
+    expected.detailType = QQmlProfilerDefinitions::PixmapCacheCountChanged;
     VERIFY(MessageListPixmap, 3, expected, CheckMessageType | CheckDetailType);
 }
 
@@ -641,11 +584,11 @@ void tst_QQmlProfilerService::scenegraphData()
 {
     connect(true, "scenegraphTest.qml");
 
-    m_client->setTraceState(true);
+    m_client->sendRecordingStatus(true);
 
     while (!m_process->output().contains(QLatin1String("tick")))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
 
     checkTraceReceived();
     checkJsHeap();
@@ -661,8 +604,8 @@ void tst_QQmlProfilerService::scenegraphData()
     qint64 renderFrameTime = -1;
 
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
-        if (msg.messageType == QQmlProfilerClient::SceneGraphFrame) {
-            if (msg.detailType == QQmlProfilerClient::SceneGraphContextFrame) {
+        if (msg.messageType == QQmlProfilerDefinitions::SceneGraphFrame) {
+            if (msg.detailType == QQmlProfilerDefinitions::SceneGraphContextFrame) {
                 contextFrameTime = msg.time;
                 break;
             }
@@ -672,7 +615,7 @@ void tst_QQmlProfilerService::scenegraphData()
     QVERIFY(contextFrameTime != -1);
 
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
-        if (msg.detailType == QQmlProfilerClient::SceneGraphRendererFrame) {
+        if (msg.detailType == QQmlProfilerDefinitions::SceneGraphRendererFrame) {
             QVERIFY(msg.time >= contextFrameTime);
             renderFrameTime = msg.time;
             break;
@@ -682,7 +625,7 @@ void tst_QQmlProfilerService::scenegraphData()
     QVERIFY(renderFrameTime != -1);
 
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
-        if (msg.detailType == QQmlProfilerClient::SceneGraphRenderLoopFrame) {
+        if (msg.detailType == QQmlProfilerDefinitions::SceneGraphRenderLoopFrame) {
             QVERIFY(msg.time >= renderFrameTime);
             break;
         }
@@ -693,7 +636,7 @@ void tst_QQmlProfilerService::profileOnExit()
 {
     connect(true, "exit.qml");
 
-    m_client->setTraceState(true);
+    m_client->sendRecordingStatus(true);
 
     checkTraceReceived();
     checkJsHeap();
@@ -703,7 +646,7 @@ void tst_QQmlProfilerService::controlFromJS()
 {
     connect(true, "controlFromJS.qml");
 
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
 }
@@ -712,15 +655,15 @@ void tst_QQmlProfilerService::signalSourceLocation()
 {
     connect(true, "signalSourceLocation.qml");
 
-    m_client->setTraceState(true);
+    m_client->sendRecordingStatus(true);
     while (!(m_process->output().contains(QLatin1String("500"))))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
 
-    QQmlProfilerData expected(QQmlProfilerClient::RangeLocation,
-                              QQmlProfilerClient::HandlingSignal,
+    QQmlProfilerData expected(0, QQmlProfilerDefinitions::RangeLocation,
+                              QQmlProfilerDefinitions::HandlingSignal,
                               QLatin1String("signalSourceLocation.qml"));
     expected.line = 8;
     expected.column = 28;
@@ -735,28 +678,29 @@ void tst_QQmlProfilerService::javascript()
 {
     connect(true, "javascript.qml");
 
-    m_client->setTraceState(true);
+    m_client->sendRecordingStatus(true);
     while (!(m_process->output().contains(QLatin1String("done"))))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
 
-    QQmlProfilerData expected(QQmlProfilerClient::RangeStart, QQmlProfilerClient::Javascript);
+    QQmlProfilerData expected(0, QQmlProfilerDefinitions::RangeStart,
+                              QQmlProfilerDefinitions::Javascript);
     VERIFY(MessageListJavaScript, 6, expected, CheckMessageType | CheckDetailType);
 
-    expected.messageType = QQmlProfilerClient::RangeLocation;
+    expected.messageType = QQmlProfilerDefinitions::RangeLocation;
     expected.detailData = QLatin1String("javascript.qml");
     expected.line = 4;
     expected.column = 5;
     VERIFY(MessageListJavaScript, 7, expected, CheckAll);
 
-    expected.messageType = QQmlProfilerClient::RangeData;
+    expected.messageType = QQmlProfilerDefinitions::RangeData;
     expected.detailData = QLatin1String("something");
     VERIFY(MessageListJavaScript, 8, expected,
            CheckMessageType | CheckDetailType | CheckDataEndsWith);
 
-    expected.messageType = QQmlProfilerClient::RangeEnd;
+    expected.messageType = QQmlProfilerDefinitions::RangeEnd;
     VERIFY(MessageListJavaScript, 21, expected, CheckMessageType | CheckDetailType);
 }
 
@@ -764,14 +708,14 @@ void tst_QQmlProfilerService::flushInterval()
 {
     connect(true, "timer.qml");
 
-    m_client->setTraceState(true, 1);
+    m_client->sendRecordingStatus(true, -1, 1);
 
     // Make sure we get multiple messages
     QTRY_VERIFY(m_client->qmlMessages.length() > 0);
     QVERIFY(m_client->qmlMessages.length() < 100);
     QTRY_VERIFY(m_client->qmlMessages.length() > 100);
 
-    m_client->setTraceState(false);
+    m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
 }

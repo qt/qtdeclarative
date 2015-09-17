@@ -12,7 +12,6 @@ HEADERS += \
     commandlistener.h \
     constants.h \
     qmlprofilerdata.h \
-    qmlprofilerclient.h \
-    qmlprofilereventlocation.h
+    qmlprofilerclient.h
 
 load(qt_tool)

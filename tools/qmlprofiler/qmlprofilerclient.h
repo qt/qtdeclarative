@@ -34,50 +34,45 @@
 #ifndef QMLPROFILERCLIENT_H
 #define QMLPROFILERCLIENT_H
 
-#include "qmlprofilereventlocation.h"
-
-#include <private/qqmldebugclient_p.h>
+#include <private/qqmleventlocation_p.h>
+#include <private/qqmlprofilerclient_p.h>
 #include <private/qqmlprofilerdefinitions_p.h>
 
-class QmlProfilerClient : public QQmlDebugClient
+class QmlProfilerData;
+class QmlProfilerClientPrivate;
+class QmlProfilerClient : public QQmlProfilerClient
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QmlProfilerClient)
 
 public:
-    QmlProfilerClient(QQmlDebugConnection *client);
-    ~QmlProfilerClient();
-
-    void setFeatures(quint64 features);
-    void clearData();
-
-public slots:
-    void sendRecordingStatus(bool record);
+    QmlProfilerClient(QQmlDebugConnection *connection, QmlProfilerData *data);
+    void clearPendingData();
 
 signals:
-    void traceFinished( qint64 time );
-    void traceStarted( qint64 time );
-    void range(QQmlProfilerDefinitions::RangeType type,
-               QQmlProfilerDefinitions::BindingType bindingType,
-               qint64 startTime, qint64 length,
-               const QStringList &data,
-               const QmlEventLocation &location);
-    void frame(qint64 time, int frameRate, int animationCount, int threadId);
-    void sceneGraphFrame(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
+    void enabledChanged(bool enabled);
+    void recordingStarted();
+    void error(const QString &error);
+
+private:
+    virtual void stateChanged(State state);
+
+    void traceStarted(qint64 time, int engineId);
+    void traceFinished(qint64 time, int engineId);
+    void rangeStart(QQmlProfilerDefinitions::RangeType type, qint64 startTime);
+    void rangeData(QQmlProfilerDefinitions::RangeType type, qint64 time, const QString &data);
+    void rangeLocation(QQmlProfilerDefinitions::RangeType type, qint64 time,
+                       const QQmlEventLocation &location);
+    void rangeEnd(QQmlProfilerDefinitions::RangeType type, qint64 endTime);
+    void animationFrame(qint64 time, int frameRate, int animationCount, int threadId);
+    void sceneGraphEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                          qint64 numericData1, qint64 numericData2, qint64 numericData3,
                          qint64 numericData4, qint64 numericData5);
-    void pixmapCache(QQmlProfilerDefinitions::PixmapEventType, qint64 time,
-                     const QmlEventLocation &location, int width, int height, int refCount);
+    void pixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
+                          const QString &url, int numericData1, int numericData2);
     void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
     void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b);
     void complete();
-    void enabledChanged(bool enabled);
-
-protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &);
-
-private:
-    class QmlProfilerClientPrivate *d;
 };
 
 #endif // QMLPROFILERCLIENT_H

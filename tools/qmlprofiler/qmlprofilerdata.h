@@ -34,9 +34,9 @@
 #ifndef QMLPROFILERDATA_H
 #define QMLPROFILERDATA_H
 
-#include "qmlprofilereventlocation.h"
+#include <private/qqmleventlocation_p.h>
+#include <private/qqmlprofilerdefinitions_p.h>
 
-#include <QtQml/private/qqmlprofilerdefinitions_p.h>
 #include <QObject>
 
 class QmlProfilerDataPrivate;
@@ -54,7 +54,7 @@ public:
     explicit QmlProfilerData(QObject *parent = 0);
     ~QmlProfilerData();
 
-    static QString getHashStringForQmlEvent(const QmlEventLocation &location, int eventType);
+    static QString getHashStringForQmlEvent(const QQmlEventLocation &location, int eventType);
     static QString qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type);
     static QString qmlMessageAsString(QQmlProfilerDefinitions::Message type);
 
@@ -75,13 +75,13 @@ public slots:
     void addQmlEvent(QQmlProfilerDefinitions::RangeType type,
                      QQmlProfilerDefinitions::BindingType bindingType,
                      qint64 startTime, qint64 duration, const QStringList &data,
-                     const QmlEventLocation &location);
+                     const QQmlEventLocation &location);
     void addFrameEvent(qint64 time, int framerate, int animationcount, int threadId);
     void addSceneGraphFrameEvent(QQmlProfilerDefinitions::SceneGraphFrameType type, qint64 time,
                                  qint64 numericData1, qint64 numericData2, qint64 numericData3,
                                  qint64 numericData4, qint64 numericData5);
     void addPixmapCacheEvent(QQmlProfilerDefinitions::PixmapEventType type, qint64 time,
-                             const QmlEventLocation &location, int width, int height, int refcount);
+                             const QString &location, int numericData1, int numericData2);
     void addMemoryEvent(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 size);
     void addInputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b);
 

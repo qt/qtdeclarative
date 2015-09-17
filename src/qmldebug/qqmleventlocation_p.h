@@ -31,23 +31,37 @@
 **
 ****************************************************************************/
 
-#ifndef QMLPROFILEREVENTLOCATION_H
-#define QMLPROFILEREVENTLOCATION_H
+#ifndef QQMLEVENTLOCATION_P_H
+#define QQMLEVENTLOCATION_P_H
 
-#include <QString>
+#include <QtCore/qstring.h>
 
-struct QmlEventLocation
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+QT_BEGIN_NAMESPACE
+
+struct QQmlEventLocation
 {
-    QmlEventLocation() : line(-1), column(-1) {}
-    QmlEventLocation(const QString &file, int lineNumber, int columnNumber)
-        : filename(file), line(lineNumber), column(columnNumber) {}
+    QQmlEventLocation() : line(-1), column(-1) {}
+    QQmlEventLocation(const QString &file, int lineNumber, int columnNumber) :
+        filename(file), line(lineNumber), column(columnNumber) {}
+
     QString filename;
     int line;
     int column;
 };
 
-QT_BEGIN_NAMESPACE
-Q_DECLARE_TYPEINFO(QmlEventLocation, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlEventLocation, Q_MOVABLE_TYPE);
+
 QT_END_NAMESPACE
 
-#endif // QMLPROFILEREVENTLOCATION_H
+#endif // QQMLEVENTLOCATION_P_H
