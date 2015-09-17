@@ -520,9 +520,11 @@ void MemoryManager::runGC()
         int markTime = t.elapsed();
         t.restart();
         const size_t usedBefore = getUsedMem();
+        const size_t largeItemsBefore = getLargeItemsMem();
         int chunksBefore = m_d->heapChunks.size();
         sweep();
         const size_t usedAfter = getUsedMem();
+        const size_t largeItemsAfter = getLargeItemsMem();
         int sweepTime = t.elapsed();
 
         qDebug() << "========== GC ==========";
@@ -533,6 +535,9 @@ void MemoryManager::runGC()
         qDebug() << "Used memory after GC:" << usedAfter;
         qDebug() << "Freed up bytes:" << (usedBefore - usedAfter);
         qDebug() << "Released chunks:" << (chunksBefore - m_d->heapChunks.size());
+        qDebug() << "Large item memory before GC:" << largeItemsBefore;
+        qDebug() << "Large item memory after GC:" << largeItemsAfter;
+        qDebug() << "Large item memory freed up:" << (largeItemsBefore - largeItemsAfter);
         qDebug() << "======== End GC ========";
     }
 
