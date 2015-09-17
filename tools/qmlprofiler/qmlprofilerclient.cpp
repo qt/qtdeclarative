@@ -157,7 +157,25 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
                    event == QQmlProfilerDefinitions::Mouse) {
             if (!(d->features & one << QQmlProfilerDefinitions::ProfileInputEvents))
                 return;
-            emit this->inputEvent((QQmlProfilerDefinitions::EventType)event, time);
+
+            int type;
+            if (!stream.atEnd()) {
+                stream >> type;
+            } else {
+                type = (event == QQmlProfilerDefinitions::Key) ?
+                            QQmlProfilerDefinitions::InputKeyUnknown :
+                            QQmlProfilerDefinitions::InputMouseUnknown;
+            }
+
+            int a = 0;
+            if (!stream.atEnd())
+                stream >> a;
+
+            int b = 0;
+            if (!stream.atEnd())
+                stream >> b;
+
+            emit inputEvent(static_cast<QQmlProfilerDefinitions::InputEventType>(type), time, a, b);
         }
     } else if (messageType == QQmlProfilerDefinitions::Complete) {
         emit complete();

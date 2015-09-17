@@ -601,40 +601,30 @@ void QQuickView::resizeEvent(QResizeEvent *e)
 /*! \reimp */
 void QQuickView::keyPressEvent(QKeyEvent *e)
 {
-    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
-
     QQuickWindow::keyPressEvent(e);
 }
 
 /*! \reimp */
 void QQuickView::keyReleaseEvent(QKeyEvent *e)
 {
-    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Key>());
-
     QQuickWindow::keyReleaseEvent(e);
 }
 
 /*! \reimp */
 void QQuickView::mouseMoveEvent(QMouseEvent *e)
 {
-    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
-
     QQuickWindow::mouseMoveEvent(e);
 }
 
 /*! \reimp */
 void QQuickView::mousePressEvent(QMouseEvent *e)
 {
-    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
-
     QQuickWindow::mousePressEvent(e);
 }
 
 /*! \reimp */
 void QQuickView::mouseReleaseEvent(QMouseEvent *e)
 {
-    Q_QUICK_INPUT_PROFILE(addEvent<QQuickProfiler::Mouse>());
-
     QQuickWindow::mouseReleaseEvent(e);
 }
 

@@ -97,8 +97,9 @@ QT_BEGIN_NAMESPACE
                                (QQuickProfiler::reportSceneGraphFrame<Type, true>(Payload)))
 
 
-#define Q_QUICK_INPUT_PROFILE(Method)\
-    Q_QUICK_PROFILE(QQuickProfiler::ProfileInputEvents, Method)
+#define Q_QUICK_INPUT_PROFILE(Type, DetailType, A, B)\
+    Q_QUICK_PROFILE_IF_ENABLED(QQuickProfiler::ProfileInputEvents,\
+                               (QQuickProfiler::inputEvent<Type, DetailType>(A, B)))
 
 // This struct is somewhat dangerous to use:
 // You can save values either with 32 or 64 bit precision. toByteArrays will
@@ -117,10 +118,10 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
         time(time), messageType(messageType), detailType(detailType), detailUrl(url), x(x), y(y),
         framerate(framerate), count(count) {}
 
-    QQuickProfilerData(qint64 time, int messageType, int detailType, int framerate = 0,
-                       int count = 0, int threadId = 0) :
-        time(time), messageType(messageType), detailType(detailType), framerate(framerate),
-        count(count), threadId(threadId) {}
+    QQuickProfilerData(qint64 time, int messageType, int detailType, int framerateOrInputType = 0,
+                       int countOrInputA = 0, int threadIdOrInputB = 0) :
+        time(time), messageType(messageType), detailType(detailType),
+        framerate(framerateOrInputType), count(countOrInputA), threadId(threadIdOrInputB) {}
 
     // Special ctor for scenegraph frames. Note that it's missing the QString/QUrl params.
     // This is slightly ugly, but makes it easier to disambiguate between int and qint64 params.
@@ -149,16 +150,19 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
     union {
         qint64 subtime_3;
         int framerate;      //used by animation events
+        int inputType;
     };
 
     union {
         qint64 subtime_4;
         int count;          //used by animation events and for pixmaps
+        int inputA;         //used by input events
     };
 
     union {
         qint64 subtime_5;
         int threadId;
+        int inputB;         //used by input events
     };
 
     void toByteArrays(QList<QByteArray> &messages) const;
@@ -208,11 +212,11 @@ public:
         RenderThread
     };
 
-    template<EventType DetailType>
-    static void addEvent()
+    template<EventType DetailType, InputEventType InputType>
+    static void inputEvent(int x, int y = 0)
     {
         s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(), 1 << Event,
-                1 << DetailType));
+                                                      1 << DetailType, InputType, x, y));
     }
 
     static void animationFrame(qint64 delta, AnimationThread threadId)

@@ -46,6 +46,7 @@
 #include <private/qsgrenderloop_p.h>
 #include <private/qquickrendercontrol_p.h>
 #include <private/qquickanimatorcontroller_p.h>
+#include <private/qquickprofiler_p.h>
 
 #include <private/qguiapplication_p.h>
 #include <QtGui/QInputMethod>
@@ -1420,6 +1421,8 @@ bool QQuickWindow::event(QEvent *e)
 void QQuickWindow::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyPress, e->key(),
+                          e->modifiers());
     d->deliverKeyEvent(e);
 }
 
@@ -1427,6 +1430,8 @@ void QQuickWindow::keyPressEvent(QKeyEvent *e)
 void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyRelease, e->key(),
+                          e->modifiers());
     d->deliverKeyEvent(e);
 }
 
@@ -1524,6 +1529,8 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
 void QQuickWindow::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMousePress, event->button(),
+                          event->buttons());
 
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         event->accept();
@@ -1538,6 +1545,8 @@ void QQuickWindow::mousePressEvent(QMouseEvent *event)
 void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
+                          event->buttons());
 
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         event->accept();
@@ -1560,6 +1569,8 @@ void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
 void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
+                          event->button(), event->buttons());
 
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         event->accept();
@@ -1604,6 +1615,8 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
 void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
+                          event->localPos().x(), event->localPos().y());
 
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         event->accept();
@@ -1749,6 +1762,9 @@ bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickWindow);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseWheel,
+                          event->angleDelta().x(), event->angleDelta().y());
+
     qCDebug(DBG_MOUSE) << "QQuickWindow::wheelEvent()" << event->pixelDelta() << event->angleDelta() << event->phase();
 
     //if the actual wheel event was accepted, accept the compatibility wheel event and return early

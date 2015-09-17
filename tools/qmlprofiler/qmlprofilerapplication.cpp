@@ -112,8 +112,10 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
                                                           qint64)),
             &m_profilerData, SLOT(addMemoryEvent(QQmlProfilerDefinitions::MemoryType,qint64,
                                                  qint64)));
-    connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerDefinitions::EventType,qint64)),
-            &m_profilerData, SLOT(addInputEvent(QQmlProfilerDefinitions::EventType,qint64)));
+    connect(&m_qmlProfilerClient, SIGNAL(inputEvent(QQmlProfilerDefinitions::InputEventType,qint64,
+                                                    int,int)),
+            &m_profilerData, SLOT(addInputEvent(QQmlProfilerDefinitions::InputEventType,qint64,int,
+                                                int)));
 
     connect(&m_qmlProfilerClient, SIGNAL(complete()), &m_profilerData, SLOT(complete()));
 

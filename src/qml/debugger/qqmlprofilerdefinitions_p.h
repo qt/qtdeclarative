@@ -137,6 +137,21 @@ struct QQmlProfilerDefinitions {
 
         MaximumProfileFeature
     };
+
+    enum InputEventType {
+        InputKeyPress,
+        InputKeyRelease,
+        InputKeyUnknown,
+
+        InputMousePress,
+        InputMouseRelease,
+        InputMouseMove,
+        InputMouseDoubleClick,
+        InputMouseWheel,
+        InputMouseUnknown,
+
+        MaximumInputEventType
+    };
 };
 
 QT_END_NAMESPACE

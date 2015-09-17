@@ -68,7 +68,7 @@ signals:
     void pixmapCache(QQmlProfilerDefinitions::PixmapEventType, qint64 time,
                      const QmlEventLocation &location, int width, int height, int refCount);
     void memoryAllocation(QQmlProfilerDefinitions::MemoryType type, qint64 time, qint64 amount);
-    void inputEvent(QQmlProfilerDefinitions::EventType, qint64 time);
+    void inputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time, int a, int b);
     void complete();
     void enabledChanged(bool enabled);
 

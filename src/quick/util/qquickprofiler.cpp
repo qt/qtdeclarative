@@ -62,8 +62,15 @@ void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
 
             switch (decodedMessageType) {
             case QQuickProfiler::Event:
-                if (decodedDetailType == (int)QQuickProfiler::AnimationFrame)
+                switch (decodedDetailType) {
+                case QQuickProfiler::AnimationFrame:
                     ds << framerate << count << threadId;
+                    break;
+                case QQuickProfiler::Key:
+                case QQuickProfiler::Mouse:
+                    ds << inputType << inputA << inputB;
+                    break;
+                }
                 break;
             case QQuickProfiler::PixmapCacheEvent:
                 ds << detailUrl.toString();

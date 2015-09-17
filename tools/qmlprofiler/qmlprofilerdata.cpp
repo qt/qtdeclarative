@@ -107,14 +107,17 @@ struct QmlRangeEventStartInstance {
     qint64 duration;
     union {
         int frameRate;
+        int inputType;
         qint64 numericData1;
     };
     union {
         int animationCount;
+        int inputA;
         qint64 numericData2;
     };
     union {
         int threadId;
+        int inputB;
         qint64 numericData3;
     };
     qint64 numericData4;
@@ -366,23 +369,36 @@ void QmlProfilerData::addMemoryEvent(QQmlProfilerDefinitions::MemoryType type, q
     d->startInstanceList.append(rangeEventStartInstance);
 }
 
-void QmlProfilerData::addInputEvent(QQmlProfilerDefinitions::EventType type, qint64 time)
+void QmlProfilerData::addInputEvent(QQmlProfilerDefinitions::InputEventType type, qint64 time,
+                                    int a, int b)
 {
     setState(AcquiringData);
 
-    QString eventHashStr = QString::fromLatin1("Input:%1").arg(type);
+    QQmlProfilerDefinitions::EventType eventType;
+    switch (type) {
+    case QQmlProfilerDefinitions::InputKeyPress:
+    case QQmlProfilerDefinitions::InputKeyRelease:
+    case QQmlProfilerDefinitions::InputKeyUnknown:
+        eventType = QQmlProfilerDefinitions::Key;
+        break;
+    default:
+        eventType = QQmlProfilerDefinitions::Mouse;
+        break;
+    }
+
+    QString eventHashStr = QString::fromLatin1("Input:%1").arg(eventType);
 
     QmlRangeEventData *newEvent;
     if (d->eventDescriptions.contains(eventHashStr)) {
         newEvent = d->eventDescriptions[eventHashStr];
     } else {
-        newEvent = new QmlRangeEventData(QString(), type, eventHashStr, QmlEventLocation(),
+        newEvent = new QmlRangeEventData(QString(), eventType, eventHashStr, QmlEventLocation(),
                                          QString(), QQmlProfilerDefinitions::Event,
                                          QQmlProfilerDefinitions::MaximumRangeType);
         d->eventDescriptions.insert(eventHashStr, newEvent);
     }
 
-    d->startInstanceList.append(QmlRangeEventStartInstance(time, -1, 0, 0, 0, newEvent));
+    d->startInstanceList.append(QmlRangeEventStartInstance(time, -1, type, a, b, newEvent));
 }
 
 void QmlProfilerData::computeQmlTime()
@@ -567,13 +583,23 @@ bool QmlProfilerData::save(const QString &filename)
                                   QString::number(event.duration));
         stream.writeAttribute(QStringLiteral("eventIndex"), QString::number(
                                   d->eventDescriptions.keys().indexOf(event.data->eventHashStr)));
-        if (event.data->message == QQmlProfilerDefinitions::Event &&
-                event.data->detailType == QQmlProfilerDefinitions::AnimationFrame) {
-            // special: animation frame
-            stream.writeAttribute(QStringLiteral("framerate"), QString::number(event.frameRate));
-            stream.writeAttribute(QStringLiteral("animationcount"),
-                                  QString::number(event.animationCount));
-            stream.writeAttribute(QStringLiteral("thread"), QString::number(event.threadId));
+        if (event.data->message == QQmlProfilerDefinitions::Event) {
+            if (event.data->detailType == QQmlProfilerDefinitions::AnimationFrame) {
+                // special: animation frame
+                stream.writeAttribute(QStringLiteral("framerate"), QString::number(event.frameRate));
+                stream.writeAttribute(QStringLiteral("animationcount"),
+                                      QString::number(event.animationCount));
+                stream.writeAttribute(QStringLiteral("thread"), QString::number(event.threadId));
+            } else if (event.data->detailType == QQmlProfilerDefinitions::Key ||
+                       event.data->detailType == QQmlProfilerDefinitions::Mouse) {
+                // numerical value here, to keep the format a bit more compact
+                stream.writeAttribute(QStringLiteral("type"),
+                                      QString::number(event.inputType));
+                stream.writeAttribute(QStringLiteral("data1"),
+                                      QString::number(event.inputA));
+                stream.writeAttribute(QStringLiteral("data2"),
+                                      QString::number(event.inputB));
+            }
         } else if (event.data->message == QQmlProfilerDefinitions::PixmapCacheEvent) {
             // special: pixmap cache event
             if (event.data->detailType == QQmlProfilerDefinitions::PixmapSizeKnown) {
