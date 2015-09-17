@@ -168,7 +168,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
-    aConnected.resize(metaData->aliasCount);
     int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
     int qobject_type = qMetaTypeId<QObject*>();
     int variant_type = qMetaTypeId<QVariant>();
@@ -1124,22 +1123,21 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
 void QQmlVMEMetaObject::connectAlias(int aliasId)
 {
-    if (!aConnected.testBit(aliasId)) {
+    if (!aliasEndpoints)
+        aliasEndpoints = new QQmlVMEMetaObjectEndpoint[metaData->aliasCount];
 
-        if (!aliasEndpoints)
-            aliasEndpoints = new QQmlVMEMetaObjectEndpoint[metaData->aliasCount];
+    QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
 
-        aConnected.setBit(aliasId);
-
-        QQmlVMEMetaData::AliasData *d = metaData->aliasData() + aliasId;
-
-        QQmlVMEMetaObjectEndpoint *endpoint = aliasEndpoints + aliasId;
-        endpoint->metaObject = this;
-
-        endpoint->connect(&ctxt->idValues[d->contextIdx].bindings);
-
-        endpoint->tryConnect();
+    QQmlVMEMetaObjectEndpoint *endpoint = aliasEndpoints + aliasId;
+    if (endpoint->metaObject.data()) {
+        // already connected
+        Q_ASSERT(endpoint->metaObject.data() == this);
+        return;
     }
+
+    endpoint->metaObject = this;
+    endpoint->connect(&ctxt->idValues[d->contextIdx].bindings);
+    endpoint->tryConnect();
 }
 
 void QQmlVMEMetaObject::connectAliasSignal(int index, bool indexInSignalRange)

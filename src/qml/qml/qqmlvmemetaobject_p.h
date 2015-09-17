@@ -233,7 +233,6 @@ public:
     void mark(QV4::ExecutionEngine *e);
 
     void connectAlias(int aliasId);
-    QBitArray aConnected;
 
     QQmlPropertyValueInterceptor *interceptors;
 
