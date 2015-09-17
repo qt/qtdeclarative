@@ -1,4 +1,4 @@
-import QtQuick.tooling 1.1
+import QtQuick.tooling 1.2
 
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
@@ -7,19 +7,7 @@ import QtQuick.tooling 1.1
 // 'qmlplugindump -nonrelocatable QtQuick.Window 2.2'
 
 Module {
-    Component {
-        name: "QQuickRootItem"
-        defaultProperty: "data"
-        prototype: "QQuickItem"
-        Method {
-            name: "setWidth"
-            Parameter { name: "w"; type: "int" }
-        }
-        Method {
-            name: "setHeight"
-            Parameter { name: "h"; type: "int" }
-        }
-    }
+    dependencies: []
     Component {
         name: "QQuickScreen"
         prototype: "QObject"
@@ -112,6 +100,8 @@ Module {
         Property { name: "active"; type: "bool"; isReadonly: true }
         Property { name: "activeFocusItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "width"; type: "int"; isReadonly: true }
+        Property { name: "height"; type: "int"; isReadonly: true }
     }
     Component {
         name: "QQuickWindowQmlImpl"
@@ -288,5 +278,6 @@ Module {
             revision: 1
             Parameter { name: "msec"; type: "int" }
         }
+        Method { name: "requestUpdate"; revision: 3 }
     }
 }
