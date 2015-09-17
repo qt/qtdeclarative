@@ -154,6 +154,8 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
       hasAssignedMetaObjectData(false), aliasEndpoints(0),
       interceptors(0), methods(0)
 {
+    cache->addref();
+
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
     if (op->metaObject) {
@@ -212,6 +214,8 @@ QQmlVMEMetaObject::~QQmlVMEMetaObject()
     delete [] methods;
 
     qDeleteAll(varObjectGuards);
+
+    cache->release();
 }
 
 QV4::MemberData *QQmlVMEMetaObject::propertiesAsMemberData()
