@@ -612,22 +612,23 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             break;
                         default:
                         {
-                            QV4::MemberData *md = propertiesAsMemberData();
-                            if (md) {
-                                QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
-                                if (v)
-                                    QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], t);
+                            if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
+                                const int listIndex = readPropertyAsInt(id);
+                                const List *list = &listProperties.at(listIndex);
+                                *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
+                                    QQmlListProperty<QObject>(object, const_cast<List *>(list),
+                                                                      list_append, list_count, list_at,
+                                                                      list_clear);
+                            } else {
+                                QV4::MemberData *md = propertiesAsMemberData();
+                                if (md) {
+                                    QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
+                                    if (v)
+                                        QQml_valueTypeProvider()->readValueType(v->d()->data, a[0], t);
+                                }
                             }
                             break;
                         }
-                        }
-                        if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
-                            const int listIndex = readPropertyAsInt(id);
-                            const List *list = &listProperties.at(listIndex);
-                            *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
-                                QQmlListProperty<QObject>(object, const_cast<List *>(list),
-                                                                  list_append, list_count, list_at,
-                                                                  list_clear);
                         }
 
                     } else if (c == QMetaObject::WriteProperty) {
