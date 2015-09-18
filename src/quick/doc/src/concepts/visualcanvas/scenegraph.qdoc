@@ -762,7 +762,7 @@ with multiple windows.
   faster to process in the renderer and faster to draw on the GPU. For
   instance, PNG files will often have an alpha channel, even though
   each pixel is fully opaque. JPG files are always opaque. When
-  providing images to an QQuickImageProvider or creating images with
+  providing images to a QQuickImageProvider or creating images with
   QQuickWindow::createTextureFromImage(), let the image have
   QImage::Format_RGB32, when possible.
 
