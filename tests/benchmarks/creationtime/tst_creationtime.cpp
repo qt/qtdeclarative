@@ -50,9 +50,6 @@ private slots:
     void calendar();
     void calendar_data();
 
-    void extras();
-    void extras_data();
-
 private:
     QQmlEngine engine;
 };
@@ -126,20 +123,6 @@ void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QByteArray>("control");
     addTestRows(engine.importPathList(), "QtQuick/Calendar.2");
-}
-
-void tst_CreationTime::extras()
-{
-    QFETCH(QByteArray, control);
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick.Extras 2.0;" + control + "{}", QUrl());
-    doBenchmark(&component);
-}
-
-void tst_CreationTime::extras_data()
-{
-    QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Extras.2");
 }
 
 QTEST_MAIN(tst_CreationTime)

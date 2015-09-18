@@ -41,7 +41,6 @@
 import QtQuick 2.6
 import QtQuick.Calendar 2.0
 import QtQuick.Controls 2.0
-import QtQuick.Extras 2.0
 
 Item {
     id: dateTimePicker

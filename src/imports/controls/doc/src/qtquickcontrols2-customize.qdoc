@@ -95,6 +95,23 @@
 
             \snippet CheckBox.qml indicator
 
+    \section1 Customizing Dial
+
+        Dial consists of two visual items: \l {Control::background}{background}
+        and \l {Dial::handle}{handle}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-dial-background.png
+
+            \snippet Dial.qml background
+
+        \section3 Indicator
+
+            \image qtquickcontrols2-dial-handle.png
+
+            \snippet Dial.qml handle
+
 
     \section1 Customizing Frame
 
@@ -370,4 +387,29 @@
             \image qtquickcontrols2-toolbutton-label.png
 
             \snippet ToolButton.qml label
+
+    \section1 Customizing Tumbler
+
+        Tumbler consists of three visual items:
+        \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, and
+        \l {Tumbler::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtquickcontrols2-tumbler-background.png
+
+            Tumbler has no background item by default.
+
+        \section3 Content Item
+
+            \image qtquickcontrols2-tumbler-contentItem.png
+
+            \snippet Tumbler.qml contentItem
+
+        \section3 Delegate
+
+            \image qtquickcontrols2-tumbler-delegate.png
+
+            \snippet Tumbler.qml delegate
 */

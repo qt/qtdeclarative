@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Dial
     \inherits Control
     \instantiates QQuickDial
-    \inqmlmodule QtQuick.Extras
+    \inqmlmodule QtQuick.Controls
     \ingroup sliders
     \brief A circular dial that is rotated to set a value.
 
@@ -167,7 +167,7 @@ QQuickDial::QQuickDial(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::from
+    \qmlproperty real QtQuickControls2::Dial::from
 
     This property holds the starting value for the range. The default value is \c 0.0.
 
@@ -193,7 +193,7 @@ void QQuickDial::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::to
+    \qmlproperty real QtQuickControls2::Dial::to
 
     This property holds the end value for the range. The default value is
     \c 1.0.
@@ -220,7 +220,7 @@ void QQuickDial::setTo(qreal to)
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::value
+    \qmlproperty real QtQuickControls2::Dial::value
 
     This property holds the value in the range \c from - \c to. The default
     value is \c 0.0.
@@ -251,7 +251,7 @@ void QQuickDial::setValue(qreal value)
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::position
+    \qmlproperty real QtQuickControls2::Dial::position
 
     This property holds the logical position of the handle.
 
@@ -269,7 +269,7 @@ qreal QQuickDial::position() const
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::angle \readonly
+    \qmlproperty real QtQuickControls2::Dial::angle \readonly
 
     This property holds the angle of the handle.
 
@@ -285,7 +285,7 @@ qreal QQuickDial::angle() const
 }
 
 /*!
-    \qmlproperty real QtQuickExtras2::Dial::stepSize
+    \qmlproperty real QtQuickControls2::Dial::stepSize
 
     This property holds the step size. The default value is \c 0.0.
 
@@ -307,7 +307,7 @@ void QQuickDial::setStepSize(qreal step)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickExtras2::Dial::snapMode
+    \qmlproperty enumeration QtQuickControls2::Dial::snapMode
 
     This property holds the snap mode.
 
@@ -339,7 +339,7 @@ void QQuickDial::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty bool QtQuickExtras2::Dial::pressed
+    \qmlproperty bool QtQuickControls2::Dial::pressed
 
     This property holds whether the dial is pressed.
 
@@ -372,7 +372,7 @@ void QQuickDial::setPressed(bool pressed)
 }
 
 /*!
-    \qmlmethod void QtQuickExtras2::Dial::increase()
+    \qmlmethod void QtQuickControls2::Dial::increase()
 
     Increases the value by \l stepSize, or \c 0.1 if stepSize is not defined.
 
@@ -386,7 +386,7 @@ void QQuickDial::increase()
 }
 
 /*!
-    \qmlmethod void QtQuickExtras2::Dial::decrease()
+    \qmlmethod void QtQuickControls2::Dial::decrease()
 
     Decreases the value by \l stepSize, or \c 0.1 if stepSize is not defined.
 
@@ -400,7 +400,7 @@ void QQuickDial::decrease()
 }
 
 /*!
-    \qmlproperty component QtQuickExtras2::Dial::handle
+    \qmlproperty component QtQuickControls2::Dial::handle
 
     This property holds the handle of the dial.
 

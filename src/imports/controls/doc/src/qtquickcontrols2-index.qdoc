@@ -229,7 +229,7 @@
         \li \l [QtQuickControls2] {Slider}
     \row
         \li \l [QtQuickControls] {SpinBox}
-        \li No equivalent; see \l [QtQuickExtras2] {Tumbler} instead.
+        \li No equivalent; see \l [QtQuickControls2] {Tumbler} instead.
     \row
         \li \l [QtQuickControls] {Stack},
             \l [QtQuickControls] {StackView},
@@ -245,7 +245,7 @@
         \li \l [QtQuickControls] {Tab},
             \l [QtQuickControls] {TabView}
         \li \l [QtQuickControls2] {TabBar} in combination with, for example,
-            \l [QtQuickExtras2] {SwipeView}.
+            \l [QtQuickControls2] {SwipeView}.
     \row
         \li \l [QtQuickControls] {TableView}
         \li No equivalent

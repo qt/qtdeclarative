@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,23 +36,31 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
-import QtQuick.Extras 2.0
 
-AbstractDrawer {
+AbstractSwipeView {
     id: control
 
-    width: parent ? parent.width : 0 // TODO: Window.width
-    height: parent ? parent.height : 0 // TODO: Window.height
+    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+                             contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [background]
-    background: Rectangle {
-        color: control.Theme.shadowColor
-        opacity: position * 0.75
-    }
-    //! [background]
+    Accessible.role: Accessible.PageTabList
 
-    // TODO: make this a proper transition
-    animation: SmoothedAnimation {
-        velocity: 5
+    //! [contentItem]
+    contentItem: ListView {
+        model: control.contentModel
+        currentIndex: control.currentIndex
+
+        spacing: control.spacing
+        orientation: Qt.Horizontal
+        snapMode: ListView.SnapOneItem
+        boundsBehavior: Flickable.StopAtBounds
+
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: 0
+        highlightMoveDuration: 250
     }
+    //! [contentItem]
 }

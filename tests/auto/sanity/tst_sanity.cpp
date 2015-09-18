@@ -149,7 +149,6 @@ void tst_Sanity::initTestCase()
     foreach (const QString &path, engine.importPathList()) {
         files.unite(listQmlFiles(QDir(path + "/QtQuick/Calendar.2")));
         files.unite(listQmlFiles(QDir(path + "/QtQuick/Controls.2")));
-        files.unite(listQmlFiles(QDir(path + "/QtQuick/Extras.2")));
     }
 }
 

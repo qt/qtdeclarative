@@ -38,51 +38,29 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.2
+import QtTest 1.0
 import QtQuick.Controls 2.0
-import QtQuick.Extras 2.0
 
-Row {
-    id: datePicker
+TestCase {
+    id: testCase
+    width: 400
+    height: 400
+    visible: true
+    when: windowShown
+    name: "Drawer"
 
-    readonly property var days: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-    property alias dayTumbler: dayTumbler
-    property alias monthTumbler: monthTumbler
-    property alias yearTumbler: yearTumbler
-
-    Tumbler {
-        id: dayTumbler
-        objectName: "dayTumbler"
-
-        Component.onCompleted: updateModel()
-
-        function updateModel() {
-            var previousIndex = dayTumbler.currentIndex;
-            var array = [];
-            var newDays = datePicker.days[monthTumbler.currentIndex];
-            for (var i = 0; i < newDays; ++i) {
-                array.push(i + 1);
-            }
-            dayTumbler.model = array;
-            dayTumbler.currentIndex = Math.min(newDays - 1, previousIndex);
-        }
+    Component {
+        id: drawer
+        Drawer { }
     }
-    Tumbler {
-        id: monthTumbler
-        objectName: "monthTumbler"
-        model: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        onCurrentIndexChanged: dayTumbler.updateModel()
-    }
-    Tumbler {
-        id: yearTumbler
-        objectName: "yearTumbler"
-        model: ListModel {
-            Component.onCompleted: {
-                for (var i = 2000; i < 2100; ++i) {
-                    append({value: i.toString()});
-                }
-            }
-        }
+
+    function test_defaults() {
+        var control = drawer.createObject(testCase)
+        verify(!control.contentItem)
+        compare(control.edge, Qt.LeftEdge)
+        compare(control.position, 0.0)
+        verify(control.animation)
+        control.destroy()
     }
 }

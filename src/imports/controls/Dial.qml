@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,45 +36,47 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
-import QtQuick.Extras 2.0
 
-AbstractTumbler {
+AbstractDial {
     id: control
-    implicitWidth: 60
-    implicitHeight: 200
 
-    //! [delegate]
-    delegate: Text {
-        id: label
-        text: modelData
-        color: "#666666"
-        opacity: 0.4 + Math.max(0, 1 - Math.abs(AbstractTumbler.displacement)) * 0.6
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    implicitWidth: 100
+    implicitHeight: 100
+
+    Accessible.pressed: pressed
+    Accessible.role: Accessible.Dial
+
+    //! [background]
+    background: Rectangle {
+        color: control.Theme.backgroundColor
+        radius: width / 2
+
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
     }
-    //! [delegate]
+    //! [background]
 
-    //! [contentItem]
-    contentItem: PathView {
-        id: pathView
-        model: control.model
-        delegate: control.delegate
-        clip: true
-        pathItemCount: control.visibleItemCount + 1
-        preferredHighlightBegin: 0.5
-        preferredHighlightEnd: 0.5
-        dragMargin: width / 2
+    //! [handle]
+    handle: Rectangle {
+        id: handleItem
 
-        path: Path {
-            startX: pathView.width / 2
-            startY: -pathView.delegateHeight / 2
-            PathLine {
-                x: pathView.width / 2
-                y: pathView.pathItemCount * pathView.delegateHeight - pathView.delegateHeight / 2
+        x: background.width / 2 - handle.width / 2
+        y: background.height / 2 - handle.height / 2
+        transform: [
+            Translate {
+                y: -background.height * 0.35
+            },
+            Rotation {
+                angle: control.angle
+                origin.x: handle.width / 2
+                origin.y: handle.height / 2
             }
-        }
-
-        property real delegateHeight: control.availableHeight / control.visibleItemCount
+        ]
+        implicitWidth: 20
+        implicitHeight: 20
+        radius: width / 2
+        border.width: control.activeFocus ? 2 : 1
+        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        color: control.Theme.baseColor
     }
-    //! [contentItem]
+    //! [handle]
 }

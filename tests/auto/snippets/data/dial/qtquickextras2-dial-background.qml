@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import QtQuick.Extras 2.0
+import QtQuick.Controls 2.0
 
 Dial {
     Rectangle {

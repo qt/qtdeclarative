@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Tumbler
     \inherits Control
     \instantiates QQuickTumbler
-    \inqmlmodule QtQuick.Extras
+    \inqmlmodule QtQuick.Controls
     \ingroup containers
     \brief A spinnable wheel of items that can be selected.
 
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet tst_tumbler.qml contentItem
 
-    \image qtquickextras2-tumbler-wrap.gif
+    \image qtquickcontrols2-tumbler-wrap.gif
 */
 
 class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
@@ -193,7 +193,7 @@ QQuickTumbler::~QQuickTumbler()
 }
 
 /*!
-    \qmlproperty variant QtQuickExtras2::Tumbler::model
+    \qmlproperty variant QtQuickControls2::Tumbler::model
 
     This property holds the model that provides data for this tumbler.
 */
@@ -213,7 +213,7 @@ void QQuickTumbler::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int QtQuickExtras2::Tumbler::count
+    \qmlproperty int QtQuickControls2::Tumbler::count
 
     This property holds the number of items in the model.
 */
@@ -224,7 +224,7 @@ int QQuickTumbler::count() const
 }
 
 /*!
-    \qmlproperty int QtQuickExtras2::Tumbler::currentIndex
+    \qmlproperty int QtQuickControls2::Tumbler::currentIndex
 
     This property holds the index of the current item.
 */
@@ -241,7 +241,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 }
 
 /*!
-    \qmlproperty Item QtQuickExtras2::Tumbler::currentItem
+    \qmlproperty Item QtQuickControls2::Tumbler::currentItem
 
     This property holds the item at the current index.
 */
@@ -252,7 +252,7 @@ QQuickItem *QQuickTumbler::currentItem() const
 }
 
 /*!
-    \qmlproperty component QtQuickExtras2::Tumbler::delegate
+    \qmlproperty component QtQuickControls2::Tumbler::delegate
 
     This property holds the delegate used to display each item.
 */
@@ -272,7 +272,7 @@ void QQuickTumbler::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty int QtQuickExtras2::Tumbler::visibleItemCount
+    \qmlproperty int QtQuickControls2::Tumbler::visibleItemCount
 
     This property holds the number of items visible in the tumbler. It must be
     an odd number, as the current item is always vertically centered.

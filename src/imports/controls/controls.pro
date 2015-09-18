@@ -15,6 +15,8 @@ QML_FILES = \
     BusyIndicator.qml \
     Button.qml \
     CheckBox.qml \
+    Dial.qml \
+    Drawer.qml \
     Frame.qml \
     GroupBox.qml \
     Label.qml \
@@ -26,21 +28,31 @@ QML_FILES = \
     Slider.qml \
     StackView.qml \
     Switch.qml \
+    SwipeView.qml \
     TabBar.qml \
     TabButton.qml \
     TextArea.qml \
     TextField.qml \
     ToggleButton.qml \
     ToolBar.qml \
-    ToolButton.qml
+    ToolButton.qml \
+    Tumbler.qml
 
 HEADERS += \
+    $$PWD/qquickdial_p.h \
+    $$PWD/qquickdrawer_p.h \
+    $$PWD/qquickswipeview_p.h \
     $$PWD/qquicktheme_p.h \
-    $$PWD/qquickthemedata_p.h
+    $$PWD/qquickthemedata_p.h \
+    $$PWD/qquicktumbler_p.h
 
 SOURCES += \
+    $$PWD/qquickdial.cpp \
+    $$PWD/qquickdrawer.cpp \
+    $$PWD/qquickswipeview.cpp \
     $$PWD/qquicktheme.cpp \
     $$PWD/qquickthemedata.cpp \
+    $$PWD/qquicktumbler.cpp \
     $$PWD/qtquickcontrols2plugin.cpp
 
 RESOURCES += \

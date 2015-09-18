@@ -4,6 +4,5 @@ SUBDIRS += \
     activeFocusOnTab \
     applicationwindow \
     controls \
-    extras \
     sanity \
     snippets

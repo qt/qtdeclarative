@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Extras module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \qmltype SwipeView
     \inherits Container
     \instantiates QQuickSwipeView
-    \inqmlmodule QtQuick.Extras
+    \inqmlmodule QtQuick.Controls
     \ingroup navigation
     \brief A swipe view control.
 
@@ -149,7 +149,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 }
 
 /*!
-    \qmlattachedproperty int QtQuickExtras2::SwipeView::index
+    \qmlattachedproperty int QtQuickControls2::SwipeView::index
 
     This attached property holds the index of each child item in the SwipeView.
 
@@ -157,7 +157,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty bool QtQuickExtras2::SwipeView::isCurrentItem
+    \qmlattachedproperty bool QtQuickControls2::SwipeView::isCurrentItem
 
     This attached property is \c true if this child is the current item.
 
@@ -165,7 +165,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty SwipeView QtQuickExtras2::SwipeView::view
+    \qmlattachedproperty SwipeView QtQuickControls2::SwipeView::view
 
     This attached property holds the view that manages this child item.
 

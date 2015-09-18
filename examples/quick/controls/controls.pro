@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 SUBDIRS += \
     mirroring \
     theme \
-    tabs
+    tabs \
+    drawer
