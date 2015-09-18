@@ -214,7 +214,7 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *i, const QFont &f)
 {
     foreach (QQuickItem *child, i->childItems()) {
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(child)) {
-            QQuickControlPrivate *qcp = qc->d_func();
+            QQuickControlPrivate *qcp = QQuickControlPrivate::get(qc);
             qcp->resolveFont();
         } else if (QQuickLabel *ql = qobject_cast<QQuickLabel *>(child)) {
             QQuickLabelPrivate *qlp = QQuickLabelPrivate::get(ql);

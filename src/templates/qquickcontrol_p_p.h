@@ -61,6 +61,11 @@ class Q_QUICKTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 public:
     QQuickControlPrivate();
 
+    static QQuickControlPrivate *get(QQuickControl *control)
+    {
+        return control->d_func();
+    }
+
     void mirrorChange() Q_DECL_OVERRIDE;
 
     void setTopPadding(qreal value, bool reset = false);
