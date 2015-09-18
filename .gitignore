@@ -12,6 +12,7 @@
 /examples/quick/controls/drawer/drawer
 
 /tests/auto/accessibility/tst_accessibility
+/tests/auto/activeFocusOnTab/tst_activeFocusOnTab
 /tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/controls/tst_controls
 /tests/auto/sanity/tst_sanity
