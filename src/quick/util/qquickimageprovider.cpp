@@ -99,7 +99,9 @@ QImage QQuickTextureFactory::image() const
 }
 
 /*!
-    Returns a QQuickTextureFactory holding given the image.
+    Returns a QQuickTextureFactory holding the given image.
+
+    This is typically used as a helper in QQuickImageResponse::textureFactory.
 
     \since 5.6
  */
