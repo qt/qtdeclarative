@@ -210,24 +210,19 @@ void QQuickControlPrivate::updateFont(const QFont &f)
     emit q->fontChanged();
 }
 
-void QQuickControlPrivate::updateFontRecur(QQuickItem *i, const QFont &f)
+void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
 {
-    foreach (QQuickItem *child, i->childItems()) {
-        if (QQuickControl *qc = qobject_cast<QQuickControl *>(child)) {
-            QQuickControlPrivate *qcp = QQuickControlPrivate::get(qc);
-            qcp->resolveFont();
-        } else if (QQuickLabel *ql = qobject_cast<QQuickLabel *>(child)) {
-            QQuickLabelPrivate *qlp = QQuickLabelPrivate::get(ql);
-            qlp->resolveFont();
-        } else if (QQuickTextArea *qta = qobject_cast<QQuickTextArea *>(child)) {
-            QQuickTextAreaPrivate *qtap = QQuickTextAreaPrivate::get(qta);
-            qtap->resolveFont();
-        } else if (QQuickTextField *qtf = qobject_cast<QQuickTextField *>(child)) {
-            QQuickTextFieldPrivate *qtfp = QQuickTextFieldPrivate::get(qtf);
-            qtfp->resolveFont();
-        } else {
+    foreach (QQuickItem *child, item->childItems()) {
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
+            QQuickControlPrivate::get(control)->resolveFont();
+        else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(child))
+            QQuickLabelPrivate::get(label)->resolveFont();
+        else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(child))
+            QQuickTextAreaPrivate::get(textArea)->resolveFont();
+        else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(child))
+            QQuickTextFieldPrivate::get(textField)->resolveFont();
+        else
             QQuickControlPrivate::updateFontRecur(child, f);
-        }
     }
 }
 
