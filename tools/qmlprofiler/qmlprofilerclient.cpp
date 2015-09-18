@@ -141,6 +141,7 @@ void QmlProfilerClient::sendRecordingStatus()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
+    stream.setVersion(QDataStream::Qt_4_7);
     stream << isRecording();
     sendMessage(ba);
 }
@@ -149,6 +150,7 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
+    stream.setVersion(QDataStream::Qt_4_7);
 
     qint64 time;
     int messageType;
