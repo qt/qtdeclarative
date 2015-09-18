@@ -71,13 +71,6 @@ public:
         return static_cast<QQuickTextFieldPrivate *>(QObjectPrivate::get(item)); }
 
     void resizeBackground();
-
-    inline void setFont_helper(const QFont &f) {
-        // In QQuickTextInputPrivate, sourceFont was used, instead of font...
-        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
-            return;
-        sourceFont = f;
-    }
     void resolveFont();
 
     void _q_readOnlyChanged(bool isReadOnly);

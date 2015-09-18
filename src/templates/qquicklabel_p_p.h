@@ -65,13 +65,6 @@ public:
         return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item)); }
 
     void resizeBackground();
-
-    inline void setFont_helper(const QFont &f) {
-        // In QQuickTextPrivate, sourceFont was used, instead of font...
-        if (sourceFont.resolve() == f.resolve() && sourceFont == f)
-            return;
-        sourceFont = f;
-    }
     void resolveFont();
 
     void _q_textChanged(const QString &text);

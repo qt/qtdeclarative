@@ -133,7 +133,12 @@ void QQuickTextFieldPrivate::resolveFont()
     Q_Q(QQuickTextField);
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
     QFont resolvedFont = sourceFont.resolve(naturalFont);
-    setFont_helper(resolvedFont);
+    if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
+        return;
+
+    q->QQuickTextInput::setFont(resolvedFont);
+
+    emit q->fontChanged();
 }
 
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
@@ -171,8 +176,7 @@ void QQuickTextFieldPrivate::_q_echoModeChanged(QQuickTextField::EchoMode echoMo
 
 QFont QQuickTextField::font() const
 {
-    Q_D(const QQuickTextField);
-    return d->sourceFont;
+    return QQuickTextInput::font();
 }
 
 void QQuickTextField::setFont(const QFont &font)
@@ -187,7 +191,8 @@ void QQuickTextField::setFont(const QFont &font)
     // control's children.
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
     QFont resolvedFont = font.resolve(naturalFont);
-    d->setFont_helper(resolvedFont);
+    if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
+        return;
 
     QQuickTextInput::setFont(font);
 

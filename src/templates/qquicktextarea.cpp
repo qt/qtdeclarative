@@ -110,10 +110,15 @@ QQuickTextArea::~QQuickTextArea()
 */
 void QQuickTextAreaPrivate::resolveFont()
 {
-    Q_Q(const QQuickTextArea);
+    Q_Q(QQuickTextArea);
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
     QFont resolvedFont = sourceFont.resolve(naturalFont);
-    setFont_helper(resolvedFont);
+    if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
+        return;
+
+    q->QQuickTextEdit::setFont(resolvedFont);
+
+    emit q->fontChanged();
 }
 
 void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
@@ -139,8 +144,7 @@ void QQuickTextAreaPrivate::_q_placeholderTextChanged(const QString &text)
 
 QFont QQuickTextArea::font() const
 {
-    Q_D(const QQuickTextArea);
-    return d->sourceFont;
+    return QQuickTextEdit::font();
 }
 
 void QQuickTextArea::setFont(const QFont &font)
@@ -155,7 +159,8 @@ void QQuickTextArea::setFont(const QFont &font)
     // control's children.
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
     QFont resolvedFont = font.resolve(naturalFont);
-    d->setFont_helper(resolvedFont);
+    if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
+        return;
 
     QQuickTextEdit::setFont(font);
 

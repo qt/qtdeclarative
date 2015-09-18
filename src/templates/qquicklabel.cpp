@@ -71,10 +71,15 @@ QQuickLabel::~QQuickLabel()
 */
 void QQuickLabelPrivate::resolveFont()
 {
-    Q_Q(const QQuickLabel);
+    Q_Q(QQuickLabel);
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(q);
     QFont resolvedFont = sourceFont.resolve(naturalFont);
-    setFont_helper(resolvedFont);
+    if (sourceFont.resolve() == resolvedFont.resolve() && sourceFont == resolvedFont)
+        return;
+
+    q->QQuickText::setFont(resolvedFont);
+
+    emit q->fontChanged();
 }
 
 void QQuickLabelPrivate::_q_textChanged(const QString &text)
@@ -89,8 +94,7 @@ void QQuickLabelPrivate::_q_textChanged(const QString &text)
 
 QFont QQuickLabel::font() const
 {
-    Q_D(const QQuickLabel);
-    return d->sourceFont;
+    return QQuickText::font();
 }
 
 void QQuickLabel::setFont(const QFont &font)
@@ -105,7 +109,8 @@ void QQuickLabel::setFont(const QFont &font)
     // control's children.
     QFont naturalFont = QQuickControlPrivate::naturalControlFont(this);
     QFont resolvedFont = font.resolve(naturalFont);
-    d->setFont_helper(resolvedFont);
+    if (d->sourceFont.resolve() == resolvedFont.resolve() && d->sourceFont == resolvedFont)
+        return;
 
     QQuickText::setFont(font);
 
