@@ -103,22 +103,30 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, 0);
 
     defineDefaultProperty(QStringLiteral("getInt8"), method_getChar<signed char>, 0);
-    defineDefaultProperty(QStringLiteral("getUInt8"), method_getChar<unsigned char>, 0);
+    defineDefaultProperty(QStringLiteral("getUint8"), method_getChar<unsigned char>, 0);
     defineDefaultProperty(QStringLiteral("getInt16"), method_get<short>, 0);
-    defineDefaultProperty(QStringLiteral("getUInt16"), method_get<unsigned short>, 0);
+    defineDefaultProperty(QStringLiteral("getUint16"), method_get<unsigned short>, 0);
     defineDefaultProperty(QStringLiteral("getInt32"), method_get<int>, 0);
-    defineDefaultProperty(QStringLiteral("getUInt32"), method_get<unsigned int>, 0);
+    defineDefaultProperty(QStringLiteral("getUint32"), method_get<unsigned int>, 0);
     defineDefaultProperty(QStringLiteral("getFloat32"), method_getFloat<float>, 0);
     defineDefaultProperty(QStringLiteral("getFloat64"), method_getFloat<double>, 0);
 
     defineDefaultProperty(QStringLiteral("setInt8"), method_setChar<signed char>, 0);
-    defineDefaultProperty(QStringLiteral("setUInt8"), method_setChar<unsigned char>, 0);
+    defineDefaultProperty(QStringLiteral("setUint8"), method_setChar<unsigned char>, 0);
     defineDefaultProperty(QStringLiteral("setInt16"), method_set<short>, 0);
-    defineDefaultProperty(QStringLiteral("setUInt16"), method_set<unsigned short>, 0);
+    defineDefaultProperty(QStringLiteral("setUint16"), method_set<unsigned short>, 0);
     defineDefaultProperty(QStringLiteral("setInt32"), method_set<int>, 0);
-    defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 0);
+    defineDefaultProperty(QStringLiteral("setUint32"), method_set<unsigned int>, 0);
     defineDefaultProperty(QStringLiteral("setFloat32"), method_setFloat<float>, 0);
     defineDefaultProperty(QStringLiteral("setFloat64"), method_setFloat<double>, 0);
+
+    // For backword compatibility
+    defineDefaultProperty(QStringLiteral("getUInt8"), method_getChar<unsigned char>, 0);
+    defineDefaultProperty(QStringLiteral("getUInt16"), method_get<unsigned short>, 0);
+    defineDefaultProperty(QStringLiteral("getUInt32"), method_get<unsigned int>, 0);
+    defineDefaultProperty(QStringLiteral("setUInt8"), method_setChar<unsigned char>, 0);
+    defineDefaultProperty(QStringLiteral("setUInt16"), method_set<unsigned short>, 0);
+    defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 0);
 }
 
 ReturnedValue DataViewPrototype::method_get_buffer(CallContext *ctx)
