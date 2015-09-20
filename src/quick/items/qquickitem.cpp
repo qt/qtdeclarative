@@ -72,7 +72,7 @@
 #endif
 
 #include <algorithm>
-#include <float.h>
+#include <limits>
 
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
 
@@ -217,8 +217,8 @@ bool QQuickContents::calcHeight(QQuickItem *changed)
         m_y = top;
         m_height = bottom - top;
     } else {
-        qreal top = FLT_MAX;
-        qreal bottom = 0;
+        qreal top = std::numeric_limits<qreal>::max();
+        qreal bottom = -std::numeric_limits<qreal>::max();
         QList<QQuickItem *> children = m_item->childItems();
         for (int i = 0; i < children.count(); ++i) {
             QQuickItem *child = children.at(i);
@@ -252,8 +252,8 @@ bool QQuickContents::calcWidth(QQuickItem *changed)
         m_x = left;
         m_width = right - left;
     } else {
-        qreal left = FLT_MAX;
-        qreal right = 0;
+        qreal left = std::numeric_limits<qreal>::max();
+        qreal right = -std::numeric_limits<qreal>::max();
         QList<QQuickItem *> children = m_item->childItems();
         for (int i = 0; i < children.count(); ++i) {
             QQuickItem *child = children.at(i);

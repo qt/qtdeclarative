@@ -104,6 +104,7 @@ private slots:
     void childrenRectBug();
     void childrenRectBug2();
     void childrenRectBug3();
+    void childrenRectBottomRightCorner();
 
     void childrenProperty();
     void resourcesProperty();
@@ -2592,6 +2593,22 @@ void tst_QQuickItem::childrenRectBug3()
     window->show();
 
     //don't crash on delete
+    delete window;
+}
+
+// QTBUG-38732
+void tst_QQuickItem::childrenRectBottomRightCorner()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("childrenRectBottomRightCorner.qml"));
+    window->show();
+
+    QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>("childrenRectProxy");
+    QCOMPARE(rect->x(), qreal(-100));
+    QCOMPARE(rect->y(), qreal(-100));
+    QCOMPARE(rect->width(), qreal(50));
+    QCOMPARE(rect->height(), qreal(50));
+
     delete window;
 }
 
