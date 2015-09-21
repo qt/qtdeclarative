@@ -163,6 +163,7 @@ QQuickDial::QQuickDial(QQuickItem *parent) :
     QQuickControl(*(new QQuickDialPrivate), parent)
 {
     setActiveFocusOnTab(true);
+    setAccessibleRole(0x00000031); //QAccessible::Dial
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
@@ -367,6 +368,7 @@ void QQuickDial::setPressed(bool pressed)
     Q_D(QQuickDial);
     if (d->pressed != pressed) {
         d->pressed = pressed;
+        setAccessibleProperty("pressed", pressed);
         emit pressedChanged();
     }
 }

@@ -43,9 +43,6 @@ AbstractDial {
     implicitWidth: 100
     implicitHeight: 100
 
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Dial
-
     //! [background]
     background: Rectangle {
         color: control.Theme.backgroundColor

@@ -91,6 +91,11 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
 
+    QTest::newRow("Dial") << "dial" << 0x00000031 << ""; //QAccessible::Dial
+    // Drawer
+    // SwipeView
+    // Tumbler
+
     QTest::newRow("CalendarView") << "calendarview" << 0x0 << "CalendarView"; //QAccessible::NoRole
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
