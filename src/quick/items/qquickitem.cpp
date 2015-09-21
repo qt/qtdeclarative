@@ -7310,9 +7310,11 @@ bool QQuickItem::event(QEvent *ev)
         dropEvent(static_cast<QDropEvent*>(ev));
         break;
 #endif // QT_NO_DRAGANDDROP
+#ifndef QT_NO_GESTURES
     case QEvent::NativeGesture:
         ev->ignore();
         break;
+#endif // QT_NO_GESTURES
     default:
         return QObject::event(ev);
     }

@@ -1400,9 +1400,11 @@ bool QQuickWindow::event(QEvent *e)
             d->windowManager->handleUpdateRequest(this);
         break;
     }
+#ifndef QT_NO_GESTURES
     case QEvent::NativeGesture:
         d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
+#endif
     default:
         break;
     }
@@ -1779,6 +1781,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 }
 #endif // QT_NO_WHEELEVENT
 
+#ifndef QT_NO_GESTURES
 bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -1810,6 +1813,7 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
 
     return false;
 }
+#endif // QT_NO_GESTURES
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {
