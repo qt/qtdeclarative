@@ -202,6 +202,8 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
 
 void QQuickWidgetPrivate::render(bool needsSync)
 {
+    Q_ASSERT(context);
+
     if (!context->makeCurrent(offscreenSurface)) {
         qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
         return;
