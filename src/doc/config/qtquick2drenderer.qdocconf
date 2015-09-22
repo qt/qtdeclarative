@@ -7,11 +7,12 @@ outputencoding              = UTF-8
 sourceencoding              = UTF-8
 
 projects                    = QtQuick2dRenderer
+url                         = http://doc.qt.io/QtQuick2DRenderer
 description                 = Qt Quick 2D Renderer Documentation
 version                     = $QT_VERSION
 
-sourcedirs                   = ../src
-imagedirs                    += ../images
+sourcedirs                  += ../src
+imagedirs                   += ../images
 
 qhp.projects            = QtQuick2dRenderer
 
