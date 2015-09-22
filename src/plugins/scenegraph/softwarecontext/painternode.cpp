@@ -136,7 +136,7 @@ QImage PainterNode::toImage() const
 void PainterNode::update()
 {
     if (m_dirtyGeometry) {
-        m_pixmap = QPixmap(m_size);
+        m_pixmap = QPixmap(m_textureSize);
         if (!m_opaquePainting)
             m_pixmap.fill(Qt::transparent);
 
@@ -168,22 +168,43 @@ void PainterNode::paint()
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     }
 
-    painter.scale(m_contentsScale, m_contentsScale);
+    QRect clipRect;
 
-    QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
-                qFloor(dirtyRect.y()/m_contentsScale),
-                qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
-                qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+    if (m_contentsScale == 1) {
+        qreal scaleX = m_textureSize.width() / (qreal) m_size.width();
+        qreal scaleY = m_textureSize.height() / (qreal) m_size.height();
+        painter.scale(scaleX, scaleY);
+        clipRect = dirtyRect;
+    } else {
+        painter.scale(m_contentsScale, m_contentsScale);
+
+        QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
+                    qFloor(dirtyRect.y()/m_contentsScale),
+                    qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
+                    qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+
+        clipRect = sclip;
+    }
 
     if (!m_dirtyRect.isNull())
-        painter.setClipRect(sclip);
+        painter.setClipRect(clipRect);
 
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(sclip, m_fillColor);
+    painter.fillRect(clipRect, m_fillColor);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     m_item->paint(&painter);
     painter.end();
 
     m_dirtyRect = QRect();
+}
+
+
+void PainterNode::setTextureSize(const QSize &size)
+{
+    if (size == m_textureSize)
+        return;
+
+    m_textureSize = size;
+    m_dirtyGeometry = true;
 }
