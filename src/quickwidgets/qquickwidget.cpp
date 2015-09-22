@@ -1072,7 +1072,10 @@ void QQuickWidget::showEvent(QShowEvent *)
     Q_D(QQuickWidget);
     d->updatePending = false;
     d->createContext();
-    d->render(true);
+    if (d->offscreenWindow->openglContext())
+        d->render(true);
+    else
+        triggerUpdate();
 }
 
 /*! \reimp */
