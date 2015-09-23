@@ -214,7 +214,8 @@ public:
     QDate readPropertyAsDate(int id);
     QDateTime readPropertyAsDateTime(int id);
     QRectF readPropertyAsRectF(int id);
-    QObject* readPropertyAsQObject(int id);
+    QObject *readPropertyAsQObject(int id);
+    QList<QObject *> *readPropertyAsList(int id);
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
@@ -249,14 +250,6 @@ public:
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
     void listChanged(int);
-    class List : public QList<QObject*>
-    {
-    public:
-        List(int lpi, QQmlVMEMetaObject *mo) : notifyIndex(lpi), mo(mo) {}
-        int notifyIndex;
-        QQmlVMEMetaObject *mo;
-    };
-    QList<List> listProperties;
 
     static void list_append(QQmlListProperty<QObject> *, QObject *);
     static int list_count(QQmlListProperty<QObject> *);

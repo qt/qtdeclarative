@@ -168,7 +168,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
-    int list_type = qMetaTypeId<QQmlListProperty<QObject> >();
     int qobject_type = qMetaTypeId<QObject*>();
     int variant_type = qMetaTypeId<QVariant>();
     // Need JS wrapper to ensure properties are marked.
@@ -179,11 +178,9 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
     // ### Optimize
     for (int ii = 0; ii < metaData->propertyCount; ++ii) {
         int t = (metaData->propertyData() + ii)->propertyType;
-        if (t == list_type) {
-            listProperties.append(List(methodOffset() + ii, this));
-            writeProperty(ii, listProperties.count() - 1);
-        } else if (!needsJSWrapper && (t == qobject_type || t == variant_type)) {
+        if (t == qobject_type || t == variant_type) {
             needsJSWrapper = true;
+            break;
         }
     }
 
@@ -453,6 +450,22 @@ QObject* QQmlVMEMetaObject::readPropertyAsQObject(int id)
     return wrapper->object();
 }
 
+QList<QObject *> *QQmlVMEMetaObject::readPropertyAsList(int id)
+{
+    QV4::MemberData *md = propertiesAsMemberData();
+    if (!md)
+        return 0;
+
+    QV4::Scope scope(cache->engine);
+    QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
+    if (!v || (int)v->d()->data.userType() != qMetaTypeId<QList<QObject *> >()) {
+        QVariant variant(qVariantFromValue(QList<QObject*>()));
+        v = cache->engine->newVariantObject(variant);
+        *(md->data() + id) = v;
+    }
+    return static_cast<QList<QObject *> *>(v->d()->data.data());
+}
+
 QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id)
 {
     QV4::MemberData *md = propertiesAsMemberData();
@@ -613,12 +626,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         default:
                         {
                             if (t == qMetaTypeId<QQmlListProperty<QObject> >()) {
-                                const int listIndex = readPropertyAsInt(id);
-                                const List *list = &listProperties.at(listIndex);
-                                *reinterpret_cast<QQmlListProperty<QObject> *>(a[0]) =
-                                    QQmlListProperty<QObject>(object, const_cast<List *>(list),
+                                QList<QObject *> *list = readPropertyAsList(id);
+                                QQmlListProperty<QObject> *p = static_cast<QQmlListProperty<QObject> *>(a[0]);
+                                *p = QQmlListProperty<QObject>(object, list,
                                                                       list_append, list_count, list_at,
                                                                       list_clear);
+                                p->dummy1 = this;
+                                p->dummy2 = reinterpret_cast<quintptr *>(methodOffset() + id);
                             } else {
                                 QV4::MemberData *md = propertiesAsMemberData();
                                 if (md) {
@@ -969,26 +983,28 @@ void QQmlVMEMetaObject::listChanged(int id)
 
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    List *list = static_cast<List *>(prop->data);
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
     list->append(o);
-    list->mo->activate(prop->object, list->notifyIndex, 0);
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
 }
 
 int QQmlVMEMetaObject::list_count(QQmlListProperty<QObject> *prop)
 {
-    return static_cast<List *>(prop->data)->count();
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    return list->count();
 }
 
 QObject *QQmlVMEMetaObject::list_at(QQmlListProperty<QObject> *prop, int index)
 {
-    return static_cast<List *>(prop->data)->at(index);
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
+    return list->at(index);
 }
 
 void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 {
-    List *list = static_cast<List *>(prop->data);
+    QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
     list->clear();
-    list->mo->activate(prop->object, list->notifyIndex, 0);
+    static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
 }
 
 void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
