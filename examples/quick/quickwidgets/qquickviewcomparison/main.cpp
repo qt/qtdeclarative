@@ -48,7 +48,13 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
 
-    MainWindow widgetWindow;
+    bool transparency = QCoreApplication::arguments().contains(QStringLiteral("--transparent"));
+    MainWindow widgetWindow(transparency);
+    if (transparency) {
+        widgetWindow.setAttribute(Qt::WA_TranslucentBackground);
+        widgetWindow.setAttribute(Qt::WA_NoSystemBackground, false);
+    }
+
     widgetWindow.resize(1024, 768);
     widgetWindow.show();
 

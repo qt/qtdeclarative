@@ -53,7 +53,7 @@ QT_FORWARD_DECLARE_CLASS(QLayout)
 class MainWindow : public QWidget
 {
 public:
-    MainWindow();
+    MainWindow(bool transparency);
 
 protected:
     void resizeEvent(QResizeEvent*);
@@ -63,7 +63,6 @@ private slots:
     void onStatusChangedView(QQuickView::Status status);
     void onStatusChangedWidget(QQuickWidget::Status status);
     void onSceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
-    void onTransparentChanged(bool enabled);
 
 private:
     void switchTo(QWidget *view);
@@ -85,8 +84,6 @@ private:
     } m_state;
 
     QSurfaceFormat m_format;
-
-    QCheckBox *m_checkboxTransparent;
 
     bool m_transparent;
 };
