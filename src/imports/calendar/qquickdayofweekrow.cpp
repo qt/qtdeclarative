@@ -41,6 +41,32 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype DayOfWeekRow
+    \inherits Control
+    \instantiates QQuickDayOfWeekRow
+    \inqmlmodule QtQuick.Calendar
+    \brief A row of names for the days in a week.
+
+    DayOfWeekRow presents day of week names in a row. The names of
+    the days are ordered and formatted using the specified \l locale.
+
+    \image qtquickcalendar2-dayofweekrow.png
+    \snippet dayofweekrow/qtquickcalendar2-dayofweekrow.qml 1
+
+    DayOfWeekRow can be used as a standalone control, but it is most
+    often used in conjunction with CalendarView. Regardless of the use case,
+    positioning of the row is left to the user.
+
+    \image qtquickcalendar2-dayofweekrow-layout.png
+    \snippet dayofweekrow/qtquickcalendar2-dayofweekrow-layout.qml 1
+
+    The visual appearance of DayOfWeekRow can be changed by
+    implementing a \l {delegate}{custom delegate}.
+
+    \sa CalendarView, WeekNumberColumn
+*/
+
 class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate
 {
 public:
@@ -75,6 +101,11 @@ QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
     connect(d->model, &QQuickDayOfWeekModel::localeChanged, this, &QQuickDayOfWeekRow::localeChanged);
 }
 
+/*!
+    \qmlproperty Locale QtQuick.Calendar::DayOfWeekRow::locale
+
+    This property holds the locale that is used to format names of the days in a week.
+*/
 QLocale QQuickDayOfWeekRow::locale() const
 {
     Q_D(const QQuickDayOfWeekRow);
@@ -87,6 +118,13 @@ void QQuickDayOfWeekRow::setLocale(const QLocale &locale)
     d->model->setLocale(locale);
 }
 
+/*!
+    \internal
+    \qmlproperty model QtQuick.Calendar::DayOfWeekRow::source
+
+    This property holds the source model that is used as a data model
+    for the internal content row.
+*/
 QVariant QQuickDayOfWeekRow::source() const
 {
     Q_D(const QQuickDayOfWeekRow);
@@ -102,6 +140,26 @@ void QQuickDayOfWeekRow::setSource(const QVariant &source)
     }
 }
 
+/*!
+    \qmlproperty Component QtQuick.Calendar::DayOfWeekRow::delegate
+
+    This property holds the item delegate that visualizes each day of the week.
+
+    In addition to the \c index property, a list of model data roles
+    are available in the context of each delegate:
+    \table
+        \row \li \b model.day : int \li The day of week (\l Qt::DayOfWeek)
+        \row \li \b model.longName : string \li The long version of the day name; for example, "Monday" (\l QLocale::LongFormat)
+        \row \li \b model.shortName : string \li The short version of the day name; for example, "Mon" (\l QLocale::ShortFormat)
+        \row \li \b model.narrowName : string \li A special version of the day name for use when space is limited; for example, "M" (\l QLocale::NarrowFormat)
+    \endtable
+
+    The following snippet presents the default implementation of the item
+    delegate. It can be used as a starting point for implementing custom
+    delegates.
+
+    \snippet DayOfWeekRow.qml delegate
+*/
 QQmlComponent *QQuickDayOfWeekRow::delegate() const
 {
     Q_D(const QQuickDayOfWeekRow);

@@ -5,6 +5,8 @@ IMPORT_VERSION = 2.0
 QT += qml quick
 QT += core-private gui-private qml-private quick-private quicktemplates-private
 
+QMAKE_DOCS = $$PWD/doc/qtquickcalendar2.qdocconf
+
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 INCLUDEPATH += $$PWD

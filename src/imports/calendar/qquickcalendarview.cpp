@@ -43,6 +43,33 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype CalendarView
+    \inherits Control
+    \instantiates QQuickCalendarView
+    \inqmlmodule QtQuick.Calendar
+    \brief A calendar view.
+
+    CalendarView presents a calendar month in a grid. The contents
+    are calculated for a given \l month and \l year, using the specified
+    \l locale.
+
+    \image qtquickcalendar2-calendarview.png
+    \snippet calendarview/qtquickcalendar2-calendarview.qml 1
+
+    CalendarView can be used as a standalone control, but it is most often
+    used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
+    of the use case, positioning of the grid is left to the user.
+
+    \image qtquickcalendar2-calendarview-layout.png
+    \snippet calendarview/qtquickcalendar2-calendarview-layout.qml 1
+
+    The visual appearance of CalendarView can be changed by
+    implementing a \l {delegate}{custom delegate}.
+
+    \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
+*/
+
 class QQuickCalendarViewPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickCalendarView)
@@ -149,6 +176,11 @@ QQuickCalendarView::QQuickCalendarView(QQuickItem *parent) :
     connect(d->model, &QQuickMonthModel::titleChanged, this, &QQuickCalendarView::titleChanged);
 }
 
+/*!
+    \qmlproperty int QtQuick.Calendar::CalendarView::month
+
+    This property holds the number of the month.
+*/
 int QQuickCalendarView::month() const
 {
     Q_D(const QQuickCalendarView);
@@ -161,6 +193,11 @@ void QQuickCalendarView::setMonth(int month)
     d->model->setMonth(month);
 }
 
+/*!
+    \qmlproperty int QtQuick.Calendar::CalendarView::year
+
+    This property holds the number of the year.
+*/
 int QQuickCalendarView::year() const
 {
     Q_D(const QQuickCalendarView);
@@ -173,6 +210,11 @@ void QQuickCalendarView::setYear(int year)
     d->model->setYear(year);
 }
 
+/*!
+    \qmlproperty Locale QtQuick.Calendar::CalendarView::locale
+
+    This property holds the locale that is used to calculate the contents.
+*/
 QLocale QQuickCalendarView::locale() const
 {
     Q_D(const QQuickCalendarView);
@@ -185,6 +227,13 @@ void QQuickCalendarView::setLocale(const QLocale &locale)
     d->model->setLocale(locale);
 }
 
+/*!
+    \internal
+    \qmlproperty model QtQuick.Calendar::CalendarView::source
+
+    This property holds the source model that is used as a data model
+    for the internal content column.
+*/
 QVariant QQuickCalendarView::source() const
 {
     Q_D(const QQuickCalendarView);
@@ -200,6 +249,15 @@ void QQuickCalendarView::setSource(const QVariant &source)
     }
 }
 
+/*!
+    \qmlproperty string QtQuick.Calendar::CalendarView::title
+
+    This property holds a title for the calendar.
+
+    This property is provided for convenience. CalendarView itself does
+    not visualize the title. The default value consists of the month name,
+    formatted using \l locale, and the year number.
+*/
 QString QQuickCalendarView::title() const
 {
     Q_D(const QQuickCalendarView);
@@ -217,6 +275,28 @@ void QQuickCalendarView::setTitle(const QString &title)
     }
 }
 
+/*!
+    \qmlproperty Component QtQuick.Calendar::CalendarView::delegate
+
+    This property holds the item delegate that visualizes each day.
+
+    In addition to the \c index property, a list of model data roles
+    are available in the context of each delegate:
+    \table
+        \row \li \b model.date : date \li The date of the cell
+        \row \li \b model.day : int \li The number of the day
+        \row \li \b model.today : bool \li Whether the delegate represents today
+        \row \li \b model.weekNumber : int \li The week number
+        \row \li \b model.month : int \li The number of the month
+        \row \li \b model.year : int \li The number of the year
+    \endtable
+
+    The following snippet presents the default implementation of the item
+    delegate. It can be used as a starting point for implementing custom
+    delegates.
+
+    \snippet CalendarView.qml delegate
+*/
 QQmlComponent *QQuickCalendarView::delegate() const
 {
     Q_D(const QQuickCalendarView);

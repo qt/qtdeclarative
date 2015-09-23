@@ -41,6 +41,33 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype WeekNumberColumn
+    \inherits Control
+    \instantiates QQuickWeekNumberColumn
+    \inqmlmodule QtQuick.Calendar
+    \brief A column of week numbers.
+
+    WeekNumberColumn presents week numbers in a column. The week numbers
+    are calculated for a given \l month and \l year, using the specified
+    \l locale.
+
+    \image qtquickcalendar2-weeknumbercolumn.png
+    \snippet weeknumbercolumn/qtquickcalendar2-weeknumbercolumn.qml 1
+
+    WeekNumberColumn can be used as a standalone control, but it is most
+    often used in conjunction with CalendarView. Regardless of the use case,
+    positioning of the column is left to the user.
+
+    \image qtquickcalendar2-weeknumbercolumn-layout.png
+    \snippet weeknumbercolumn/qtquickcalendar2-weeknumbercolumn-layout.qml 1
+
+    The visual appearance of WeekNumberColumn can be changed by
+    implementing a \l {delegate}{custom delegate}.
+
+    \sa CalendarView, DayOfWeekRow
+*/
+
 class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate
 {
 public:
@@ -77,6 +104,11 @@ QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
     connect(d->model, &QQuickWeekNumberModel::localeChanged, this, &QQuickWeekNumberColumn::localeChanged);
 }
 
+/*!
+    \qmlproperty int QtQuick.Calendar::WeekNumberColumn::month
+
+    This property holds the number of the month that the week numbers are calculated for.
+*/
 int QQuickWeekNumberColumn::month() const
 {
     Q_D(const QQuickWeekNumberColumn);
@@ -89,6 +121,11 @@ void QQuickWeekNumberColumn::setMonth(int month)
     d->model->setMonth(month);
 }
 
+/*!
+    \qmlproperty int QtQuick.Calendar::WeekNumberColumn::year
+
+    This property holds the number of the year that the week numbers are calculated for.
+*/
 int QQuickWeekNumberColumn::year() const
 {
     Q_D(const QQuickWeekNumberColumn);
@@ -101,6 +138,11 @@ void QQuickWeekNumberColumn::setYear(int year)
     d->model->setYear(year);
 }
 
+/*!
+    \qmlproperty Locale QtQuick.Calendar::WeekNumberColumn::locale
+
+    This property holds the locale that is used to calculate the week numbers.
+*/
 QLocale QQuickWeekNumberColumn::locale() const
 {
     Q_D(const QQuickWeekNumberColumn);
@@ -113,6 +155,13 @@ void QQuickWeekNumberColumn::setLocale(const QLocale &locale)
     d->model->setLocale(locale);
 }
 
+/*!
+    \internal
+    \qmlproperty model QtQuick.Calendar::WeekNumberColumn::source
+
+    This property holds the source model that is used as a data model
+    for the internal content column.
+*/
 QVariant QQuickWeekNumberColumn::source() const
 {
     Q_D(const QQuickWeekNumberColumn);
@@ -128,6 +177,23 @@ void QQuickWeekNumberColumn::setSource(const QVariant &source)
     }
 }
 
+/*!
+    \qmlproperty Component QtQuick.Calendar::WeekNumberColumn::delegate
+
+    This property holds the item delegate that visualizes each week number.
+
+    In addition to the \c index property, a list of model data roles
+    are available in the context of each delegate:
+    \table
+        \row \li \b model.weekNumber : int \li The week number
+    \endtable
+
+    The following snippet presents the default implementation of the item
+    delegate. It can be used as a starting point for implementing custom
+    delegates.
+
+    \snippet WeekNumberColumn.qml delegate
+*/
 QQmlComponent *QQuickWeekNumberColumn::delegate() const
 {
     Q_D(const QQuickWeekNumberColumn);
