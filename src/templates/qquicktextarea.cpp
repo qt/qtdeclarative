@@ -168,7 +168,7 @@ void QQuickTextArea::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::TextArea::background
+    \qmlproperty Item QtQuick.Controls::TextArea::background
 
     This property holds the background item.
 
@@ -202,7 +202,7 @@ void QQuickTextArea::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text QtQuickControls2::TextArea::placeholder
+    \qmlproperty Text QtQuick.Controls::TextArea::placeholder
 
     This property holds the placeholder text item.
 

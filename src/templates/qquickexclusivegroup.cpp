@@ -221,7 +221,7 @@ QQuickExclusiveGroupAttached *QQuickExclusiveGroup::qmlAttachedProperties(QObjec
 }
 
 /*!
-    \qmlproperty QtObject QtQuickControls2::ExclusiveGroup::current
+    \qmlproperty QtObject QtQuick.Controls::ExclusiveGroup::current
 
     This property holds the currently selected object or \c null if there is none.
 
@@ -247,7 +247,7 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuickControls2::ExclusiveGroup::checkables
+    \qmlproperty list<Object> QtQuick.Controls::ExclusiveGroup::checkables
     \default
 
     This property holds the list of checkables.
@@ -284,7 +284,7 @@ QQmlListProperty<QObject> QQuickExclusiveGroup::checkables()
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::ExclusiveGroup::addCheckable(QtObject object)
+    \qmlmethod void QtQuick.Controls::ExclusiveGroup::addCheckable(QtObject object)
 
     Adds an \a object to the exclusive group.
 
@@ -316,7 +316,7 @@ void QQuickExclusiveGroup::addCheckable(QObject *object)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::ExclusiveGroup::removeCheckable(QtObject object)
+    \qmlmethod void QtQuick.Controls::ExclusiveGroup::removeCheckable(QtObject object)
 
     Removes an \a object from the exclusive group.
 
@@ -359,7 +359,7 @@ QQuickExclusiveGroupAttached::QQuickExclusiveGroupAttached(QObject *parent) :
 }
 
 /*!
-    \qmlattachedproperty ExclusiveGroup QtQuickControls2::ExclusiveGroup::group
+    \qmlattachedproperty ExclusiveGroup QtQuick.Controls::ExclusiveGroup::group
 
     This property attaches a checkable control or object to an exclusive group.
 

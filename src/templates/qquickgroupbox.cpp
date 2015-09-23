@@ -88,7 +88,7 @@ QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty string QtQuickControls2::GroupBox::title
+    \qmlproperty string QtQuick.Controls::GroupBox::title
 
     This property holds the title.
 */
@@ -108,7 +108,7 @@ void QQuickGroupBox::setTitle(const QString &title)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::GroupBox::label
+    \qmlproperty Item QtQuick.Controls::GroupBox::label
 
     This property holds the label item that visualizes \l title.
 

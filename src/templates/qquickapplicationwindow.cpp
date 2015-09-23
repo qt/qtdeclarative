@@ -130,7 +130,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::ApplicationWindow::header
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::header
 
     A header item for the window, for example a title bar, menu or tool-bar.
     By default this property is empty, no header will be shown.
@@ -163,7 +163,7 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::ApplicationWindow::footer
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::footer
 
     A footer item for the window, for example a status bar or menu.
     By default this property is empty, no footer will be shown.

@@ -335,7 +335,7 @@ void QQuickControl::resetFont()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::availableWidth
+    \qmlproperty real QtQuick.Controls::Control::availableWidth
 
     This property holds the width available after deducting horizontal padding.
 
@@ -347,7 +347,7 @@ qreal QQuickControl::availableWidth() const
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::availableHeight
+    \qmlproperty real QtQuick.Controls::Control::availableHeight
 
     This property holds the height available after deducting vertical padding.
 
@@ -359,7 +359,7 @@ qreal QQuickControl::availableHeight() const
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::padding
+    \qmlproperty real QtQuick.Controls::Control::padding
 
     This property holds the default padding.
 
@@ -401,7 +401,7 @@ void QQuickControl::resetPadding()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::topPadding
+    \qmlproperty real QtQuick.Controls::Control::topPadding
 
     This property holds the top padding.
 
@@ -428,7 +428,7 @@ void QQuickControl::resetTopPadding()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::leftPadding
+    \qmlproperty real QtQuick.Controls::Control::leftPadding
 
     This property holds the left padding.
 
@@ -455,7 +455,7 @@ void QQuickControl::resetLeftPadding()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::rightPadding
+    \qmlproperty real QtQuick.Controls::Control::rightPadding
 
     This property holds the right padding.
 
@@ -482,7 +482,7 @@ void QQuickControl::resetRightPadding()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::bottomPadding
+    \qmlproperty real QtQuick.Controls::Control::bottomPadding
 
     This property holds the bottom padding.
 
@@ -509,7 +509,7 @@ void QQuickControl::resetBottomPadding()
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Control::spacing
+    \qmlproperty real QtQuick.Controls::Control::spacing
 
     This property holds the spacing.
 */
@@ -534,7 +534,7 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Control::layoutDirection
+    \qmlproperty enumeration QtQuick.Controls::Control::layoutDirection
 
     This property holds the layout direction of the control.
 
@@ -555,7 +555,7 @@ Qt::LayoutDirection QQuickControl::layoutDirection() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Control::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick.Controls::Control::effectiveLayoutDirection
     \readonly
 
     This property holds the effective layout direction of the control.
@@ -585,7 +585,7 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::Control::mirrored
+    \qmlproperty bool QtQuick.Controls::Control::mirrored
     \readonly
 
     This property holds whether the control is mirrored.
@@ -601,7 +601,7 @@ bool QQuickControl::isMirrored() const
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Control::background
+    \qmlproperty Item QtQuick.Controls::Control::background
 
     This property holds the background item.
 
@@ -633,7 +633,7 @@ void QQuickControl::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Control::contentItem
+    \qmlproperty Item QtQuick.Controls::Control::contentItem
 
     TODO
 */

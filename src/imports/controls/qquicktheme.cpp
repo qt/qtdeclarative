@@ -59,43 +59,43 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::accentColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::accentColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::backgroundColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::backgroundColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::disabledColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::disabledColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::focusColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::focusColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::frameColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::frameColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::pressColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::pressColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::selectedTextColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::selectedTextColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::selectionColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::selectionColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::shadowColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::shadowColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::textColor
+    \qmlattachedproperty color QtQuick.Controls::Theme::textColor
 */
 
 Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtquickcontrols/theme.json")))

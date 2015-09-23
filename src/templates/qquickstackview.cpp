@@ -284,7 +284,7 @@ QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::StackView::busy
+    \qmlproperty bool QtQuick.Controls::StackView::busy
     \readonly
     This property holds whether a transition is running.
 */
@@ -295,7 +295,7 @@ bool QQuickStackView::busy() const
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::StackView::depth
+    \qmlproperty int QtQuick.Controls::StackView::depth
     \readonly
     This property holds the number of items currently pushed onto the stack.
 */
@@ -306,7 +306,7 @@ int QQuickStackView::depth() const
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::StackView::currentItem
+    \qmlproperty Item QtQuick.Controls::StackView::currentItem
     \readonly
     This property holds the current top-most item in the stack.
 */
@@ -317,7 +317,7 @@ QQuickItem *QQuickStackView::currentItem() const
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::get(index, behavior = DontLoad)
+    \qmlmethod Item QtQuick.Controls::StackView::get(index, behavior = DontLoad)
 
     Supported behavior values:
     \list
@@ -340,7 +340,7 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::find(callback, behavior = DontLoad)
+    \qmlmethod Item QtQuick.Controls::StackView::find(callback, behavior = DontLoad)
 
     Supported behavior values:
     \list
@@ -373,7 +373,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::push(item, properties, operation)
+    \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation)
 
     TODO
 */
@@ -421,7 +421,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::pop(item = null, operation = Transition)
+    \qmlmethod Item QtQuick.Controls::StackView::pop(item = null, operation = Transition)
 
     TODO
 */
@@ -483,7 +483,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::push(item, properties, operation = Transition)
+    \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation = Transition)
 
     TODO
 */
@@ -540,7 +540,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::StackView::clear()
+    \qmlmethod Item QtQuick.Controls::StackView::clear()
 
     TODO
 */
@@ -554,7 +554,7 @@ void QQuickStackView::clear()
 }
 
 /*!
-    \qmlproperty var QtQuickControls2::StackView::initialItem
+    \qmlproperty var QtQuick.Controls::StackView::initialItem
 
     This property holds the initial item.
 
@@ -573,7 +573,7 @@ void QQuickStackView::setInitialItem(const QVariant &item)
 }
 
 /*!
-    \qmlproperty Transition QtQuickControls2::StackView::popEnter
+    \qmlproperty Transition QtQuick.Controls::StackView::popEnter
 
     TODO
 */
@@ -596,7 +596,7 @@ void QQuickStackView::setPopEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition QtQuickControls2::StackView::popExit
+    \qmlproperty Transition QtQuick.Controls::StackView::popExit
 
     TODO
 */
@@ -619,7 +619,7 @@ void QQuickStackView::setPopExit(QQuickTransition *exit)
 }
 
 /*!
-    \qmlproperty Transition QtQuickControls2::StackView::pushEnter
+    \qmlproperty Transition QtQuick.Controls::StackView::pushEnter
 
     TODO
 */
@@ -642,7 +642,7 @@ void QQuickStackView::setPushEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition QtQuickControls2::StackView::pushExit
+    \qmlproperty Transition QtQuick.Controls::StackView::pushExit
 
     TODO
 */
@@ -742,7 +742,7 @@ QQuickStackAttached::QQuickStackAttached(QQuickItem *parent) :
 }
 
 /*!
-    \qmlattachedproperty int QtQuickControls2::StackView::index
+    \qmlattachedproperty int QtQuick.Controls::StackView::index
 
     TODO
 */
@@ -755,7 +755,7 @@ int QQuickStackAttached::index() const
 }
 
 /*!
-    \qmlattachedproperty StackView QtQuickControls2::StackView::view
+    \qmlattachedproperty StackView QtQuick.Controls::StackView::view
 
     TODO
 */
@@ -768,7 +768,7 @@ QQuickStackView *QQuickStackAttached::view() const
 }
 
 /*!
-    \qmlattachedproperty enumeration QtQuickControls2::StackView::status
+    \qmlattachedproperty enumeration QtQuick.Controls::StackView::status
 
     TODO
 */

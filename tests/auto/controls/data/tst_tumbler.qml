@@ -316,11 +316,10 @@ TestCase {
 
     Component {
         id: listViewTumblerComponent
-
+        //! [contentItem]
         Tumbler {
             id: listViewTumbler
 
-            //! [contentItem]
             contentItem: ListView {
                 anchors.fill: parent
                 model: listViewTumbler.model
@@ -332,8 +331,8 @@ TestCase {
                 preferredHighlightEnd: height / 2  + (height / listViewTumbler.visibleItemCount / 2)
                 clip: true
             }
-            //! [contentItem]
         }
+        //! [contentItem]
     }
 
     function test_displacementListView_data() {

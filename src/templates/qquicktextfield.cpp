@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuickControls2::TextField::pressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick.Controls::TextField::pressAndHold(MouseEvent mouse)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -200,7 +200,7 @@ void QQuickTextField::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::TextField::background
+    \qmlproperty Item QtQuick.Controls::TextField::background
 
     This property holds the background item.
 
@@ -234,7 +234,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text QtQuickControls2::TextField::placeholder
+    \qmlproperty Text QtQuick.Controls::TextField::placeholder
 
     This property holds the placeholder text item.
 

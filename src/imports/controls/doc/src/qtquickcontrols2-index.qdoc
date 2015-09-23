@@ -90,7 +90,7 @@
     ScrollView {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         Flickable {
-            ...
+            // ...
         }
     }
     \endqml
@@ -100,7 +100,7 @@
 
     \qml
     Flickable {
-        ...
+        // ...
         ScrollBar.vertical: ScrollBar { }
     }
     \endqml
@@ -162,7 +162,7 @@
     Button {
         style: ButtonStyle {
             label: Label {
-                ...
+                // ...
             }
         }
     }
@@ -173,7 +173,7 @@
     \qml
     Button {
         label: Label {
-            ...
+            // ...
         }
     }
     \endqml

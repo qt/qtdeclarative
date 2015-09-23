@@ -83,7 +83,7 @@ QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::PageIndicator::count
+    \qmlproperty int QtQuick.Controls::PageIndicator::count
 
     This property holds the number of pages.
 */
@@ -103,7 +103,7 @@ void QQuickPageIndicator::setCount(int count)
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::PageIndicator::currentIndex
+    \qmlproperty int QtQuick.Controls::PageIndicator::currentIndex
 
     This property holds the index of the current page.
 */
@@ -123,7 +123,7 @@ void QQuickPageIndicator::setCurrentIndex(int index)
 }
 
 /*!
-    \qmlproperty Component QtQuickControls2::PageIndicator::delegate
+    \qmlproperty Component QtQuick.Controls::PageIndicator::delegate
 
     This property holds a delegate that presents a page.
 
@@ -145,7 +145,7 @@ void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty color QtQuickControls2::PageIndicator::color
+    \qmlproperty color QtQuick.Controls::PageIndicator::color
 
     This property holds the color of the indicator.
 

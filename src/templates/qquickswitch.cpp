@@ -107,7 +107,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Switch::position
+    \qmlproperty real QtQuick.Controls::Switch::position
 
     This property holds the logical position of the thumb indicator.
 
@@ -136,7 +136,7 @@ void QQuickSwitch::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Switch::visualPosition
+    \qmlproperty real QtQuick.Controls::Switch::visualPosition
 
     This property holds the visual position of the thumb indicator.
 

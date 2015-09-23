@@ -247,7 +247,7 @@ QQuickContainer::~QQuickContainer()
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::Container::count
+    \qmlproperty int QtQuick.Controls::Container::count
     \readonly
 
     This property holds the number of items.
@@ -259,7 +259,7 @@ int QQuickContainer::count() const
 }
 
 /*!
-    \qmlmethod Item QtQuickControls2::Container::itemAt(int index)
+    \qmlmethod Item QtQuick.Controls::Container::itemAt(int index)
 
     Returns the item at \a index, or \c null if it does not exist.
 */
@@ -270,7 +270,7 @@ QQuickItem *QQuickContainer::itemAt(int index) const
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Container::addItem(Item item)
+    \qmlmethod void QtQuick.Controls::Container::addItem(Item item)
 
     Adds an \a item.
 */
@@ -281,7 +281,7 @@ void QQuickContainer::addItem(QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Container::insertItem(int index, Item item)
+    \qmlmethod void QtQuick.Controls::Container::insertItem(int index, Item item)
 
     Inserts an \a item at \a index.
 */
@@ -306,7 +306,7 @@ void QQuickContainer::insertItem(int index, QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Container::moveItem(int from, int to)
+    \qmlmethod void QtQuick.Controls::Container::moveItem(int from, int to)
 
     Moves an item \a from one index \a to another.
 */
@@ -324,7 +324,7 @@ void QQuickContainer::moveItem(int from, int to)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Container::removeItem(int index)
+    \qmlmethod void QtQuick.Controls::Container::removeItem(int index)
 
     Removes an item at \a index.
 
@@ -343,7 +343,7 @@ void QQuickContainer::removeItem(int index)
 }
 
 /*!
-    \qmlproperty model QtQuickControls2::Container::contentModel
+    \qmlproperty model QtQuick.Controls::Container::contentModel
     \readonly
 
     This property holds the content model of items.
@@ -355,7 +355,7 @@ QVariant QQuickContainer::contentModel() const
 }
 
 /*!
-    \qmlproperty list<Object> QtQuickControls2::Container::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Container::contentData
     \default
 
     This property holds the list of content data.
@@ -373,7 +373,7 @@ QQmlListProperty<QObject> QQuickContainer::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> QtQuickControls2::Container::contentChildren
+    \qmlproperty list<Item> QtQuick.Controls::Container::contentChildren
 
     This property holds the list of content children.
 
@@ -390,7 +390,7 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::Container::currentIndex
+    \qmlproperty int QtQuick.Controls::Container::currentIndex
 
     TODO
 */
@@ -411,7 +411,7 @@ void QQuickContainer::setCurrentIndex(int index)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Container::currentItem
+    \qmlproperty Item QtQuick.Controls::Container::currentItem
 
     TODO
 */

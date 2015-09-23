@@ -83,7 +83,7 @@ QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::BusyIndicator::running
+    \qmlproperty bool QtQuick.Controls::BusyIndicator::running
 
     This property holds whether the busy indicator is currently indicating
     activity.
@@ -109,7 +109,7 @@ void QQuickBusyIndicator::setRunning(bool running)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::BusyIndicator::indicator
+    \qmlproperty Item QtQuick.Controls::BusyIndicator::indicator
 
     This property holds the \l[QML]{Item}, which graphically implements the busy indicator.
 */

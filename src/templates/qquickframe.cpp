@@ -87,7 +87,7 @@ QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Frame::contentWidth
+    \qmlproperty real QtQuick.Controls::Frame::contentWidth
 
     This property holds the content width. It is used for calculating the
     total implicit width of the frame.
@@ -111,7 +111,7 @@ void QQuickFrame::setContentWidth(qreal width)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Frame::contentHeight
+    \qmlproperty real QtQuick.Controls::Frame::contentHeight
 
     This property holds the content height. It is used for calculating the
     total implicit height of the frame.
@@ -135,7 +135,7 @@ void QQuickFrame::setContentHeight(qreal height)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Frame::frame
+    \qmlproperty Item QtQuick.Controls::Frame::frame
 
     This property holds the visual frame item.
 
@@ -160,7 +160,7 @@ void QQuickFrame::setFrame(QQuickItem *frame)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuickControls2::Frame::contentData
+    \qmlproperty list<Object> QtQuick.Controls::Frame::contentData
     \default
 
     This property holds the list of content data.
@@ -178,7 +178,7 @@ QQmlListProperty<QObject> QQuickFrame::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> QtQuickControls2::Frame::contentChildren
+    \qmlproperty list<Item> QtQuick.Controls::Frame::contentChildren
 
     This property holds the list of content children.
 

@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
     \code
     Tumbler {
         model: 5
+        // ...
     }
     \endcode
 
@@ -193,7 +194,7 @@ QQuickTumbler::~QQuickTumbler()
 }
 
 /*!
-    \qmlproperty variant QtQuickControls2::Tumbler::model
+    \qmlproperty variant QtQuick.Controls::Tumbler::model
 
     This property holds the model that provides data for this tumbler.
 */
@@ -213,7 +214,7 @@ void QQuickTumbler::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::Tumbler::count
+    \qmlproperty int QtQuick.Controls::Tumbler::count
 
     This property holds the number of items in the model.
 */
@@ -224,7 +225,7 @@ int QQuickTumbler::count() const
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::Tumbler::currentIndex
+    \qmlproperty int QtQuick.Controls::Tumbler::currentIndex
 
     This property holds the index of the current item.
 */
@@ -241,7 +242,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Tumbler::currentItem
+    \qmlproperty Item QtQuick.Controls::Tumbler::currentItem
 
     This property holds the item at the current index.
 */
@@ -252,7 +253,7 @@ QQuickItem *QQuickTumbler::currentItem() const
 }
 
 /*!
-    \qmlproperty component QtQuickControls2::Tumbler::delegate
+    \qmlproperty component QtQuick.Controls::Tumbler::delegate
 
     This property holds the delegate used to display each item.
 */
@@ -272,7 +273,7 @@ void QQuickTumbler::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty int QtQuickControls2::Tumbler::visibleItemCount
+    \qmlproperty int QtQuick.Controls::Tumbler::visibleItemCount
 
     This property holds the number of items visible in the tumbler. It must be
     an odd number, as the current item is always vertically centered.

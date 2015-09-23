@@ -107,7 +107,7 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::ScrollIndicator::size
+    \qmlproperty real QtQuick.Controls::ScrollIndicator::size
 
     This property holds the size of the indicator, scaled to \c {0.0 - 1.0}.
 
@@ -129,7 +129,7 @@ void QQuickScrollIndicator::setSize(qreal size)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::ScrollIndicator::position
+    \qmlproperty real QtQuick.Controls::ScrollIndicator::position
 
     This property holds the position of the indicator, scaled to \c {0.0 - 1.0}.
 
@@ -151,7 +151,7 @@ void QQuickScrollIndicator::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::ScrollIndicator::active
+    \qmlproperty bool QtQuick.Controls::ScrollIndicator::active
 
     This property holds whether the indicator is active, that is, when the
     attached Flickable is \l {Flickable::moving}{moving}.
@@ -172,7 +172,7 @@ void QQuickScrollIndicator::setActive(bool active)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::ScrollIndicator::orientation
+    \qmlproperty enumeration QtQuick.Controls::ScrollIndicator::orientation
 
     This property holds the orientation of the indicator.
 
@@ -198,7 +198,7 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::ScrollIndicator::indicator
+    \qmlproperty Item QtQuick.Controls::ScrollIndicator::indicator
 
     This property holds the indicator item.
 
@@ -280,7 +280,7 @@ QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QQuickFlickable *fl
 }
 
 /*!
-    \qmlattachedproperty ScrollIndicator QtQuickControls2::ScrollIndicator::horizontal
+    \qmlattachedproperty ScrollIndicator QtQuick.Controls::ScrollIndicator::horizontal
 
     This property attaches a horizontal scroll indicator to a \l Flickable.
 
@@ -332,7 +332,7 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
 }
 
 /*!
-    \qmlattachedproperty ScrollIndicator QtQuickControls2::ScrollIndicator::vertical
+    \qmlattachedproperty ScrollIndicator QtQuick.Controls::ScrollIndicator::vertical
 
     This property attaches a vertical scroll indicator to a \l Flickable.
 

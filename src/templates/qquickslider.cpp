@@ -162,7 +162,7 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::from
+    \qmlproperty real QtQuick.Controls::Slider::from
 
     This property holds the starting value for the range. The default value is \c 0.0.
 
@@ -188,7 +188,7 @@ void QQuickSlider::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::to
+    \qmlproperty real QtQuick.Controls::Slider::to
 
     This property holds the end value for the range. The default value is \c 1.0.
 
@@ -214,7 +214,7 @@ void QQuickSlider::setTo(qreal to)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::value
+    \qmlproperty real QtQuick.Controls::Slider::value
 
     This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
@@ -244,7 +244,7 @@ void QQuickSlider::setValue(qreal value)
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::position
+    \qmlproperty real QtQuick.Controls::Slider::position
 
     This property holds the logical position of the handle.
 
@@ -262,7 +262,7 @@ qreal QQuickSlider::position() const
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::visualPosition
+    \qmlproperty real QtQuick.Controls::Slider::visualPosition
     \readonly
 
     This property holds the visual position of the handle.
@@ -283,7 +283,7 @@ qreal QQuickSlider::visualPosition() const
 }
 
 /*!
-    \qmlproperty real QtQuickControls2::Slider::stepSize
+    \qmlproperty real QtQuick.Controls::Slider::stepSize
 
     This property holds the step size. The default value is \c 0.0.
 
@@ -305,7 +305,7 @@ void QQuickSlider::setStepSize(qreal step)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Slider::snapMode
+    \qmlproperty enumeration QtQuick.Controls::Slider::snapMode
 
     This property holds the snap mode.
 
@@ -334,7 +334,7 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::Slider::pressed
+    \qmlproperty bool QtQuick.Controls::Slider::pressed
 
     This property holds whether the slider is pressed.
 */
@@ -355,7 +355,7 @@ void QQuickSlider::setPressed(bool pressed)
 }
 
 /*!
-    \qmlproperty enumeration QtQuickControls2::Slider::orientation
+    \qmlproperty enumeration QtQuick.Controls::Slider::orientation
 
     This property holds the orientation.
 
@@ -381,7 +381,7 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Slider::handle
+    \qmlproperty Item QtQuick.Controls::Slider::handle
 
     This property holds the handle item.
 
@@ -406,7 +406,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::Slider::track
+    \qmlproperty Item QtQuick.Controls::Slider::track
 
     This property holds the track item.
 
@@ -431,7 +431,7 @@ void QQuickSlider::setTrack(QQuickItem *track)
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Slider::increase()
+    \qmlmethod void QtQuick.Controls::Slider::increase()
 
     Increases the value by \l stepSize or \c 0.1 if stepSize is not defined.
 
@@ -445,7 +445,7 @@ void QQuickSlider::increase()
 }
 
 /*!
-    \qmlmethod void QtQuickControls2::Slider::decrease()
+    \qmlmethod void QtQuick.Controls::Slider::decrease()
 
     Decreases the value by \l stepSize or \c 0.1 if stepSize is not defined.
 

@@ -49,19 +49,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuickControls2::AbstractButton::pressed()
+    \qmlsignal QtQuick.Controls::AbstractButton::pressed()
 
     This signal is emitted when the button is interactively pressed by the user.
 */
 
 /*!
-    \qmlsignal QtQuickControls2::AbstractButton::released()
+    \qmlsignal QtQuick.Controls::AbstractButton::released()
 
     This signal is emitted when the button is interactively released by the user.
 */
 
 /*!
-    \qmlsignal QtQuickControls2::AbstractButton::canceled()
+    \qmlsignal QtQuick.Controls::AbstractButton::canceled()
 
     This signal is emitted when the button loses mouse grab
     while being pressed, or when it would emit the \l released
@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuickControls2::AbstractButton::clicked()
+    \qmlsignal QtQuick.Controls::AbstractButton::clicked()
 
     This signal is emitted when the button is clicked.
 */
@@ -95,7 +95,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
 }
 
 /*!
-    \qmlproperty string QtQuickControls2::AbstractButton::text
+    \qmlproperty string QtQuick.Controls::AbstractButton::text
 
     This property holds a textual description of the button.
 
@@ -121,7 +121,7 @@ void QQuickAbstractButton::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty bool QtQuickControls2::AbstractButton::pressed
+    \qmlproperty bool QtQuick.Controls::AbstractButton::pressed
 
     This property holds whether the button is pressed.
 */
@@ -142,7 +142,7 @@ void QQuickAbstractButton::setPressed(bool isPressed)
 }
 
 /*!
-    \qmlproperty Item QtQuickControls2::AbstractButton::label
+    \qmlproperty Item QtQuick.Controls::AbstractButton::label
 
     This property holds the label item.
 

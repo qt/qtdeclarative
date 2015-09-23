@@ -149,7 +149,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 }
 
 /*!
-    \qmlattachedproperty int QtQuickControls2::SwipeView::index
+    \qmlattachedproperty int QtQuick.Controls::SwipeView::index
 
     This attached property holds the index of each child item in the SwipeView.
 
@@ -157,7 +157,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty bool QtQuickControls2::SwipeView::isCurrentItem
+    \qmlattachedproperty bool QtQuick.Controls::SwipeView::isCurrentItem
 
     This attached property is \c true if this child is the current item.
 
@@ -165,7 +165,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty SwipeView QtQuickControls2::SwipeView::view
+    \qmlattachedproperty SwipeView QtQuick.Controls::SwipeView::view
 
     This attached property holds the view that manages this child item.
 
