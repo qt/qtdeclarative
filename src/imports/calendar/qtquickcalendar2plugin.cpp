@@ -40,9 +40,6 @@
 #include "qquickdayofweekrow_p.h"
 #include "qquickweeknumbercolumn_p.h"
 #include "qquickcalendarmodel_p.h"
-#include "qquickdayofweekmodel_p.h"
-#include "qquickmonthmodel_p.h"
-#include "qquickweeknumbermodel_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -61,9 +58,6 @@ void QtQuickCalendar2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
     qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
     qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
-    qmlRegisterType<QQuickDayOfWeekModel>(uri, 2, 0, "DayOfWeekModel");
-    qmlRegisterType<QQuickMonthModel>(uri, 2, 0, "MonthModel");
-    qmlRegisterType<QQuickWeekNumberModel>(uri, 2, 0, "WeekNumberModel");
 }
 
 QT_END_NAMESPACE
