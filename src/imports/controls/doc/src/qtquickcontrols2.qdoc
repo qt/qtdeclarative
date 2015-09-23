@@ -29,7 +29,7 @@
     \qmlmodule QtQuick.Controls 2.0
     \title Qt Quick Controls 2 QML Types
     \ingroup qmlmodules
-    \brief Provides QML types for user interfaces.
+    \brief Provides QML types for user interfaces (Qt Quick Controls 2).
 
     The \l{Qt Quick Controls 2} module provides QML types for creating user
     interfaces. These QML types work in conjunction with \l{Qt Quick} and
