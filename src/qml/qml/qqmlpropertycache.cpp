@@ -810,19 +810,17 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     This is different from QMetaMethod::methodIndex().
 */
 QQmlPropertyData *
-QQmlPropertyCache::signal(int index, QQmlPropertyCache **c) const
+QQmlPropertyCache::signal(int index) const
 {
     if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
         return 0;
 
     if (index < signalHandlerIndexCacheStart)
-        return _parent->signal(index, c);
+        return _parent->signal(index);
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
-    if (rv->notFullyResolved()) resolve(rv);
     Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
-    if (c) *c = const_cast<QQmlPropertyCache *>(this);
-    return rv;
+    return ensureResolved(rv);
 }
 
 int QQmlPropertyCache::methodIndexToSignalIndex(int index) const

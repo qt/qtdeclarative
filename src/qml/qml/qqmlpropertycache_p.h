@@ -284,7 +284,7 @@ public:
 
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
-    QQmlPropertyData *signal(int index) const { return signal(index, 0); }
+    QQmlPropertyData *signal(int index) const;
     int methodIndexToSignalIndex(int) const;
     QStringList propertyNames() const;
 
@@ -340,9 +340,7 @@ private:
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
-    QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
-                                                            const QList<QByteArray> &names);
-    QQmlPropertyData *signal(int, QQmlPropertyCache **) const;
+    QQmlPropertyCacheMethodArguments *createArgumentsObject(int count, const QList<QByteArray> &names);
 
     typedef QVector<QQmlPropertyData> IndexCache;
     typedef QStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
