@@ -13,6 +13,8 @@ HEADERS += \
     $$PWD/qquickcontainer_p_p.h \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
+    $$PWD/qquickdial_p.h \
+    $$PWD/qquickdrawer_p.h \
     $$PWD/qquickexclusivegroup_p.h \
     $$PWD/qquickframe_p.h \
     $$PWD/qquickframe_p_p.h \
@@ -28,6 +30,7 @@ HEADERS += \
     $$PWD/qquickslider_p.h \
     $$PWD/qquickstackview_p.h \
     $$PWD/qquickstackview_p_p.h \
+    $$PWD/qquickswipeview_p.h \
     $$PWD/qquickswitch_p.h \
     $$PWD/qquicktabbar_p.h \
     $$PWD/qquicktabbutton_p.h \
@@ -37,7 +40,8 @@ HEADERS += \
     $$PWD/qquicktextfield_p_p.h \
     $$PWD/qquicktogglebutton_p.h \
     $$PWD/qquicktoolbar_p.h \
-    $$PWD/qquicktoolbutton_p.h
+    $$PWD/qquicktoolbutton_p.h \
+    $$PWD/qquicktumbler_p.h
 
 SOURCES += \
     $$PWD/qquickabstractbutton.cpp \
@@ -48,6 +52,8 @@ SOURCES += \
     $$PWD/qquickcheckbox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
+    $$PWD/qquickdial.cpp \
+    $$PWD/qquickdrawer.cpp \
     $$PWD/qquickexclusivegroup.cpp \
     $$PWD/qquickframe.cpp \
     $$PWD/qquickgroupbox.cpp \
@@ -61,6 +67,7 @@ SOURCES += \
     $$PWD/qquickslider.cpp \
     $$PWD/qquickstackview.cpp \
     $$PWD/qquickstackview_p.cpp \
+    $$PWD/qquickswipeview.cpp \
     $$PWD/qquickswitch.cpp \
     $$PWD/qquicktabbar.cpp \
     $$PWD/qquicktabbutton.cpp \
@@ -68,4 +75,5 @@ SOURCES += \
     $$PWD/qquicktextfield.cpp \
     $$PWD/qquicktogglebutton.cpp \
     $$PWD/qquicktoolbar.cpp \
-    $$PWD/qquicktoolbutton.cpp
+    $$PWD/qquicktoolbutton.cpp \
+    $$PWD/qquicktumbler.cpp

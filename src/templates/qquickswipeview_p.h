@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAWER_P_H
-#define QQUICKDRAWER_P_H
+#ifndef QQUICKSWIPEVIEW_P_H
+#define QQUICKSWIPEVIEW_P_H
 
 //
 //  W A R N I N G
@@ -48,67 +48,64 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtQuickTemplates/private/qquickcontainer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPropertyAnimation;
-class QQuickDrawerPrivate;
+class QQuickSwipeViewAttached;
+class QQuickSwipeViewPrivate;
 
-class QQuickDrawer : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
-    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
-    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    // TODO: make this a proper transition
-    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentItem")
 
 public:
-    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickSwipeView(QQuickItem *parent = Q_NULLPTR);
 
-    Qt::Edge edge() const;
-    void setEdge(Qt::Edge edge);
-
-    qreal position() const;
-    void setPosition(qreal position);
-
-    QQuickItem *contentItem() const;
-    void setContentItem(QQuickItem *item);
-
-    QQuickPropertyAnimation *animation() const;
-    void setAnimation(QQuickPropertyAnimation *animation);
-
-public Q_SLOTS:
-    void open();
-    void close();
-
-Q_SIGNALS:
-    void clicked();
-    void edgeChanged();
-    void positionChanged();
-    void contentItemChanged();
-    void animationChanged();
+    static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
 protected:
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-
-    virtual qreal positionAt(const QPointF &point) const;
 
 private:
-    Q_DISABLE_COPY(QQuickDrawer)
-    Q_DECLARE_PRIVATE(QQuickDrawer)
+    Q_DISABLE_COPY(QQuickSwipeView)
+    Q_DECLARE_PRIVATE(QQuickSwipeView)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
+class QQuickSwipeViewAttachedPrivate;
+
+class Q_QUICKTEMPLATES_EXPORT QQuickSwipeViewAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
+    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
+    Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
+
+public:
+    explicit QQuickSwipeViewAttached(QQuickItem *delegateItem);
+    ~QQuickSwipeViewAttached();
+
+    int index() const;
+    bool isCurrentItem() const;
+    QQuickSwipeView *view() const;
+
+Q_SIGNALS:
+    void indexChanged();
+    void isCurrentItemChanged();
+    void viewChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickSwipeViewAttached)
+    Q_DECLARE_PRIVATE(QQuickSwipeViewAttached)
+};
+
+Q_DECLARE_TYPEINFO(QQuickSwipeView, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDRAWER_P_H
+QML_DECLARE_TYPEINFO(QQuickSwipeView, QML_HAS_ATTACHED_PROPERTIES)
+
+#endif // QQUICKSWIPEVIEW_P_H

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIAL_H
-#define QQUICKDIAL_H
+#ifndef QQUICKDRAWER_P_H
+#define QQUICKDRAWER_P_H
 
 //
 //  W A R N I N G
@@ -48,95 +48,67 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
-#include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDialAttached;
-class QQuickDialPrivate;
+class QQuickPropertyAnimation;
+class QQuickDrawerPrivate;
 
-class QQuickDial : public QQuickControl
+class Q_QUICKTEMPLATES_EXPORT QQuickDrawer : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged FINAL)
-    Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
-    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged FINAL)
-    Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
+    Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
+    Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    // TODO: make this a proper transition
+    Q_PROPERTY(QQuickPropertyAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentItem")
 
 public:
-    explicit QQuickDial(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickDrawer(QQuickItem *parent = Q_NULLPTR);
 
-    qreal from() const;
-    void setFrom(qreal from);
-
-    qreal to() const;
-    void setTo(qreal to);
-
-    qreal value() const;
-    void setValue(qreal value);
+    Qt::Edge edge() const;
+    void setEdge(Qt::Edge edge);
 
     qreal position() const;
+    void setPosition(qreal position);
 
-    qreal angle() const;
+    QQuickItem *contentItem() const;
+    void setContentItem(QQuickItem *item);
 
-    qreal stepSize() const;
-    void setStepSize(qreal step);
-
-    enum SnapMode {
-        NoSnap,
-        SnapAlways,
-        SnapOnRelease
-    };
-    Q_ENUM(SnapMode)
-
-    SnapMode snapMode() const;
-    void setSnapMode(SnapMode mode);
-
-    bool isPressed() const;
-    void setPressed(bool pressed);
-
-    QQuickItem *handle() const;
-    void setHandle(QQuickItem *handle);
+    QQuickPropertyAnimation *animation() const;
+    void setAnimation(QQuickPropertyAnimation *animation);
 
 public Q_SLOTS:
-    void increase();
-    void decrease();
+    void open();
+    void close();
 
 Q_SIGNALS:
-    void fromChanged();
-    void toChanged();
-    void valueChanged();
+    void clicked();
+    void edgeChanged();
     void positionChanged();
-    void angleChanged();
-    void stepSizeChanged();
-    void snapModeChanged();
-    void pressedChanged();
-    void handleChanged();
+    void contentItemChanged();
+    void animationChanged();
 
 protected:
-    void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
+    bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
 
+    virtual qreal positionAt(const QPointF &point) const;
+
 private:
-    Q_DISABLE_COPY(QQuickDial)
-    Q_DECLARE_PRIVATE(QQuickDial)
+    Q_DISABLE_COPY(QQuickDrawer)
+    Q_DECLARE_PRIVATE(QQuickDrawer)
 };
 
-Q_DECLARE_TYPEINFO(QQuickDial, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickDrawer, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDIAL_H
+#endif // QQUICKDRAWER_P_H

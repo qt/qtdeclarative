@@ -40,11 +40,12 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 Text {
     text: isNaN(modelData) ? modelData : modelData + 1
     color: "#666666"
-    opacity: 0.4 + Math.max(0, 1 - Math.abs(AbstractTumbler.displacement)) * 0.6
+    opacity: 0.4 + Math.max(0, 1 - Math.abs(T.Tumbler.displacement)) * 0.6
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
 

@@ -38,32 +38,7 @@
 #include <QtCore/qdir.h>
 
 #include <QtQuickTemplates/private/qquickexclusivegroup_p.h>
-#include <QtQuickTemplates/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates/private/qquickbusyindicator_p.h>
-#include <QtQuickTemplates/private/qquickbutton_p.h>
-#include <QtQuickTemplates/private/qquickcheckbox_p.h>
-#include <QtQuickTemplates/private/qquickframe_p.h>
-#include <QtQuickTemplates/private/qquickgroupbox_p.h>
-#include <QtQuickTemplates/private/qquicklabel_p.h>
-#include <QtQuickTemplates/private/qquickpageindicator_p.h>
-#include <QtQuickTemplates/private/qquickprogressbar_p.h>
-#include <QtQuickTemplates/private/qquickradiobutton_p.h>
-#include <QtQuickTemplates/private/qquickscrollbar_p.h>
-#include <QtQuickTemplates/private/qquickscrollindicator_p.h>
-#include <QtQuickTemplates/private/qquickslider_p.h>
-#include <QtQuickTemplates/private/qquickstackview_p.h>
-#include <QtQuickTemplates/private/qquickswitch_p.h>
-#include <QtQuickTemplates/private/qquicktabbar_p.h>
-#include <QtQuickTemplates/private/qquicktabbutton_p.h>
-#include <QtQuickTemplates/private/qquicktextarea_p.h>
-#include <QtQuickTemplates/private/qquicktextfield_p.h>
-#include <QtQuickTemplates/private/qquicktogglebutton_p.h>
-#include <QtQuickTemplates/private/qquicktoolbar_p.h>
-#include <QtQuickTemplates/private/qquicktoolbutton_p.h>
-#include "qquickdial_p.h"
-#include "qquickdrawer_p.h"
-#include "qquickswipeview_p.h"
-#include "qquicktumbler_p.h"
+
 #include "qquicktheme_p.h"
 
 void initResources()
@@ -87,14 +62,8 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 2, 0, "Theme", "Theme is an attached property");
 
-    qmlRegisterType<QQuickDial>(uri, 2, 0, "AbstractDial");
-    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "AbstractDrawer");
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");
     qmlRegisterType<QQuickExclusiveGroupAttached>();
-    qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "AbstractSwipeView");
-    qmlRegisterType<QQuickSwipeViewAttached>();
-    qmlRegisterType<QQuickTumbler>(uri, 2, 0, "AbstractTumbler");
-    qmlRegisterType<QQuickTumblerAttached>();
 
     QDir baseDir(baseUrl().toLocalFile());
     qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ApplicationWindow.qml"))), uri, 2, 0, "ApplicationWindow");

@@ -41,6 +41,7 @@
 import QtQuick 2.2
 import QtTest 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Templates 2.0 as T
 
 TestCase {
     id: testCase
@@ -404,9 +405,9 @@ TestCase {
         id: pageAttached
 
         Text {
-            property int index: AbstractSwipeView.index
-            property SwipeView view: AbstractSwipeView.view
-            property bool isCurrentItem: AbstractSwipeView.isCurrentItem
+            property int index: T.SwipeView.index
+            property SwipeView view: T.SwipeView.view
+            property bool isCurrentItem: T.SwipeView.isCurrentItem
         }
     }
 
@@ -425,13 +426,13 @@ TestCase {
         compare(control.count, titles.length)
         for (i = 0; i < control.count; ++i) {
             compare(control.itemAt(i).text, titles[i])
-            compare(control.itemAt(i).AbstractSwipeView.index, i)
-            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === 0)
+            compare(control.itemAt(i).T.SwipeView.index, i)
+            compare(control.itemAt(i).T.SwipeView.isCurrentItem, i === 0)
         }
 
         control.currentIndex = data.currentBefore
         for (i = 0; i < control.count; ++i) {
-            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === data.currentBefore)
+            compare(control.itemAt(i).T.SwipeView.isCurrentItem, i === data.currentBefore)
         }
 
         control.moveItem(data.from, data.to)
@@ -446,8 +447,8 @@ TestCase {
         compare(control.count, titles.length)
         for (i = 0; i < control.count; ++i) {
             compare(control.itemAt(i).text, titles[i])
-            compare(control.itemAt(i).AbstractSwipeView.index, i);
-            compare(control.itemAt(i).AbstractSwipeView.isCurrentItem, i === data.currentAfter)
+            compare(control.itemAt(i).T.SwipeView.index, i);
+            compare(control.itemAt(i).T.SwipeView.isCurrentItem, i === data.currentAfter)
         }
 
         control.destroy()

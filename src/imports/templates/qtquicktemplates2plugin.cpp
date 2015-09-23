@@ -42,6 +42,8 @@
 #include <QtQuickTemplates/private/qquickcheckbox_p.h>
 #include <QtQuickTemplates/private/qquickcontrol_p.h>
 #include <QtQuickTemplates/private/qquickcontainer_p.h>
+#include <QtQuickTemplates/private/qquickdial_p.h>
+#include <QtQuickTemplates/private/qquickdrawer_p.h>
 #include <QtQuickTemplates/private/qquickframe_p.h>
 #include <QtQuickTemplates/private/qquickgroupbox_p.h>
 #include <QtQuickTemplates/private/qquicklabel_p.h>
@@ -52,6 +54,7 @@
 #include <QtQuickTemplates/private/qquickscrollindicator_p.h>
 #include <QtQuickTemplates/private/qquickslider_p.h>
 #include <QtQuickTemplates/private/qquickstackview_p.h>
+#include <QtQuickTemplates/private/qquickswipeview_p.h>
 #include <QtQuickTemplates/private/qquickswitch_p.h>
 #include <QtQuickTemplates/private/qquicktabbar_p.h>
 #include <QtQuickTemplates/private/qquicktabbutton_p.h>
@@ -60,6 +63,7 @@
 #include <QtQuickTemplates/private/qquicktogglebutton_p.h>
 #include <QtQuickTemplates/private/qquicktoolbar_p.h>
 #include <QtQuickTemplates/private/qquicktoolbutton_p.h>
+#include <QtQuickTemplates/private/qquicktumbler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,8 +82,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickBusyIndicator>(uri, 2, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 2, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 2, 0, "CheckBox");
-    qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
     qmlRegisterType<QQuickContainer>(uri, 2, 0, "Container");
+    qmlRegisterType<QQuickControl>(uri, 2, 0, "Control");
+    qmlRegisterType<QQuickDial>(uri, 2, 0, "Dial");
+    qmlRegisterType<QQuickDrawer>(uri, 2, 0, "Drawer");
     qmlRegisterType<QQuickFrame>(uri, 2, 0, "Frame");
     qmlRegisterType<QQuickGroupBox>(uri, 2, 0, "GroupBox");
     qmlRegisterType<QQuickLabel>(uri, 2, 0, "Label");
@@ -90,6 +96,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickScrollIndicator>(uri, 2, 0, "ScrollIndicator");
     qmlRegisterType<QQuickSlider>(uri, 2, 0, "Slider");
     qmlRegisterType<QQuickStackView>(uri, 2, 0, "StackView");
+    qmlRegisterType<QQuickSwipeViewAttached>();
+    qmlRegisterType<QQuickSwipeView>(uri, 2, 0, "SwipeView");
     qmlRegisterType<QQuickSwitch>(uri, 2, 0, "Switch");
     qmlRegisterType<QQuickTabBar>(uri, 2, 0, "TabBar");
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
@@ -98,6 +106,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickToggleButton>(uri, 2, 0, "ToggleButton");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");
     qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
+    qmlRegisterType<QQuickTumblerAttached>();
+    qmlRegisterType<QQuickTumbler>(uri, 2, 0, "Tumbler");
 
     qmlRegisterRevision<QQuickText, 6>(uri, 2, 0);
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 2, 0);
