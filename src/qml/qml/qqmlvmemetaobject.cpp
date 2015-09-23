@@ -148,7 +148,7 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
-                                     const QQmlVMEMetaData *meta, QV4::ExecutionContext *qmlBindingContext, QQmlCompiledData *compiledData)
+                                     const QQmlVMEMetaData *meta)
     : object(obj),
       ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
       hasAssignedMetaObjectData(false), aliasEndpoints(0),
@@ -186,21 +186,6 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
 
     if (needsJSWrapper)
         ensureQObjectWrapper();
-
-    if (qmlBindingContext && metaData->methodCount) {
-        methods = new QV4::PersistentValue[metaData->methodCount];
-
-        QV4::CompiledData::CompilationUnit *compilationUnit = compiledData->compilationUnit;
-        QV4::Scope scope(cache->engine);
-        QV4::ScopedObject o(scope);
-        for (int index = 0; index < metaData->methodCount; ++index) {
-            QQmlVMEMetaData::MethodData *data = metaData->methodData() + index;
-
-            QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[data->runtimeFunctionIndex];
-            o = QV4::FunctionObject::createScriptFunction(qmlBindingContext, runtimeFunction);
-            methods[index].set(qmlBindingContext->engine(), o);
-        }
-    }
 }
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
@@ -850,11 +835,11 @@ QV4::ReturnedValue QQmlVMEMetaObject::method(int index)
 {
     if (!ctxt || !ctxt->isValid()) {
         qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
-        return QV4::Primitive::undefinedValue().asReturnedValue();
+        return QV4::Encode::undefined();
     }
 
     if (!methods)
-        methods = new QV4::PersistentValue[metaData->methodCount];
+        return QV4::Encode::undefined();
 
     return methods[index].value();
 }
