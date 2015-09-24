@@ -1,3 +1,4 @@
 module QtQuick.Controls
 plugin qtquickcontrols2plugin
 classname QtQuickControls2Plugin
+depends QtQuick.Templates 2.0
