@@ -308,7 +308,7 @@ void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
 void QQuickImageBase::handleScreenChanged(QScreen* screen)
 {
     // Screen DPI might have changed, reload images on screen change.
-    if (screen && isComponentComplete())
+    if (qmlEngine(this) && screen && isComponentComplete())
         load();
 }
 
