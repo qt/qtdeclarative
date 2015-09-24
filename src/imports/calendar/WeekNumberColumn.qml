@@ -49,11 +49,12 @@ AbstractWeekNumberColumn {
     spacing: 6
     leftPadding: 6
     rightPadding: 6
+    font.bold: true
 
     //! [delegate]
     delegate: Text {
         text: model.weekNumber
-        font.bold: true
+        font: control.font
         color: control.Theme.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

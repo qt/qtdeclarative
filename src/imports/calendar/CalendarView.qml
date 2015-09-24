@@ -55,6 +55,7 @@ AbstractCalendarView {
         opacity: model.month === control.month ? 1 : 0
         color: model.today ? control.Theme.accentColor : control.Theme.textColor
         text: model.day
+        font: control.font
     }
     //! [delegate]
 

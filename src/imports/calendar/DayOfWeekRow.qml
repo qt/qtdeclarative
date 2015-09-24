@@ -49,11 +49,12 @@ AbstractDayOfWeekRow {
     spacing: 6
     topPadding: 6
     bottomPadding: 6
+    font.bold: true
 
     //! [delegate]
     delegate: Text {
         text: model.shortName
-        font.bold: true
+        font: control.font
         color: control.Theme.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

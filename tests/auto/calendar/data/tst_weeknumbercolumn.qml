@@ -48,28 +48,11 @@ TestCase {
     height: 400
     visible: true
     when: windowShown
-    name: "DayOfWeekRow"
+    name: "WeekNumberColumn"
 
     Component {
         id: component
-        DayOfWeekRow { }
-    }
-
-    function test_locale() {
-        var control = component.createObject(testCase)
-
-        verify(control.contentItem.children[0])
-
-        control.locale = Qt.locale("en_US")
-        compare(control.contentItem.children[0].text, "Sun")
-
-        control.locale = Qt.locale("no_NO")
-        compare(control.contentItem.children[0].text, "ma.")
-
-        control.locale = Qt.locale("fi_FI")
-        compare(control.contentItem.children[0].text, "ma")
-
-        control.destroy()
+        WeekNumberColumn { }
     }
 
     function test_font() {
