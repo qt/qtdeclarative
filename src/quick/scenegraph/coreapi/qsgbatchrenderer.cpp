@@ -1950,25 +1950,27 @@ void Renderer::uploadBatch(Batch *b)
                 vd += g->sizeOfVertex();
             }
 
-            const quint16 *id =
+            if (!b->drawSets.isEmpty()) {
+                const quint16 *id =
 # ifdef QSG_SEPARATE_INDEX_BUFFER
                     (const quint16 *) (b->ibo.data);
 # else
                     (const quint16 *) (b->vbo.data + b->drawSets.at(0).indices);
 # endif
-            {
-                QDebug iDump = qDebug();
-                iDump << "  -- Index Data, count:" << b->indexCount;
-                for (int i=0; i<b->indexCount; ++i) {
-                    if ((i % 24) == 0)
-                       iDump << endl << "  --- ";
-                 iDump << id[i];
+                {
+                    QDebug iDump = qDebug();
+                    iDump << "  -- Index Data, count:" << b->indexCount;
+                    for (int i=0; i<b->indexCount; ++i) {
+                        if ((i % 24) == 0)
+                           iDump << endl << "  --- ";
+                        iDump << id[i];
+                    }
                 }
-            }
 
-            for (int i=0; i<b->drawSets.size(); ++i) {
-                const DrawSet &s = b->drawSets.at(i);
-                qDebug() << "  -- DrawSet: indexCount:" << s.indexCount << " vertices:" << s.vertices << " z:" << s.zorders << " indices:" << s.indices;
+                for (int i=0; i<b->drawSets.size(); ++i) {
+                    const DrawSet &s = b->drawSets.at(i);
+                    qDebug() << "  -- DrawSet: indexCount:" << s.indexCount << " vertices:" << s.vertices << " z:" << s.zorders << " indices:" << s.indices;
+                }
             }
         }
 #endif // QT_NO_DEBUG_OUTPUT
