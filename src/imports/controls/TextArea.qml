@@ -52,6 +52,7 @@ T.TextArea {
         width: control.availableWidth
         height: control.availableHeight
 
+        font: control.font
         color: control.Theme.disabledColor
         visible: !control.length
     }

@@ -49,27 +49,45 @@ ApplicationWindow {
     height: 640
     title: qsTr("Hello World")
 
-    T.Control {
-        id: control
-        ColumnLayout {
-            Button { text: "Button" }
-            CheckBox { text: "CheckBox" }
-            GroupBox { title: "GroupBox" }
-            RadioButton { text: "RadioButton" }
-            Switch { text: "Switch" }
-            TabButton {
-                text: "TabButton"
-                font.pointSize: control.font.pointSize
-            }
-            ToggleButton { text: "ToggleButton" }
-            ToolButton { text: "ToolButton" }
-            Slider {
-                from: 16
-                to: 48
-                stepSize: 1
-                onValueChanged: control.font.pointSize = value
-            }
+    header: ToolBar {
+        Slider {
+            from: 16
+            to: 48
+            stepSize: 1
+            onValueChanged: control.font.pointSize = value
         }
     }
-}
 
+    Flickable {
+        anchors.fill: parent
+        contentWidth: control.width
+        contentHeight: control.height
+
+        T.Control {
+            id: control
+            width: layout.implicitWidth + 40
+            height: layout.implicitHeight + 40
+            ColumnLayout {
+                id: layout
+                anchors.fill: parent
+                anchors.margins: 20
+                Button { text: "Button" }
+                CheckBox { text: "CheckBox" }
+                GroupBox { title: "GroupBox" }
+                RadioButton { text: "RadioButton" }
+                Switch { text: "Switch" }
+                TabButton {
+                    text: "TabButton"
+                    font.pointSize: control.font.pointSize
+                }
+                TextField { placeholder.text: "TextField" }
+                TextArea { placeholder.text: "TextArea" }
+                ToggleButton { text: "ToggleButton" }
+                ToolButton { text: "ToolButton" }
+                Tumbler { model: 3 }
+            }
+        }
+
+        T.ScrollBar.vertical: ScrollBar { }
+    }
+}

@@ -48,6 +48,7 @@ T.Tumbler {
         id: label
         text: modelData
         color: "#666666"
+        font: control.font
         opacity: 0.4 + Math.max(0, 1 - Math.abs(T.Tumbler.displacement)) * 0.6
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

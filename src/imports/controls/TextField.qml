@@ -55,6 +55,7 @@ T.TextField {
         width: control.width - (control.leftPadding + control.rightPadding)
         height: control.height - (control.topPadding + control.bottomPadding)
 
+        font: control.font
         color: control.Theme.disabledColor
         visible: !control.displayText
         elide: Text.ElideRight
