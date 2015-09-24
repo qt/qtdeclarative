@@ -1908,4 +1908,43 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
     return 0;
 }
 
+/*!
+    Returns the pretty QML type name (e.g. 'Item' instead of 'QtQuickItem') for the given object.
+ */
+QString QQmlMetaType::prettyTypeName(const QObject *object)
+{
+    QString typeName;
+
+    if (!object)
+        return typeName;
+
+    const QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
+    if (type) {
+        typeName = type->qmlTypeName();
+        const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
+        if (lastSlash != -1)
+            typeName = typeName.mid(lastSlash + 1);
+    } else {
+        typeName = QString::fromUtf8(object->metaObject()->className());
+        int marker = typeName.indexOf(QLatin1String("_QMLTYPE_"));
+        if (marker != -1)
+            typeName = typeName.left(marker);
+
+        marker = typeName.indexOf(QLatin1String("_QML_"));
+        if (marker != -1) {
+            typeName = typeName.left(marker);
+            typeName += QLatin1Char('*');
+            type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
+            if (type) {
+                typeName = type->qmlTypeName();
+                const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
+                if (lastSlash != -1)
+                    typeName = typeName.mid(lastSlash + 1);
+            }
+        }
+    }
+
+    return typeName;
+}
+
 QT_END_NAMESPACE

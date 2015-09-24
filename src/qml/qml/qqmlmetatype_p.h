@@ -123,6 +123,8 @@ public:
     static QStringList typeRegistrationFailures();
 
     static QMutex *typeRegistrationLock();
+
+    static QString prettyTypeName(const QObject *object);
 };
 
 struct QQmlMetaTypeData;
