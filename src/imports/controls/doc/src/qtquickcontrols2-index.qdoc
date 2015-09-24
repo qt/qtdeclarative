@@ -204,7 +204,7 @@
         \li Qt Quick Controls 2
     \row
         \li \l [QtQuickControls] {Action}
-        \li \l No equivalent; see \l [QtQuick] {Shortcut} instead.
+        \li No equivalent; see \l [QtQuick] {Shortcut} instead.
     \row
         \li \l [QtQuickControls] {ApplicationWindow}
         \li \l [QtQuickControls2] {ApplicationWindow}

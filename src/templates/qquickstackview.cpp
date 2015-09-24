@@ -483,7 +483,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation = Transition)
+    \qmlmethod Item QtQuick.Controls::StackView::replace(item, properties, operation = Transition)
 
     TODO
 */
