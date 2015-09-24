@@ -79,7 +79,8 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
         QQuickItem *item = qobject_cast<QQuickItem *>(ctx);
         if (item->window())
             setWindow(item->window());
-        connect(item, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(windowChanged(QQuickWindow*)));
+
+        qmlobject_connect(item, QQuickItem, SIGNAL(windowChanged(QQuickWindow*)), this, QQuickAnimatorProxyJob, SLOT(windowChanged(QQuickWindow*)));
     }
 }
 
