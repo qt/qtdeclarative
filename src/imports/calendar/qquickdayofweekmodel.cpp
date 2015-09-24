@@ -63,11 +63,9 @@ void QQuickDayOfWeekModel::setLocale(const QLocale &locale)
 {
     Q_D(QQuickDayOfWeekModel);
     if (d->locale != locale) {
-        bool changed = d->locale.firstDayOfWeek() != locale.firstDayOfWeek();
         d->locale = locale;
         emit localeChanged();
-        if (changed)
-            emit dataChanged(index(0, 0), index(6, 0));
+        emit dataChanged(index(0, 0), index(6, 0));
     }
 }
 

@@ -14,6 +14,7 @@
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/activeFocusOnTab/tst_activeFocusOnTab
 /tests/auto/applicationwindow/tst_applicationwindow
+/tests/auto/calendar/tst_calendar
 /tests/auto/controls/tst_controls
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
