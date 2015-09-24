@@ -103,8 +103,6 @@ struct IdentifierHashBase
     inline IdentifierHashBase &operator=(const IdentifierHashBase &other);
 
     bool isEmpty() const { return !d; }
-    // ###
-    void reserve(int) {}
 
     inline int count() const;
     bool contains(const Identifier *i) const;
