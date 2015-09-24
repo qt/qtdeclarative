@@ -36,6 +36,7 @@
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
+#include <private/qqmlmetatype_p.h>
 
 #include <qqmlengine.h>
 #include <qqmlcontext.h>
@@ -48,6 +49,29 @@
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace {
+
+void validateProperty(QObject *target, const QString &propertyName, QObject *binding)
+{
+    if (!target)
+        return;
+
+    const QMetaObject *mo = target->metaObject();
+    const int index = mo->indexOfProperty(propertyName.toUtf8());
+    if (index == -1) {
+        qmlInfo(binding) << "Property '" << propertyName << "' does not exist on " << QQmlMetaType::prettyTypeName(target) << ".";
+        return;
+    }
+
+    const QMetaProperty mp = mo->property(index);
+    if (!mp.isWritable()) {
+        qmlInfo(binding) << "Property '" << propertyName << "' on " << QQmlMetaType::prettyTypeName(target) << " is read-only.";
+        return;
+    }
+}
+
+}
 
 class QQmlBindPrivate : public QObjectPrivate
 {
@@ -186,8 +210,10 @@ void QQmlBind::setObject(QObject *obj)
         d->when = true;
     }
     d->obj = obj;
-    if (d->componentComplete)
+    if (d->componentComplete) {
+        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+    }
     eval();
 }
 
@@ -213,8 +239,10 @@ void QQmlBind::setProperty(const QString &p)
         d->when = true;
     }
     d->propName = p;
-    if (d->componentComplete)
+    if (d->componentComplete) {
+        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+    }
     eval();
 }
 
@@ -253,8 +281,10 @@ void QQmlBind::componentComplete()
 {
     Q_D(QQmlBind);
     d->componentComplete = true;
-    if (!d->prop.isValid())
+    if (!d->prop.isValid()) {
+        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+    }
     eval();
 }
 
