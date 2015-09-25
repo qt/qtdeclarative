@@ -340,7 +340,7 @@
 
         StackView can have a visual \l {Control::background}{background}
         item, and it allows customizing the transitions that are used for
-        push and pop operations.
+        push, pop, and replace operations.
 
         \section3 Push enter
 
@@ -357,6 +357,14 @@
         \section3 Pop exit
 
             \snippet StackView.qml popExit
+
+        \section3 Replace enter
+
+            \snippet StackView.qml replaceEnter
+
+        \section3 Replace exit
+
+            \snippet StackView.qml replaceExit
 
 
     \section1 Customizing SwipeView

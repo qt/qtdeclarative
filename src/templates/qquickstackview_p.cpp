@@ -461,27 +461,27 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
 {
     ensureTransitioner();
 
-    if (enter) {
-        enter->setStatus(QQuickStackView::Activating);
-        enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
-    }
     if (exit) {
         exit->removal = true;
         exit->setStatus(QQuickStackView::Deactivating);
-        exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
+        exit->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
+    }
+    if (enter) {
+        enter->setStatus(QQuickStackView::Activating);
+        enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
     }
 
-    if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
-            completeTransition(enter, transitioner->addTransition);
-        else
-            enter->startTransition(transitioner);
-    }
     if (exit) {
         if (immediate || !exit->prepareTransition(transitioner, QRectF()))
-            completeTransition(exit, transitioner->addDisplacedTransition);
+            completeTransition(exit, transitioner->moveDisplacedTransition);
         else
             exit->startTransition(transitioner);
+    }
+    if (enter) {
+        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+            completeTransition(enter, transitioner->moveTransition);
+        else
+            enter->startTransition(transitioner);
     }
 
     if (!immediate)

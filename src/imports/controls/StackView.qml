@@ -64,4 +64,16 @@ T.StackView {
         NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushExit]
+
+    //! [replaceEnter]
+    replaceEnter: Transition {
+        NumberAnimation { property: "x"; from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceEnter]
+
+    //! [replaceExit]
+    replaceExit: Transition {
+        NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceExit]
 }

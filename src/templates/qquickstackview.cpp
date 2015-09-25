@@ -207,12 +207,12 @@ QT_BEGIN_NAMESPACE
     to entering and exiting items. These animations define how the entering item
     should animate in, and the exiting item should animate out. The animations
     can be customized by assigning different \l{Transition}s for the
-    \l pushEnter, \l pushExit, \l popEnter, and \l popExit properties of
-    StackView.
+    \l pushEnter, \l pushExit, \l popEnter, \l popExit, \l replaceEnter, and
+    \l replaceExit properties of StackView.
 
-    \note The pop and push transition animations affect each others'
-    transitional behavior. So customizing the animation for one and leaving
-    the other may give unexpected results.
+    \note The transition animations affect each others' transitional behavior.
+    Customizing the animation for one and leaving the other may give unexpected
+    results.
 
     The following snippet defines a simple fade transition for push and pop
     operations:
@@ -791,6 +791,58 @@ void QQuickStackView::setPushExit(QQuickTransition *exit)
     if (d->transitioner->addDisplacedTransition != exit) {
         d->transitioner->addDisplacedTransition = exit;
         emit pushExitChanged();
+    }
+}
+
+/*!
+    \qmlproperty Transition Qt.labs.controls::StackView::replaceEnter
+
+    This property holds the transition that is applied to the item that
+    enters the stack when another item is replaced by it.
+
+    \sa {Customizing StackView}
+*/
+QQuickTransition *QQuickStackView::replaceEnter() const
+{
+    Q_D(const QQuickStackView);
+    if (d->transitioner)
+        return d->transitioner->moveTransition;
+    return Q_NULLPTR;
+}
+
+void QQuickStackView::setReplaceEnter(QQuickTransition *enter)
+{
+    Q_D(QQuickStackView);
+    d->ensureTransitioner();
+    if (d->transitioner->moveTransition != enter) {
+        d->transitioner->moveTransition = enter;
+        emit replaceEnterChanged();
+    }
+}
+
+/*!
+    \qmlproperty Transition Qt.labs.controls::StackView::replaceExit
+
+    This property holds the transition that is applied to the item that
+    exits the stack when it is replaced by another item.
+
+    \sa {Customizing StackView}
+*/
+QQuickTransition *QQuickStackView::replaceExit() const
+{
+    Q_D(const QQuickStackView);
+    if (d->transitioner)
+        return d->transitioner->moveDisplacedTransition;
+    return Q_NULLPTR;
+}
+
+void QQuickStackView::setReplaceExit(QQuickTransition *exit)
+{
+    Q_D(QQuickStackView);
+    d->ensureTransitioner();
+    if (d->transitioner->moveDisplacedTransition != exit) {
+        d->transitioner->moveDisplacedTransition = exit;
+        emit replaceExitChanged();
     }
 }
 

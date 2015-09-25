@@ -451,6 +451,8 @@ TestCase {
             property int popExitRuns
             property int pushEnterRuns
             property int pushExitRuns
+            property int replaceEnterRuns
+            property int replaceExitRuns
             popEnter: Transition {
                 PauseAnimation { duration: 1 }
                 onRunningChanged: if (!running) ++popEnterRuns
@@ -466,6 +468,14 @@ TestCase {
             pushExit: Transition {
                 PauseAnimation { duration: 1 }
                 onRunningChanged: if (!running) ++pushExitRuns
+            }
+            replaceEnter: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++replaceEnterRuns
+            }
+            replaceExit: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++replaceExitRuns
             }
         }
     }
@@ -483,6 +493,11 @@ TestCase {
         tryCompare(control, "busy", false)
         compare(control.pushEnterRuns, 1)
         compare(control.pushExitRuns, 1)
+
+        control.replace(component)
+        tryCompare(control, "busy", false)
+        compare(control.replaceEnterRuns, 1)
+        compare(control.replaceExitRuns, 1)
 
         control.pop()
         tryCompare(control, "busy", false)

@@ -69,6 +69,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(QQuickTransition *popExit READ popExit WRITE setPopExit NOTIFY popExitChanged FINAL)
     Q_PROPERTY(QQuickTransition *pushEnter READ pushEnter WRITE setPushEnter NOTIFY pushEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *pushExit READ pushExit WRITE setPushExit NOTIFY pushExitChanged FINAL)
+    Q_PROPERTY(QQuickTransition *replaceEnter READ replaceEnter WRITE setReplaceEnter NOTIFY replaceEnterChanged FINAL)
+    Q_PROPERTY(QQuickTransition *replaceExit READ replaceExit WRITE setReplaceExit NOTIFY replaceExitChanged FINAL)
 
 public:
     explicit QQuickStackView(QQuickItem *parent = Q_NULLPTR);
@@ -103,6 +105,12 @@ public:
     QQuickTransition *pushExit() const;
     void setPushExit(QQuickTransition *exit);
 
+    QQuickTransition *replaceEnter() const;
+    void setReplaceEnter(QQuickTransition *enter);
+
+    QQuickTransition *replaceExit() const;
+    void setReplaceExit(QQuickTransition *exit);
+
     enum LoadBehavior {
         DontLoad,
         ForceLoad
@@ -133,6 +141,8 @@ Q_SIGNALS:
     void popExitChanged();
     void pushEnterChanged();
     void pushExitChanged();
+    void replaceEnterChanged();
+    void replaceExitChanged();
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
