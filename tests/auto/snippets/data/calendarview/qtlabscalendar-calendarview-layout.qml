@@ -23,7 +23,7 @@ GridLayout {
 
     CalendarView {
         id: view
-        month: 12
+        month: 11
         year: 2015
         locale: Qt.locale("en_US")
 

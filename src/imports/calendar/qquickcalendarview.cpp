@@ -40,6 +40,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -180,23 +181,33 @@ QQuickCalendarView::QQuickCalendarView(QQuickItem *parent) :
     \qmlproperty int Qt.labs.calendar::CalendarView::month
 
     This property holds the number of the month.
+
+    The value must be in the range from \c 0 (January) to \c 11 (December). The default
+    value is the current month.
 */
 int QQuickCalendarView::month() const
 {
     Q_D(const QQuickCalendarView);
-    return d->model->month();
+    return d->model->month() - 1;
 }
 
 void QQuickCalendarView::setMonth(int month)
 {
     Q_D(QQuickCalendarView);
-    d->model->setMonth(month);
+    if (month < 0 || month > 11) {
+        qmlInfo(this) << "month " << month << " is out of range [0...11]";
+        return;
+    }
+    d->model->setMonth(month + 1);
 }
 
 /*!
     \qmlproperty int Qt.labs.calendar::CalendarView::year
 
     This property holds the number of the year.
+
+    The value must be in the range from \c -271820 to \c 275759. The default
+    value is the current year.
 */
 int QQuickCalendarView::year() const
 {
@@ -207,6 +218,10 @@ int QQuickCalendarView::year() const
 void QQuickCalendarView::setYear(int year)
 {
     Q_D(QQuickCalendarView);
+    if (year < -271820 || year > 275759) {
+        qmlInfo(this) << "year " << year << " is out of range [-271820...275759]";
+        return;
+    }
     d->model->setYear(year);
 }
 

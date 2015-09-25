@@ -194,7 +194,7 @@ QVariant QQuickMonthModel::data(const QModelIndex &index, int role) const
         case WeekNumberRole:
             return date.weekNumber();
         case MonthRole:
-            return date.month();
+            return date.month() - 1;
         case YearRole:
             return date.year();
         default:

@@ -55,6 +55,128 @@ TestCase {
         CalendarView { }
     }
 
+    function test_locale() {
+        var control = component.createObject(testCase, {month: 0, year: 2013})
+
+        compare(control.contentItem.children.length, 6 * 7 + 1)
+
+        // January 2013
+        compare(control.month, 0)
+        compare(control.year, 2013)
+
+        // en_GB
+        control.locale = Qt.locale("en_GB")
+        compare(control.locale.name, "en_GB")
+
+        //            M   T   W   T   F   S   S
+        var en_GB = [31,  1,  2,  3,  4,  5,  6,
+                      7,  8,  9, 10, 11, 12, 13,
+                     14, 15, 16, 17, 18, 19, 20,
+                     21, 22, 23, 24, 25, 26, 27,
+                     28, 29, 30, 31,  1,  2,  3,
+                      4,  5,  6,  7,  8,  9, 10]
+
+        for (var i = 0; i < 42; ++i)
+            compare(control.contentItem.children[i].text, en_GB[i].toString())
+
+        // en_US
+        control.locale = Qt.locale("en_US")
+        compare(control.locale.name, "en_US")
+
+        //            S   M   T   W   T   F   S
+        var en_US = [30, 31,  1,  2,  3,  4,  5,
+                      6,  7,  8,  9, 10, 11, 12,
+                     13, 14, 15, 16, 17, 18, 19,
+                     20, 21, 22, 23, 24, 25, 26,
+                     27, 28, 29, 30, 31,  1,  2,
+                      3,  4,  5,  6,  7,  8,  9]
+
+        for (var j = 0; j < 42; ++j)
+            compare(control.contentItem.children[j].text, en_US[j].toString())
+
+        control.destroy()
+    }
+
+    function test_range() {
+        var control = component.createObject(testCase)
+
+        control.month = 0
+        compare(control.month, 0)
+
+        ignoreWarning(Qt.resolvedUrl("tst_calendarview.qml") + ":55:9: QML AbstractCalendarView: month -1 is out of range [0...11]")
+        control.month = -1
+        compare(control.month, 0)
+
+        control.month = 11
+        compare(control.month, 11)
+
+        ignoreWarning(Qt.resolvedUrl("tst_calendarview.qml") + ":55:9: QML AbstractCalendarView: month 12 is out of range [0...11]")
+        control.month = 12
+        compare(control.month, 11)
+
+        control.year = -271820
+        compare(control.year, -271820)
+
+        ignoreWarning(Qt.resolvedUrl("tst_calendarview.qml") + ":55:9: QML AbstractCalendarView: year -271821 is out of range [-271820...275759]")
+        control.year = -271821
+        compare(control.year, -271820)
+
+        control.year = 275759
+        compare(control.year, 275759)
+
+        ignoreWarning(Qt.resolvedUrl("tst_calendarview.qml") + ":55:9: QML AbstractCalendarView: year 275760 is out of range [-271820...275759]")
+        control.year = 275760
+        compare(control.year, 275759)
+
+        control.destroy()
+    }
+
+    function test_bce() {
+        var control = component.createObject(testCase)
+
+        compare(control.contentItem.children.length, 6 * 7 + 1)
+
+        // fi_FI
+        control.locale = Qt.locale("fi_FI")
+        compare(control.locale.name, "fi_FI")
+
+        // January 1 BCE
+        control.month = 0
+        compare(control.month, 0)
+        control.year = -1
+        compare(control.year, -1)
+
+        //              M   T   W   T   F   S   S
+        var jan1bce = [27, 28, 29, 30, 31,  1,  2,
+                        3,  4,  5,  6,  7,  8,  9,
+                       10, 11, 12, 13, 14, 15, 16,
+                       17, 18, 19, 20, 21, 22, 23,
+                       24, 25, 26, 27, 28, 29, 30,
+                       31,  1,  2,  3,  4,  5,  6]
+
+        for (var i = 0; i < 42; ++i)
+            compare(control.contentItem.children[i].text, jan1bce[i].toString())
+
+        // February 1 BCE
+        control.month = 1
+        compare(control.month, 1)
+        control.year = -1
+        compare(control.year, -1)
+
+        //              M   T   W   T   F   S   S
+        var feb1bce = [31,  1,  2,  3,  4,  5,  6,
+                        7,  8,  9, 10, 11, 12, 13,
+                       14, 15, 16, 17, 18, 19, 20,
+                       21, 22, 23, 24, 25, 26, 27,
+                       28, 29,  1,  2,  3,  4,  5,
+                        6,  7,  8,  9, 10, 11, 12]
+
+        for (var j = 0; j < 42; ++j)
+            compare(control.contentItem.children[j].text, feb1bce[j].toString())
+
+        control.destroy()
+    }
+
     function test_font() {
         var control = component.createObject(testCase)
 
