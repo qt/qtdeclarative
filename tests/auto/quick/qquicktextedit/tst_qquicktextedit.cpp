@@ -2599,9 +2599,7 @@ void tst_qquicktextedit::cursorDelegate()
 
 void tst_qquicktextedit::remoteCursorDelegate()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+    ThreadedTestHTTPServer server(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickView view;
 
@@ -2737,20 +2735,21 @@ void tst_qquicktextedit::delegateLoading()
     QFETCH(QString, qmlfile);
     QFETCH(QString, error);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(testFile("httpfail"), TestHTTPServer::Disconnect);
-    server.serveDirectory(testFile("httpslow"), TestHTTPServer::Delay);
-    server.serveDirectory(testFile("http"));
+    QHash<QString, TestHTTPServer::Mode> dirs;
+    dirs[testFile("httpfail")] = TestHTTPServer::Disconnect;
+    dirs[testFile("httpslow")] = TestHTTPServer::Delay;
+    dirs[testFile("http")] = TestHTTPServer::Normal;
+    ThreadedTestHTTPServer server(dirs);
 
     error.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
+    if (!error.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
     QQuickView view(server.url(qmlfile));
     view.show();
     view.requestActivate();
 
     if (!error.isEmpty()) {
-        QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
         QTRY_VERIFY(view.status()==QQuickView::Error);
         QTRY_VERIFY(!view.rootObject()); // there is fail item inside this test
     } else {

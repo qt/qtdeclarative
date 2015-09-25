@@ -36,6 +36,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTimer>
+#include <QTest>
 
 /*!
 \internal
@@ -80,6 +81,16 @@ The following request urls will then result in the appropriate action:
 \row \li http://localhost:14445/slowMain.qml \li slowMain.qml returned after 500ms
 \endtable
 */
+
+static QUrl localHostUrl(quint16 port)
+{
+    QUrl url;
+    url.setScheme(QStringLiteral("http"));
+    url.setHost(QStringLiteral("127.0.0.1"));
+    url.setPort(port);
+    return url;
+}
+
 TestHTTPServer::TestHTTPServer()
     : m_state(AwaitingHeader)
 {
@@ -93,11 +104,12 @@ bool TestHTTPServer::listen()
 
 QUrl TestHTTPServer::baseUrl() const
 {
-    QUrl url;
-    url.setScheme(QStringLiteral("http"));
-    url.setHost(QStringLiteral("127.0.0.1"));
-    url.setPort(m_server.serverPort());
-    return url;
+    return localHostUrl(m_server.serverPort());
+}
+
+quint16 TestHTTPServer::port() const
+{
+    return m_server.serverPort();
 }
 
 QUrl TestHTTPServer::url(const QString &documentPath) const
@@ -376,4 +388,61 @@ void TestHTTPServer::serveGET(QTcpSocket *socket, const QByteArray &data)
         if (close)
             socket->disconnectFromHost();
     }
+}
+
+ThreadedTestHTTPServer::ThreadedTestHTTPServer(const QString &dir, TestHTTPServer::Mode mode) :
+    m_port(0)
+{
+    m_dirs[dir] = mode;
+    start();
+}
+
+ThreadedTestHTTPServer::ThreadedTestHTTPServer(const QHash<QString, TestHTTPServer::Mode> &dirs) :
+    m_dirs(dirs), m_port(0)
+{
+    start();
+}
+
+ThreadedTestHTTPServer::~ThreadedTestHTTPServer()
+{
+    quit();
+    wait();
+}
+
+QUrl ThreadedTestHTTPServer::baseUrl() const
+{
+    return localHostUrl(m_port);
+}
+
+QUrl ThreadedTestHTTPServer::url(const QString &documentPath) const
+{
+    return baseUrl().resolved(documentPath);
+}
+
+QString ThreadedTestHTTPServer::urlString(const QString &documentPath) const
+{
+    return url(documentPath).toString();
+}
+
+void ThreadedTestHTTPServer::run()
+{
+    TestHTTPServer server;
+    {
+        QMutexLocker locker(&m_mutex);
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        m_port = server.port();
+        for (QHash<QString, TestHTTPServer::Mode>::ConstIterator i = m_dirs.constBegin();
+             i != m_dirs.constEnd(); ++i) {
+            server.serveDirectory(i.key(), i.value());
+        }
+        m_condition.wakeAll();
+    }
+    exec();
+}
+
+void ThreadedTestHTTPServer::start()
+{
+    QMutexLocker locker(&m_mutex);
+    QThread::start();
+    m_condition.wait(&m_mutex);
 }

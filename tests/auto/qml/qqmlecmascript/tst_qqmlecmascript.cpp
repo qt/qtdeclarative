@@ -4203,9 +4203,7 @@ void tst_qqmlecmascript::importScripts()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory() + "/remote");
+    ThreadedTestHTTPServer server(dataDirectory() + "/remote");
 
     QStringList importPathList = engine.importPathList();
 

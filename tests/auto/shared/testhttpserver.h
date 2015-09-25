@@ -37,6 +37,9 @@
 #include <QTcpServer>
 #include <QUrl>
 #include <QPair>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 
 class TestHTTPServer : public QObject
 {
@@ -45,6 +48,7 @@ public:
     TestHTTPServer();
 
     bool listen();
+    quint16 port() const;
     QUrl baseUrl() const;
     QUrl url(const QString &documentPath) const;
     QString urlString(const QString &documentPath) const;
@@ -98,6 +102,30 @@ private:
     QHash<QString, QString> m_redirects;
 
     QTcpServer m_server;
+};
+
+class ThreadedTestHTTPServer : public QThread
+{
+    Q_OBJECT
+public:
+    ThreadedTestHTTPServer(const QString &dir, TestHTTPServer::Mode mode = TestHTTPServer::Normal);
+    ThreadedTestHTTPServer(const QHash<QString, TestHTTPServer::Mode> &dirs);
+    ~ThreadedTestHTTPServer();
+
+    QUrl baseUrl() const;
+    QUrl url(const QString &documentPath) const;
+    QString urlString(const QString &documentPath) const;
+
+protected:
+    void run();
+
+private:
+    void start();
+
+    QHash<QString, TestHTTPServer::Mode> m_dirs;
+    quint16 m_port;
+    QMutex m_mutex;
+    QWaitCondition m_condition;
 };
 
 #endif // TESTHTTPSERVER_H

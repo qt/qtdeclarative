@@ -2543,9 +2543,7 @@ void tst_qqmllanguage::basicRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     url = server.baseUrl().resolved(url);
 
@@ -2590,9 +2588,7 @@ void tst_qqmllanguage::importsRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     qml.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
@@ -2685,9 +2681,7 @@ void tst_qqmllanguage::importsInstalledRemote()
     QFETCH(QString, type);
     QFETCH(QString, error);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QString serverdir = server.urlString("/lib/");
     engine.setImportPathList(QStringList(defaultImportPathList) << serverdir);
@@ -2752,9 +2746,7 @@ void tst_qqmllanguage::importsPath()
     QFETCH(QString, qml);
     QFETCH(QString, value);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     for (int i = 0; i < importPath.count(); ++i)
         importPath[i].replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
@@ -3386,9 +3378,7 @@ void tst_qqmllanguage::registeredCompositeTypeWithAttachedProperty()
 // QTBUG-18268
 void tst_qqmllanguage::remoteLoadCrash()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; Text {}", server.url("/remoteLoadCrash.qml"));
@@ -3877,9 +3867,7 @@ void tst_qqmllanguage::compositeSingletonQmlDirError()
 // Load a remote composite singleton type via qmldir that defines the type as a singleton
 void tst_qqmllanguage::compositeSingletonRemote()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QFile f(testFile("singletonTest15.qml"));
     QVERIFY(f.open(QIODevice::ReadOnly));

@@ -2857,10 +2857,7 @@ void tst_qquicktextinput::cursorDelegate()
 
 void tst_qquicktextinput::remoteCursorDelegate()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
-
+    ThreadedTestHTTPServer server(dataDirectory(), TestHTTPServer::Delay);
     QQuickView view;
 
     QQmlComponent component(view.engine(), server.url("/RemoteCursor.qml"));

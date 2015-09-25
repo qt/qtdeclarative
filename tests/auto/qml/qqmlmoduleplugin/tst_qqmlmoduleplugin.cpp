@@ -239,9 +239,7 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
 
 void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(m_dataImportsDirectory);
+    ThreadedTestHTTPServer server(m_dataImportsDirectory);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
