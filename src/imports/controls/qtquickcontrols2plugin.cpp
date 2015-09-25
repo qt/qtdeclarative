@@ -35,7 +35,8 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtCore/qdir.h>
+#include <QtCore/qfileselector.h>
+#include <QtCore/qurl.h>
 
 #include <QtQuickTemplates/private/qquickexclusivegroup_p.h>
 
@@ -65,33 +66,35 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickExclusiveGroup>(uri, 2, 0, "ExclusiveGroup");
     qmlRegisterType<QQuickExclusiveGroupAttached>();
 
-    QDir baseDir(baseUrl().toLocalFile());
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ApplicationWindow.qml"))), uri, 2, 0, "ApplicationWindow");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("BusyIndicator.qml"))), uri, 2, 0, "BusyIndicator");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Button.qml"))), uri, 2, 0, "Button");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("CheckBox.qml"))), uri, 2, 0, "CheckBox");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Dial.qml"))), uri, 2, 0, "Dial");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Drawer.qml"))), uri, 2, 0, "Drawer");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Frame.qml"))), uri, 2, 0, "Frame");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("GroupBox.qml"))), uri, 2, 0, "GroupBox");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Label.qml"))), uri, 2, 0, "Label");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("PageIndicator.qml"))), uri, 2, 0, "PageIndicator");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ProgressBar.qml"))), uri, 2, 0, "ProgressBar");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("RadioButton.qml"))), uri, 2, 0, "RadioButton");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ScrollBar.qml"))), uri, 2, 0, "ScrollBar");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ScrollIndicator.qml"))), uri, 2, 0, "ScrollIndicator");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Slider.qml"))), uri, 2, 0, "Slider");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("StackView.qml"))), uri, 2, 0, "StackView");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("SwipeView.qml"))), uri, 2, 0, "SwipeView");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Switch.qml"))), uri, 2, 0, "Switch");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("TabBar.qml"))), uri, 2, 0, "TabBar");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("TabButton.qml"))), uri, 2, 0, "TabButton");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("TextArea.qml"))), uri, 2, 0, "TextArea");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("TextField.qml"))), uri, 2, 0, "TextField");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ToggleButton.qml"))), uri, 2, 0, "ToggleButton");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ToolBar.qml"))), uri, 2, 0, "ToolBar");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("ToolButton.qml"))), uri, 2, 0, "ToolButton");
-    qmlRegisterType(QUrl::fromLocalFile(baseDir.filePath(QStringLiteral("Tumbler.qml"))), uri, 2, 0, "Tumbler");
+    // TODO: read the style from application manifest file
+    QFileSelector selector;
+    QString base = baseUrl().toString();
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ApplicationWindow.qml"))), uri, 2, 0, "ApplicationWindow");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/BusyIndicator.qml"))), uri, 2, 0, "BusyIndicator");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Button.qml"))), uri, 2, 0, "Button");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/CheckBox.qml"))), uri, 2, 0, "CheckBox");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Dial.qml"))), uri, 2, 0, "Dial");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Drawer.qml"))), uri, 2, 0, "Drawer");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Frame.qml"))), uri, 2, 0, "Frame");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/GroupBox.qml"))), uri, 2, 0, "GroupBox");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Label.qml"))), uri, 2, 0, "Label");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/PageIndicator.qml"))), uri, 2, 0, "PageIndicator");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ProgressBar.qml"))), uri, 2, 0, "ProgressBar");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/RadioButton.qml"))), uri, 2, 0, "RadioButton");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollBar.qml"))), uri, 2, 0, "ScrollBar");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollIndicator.qml"))), uri, 2, 0, "ScrollIndicator");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Slider.qml"))), uri, 2, 0, "Slider");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/StackView.qml"))), uri, 2, 0, "StackView");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/SwipeView.qml"))), uri, 2, 0, "SwipeView");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Switch.qml"))), uri, 2, 0, "Switch");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TabBar.qml"))), uri, 2, 0, "TabBar");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TabButton.qml"))), uri, 2, 0, "TabButton");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextArea.qml"))), uri, 2, 0, "TextArea");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextField.qml"))), uri, 2, 0, "TextField");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToggleButton.qml"))), uri, 2, 0, "ToggleButton");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolBar.qml"))), uri, 2, 0, "ToolBar");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolButton.qml"))), uri, 2, 0, "ToolButton");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Tumbler.qml"))), uri, 2, 0, "Tumbler");
 }
 
 void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
