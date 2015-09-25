@@ -329,30 +329,6 @@
             \snippet TextField.qml placeholder
 
 
-    \section1 Customizing ToggleButton
-
-        ToggleButton consists of three visual items: \l {Control::background}{background},
-        \l {AbstractButton::label}{label} and \l {Checkable::indicator}{indicator}.
-
-        \section3 Background
-
-            \image qtquickcontrols2-togglebutton-background.png
-
-            ToggleButton has no background item by default.
-
-        \section3 Label
-
-            \image qtquickcontrols2-togglebutton-label.png
-
-            \snippet ToggleButton.qml label
-
-        \section3 Indicator
-
-            \image qtquickcontrols2-togglebutton-indicator.png
-
-            \snippet ToggleButton.qml indicator
-
-
     \section1 Customizing ToolBar
 
         ToolBar consists of two visual items: \l {Control::background}{background} and
@@ -368,7 +344,7 @@
 
             \image qtquickcontrols2-toolbar-frame.png
 
-            ToggleButton has no frame item by default.
+            ToolBar has no frame item by default.
 
 
     \section1 Customizing ToolButton

@@ -257,16 +257,6 @@ TestCase {
     }
 
     Component {
-        id: toggleButtons
-        Item {
-            property ExclusiveGroup group: ExclusiveGroup { id: group }
-            property ToggleButton control1: ToggleButton { ExclusiveGroup.group: group }
-            property ToggleButton control2: ToggleButton { ExclusiveGroup.group: group }
-            property ToggleButton control3: ToggleButton { ExclusiveGroup.group: group }
-        }
-    }
-
-    Component {
         id: childControls
         Item {
             id: container
@@ -285,7 +275,6 @@ TestCase {
             { tag: "CheckBox", component: checkBoxes },
             { tag: "RadioButton", component: radioButtons },
             { tag: "Switch", component: switches },
-            { tag: "ToggleButton", component: toggleButtons },
             { tag: "Children", component: childControls }
         ]
     }

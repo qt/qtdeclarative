@@ -38,7 +38,6 @@ HEADERS += \
     $$PWD/qquicktextarea_p_p.h \
     $$PWD/qquicktextfield_p.h \
     $$PWD/qquicktextfield_p_p.h \
-    $$PWD/qquicktogglebutton_p.h \
     $$PWD/qquicktoolbar_p.h \
     $$PWD/qquicktoolbutton_p.h \
     $$PWD/qquicktumbler_p.h
@@ -73,7 +72,6 @@ SOURCES += \
     $$PWD/qquicktabbutton.cpp \
     $$PWD/qquicktextarea.cpp \
     $$PWD/qquicktextfield.cpp \
-    $$PWD/qquicktogglebutton.cpp \
     $$PWD/qquicktoolbar.cpp \
     $$PWD/qquicktoolbutton.cpp \
     $$PWD/qquicktumbler.cpp

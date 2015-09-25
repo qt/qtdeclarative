@@ -163,11 +163,6 @@ Item {
             objectName: "textfield"
             text: "abc"
         }
-        ToggleButton {
-            id: togglebutton
-            objectName: "togglebutton"
-            text: "togglebutton"
-        }
         ToolBar {
             width: parent.width
             id: toolbar

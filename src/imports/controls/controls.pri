@@ -21,7 +21,6 @@ QML_FILES = \
     TabButton.qml \
     TextArea.qml \
     TextField.qml \
-    ToggleButton.qml \
     ToolBar.qml \
     ToolButton.qml \
     Tumbler.qml

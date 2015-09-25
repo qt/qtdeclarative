@@ -59,7 +59,7 @@ ApplicationWindow {
 
         headerPositioning: ListView.PullBackHeader
         header: Rectangle {
-            property alias mirror: mirrorToggle.checked
+            property alias mirror: mirrorSwitch.checked
 
             z: 2
             width: parent.width
@@ -77,8 +77,8 @@ ApplicationWindow {
                 font.pointSize: 26
             }
 
-            ToggleButton {
-                id: mirrorToggle
+            Switch {
+                id: mirrorSwitch
                 text: "Mirror"
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom

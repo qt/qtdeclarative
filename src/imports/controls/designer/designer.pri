@@ -18,7 +18,6 @@ QML_FILES += \
     $$PWD/SwitchSpecifics.qml \
     $$PWD/TextAreaSpecifics.qml \
     $$PWD/TextFieldSpecifics.qml \
-    $$PWD/ToggleButtonSpecifics.qml \
     $$PWD/ToolBarSpecifics.qml \
     $$PWD/ToolButtonSpecifics.qml
 

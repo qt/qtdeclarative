@@ -207,16 +207,7 @@ void tst_activeFocusOnTab::activeFocusOnTab()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // Tab: textfield->togglebutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "togglebutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // Tab: togglebutton->toolbutton
+    // Tab: textfield->toolbutton
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
@@ -243,16 +234,7 @@ void tst_activeFocusOnTab::activeFocusOnTab()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // BackTab: toolbutton->togglebutton
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-
-    item = findItem<QQuickItem>(window->rootObject(), "togglebutton");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
-
-    // BackTab: togglebutton->textfield
+    // BackTab: toolbutton->textfield
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());

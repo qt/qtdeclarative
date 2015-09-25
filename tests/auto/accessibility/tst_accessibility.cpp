@@ -87,7 +87,6 @@ void tst_accessibility::a11y_data()
     QTest::newRow("TabButton") << "tabbutton" << 0x00000025 << "TabButton"; //QAccessible::PageTab
     QTest::newRow("TextArea") << "textarea" << 0x0000002A << "TextArea"; //QAccessible::Accessible.EditableText
     QTest::newRow("TextField") << "textfield" << 0x0000002A << "TextField"; //QAccessible::Accessible.EditableText
-    QTest::newRow("ToggleButton") << "togglebutton" << 0x0000002B << "ToggleButton"; //QAccessible::Button
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
 

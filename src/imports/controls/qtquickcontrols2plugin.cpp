@@ -91,7 +91,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TabButton.qml"))), uri, 2, 0, "TabButton");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextArea.qml"))), uri, 2, 0, "TextArea");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextField.qml"))), uri, 2, 0, "TextField");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToggleButton.qml"))), uri, 2, 0, "ToggleButton");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolBar.qml"))), uri, 2, 0, "ToolBar");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolButton.qml"))), uri, 2, 0, "ToolButton");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Tumbler.qml"))), uri, 2, 0, "Tumbler");

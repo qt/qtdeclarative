@@ -60,7 +60,6 @@
 #include <QtQuickTemplates/private/qquicktabbutton_p.h>
 #include <QtQuickTemplates/private/qquicktextarea_p.h>
 #include <QtQuickTemplates/private/qquicktextfield_p.h>
-#include <QtQuickTemplates/private/qquicktogglebutton_p.h>
 #include <QtQuickTemplates/private/qquicktoolbar_p.h>
 #include <QtQuickTemplates/private/qquicktoolbutton_p.h>
 #include <QtQuickTemplates/private/qquicktumbler_p.h>
@@ -103,7 +102,6 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTabButton>(uri, 2, 0, "TabButton");
     qmlRegisterType<QQuickTextArea>(uri, 2, 0, "TextArea");
     qmlRegisterType<QQuickTextField>(uri, 2, 0, "TextField");
-    qmlRegisterType<QQuickToggleButton>(uri, 2, 0, "ToggleButton");
     qmlRegisterType<QQuickToolBar>(uri, 2, 0, "ToolBar");
     qmlRegisterType<QQuickToolButton>(uri, 2, 0, "ToolButton");
     qmlRegisterType<QQuickTumblerAttached>();

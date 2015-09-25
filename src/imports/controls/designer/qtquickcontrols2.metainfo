@@ -196,21 +196,6 @@ MetaInfo {
     }
 
     Type {
-        name: "QtQuick.Controls.ToggleButton"
-        icon: "images/todo16.png"
-
-        ItemLibraryEntry {
-            name: "Toggle Button"
-            category: "Qt Quick - Controls"
-            libraryIcon: "images/todo.png"
-            version: "2.0"
-            requiredImport: "QtQuick.Controls"
-
-            Property { name: "text"; type: "binding"; value: "qsTr('Toggle Button')" }
-        }
-    }
-
-    Type {
         name: "QtQuick.Controls.ToolButton"
         icon: "images/todo16.png"
 

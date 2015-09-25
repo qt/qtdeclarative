@@ -221,10 +221,6 @@ void tst_ObjectCount::testCount_data()
             << QByteArray("import QtQuick.Controls 1.3; TextField { }")
             << QByteArray("import QtQuick.Controls 2.0; TextField { }");
 
-    QTest::newRow("ToggleButton")
-            << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; ToggleButton { }");
-
     QTest::newRow("ToolBar")
             << QByteArray("import QtQuick.Controls 1.3; ToolBar { }")
             << QByteArray("import QtQuick.Controls 2.0; ToolBar { }");

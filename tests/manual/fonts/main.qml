@@ -82,7 +82,6 @@ ApplicationWindow {
                 }
                 TextField { placeholder.text: "TextField" }
                 TextArea { placeholder.text: "TextArea" }
-                ToggleButton { text: "ToggleButton" }
                 ToolButton { text: "ToolButton" }
                 Tumbler { model: 3 }
             }
