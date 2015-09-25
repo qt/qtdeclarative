@@ -1640,10 +1640,8 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
     bool changed = false;
     if (newGeometry.width() != oldGeometry.width()) {
         changed = true; // we must update visualArea.widthRatio
-        if (d->hData.viewSize < 0) {
+        if (d->hData.viewSize < 0)
             d->contentItem->setWidth(width());
-            emit contentWidthChanged();
-        }
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;
@@ -1652,10 +1650,8 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
     }
     if (newGeometry.height() != oldGeometry.height()) {
         changed = true; // we must update visualArea.heightRatio
-        if (d->vData.viewSize < 0) {
+        if (d->vData.viewSize < 0)
             d->contentItem->setHeight(height());
-            emit contentHeightChanged();
-        }
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;

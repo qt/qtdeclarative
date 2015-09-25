@@ -93,6 +93,7 @@ private slots:
     void pressDelayWithLoader();
     void movementFromProgrammaticFlick();
     void cleanup();
+    void contentSize();
 
 private:
     void flickWithTouch(QQuickWindow *window, QTouchDevice *touchDevice, const QPoint &from, const QPoint &to);
@@ -1737,6 +1738,40 @@ void tst_qquickflickable::movementFromProgrammaticFlick()
     // verify that the signals for movement and flicking are called in the right order
     flickable->flick(0, -1000);
     QTRY_COMPARE(flickable->property("signalString").toString(), QString("msfsfeme"));
+}
+
+// QTBUG_35038
+void tst_qquickflickable::contentSize()
+{
+    QQuickFlickable flickable;
+    QCOMPARE(flickable.contentWidth(), qreal(-1));
+    QCOMPARE(flickable.contentHeight(), qreal(-1));
+
+    QSignalSpy cwspy(&flickable, SIGNAL(contentWidthChanged()));
+    QVERIFY(cwspy.isValid());
+
+    QSignalSpy chspy(&flickable, SIGNAL(contentHeightChanged()));
+    QVERIFY(chspy.isValid());
+
+    flickable.setWidth(100);
+    QCOMPARE(flickable.width(), qreal(100));
+    QCOMPARE(flickable.contentWidth(), qreal(-1.0));
+    QCOMPARE(cwspy.count(), 0);
+
+    flickable.setContentWidth(10);
+    QCOMPARE(flickable.width(), qreal(100));
+    QCOMPARE(flickable.contentWidth(), qreal(10));
+    QCOMPARE(cwspy.count(), 1);
+
+    flickable.setHeight(100);
+    QCOMPARE(flickable.height(), qreal(100));
+    QCOMPARE(flickable.contentHeight(), qreal(-1.0));
+    QCOMPARE(chspy.count(), 0);
+
+    flickable.setContentHeight(10);
+    QCOMPARE(flickable.height(), qreal(100));
+    QCOMPARE(flickable.contentHeight(), qreal(10));
+    QCOMPARE(chspy.count(), 1);
 }
 
 QTEST_MAIN(tst_qquickflickable)
