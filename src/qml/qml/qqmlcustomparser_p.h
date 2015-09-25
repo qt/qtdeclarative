@@ -55,15 +55,8 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlCompiledData;
-
-struct QQmlCustomParserCompilerBackend
-{
-    virtual ~QQmlCustomParserCompilerBackend() {}
-    virtual const QQmlImports &imports() const = 0;
-
-    int evaluateEnum(const QString &scope, const QByteArray& enumValue, bool *ok) const;
-    const QMetaObject *resolveType(const QString& name) const;
-};
+class QQmlPropertyValidator;
+class QQmlEnginePrivate;
 
 class Q_QML_PRIVATE_EXPORT QQmlCustomParser
 {
@@ -75,8 +68,8 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    QQmlCustomParser() : compiler(0), m_flags(NoFlag) {}
-    QQmlCustomParser(Flags f) : compiler(0), m_flags(f) {}
+    QQmlCustomParser() : engine(0), validator(0), m_flags(NoFlag) {}
+    QQmlCustomParser(Flags f) : engine(0), validator(0), m_flags(f) {}
     virtual ~QQmlCustomParser() {}
 
     void clearErrors();
@@ -100,7 +93,8 @@ protected:
 
 private:
     QList<QQmlError> exceptions;
-    const QQmlCustomParserCompilerBackend *compiler;
+    QQmlEnginePrivate *engine;
+    const QQmlPropertyValidator *validator;
     Flags m_flags;
     QBiPointer<const QQmlImports, QQmlTypeNameCache> imports;
     friend class QQmlPropertyValidator;

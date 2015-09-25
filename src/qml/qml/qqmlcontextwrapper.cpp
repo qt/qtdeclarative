@@ -54,9 +54,8 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(QmlContextWrapper);
 
-Heap::QmlContextWrapper::QmlContextWrapper(QV4::ExecutionEngine *engine, QQmlContextData *context, QObject *scopeObject, bool ownsContext)
-    : Heap::Object(engine)
-    , readOnly(true)
+Heap::QmlContextWrapper::QmlContextWrapper(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+    : readOnly(true)
     , ownsContext(ownsContext)
     , isNullWrapper(false)
     , context(context)
@@ -74,7 +73,7 @@ ReturnedValue QmlContextWrapper::qmlScope(ExecutionEngine *v4, QQmlContextData *
 {
     Scope valueScope(v4);
 
-    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->alloc<QmlContextWrapper>(v4, ctxt, scope));
+    Scoped<QmlContextWrapper> w(valueScope, v4->memoryManager->allocObject<QmlContextWrapper>(ctxt, scope));
     return w.asReturnedValue();
 }
 
@@ -88,7 +87,7 @@ ReturnedValue QmlContextWrapper::urlScope(ExecutionEngine *v4, const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->alloc<QmlContextWrapper>(v4, context, (QObject*)0, true));
+    Scoped<QmlContextWrapper> w(scope, v4->memoryManager->allocObject<QmlContextWrapper>(context, (QObject*)0, true));
     w->d()->isNullWrapper = true;
     return w.asReturnedValue();
 }
@@ -240,7 +239,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
 
     uint member = wrapper->internalClass()->find(name);
     if (member < UINT_MAX) {
-        wrapper->putValue(wrapper->propertyAt(member), wrapper->internalClass()->propertyData[member], value);
+        wrapper->putValue(member, value);
         return;
     }
 
@@ -248,7 +247,7 @@ void QmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (wrapper && wrapper->d()->readOnly) {
             QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
                             QLatin1Char('"');
-            ScopedString e(scope, v4->currentContext()->engine->newString(error));
+            ScopedString e(scope, v4->newString(error));
             v4->throwError(e);
             return;
         }

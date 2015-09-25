@@ -98,7 +98,10 @@ namespace QV4 {
 namespace Heap {
 
 struct QQuickRootItemMarker : Object {
-    inline QQuickRootItemMarker(QV4::ExecutionEngine *engine, QQuickWindow *window);
+    inline QQuickRootItemMarker(QQuickWindow *window)
+        : window(window)
+    {
+    }
 
     QQuickWindow *window;
 };
@@ -115,12 +118,7 @@ struct QQuickRootItemMarker : public Object
 
 };
 
-inline
-Heap::QQuickRootItemMarker::QQuickRootItemMarker(QV4::ExecutionEngine *engine, QQuickWindow *window)
-    : Heap::Object(engine)
-    , window(window)
-{
-}
+
 
 }
 

@@ -201,6 +201,7 @@ private slots:
     void emptytags_QTBUG_22058();
     void cursorRectangle_QTBUG_38947();
     void textCached_QTBUG_41583();
+    void doubleSelect_QTBUG_38704();
 
     void padding();
 
@@ -4044,7 +4045,7 @@ void tst_qquicktextedit::append_data()
             << QString("Hello")
             << standard.at(0) + QString("\nHello")
             << 18 << standard.at(0).length() + 6 << standard.at(0).length() + 6
-            << false << true;
+            << true << true;
 
     QTest::newRow("reversed selection kept intact")
             << standard.at(0) << QQuickTextEdit::PlainText
@@ -4126,11 +4127,8 @@ void tst_qquicktextedit::append()
     if (selectionStart > selectionEnd)
         qSwap(selectionStart, selectionEnd);
 
-    QEXPECT_FAIL("into selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
-    QEXPECT_FAIL("into reversed selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QEXPECT_FAIL("into reversed selection", "selectionEndChanged signal not emitted", Continue);
     QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
     QCOMPARE(textSpy.count() > 0, text != expectedText);
     QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
@@ -4213,7 +4211,7 @@ void tst_qquicktextedit::insert_data()
             << QString("Hello")
             << QString("Hello") + standard.at(0)
             << 19 << 24 << 24
-            << false << true;
+            << true << true;
 
     QTest::newRow("before reversed selection")
             << standard.at(0) << QQuickTextEdit::PlainText
@@ -4221,7 +4219,7 @@ void tst_qquicktextedit::insert_data()
             << QString("Hello")
             << QString("Hello") + standard.at(0)
             << 19 << 24 << 19
-            << false << true;
+            << true << true;
 
     QTest::newRow("after selection")
             << standard.at(0) << QQuickTextEdit::PlainText
@@ -4344,11 +4342,8 @@ void tst_qquicktextedit::insert()
     if (selectionStart > selectionEnd)
         qSwap(selectionStart, selectionEnd);
 
-    QEXPECT_FAIL("into selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
-    QEXPECT_FAIL("into reversed selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QEXPECT_FAIL("into reversed selection", "selectionEndChanged signal not emitted", Continue);
     QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
     QCOMPARE(textSpy.count() > 0, text != expectedText);
     QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
@@ -4458,7 +4453,7 @@ void tst_qquicktextedit::remove_data()
             << 0 << 5
             << standard.at(0).mid(5)
             << 9 << 14 << 14
-            << false << true;
+            << true << true;
 
     QTest::newRow("before reversed selection")
             << standard.at(0) << QQuickTextEdit::PlainText
@@ -4466,7 +4461,7 @@ void tst_qquicktextedit::remove_data()
             << 0 << 5
             << standard.at(0).mid(5)
             << 9 << 14 << 9
-            << false << true;
+            << true << true;
 
     QTest::newRow("after selection")
             << standard.at(0) << QQuickTextEdit::PlainText
@@ -4588,11 +4583,8 @@ void tst_qquicktextedit::remove()
     QCOMPARE(textEdit->selectionEnd(), expectedSelectionEnd);
     QCOMPARE(textEdit->cursorPosition(), expectedCursorPosition);
 
-    QEXPECT_FAIL("from selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
-    QEXPECT_FAIL("from reversed selection", "selectedTextChanged signal isn't emitted on edits within selection", Continue);
     QCOMPARE(selectionSpy.count() > 0, selectionChanged);
     QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QEXPECT_FAIL("from reversed selection", "selectionEndChanged signal not emitted", Continue);
     QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
     QCOMPARE(textSpy.count() > 0, text != expectedText);
 
@@ -5372,6 +5364,26 @@ void tst_qquicktextedit::textCached_QTBUG_41583()
     QCOMPARE(textedit->textMargin(), qreal(10.0));
     QCOMPARE(textedit->text(), QString("TextEdit"));
     QVERIFY(!textedit->property("empty").toBool());
+}
+
+void tst_qquicktextedit::doubleSelect_QTBUG_38704()
+{
+    QString componentStr = "import QtQuick 2.2\nTextEdit { text: \"TextEdit\" }";
+    QQmlComponent textEditComponent(&engine);
+    textEditComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
+    QVERIFY(textEdit != 0);
+
+    QSignalSpy selectionSpy(textEdit, SIGNAL(selectedTextChanged()));
+
+    textEdit->select(0,1); //Select some text initially
+    QCOMPARE(selectionSpy.count(), 1);
+    textEdit->select(0,1); //No change to selection start/end
+    QCOMPARE(selectionSpy.count(), 1);
+    textEdit->select(0,2); //Change selection end
+    QCOMPARE(selectionSpy.count(), 2);
+    textEdit->select(1,2); //Change selection start
+    QCOMPARE(selectionSpy.count(), 3);
 }
 
 void tst_qquicktextedit::padding()

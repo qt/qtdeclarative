@@ -83,21 +83,31 @@ Heap::CallContext *ExecutionContext::newCallContext(const FunctionObject *functi
     return c;
 }
 
-Heap::WithContext *ExecutionContext::newWithContext(Object *with)
+Heap::WithContext *ExecutionContext::newWithContext(Heap::Object *with)
 {
-    return d()->engine->memoryManager->alloc<WithContext>(d()->engine, with);
+    return d()->engine->memoryManager->alloc<WithContext>(d(), with);
 }
 
-Heap::CatchContext *ExecutionContext::newCatchContext(String *exceptionVarName, const Value &exceptionValue)
+Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue)
 {
-    return d()->engine->memoryManager->alloc<CatchContext>(d()->engine, exceptionVarName, exceptionValue);
+    Scope scope(this);
+    ScopedValue e(scope, exceptionValue);
+    return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
 }
 
 Heap::QmlContext *ExecutionContext::newQmlContext(QmlContextWrapper *qml)
 {
-    return d()->engine->memoryManager->alloc<QmlContext>(this, qml);
+    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
+    return c;
 }
 
+Heap::QmlContext *ExecutionContext::newQmlContext(QQmlContextData *context, QObject *scopeObject)
+{
+    Scope scope(this);
+    Scoped<QmlContextWrapper> qml(scope, QmlContextWrapper::qmlScope(scope.engine, context, scopeObject));
+    Heap::QmlContext *c = d()->engine->memoryManager->alloc<QmlContext>(this, qml);
+    return c;
+}
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
 {
@@ -142,38 +152,38 @@ Heap::GlobalContext::GlobalContext(ExecutionEngine *eng)
     global = eng->globalObject->d();
 }
 
-Heap::WithContext::WithContext(ExecutionEngine *engine, QV4::Object *with)
-    : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_WithContext)
+Heap::WithContext::WithContext(ExecutionContext *outerContext, Object *with)
+    : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_WithContext)
 {
-    callData = parent->callData;
-    outer = parent;
-    lookups = parent->lookups;
-    compilationUnit = parent->compilationUnit;
+    outer = outerContext;
+    callData = outer->callData;
+    lookups = outer->lookups;
+    compilationUnit = outer->compilationUnit;
 
-    withObject = with ? with->d() : 0;
+    withObject = with;
 }
 
-Heap::CatchContext::CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue)
-    : Heap::ExecutionContext(engine, Heap::ExecutionContext::Type_CatchContext)
+Heap::CatchContext::CatchContext(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue)
+    : Heap::ExecutionContext(outerContext->engine, Heap::ExecutionContext::Type_CatchContext)
 {
-    strictMode = parent->strictMode;
-    callData = parent->callData;
-    outer = parent;
-    lookups = parent->lookups;
-    compilationUnit = parent->compilationUnit;
+    outer = outerContext;
+    strictMode = outer->strictMode;
+    callData = outer->callData;
+    lookups = outer->lookups;
+    compilationUnit = outer->compilationUnit;
 
-    this->exceptionVarName = exceptionVarName->d();
+    this->exceptionVarName = exceptionVarName;
     this->exceptionValue = exceptionValue;
 }
 
-Heap::QmlContext::QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml)
-    : Heap::ExecutionContext(outer->engine(), Heap::ExecutionContext::Type_QmlContext)
+Heap::QmlContext::QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml)
+    : Heap::ExecutionContext(outerContext->engine(), Heap::ExecutionContext::Type_QmlContext)
 {
+    outer = outerContext->d();
     strictMode = false;
-    callData = parent->callData;
-    this->outer = outer->d();
-    lookups = parent->lookups;
-    compilationUnit = parent->compilationUnit;
+    callData = outer->callData;
+    lookups = outer->lookups;
+    compilationUnit = outer->compilationUnit;
 
     this->qml = qml->d();
 }
@@ -362,7 +372,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         if (activation) {
             uint member = activation->internalClass()->find(name);
             if (member < UINT_MAX) {
-                activation->putValue(activation->propertyAt(member), activation->internalClass()->propertyData[member], value);
+                activation->putValue(member, value);
                 return;
             }
         }
@@ -538,7 +548,7 @@ Heap::FunctionObject *ExecutionContext::getFunctionObject() const
 {
     Scope scope(d()->engine);
     ScopedContext it(scope, this->d());
-    for (; it; it = it->d()->parent) {
+    for (; it; it = it->d()->outer) {
         if (const CallContext *callCtx = it->asCallContext())
             return callCtx->d()->function;
         else if (it->asCatchContext() || it->asWithContext())
@@ -560,3 +570,8 @@ QQmlContextData *QmlContext::qmlContext() const
 {
     return d()->qml->context;
 }
+
+void QmlContext::takeContextOwnership() {
+    d()->qml->ownsContext = true;
+}
+

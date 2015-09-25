@@ -134,21 +134,64 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     Q_ASSERT(extensible);
 }
 
+static void insertHoleIntoPropertyData(Object *object, int idx)
+{
+    int inlineSize = object->d()->inlineMemberSize;
+    int icSize = object->internalClass()->size;
+    int from = qMax(idx, inlineSize);
+    int to = from + 1;
+    if (from < icSize)
+        memmove(object->propertyData(to), object->propertyData(from), icSize - from - 1);
+    if (from == idx)
+        return;
+    if (inlineSize < icSize)
+        *object->propertyData(inlineSize) = *object->propertyData(inlineSize - 1);
+    from = idx;
+    to = from + 1;
+    if (from < inlineSize - 1)
+        memmove(object->propertyData(to), object->propertyData(from), inlineSize - from - 1);
+}
+
+static void removeFromPropertyData(Object *object, int idx, bool accessor = false)
+{
+    int inlineSize = object->d()->inlineMemberSize;
+    int icSize = object->internalClass()->size;
+    int delta = (accessor ? 2 : 1);
+    int to = idx;
+    int from = to + delta;
+    if (from < inlineSize) {
+        memmove(object->propertyData(to), object->d()->propertyData(from), (inlineSize - from)*sizeof(Value));
+        to = inlineSize - delta;
+        from = inlineSize;
+    }
+    if (to < inlineSize && from < icSize) {
+        Q_ASSERT(from >= inlineSize);
+        memcpy(object->propertyData(to), object->d()->propertyData(from), (inlineSize - to)*sizeof(Value));
+        to = inlineSize;
+        from = inlineSize + delta;
+    }
+    if (from < icSize + delta) {
+        Q_ASSERT(to >= inlineSize && from > to);
+        memmove(object->propertyData(to), object->d()->propertyData(from), (icSize + delta - to)*sizeof(Value));
+    }
+}
+
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
 {
     uint idx;
-    InternalClass *newClass = object->internalClass()->changeMember(string->identifier(), data, &idx);
+    InternalClass *oldClass = object->internalClass();
+    InternalClass *newClass = oldClass->changeMember(string->identifier(), data, &idx);
     if (index)
         *index = idx;
 
-    if (newClass->size > object->internalClass()->size) {
-        Q_ASSERT(newClass->size == object->internalClass()->size + 1);
-        memmove(object->memberData()->data + idx + 2, object->memberData()->data + idx + 1, (object->internalClass()->size - idx - 1)*sizeof(Value));
-    } else if (newClass->size < object->internalClass()->size) {
-        Q_ASSERT(newClass->size == object->internalClass()->size - 1);
-        memmove(object->memberData()->data + idx + 1, object->memberData()->data + idx + 2, (object->internalClass()->size - idx - 2)*sizeof(Value));
-    }
     object->setInternalClass(newClass);
+    if (newClass->size > oldClass->size) {
+        Q_ASSERT(newClass->size == oldClass->size + 1);
+        insertHoleIntoPropertyData(object, idx + 1);
+    } else if (newClass->size < oldClass->size) {
+        Q_ASSERT(newClass->size == oldClass->size - 1);
+        removeFromPropertyData(object, idx + 1);
+    }
 }
 
 InternalClassTransition &InternalClass::lookupOrInsertTransition(const InternalClassTransition &t)
@@ -286,6 +329,8 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     Transition temp = { id, 0, -1 };
     Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
 
+    bool accessor = oldClass->propertyData.at(propIdx).isAccessor();
+
     if (t.lookup) {
         object->setInternalClass(t.lookup);
     } else {
@@ -300,8 +345,10 @@ void InternalClass::removeMember(Object *object, Identifier *id)
         object->setInternalClass(newClass);
     }
 
-    // remove the entry in memberdata
-    memmove(object->memberData()->data + propIdx, object->memberData()->data + propIdx + 1, (object->internalClass()->size - propIdx)*sizeof(Value));
+    Q_ASSERT(object->internalClass()->size == oldClass->size - (accessor ? 2 : 1));
+
+    // remove the entry in the property data
+    removeFromPropertyData(object, propIdx, accessor);
 
     t.lookup = object->internalClass();
     Q_ASSERT(t.lookup);
@@ -352,20 +399,26 @@ InternalClass *InternalClass::frozen()
     if (m_frozen)
         return m_frozen;
 
-    m_frozen = engine->emptyClass;
+    m_frozen = propertiesFrozen();
+    m_frozen = m_frozen->nonExtensible();
+
+    m_frozen->m_frozen = m_frozen;
+    m_frozen->m_sealed = m_frozen;
+    return m_frozen;
+}
+
+InternalClass *InternalClass::propertiesFrozen() const
+{
+    InternalClass *frozen = engine->emptyClass;
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
             continue;
         attrs.setWritable(false);
         attrs.setConfigurable(false);
-        m_frozen = m_frozen->addMember(nameMap.at(i), attrs);
+        frozen = frozen->addMember(nameMap.at(i), attrs);
     }
-    m_frozen = m_frozen->nonExtensible();
-
-    m_frozen->m_frozen = m_frozen;
-    m_frozen->m_sealed = m_frozen;
-    return m_frozen;
+    return frozen;
 }
 
 void InternalClass::destroy()

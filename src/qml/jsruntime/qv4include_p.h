@@ -76,8 +76,7 @@ private Q_SLOTS:
     void finished();
 
 private:
-    QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
-               const QV4::Value &qmlglobal, const QV4::Value &callback);
+    QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &callback);
     ~QV4Include();
 
     QV4::ReturnedValue result();
@@ -95,8 +94,7 @@ private:
     QV4::PersistentValue m_callbackFunction;
     QV4::PersistentValue m_resultObject;
 
-    QQmlGuardedContextData m_context;
-    QV4::PersistentValue m_qmlglobal;
+    QV4::PersistentValue m_qmlContext;
 };
 
 QT_END_NAMESPACE

@@ -52,6 +52,7 @@ public:
     QColor fillColor;
     QQuickPaintedItem::RenderTarget renderTarget;
     QQuickPaintedItem::PerformanceHints performanceHints;
+    QSize textureSize;
 
     QRect dirtyRect;
 

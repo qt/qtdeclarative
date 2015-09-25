@@ -78,7 +78,6 @@ private:
     friend struct Heap::ExecutionContext;
 public:
     Heap::ExecutionContext *current;
-    Heap::ExecutionContext *currentContext() const { return current; }
 
     Value *jsStackTop;
     quint32 hasException;
@@ -88,6 +87,7 @@ public:
     ExecutableAllocator *regExpAllocator;
     QScopedPointer<EvalISelFactory> iselFactory;
 
+    ExecutionContext *currentContext;
 
     Value *jsStackLimit;
     quintptr cStackLimit;
@@ -127,7 +127,8 @@ public:
     QV8Engine *v8Engine;
 
     enum JSObjects {
-        RootContect,
+        RootContext,
+        IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
         ArrayProto,
         StringProto,
@@ -148,6 +149,7 @@ public:
         ArrayBufferProto,
         DataViewProto,
         ValueTypeProto,
+        SignalHandlerProto,
 
         Object_Ctor,
         String_Ctor,
@@ -168,13 +170,14 @@ public:
         DataView_Ctor,
 
         Eval_Function,
+        GetStack_Function,
         ThrowerObject,
         NJSObjects
     };
     Value *jsObjects;
     enum { NTypedArrayTypes = 9 }; // == TypedArray::NValues, avoid header dependency
 
-    GlobalContext *rootContext() const { return reinterpret_cast<GlobalContext *>(jsObjects + RootContect); }
+    GlobalContext *rootContext() const { return reinterpret_cast<GlobalContext *>(jsObjects + RootContext); }
     FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
     FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
     FunctionObject *numberCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Number_Ctor); }
@@ -217,22 +220,30 @@ public:
     Object *typedArrayPrototype;
 
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
+    Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
 
     InternalClassPool *classPool;
     InternalClass *emptyClass;
 
     InternalClass *arrayClass;
+    InternalClass *stringClass;
 
     InternalClass *functionClass;
     InternalClass *simpleScriptFunctionClass;
     InternalClass *protoClass;
 
     InternalClass *regExpExecArrayClass;
+    InternalClass *regExpObjectClass;
 
     InternalClass *argumentsObjectClass;
     InternalClass *strictArgumentsObjectClass;
 
+    InternalClass *errorClass;
+    InternalClass *errorClassWithMessage;
+    InternalClass *errorProtoClass;
+
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
+    FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
     Property *argumentsAccessors;
@@ -347,9 +358,11 @@ public:
     void enableDebugger();
     void enableProfiler();
 
-    Heap::ExecutionContext *pushGlobalContext();
-    void pushContext(CallContext *context);
-    Heap::ExecutionContext *popContext();
+    ExecutionContext *pushGlobalContext();
+    void pushContext(Heap::ExecutionContext *context);
+    void pushContext(ExecutionContext *context);
+    void popContext();
+    ExecutionContext *parentContext(ExecutionContext *context) const;
 
     Heap::Object *newObject();
     Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
@@ -362,10 +375,12 @@ public:
     Heap::Object *newBooleanObject(bool b);
 
     Heap::ArrayObject *newArrayObject(int count = 0);
+    Heap::ArrayObject *newArrayObject(const Value *values, int length);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
     Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
 
     Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
+    Heap::ArrayBuffer *newArrayBuffer(size_t length);
 
     Heap::DateObject *newDateObject(const Value &value);
     Heap::DateObject *newDateObject(const QDateTime &dt);
@@ -378,7 +393,7 @@ public:
     Heap::Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newSyntaxErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message);
-    Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber);
+    Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newTypeErrorObject(const QString &message);
     Heap::Object *newRangeErrorObject(const QString &message);
     Heap::Object *newURIErrorObject(const Value &message);
@@ -388,7 +403,6 @@ public:
     Heap::Object *newForEachIteratorObject(Object *o);
 
     Heap::QmlContext *qmlContext() const;
-    QV4::Heap::QmlContextWrapper *qmlContextObject() const;
     QObject *qmlScopeObject() const;
     ReturnedValue qmlSingletonWrapper(String *name);
     QQmlContextData *callingQmlContext() const;
@@ -442,35 +456,32 @@ public:
     void assertObjectBelongsToEngine(const Heap::Base &baseObject);
 };
 
-inline void ExecutionEngine::pushContext(CallContext *context)
+inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
 {
-    Q_ASSERT(current && context && context->d());
-    context->d()->parent = current;
-    current = context->d();
+    Q_ASSERT(currentContext && context);
+    Value *v = jsAlloca(2);
+    v[0] = Encode(context);
+    v[1] = Encode((int)(v - static_cast<Value *>(currentContext)));
+    currentContext = static_cast<ExecutionContext *>(v);
+    current = currentContext->d();
 }
 
-inline Heap::ExecutionContext *ExecutionEngine::popContext()
+inline void ExecutionEngine::pushContext(ExecutionContext *context)
 {
-    Q_ASSERT(current->parent);
-    current = current->parent;
-    Q_ASSERT(current);
-    return current;
+    pushContext(context->d());
 }
 
-inline
-Heap::ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
-    : engine(engine)
-    , parent(engine->currentContext())
-    , outer(0)
-    , lookups(0)
-    , compilationUnit(0)
-    , type(t)
-    , strictMode(false)
-    , lineNumber(-1)
-{
-    engine->current = this;
-}
 
+inline void ExecutionEngine::popContext()
+{
+    Q_ASSERT(jsStackTop > currentContext);
+    QV4::Value *offset = (currentContext + 1);
+    Q_ASSERT(offset->isInteger());
+    int o = offset->integerValue();
+    Q_ASSERT(o);
+    currentContext -= o;
+    current = currentContext->d();
+}
 
 inline
 void Heap::Base::mark(QV4::ExecutionEngine *engine)
@@ -487,11 +498,12 @@ void Heap::Base::mark(QV4::ExecutionEngine *engine)
 
 inline void Value::mark(ExecutionEngine *e)
 {
-    if (!_val)
+    if (!isManaged())
         return;
-    Managed *m = as<Managed>();
-    if (m)
-        m->d()->mark(e);
+
+    Heap::Base *o = heapObject();
+    if (o)
+        o->mark(e);
 }
 
 

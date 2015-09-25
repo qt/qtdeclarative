@@ -64,13 +64,13 @@ struct DelegateModelGroupFunction : FunctionObject {
 };
 
 struct QQmlDelegateModelGroupChange : Object {
-    QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine);
+    QQmlDelegateModelGroupChange() {}
 
     QQmlChangeSet::Change change;
 };
 
 struct QQmlDelegateModelGroupChangeArray : Object {
-    QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes);
+    QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes);
     QVector<QQmlChangeSet::Change> changes;
 };
 
@@ -83,7 +83,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 
     static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
     {
-        return scope->engine()->memoryManager->alloc<DelegateModelGroupFunction>(scope, flag, code);
+        return scope->engine()->memoryManager->allocObject<DelegateModelGroupFunction>(scope, flag, code);
     }
 
     static QV4::ReturnedValue call(const QV4::Managed *that, QV4::CallData *callData)
@@ -1717,7 +1717,7 @@ void QQmlDelegateModelItemMetaType::initializePrototype()
 
     s = v4->newString(QStringLiteral("isUnresolved"));
     QV4::ScopedFunctionObject f(scope);
-    QV4::ScopedContext global(scope, scope.engine->rootContext());
+    QV4::ExecutionContext *global = scope.engine->rootContext();
     p->setGetter((f = QV4::DelegateModelGroupFunction::create(global, 30, QQmlDelegateModelItem::get_member)));
     p->setSetter(0);
     proto->insertMember(s, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
@@ -2488,7 +2488,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     QV8Engine *v8 = model->m_cacheMetaType->v8Engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8);
     QV4::Scope scope(v4);
-    QV4::ScopedObject o(scope, v4->memoryManager->alloc<QQmlDelegateModelItemObject>(v4, cacheItem));
+    QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QQmlDelegateModelItemObject>(cacheItem));
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
     o->setPrototype(p);
     ++cacheItem->scriptRef;
@@ -3233,7 +3233,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     V4_OBJECT2(QQmlDelegateModelGroupChange, QV4::Object)
 
     static QV4::Heap::QQmlDelegateModelGroupChange *create(QV4::ExecutionEngine *e) {
-        return e->memoryManager->alloc<QQmlDelegateModelGroupChange>(e);
+        return e->memoryManager->allocObject<QQmlDelegateModelGroupChange>();
     }
 
     static QV4::ReturnedValue method_get_index(QV4::CallContext *ctx) {
@@ -3261,11 +3261,6 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     }
 };
 
-QV4::Heap::QQmlDelegateModelGroupChange::QQmlDelegateModelGroupChange(QV4::ExecutionEngine *engine)
-    : QV4::Heap::Object(engine)
-{
-}
-
 DEFINE_OBJECT_VTABLE(QQmlDelegateModelGroupChange);
 
 struct QQmlDelegateModelGroupChangeArray : public QV4::Object
@@ -3275,7 +3270,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 public:
     static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
-        return engine->memoryManager->alloc<QQmlDelegateModelGroupChangeArray>(engine, changes);
+        return engine->memoryManager->allocObject<QQmlDelegateModelGroupChangeArray>(changes);
     }
 
     quint32 count() const { return d()->changes.count(); }
@@ -3321,11 +3316,10 @@ public:
     }
 };
 
-QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
-    : QV4::Heap::Object(engine)
-    , changes(changes)
+QV4::Heap::QQmlDelegateModelGroupChangeArray::QQmlDelegateModelGroupChangeArray(const QVector<QQmlChangeSet::Change> &changes)
+    : changes(changes)
 {
-    QV4::Scope scope(engine);
+    QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);
 }

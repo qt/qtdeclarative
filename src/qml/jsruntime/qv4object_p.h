@@ -42,17 +42,19 @@
 
 QT_BEGIN_NAMESPACE
 
+
 namespace QV4 {
 
 namespace Heap {
 
 struct Object : Base {
-    inline Object(ExecutionEngine *engine);
-    Object(InternalClass *internal, QV4::Object *prototype);
+    inline Object() {}
 
-    const Property *propertyAt(uint index) const { return reinterpret_cast<const Property *>(memberData->data + index); }
-    Property *propertyAt(uint index) { return reinterpret_cast<Property *>(memberData->data + index); }
+    const Value *propertyData(uint index) const { if (index < inlineMemberSize) return reinterpret_cast<const Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
+    Value *propertyData(uint index) { if (index < inlineMemberSize) return reinterpret_cast<Value *>(this) + inlineMemberOffset + index; return memberData->data + index - inlineMemberSize; }
 
+    uint inlineMemberOffset;
+    uint inlineMemberSize;
     InternalClass *internalClass;
     Pointer<Object> prototype;
     Pointer<MemberData> memberData;
@@ -79,6 +81,13 @@ struct Object : Base {
         static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+
+#define V4_INTERNALCLASS(c) \
+    static QV4::InternalClass *defaultInternalClass(QV4::ExecutionEngine *e) \
+    { return e->c; }
+#define V4_PROTOTYPE(p) \
+    static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
+    { return e->p(); }
 
 struct ObjectVTable
 {
@@ -124,21 +133,26 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)
     Q_MANAGED_TYPE(Object)
+    V4_INTERNALCLASS(emptyClass)
+    V4_PROTOTYPE(objectPrototype)
 
     enum {
-        IsObject = true
+        IsObject = true,
+        GetterOffset = 0,
+        SetterOffset = 1
     };
 
     InternalClass *internalClass() const { return d()->internalClass; }
-    void setInternalClass(InternalClass *ic) { d()->internalClass = ic; }
+    void setInternalClass(InternalClass *ic);
 
-    Heap::MemberData *memberData() { return d()->memberData; }
-    const Heap::MemberData *memberData() const { return d()->memberData; }
+    const Value *propertyData(uint index) const { return d()->propertyData(index); }
+    Value *propertyData(uint index) { return d()->propertyData(index); }
+
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData = a->d(); }
 
-    const Property *propertyAt(uint index) const { return d()->propertyAt(index); }
-    Property *propertyAt(uint index) { return d()->propertyAt(index); }
+    void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
+    void setProperty(uint index, const Property *p);
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
     Heap::Object *prototype() const { return d()->prototype; }
@@ -147,8 +161,8 @@ struct Q_QML_EXPORT Object: Managed {
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
 
-    Property *__getPropertyDescriptor__(String *name, PropertyAttributes *attrs) const;
-    Property *__getPropertyDescriptor__(uint index, PropertyAttributes *attrs) const;
+    Value *getValueOrSetter(String *name, PropertyAttributes *attrs);
+    Value *getValueOrSetter(uint index, PropertyAttributes *attrs);
 
     bool hasProperty(String *name) const;
     bool hasProperty(uint index) const;
@@ -167,14 +181,14 @@ struct Q_QML_EXPORT Object: Managed {
     //
     void put(ExecutionEngine *engine, const QString &name, const Value &value);
 
-    static ReturnedValue getValue(const Value &thisObject, const Property *p, PropertyAttributes attrs);
-    ReturnedValue getValue(const Property *p, PropertyAttributes attrs) const {
+    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
+    ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
         Scope scope(this->engine());
         ScopedValue t(scope, const_cast<Object *>(this));
-        return getValue(t, p, attrs);
+        return getValue(t, v, attrs);
     }
 
-    void putValue(Property *pd, PropertyAttributes attrs, const Value &value);
+    void putValue(uint memberIndex, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(String *name, const Value &value) {
@@ -188,10 +202,6 @@ struct Q_QML_EXPORT Object: Managed {
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
-
-    void ensureMemberIndex(QV4::ExecutionEngine *e, uint idx) {
-        d()->memberData = MemberData::reallocate(e, d()->memberData, idx);
-    }
 
     void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
@@ -269,7 +279,6 @@ public:
 
         return false;
     }
-    void ensureMemberIndex(uint idx);
 
     inline ReturnedValue get(String *name, bool *hasProperty = 0) const
     { return vtable()->get(this, name, hasProperty); }
@@ -316,6 +325,8 @@ protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
 
+    void ensureMemberData();
+
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
@@ -330,39 +341,19 @@ private:
 
 namespace Heap {
 
-inline Object::Object(ExecutionEngine *engine)
-    : internalClass(engine->emptyClass),
-      prototype(static_cast<Object *>(engine->objectPrototype()->m()))
-{
-}
-
 struct BooleanObject : Object {
-    BooleanObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype),
-          b(false)
-    {
-    }
-
-    BooleanObject(ExecutionEngine *engine, bool b)
-        : Object(engine->emptyClass, engine->booleanPrototype()),
-          b(b)
-    {
-    }
+    BooleanObject() {}
+    BooleanObject(bool b)
+        : b(b)
+    {}
     bool b;
 };
 
 struct NumberObject : Object {
-    NumberObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype),
-          value(0)
-    {
-    }
-
-    NumberObject(ExecutionEngine *engine, double val)
-        : Object(engine->emptyClass, engine->numberPrototype()),
-          value(val)
-    {
-    }
+    NumberObject() {}
+    NumberObject(double val)
+        : value(val)
+    {}
     double value;
 };
 
@@ -371,15 +362,11 @@ struct ArrayObject : Object {
         LengthPropertyIndex = 0
     };
 
-    ArrayObject(ExecutionEngine *engine)
-        : Heap::Object(engine->arrayClass, engine->arrayPrototype())
+    ArrayObject()
     { init(); }
-    ArrayObject(ExecutionEngine *engine, const QStringList &list);
-    ArrayObject(InternalClass *ic, QV4::Object *prototype)
-        : Heap::Object(ic, prototype)
-    { init(); }
+    ArrayObject(const QStringList &list);
     void init()
-    { memberData->data[LengthPropertyIndex] = Primitive::fromInt32(0); }
+    { *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0); }
 };
 
 }
@@ -387,6 +374,7 @@ struct ArrayObject : Object {
 struct BooleanObject: Object {
     V4_OBJECT2(BooleanObject, Object)
     Q_MANAGED_TYPE(BooleanObject)
+    V4_PROTOTYPE(booleanPrototype)
 
     bool value() const { return d()->b; }
 
@@ -395,6 +383,7 @@ struct BooleanObject: Object {
 struct NumberObject: Object {
     V4_OBJECT2(NumberObject, Object)
     Q_MANAGED_TYPE(NumberObject)
+    V4_PROTOTYPE(numberPrototype)
 
     double value() const { return d()->value; }
 };
@@ -402,6 +391,8 @@ struct NumberObject: Object {
 struct ArrayObject: Object {
     V4_OBJECT2(ArrayObject, Object)
     Q_MANAGED_TYPE(ArrayObject)
+    V4_INTERNALCLASS(arrayClass)
+    V4_PROTOTYPE(arrayPrototype)
 
     void init(ExecutionEngine *engine);
 
@@ -415,7 +406,7 @@ struct ArrayObject: Object {
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        memberData()->data[Heap::ArrayObject::LengthPropertyIndex] = Primitive::fromUInt32(l);
+        *propertyData(Heap::ArrayObject::LengthPropertyIndex) = Primitive::fromUInt32(l);
 }
 
 inline void Object::push_back(const Value &v)
@@ -438,10 +429,7 @@ inline void Object::arraySet(uint index, const Property *p, PropertyAttributes a
         arrayData()->vtable()->reallocate(this, index + 1, false);
     }
     setArrayAttributes(index, attributes);
-    Property *pd = ArrayData::insert(this, index, attributes.isAccessor());
-    pd->value = p->value;
-    if (attributes.isAccessor())
-        pd->set = p->set;
+    ArrayData::insert(this, index, &p->value, attributes.isAccessor());
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }
@@ -453,8 +441,7 @@ inline void Object::arraySet(uint index, const Value &value)
     if (index > 0x1000 && index > 2*d()->arrayData->alloc) {
         initSparseArray();
     }
-    Property *pd = ArrayData::insert(this, index);
-    pd->value = value;
+    ArrayData::insert(this, index, &value);
     if (isArrayObject() && index >= getLength())
         setArrayLengthUnchecked(index + 1);
 }

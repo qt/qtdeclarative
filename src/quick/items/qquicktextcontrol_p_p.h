@@ -156,6 +156,9 @@ public:
     bool hasImState : 1;
     bool cursorRectangleChanged : 1;
 
+    int lastSelectionStart;
+    int lastSelectionEnd;
+
     void _q_copyLink();
 };
 

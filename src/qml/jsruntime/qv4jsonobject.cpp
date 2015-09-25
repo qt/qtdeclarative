@@ -858,10 +858,9 @@ QString Stringify::JA(ArrayObject *a)
 }
 
 
-Heap::JsonObject::JsonObject(ExecutionEngine *e)
-    : Heap::Object(e->emptyClass, e->objectPrototype())
+Heap::JsonObject::JsonObject()
 {
-    Scope scope(e);
+    Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
     o->defineDefaultProperty(QStringLiteral("parse"), QV4::JsonObject::method_parse, 2);
@@ -943,7 +942,7 @@ ReturnedValue JsonObject::method_stringify(CallContext *ctx)
 ReturnedValue JsonObject::fromJsonValue(ExecutionEngine *engine, const QJsonValue &value)
 {
     if (value.isString())
-        return engine->currentContext()->engine->newString(value.toString())->asReturnedValue();
+        return engine->newString(value.toString())->asReturnedValue();
     else if (value.isDouble())
         return Encode(value.toDouble());
     else if (value.isBool())

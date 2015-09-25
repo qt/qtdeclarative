@@ -585,7 +585,7 @@ with multiple windows.
 
   \section1 Batch Roots
 
-  In addition to mergin compatible primitives into batches, the
+  In addition to merging compatible primitives into batches, the
   default renderer also tries to minimize the amount of data that
   needs to be sent to the GPU for every frame. The default renderer
   identifies subtrees which belong together and tries to put these

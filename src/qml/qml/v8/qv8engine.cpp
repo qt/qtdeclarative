@@ -191,41 +191,47 @@ void QV8Engine::initializeGlobal()
                 m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->string);
         }
     }
+}
 
-    {
-#define FREEZE_SOURCE "(function freeze_recur(obj) { "\
-                      "    if (Qt.isQtObject(obj)) return;"\
-                      "    if (obj != Function.connect && obj != Function.disconnect && "\
-                      "        obj instanceof Object) {"\
-                      "        var properties = Object.getOwnPropertyNames(obj);"\
-                      "        for (var prop in properties) { "\
-                      "            if (prop == \"connect\" || prop == \"disconnect\") {"\
-                      "                Object.freeze(obj[prop]); "\
-                      "                continue;"\
-                      "            }"\
-                      "            freeze_recur(obj[prop]);"\
-                      "        }"\
-                      "    }"\
-                      "    if (obj instanceof Object) {"\
-                      "        Object.freeze(obj);"\
-                      "    }"\
-                      "})"
+static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
+{
+    if (object->as<QV4::QObjectWrapper>())
+        return;
 
-        QV4::ScopedFunctionObject result(scope, QV4::Script::evaluate(m_v4Engine, QString::fromUtf8(FREEZE_SOURCE), 0));
-        Q_ASSERT(!!result);
-        m_freezeObject.set(scope.engine, result);
-#undef FREEZE_SOURCE
+    QV4::Scope scope(v4);
+
+    bool instanceOfObject = false;
+    QV4::ScopedObject p(scope, object->prototype());
+    while (p) {
+        if (p->d() == v4->objectPrototype()->d()) {
+            instanceOfObject = true;
+            break;
+        }
+        p = p->prototype();
+    }
+    if (!instanceOfObject)
+        return;
+
+    QV4::InternalClass *frozen = object->internalClass()->propertiesFrozen();
+    if (object->internalClass() == frozen)
+        return;
+    object->setInternalClass(frozen);
+
+    QV4::ScopedObject o(scope);
+    for (uint i = 0; i < frozen->size; ++i) {
+        if (!frozen->nameMap.at(i))
+            continue;
+        o = *object->propertyData(i);
+        if (o)
+            freeze_recursive(v4, o);
     }
 }
 
 void QV8Engine::freezeObject(const QV4::Value &value)
 {
     QV4::Scope scope(m_v4Engine);
-    QV4::ScopedFunctionObject f(scope, m_freezeObject.value());
-    QV4::ScopedCallData callData(scope, 1);
-    callData->args[0] = value;
-    callData->thisObject = m_v4Engine->globalObject;
-    f->call(callData);
+    QV4::ScopedObject o(scope, value);
+    freeze_recursive(m_v4Engine, o);
 }
 
 struct QV8EngineRegistrationData

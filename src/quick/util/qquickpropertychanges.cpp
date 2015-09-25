@@ -451,7 +451,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             QQmlBinding *newBinding = 0;
             if (e.id != QQmlBinding::Invalid) {
                 QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-                QV4::ScopedValue function(scope, QV4::QmlBindingWrapper::createQmlCallableForFunction(context, object(), d->cdata->compilationUnit->runtimeFunctions[e.id]));
+                QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, object(), d->cdata->compilationUnit->runtimeFunctions[e.id]));
                 newBinding = new QQmlBinding(function, object(), context);
             }
 //            QQmlBinding *newBinding = e.id != QQmlBinding::Invalid ? QQmlBinding::createBinding(e.id, object(), qmlContext(this)) : 0;

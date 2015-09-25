@@ -58,13 +58,13 @@ namespace QV4 {
 namespace Heap {
 
 struct QtObject : Object {
-    QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine);
+    QtObject(QQmlEngine *qmlEngine);
     QObject *platform;
     QObject *application;
 };
 
 struct ConsoleObject : Object {
-    ConsoleObject(ExecutionEngine *engine);
+    ConsoleObject();
 };
 
 struct QQmlBindingFunction : FunctionObject {

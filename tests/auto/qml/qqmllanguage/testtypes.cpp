@@ -91,6 +91,8 @@ void registerTypes()
     qmlRegisterCustomExtendedType<SimpleObjectWithCustomParser, SimpleObjectExtension>("Test", 1, 0, "SimpleExtendedObjectWithCustomParser", new SimpleObjectCustomParser);
 
     qmlRegisterType<RootObjectInCreationTester>("Test", 1, 0, "RootObjectInCreationTester");
+
+    qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
@@ -121,7 +123,7 @@ void CustomBinding::componentComplete()
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
         QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
-        QV4::ScopedValue function(scope, QV4::QmlBindingWrapper::createQmlCallableForFunction(context, m_target, cdata->compilationUnit->runtimeFunctions[bindingId]));
+        QV4::ScopedValue function(scope, QV4::FunctionObject::createQmlFunction(context, m_target, cdata->compilationUnit->runtimeFunctions[bindingId]));
         QQmlBinding *qmlBinding = new QQmlBinding(function, m_target, context);
 
         QQmlProperty property(m_target, name, qmlContext(this));

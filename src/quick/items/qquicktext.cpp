@@ -1371,6 +1371,13 @@ QQuickText::QQuickText(QQuickItem *parent)
     d->init();
 }
 
+QQuickText::QQuickText(QQuickTextPrivate &dd, QQuickItem *parent)
+: QQuickImplicitSizeItem(dd, parent)
+{
+    Q_D(QQuickText);
+    d->init();
+}
+
 QQuickText::~QQuickText()
 {
 }
@@ -1451,7 +1458,7 @@ QQuickText::~QQuickText()
     Sets the style name of the font.
 
     The style name is case insensitive. If set, the font will be matched against style name instead
-    of the font properties \l weight, \l bold and \l italic.
+    of the font properties \l font.weight, \l font.bold and \l font.italic.
 */
 
 /*!
@@ -2292,18 +2299,19 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     bool widthMaximum = newGeometry.width() >= oldGeometry.width() && !d->widthExceeded;
     bool heightMaximum = newGeometry.height() >= oldGeometry.height() && !d->heightExceeded;
 
+    bool verticalPositionChanged = heightChanged && d->vAlign != AlignTop;
+
     if ((!widthChanged && !heightChanged) || d->internalWidthUpdate)
         goto geomChangeDone;
 
-    if ((effectiveHAlign() != QQuickText::AlignLeft && widthChanged)
-            || (vAlign() != QQuickText::AlignTop && heightChanged)) {
+    if ((effectiveHAlign() != QQuickText::AlignLeft && widthChanged) || verticalPositionChanged) {
         // If the width has changed and we're not left aligned do an update so the text is
         // repositioned even if a full layout isn't required. And the same for vertical.
         d->updateType = QQuickTextPrivate::UpdatePaintNode;
         update();
     }
 
-    if (!wrapped && !elide && !scaleFont)
+    if (!wrapped && !elide && !scaleFont && !verticalPositionChanged)
         goto geomChangeDone; // left aligned unwrapped text without eliding never needs relayout
 
     if (elide // eliding and dimensions were and remain invalid;
@@ -2312,7 +2320,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
         goto geomChangeDone;
     }
 
-    if (widthMaximum && heightMaximum && !d->isLineLaidOutConnected())  // Size is sufficient and growing.
+    if (widthMaximum && heightMaximum && !d->isLineLaidOutConnected() && !verticalPositionChanged)  // Size is sufficient and growing.
         goto geomChangeDone;
 
     if (!(widthChanged || widthMaximum) && !d->isLineLaidOutConnected()) { // only height has changed

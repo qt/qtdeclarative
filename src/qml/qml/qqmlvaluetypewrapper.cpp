@@ -55,7 +55,7 @@ namespace Heap {
 
 struct QQmlValueTypeReference : QQmlValueTypeWrapper
 {
-    QQmlValueTypeReference(ExecutionEngine *engine);
+    QQmlValueTypeReference() {}
     QPointer<QObject> object;
     int property;
 };
@@ -76,11 +76,6 @@ struct QQmlValueTypeReference : public QQmlValueTypeWrapper
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeReference);
 
 using namespace QV4;
-
-Heap::QQmlValueTypeWrapper::QQmlValueTypeWrapper(ExecutionEngine *engine)
-    : Heap::Object(engine)
-{
-}
 
 Heap::QQmlValueTypeWrapper::~QQmlValueTypeWrapper()
 {
@@ -106,11 +101,6 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
     return QVariant(valueType->typeId, gadgetPtr);
 }
 
-
-Heap::QQmlValueTypeReference::QQmlValueTypeReference(ExecutionEngine *engine)
-    : Heap::QQmlValueTypeWrapper(engine)
-{
-}
 
 bool QQmlValueTypeReference::readReferenceValue() const
 {
@@ -164,7 +154,7 @@ bool QQmlValueTypeReference::readReferenceValue() const
 
 void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (v4->valueTypeWrapperPrototype()->as<Object>())
+    if (v4->valueTypeWrapperPrototype()->d())
         return;
 
     Scope scope(v4);
@@ -178,10 +168,9 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->alloc<QQmlValueTypeReference>(engine));
-    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
-    r->setPrototype(proto);
-    r->d()->object = object; r->d()->property = property;
+    Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->allocObject<QQmlValueTypeReference>());
+    r->d()->object = object;
+    r->d()->property = property;
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
     r->d()->gadgetPtr = 0;
@@ -193,9 +182,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->alloc<QQmlValueTypeWrapper>(engine));
-    ScopedObject proto(scope, engine->valueTypeWrapperPrototype());
-    r->setPrototype(proto);
+    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocObject<QQmlValueTypeWrapper>());
     r->d()->propertyCache = QJSEnginePrivate::get(engine)->cache(metaObject);
     r->d()->valueType = QQmlValueTypeFactory::valueType(typeId);
     r->d()->gadgetPtr = 0;
@@ -345,12 +332,9 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
     if (hasProperty)
         *hasProperty = true;
 
-    if (result->isFunction()) {
+    if (result->isFunction())
         // calling a Q_INVOKABLE function of a value type
-        Scope scope(v4);
-        ScopedContext c(scope, v4->rootContext());
-        return QV4::QObjectMethod::create(c, r, result->coreIndex);
-    }
+        return QV4::QObjectMethod::create(v4->rootContext(), r, result->coreIndex);
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     if (result->propType == metatype) { \

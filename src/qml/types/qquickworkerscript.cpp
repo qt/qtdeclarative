@@ -165,7 +165,7 @@ public:
         QUrl source;
         bool initialized;
         QQuickWorkerScript *owner;
-        QV4::PersistentValue object;
+        QV4::PersistentValue qmlContext;
     };
 
     QHash<int, WorkerScript *> workers;
@@ -221,7 +221,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     "})"
 
     QV4::Scope scope(m_v4Engine);
-    QV4::ScopedContext globalContext(scope, scope.engine->rootContext());
+    QV4::ExecutionContext *globalContext = scope.engine->rootContext();
     onmessage.set(scope.engine, QV4::Script(globalContext, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run()); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
     Q_ASSERT(!scope.engine->hasException);
     QV4::Script createsendscript(globalContext, QString::fromUtf8(SEND_MESSAGE_CREATE_SCRIPT)); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
@@ -291,7 +291,6 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(QV4::Call
     return QV4::Encode::undefined();
 }
 
-// Requires handle scope and context scope
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
 {
     if (!script->initialized) {
@@ -300,9 +299,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
         QV4::Scope scope(v4);
 
-        script->object.set(v4, QV4::QmlContextWrapper::urlScope(v4, script->source));
-
-        QV4::Scoped<QV4::QmlContextWrapper> w(scope, script->object.value());
+        QV4::Scoped<QV4::QmlContextWrapper> w(scope, QV4::QmlContextWrapper::urlScope(v4, script->source));
         Q_ASSERT(!!w);
         w->setReadOnly(false);
 
@@ -312,9 +309,11 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
         w->QV4::Object::put(QV4::ScopedString(scope, v4->newString(QStringLiteral("WorkerScript"))), api);
 
         w->setReadOnly(true);
+
+        script->qmlContext.set(v4, v4->rootContext()->newQmlContext(w));
     }
 
-    return script->object.value();
+    return script->qmlContext.value();
 }
 
 bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
@@ -354,10 +353,12 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, script->qmlContext.value());
+    Q_ASSERT(!!qmlContext);
 
     QV4::ScopedCallData callData(scope, 2);
     callData->thisObject = workerEngine->global();
-    callData->args[0] = script->object.value();
+    callData->args[0] = qmlContext->d()->qml; // ###
     callData->args[1] = value;
     f->call(callData);
     if (scope.hasException()) {
@@ -382,13 +383,12 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         return;
     script->source = url;
 
-    QV4::ScopedObject activation(scope, getWorker(script));
-    if (!activation)
-        return;
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, getWorker(script));
+    Q_ASSERT(!!qmlContext);
 
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
         QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-        program.reset(new QV4::Script(v4, activation, jsUnit));
+        program.reset(new QV4::Script(v4, qmlContext, jsUnit));
     } else {
         QFile f(fileName);
         if (!f.open(QIODevice::ReadOnly)) {
@@ -400,7 +400,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         QString sourceCode = QString::fromUtf8(data);
         QmlIR::Document::removeScriptPragmas(sourceCode);
 
-        program.reset(new QV4::Script(v4, activation, sourceCode, url.toString()));
+        program.reset(new QV4::Script(v4, qmlContext, sourceCode, url.toString()));
         program->parse();
     }
 

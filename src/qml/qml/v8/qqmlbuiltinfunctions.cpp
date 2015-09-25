@@ -80,10 +80,9 @@ struct StaticQtMetaObject : public QObject
         { return &staticQtMetaObject; }
 };
 
-Heap::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
-    : Heap::Object(v4)
+Heap::QtObject::QtObject(QQmlEngine *qmlEngine)
 {
-    Scope scope(v4);
+    Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
     // Set all the enums from the "Qt" namespace
@@ -93,11 +92,11 @@ Heap::QtObject::QtObject(ExecutionEngine *v4, QQmlEngine *qmlEngine)
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            o->put((str = v4->newString(QString::fromUtf8(enumerator.key(jj)))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
+            o->put((str = scope.engine->newString(QString::fromUtf8(enumerator.key(jj)))), (v = QV4::Primitive::fromInt32(enumerator.value(jj))));
         }
     }
-    o->put((str = v4->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
-    o->put((str = v4->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
+    o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
+    o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
 
     o->defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     o->defineDefaultProperty(QStringLiteral("isQtObject"), QV4::QtObject::method_isQtObject);
@@ -1262,7 +1261,7 @@ ReturnedValue QtObject::method_binding(CallContext *ctx)
     if (!f)
         V4THROW_TYPE("binding(): argument (binding expression) must be a function");
 
-    return (ctx->d()->engine->memoryManager->alloc<QQmlBindingFunction>(f))->asReturnedValue();
+    return (ctx->d()->engine->memoryManager->allocObject<QQmlBindingFunction>(f))->asReturnedValue();
 }
 
 
@@ -1315,10 +1314,9 @@ ReturnedValue QtObject::method_get_styleHints(CallContext *ctx)
 }
 
 
-QV4::Heap::ConsoleObject::ConsoleObject(ExecutionEngine *v4)
-    : Heap::Object(v4)
+QV4::Heap::ConsoleObject::ConsoleObject()
 {
-    QV4::Scope scope(v4);
+    QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
 
     o->defineDefaultProperty(QStringLiteral("debug"), QV4::ConsoleObject::method_log);
@@ -1609,10 +1607,10 @@ void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
     globalObject->defineDefaultProperty(QStringLiteral("print"), ConsoleObject::method_log);
     globalObject->defineDefaultProperty(QStringLiteral("gc"), method_gc);
 
-    ScopedObject console(scope, v4->memoryManager->alloc<QV4::ConsoleObject>(v4));
+    ScopedObject console(scope, v4->memoryManager->allocObject<QV4::ConsoleObject>());
     globalObject->defineDefaultProperty(QStringLiteral("console"), console);
 
-    ScopedObject qt(scope, v4->memoryManager->alloc<QV4::QtObject>(v4, qmlEngine));
+    ScopedObject qt(scope, v4->memoryManager->allocObject<QV4::QtObject>(qmlEngine));
     globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
     // string prototype extension
@@ -1737,10 +1735,10 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
         int lastDot = path.lastIndexOf(QLatin1Char('.'));
         int length = lastDot - (lastSlash + 1);
         context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
-    } else if (ctx->d()->parent) {
-        ScopedContext parentCtx(scope, ctx->d()->parent);
+    } else {
+        ExecutionContext *parentCtx = scope.engine->parentContext(ctx);
         // The first non-empty source URL in the call stack determines the translation context.
-        while (parentCtx && context.isEmpty()) {
+        while (!!parentCtx && context.isEmpty()) {
             if (QV4::CompiledData::CompilationUnit *unit = parentCtx->d()->compilationUnit) {
                 QString fileName = unit->fileName();
                 QUrl url(unit->fileName());
@@ -1753,7 +1751,7 @@ ReturnedValue GlobalExtensions::method_qsTr(CallContext *ctx)
                 }
                 context = QFileInfo(context).baseName();
             }
-            parentCtx = parentCtx->d()->parent;
+            parentCtx = scope.engine->parentContext(parentCtx);
         }
     }
 

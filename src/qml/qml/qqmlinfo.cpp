@@ -109,34 +109,8 @@ QQmlInfo::~QQmlInfo()
 
             if (object) {
                 engine = qmlEngine(d->object);
-                QString typeName;
-                QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
-                if (type) {
-                    typeName = type->qmlTypeName();
-                    int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
-                    if (lastSlash != -1)
-                        typeName = typeName.mid(lastSlash+1);
-                } else {
-                    typeName = QString::fromUtf8(object->metaObject()->className());
-                    int marker = typeName.indexOf(QLatin1String("_QMLTYPE_"));
-                    if (marker != -1)
-                        typeName = typeName.left(marker);
 
-                    marker = typeName.indexOf(QLatin1String("_QML_"));
-                    if (marker != -1) {
-                        typeName = typeName.left(marker);
-                        typeName += QLatin1Char('*');
-                        type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
-                        if (type) {
-                            typeName = type->qmlTypeName();
-                            int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
-                            if (lastSlash != -1)
-                                typeName = typeName.mid(lastSlash+1);
-                        }
-                    }
-                }
-
-                d->buffer.prepend(QLatin1String("QML ") + typeName + QLatin1String(": "));
+                d->buffer.prepend(QLatin1String("QML ") + QQmlMetaType::prettyTypeName(object) + QLatin1String(": "));
 
                 QQmlData *ddata = QQmlData::get(object, false);
                 if (ddata && ddata->outerContext) {

@@ -207,8 +207,8 @@ namespace Heap {
 
 template <typename Container>
 struct QQmlSequence : Object {
-    QQmlSequence(QV4::ExecutionEngine *engine, const Container &container);
-    QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex);
+    QQmlSequence(const Container &container);
+    QQmlSequence(QObject *object, int propertyIndex);
 
     mutable Container container;
     QPointer<QObject> object;
@@ -223,6 +223,7 @@ struct QQmlSequence : public QV4::Object
 {
     V4_OBJECT2(QQmlSequence<Container>, QV4::Object)
     Q_MANAGED_TYPE(QmlSequence)
+    V4_PROTOTYPE(sequencePrototype)
     V4_NEEDS_DESTROY
 public:
 
@@ -543,26 +544,24 @@ public:
 
 
 template <typename Container>
-Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, const Container &container)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype())
-    , container(container)
+Heap::QQmlSequence<Container>::QQmlSequence(const Container &container)
+    : container(container)
     , propertyIndex(-1)
     , isReference(false)
 {
-    QV4::Scope scope(engine);
+    QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
     o->init();
 }
 
 template <typename Container>
-Heap::QQmlSequence<Container>::QQmlSequence(QV4::ExecutionEngine *engine, QObject *object, int propertyIndex)
-    : Heap::Object(engine->emptyClass, engine->sequencePrototype())
-    , object(object)
+Heap::QQmlSequence<Container>::QQmlSequence(QObject *object, int propertyIndex)
+    : object(object)
     , propertyIndex(propertyIndex)
     , isReference(true)
 {
-    QV4::Scope scope(engine);
+    QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
     o->loadReference();
@@ -644,7 +643,7 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->alloc<QQml##ElementTypeName##List>(engine, object, propertyIndex)); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocObject<QQml##ElementTypeName##List>(object, propertyIndex)); \
         return obj.asReturnedValue(); \
     } else
 
@@ -662,7 +661,7 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->alloc<QQml##ElementTypeName##List>(engine, v.value<SequenceType >())); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocObject<QQml##ElementTypeName##List>(v.value<SequenceType >())); \
         return obj.asReturnedValue(); \
     } else
 

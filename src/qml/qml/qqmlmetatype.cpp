@@ -38,6 +38,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
+#include <private/qqmlcompiler_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
@@ -217,12 +218,10 @@ public:
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(e->handle());
+    v4->pushGlobalContext();
     if (scriptCallback && scriptApi(e).isUndefined()) {
-        v4->pushGlobalContext();
         setScriptApi(e, scriptCallback(e, e));
-        v4->popContext();
     } else if (qobjectCallback && !qobjectApi(e)) {
-        v4->pushGlobalContext();
         QObject *o = qobjectCallback(e, e);
         setQObjectApi(e, o);
         if (!o) {
@@ -230,14 +229,12 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         }
         // if this object can use a property cache, create it now
         QQmlData::ensurePropertyCache(e, o);
-        v4->popContext();
     } else if (!url.isEmpty() && !qobjectApi(e)) {
-        v4->pushGlobalContext();
         QQmlComponent component(e, url, QQmlComponent::PreferSynchronous);
         QObject *o = component.create();
         setQObjectApi(e, o);
-        v4->popContext();
     }
+    v4->popContext();
 }
 
 void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
@@ -475,6 +472,23 @@ QQmlType *QQmlType::superType() const
     }
 
     return d->superType;
+}
+
+int QQmlType::resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
+{
+    Q_ASSERT(isComposite());
+    *ok = false;
+    if (!engine)
+        return -1;
+    QQmlTypeData *td = engine->typeLoader.getType(sourceUrl());
+    if (!td || !td->isComplete())
+        return -1;
+    QQmlCompiledData *cd = td->compiledData();
+    const QMetaObject *mo = cd->rootPropertyCache->firstCppMetaObject();
+    QQmlType *type = QQmlMetaType::qmlType(mo);
+    if (!type)
+        return -1;
+    return type->enumValue(engine, name, ok);
 }
 
 static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
@@ -911,9 +925,11 @@ QUrl QQmlType::sourceUrl() const
         return QUrl();
 }
 
-int QQmlType::enumValue(const QHashedStringRef &name, bool *ok) const
+int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name, bool *ok) const
 {
     Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeEnumValue(engine, name.toString(), ok);
     *ok = true;
 
     d->initEnums();
@@ -926,9 +942,11 @@ int QQmlType::enumValue(const QHashedStringRef &name, bool *ok) const
     return -1;
 }
 
-int QQmlType::enumValue(const QHashedCStringRef &name, bool *ok) const
+int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &name, bool *ok) const
 {
     Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeEnumValue(engine, name.toUtf16(), ok);
     *ok = true;
 
     d->initEnums();
@@ -941,9 +959,11 @@ int QQmlType::enumValue(const QHashedCStringRef &name, bool *ok) const
     return -1;
 }
 
-int QQmlType::enumValue(const QV4::String *name, bool *ok) const
+int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
 {
     Q_ASSERT(ok);
+    if (isComposite())
+        return resolveCompositeEnumValue(engine, name->toQString(), ok);
     *ok = true;
 
     d->initEnums();
@@ -1886,6 +1906,45 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
             return unit;
     }
     return 0;
+}
+
+/*!
+    Returns the pretty QML type name (e.g. 'Item' instead of 'QtQuickItem') for the given object.
+ */
+QString QQmlMetaType::prettyTypeName(const QObject *object)
+{
+    QString typeName;
+
+    if (!object)
+        return typeName;
+
+    const QQmlType *type = QQmlMetaType::qmlType(object->metaObject());
+    if (type) {
+        typeName = type->qmlTypeName();
+        const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
+        if (lastSlash != -1)
+            typeName = typeName.mid(lastSlash + 1);
+    } else {
+        typeName = QString::fromUtf8(object->metaObject()->className());
+        int marker = typeName.indexOf(QLatin1String("_QMLTYPE_"));
+        if (marker != -1)
+            typeName = typeName.left(marker);
+
+        marker = typeName.indexOf(QLatin1String("_QML_"));
+        if (marker != -1) {
+            typeName = typeName.left(marker);
+            typeName += QLatin1Char('*');
+            type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
+            if (type) {
+                typeName = type->qmlTypeName();
+                const int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
+                if (lastSlash != -1)
+                    typeName = typeName.mid(lastSlash + 1);
+            }
+        }
+    }
+
+    return typeName;
 }
 
 QT_END_NAMESPACE

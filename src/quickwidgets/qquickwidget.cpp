@@ -206,6 +206,11 @@ void QQuickWidgetPrivate::itemGeometryChanged(QQuickItem *resizeItem, const QRec
 
 void QQuickWidgetPrivate::render(bool needsSync)
 {
+    // createFramebufferObject() bails out when the size is empty. In this case
+    // we cannot render either.
+    if (!fbo)
+        return;
+
     if (!context->makeCurrent(offscreenSurface)) {
         qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
         return;

@@ -120,8 +120,6 @@ class QQmlV4Function
 public:
     int length() const { return callData->argc; }
     QV4::ReturnedValue operator[](int idx) { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
-    QQmlContextData *context() { return e->qmlContextObject()->context.contextData(); }
-    QV4::ReturnedValue qmlGlobal() { return e->qmlContextObject()->asReturnedValue(); }
     void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:
@@ -218,8 +216,6 @@ protected:
     QQmlEngine *m_engine;
 
     QV4::ExecutionEngine *m_v4Engine;
-
-    QV4::PersistentValue m_freezeObject;
 
     void *m_xmlHttpRequestData;
 

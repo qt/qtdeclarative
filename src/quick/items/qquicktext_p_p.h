@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QQuickTextDocumentWithImageResources;
 
-class Q_AUTOTEST_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickText)
 public:

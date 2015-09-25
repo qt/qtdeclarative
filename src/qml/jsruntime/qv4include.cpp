@@ -49,11 +49,12 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QQmlContextData *context,
-                       const QV4::Value &qmlglobal, const QV4::Value &callback)
-    : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
+QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
+                       QV4::QmlContext *qmlContext, const QV4::Value &callback)
+    : v4(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0)
 {
-    m_qmlglobal.set(engine, qmlglobal);
+    if (qmlContext)
+        m_qmlContext.set(engine, *qmlContext);
     if (callback.as<QV4::FunctionObject>())
         m_callbackFunction.set(engine, callback);
 
@@ -142,8 +143,8 @@ void QV4Include::finished()
         QString code = QString::fromUtf8(data);
         QmlIR::Document::removeScriptPragmas(code);
 
-        QV4::ScopedObject qmlglobal(scope, m_qmlglobal.value());
-        QV4::Script script(v4, qmlglobal, code, m_url.toString());
+        QV4::Scoped<QV4::QmlContext> qml(scope, m_qmlContext.value());
+        QV4::Script script(v4, qml, code, m_url.toString());
 
         script.parse();
         if (!scope.engine->hasException)
@@ -190,12 +191,10 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
 
     QV4::ScopedValue result(scope);
-    QV4::ScopedObject qmlcontextobject(scope, scope.engine->qmlContextObject());
+    QV4::Scoped<QV4::QmlContext> qmlcontext(scope, scope.engine->qmlContext());
 
     if (localFile.isEmpty()) {
-        QV4Include *i = new QV4Include(url, scope.engine, context,
-                                       qmlcontextobject,
-                                       callbackFunction);
+        QV4Include *i = new QV4Include(url, scope.engine, qmlcontext, callbackFunction);
         result = i->result();
 
     } else {
@@ -203,7 +202,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
 
         if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
             QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-            script.reset(new QV4::Script(scope.engine, qmlcontextobject, jsUnit));
+            script.reset(new QV4::Script(scope.engine, qmlcontext, jsUnit));
         } else {
             QFile f(localFile);
 
@@ -212,7 +211,7 @@ QV4::ReturnedValue QV4Include::method_include(QV4::CallContext *ctx)
                 QString code = QString::fromUtf8(data);
                 QmlIR::Document::removeScriptPragmas(code);
 
-                script.reset(new QV4::Script(scope.engine, qmlcontextobject, code, url.toString()));
+                script.reset(new QV4::Script(scope.engine, qmlcontext, code, url.toString()));
             }
         }
 

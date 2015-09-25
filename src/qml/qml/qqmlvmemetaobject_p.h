@@ -271,8 +271,6 @@ public:
     QList<QQmlVMEVariantQObjectPtr *> varObjectGuards;
 
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
-
-    friend class QV8GCCallback;
 };
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)

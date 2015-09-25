@@ -101,7 +101,10 @@ struct ArrayData : public Base {
     inline ReturnedValue get(uint i) const {
         return vtable()->get(this, i);
     }
+    inline void getProperty(uint index, Property *p, PropertyAttributes *attrs);
+    inline void setProperty(uint index, const Property *p);
     inline Property *getProperty(uint index);
+    inline Value *getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
 
     bool isEmpty(uint i) const {
@@ -205,7 +208,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
 
     static void sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint dataLen);
     static uint append(Object *obj, ArrayObject *otherObj, uint n);
-    static Property *insert(Object *o, uint index, bool isAccessor = false);
+    static void insert(Object *o, uint index, const Value *v, bool isAccessor = false);
 };
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
@@ -270,6 +273,25 @@ inline SparseArrayData::~SparseArrayData()
     delete sparse;
 }
 
+void ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
+{
+    Property *pd = getProperty(index);
+    Q_ASSERT(pd);
+    *attrs = attributes(index);
+    p->value = pd->value;
+    if (attrs->isAccessor())
+        p->set = pd->set;
+}
+
+void ArrayData::setProperty(uint index, const Property *p)
+{
+    Property *pd = getProperty(index);
+    Q_ASSERT(pd);
+    pd->value = p->value;
+    if (attributes(index).isAccessor())
+        pd->set = p->set;
+}
+
 inline Property *ArrayData::getProperty(uint index)
 {
     if (isSparse())
@@ -283,6 +305,19 @@ inline PropertyAttributes ArrayData::attributes(uint i) const
         return static_cast<const SparseArrayData *>(this)->attributes(i);
     return static_cast<const SimpleArrayData *>(this)->attributes(i);
 }
+
+Value *ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
+{
+    Property *p = getProperty(index);
+    if (!p) {
+        *attrs = Attr_Invalid;
+        return 0;
+    }
+
+    *attrs = attributes(index);
+    return attrs->isAccessor() ? &p->set : &p->value;
+}
+
 
 
 }

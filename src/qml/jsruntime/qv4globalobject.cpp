@@ -339,11 +339,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
+    ExecutionContextSaver ctxSaver(scope);
 
-    ScopedContext parentContext(scope, v4->currentContext());
-    ExecutionContextSaver ctxSaver(scope, parentContext);
-
-    ScopedContext ctx(scope, parentContext.getPointer());
+    ExecutionContext *currentContext = v4->currentContext;
+    ExecutionContext *ctx = currentContext;
 
     if (!directCall) {
         // the context for eval should be the global scope, so we fake a root
@@ -358,10 +357,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     bool inheritContext = !ctx->d()->strictMode;
 
     Script script(ctx, code, QStringLiteral("eval code"));
-    script.strictMode = (directCall && parentContext->d()->strictMode);
+    script.strictMode = (directCall && currentContext->d()->strictMode);
     script.inheritContext = inheritContext;
     script.parse();
-    if (scope.engine->hasException)
+    if (v4->hasException)
         return Encode::undefined();
 
     Function *function = script.function();

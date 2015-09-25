@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 200
+    width: 220
     height: 100
 
     Text {

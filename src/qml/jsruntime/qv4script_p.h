@@ -36,6 +36,7 @@
 #include "qv4global_p.h"
 #include "qv4engine_p.h"
 #include "qv4functionobject_p.h"
+#include "qv4context_p.h"
 
 #include <QQmlError>
 
@@ -85,32 +86,19 @@ struct ContextStateSaver {
     }
 };
 
-namespace Heap {
-struct QmlBindingWrapper : Heap::FunctionObject {
-    QmlBindingWrapper(QV4::ExecutionContext *scope, Function *f, QV4::QmlContextWrapper *qml);
-};
-
-}
-
-struct Q_QML_EXPORT QmlBindingWrapper : FunctionObject {
-    V4_OBJECT2(QmlBindingWrapper, FunctionObject)
-
-    static ReturnedValue call(const Managed *that, CallData *callData);
-
-    static Heap::FunctionObject *createQmlCallableForFunction(QQmlContextData *qmlContext, QObject *scopeObject, QV4::Function *runtimeFunction,
-                                                              const QList<QByteArray> &signalParameters = QList<QByteArray>(), QString *error = 0);
-};
-
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(scope), strictMode(false), inheritContext(false), parsed(false)
         , vmFunction(0), parseAsBinding(false) {}
-    Script(ExecutionEngine *engine, Object *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , scope(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-        , qml(engine, qml), vmFunction(0), parseAsBinding(true) {}
-    Script(ExecutionEngine *engine, Object *qml, CompiledData::CompilationUnit *compilationUnit);
+        , vmFunction(0), parseAsBinding(true) {
+        if (qml)
+            qmlContext.set(engine, *qml);
+    }
+    Script(ExecutionEngine *engine, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit);
     ~Script();
     QString sourceFile;
     int line;
@@ -120,7 +108,7 @@ struct Q_QML_EXPORT Script {
     bool strictMode;
     bool inheritContext;
     bool parsed;
-    QV4::PersistentValue qml;
+    QV4::PersistentValue qmlContext;
     QV4::PersistentValue compilationUnitHolder;
     Function *vmFunction;
     bool parseAsBinding;
@@ -134,7 +122,7 @@ struct Q_QML_EXPORT Script {
     static QQmlRefPointer<CompiledData::CompilationUnit> precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source,
                                                                     QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
 
-    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, Object *scopeObject);
+    static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);
 };
 
 }

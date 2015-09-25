@@ -46,18 +46,16 @@ namespace QV4 {
 namespace Heap {
 
 struct DateObject : Object {
-    DateObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype)
+    DateObject()
     {
         date = qSNaN();
     }
 
-    DateObject(QV4::ExecutionEngine *engine, const Value &date)
-        : Object(engine->emptyClass, engine->datePrototype())
+    DateObject(const Value &date)
     {
         this->date = date.toNumber();
     }
-    DateObject(QV4::ExecutionEngine *engine, const QDateTime &date);
+    DateObject(const QDateTime &date);
     double date;
 };
 
@@ -71,6 +69,7 @@ struct DateCtor : FunctionObject {
 struct DateObject: Object {
     V4_OBJECT2(DateObject, Object)
     Q_MANAGED_TYPE(DateObject)
+    V4_PROTOTYPE(datePrototype)
 
 
     double date() const { return d()->date; }

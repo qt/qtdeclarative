@@ -913,7 +913,7 @@ void tst_qquicktext::hAlignImplicitWidth()
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
-    const int windowWidth = 200;
+    const int windowWidth = 220;
     const int textWidth = qCeil(text->implicitWidth());
     QVERIFY2(textWidth < windowWidth, "System font too large.");
     const int sectionWidth = textWidth / 3;
@@ -3756,8 +3756,8 @@ void tst_qquicktext::baselineOffset_data()
             << "<b>hello world</b>"
             << "<b>hello<br/>world</b>"
             << QByteArray("height: 200")
-            << &expectedBaselineTop
-            << &expectedBaselineBold;
+            << &expectedBaselineBold
+            << &expectedBaselineTop;
 
     QTest::newRow("richText")
             << "<b>hello world</b>"
@@ -3852,8 +3852,8 @@ void tst_qquicktext::baselineOffset_data()
             << "<b>hello world</b>"
             << "<b>hello<br/>world</b>"
             << QByteArray("height: 200; topPadding: 10; bottomPadding: 20")
-            << &expectedBaselineTop
-            << &expectedBaselineBold;
+            << &expectedBaselineBold
+            << &expectedBaselineTop;
 
     QTest::newRow("richText with padding")
             << "<b>hello world</b>"

@@ -67,25 +67,17 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(StringObject);
 
-Heap::StringObject::StringObject(InternalClass *ic, QV4::Object *prototype)
-    : Heap::Object(ic, prototype)
+Heap::StringObject::StringObject()
 {
     Q_ASSERT(vtable() == QV4::StringObject::staticVTable());
-    string = ic->engine->newString();
-
-    Scope scope(ic->engine);
-    ScopedObject s(scope, this);
-    s->defineReadonlyProperty(ic->engine->id_length(), Primitive::fromInt32(0));
+    string = internalClass->engine->id_empty()->d();
+    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(0);
 }
 
-Heap::StringObject::StringObject(ExecutionEngine *engine, const QV4::String *str)
-    : Heap::Object(engine->emptyClass, engine->stringPrototype())
+Heap::StringObject::StringObject(const QV4::String *str)
 {
     string = str->d();
-
-    Scope scope(engine);
-    ScopedObject s(scope, this);
-    s->defineReadonlyProperty(engine->id_length(), Primitive::fromUInt32(length()));
+    *propertyData(LengthPropertyIndex) = Primitive::fromInt32(length());
 }
 
 Heap::String *Heap::StringObject::getIndex(uint index) const
@@ -98,7 +90,7 @@ Heap::String *Heap::StringObject::getIndex(uint index) const
 
 uint Heap::StringObject::length() const
 {
-    return string->toQString().length();
+    return string->len;
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
@@ -109,7 +101,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Q_ASSERT(!!o);
 
     if (index < static_cast<uint>(o->d()->string->toQString().length())) {
-        if (v4->currentContext()->strictMode)
+        if (v4->current->strictMode)
             v4->throwTypeError();
         return false;
     }
@@ -511,7 +503,7 @@ ReturnedValue StringPrototype::method_replace(CallContext *ctx)
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
         if (regExp->global())
-            regExp->lastIndexProperty()->value = Primitive::fromUInt32(0);
+            *regExp->lastIndexProperty() = Primitive::fromUInt32(0);
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

@@ -108,7 +108,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineGetter__"), method_defineGetter, 2);
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
-    ScopedContext global(scope, scope.engine->rootContext());
+    ExecutionContext *global = v4->rootContext();
     ScopedProperty p(scope);
     p->value = BuiltinFunction::create(global, v4->id___proto__(), method_get_proto);
     p->set = BuiltinFunction::create(global, v4->id___proto__(), method_set_proto);
@@ -141,9 +141,9 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(CallContext *ctx)
     if (scope.hasException())
         return Encode::undefined();
     PropertyAttributes attrs;
-    Property desc;
-    O->getOwnProperty(name, &attrs, &desc);
-    return fromPropertyDescriptor(scope.engine, &desc, attrs);
+    ScopedProperty desc(scope);
+    O->getOwnProperty(name, &attrs, desc);
+    return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(CallContext *context)
@@ -222,7 +222,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(CallContext *ctx)
         if (attrs.isEmpty())
             break;
         PropertyAttributes nattrs;
-        val = o->getValue(pd, attrs);
+        val = o->getValue(pd->value, attrs);
         toPropertyDescriptor(scope.engine, val, n, &nattrs);
         if (scope.engine->hasException)
             return Encode::undefined();
@@ -630,7 +630,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
 
 ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs)
 {
-    if (!desc)
+    if (attrs.isEmpty())
         return Encode::undefined();
 
     Scope scope(engine);

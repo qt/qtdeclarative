@@ -47,7 +47,7 @@ struct DataViewCtor : FunctionObject {
 };
 
 struct DataView : Object {
-    DataView(ExecutionEngine *e);
+    DataView() {}
     Pointer<ArrayBuffer> buffer;
     uint byteLength;
     uint byteOffset;
@@ -66,6 +66,7 @@ struct DataViewCtor: FunctionObject
 struct DataView : Object
 {
     V4_OBJECT2(DataView, Object)
+    V4_PROTOTYPE(dataViewPrototype)
 
     static void markObjects(Heap::Base *that, ExecutionEngine *e);
 };

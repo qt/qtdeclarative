@@ -89,7 +89,6 @@ struct ExecutionContext : Base {
     CallData *callData;
 
     ExecutionEngine *engine;
-    Pointer<ExecutionContext> parent;
     Pointer<ExecutionContext> outer;
     Lookup *lookups;
     CompiledData::CompilationUnit *compilationUnit;
@@ -98,6 +97,18 @@ struct ExecutionContext : Base {
     bool strictMode : 8;
     int lineNumber;
 };
+
+inline
+ExecutionContext::ExecutionContext(ExecutionEngine *engine, ContextType t)
+    : engine(engine)
+    , outer(0)
+    , lookups(0)
+    , compilationUnit(0)
+    , type(t)
+    , strictMode(false)
+    , lineNumber(-1)
+{}
+
 
 struct CallContext : ExecutionContext {
     CallContext(ExecutionEngine *engine, ContextType t = Type_SimpleCallContext)
@@ -119,20 +130,20 @@ struct GlobalContext : ExecutionContext {
 };
 
 struct CatchContext : ExecutionContext {
-    CatchContext(ExecutionEngine *engine, QV4::String *exceptionVarName, const Value &exceptionValue);
+    CatchContext(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
     Pointer<String> exceptionVarName;
     Value exceptionValue;
 };
 
 struct WithContext : ExecutionContext {
-    WithContext(ExecutionEngine *engine, QV4::Object *with);
+    WithContext(ExecutionContext *outerContext, Object *with);
     Pointer<Object> withObject;
 };
 
 struct QmlContextWrapper;
 
 struct QmlContext : ExecutionContext {
-    QmlContext(QV4::ExecutionContext *outer, QV4::QmlContextWrapper *qml);
+    QmlContext(QV4::ExecutionContext *outerContext, QV4::QmlContextWrapper *qml);
     Pointer<QmlContextWrapper> qml;
 };
 
@@ -150,9 +161,10 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ExecutionEngine *engine() const { return d()->engine; }
 
     Heap::CallContext *newCallContext(const FunctionObject *f, CallData *callData);
-    Heap::WithContext *newWithContext(Object *with);
-    Heap::CatchContext *newCatchContext(String *exceptionVarName, const Value &exceptionValue);
+    Heap::WithContext *newWithContext(Heap::Object *with);
+    Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
     Heap::QmlContext *newQmlContext(QmlContextWrapper *qml);
+    Heap::QmlContext *newQmlContext(QQmlContextData *context, QObject *scopeObject);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -224,6 +236,8 @@ struct QmlContext : public ExecutionContext
 
     QObject *qmlScope() const;
     QQmlContextData *qmlContext() const;
+
+    void takeContextOwnership();
 };
 
 inline CallContext *ExecutionContext::asCallContext()

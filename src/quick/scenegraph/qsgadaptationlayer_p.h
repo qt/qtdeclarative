@@ -160,6 +160,7 @@ public:
     virtual void setFillColor(const QColor &c) = 0;
     virtual void setContentsScale(qreal s) = 0;
     virtual void setFastFBOResizing(bool dynamic) = 0;
+    virtual void setTextureSize(const QSize &size) = 0;
 
     virtual QImage toImage() const = 0;
     virtual void update() = 0;

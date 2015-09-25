@@ -155,8 +155,8 @@ namespace QV4 {
 namespace Heap {
 
 struct ModelObject : public QObjectWrapper {
-    ModelObject(QV4::ExecutionEngine *engine, QObject *object, QQmlListModel *model, int elementIndex)
-        : QObjectWrapper(engine, object)
+    ModelObject(QObject *object, QQmlListModel *model, int elementIndex)
+        : QObjectWrapper(object)
         , m_model(model)
         , m_elementIndex(elementIndex)
     {}

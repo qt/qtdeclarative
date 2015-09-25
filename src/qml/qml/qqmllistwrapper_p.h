@@ -62,7 +62,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QmlListWrapper : Object {
-    QmlListWrapper(ExecutionEngine *engine);
+    QmlListWrapper();
     ~QmlListWrapper();
     QPointer<QObject> object;
     QQmlListProperty<QObject> property;

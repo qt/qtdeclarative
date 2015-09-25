@@ -34,6 +34,7 @@
 #include "qqmlcustomparser_p.h"
 
 #include "qqmlcompiler_p.h"
+#include <private/qqmltypecompiler_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -140,7 +141,7 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
                 type = result.type;
         }
 
-        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+        return type ? type->enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
     }
 
     const QMetaObject *mo = StaticQtMetaObject::get();
@@ -159,34 +160,8 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
 */
 const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 {
-    return compiler->resolveType(name);
-}
-
-int QQmlCustomParserCompilerBackend::evaluateEnum(const QString &scope, const QByteArray &enumValue, bool *ok) const
-{
-    Q_ASSERT_X(ok, "QQmlCompiler::evaluateEnum", "ok must not be a null pointer");
-    *ok = false;
-
-    if (scope != QLatin1String("Qt")) {
-        QQmlType *type = 0;
-        imports().resolveType(scope, &type, 0, 0, 0);
-        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
-    }
-
-    const QMetaObject *mo = StaticQtMetaObject::get();
-    int i = mo->enumeratorCount();
-    while (i--) {
-        int v = mo->enumerator(i).keyToValue(enumValue.constData(), ok);
-        if (*ok)
-            return v;
-    }
-    return -1;
-}
-
-const QMetaObject *QQmlCustomParserCompilerBackend::resolveType(const QString &name) const
-{
     QQmlType *qmltype = 0;
-    if (!imports().resolveType(name, &qmltype, 0, 0, 0))
+    if (!validator->imports().resolveType(name, &qmltype, 0, 0, 0))
         return 0;
     if (!qmltype)
         return 0;

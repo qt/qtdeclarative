@@ -73,7 +73,7 @@ static inline int qsg_device_pixel_ratio(QOpenGLContext *ctx)
         else
             devicePixelRatio = w->devicePixelRatio();
     } else {
-        devicePixelRatio = ctx->screen()->devicePixelRatio();
+        devicePixelRatio = ctx->screen() ? ctx->screen()->devicePixelRatio() : qGuiApp->devicePixelRatio();
     }
     return devicePixelRatio;
 }

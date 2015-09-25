@@ -50,6 +50,8 @@ private slots:
     void restoreBindingWithLoop();
     void restoreBindingWithoutCrash();
     void deletedObject();
+    void warningOnUnknownProperty();
+    void warningOnReadOnlyProperty();
 
 private:
     QQmlEngine engine;
@@ -222,6 +224,38 @@ void tst_qqmlbinding::deletedObject()
     rect->setProperty("activateBinding", true);
 
     delete rect;
+}
+
+void tst_qqmlbinding::warningOnUnknownProperty()
+{
+    QQmlTestMessageHandler messageHandler;
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("unknownProperty.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+    delete item;
+
+    QCOMPARE(messageHandler.messages().count(), 1);
+
+    const QString expectedMessage = c.url().toString() + QLatin1String(":6:5: QML Binding: Property 'unknown' does not exist on Item.");
+    QCOMPARE(messageHandler.messages().first(), expectedMessage);
+}
+
+void tst_qqmlbinding::warningOnReadOnlyProperty()
+{
+    QQmlTestMessageHandler messageHandler;
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("readonlyProperty.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+    delete item;
+
+    QCOMPARE(messageHandler.messages().count(), 1);
+
+    const QString expectedMessage = c.url().toString() + QLatin1String(":8:5: QML Binding: Property 'name' on Item is read-only.");
+    QCOMPARE(messageHandler.messages().first(), expectedMessage);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

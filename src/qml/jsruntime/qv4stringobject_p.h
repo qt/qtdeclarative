@@ -44,8 +44,12 @@ namespace QV4 {
 namespace Heap {
 
 struct StringObject : Object {
-    StringObject(InternalClass *ic, QV4::Object *prototype);
-    StringObject(ExecutionEngine *engine, const QV4::String *string);
+    enum {
+        LengthPropertyIndex = 0
+    };
+
+    StringObject();
+    StringObject(const QV4::String *string);
     String *string;
 
     Heap::String *getIndex(uint index) const;
@@ -61,6 +65,8 @@ struct StringCtor : FunctionObject {
 struct StringObject: Object {
     V4_OBJECT2(StringObject, Object)
     Q_MANAGED_TYPE(StringObject)
+    V4_INTERNALCLASS(stringClass)
+    V4_PROTOTYPE(stringPrototype)
 
     Heap::String *getIndex(uint index) const {
         return d()->getIndex(index);

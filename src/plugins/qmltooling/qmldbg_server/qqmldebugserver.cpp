@@ -223,25 +223,19 @@ void QQmlDebugServerThread::run()
     Q_ASSERT_X(m_server != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServerConnection *connection = loadQQmlDebugServerConnection(m_pluginName);
     if (connection) {
-        connection->setServer(m_server);
-
-        if (m_fileName.isEmpty()) {
-            if (!connection->setPortRange(m_portFrom, m_portTo, m_server->blockingMode(),
-                                          m_hostAddress)) {
-                delete connection;
-                return;
-            }
-        } else {
-            if (!connection->setFileName(m_fileName, m_server->blockingMode())) {
-                delete connection;
-                return;
-            }
-        }
-
         {
             QMutexLocker connectionLocker(&m_server->m_helloMutex);
             m_server->m_connection = connection;
+            connection->setServer(m_server);
             m_server->m_helloCondition.wakeAll();
+        }
+
+        if (m_fileName.isEmpty()) {
+            if (!connection->setPortRange(m_portFrom, m_portTo, m_server->blockingMode(),
+                                          m_hostAddress))
+                return;
+        } else if (!connection->setFileName(m_fileName, m_server->blockingMode())) {
+            return;
         }
 
         if (m_server->blockingMode())

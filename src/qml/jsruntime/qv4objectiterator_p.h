@@ -67,7 +67,7 @@ struct Q_QML_EXPORT ObjectIterator
 
 namespace Heap {
 struct ForEachIteratorObject : Object {
-    ForEachIteratorObject(QV4::ExecutionEngine *engine, QV4::Object *o);
+    ForEachIteratorObject(QV4::Object *o);
     ObjectIterator it;
     Value workArea[2];
 };
@@ -85,9 +85,8 @@ protected:
 };
 
 inline
-Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::ExecutionEngine *engine, QV4::Object *o)
-    : Heap::Object(engine)
-    , it(engine, workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
+Heap::ForEachIteratorObject::ForEachIteratorObject(QV4::Object *o)
+    : it(internalClass->engine, workArea, workArea + 1, o, ObjectIterator::EnumerableOnly|ObjectIterator::WithProtoChain)
 {
 }
 

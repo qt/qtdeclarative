@@ -45,8 +45,8 @@ public:
     typedef uint Ref;
     typedef QVector<uint> Refs;
 
-    static QV4::Heap::CallContext *findContext(QV4::Heap::ExecutionContext *ctxt, int frame);
-    static QV4::Heap::CallContext *findScope(QV4::Heap::ExecutionContext *ctxt, int scope);
+    static QV4::CallContext *findContext(QV4::ExecutionEngine *engine, int frame);
+    static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
     static QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(
             QV4::ExecutionEngine *engine, int frame);
 

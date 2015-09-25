@@ -314,7 +314,7 @@ merged with the original target class when used from within QML. For example:
 The \c leftMargin property is a new property added to an existing C++ type, \l
 QLineEdit, without modifying its source code.
 
-The \l qmlRegisterExtendedType() function is for registering extended types.
+The \l {QQmlEngine::}{qmlRegisterExtendedType()} function is for registering extended types.
 Note that it has two forms.
 
 \code

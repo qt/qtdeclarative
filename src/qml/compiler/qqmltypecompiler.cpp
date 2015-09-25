@@ -1163,8 +1163,6 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
 
     if (!type && typeName != QLatin1String("Qt"))
         return true;
-    if (type && type->isComposite()) //No enums on composite (or composite singleton) types
-        return true;
 
     int value = 0;
     bool ok = false;
@@ -1182,7 +1180,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     } else {
         // Otherwise we have to search the whole type
         if (type) {
-            value = type->enumValue(QHashedStringRef(enumValue), &ok);
+            value = type->enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue), &ok);
         } else {
             QByteArray enumName = enumValue.toUtf8();
             const QMetaObject *metaObject = StaticQtMetaObject::get();
@@ -1210,7 +1208,9 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QByteArray &e
     if (scope != QLatin1String("Qt")) {
         QQmlType *type = 0;
         imports->resolveType(scope, &type, 0, 0, 0);
-        return type ? type->enumValue(QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+        if (!type)
+            return -1;
+        return type ? type->enumValue(compiler->enginePrivate(), QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
     }
 
     const QMetaObject *mo = StaticQtMetaObject::get();
@@ -1719,17 +1719,6 @@ const QQmlImports &QQmlPropertyValidator::imports() const
     return *compiler->imports();
 }
 
-QString QQmlPropertyValidator::bindingAsString(int objectIndex, const QV4::CompiledData::Binding *binding) const
-{
-    const QmlIR::Object *object = compiler->qmlObjects()->value(objectIndex);
-    if (!object)
-        return QString();
-    int reverseIndex = object->runtimeFunctionIndices->indexOf(binding->value.compiledScriptIndex);
-    if (reverseIndex == -1)
-        return QString();
-    return compiler->bindingAsString(object, reverseIndex);
-}
-
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
 
 struct BindingFinder
@@ -1998,10 +1987,12 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
     if (customParser && !customBindings.isEmpty()) {
         customParser->clearErrors();
-        customParser->compiler = this;
+        customParser->validator = this;
+        customParser->engine = enginePrivate;
         customParser->imports = compiler->imports();
         customParser->verifyBindings(qmlUnit, customBindings);
-        customParser->compiler = 0;
+        customParser->validator = 0;
+        customParser->engine = 0;
         customParser->imports = (QQmlImports*)0;
         customParserBindingsPerObject->insert(objectIndex, customParserBindings);
         const QList<QQmlError> parserErrors = customParser->errors();

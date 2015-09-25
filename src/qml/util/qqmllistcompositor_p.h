@@ -166,7 +166,7 @@ public:
     struct Change
     {
         inline Change() {}
-        inline Change(iterator it, int count, uint flags, int moveId = -1);
+        inline Change(const iterator &it, int count, uint flags, int moveId = -1);
         int count;
         uint flags;
         int moveId;
@@ -188,14 +188,14 @@ public:
     struct Insert : public Change
     {
         Insert() {}
-        Insert(iterator it, int count, uint flags, int moveId = -1)
+        Insert(const iterator &it, int count, uint flags, int moveId = -1)
             : Change(it, count, flags, moveId) {}
     };
 
     struct Remove : public Change
     {
         Remove() {}
-        Remove(iterator it, int count, uint flags, int moveId = -1)
+        Remove(const iterator &it, int count, uint flags, int moveId = -1)
             : Change(it, count, flags, moveId) {}
     };
 
@@ -224,14 +224,14 @@ public:
     void setFlags(iterator from, int count, Group group, uint flags, QVector<Insert> *inserts = 0);
     void setFlags(Group fromGroup, int from, int count, uint flags, QVector<Insert> *inserts = 0) {
         setFlags(fromGroup, from, count, fromGroup, flags, inserts); }
-    void setFlags(iterator from, int count, uint flags, QVector<Insert> *inserts = 0) {
+    void setFlags(const iterator from, int count, uint flags, QVector<Insert> *inserts = 0) {
         setFlags(from, count, from.group, flags, inserts); }
 
     void clearFlags(Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removals = 0);
     void clearFlags(iterator from, int count, Group group, uint flags, QVector<Remove> *removals = 0);
     void clearFlags(Group fromGroup, int from, int count, uint flags, QVector<Remove> *removals = 0) {
         clearFlags(fromGroup, from, count, fromGroup, flags, removals); }
-    void clearFlags(iterator from, int count, uint flags, QVector<Remove> *removals = 0) {
+    void clearFlags(const iterator &from, int count, uint flags, QVector<Remove> *removals = 0) {
         clearFlags(from, count, from.group, flags, removals); }
 
     bool verifyMoveTo(Group fromGroup, int from, Group toGroup, int to, int count, Group group) const;
@@ -347,7 +347,7 @@ inline QQmlListCompositor::insert_iterator::insert_iterator(
         Range *range, int offset, Group group, int groupCount)
     : iterator(range, offset, group, groupCount) {}
 
-inline QQmlListCompositor::Change::Change(iterator it, int count, uint flags, int moveId)
+inline QQmlListCompositor::Change::Change(const iterator &it, int count, uint flags, int moveId)
     : count(count), flags(flags), moveId(moveId)
 {
     for (int i = 0; i < MaximumGroupCount; ++i)

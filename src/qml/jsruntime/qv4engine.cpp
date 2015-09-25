@@ -200,6 +200,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , memoryManager(new QV4::MemoryManager(this))
     , executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
+    , currentContext(0)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , debugger(0)
@@ -297,10 +298,10 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
-    jsObjects[ObjectProto] = memoryManager->alloc<ObjectPrototype>(emptyClass, (QV4::Object *)0);
+    jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(emptyClass);
 
     arrayClass = emptyClass->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
-    jsObjects[ArrayProto] = memoryManager->alloc<ArrayPrototype>(arrayClass, objectPrototype());
+    jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(arrayClass, objectPrototype());
 
     InternalClass *argsClass = emptyClass->addMember(id_length(), Attr_NotEnumerable);
     argumentsObjectClass = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
@@ -311,15 +312,17 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     Q_ASSERT(globalObject->d()->vtable());
     initRootContext();
 
-    jsObjects[StringProto] = memoryManager->alloc<StringPrototype>(emptyClass, objectPrototype());
-    jsObjects[NumberProto] = memoryManager->alloc<NumberPrototype>(emptyClass, objectPrototype());
-    jsObjects[BooleanProto] = memoryManager->alloc<BooleanPrototype>(emptyClass, objectPrototype());
-    jsObjects[DateProto] = memoryManager->alloc<DatePrototype>(emptyClass, objectPrototype());
+    stringClass = emptyClass->addMember(id_length(), Attr_ReadOnly);
+    Q_ASSERT(stringClass->find(id_length()) == Heap::StringObject::LengthPropertyIndex);
+    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(stringClass, objectPrototype());
+    jsObjects[NumberProto] = memoryManager->allocObject<NumberPrototype>(emptyClass, objectPrototype());
+    jsObjects[BooleanProto] = memoryManager->allocObject<BooleanPrototype>(emptyClass, objectPrototype());
+    jsObjects[DateProto] = memoryManager->allocObject<DatePrototype>(emptyClass, objectPrototype());
 
     uint index;
     InternalClass *functionProtoClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    jsObjects[FunctionProto] = memoryManager->alloc<FunctionPrototype>(functionProtoClass, objectPrototype());
+    jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(functionProtoClass, objectPrototype());
     functionClass = emptyClass->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     simpleScriptFunctionClass = functionClass->addMember(id_name(), Attr_ReadOnly, &index);
@@ -329,42 +332,72 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     protoClass = emptyClass->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
-    jsObjects[RegExpProto] = memoryManager->alloc<RegExpPrototype>(this);
+    Scope scope(this);
+    ScopedString str(scope);
+    regExpObjectClass = emptyClass->addMember(id_lastIndex(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
+    Q_ASSERT(index == RegExpObject::Index_LastIndex);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("source"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Source);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("global"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Global);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("ignoreCase"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_IgnoreCase);
+    regExpObjectClass = regExpObjectClass->addMember((str = newIdentifier(QStringLiteral("multiline"))), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Multiline);
+
+    jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(regExpObjectClass, objectPrototype());
     regExpExecArrayClass = arrayClass->addMember(id_index(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
     regExpExecArrayClass = regExpExecArrayClass->addMember(id_input(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    jsObjects[ErrorProto] = memoryManager->alloc<ErrorPrototype>(emptyClass, objectPrototype());
-    jsObjects[EvalErrorProto] = memoryManager->alloc<EvalErrorPrototype>(emptyClass, errorPrototype());
-    jsObjects[RangeErrorProto] = memoryManager->alloc<RangeErrorPrototype>(emptyClass, errorPrototype());
-    jsObjects[ReferenceErrorProto] = memoryManager->alloc<ReferenceErrorPrototype>(emptyClass, errorPrototype());
-    jsObjects[SyntaxErrorProto] = memoryManager->alloc<SyntaxErrorPrototype>(emptyClass, errorPrototype());
-    jsObjects[TypeErrorProto] = memoryManager->alloc<TypeErrorPrototype>(emptyClass, errorPrototype());
-    jsObjects[URIErrorProto] = memoryManager->alloc<URIErrorPrototype>(emptyClass, errorPrototype());
+    errorClass = emptyClass->addMember((str = newIdentifier(QStringLiteral("stack"))), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorObject::Index_Stack);
+    errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("fileName"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorObject::Index_FileName);
+    errorClass = errorClass->addMember((str = newIdentifier(QStringLiteral("lineNumber"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorObject::Index_LineNumber);
+    errorClassWithMessage = errorClass->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorObject::Index_Message);
+    errorProtoClass = emptyClass->addMember(id_constructor(), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Constructor);
+    errorProtoClass = errorProtoClass->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Message);
+    errorProtoClass = errorProtoClass->addMember(id_name(), Attr_Data|Attr_NotEnumerable, &index);
+    Q_ASSERT(index == ErrorPrototype::Index_Name);
 
-    jsObjects[VariantProto] = memoryManager->alloc<VariantPrototype>(emptyClass, objectPrototype());
+    jsObjects[GetStack_Function] = BuiltinFunction::create(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
+    getStackFunction()->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
+
+    jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(errorProtoClass, objectPrototype());
+    jsObjects[EvalErrorProto] = memoryManager->allocObject<EvalErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[RangeErrorProto] = memoryManager->allocObject<RangeErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[ReferenceErrorProto] = memoryManager->allocObject<ReferenceErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[SyntaxErrorProto] = memoryManager->allocObject<SyntaxErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(errorProtoClass, errorPrototype());
+    jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(errorProtoClass, errorPrototype());
+
+    jsObjects[VariantProto] = memoryManager->allocObject<VariantPrototype>(emptyClass, objectPrototype());
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
 
-    Scope scope(this);
-    jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->alloc<SequencePrototype>(arrayClass, arrayPrototype()));
+    jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(arrayClass, arrayPrototype()));
 
-    ScopedContext global(scope, rootContext());
-    jsObjects[Object_Ctor] = memoryManager->alloc<ObjectCtor>(global);
-    jsObjects[String_Ctor] = memoryManager->alloc<StringCtor>(global);
-    jsObjects[Number_Ctor] = memoryManager->alloc<NumberCtor>(global);
-    jsObjects[Boolean_Ctor] = memoryManager->alloc<BooleanCtor>(global);
-    jsObjects[Array_Ctor] = memoryManager->alloc<ArrayCtor>(global);
-    jsObjects[Function_Ctor] = memoryManager->alloc<FunctionCtor>(global);
-    jsObjects[Date_Ctor] = memoryManager->alloc<DateCtor>(global);
-    jsObjects[RegExp_Ctor] = memoryManager->alloc<RegExpCtor>(global);
-    jsObjects[Error_Ctor] = memoryManager->alloc<ErrorCtor>(global);
-    jsObjects[EvalError_Ctor] = memoryManager->alloc<EvalErrorCtor>(global);
-    jsObjects[RangeError_Ctor] = memoryManager->alloc<RangeErrorCtor>(global);
-    jsObjects[ReferenceError_Ctor] = memoryManager->alloc<ReferenceErrorCtor>(global);
-    jsObjects[SyntaxError_Ctor] = memoryManager->alloc<SyntaxErrorCtor>(global);
-    jsObjects[TypeError_Ctor] = memoryManager->alloc<TypeErrorCtor>(global);
-    jsObjects[URIError_Ctor] = memoryManager->alloc<URIErrorCtor>(global);
+    ExecutionContext *global = rootContext();
+    jsObjects[Object_Ctor] = memoryManager->allocObject<ObjectCtor>(global);
+    jsObjects[String_Ctor] = memoryManager->allocObject<StringCtor>(global);
+    jsObjects[Number_Ctor] = memoryManager->allocObject<NumberCtor>(global);
+    jsObjects[Boolean_Ctor] = memoryManager->allocObject<BooleanCtor>(global);
+    jsObjects[Array_Ctor] = memoryManager->allocObject<ArrayCtor>(global);
+    jsObjects[Function_Ctor] = memoryManager->allocObject<FunctionCtor>(global);
+    jsObjects[Date_Ctor] = memoryManager->allocObject<DateCtor>(global);
+    jsObjects[RegExp_Ctor] = memoryManager->allocObject<RegExpCtor>(global);
+    jsObjects[Error_Ctor] = memoryManager->allocObject<ErrorCtor>(global);
+    jsObjects[EvalError_Ctor] = memoryManager->allocObject<EvalErrorCtor>(global);
+    jsObjects[RangeError_Ctor] = memoryManager->allocObject<RangeErrorCtor>(global);
+    jsObjects[ReferenceError_Ctor] = memoryManager->allocObject<ReferenceErrorCtor>(global);
+    jsObjects[SyntaxError_Ctor] = memoryManager->allocObject<SyntaxErrorCtor>(global);
+    jsObjects[TypeError_Ctor] = memoryManager->allocObject<TypeErrorCtor>(global);
+    jsObjects[URIError_Ctor] = memoryManager->allocObject<URIErrorCtor>(global);
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
@@ -388,18 +421,19 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     // typed arrays
 
-    jsObjects[ArrayBuffer_Ctor] = memoryManager->alloc<ArrayBufferCtor>(global);
-    jsObjects[ArrayBufferProto] = memoryManager->alloc<ArrayBufferPrototype>(emptyClass, objectPrototype());
+    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocObject<ArrayBufferCtor>(global);
+    jsObjects[ArrayBufferProto] = memoryManager->allocObject<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
 
-    jsObjects[DataView_Ctor] = memoryManager->alloc<DataViewCtor>(global);
-    jsObjects[DataViewProto] = memoryManager->alloc<DataViewPrototype>(emptyClass, objectPrototype());
+    jsObjects[DataView_Ctor] = memoryManager->allocObject<DataViewCtor>(global);
+    jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) 0;
+    jsObjects[SignalHandlerProto] = (Heap::Base *) 0;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->alloc<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
-        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->alloc<TypedArrayPrototype>(this, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocObject<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
 
@@ -428,19 +462,18 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
-    ScopedString str(scope);
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->alloc<MathObject>(this)));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->alloc<JsonObject>(this)));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocObject<MathObject>()));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocObject<JsonObject>()));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    jsObjects[Eval_Function] = memoryManager->alloc<EvalFunction>(global);
+    jsObjects[Eval_Function] = memoryManager->allocObject<EvalFunction>(global);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
     globalObject->defineDefaultProperty(QStringLiteral("parseInt"), GlobalFunctions::method_parseInt, 2);
@@ -508,8 +541,11 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
+    jsObjects[RootContext] = r;
+    jsObjects[IntegerNull] = Encode((int)0);
 
-    jsObjects[RootContect] = r;
+    currentContext = static_cast<ExecutionContext *>(jsObjects + RootContext);
+    current = currentContext->d();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -517,29 +553,31 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool) InternalClass(other);
 }
 
-Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
+ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    Scope scope(this);
-    Scoped<GlobalContext> g(scope, memoryManager->alloc<GlobalContext>(this));
-    g->d()->callData = rootContext()->d()->callData;
+    pushContext(rootContext()->d());
 
-    Q_ASSERT(currentContext() == g->d());
-    return g->d();
+    Q_ASSERT(current == rootContext()->d());
+    return currentContext;
+}
+
+ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
+{
+    Value *offset = static_cast<Value *>(context) + 1;
+    Q_ASSERT(offset->isInteger());
+    int o = offset->integerValue();
+    return o ? context - o : 0;
 }
 
 
 Heap::Object *ExecutionEngine::newObject()
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<Object>(this));
-    return object->d();
+    return memoryManager->allocObject<Object>();
 }
 
 Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Object *prototype)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<Object>(internalClass, prototype));
-    return object->d();
+    return memoryManager->allocObject<Object>(internalClass, prototype);
 }
 
 Heap::String *ExecutionEngine::newString(const QString &s)
@@ -555,29 +593,23 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 
 Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
-    Scope scope(this);
-    Scoped<StringObject> object(scope, memoryManager->alloc<StringObject>(this, string));
-    return object->d();
+    return memoryManager->allocObject<StringObject>(string);
 }
 
 Heap::Object *ExecutionEngine::newNumberObject(double value)
 {
-    Scope scope(this);
-    Scoped<NumberObject> object(scope, memoryManager->alloc<NumberObject>(this, value));
-    return object->d();
+    return memoryManager->allocObject<NumberObject>(value);
 }
 
 Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<BooleanObject>(this, b));
-    return object->d();
+    return memoryManager->allocObject<BooleanObject>(b);
 }
 
 Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>());
 
     if (count) {
         if (count < 0x1000)
@@ -587,39 +619,60 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
     return object->d();
 }
 
+Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int length)
+{
+    Scope scope(this);
+    ScopedArrayObject a(scope, memoryManager->allocObject<ArrayObject>());
+
+    if (length) {
+        size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
+        Heap::SimpleArrayData *d = scope.engine->memoryManager->allocManaged<SimpleArrayData>(size);
+        new (d) Heap::SimpleArrayData;
+        d->alloc = length;
+        d->type = Heap::ArrayData::Simple;
+        d->offset = 0;
+        d->len = length;
+        memcpy(&d->arrayData, values, length*sizeof(Value));
+        a->d()->arrayData = d;
+        a->setArrayLengthUnchecked(length);
+    }
+    return a->d();
+}
+
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(this, list));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(list));
     return object->d();
 }
 
-Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *ic, Object *prototype)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass, Object *prototype)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->alloc<ArrayObject>(ic, prototype));
+    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(internalClass, prototype));
     return object->d();
 }
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
-    Scope scope(this);
-    Scoped<ArrayBuffer> object(scope, memoryManager->alloc<ArrayBuffer>(this, array));
-    return object->d();
+    return memoryManager->allocObject<ArrayBuffer>(array);
+}
+
+Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(size_t length)
+{
+    return memoryManager->allocObject<ArrayBuffer>(length);
 }
 
 
 Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
-    Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, value));
-    return object->d();
+    return memoryManager->allocObject<DateObject>(value);
 }
 
 Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->alloc<DateObject>(this, dt));
+    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(dt));
     return object->d();
 }
 
@@ -640,97 +693,75 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re, bool global)
 {
-    Scope scope(this);
-    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re, global));
-    return object->d();
+    return memoryManager->allocObject<RegExpObject>(re, global);
 }
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
-    Scope scope(this);
-    Scoped<RegExpObject> object(scope, memoryManager->alloc<RegExpObject>(this, re));
-    return object->d();
+    return memoryManager->allocObject<RegExpObject>(re);
 }
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    Scope scope(this);
-    ScopedObject object(scope, memoryManager->alloc<ErrorObject>(emptyClass, errorPrototype(), value));
-    return object->d();
+    return ErrorObject::create<ErrorObject>(this, value);
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedString s(scope, newString(message));
-    ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, s));
-    return error->d();
+    return ErrorObject::create<SyntaxErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    Scope scope(this);
-    ScopedObject error(scope, memoryManager->alloc<SyntaxErrorObject>(this, message, fileName, line, column));
-    return error->d();
+    return ErrorObject::create<SyntaxErrorObject>(this, message, fileName, line, column);
 }
 
 
 Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message));
-    return o->d();
+    return ErrorObject::create<ReferenceErrorObject>(this, message);
 }
 
-Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int lineNumber, int columnNumber)
+Heap::Object *ExecutionEngine::newReferenceErrorObject(const QString &message, const QString &fileName, int line, int column)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<ReferenceErrorObject>(this, message, fileName, lineNumber, columnNumber));
-    return o->d();
+    return ErrorObject::create<ReferenceErrorObject>(this, message, fileName, line, column);
 }
 
 
 Heap::Object *ExecutionEngine::newTypeErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<TypeErrorObject>(this, message));
-    return o->d();
+    return ErrorObject::create<TypeErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<RangeErrorObject>(this, message));
-    return o->d();
+    return ErrorObject::create<RangeErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<URIErrorObject>(this, message));
-    return o->d();
+    return ErrorObject::create<URIErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    Scope scope(this);
-    ScopedObject o(scope, memoryManager->alloc<VariantObject>(this, v));
-    return o->d();
+    return memoryManager->allocObject<VariantObject>(v);
 }
 
 Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, memoryManager->alloc<ForEachIteratorObject>(this, o));
+    ScopedObject obj(scope, memoryManager->allocObject<ForEachIteratorObject>(o));
     return obj->d();
 }
 
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
-    Heap::ExecutionContext *ctx = currentContext();
+    Heap::ExecutionContext *ctx = current;
 
+    // get the correct context when we're within a builtin function
     if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = ctx->parent;
+        ctx = parentContext(currentContext)->d();
 
     if (!ctx->outer)
         return 0;
@@ -745,18 +776,13 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
     return static_cast<Heap::QmlContext *>(ctx);
 }
 
-Heap::QmlContextWrapper *ExecutionEngine::qmlContextObject() const
+QObject *ExecutionEngine::qmlScopeObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
         return 0;
-    Q_ASSERT(ctx->qml);
-    return ctx->qml;
-}
 
-QObject *ExecutionEngine::qmlScopeObject() const
-{
-    return qmlContextObject()->scopeObject;
+    return ctx->qml->scopeObject;
 }
 
 ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
@@ -782,9 +808,11 @@ ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
 
 QQmlContextData *ExecutionEngine::callingQmlContext() const
 {
-    Heap::QmlContextWrapper *w = qmlContextObject();
+    Heap::QmlContext *ctx = qmlContext();
+    if (!ctx)
+        return 0;
 
-    return w ? w->context.contextData() : 0;
+    return ctx->qml->context.contextData();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
@@ -793,7 +821,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    ScopedContext c(scope, currentContext());
+    ExecutionContext *c = currentContext;
     ScopedFunctionObject function(scope);
     while (c && frameLimit) {
         function = c->getFunctionObject();
@@ -813,7 +841,7 @@ QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
             stack.append(frame);
             --frameLimit;
         }
-        c = c->d()->parent;
+        c = parentContext(c);
     }
 
     if (frameLimit && globalCode) {
@@ -881,8 +909,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    Scope scope(this);
-    ScopedContext c(scope, currentContext());
+    ExecutionContext *c = currentContext;
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->function) {
@@ -890,7 +917,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
                 base.setUrl(callCtx->d()->function->function->sourceFile());
             break;
         }
-        c = c->d()->parent;
+        c = parentContext(c);
     }
 
     if (base.isEmpty() && globalCode)
@@ -920,10 +947,10 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
             memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
             delete [] oldAccessors;
         }
-        ScopedContext global(scope, scope.engine->rootContext());
+        ExecutionContext *global = rootContext();
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->alloc<ArgumentsGetterFunction>(global, i));
-            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->alloc<ArgumentsSetterFunction>(global, i));
+            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->allocObject<ArgumentsGetterFunction>(global, i));
+            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->allocObject<ArgumentsSetterFunction>(global, i));
         }
     }
 }
@@ -938,16 +965,6 @@ void ExecutionEngine::markObjects()
             getter->mark(this);
         if (Heap::FunctionObject *setter = pd.setter())
             setter->mark(this);
-    }
-
-    Heap::ExecutionContext *c = currentContext();
-    while (c) {
-        Q_ASSERT(c->inUse());
-        if (!c->isMarked()) {
-            c->setMarkBit();
-            c->vtable()->markObjects(c, this);
-        }
-        c = c->parent;
     }
 
     classPool->markObjects(this);

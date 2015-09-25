@@ -584,7 +584,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
             ScopedValue v(scope);
             for (const SparseArrayNode *it = os->sparse->begin();
                  it != os->sparse->end(); it = it->nextNode()) {
-                v = otherObj->getValue(reinterpret_cast<Property *>(os->arrayData + it->value), other->d()->attrs[it->value]);
+                v = otherObj->getValue(os->arrayData[it->value], other->d()->attrs[it->value]);
                 obj->arraySet(oldSize + it->key(), v);
             }
         } else {
@@ -607,7 +607,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
     return oldSize + n;
 }
 
-Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
+void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
 {
     if (!isAccessor && o->d()->arrayData->type != Heap::ArrayData::Sparse) {
         Heap::SimpleArrayData *d = o->d()->arrayData.cast<Heap::SimpleArrayData>();
@@ -622,7 +622,8 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
                     d->data(i) = Primitive::emptyValue();
                 d->len = index + 1;
             }
-            return reinterpret_cast<Property *>(d->arrayData + d->mappedIndex(index));
+            d->arrayData[d->mappedIndex(index)] = *v;
+            return;
         }
     }
 
@@ -632,7 +633,9 @@ Property *ArrayData::insert(Object *o, uint index, bool isAccessor)
     if (n->value == UINT_MAX)
         n->value = SparseArrayData::allocate(o, isAccessor);
     s = o->d()->arrayData.cast<Heap::SparseArrayData>();
-    return reinterpret_cast<Property *>(s->arrayData + n->value);
+    s->arrayData[n->value] = *v;
+    if (isAccessor)
+        s->arrayData[n->value + Object::SetterOffset] = v[Object::SetterOffset];
 }
 
 
@@ -769,7 +772,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
                     break;
 
                 PropertyAttributes a = sparse->attrs() ? sparse->attrs()[n->value] : Attr_Data;
-                d->data(i) = thisObject->getValue(reinterpret_cast<Property *>(sparse->arrayData() + n->value), a);
+                d->data(i) = thisObject->getValue(sparse->arrayData()[n->value], a);
                 d->attrs[i] = a.isAccessor() ? Attr_Data : a;
 
                 n = n->nextNode();

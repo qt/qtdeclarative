@@ -949,7 +949,7 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
     if (arg.isEmpty())
         return QUrl();
 
-    QQmlContextData *context = args->context();
+    QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);
     return context->resolvedUrl(QUrl(arg));
 }

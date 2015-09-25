@@ -40,9 +40,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
 Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
-    : Heap::Object(context->d()->strictMode ? context->d()->engine->strictArgumentsObjectClass : context->d()->engine->argumentsObjectClass,
-                   context->d()->engine->objectPrototype())
-    , context(context->d())
+    : context(context->d())
     , fullyCreated(false)
 {
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
@@ -56,20 +54,20 @@ Heap::ArgumentsObject::ArgumentsObject(QV4::CallContext *context)
     if (context->d()->strictMode) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
         Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(context->d()->engine->id_caller()));
-        args->propertyAt(CalleePropertyIndex)->value = v4->thrower();
-        args->propertyAt(CalleePropertyIndex)->set = v4->thrower();
-        args->propertyAt(CallerPropertyIndex)->value = v4->thrower();
-        args->propertyAt(CallerPropertyIndex)->set = v4->thrower();
+        *args->propertyData(CalleePropertyIndex + QV4::Object::GetterOffset) = v4->thrower();
+        *args->propertyData(CalleePropertyIndex + QV4::Object::SetterOffset) = v4->thrower();
+        *args->propertyData(CallerPropertyIndex + QV4::Object::GetterOffset) = v4->thrower();
+        *args->propertyData(CallerPropertyIndex + QV4::Object::SetterOffset) = v4->thrower();
 
         args->arrayReserve(context->argc());
         args->arrayPut(0, context->args(), context->argc());
         args->d()->fullyCreated = true;
     } else {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(context->d()->engine->id_callee()));
-        args->memberData()->data[CalleePropertyIndex] = context->d()->function->asReturnedValue();
+        *args->propertyData(CalleePropertyIndex) = context->d()->function->asReturnedValue();
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(context->d()->engine->id_length()));
-    args->memberData()->data[LengthPropertyIndex] = Primitive::fromInt32(context->d()->callData->argc);
+    *args->propertyData(LengthPropertyIndex) = Primitive::fromInt32(context->d()->callData->argc);
 }
 
 void ArgumentsObject::fullyCreate()
@@ -84,10 +82,9 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
     Scoped<MemberData> md(scope, d()->mappedArguments);
-    if (!md || md->size() < numAccessors)
-        d()->mappedArguments = md->reallocate(engine(), d()->mappedArguments, numAccessors);
+    d()->mappedArguments = md->allocate(engine(), numAccessors);
     for (uint i = 0; i < numAccessors; ++i) {
-        mappedArguments()->data[i] = context()->callData->args[i];
+        d()->mappedArguments->data[i] = context()->callData->args[i];
         arraySet(i, context()->engine->argumentsAccessors + i, Attr_Accessor);
     }
     arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
@@ -117,13 +114,13 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         map->copy(pd, mapAttrs);
         setArrayAttributes(index, Attr_Data);
         pd = arrayData()->getProperty(index);
-        pd->value = mappedArguments()->data[index];
+        pd->value = d()->mappedArguments->data[index];
     }
 
-    bool strict = engine->currentContext()->strictMode;
-    engine->currentContext()->strictMode = false;
+    bool strict = engine->current->strictMode;
+    engine->current->strictMode = false;
     bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    engine->currentContext()->strictMode = strict;
+    engine->current->strictMode = strict;
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
@@ -140,7 +137,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         }
     }
 
-    if (engine->currentContext()->strictMode && !result)
+    if (engine->current->strictMode && !result)
         return engine->throwTypeError();
     return result;
 }

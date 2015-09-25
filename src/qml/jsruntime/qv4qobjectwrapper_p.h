@@ -69,8 +69,10 @@ struct QObjectSlotDispatcher;
 
 namespace Heap {
 
+struct QQmlValueTypeWrapper;
+
 struct QObjectWrapper : Object {
-    QObjectWrapper(QV4::ExecutionEngine *engine, QObject *object);
+    QObjectWrapper(QObject *object);
     QPointer<QObject> object;
 };
 
@@ -80,13 +82,13 @@ struct QObjectMethod : FunctionObject {
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     int index;
 
-    Value valueTypeWrapper;
+    Pointer<QQmlValueTypeWrapper> valueTypeWrapper;
 
     const QMetaObject *metaObject();
 };
 
 struct QmlSignalHandler : Object {
-    QmlSignalHandler(QV4::ExecutionEngine *engine, QObject *object, int signalIndex);
+    QmlSignalHandler(QObject *object, int signalIndex);
     QPointer<QObject> object;
     int signalIndex;
 };
@@ -167,10 +169,13 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 struct QmlSignalHandler : public QV4::Object
 {
     V4_OBJECT2(QmlSignalHandler, QV4::Object)
+    V4_PROTOTYPE(signalHandlerPrototype)
     V4_NEEDS_DESTROY
 
     int signalIndex() const { return d()->signalIndex; }
     QObject *object() const { return d()->object.data(); }
+
+    static void initProto(ExecutionEngine *v4);
 };
 
 class MultiplyWrappedQObjectMap : public QObject,

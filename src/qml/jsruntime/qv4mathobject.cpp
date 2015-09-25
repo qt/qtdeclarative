@@ -47,10 +47,9 @@ DEFINE_OBJECT_VTABLE(MathObject);
 
 static const double qt_PI = 2.0 * ::asin(1.0);
 
-Heap::MathObject::MathObject(ExecutionEngine *e)
-    : Heap::Object(e->emptyClass, e->objectPrototype())
+Heap::MathObject::MathObject()
 {
-    Scope scope(e);
+    Scope scope(internalClass->engine);
     ScopedObject m(scope, this);
 
     m->defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(M_E));

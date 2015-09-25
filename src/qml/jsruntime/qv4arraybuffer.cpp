@@ -58,7 +58,7 @@ ReturnedValue ArrayBufferCtor::construct(const Managed *m, CallData *callData)
     if (len != dl)
         return v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
 
-    Scoped<ArrayBuffer> a(scope, v4->memoryManager->alloc<ArrayBuffer>(v4, len));
+    Scoped<ArrayBuffer> a(scope, v4->newArrayBuffer(len));
     if (scope.engine->hasException)
         return Encode::undefined();
     return a.asReturnedValue();
@@ -83,22 +83,20 @@ ReturnedValue ArrayBufferCtor::method_isView(CallContext *ctx)
 }
 
 
-Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, size_t length)
-    : Heap::Object(e->emptyClass, e->arrayBufferPrototype())
+Heap::ArrayBuffer::ArrayBuffer(size_t length)
 {
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
         data = 0;
-        e->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
+        internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
     data->size = int(length);
     memset(data->data(), 0, length + 1);
 }
 
-Heap::ArrayBuffer::ArrayBuffer(ExecutionEngine *e, const QByteArray& array)
-    : Heap::Object(e->emptyClass, e->arrayBufferPrototype())
-    , data(const_cast<QByteArray&>(array).data_ptr())
+Heap::ArrayBuffer::ArrayBuffer(const QByteArray& array)
+    : data(const_cast<QByteArray&>(array).data_ptr())
 {
     data->ref.ref();
 }

@@ -246,15 +246,12 @@ void SparseArray::deleteNode(SparseArrayNode *z)
             x->setParent(y->parent());
         if (root == y)
             root = x;
-        else if (y->parent()->left == y) {
+        else if (y->parent()->left == y)
             y->parent()->left = x;
-            if (x)
-                x->size_left += y->size_left;
-        } else {
+        else
             y->parent()->right = x;
-            if (x)
-                x->size_left += y->size_left;
-        }
+        if (x && x == y->right)
+            x->size_left += y->size_left;
         y->size_left = 0;
     }
     if (y->color() != SparseArrayNode::Red) {

@@ -1590,7 +1590,7 @@ static QV4::IR::Type resolveQmlType(QQmlEnginePrivate *qmlEngine, QV4::IR::Membe
 
     if (member->name->constData()->isUpper()) {
         bool ok = false;
-        int value = type->enumValue(*member->name, &ok);
+        int value = type->enumValue(qmlEngine, *member->name, &ok);
         if (ok) {
             member->setEnumValue(value);
             resolver->clear();

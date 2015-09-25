@@ -51,11 +51,13 @@ function assertTrue(b) {
         throw "assertTrue failed:" + b
 }
 
-function assertEquals(a, b) {
+function assertEquals(a, b, delta) {
     if (isNaN(a) && isNaN(b))
         return
-    if (a !== b)
+    if (!delta && a !== b)
         throw "assertEquals failed:" + a + "!==" + b
+    else if (Math.abs(a - b) > delta)
+        throw "assertEquals failed: Math.abs(" + a + " - " + b + ") > " + delta
 }
 
 function assertArrayEquals(a, b)
@@ -700,8 +702,35 @@ function TestDataViewPropertyTypeChecks() {
   CheckProperty("byteLength");
 }
 
-
 TestDataViewPropertyTypeChecks();
+
+function TestDataGetterSetters() {
+  var a = new DataView(new ArrayBuffer(16));
+  function TestGetterSetter(size, name, value0, value1, delta1, delta2) {
+    var getter = 'get' + name;
+    var setter = 'set' + name;
+    a[setter](0, value0);
+    a[setter](size, value1);
+    assertEquals(value0, a[getter](0), delta1);
+    assertEquals(value1, a[getter](size), delta2);
+  }
+
+  TestGetterSetter(1, 'Int8', 111, -100);
+  TestGetterSetter(2, 'Int16', 31111, -30000);
+  TestGetterSetter(4, 'Int32', 2111111111, -2000000000);
+  TestGetterSetter(1, 'Uint8', 111, 200);
+  TestGetterSetter(2, 'Uint16', 31111, 60000);
+  TestGetterSetter(4, 'Uint32', 2111111111, 4000000000);
+  TestGetterSetter(4, 'Float32', Math.pow(10, 38), Math.pow(10, -38), Math.pow(10, 31), Math.pow(10, -45));
+  TestGetterSetter(8, 'Float64', Math.pow(10, 308), Math.pow(10, -293), Math.pow(10, 293), Math.pow(10, -308));
+
+  // Backword compatibility
+  TestGetterSetter(1, 'UInt8', 111, 200);
+  TestGetterSetter(2, 'UInt16', 31111, 60000);
+  TestGetterSetter(4, 'UInt32', 2111111111, 4000000000);
+}
+
+TestDataGetterSetters();
 
 // General tests for properties
 

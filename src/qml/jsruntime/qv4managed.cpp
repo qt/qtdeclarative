@@ -88,29 +88,7 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        switch (static_cast<Heap::ErrorObject *>(d())->errorType) {
-        case Heap::ErrorObject::Error:
-            s = "Error";
-            break;
-        case Heap::ErrorObject::EvalError:
-            s = "EvalError";
-            break;
-        case Heap::ErrorObject::RangeError:
-            s = "RangeError";
-            break;
-        case Heap::ErrorObject::ReferenceError:
-            s = "ReferenceError";
-            break;
-        case Heap::ErrorObject::SyntaxError:
-            s = "SyntaxError";
-            break;
-        case Heap::ErrorObject::TypeError:
-            s = "TypeError";
-            break;
-        case Heap::ErrorObject::URIError:
-            s = "URIError";
-            break;
-        }
+        s = ErrorObject::className(static_cast<Heap::ErrorObject *>(d())->errorType);
         break;
     case Type_ArgumentsObject:
         s = "Arguments";

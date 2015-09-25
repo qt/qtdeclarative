@@ -67,15 +67,11 @@ public:
 
     To enable QPainter to do anti-aliased rendering, use setAntialiasing().
 
-    To write your own painted item, you first create a subclass of QQuickPaintedItem, and then
-    start by implementing its only pure virtual public function: paint(), which implements
-    the actual painting. To get the size of the area painted by the item, use
-    contentsBoundingRect().
-
-    Starting Qt 5.4, the QQuickPaintedItem is a
-    \l{QSGTextureProvider}{texture provider}
-    and can be used directly in \l {ShaderEffect}{ShaderEffects} and other
-    classes that consume texture providers.
+    To write your own painted item, you first create a subclass of
+    QQuickPaintedItem, and then start by implementing its only pure virtual
+    public function: paint(), which implements the actual painting. The
+    painting will be inside the rectangle spanning from 0,0 to
+    width(),height().
 */
 
 /*!
@@ -109,11 +105,12 @@ public:
     This enum describes flags that you can enable to improve rendering
     performance in QQuickPaintedItem. By default, none of these flags are set.
 
-    \value FastFBOResizing If your item gets resized often and you are using the
-    QQuickPaintedItem::FramebufferObject render target, set this flag to true to reduce the
-    item resizing time at the cost of using more graphics memory. Resizing a Framebuffer object
-    is a costly operation, by enabling this property the Framebuffer Object will use a texture
-    larger than the actual size of the item to avoid as much as possible resizing it.
+    \value FastFBOResizing Resizing an FBO can be a costly operation on a few
+    OpenGL driver implementations. To work around this, one can set this flag
+    to let the QQuickPaintedItem allocate one large framebuffer object and
+    instead draw into a subregion of it. This saves the resize at the cost of
+    using more memory. Please note that this is not a common problem.
+
 */
 
 /*!
@@ -332,16 +329,47 @@ void QQuickPaintedItem::setPerformanceHints(QQuickPaintedItem::PerformanceHints 
     update();
 }
 
+QSize QQuickPaintedItem::textureSize() const
+{
+    Q_D(const QQuickPaintedItem);
+    return d->textureSize;
+}
+
 /*!
-    This function returns the outer bounds of the item as a rectangle; all painting must be
-    restricted to inside an item's bounding rect.
+    \property QQuickPaintedItem::textureSize
 
-    If the contents size has not been set it reflects the size of the item; otherwise
-    it reflects the contents size scaled by the contents scale.
+    \brief Defines the size of the texture.
 
-    Use this function to know the area painted by the item.
+    Changing the texture's size does not affect the coordinate system used in
+    paint(). A scale factor is instead applied so painting should still happen
+    inside 0,0 to width(),height().
 
-    \sa QQuickItem::width(), QQuickItem::height(), contentsSize(), contentsScale()
+    By default, the texture size will have the same size as this item.
+
+    \note If the item is on a window with a device pixel ratio different from
+    1, this scale factor will be implicitly applied to the texture size.
+
+ */
+void QQuickPaintedItem::setTextureSize(const QSize &size)
+{
+    Q_D(QQuickPaintedItem);
+    if (d->textureSize == size)
+        return;
+    d->textureSize = size;
+    emit textureSizeChanged();
+}
+
+#if QT_VERSION >= 0x060000
+#warning "Remove: QQuickPaintedItem::contentsBoundingRect, contentsScale, contentsSize. Also remove them from qsgadaptationlayer_p.h and qsgdefaultpainternode.h/cpp."
+#endif
+
+/*!
+    \obsolete
+
+    This function is provided for compatibility, use size in combination
+    with textureSize to decide the size of what you are drawing.
+
+    \sa width(), height(), textureSize()
 */
 QRectF QQuickPaintedItem::contentsBoundingRect() const
 {
@@ -360,11 +388,13 @@ QRectF QQuickPaintedItem::contentsBoundingRect() const
 
 /*!
     \property QQuickPaintedItem::contentsSize
-    \brief The size of the contents
+    \brief Obsolete method for setting the contents size.
+    \obsolete
 
-    The contents size is the size of the item in regards to how it is painted
-    using the paint() function.  This is distinct from the size of the
-    item in regards to height() and width().
+    This function is provided for compatibility, use size in combination
+    with textureSize to decide the size of what you are drawing.
+
+    \sa width(), height(), textureSize()
 */
 QSize QQuickPaintedItem::contentsSize() const
 {
@@ -386,6 +416,7 @@ void QQuickPaintedItem::setContentsSize(const QSize &size)
 }
 
 /*!
+    \obsolete
     This convenience function is equivalent to calling setContentsSize(QSize()).
 */
 void QQuickPaintedItem::resetContentsSize()
@@ -395,12 +426,13 @@ void QQuickPaintedItem::resetContentsSize()
 
 /*!
     \property QQuickPaintedItem::contentsScale
-    \brief The scale of the contents
+    \brief Obsolete method for scaling the contents.
+    \obsolete
 
-    All painting happening in paint() is scaled by the contents scale. This is distinct
-    from the scale of the item in regards to scale().
+    This function is provided for compatibility, use size() in combination
+    with textureSize() to decide the size of what you are drawing.
 
-    The default value is 1.
+    \sa width(), height(), textureSize()
 */
 qreal QQuickPaintedItem::contentsScale() const
 {
@@ -487,6 +519,9 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
     This function, which is usually called by the QML Scene Graph, paints the
     contents of an item in local coordinates.
 
+    The underlying texture will have a size defined by textureSize when set,
+    or the item's size, multiplied by the window's device pixel ratio.
+
     The function is called after the item has been filled with the fillColor.
 
     Reimplement this function in a QQuickPaintedItem subclass to provide the
@@ -500,6 +535,8 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
 
     \warning Extreme caution must be used when creating QObjects, emitting signals, starting
     timers and similar inside this function as these will have affinity to the rendering thread.
+
+    \sa width(), height(), textureSize
 */
 
 /*!
@@ -525,17 +562,35 @@ QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         d->node = node;
     }
 
-    QRectF br = contentsBoundingRect();
+    bool hasTextureSize = d->textureSize.width() > 0 && d->textureSize.height() > 0;
+
+    // Use the compat mode if any of the compat things are set and
+    // textureSize is 0x0.
+    if (!hasTextureSize
+        && (d->contentsScale != 1
+            || (d->contentsSize.width() > 0 && d->contentsSize.height() > 0))) {
+        QRectF br = contentsBoundingRect();
+        node->setContentsScale(d->contentsScale);
+        QSize size = QSize(qRound(br.width()), qRound(br.height()));
+        node->setSize(size);
+        node->setTextureSize(size);
+    } else {
+        // The default, use textureSize or item's size * device pixel ratio
+        node->setContentsScale(1);
+        QSize itemSize(qRound(width()), qRound(height()));
+        node->setSize(itemSize);
+        QSize textureSize = (hasTextureSize ? d->textureSize : itemSize)
+                            * window()->effectiveDevicePixelRatio();
+        node->setTextureSize(textureSize);
+    }
 
     node->setPreferredRenderTarget(d->renderTarget);
     node->setFastFBOResizing(d->performanceHints & FastFBOResizing);
-    node->setSize(QSize(qRound(br.width()), qRound(br.height())));
     node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);
     node->setMipmapping(d->mipmap);
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);
-    node->setContentsScale(d->contentsScale);
     node->setDirty(d->dirtyRect);
     node->update();
 

@@ -147,6 +147,8 @@ bool QQmlDebuggingEnabler::startTcpDebugServer(int port, StartMode mode, const Q
 }
 
 /*!
+ * \since 5.6
+ *
  * Enables debugging for QML engines created after calling this function. The debug connector will
  * connect to a debugger waiting on a local socket at the given \a socketFileName and block the QML
  * engine until the connection is established if \a mode is \c WaitForClient. If \a mode is not

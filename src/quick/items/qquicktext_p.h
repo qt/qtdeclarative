@@ -264,6 +264,8 @@ Q_SIGNALS:
     Q_REVISION(6) void bottomPaddingChanged();
 
 protected:
+    QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = 0);
+
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;

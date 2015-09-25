@@ -60,10 +60,8 @@ namespace Heap {
 
 struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 {
-    VariantObject(InternalClass *ic, QV4::Object *prototype)
-        : Object(ic, prototype)
-    {}
-    VariantObject(QV4::ExecutionEngine *engine, const QVariant &value);
+    VariantObject();
+    VariantObject(const QVariant &value);
     ~VariantObject() {
         if (isScarce())
             node.remove();
@@ -77,6 +75,7 @@ struct VariantObject : Object, public ExecutionEngine::ScarceResourceData
 struct VariantObject : Object
 {
     V4_OBJECT2(VariantObject, Object)
+    V4_PROTOTYPE(variantPrototype)
     V4_NEEDS_DESTROY
 
     void addVmePropertyReference();

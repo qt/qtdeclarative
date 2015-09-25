@@ -74,6 +74,8 @@ public:
 
     Identifier *identifierImpl(const Heap::String *str);
 
+    Heap::String *stringFromIdentifier(Identifier *i);
+
     void mark(ExecutionEngine *e) {
         for (int i = 0; i < alloc; ++i) {
             Heap::String *entry = entries[i];

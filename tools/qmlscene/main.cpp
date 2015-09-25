@@ -156,7 +156,7 @@ struct Options
         applicationAttributes.append(Qt::AA_ShareOpenGLContexts);
     }
 
-    QUrl file;
+    QUrl url;
     bool originalQml;
     bool originalQmlRaster;
     bool maximized;
@@ -252,12 +252,10 @@ static bool checkVersion(const QUrl &url)
     if (!qgetenv("QMLSCENE_IMPORT_NAME").isEmpty())
         fprintf(stderr, "QMLSCENE_IMPORT_NAME is no longer supported.\n");
 
-    QString fileName = url.toLocalFile();
-    if (fileName.isEmpty()) {
-        fprintf(stderr, "qmlscene: filename required.\n");
-        return false;
-    }
+    if (!url.isLocalFile())
+        return true;
 
+    const QString fileName = url.toLocalFile();
     QFile f(fileName);
     if (!f.open(QFile::ReadOnly | QFile::Text)) {
         fprintf(stderr, "qmlscene: failed to check version of file '%s', could not open...\n",
@@ -300,7 +298,7 @@ static void displayFileDialog(Options *options)
     QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
     if (!fileName.isEmpty()) {
         QFileInfo fi(fileName);
-        options->file = QUrl::fromLocalFile(fi.canonicalFilePath());
+        options->url = QUrl::fromLocalFile(fi.canonicalFilePath());
     }
 #else
     Q_UNUSED(options);
@@ -358,6 +356,7 @@ static void usage()
     puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
     puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
     puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --no-scaling.......................Disable High DPI scaling (AA_NoHighDpiScaling)");
     puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
@@ -416,6 +415,24 @@ static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *windo
         window->setTitle(newTitle);
 }
 
+static QUrl parseUrlArgument(const char *arg)
+{
+    const QUrl url = QUrl::fromUserInput(QFile::decodeName(arg), QDir::currentPath(), QUrl::AssumeLocalFile);
+    if (!url.isValid()) {
+        fprintf(stderr, "Invalid URL: \"%s\"\n", arg);
+        return QUrl();
+    }
+    if (url.isLocalFile()) {
+        const QFileInfo fi(url.toLocalFile());
+        if (!fi.exists()) {
+            fprintf(stderr, "\"%s\" does not exist.\n",
+                    qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())));
+            return QUrl();
+        }
+    }
+    return url;
+}
+
 int main(int argc, char ** argv)
 {
     Options options;
@@ -423,8 +440,8 @@ int main(int argc, char ** argv)
     QStringList imports;
     QStringList pluginPaths;
     for (int i = 1; i < argc; ++i) {
-        if (*argv[i] != '-' && QFileInfo(QFile::decodeName(argv[i])).exists()) {
-            options.file = QUrl::fromLocalFile(argv[i]);
+        if (*argv[i] != '-') {
+            options.url = parseUrlArgument(argv[i]);
         } else {
             const QString lowerArgument = QString::fromLatin1(argv[i]).toLower();
             if (lowerArgument == QLatin1String("--maximized"))
@@ -455,6 +472,8 @@ int main(int argc, char ** argv)
                 options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
             else if (lowerArgument == QLatin1String("--desktop"))
                 options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
+            else if (lowerArgument == QLatin1String("--no-scaling"))
+                options.applicationAttributes.append(Qt::AA_NoHighDpiScaling);
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
@@ -502,7 +521,7 @@ int main(int argc, char ** argv)
 
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 
-    if (options.file.isEmpty())
+    if (options.url.isEmpty())
 #if defined(QMLSCENE_BUNDLE)
         displayOptionsDialog(&options);
 #else
@@ -514,8 +533,8 @@ int main(int argc, char ** argv)
     if (options.verbose)
         puts(QLibraryInfo::build());
 
-    if (!options.file.isEmpty()) {
-        if (!options.versionDetection || checkVersion(options.file)) {
+    if (!options.url.isEmpty()) {
+        if (!options.versionDetection || checkVersion(options.url)) {
 #ifndef QT_NO_TRANSLATION
             QTranslator translator;
 #endif
@@ -528,15 +547,17 @@ int main(int argc, char ** argv)
                 engine.addImportPath(imports.at(i));
             for (int i = 0; i < pluginPaths.size(); ++i)
                 engine.addPluginPath(pluginPaths.at(i));
-            if (options.file.isLocalFile()) {
-                QFileInfo fi(options.file.toLocalFile());
+            if (options.url.isLocalFile()) {
+                QFileInfo fi(options.url.toLocalFile());
 #ifndef QT_NO_TRANSLATION
                 loadTranslationFile(translator, fi.path());
 #endif
                 loadDummyDataFiles(engine, fi.path());
             }
             QObject::connect(&engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
-            component->loadUrl(options.file);
+            component->loadUrl(options.url);
+            while (component->isLoading())
+                QCoreApplication::processEvents();
             if ( !component->isReady() ) {
                 fprintf(stderr, "%s\n", qPrintable(component->errorString()));
                 return -1;
@@ -560,7 +581,7 @@ int main(int argc, char ** argv)
                         qxView->setResizeMode(QQuickView::SizeViewToRootObject);
                     else
                         qxView->setResizeMode(QQuickView::SizeRootObjectToView);
-                    qxView->setContent(options.file, component, contentItem);
+                    qxView->setContent(options.url, component, contentItem);
                 }
             }
 

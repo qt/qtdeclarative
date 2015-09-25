@@ -69,7 +69,7 @@ struct TypedArray : Object {
         NTypes
     };
 
-    TypedArray(ExecutionEngine *e, Type t);
+    TypedArray(Type t);
 
     const TypedArrayOperations *type;
     Pointer<ArrayBuffer> buffer;
@@ -85,7 +85,7 @@ struct TypedArrayCtor : FunctionObject {
 };
 
 struct TypedArrayPrototype : Object {
-    inline TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t);
+    inline TypedArrayPrototype(TypedArray::Type t);
     TypedArray::Type type;
 };
 
@@ -95,6 +95,8 @@ struct TypedArrayPrototype : Object {
 struct Q_QML_PRIVATE_EXPORT TypedArray : Object
 {
     V4_OBJECT2(TypedArray, Object)
+
+    static Heap::TypedArray *create(QV4::ExecutionEngine *e, Heap::TypedArray::Type t);
 
     uint byteLength() const {
         return d()->byteLength;
@@ -142,9 +144,8 @@ struct TypedArrayPrototype : Object
 };
 
 inline
-Heap::TypedArrayPrototype::TypedArrayPrototype(ExecutionEngine *e, TypedArray::Type t)
-    : Heap::Object(e)
-    , type(t)
+Heap::TypedArrayPrototype::TypedArrayPrototype(TypedArray::Type t)
+    : type(t)
 {
 }
 

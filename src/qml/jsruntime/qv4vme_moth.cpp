@@ -375,8 +375,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    QV4::ScopedContext context(scope, engine->currentContext());
-    engine->currentContext()->lineNumber = -1;
+    QV4::ExecutionContext *context = engine->currentContext;
+    engine->current->lineNumber = -1;
 
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -650,18 +650,18 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
         Runtime::pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
-        context = engine->currentContext();
+        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         Runtime::pushWithScope(VALUE(instr.arg), engine);
-        context = engine->currentContext();
+        context = engine->currentContext;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
         Runtime::popScope(engine);
-        context = engine->currentContext();
+        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
@@ -889,7 +889,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
-        engine->currentContext()->lineNumber = instr.lineNumber;
+        engine->current->lineNumber = instr.lineNumber;
         QV4::Debugging::Debugger *debugger = context->engine()->debugger;
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
@@ -898,7 +898,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
-        engine->currentContext()->lineNumber = instr.lineNumber;
+        engine->current->lineNumber = instr.lineNumber;
         if (qt_v4IsDebugging)
             qt_v4CheckForBreak(context, scopes, scopeDepth);
     MOTH_END_INSTR(Line)

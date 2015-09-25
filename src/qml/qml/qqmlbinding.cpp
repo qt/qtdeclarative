@@ -90,7 +90,7 @@ QQmlBinding::QQmlBinding(const QQmlScriptString &script, QObject *obj, QQmlConte
 
     QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(context()->engine)->v4engine();
     if (runtimeFunction) {
-        m_function.set(v4, QV4::QmlBindingWrapper::createQmlCallableForFunction(ctxtdata, scopeObject(), runtimeFunction));
+        m_function.set(v4, QV4::FunctionObject::createQmlFunction(ctxtdata, scopeObject(), runtimeFunction));
     } else {
         QString code = scriptPrivate->script;
         createQmlBinding(context(), scopeObject(), code, url, scriptPrivate->lineNumber);

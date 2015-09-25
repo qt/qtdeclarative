@@ -61,7 +61,7 @@ namespace QV4 {
 namespace Heap {
 
 struct QQmlValueTypeWrapper : Object {
-    QQmlValueTypeWrapper(ExecutionEngine *engine);
+    QQmlValueTypeWrapper() {}
     ~QQmlValueTypeWrapper();
     QQmlRefPointer<QQmlPropertyCache> propertyCache;
     mutable void *gadgetPtr;
@@ -76,6 +76,7 @@ struct QQmlValueTypeWrapper : Object {
 struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 {
     V4_OBJECT2(QQmlValueTypeWrapper, Object)
+    V4_PROTOTYPE(valueTypeWrapperPrototype)
     static void destroy(Heap::Base *b);
 
 public:

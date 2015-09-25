@@ -185,9 +185,10 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (subComponentIndex == -1 && compiledData->scripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compiledData->scripts.count()));
         context->importedScripts.set(v4, scripts);
+        QV4::ScopedValue v(scope);
         for (int i = 0; i < compiledData->scripts.count(); ++i) {
             QQmlScriptData *s = compiledData->scripts.at(i);
-            scripts->putIndexed(i, *s->scriptValueForContext(context).valueRef());
+            scripts->putIndexed(i, (v = s->scriptValueForContext(context)));
         }
     } else if (sharedState->creationContext) {
         context->importedScripts = sharedState->creationContext->importedScripts;
@@ -988,13 +989,9 @@ void QQmlObjectCreator::registerObjectWithContextById(int objectIndex, QObject *
 
 QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
-    if (!_qmlContext->objectValue()) {
-        QV4::Scope valueScope(v4);
-        QV4::Scoped<QV4::QmlContextWrapper> qmlScope(valueScope, QV4::QmlContextWrapper::qmlScope(v4, context, _scopeObject));
-        QV4::ScopedContext global(valueScope, v4->rootContext());
-        _qmlContext->setM(global->newQmlContext(qmlScope));
-        v4->popContext();
-    }
+    if (!_qmlContext->objectValue())
+        _qmlContext->setM(v4->rootContext()->newQmlContext(context, _scopeObject));
+
     return _qmlContext->d();
 }
 
@@ -1106,6 +1103,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (customParser) {
         QHash<int, QBitArray>::ConstIterator customParserBindings = compiledData->customParserBindings.constFind(index);
         if (customParserBindings != compiledData->customParserBindings.constEnd()) {
+            customParser->engine = QQmlEnginePrivate::get(engine);
             customParser->imports = compiledData->importCache;
 
             QList<const QV4::CompiledData::Binding *> bindings;
@@ -1115,6 +1113,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                     bindings << obj->bindingTable() + i;
             customParser->applyBindings(instance, compiledData, bindings);
 
+            customParser->engine = 0;
             customParser->imports = (QQmlTypeNameCache*)0;
             bindingsToSkip = *customParserBindings;
         }
