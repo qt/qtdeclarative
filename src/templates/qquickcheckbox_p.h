@@ -48,11 +48,11 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcheckable_p.h>
+#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSTEMPLATES_EXPORT QQuickCheckBox : public QQuickCheckable
+class Q_LABSTEMPLATES_EXPORT QQuickCheckBox : public QQuickAbstractButton
 {
     Q_OBJECT
 

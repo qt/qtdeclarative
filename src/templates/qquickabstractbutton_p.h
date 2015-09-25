@@ -60,6 +60,9 @@ class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
+    Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
+    Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
+    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
 public:
@@ -71,8 +74,23 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
+    bool isChecked() const;
+    void setChecked(bool checked);
+
+    bool isCheckable() const;
+    void setCheckable(bool checkable);
+
+    bool isExclusive() const;
+    void setExclusive(bool exclusive);
+
+    QQuickItem *indicator() const;
+    void setIndicator(QQuickItem *indicator);
+
     QQuickItem *label() const;
     void setLabel(QQuickItem *label);
+
+public Q_SLOTS:
+    void toggle();
 
 Q_SIGNALS:
     void pressed(QQuickMouseEvent *mouse);
@@ -82,6 +100,9 @@ Q_SIGNALS:
     void doubleClicked(QQuickMouseEvent *mouse);
     void textChanged();
     void pressedChanged();
+    void checkedChanged();
+    void checkableChanged();
+    void indicatorChanged();
     void labelChanged();
 
 protected:

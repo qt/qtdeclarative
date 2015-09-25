@@ -6,8 +6,6 @@ HEADERS += \
     $$PWD/qquickapplicationwindow_p.h \
     $$PWD/qquickbusyindicator_p.h \
     $$PWD/qquickbutton_p.h \
-    $$PWD/qquickcheckable_p.h \
-    $$PWD/qquickcheckable_p_p.h \
     $$PWD/qquickcheckbox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
@@ -47,7 +45,6 @@ SOURCES += \
     $$PWD/qquickapplicationwindow.cpp \
     $$PWD/qquickbusyindicator.cpp \
     $$PWD/qquickbutton.cpp \
-    $$PWD/qquickcheckable.cpp \
     $$PWD/qquickcheckbox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \

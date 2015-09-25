@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TabButton
-    \inherits Checkable
+    \inherits AbstractButton
     \instantiates QQuickTabButton
     \inqmlmodule Qt.labs.controls
     \ingroup tabs
@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
-    QQuickCheckable(parent)
+    QQuickAbstractButton(parent)
 {
     setExclusive(true);
     setAccessibleRole(0x00000025); //QAccessible::PageTab

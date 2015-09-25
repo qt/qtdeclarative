@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype CheckBox
-    \inherits Checkable
+    \inherits AbstractButton
     \instantiates QQuickCheckBox
     \inqmlmodule Qt.labs.controls
     \ingroup buttons
@@ -81,8 +81,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
-    QQuickCheckable(parent)
+    QQuickAbstractButton(parent)
 {
+    setCheckable(true);
     setAccessibleRole(0x0000002C); //QAccessible::CheckBox
 }
 

@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype RadioButton
-    \inherits Checkable
+    \inherits AbstractButton
     \instantiates QQuickRadioButton
     \inqmlmodule Qt.labs.controls
     \ingroup buttons
@@ -84,8 +84,9 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
-    QQuickCheckable(parent)
+    QQuickAbstractButton(parent)
 {
+    setCheckable(true);
     setExclusive(true);
     setAccessibleRole(0x0000002D); //QAccessible::RadioButton
 }

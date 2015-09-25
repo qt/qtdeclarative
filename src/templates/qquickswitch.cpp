@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickswitch_p.h"
-#include "qquickcheckable_p_p.h"
+#include "qquickabstractbutton_p_p.h"
 
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Switch
-    \inherits Checkable
+    \inherits AbstractButton
     \instantiates QQuickSwitch
     \inqmlmodule Qt.labs.controls
     \ingroup buttons
@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Switch}
 */
 
-class QQuickSwitchPrivate : public QQuickCheckablePrivate
+class QQuickSwitchPrivate : public QQuickAbstractButtonPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSwitch)
 
@@ -100,10 +100,11 @@ void QQuickSwitchPrivate::updatePosition()
 }
 
 QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
-    QQuickCheckable(*(new QQuickSwitchPrivate), parent)
+    QQuickAbstractButton(*(new QQuickSwitchPrivate), parent)
 {
+    setCheckable(true);
     setFiltersChildMouseEvents(true);
-    QObjectPrivate::connect(this, &QQuickCheckable::checkedChanged, d_func(), &QQuickSwitchPrivate::updatePosition);
+    QObjectPrivate::connect(this, &QQuickAbstractButton::checkedChanged, d_func(), &QQuickSwitchPrivate::updatePosition);
     setAccessibleRole(0x0000002B); //QAccessible::Button
 }
 
@@ -160,7 +161,7 @@ qreal QQuickSwitch::visualPosition() const
 
 void QQuickSwitch::mirrorChange()
 {
-    QQuickCheckable::mirrorChange();
+    QQuickAbstractButton::mirrorChange();
     emit visualPositionChanged();
 }
 

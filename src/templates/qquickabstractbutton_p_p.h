@@ -61,7 +61,11 @@ public:
 
     QString text;
     bool pressed;
+    bool checked;
+    bool checkable;
+    bool exclusive;
     QQuickItem *label;
+    QQuickItem *indicator;
 };
 
 Q_DECLARE_TYPEINFO(QQuickAbstractButtonPrivate, Q_COMPLEX_TYPE);

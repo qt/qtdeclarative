@@ -94,7 +94,9 @@ QT_BEGIN_NAMESPACE
     and y position of the release of the click, and whether the click was held.
 */
 
-QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() : pressed(false), label(Q_NULLPTR)
+QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
+    pressed(false), checked(false), checkable(false), exclusive(false),
+    label(Q_NULLPTR), indicator(Q_NULLPTR)
 {
 }
 
@@ -162,6 +164,86 @@ void QQuickAbstractButton::setPressed(bool isPressed)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::checked
+
+    This property holds whether the button is checked.
+*/
+bool QQuickAbstractButton::isChecked() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->checked;
+}
+
+void QQuickAbstractButton::setChecked(bool checked)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->checked != checked) {
+        d->checked = checked;
+        setAccessibleProperty("checked", checked);
+        emit checkedChanged();
+    }
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::checkable
+
+    This property holds whether the button is checkable.
+*/
+bool QQuickAbstractButton::isCheckable() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->checkable;
+}
+
+void QQuickAbstractButton::setCheckable(bool checkable)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->checkable != checkable) {
+        d->checkable = checkable;
+        setAccessibleProperty("checkable", checkable);
+        emit checkableChanged();
+    }
+}
+
+bool QQuickAbstractButton::isExclusive() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->exclusive;
+}
+
+void QQuickAbstractButton::setExclusive(bool exclusive)
+{
+    Q_D(QQuickAbstractButton);
+    d->exclusive = exclusive;
+}
+
+/*!
+    \qmlproperty Item Qt.labs.controls::AbstractButton::indicator
+
+    This property holds the indicator item.
+*/
+QQuickItem *QQuickAbstractButton::indicator() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->indicator;
+}
+
+void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->indicator != indicator) {
+        delete d->indicator;
+        d->indicator = indicator;
+        if (indicator) {
+            if (!indicator->parentItem())
+                indicator->setParentItem(this);
+            indicator->setAcceptedMouseButtons(Qt::LeftButton);
+        }
+        emit indicatorChanged();
+    }
+}
+
+/*!
     \qmlproperty Item Qt.labs.controls::AbstractButton::label
 
     This property holds the label item.
@@ -184,6 +266,17 @@ void QQuickAbstractButton::setLabel(QQuickItem *label)
             label->setParentItem(this);
         emit labelChanged();
     }
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::Button::toggle()
+
+    Toggles the checked state of the button.
+*/
+void QQuickAbstractButton::toggle()
+{
+    Q_D(QQuickAbstractButton);
+    setChecked(!d->checked);
 }
 
 void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
@@ -210,6 +303,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 
 void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
@@ -218,6 +312,8 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
         emit released(&mre);
         QQuickMouseEvent mce(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers(), true /* isClick */);
         emit clicked(&mce);
+        if (d->checkable)
+            setChecked(d->exclusive || !d->checked);
         event->setAccepted(mre.isAccepted() || mce.isAccepted());
     }
 }
@@ -254,6 +350,8 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
+    if (d->checkable && contains(event->pos()))
+        setChecked(d->exclusive || !d->checked);
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
