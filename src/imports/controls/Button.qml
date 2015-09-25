@@ -72,9 +72,10 @@ T.Button {
         implicitHeight: 36
 
         radius: 3
-        color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
-                        control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
-                        control.pressed ? control.Theme.pressColor : "transparent")
+        color: Qt.darker(Qt.tint(!control.enabled ? control.Theme.disabledColor :
+                                  control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
+                                  control.pressed ? control.Theme.pressColor : "transparent"),
+                         control.checkable && control.checked ? 1.5 : 1.0)
     }
     //! [background]
 }
