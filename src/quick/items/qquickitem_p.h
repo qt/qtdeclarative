@@ -503,6 +503,8 @@ public:
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
     void itemToParentTransform(QTransform &) const;
+    QTransform globalToWindowTransform() const;
+    QTransform windowToGlobalTransform() const;
 
     static bool focusNextPrev(QQuickItem *item, bool forward);
     static QQuickItem *nextTabChildItem(const QQuickItem *item, int start);

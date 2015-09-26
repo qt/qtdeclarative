@@ -3045,6 +3045,28 @@ void QQuickItemPrivate::itemToParentTransform(QTransform &t) const
 }
 
 /*!
+    Returns a transform that maps points from window space into global space.
+*/
+QTransform QQuickItemPrivate::windowToGlobalTransform() const
+{
+    QPoint quickWidgetOffset;
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
+    QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
+    return QTransform::fromTranslate(pos.x(), pos.y());
+}
+
+/*!
+    Returns a transform that maps points from global space into window space.
+*/
+QTransform QQuickItemPrivate::globalToWindowTransform() const
+{
+    QPoint quickWidgetOffset;
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
+    QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
+    return QTransform::fromTranslate(-pos.x(), -pos.y());
+}
+
+/*!
     Returns true if construction of the QML component is complete; otherwise
     returns false.
 
@@ -7281,6 +7303,27 @@ QPointF QQuickItem::mapToScene(const QPointF &point) const
 }
 
 /*!
+    Maps the given \a point in this item's coordinate system to the equivalent
+    point within global screen coordinate system, and returns the mapped
+    coordinate.
+
+    For example, this may be helpful to add a popup to a Qt Quick component.
+
+    \note Window positioning is done by the window manager and this value is
+    treated only as a hint. So, the resulting window position may differ from
+    what is expected.
+
+    \since 5.7
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
+QPointF QQuickItem::mapToGlobal(const QPointF &point) const
+{
+    Q_D(const QQuickItem);
+    return d->windowToGlobalTransform().map(mapToScene(point));
+}
+
+/*!
     Maps the given \a rect in this item's coordinate system to the equivalent
     rectangular area within \a item's coordinate system, and returns the mapped
     rectangle value.
@@ -7339,6 +7382,27 @@ QPointF QQuickItem::mapFromScene(const QPointF &point) const
 {
     Q_D(const QQuickItem);
     return d->windowToItemTransform().map(point);
+}
+
+/*!
+    Maps the given \a point in the global screen coordinate system to the
+    equivalent point within this item's coordinate system, and returns the
+    mapped coordinate.
+
+    For example, this may be helpful to add a popup to a Qt Quick component.
+
+    \note Window positioning is done by the window manager and this value is
+    treated only as a hint. So, the resulting window position may differ from
+    what is expected.
+
+    \since 5.7
+
+    \sa {Concepts - Visual Coordinates in Qt Quick}
+*/
+QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
+{
+    Q_D(const QQuickItem);
+    return mapFromScene(d->globalToWindowTransform().map(point));
 }
 
 /*!

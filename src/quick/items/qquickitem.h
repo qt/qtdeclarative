@@ -313,10 +313,12 @@ public:
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapToScene(const QPointF &point) const;
+    Q_REVISION(7) Q_INVOKABLE QPointF mapToGlobal(const QPointF &point) const;
     QRectF mapRectToItem(const QQuickItem *item, const QRectF &rect) const;
     QRectF mapRectToScene(const QRectF &rect) const;
     QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     QPointF mapFromScene(const QPointF &point) const;
+    Q_REVISION(7) Q_INVOKABLE QPointF mapFromGlobal(const QPointF &point) const;
     QRectF mapRectFromItem(const QQuickItem *item, const QRectF &rect) const;
     QRectF mapRectFromScene(const QRectF &rect) const;
 
