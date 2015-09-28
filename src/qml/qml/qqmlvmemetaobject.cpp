@@ -617,7 +617,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                                                       list_append, list_count, list_at,
                                                                       list_clear);
                                 p->dummy1 = this;
-                                p->dummy2 = reinterpret_cast<quintptr *>(methodOffset() + id);
+                                p->dummy2 = reinterpret_cast<void *>(quintptr(methodOffset() + id));
                             } else {
                                 QV4::MemberData *md = propertiesAsMemberData();
                                 if (md) {
