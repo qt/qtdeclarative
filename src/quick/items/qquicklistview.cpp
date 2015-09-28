@@ -1358,26 +1358,24 @@ void QQuickListViewPrivate::updateHeader()
     }
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
-    if (listItem) {
-        if (visibleItems.count()) {
-            if (headerPositioning == QQuickListView::OverlayHeader) {
-                listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
-            } else if (headerPositioning == QQuickListView::PullBackHeader) {
-                qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
-                qreal clampedPos = qBound(originPosition() - headerSize(), listItem->position(), lastPosition() - headerSize() - size());
-                listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
-            } else {
-                qreal startPos = originPosition();
-                if (visibleIndex == 0) {
-                    listItem->setPosition(startPos - headerSize());
-                } else {
-                    if (position() <= startPos || listItem->position() > startPos - headerSize())
-                        listItem->setPosition(startPos - headerSize());
-                }
-            }
+    if (visibleItems.count()) {
+        if (headerPositioning == QQuickListView::OverlayHeader) {
+            listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
+        } else if (headerPositioning == QQuickListView::PullBackHeader) {
+            qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
+            qreal clampedPos = qBound(originPosition() - headerSize(), listItem->position(), lastPosition() - headerSize() - size());
+            listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
         } else {
-            listItem->setPosition(-headerSize());
+            qreal startPos = originPosition();
+            if (visibleIndex == 0) {
+                listItem->setPosition(startPos - headerSize());
+            } else {
+                if (position() <= startPos || listItem->position() > startPos - headerSize())
+                    listItem->setPosition(startPos - headerSize());
+            }
         }
+    } else {
+        listItem->setPosition(-headerSize());
     }
 
     if (created)
