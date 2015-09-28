@@ -47,7 +47,7 @@ additional imports:
 
 
 
-\keyword XMLHttpRequest
+\target XMLHttpRequest
 \section1 XMLHttpRequest
 
 The XMLHttpRequest object, which can be used to asynchronously obtain

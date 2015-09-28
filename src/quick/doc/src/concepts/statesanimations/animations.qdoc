@@ -138,7 +138,7 @@ are also automatically applied to this property and do not need to specify
 values.
 
 
-\keyword qml-transition-animations
+\target qml-transition-animations
 \section2 Transitions during State Changes
 
 \l{State}{Qt Quick States} are property configurations where a property may have different values to reflect different states. State changes introduce
@@ -210,7 +210,7 @@ The \l SequentialAnimation type is also useful for playing
 \l{qml-transition-animations}{transition animations} because animations are
 played in parallel inside transitions.
 
-\keyword qml-controlling-animations
+\target qml-controlling-animations
 \section1 Controlling Animations
 
 There are different methods to control animations.
@@ -222,7 +222,7 @@ essential properties and methods for animation types. Animation types have
 \c{start()}, \c{stop()}, \c{resume()}, \c{pause()}, \c {restart()}, and
 \c{complete()} -- all of these methods control the execution of animations.
 
-\keyword qml-easing-animation
+\target qml-easing-animation
 \section2 Easing
 
 Easing curves define how the animation will interpolate between the start value

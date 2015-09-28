@@ -57,7 +57,7 @@ To visualize data, bind the view's \c model property to a model and the
     Views are containers for collections of items. They are feature-rich and can be
     customizable to meet style or behavior requirements.
 
-    \keyword qtquick-views
+    \target qtquick-views
     A set of standard views are provided in the basic set of Qt Quick
     graphical types:
 
@@ -124,7 +124,7 @@ To visualize data, bind the view's \c model property to a model and the
     \snippet qml/listview-sections.qml section
     \image listview-section.png
 
-\keyword qml-view-delegate
+\target qml-view-delegate
 \section1 View Delegates
 
     Views need a \e delegate to visually represent an item in a list. A view will
@@ -154,7 +154,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \snippet qml/models/views-models-delegates.qml rectangle
 
-\keyword qml-data-models
+\target qml-data-models
 \section1 Models
 
     Data is provided to the delegate via named data roles which the delegate may
@@ -320,7 +320,7 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endqml
 
-    \keyword qml-c++-models
+    \target qml-c++-models
     \section2 C++ Data Models
 
     Models can be defined in C++ and then made available to QML. This mechanism
