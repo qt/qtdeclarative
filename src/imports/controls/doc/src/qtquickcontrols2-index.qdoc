@@ -29,15 +29,18 @@
     \page qtquickcontrols2-index.html
     \title Qt Quick Controls 2
 
-    \brief The Qt Quick Controls 2 module provides a set of UI controls for Qt
-    Quick.
+    \brief Provides a set of UI controls for Qt Quick.
 
-    The Qt Quick Controls 2 module provides a set of controls that can be used
+    Qt Quick Controls 2 provides a set of controls that can be used
     to build complete interfaces in Qt Quick.
 
     \section1 QML Types
 
+    \section2 QtQuick.Controls Module
     \generatelist {qmltypesbymodule QtQuick.Controls}
+
+    \section2 QtQuick.Calendar Module
+    \generatelist {qmltypesbymodule QtQuick.Calendar}
 
     \section1 Differences between Qt Quick Controls
 
@@ -328,11 +331,12 @@
 
     TODO
 
-    \section1 Related information
+    \section1 Related Information
 
     \list
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
+      \li \l{Qt Quick Calendar 2}
       \li \l{Qt Quick Controls 2 QML Types}{Qt Quick Controls 2 QML Types}
     \endlist
 */
