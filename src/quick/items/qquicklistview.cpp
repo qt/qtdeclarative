@@ -1319,10 +1319,10 @@ void QQuickListViewPrivate::updateFooter()
     }
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(footer);
-    if (visibleItems.count()) {
-        if (footerPositioning == QQuickListView::OverlayFooter) {
-            listItem->setPosition(isContentFlowReversed() ? -position() - footerSize() : position() + size() - footerSize());
-        } else if (footerPositioning == QQuickListView::PullBackFooter) {
+    if (footerPositioning == QQuickListView::OverlayFooter) {
+        listItem->setPosition(isContentFlowReversed() ? -position() - footerSize() : position() + size() - footerSize());
+    } else if (visibleItems.count()) {
+        if (footerPositioning == QQuickListView::PullBackFooter) {
             qreal viewPos = isContentFlowReversed() ? -position() : position() + size();
             qreal clampedPos = qBound(originPosition() - footerSize() + size(), listItem->position(), lastPosition());
             listItem->setPosition(qBound(viewPos - footerSize(), clampedPos, viewPos));
@@ -1358,10 +1358,10 @@ void QQuickListViewPrivate::updateHeader()
     }
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
-    if (visibleItems.count()) {
-        if (headerPositioning == QQuickListView::OverlayHeader) {
-            listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
-        } else if (headerPositioning == QQuickListView::PullBackHeader) {
+    if (headerPositioning == QQuickListView::OverlayHeader) {
+        listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
+    } else if (visibleItems.count()) {
+        if (headerPositioning == QQuickListView::PullBackHeader) {
             qreal viewPos = isContentFlowReversed() ? -position() - size() : position();
             qreal clampedPos = qBound(originPosition() - headerSize(), listItem->position(), lastPosition() - headerSize() - size());
             listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
@@ -2838,8 +2838,15 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
 {
     Q_D(QQuickListView);
     QQuickItemView::viewportMoved(orient);
-    if (!d->itemCount)
+
+    if (!d->itemCount) {
+        if (d->hasStickyHeader())
+            d->updateHeader();
+        if (d->hasStickyFooter())
+            d->updateFooter();
         return;
+    }
+
     // Recursion can occur due to refill changing the content size.
     if (d->inViewportMoved)
         return;
