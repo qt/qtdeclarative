@@ -2449,9 +2449,11 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
     if (!target)
         return false;
 
-    bool filtered = false;
-
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
+    if (targetPrivate->replayingPressEvent)
+        return false;
+
+    bool filtered = false;
     if (targetPrivate->filtersChildMouseEvents && !hasFiltered->contains(target)) {
         hasFiltered->insert(target);
         if (target->childMouseEventFilter(item, event))

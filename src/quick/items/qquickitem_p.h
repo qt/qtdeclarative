@@ -433,6 +433,7 @@ public:
     // when any of the item's descendants gets focus, the item constrains the tab
     // focus chain and prevents tabbing outside.
     bool isTabFence:1;
+    bool replayingPressEvent:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

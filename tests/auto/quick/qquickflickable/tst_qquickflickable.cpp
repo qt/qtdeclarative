@@ -67,6 +67,7 @@ private slots:
     void flickDeceleration();
     void pressDelay();
     void nestedPressDelay();
+    void filterReplayedPress();
     void nestedClickThenFlick();
     void flickableDirection();
     void resizeContent();
@@ -521,6 +522,48 @@ void tst_qquickflickable::nestedPressDelay()
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(90, 150));
 }
+
+void tst_qquickflickable::filterReplayedPress()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("nestedPressDelay.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+    QQuickViewTestUtil::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(window->rootObject() != 0);
+
+    QQuickFlickable *outer = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(outer != 0);
+
+    QQuickFlickable *inner = window->rootObject()->findChild<QQuickFlickable*>("innerFlickable");
+    QVERIFY(inner != 0);
+
+    QQuickItem *filteringMouseArea = outer->findChild<QQuickItem *>("filteringMouseArea");
+    QVERIFY(filteringMouseArea);
+
+    moveAndPress(window.data(), QPoint(150, 150));
+    // the MouseArea filtering the Flickable is pressed immediately.
+    QCOMPARE(filteringMouseArea->property("pressed").toBool(), true);
+
+    // Some event causes the mouse area to set keepMouseGrab.
+    filteringMouseArea->setKeepMouseGrab(true);
+    QCOMPARE(filteringMouseArea->keepMouseGrab(), true);
+
+    // The inner pressDelay will prevail (50ms, vs. 10sec)
+    // QTRY_VERIFY() has 5sec timeout, so will timeout well within 10sec.
+    QTRY_VERIFY(outer->property("pressed").toBool());
+
+    // The replayed press event isn't delivered to parent items of the
+    // flickable with the press delay, and the state of the parent mouse
+    // area is therefore unaffected.
+    QCOMPARE(filteringMouseArea->property("pressed").toBool(), true);
+    QCOMPARE(filteringMouseArea->keepMouseGrab(), true);
+
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(150, 150));
+}
+
 
 // QTBUG-37316
 void tst_qquickflickable::nestedClickThenFlick()
