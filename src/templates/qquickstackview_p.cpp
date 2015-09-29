@@ -388,6 +388,8 @@ void QQuickStackViewPrivate::ensureTransitioner()
 
 void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
 {
+    ensureTransitioner();
+
     if (exit) {
         exit->removal = true;
         exit->setStatus(QQuickStackView::Deactivating);
@@ -420,6 +422,8 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
 
 void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
 {
+    ensureTransitioner();
+
     if (enter) {
         enter->setStatus(QQuickStackView::Activating);
         enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
@@ -451,6 +455,8 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
 
 void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
 {
+    ensureTransitioner();
+
     if (enter) {
         enter->setStatus(QQuickStackView::Activating);
         enter->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
