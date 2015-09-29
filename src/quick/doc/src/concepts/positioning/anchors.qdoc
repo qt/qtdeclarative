@@ -30,7 +30,7 @@
 \title Positioning with Anchors
 \brief placing items with anchor properties
 
-\target anchor-layout
+\keyword anchor-layout
 In addition to the more traditional \l Grid, \l Row, and \l Column,
 Qt Quick also provides a way to layout items using the concept of \e anchors.
 Each item can be thought of as having a set of 7 invisible "anchor lines":
