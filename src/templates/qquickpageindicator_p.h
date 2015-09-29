@@ -61,6 +61,7 @@ class Q_QUICKTEMPLATES_EXPORT QQuickPageIndicator : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 
@@ -73,6 +74,9 @@ public:
     int currentIndex() const;
     void setCurrentIndex(int index);
 
+    bool isInteractive() const;
+    void setInteractive(bool interactive);
+
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
@@ -82,8 +86,16 @@ public:
 Q_SIGNALS:
     void countChanged();
     void currentIndexChanged();
+    void interactiveChanged();
     void delegateChanged();
     void colorChanged();
+
+protected:
+    void componentComplete() Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickPageIndicator)

@@ -76,4 +76,23 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_interactive() {
+        var control = pageIndicator.createObject(testCase, {count: 5})
+        verify(control)
+
+        verify(!control.interactive)
+        compare(control.currentIndex, 0)
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.currentIndex, 0)
+
+        control.interactive = true
+        verify(control.interactive)
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.currentIndex, 2)
+
+        control.destroy()
+    }
 }
