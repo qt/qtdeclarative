@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,7 +58,7 @@ class QQuickStackElement;
 class QQuickStackAttached;
 class QQuickStackViewPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickStackView : public QQuickControl
+class Q_LABSTEMPLATES_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)
@@ -148,7 +148,7 @@ Q_DECLARE_TYPEINFO(QQuickStackView, Q_COMPLEX_TYPE);
 
 class QQuickStackAttachedPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickStackAttached : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickStackAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

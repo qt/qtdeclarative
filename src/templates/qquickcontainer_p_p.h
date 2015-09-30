@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
+class Q_LABSTEMPLATES_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickContainer)
 

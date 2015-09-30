@@ -38,7 +38,7 @@
 #include <QtCore/qfileselector.h>
 #include <QtCore/qurl.h>
 
-#include <QtQuickTemplates/private/qquickexclusivegroup_p.h>
+#include <QtLabsTemplates/private/qquickexclusivegroup_p.h>
 
 #include "qquicktheme_p.h"
 

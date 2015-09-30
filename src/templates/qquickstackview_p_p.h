@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,8 +48,8 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickstackview_p.h>
-#include <QtQuickTemplates/private/qquickcontrol_p_p.h>
+#include <QtLabsTemplates/private/qquickstackview_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4persistent_p.h>

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -49,7 +49,7 @@
 //
 
 #include <QtCore/qobject.h>
-#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
+#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ class QQuickExclusiveGroupPrivate;
 class QQuickExclusiveGroupAttached;
 class QQuickExclusiveGroupAttachedPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickExclusiveGroup : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickExclusiveGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QObject *current READ current WRITE setCurrent NOTIFY currentChanged)
@@ -90,7 +90,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-class Q_QUICKTEMPLATES_EXPORT QQuickExclusiveGroupAttached : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickExclusiveGroupAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickExclusiveGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)

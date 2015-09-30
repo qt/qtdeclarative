@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontrol_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,7 +56,7 @@ class QQuickFlickable;
 class QQuickScrollBarAttached;
 class QQuickScrollBarPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
+class Q_LABSTEMPLATES_EXPORT QQuickScrollBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
@@ -114,7 +114,7 @@ Q_DECLARE_TYPEINFO(QQuickScrollBar, Q_COMPLEX_TYPE);
 
 class QQuickScrollBarAttachedPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollBar *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)

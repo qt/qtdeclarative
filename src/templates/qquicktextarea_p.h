@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -49,7 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuickTemplates/private/qtquicktemplatesglobal_p.h>
+#include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +57,7 @@ class QQuickText;
 class QQuickTextAreaPrivate;
 class QQuickMouseEvent;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
+class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override

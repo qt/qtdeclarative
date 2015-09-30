@@ -41,7 +41,7 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 import Qt.labs.calendar 1.0
-import QtQuick.Templates 2.0 as T
+import Qt.labs.templates 1.0 as T
 import QtQuick.Layouts 1.0
 import io.qt.examples.calendar 1.0
 

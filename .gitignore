@@ -23,7 +23,7 @@
 
 /tests/auto/snippets/screenshots/*.png
 /src/controls/doc/qtquickcontrols2.tags
-/src/templates/QtQuickTemplates.version
+/src/templates/QtLabsTemplates.version
 
 *.so
 *.so.*

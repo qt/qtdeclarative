@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,14 +48,14 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates/private/qquickcontainer_p.h>
+#include <QtLabsTemplates/private/qquickcontainer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickSwipeViewAttached;
 class QQuickSwipeViewPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
+class Q_LABSTEMPLATES_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
 
@@ -77,7 +77,7 @@ private:
 
 class QQuickSwipeViewAttachedPrivate;
 
-class Q_QUICKTEMPLATES_EXPORT QQuickSwipeViewAttached : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickSwipeViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
