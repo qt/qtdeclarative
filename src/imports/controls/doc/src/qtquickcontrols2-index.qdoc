@@ -39,8 +39,8 @@
     \section2 QtQuick.Controls Module
     \generatelist {qmltypesbymodule QtQuick.Controls}
 
-    \section2 QtQuick.Calendar Module
-    \generatelist {qmltypesbymodule QtQuick.Calendar}
+    \section2 Qt.labs.calendar Module
+    \generatelist {qmltypesbymodule Qt.labs.calendar}
 
     \section1 Differences between Qt Quick Controls
 
@@ -336,7 +336,7 @@
     \list
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
-      \li \l{Qt Quick Calendar 2}
+      \li \l{Qt Labs Calendar}
       \li \l{Qt Quick Controls 2 QML Types}{Qt Quick Controls 2 QML Types}
     \endlist
 */

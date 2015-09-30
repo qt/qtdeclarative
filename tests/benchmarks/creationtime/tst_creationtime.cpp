@@ -115,14 +115,14 @@ void tst_CreationTime::calendar()
 {
     QFETCH(QByteArray, control);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Calendar 2.0;" + control + "{}", QUrl());
+    component.setData("import Qt.labs.calendar 1.0;" + control + "{}", QUrl());
     doBenchmark(&component);
 }
 
 void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Calendar.2");
+    addTestRows(engine.importPathList(), "Qt/labs/calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)

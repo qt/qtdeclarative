@@ -5,7 +5,7 @@
 /lib
 /mkspecs
 
-/examples/quick/calendar/calendar
+/examples/labs/calendar/calendar
 /examples/quick/controls/mirroring/mirroring
 /examples/quick/controls/theme/theme
 /examples/quick/controls/tabs/tabs

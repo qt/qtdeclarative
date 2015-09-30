@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,7 +36,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
-import QtQuick.Calendar 2.0
+import Qt.labs.calendar 1.0
 
 AbstractWeekNumberColumn {
     id: control

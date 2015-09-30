@@ -40,7 +40,7 @@
 
 import QtQuick 2.6
 import QtQuick.Controls 2.0
-import QtQuick.Calendar 2.0
+import Qt.labs.calendar 1.0
 import QtQuick.Templates 2.0 as T
 import QtQuick.Layouts 1.0
 import io.qt.examples.calendar 1.0
@@ -53,7 +53,7 @@ ApplicationWindow {
     minimumHeight: 300
     color: "#f4f4f4"
     visible: true
-    title: "Qt Quick Controls - Calendar Example"
+    title: "Qt Labs Calendar - Example"
 
     SqlEventModel {
         id: eventModel

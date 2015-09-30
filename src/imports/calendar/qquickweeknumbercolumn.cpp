@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -45,22 +45,22 @@ QT_BEGIN_NAMESPACE
     \qmltype WeekNumberColumn
     \inherits Control
     \instantiates QQuickWeekNumberColumn
-    \inqmlmodule QtQuick.Calendar
+    \inqmlmodule Qt.labs.calendar
     \brief A column of week numbers.
 
     WeekNumberColumn presents week numbers in a column. The week numbers
     are calculated for a given \l month and \l year, using the specified
     \l locale.
 
-    \image qtquickcalendar2-weeknumbercolumn.png
-    \snippet weeknumbercolumn/qtquickcalendar2-weeknumbercolumn.qml 1
+    \image qtlabscalendar-weeknumbercolumn.png
+    \snippet weeknumbercolumn/qtlabscalendar-weeknumbercolumn.qml 1
 
     WeekNumberColumn can be used as a standalone control, but it is most
     often used in conjunction with CalendarView. Regardless of the use case,
     positioning of the column is left to the user.
 
-    \image qtquickcalendar2-weeknumbercolumn-layout.png
-    \snippet weeknumbercolumn/qtquickcalendar2-weeknumbercolumn-layout.qml 1
+    \image qtlabscalendar-weeknumbercolumn-layout.png
+    \snippet weeknumbercolumn/qtlabscalendar-weeknumbercolumn-layout.qml 1
 
     The visual appearance of WeekNumberColumn can be changed by
     implementing a \l {delegate}{custom delegate}.
@@ -105,7 +105,7 @@ QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty int QtQuick.Calendar::WeekNumberColumn::month
+    \qmlproperty int Qt.labs.calendar::WeekNumberColumn::month
 
     This property holds the number of the month that the week numbers are calculated for.
 */
@@ -122,7 +122,7 @@ void QQuickWeekNumberColumn::setMonth(int month)
 }
 
 /*!
-    \qmlproperty int QtQuick.Calendar::WeekNumberColumn::year
+    \qmlproperty int Qt.labs.calendar::WeekNumberColumn::year
 
     This property holds the number of the year that the week numbers are calculated for.
 */
@@ -139,7 +139,7 @@ void QQuickWeekNumberColumn::setYear(int year)
 }
 
 /*!
-    \qmlproperty Locale QtQuick.Calendar::WeekNumberColumn::locale
+    \qmlproperty Locale Qt.labs.calendar::WeekNumberColumn::locale
 
     This property holds the locale that is used to calculate the week numbers.
 */
@@ -157,7 +157,7 @@ void QQuickWeekNumberColumn::setLocale(const QLocale &locale)
 
 /*!
     \internal
-    \qmlproperty model QtQuick.Calendar::WeekNumberColumn::source
+    \qmlproperty model Qt.labs.calendar::WeekNumberColumn::source
 
     This property holds the source model that is used as a data model
     for the internal content column.
@@ -178,7 +178,7 @@ void QQuickWeekNumberColumn::setSource(const QVariant &source)
 }
 
 /*!
-    \qmlproperty Component QtQuick.Calendar::WeekNumberColumn::delegate
+    \qmlproperty Component Qt.labs.calendar::WeekNumberColumn::delegate
 
     This property holds the item delegate that visualizes each week number.
 

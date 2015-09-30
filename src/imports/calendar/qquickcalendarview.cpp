@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -47,22 +47,22 @@ QT_BEGIN_NAMESPACE
     \qmltype CalendarView
     \inherits Control
     \instantiates QQuickCalendarView
-    \inqmlmodule QtQuick.Calendar
+    \inqmlmodule Qt.labs.calendar
     \brief A calendar view.
 
     CalendarView presents a calendar month in a grid. The contents
     are calculated for a given \l month and \l year, using the specified
     \l locale.
 
-    \image qtquickcalendar2-calendarview.png
-    \snippet calendarview/qtquickcalendar2-calendarview.qml 1
+    \image qtlabscalendar-calendarview.png
+    \snippet calendarview/qtlabscalendar-calendarview.qml 1
 
     CalendarView can be used as a standalone control, but it is most often
     used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
     of the use case, positioning of the grid is left to the user.
 
-    \image qtquickcalendar2-calendarview-layout.png
-    \snippet calendarview/qtquickcalendar2-calendarview-layout.qml 1
+    \image qtlabscalendar-calendarview-layout.png
+    \snippet calendarview/qtlabscalendar-calendarview-layout.qml 1
 
     The visual appearance of CalendarView can be changed by
     implementing a \l {delegate}{custom delegate}.
@@ -177,7 +177,7 @@ QQuickCalendarView::QQuickCalendarView(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty int QtQuick.Calendar::CalendarView::month
+    \qmlproperty int Qt.labs.calendar::CalendarView::month
 
     This property holds the number of the month.
 */
@@ -194,7 +194,7 @@ void QQuickCalendarView::setMonth(int month)
 }
 
 /*!
-    \qmlproperty int QtQuick.Calendar::CalendarView::year
+    \qmlproperty int Qt.labs.calendar::CalendarView::year
 
     This property holds the number of the year.
 */
@@ -211,7 +211,7 @@ void QQuickCalendarView::setYear(int year)
 }
 
 /*!
-    \qmlproperty Locale QtQuick.Calendar::CalendarView::locale
+    \qmlproperty Locale Qt.labs.calendar::CalendarView::locale
 
     This property holds the locale that is used to calculate the contents.
 */
@@ -229,7 +229,7 @@ void QQuickCalendarView::setLocale(const QLocale &locale)
 
 /*!
     \internal
-    \qmlproperty model QtQuick.Calendar::CalendarView::source
+    \qmlproperty model Qt.labs.calendar::CalendarView::source
 
     This property holds the source model that is used as a data model
     for the internal content column.
@@ -250,7 +250,7 @@ void QQuickCalendarView::setSource(const QVariant &source)
 }
 
 /*!
-    \qmlproperty string QtQuick.Calendar::CalendarView::title
+    \qmlproperty string Qt.labs.calendar::CalendarView::title
 
     This property holds a title for the calendar.
 
@@ -276,7 +276,7 @@ void QQuickCalendarView::setTitle(const QString &title)
 }
 
 /*!
-    \qmlproperty Component QtQuick.Calendar::CalendarView::delegate
+    \qmlproperty Component Qt.labs.calendar::CalendarView::delegate
 
     This property holds the item delegate that visualizes each day.
 

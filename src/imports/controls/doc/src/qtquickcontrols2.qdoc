@@ -46,7 +46,7 @@
     following statement:
 
     \badcode
-    import QtQuick.Calendar 2.0
+    import Qt.labs.calendar 1.0
     \endcode
 
     \section1 QML Types
@@ -54,7 +54,7 @@
     \section2 QtQuick.Controls Module
     \generatelist {qmltypesbymodule QtQuick.Controls}
 
-    \section2 QtQuick.Calendar Module
-    \generatelist {qmltypesbymodule QtQuick.Calendar}
+    \section2 Qt.labs.calendar Module
+    \generatelist {qmltypesbymodule Qt.labs.calendar}
     \noautolist
 */

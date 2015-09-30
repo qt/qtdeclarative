@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -45,21 +45,21 @@ QT_BEGIN_NAMESPACE
     \qmltype DayOfWeekRow
     \inherits Control
     \instantiates QQuickDayOfWeekRow
-    \inqmlmodule QtQuick.Calendar
+    \inqmlmodule Qt.labs.calendar
     \brief A row of names for the days in a week.
 
     DayOfWeekRow presents day of week names in a row. The names of
     the days are ordered and formatted using the specified \l locale.
 
-    \image qtquickcalendar2-dayofweekrow.png
-    \snippet dayofweekrow/qtquickcalendar2-dayofweekrow.qml 1
+    \image qtlabscalendar-dayofweekrow.png
+    \snippet dayofweekrow/qtlabscalendar-dayofweekrow.qml 1
 
     DayOfWeekRow can be used as a standalone control, but it is most
     often used in conjunction with CalendarView. Regardless of the use case,
     positioning of the row is left to the user.
 
-    \image qtquickcalendar2-dayofweekrow-layout.png
-    \snippet dayofweekrow/qtquickcalendar2-dayofweekrow-layout.qml 1
+    \image qtlabscalendar-dayofweekrow-layout.png
+    \snippet dayofweekrow/qtlabscalendar-dayofweekrow-layout.qml 1
 
     The visual appearance of DayOfWeekRow can be changed by
     implementing a \l {delegate}{custom delegate}.
@@ -102,7 +102,7 @@ QQuickDayOfWeekRow::QQuickDayOfWeekRow(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty Locale QtQuick.Calendar::DayOfWeekRow::locale
+    \qmlproperty Locale Qt.labs.calendar::DayOfWeekRow::locale
 
     This property holds the locale that is used to format names of the days in a week.
 */
@@ -120,7 +120,7 @@ void QQuickDayOfWeekRow::setLocale(const QLocale &locale)
 
 /*!
     \internal
-    \qmlproperty model QtQuick.Calendar::DayOfWeekRow::source
+    \qmlproperty model Qt.labs.calendar::DayOfWeekRow::source
 
     This property holds the source model that is used as a data model
     for the internal content row.
@@ -141,7 +141,7 @@ void QQuickDayOfWeekRow::setSource(const QVariant &source)
 }
 
 /*!
-    \qmlproperty Component QtQuick.Calendar::DayOfWeekRow::delegate
+    \qmlproperty Component Qt.labs.calendar::DayOfWeekRow::delegate
 
     This property holds the item delegate that visualizes each day of the week.
 

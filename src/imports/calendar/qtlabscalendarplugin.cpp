@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickCalendar2Plugin: public QQmlExtensionPlugin
+class QtLabsCalendarPlugin: public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -52,14 +52,14 @@ public:
     void registerTypes(const char *uri);
 };
 
-void QtQuickCalendar2Plugin::registerTypes(const char *uri)
+void QtLabsCalendarPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 2, 0, "AbstractCalendarView");
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 2, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 2, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 2, 0, "CalendarModel");
+    qmlRegisterType<QQuickCalendarView>(uri, 1, 0, "AbstractCalendarView");
+    qmlRegisterType<QQuickDayOfWeekRow>(uri, 1, 0, "AbstractDayOfWeekRow");
+    qmlRegisterType<QQuickWeekNumberColumn>(uri, 1, 0, "AbstractWeekNumberColumn");
+    qmlRegisterType<QQuickCalendarModel>(uri, 1, 0, "CalendarModel");
 }
 
 QT_END_NAMESPACE
 
-#include "qtquickcalendar2plugin.moc"
+#include "qtlabscalendarplugin.moc"

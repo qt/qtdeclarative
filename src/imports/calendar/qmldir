@@ -1,6 +1,6 @@
-module QtQuick.Calendar
-plugin qtquickcalendar2plugin
-classname QtQuickCalendar2Plugin
-CalendarView 2.0 CalendarView.qml
-DayOfWeekRow 2.0 DayOfWeekRow.qml
-WeekNumberColumn 2.0 WeekNumberColumn.qml
+module Qt.labs.calendar
+plugin qtlabscalendarplugin
+classname QtLabsCalendarPlugin
+CalendarView 1.0 CalendarView.qml
+DayOfWeekRow 1.0 DayOfWeekRow.qml
+WeekNumberColumn 1.0 WeekNumberColumn.qml

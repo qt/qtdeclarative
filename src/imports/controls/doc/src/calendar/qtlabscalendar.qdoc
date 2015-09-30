@@ -26,24 +26,31 @@
 ****************************************************************************/
 
 /*!
-    \page qtquickcalendar2-index.html
-    \title Qt Quick Calendar 2
+    \qmlmodule Qt.labs.calendar 1.0
+    \title Qt Labs Calendar QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for calendars (Qt Labs Calendar).
 
-    \brief The Qt Quick Calendar 2 module provides a set of UI controls for Qt
-    Quick.
+    The \l{Qt Labs Calendar} module provides QML types for creating
+    calendars. These QML types work in conjunction with \l{Qt Quick} and
+    \l{Qt Quick Controls 2}.
 
-    The Qt Quick Calendar 2 module provides a set of types that can be used
-    to build calendars in Qt Quick.
+    The QML types can be imported into your application using the
+    following import statement in your .qml file:
+
+    \badcode
+    import Qt.labs.calendar 1.0
+    \endcode
 
     \section1 QML Types
 
-    \generatelist {qmltypesbymodule QtQuick.Calendar}
+    \generatelist {qmltypesbymodule Qt.labs.calendar}
 
     \section1 Related Information
 
     \list
-      \li \l{Qt Quick}
-      \li \l{Qt Quick Layouts}
-      \li \l{Qt Quick Controls 2}
+        \li \l {Qt Quick Controls 2 QML Types}
     \endlist
+
+    \noautolist
 */
