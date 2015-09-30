@@ -1434,13 +1434,6 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     Q_Q(QQuickWindow);
 
-#ifndef QT_NO_SHORTCUT
-    // Try looking for a Shortcut before sending key events
-    if (e->type() == QEvent::KeyPress
-        && QGuiApplicationPrivate::instance()->shortcutMap.tryShortcutEvent(q->focusObject(), e))
-        return;
-#endif
-
     if (activeFocusItem)
         q->sendEvent(activeFocusItem, e);
 #ifdef Q_OS_MAC
