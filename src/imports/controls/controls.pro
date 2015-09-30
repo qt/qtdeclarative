@@ -1,20 +1,20 @@
-TARGET  = qtquickcontrols2plugin
-TARGETPATH = QtQuick/Controls.2
-IMPORT_VERSION = 2.0
+TARGET  = qtlabscontrolsplugin
+TARGETPATH = Qt/labs/controls
+IMPORT_VERSION = 1.0
 
 QT += qml quick
 QT += core-private gui-private qml-private quick-private labstemplates-private
 
-QMAKE_DOCS = $$PWD/doc/qtquickcontrols2.qdocconf
+QMAKE_DOCS = $$PWD/doc/qtlabscontrols.qdocconf
 
 OTHER_FILES += \
     qmldir
 
 SOURCES += \
-    $$PWD/qtquickcontrols2plugin.cpp
+    $$PWD/qtlabscontrolsplugin.cpp
 
 RESOURCES += \
-    $$PWD/qtquickcontrols2plugin.qrc
+    $$PWD/qtlabscontrolsplugin.qrc
 
 OTHER_FILES += \
     $$PWD/theme.json

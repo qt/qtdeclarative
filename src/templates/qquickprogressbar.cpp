@@ -43,16 +43,16 @@ QT_BEGIN_NAMESPACE
     \qmltype ProgressBar
     \inherits Control
     \instantiates QQuickProgressBar
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup indicators
     \brief A progress bar control.
 
     ProgressBar indicates the progress of an operation.
 
     \table
-    \row \li \image qtquickcontrols2-progressbar-normal.png
+    \row \li \image qtlabscontrols-progressbar-normal.png
          \li A progress bar in its normal state.
-    \row \li \image qtquickcontrols2-progressbar-disabled.png
+    \row \li \image qtlabscontrols-progressbar-disabled.png
          \li A progress bar that is disabled.
     \endtable
 
@@ -84,7 +84,7 @@ QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::ProgressBar::from
+    \qmlproperty real Qt.labs.controls::ProgressBar::from
 
     This property holds the starting value for the progress. The default value is \c 0.0.
 
@@ -110,7 +110,7 @@ void QQuickProgressBar::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::ProgressBar::to
+    \qmlproperty real Qt.labs.controls::ProgressBar::to
 
     This property holds the end value for the progress. The default value is \c 1.0.
 
@@ -136,7 +136,7 @@ void QQuickProgressBar::setTo(qreal to)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::ProgressBar::value
+    \qmlproperty real Qt.labs.controls::ProgressBar::value
 
     This property holds the progress value. The default value is \c 0.0.
 
@@ -163,7 +163,7 @@ void QQuickProgressBar::setValue(qreal value)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::ProgressBar::position
+    \qmlproperty real Qt.labs.controls::ProgressBar::position
     \readonly
 
     This property holds the logical position of the progress.
@@ -183,7 +183,7 @@ qreal QQuickProgressBar::position() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::ProgressBar::visualPosition
+    \qmlproperty real Qt.labs.controls::ProgressBar::visualPosition
     \readonly
 
     This property holds the visual position of the progress.
@@ -203,7 +203,7 @@ qreal QQuickProgressBar::visualPosition() const
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::ProgressBar::indeterminate
+    \qmlproperty bool Qt.labs.controls::ProgressBar::indeterminate
 
     This property holds whether the progress bar is in an indeterminate mode.
 */
@@ -223,7 +223,7 @@ void QQuickProgressBar::setIndeterminate(bool indeterminate)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::ProgressBar::indicator
+    \qmlproperty Item Qt.labs.controls::ProgressBar::indicator
 
     This property holds the indicator item.
 

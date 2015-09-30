@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ToolBar
     \inherits Frame
     \instantiates QQuickToolBar
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup containers
     \brief A tool bar control.
 

@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TabBar
     \inherits Container
     \instantiates QQuickTabBar
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup tabs
     \brief A tab bar control.
 

@@ -81,7 +81,7 @@ void tst_Gifs::tumblerWrap()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
-    gifRecorder.setQmlFileName("qtquickcontrols2-tumbler-wrap.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-tumbler-wrap.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -154,7 +154,7 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-slider.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -273,7 +273,7 @@ void tst_Gifs::busyIndicator()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-busyindicator.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -302,7 +302,7 @@ void tst_Gifs::switchGif()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-switch.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-switch.qml");
     gifRecorder.setHighQuality(true);
     gifRecorder.setView(&view);
 
@@ -322,7 +322,7 @@ void tst_Gifs::button()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-button.qml");
     gifRecorder.setHighQuality(true);
     gifRecorder.setView(&view);
 
@@ -338,7 +338,7 @@ void tst_Gifs::button()
 
 void tst_Gifs::tabBar()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols2-tabbar.qml");
+    const QString qmlFileName = QStringLiteral("qtlabscontrols-tabbar.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);

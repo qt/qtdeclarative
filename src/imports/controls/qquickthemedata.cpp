@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -64,13 +64,13 @@ bool QQuickThemeData::load(const QString &filePath)
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         qDebug() << file.error();
-        qWarning() << "QQuickTheme: failed to open ':/qtquickcontrols/theme.json': " << qPrintable(file.errorString());
+        qWarning() << "QQuickTheme: failed to open ':/qtlabscontrols/theme.json': " << qPrintable(file.errorString());
         return false;
     } else {
         QJsonParseError error;
         doc = QJsonDocument::fromJson(file.readAll(), &error);
         if (error.error != QJsonParseError::NoError) {
-            qWarning() << "QQuickTheme: failed to parse ':/qtquickcontrols/theme.json': " << qPrintable(error.errorString());
+            qWarning() << "QQuickTheme: failed to parse ':/qtlabscontrols/theme.json': " << qPrintable(error.errorString());
             return false;
         }
     }

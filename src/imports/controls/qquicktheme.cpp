@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Theme
     \inherits QtObject
     \instantiates QQuickThemeAttached
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup utilities
     \brief A theme interface.
 
@@ -59,46 +59,46 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::accentColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::accentColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::backgroundColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::backgroundColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::disabledColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::disabledColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::focusColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::focusColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::frameColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::frameColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::pressColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::pressColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::selectedTextColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::selectedTextColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::selectionColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::selectionColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::shadowColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::shadowColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuick.Controls::Theme::textColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::textColor
 */
 
-Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtquickcontrols/theme.json")))
+Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtlabscontrols/theme.json")))
 
 static QQuickThemeAttached *themeInstance(QQmlEngine *engine)
 {

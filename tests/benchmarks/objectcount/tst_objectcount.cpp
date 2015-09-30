@@ -74,7 +74,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3 as C1; import QtQuick.Controls 2.0 as C2; Row { C1.Button {} C2.Button {} }", QUrl());
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 1.3 as C1; import Qt.labs.controls 1.0 as C2; Row { C1.Button {} C2.Button {} }", QUrl());
     delete component.create();
 }
 
@@ -143,43 +143,43 @@ void tst_ObjectCount::testCount_data()
 
     QTest::newRow("ApplicationWindow")
             << QByteArray("import QtQuick.Controls 1.3; ApplicationWindow { }")
-            << QByteArray("import QtQuick.Controls 2.0; ApplicationWindow { }");
+            << QByteArray("import Qt.labs.controls 1.0; ApplicationWindow { }");
 
     QTest::newRow("BusyIndicator")
             << QByteArray("import QtQuick.Controls 1.3; BusyIndicator { }")
-            << QByteArray("import QtQuick.Controls 2.0; BusyIndicator { }");
+            << QByteArray("import Qt.labs.controls 1.0; BusyIndicator { }");
 
     QTest::newRow("Button")
             << QByteArray("import QtQuick.Controls 1.3; Button { }")
-            << QByteArray("import QtQuick.Controls 2.0; Button { }");
+            << QByteArray("import Qt.labs.controls 1.0; Button { }");
 
     QTest::newRow("CheckBox")
             << QByteArray("import QtQuick.Controls 1.3; CheckBox { }")
-            << QByteArray("import QtQuick.Controls 2.0; CheckBox { }");
+            << QByteArray("import Qt.labs.controls 1.0; CheckBox { }");
 
     QTest::newRow("Frame")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; Frame { }");
+            << QByteArray("import Qt.labs.controls 1.0; Frame { }");
 
     QTest::newRow("GroupBox")
             << QByteArray("import QtQuick.Controls 1.3; GroupBox { }")
-            << QByteArray("import QtQuick.Controls 2.0; GroupBox { }");
+            << QByteArray("import Qt.labs.controls 1.0; GroupBox { }");
 
     QTest::newRow("Label")
             << QByteArray("import QtQuick.Controls 1.3; Label { }")
-            << QByteArray("import QtQuick.Controls 2.0; Label { }");
+            << QByteArray("import Qt.labs.controls 1.0; Label { }");
 
     QTest::newRow("PageIndicator")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; PageIndicator { }");
+            << QByteArray("import Qt.labs.controls 1.0; PageIndicator { }");
 
     QTest::newRow("ProgressBar")
             << QByteArray("import QtQuick.Controls 1.3; ProgressBar { }")
-            << QByteArray("import QtQuick.Controls 2.0; ProgressBar { }");
+            << QByteArray("import Qt.labs.controls 1.0; ProgressBar { }");
 
     QTest::newRow("RadioButton")
             << QByteArray("import QtQuick.Controls 1.3; RadioButton { }")
-            << QByteArray("import QtQuick.Controls 2.0; RadioButton { }");
+            << QByteArray("import Qt.labs.controls 1.0; RadioButton { }");
 
     QTest::newRow("ScrollView")
             << QByteArray("import QtQuick.Controls 1.3; ScrollView { }")
@@ -187,47 +187,47 @@ void tst_ObjectCount::testCount_data()
 
     QTest::newRow("ScrollIndicator")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; ScrollIndicator { }");
+            << QByteArray("import Qt.labs.controls 1.0; ScrollIndicator { }");
 
     QTest::newRow("ScrollBar")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; ScrollBar { }");
+            << QByteArray("import Qt.labs.controls 1.0; ScrollBar { }");
 
     QTest::newRow("Slider")
             << QByteArray("import QtQuick.Controls 1.3; Slider { }")
-            << QByteArray("import QtQuick.Controls 2.0; Slider { }");
+            << QByteArray("import Qt.labs.controls 1.0; Slider { }");
 
     QTest::newRow("StackView")
             << QByteArray("import QtQuick.Controls 1.3; StackView { }")
-            << QByteArray("import QtQuick.Controls 2.0; StackView { }");
+            << QByteArray("import Qt.labs.controls 1.0; StackView { }");
 
     QTest::newRow("Switch")
             << QByteArray("import QtQuick.Controls 1.3; Switch { }")
-            << QByteArray("import QtQuick.Controls 2.0; Switch { }");
+            << QByteArray("import Qt.labs.controls 1.0; Switch { }");
 
     QTest::newRow("TabBar")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; TabBar { }");
+            << QByteArray("import Qt.labs.controls 1.0; TabBar { }");
 
     QTest::newRow("TabButton")
             << QByteArray()
-            << QByteArray("import QtQuick.Controls 2.0; TabButton { }");
+            << QByteArray("import Qt.labs.controls 1.0; TabButton { }");
 
     QTest::newRow("TextArea")
             << QByteArray("import QtQuick.Controls 1.3; TextArea { }")
-            << QByteArray("import QtQuick.Controls 2.0; TextArea { }");
+            << QByteArray("import Qt.labs.controls 1.0; TextArea { }");
 
     QTest::newRow("TextField")
             << QByteArray("import QtQuick.Controls 1.3; TextField { }")
-            << QByteArray("import QtQuick.Controls 2.0; TextField { }");
+            << QByteArray("import Qt.labs.controls 1.0; TextField { }");
 
     QTest::newRow("ToolBar")
             << QByteArray("import QtQuick.Controls 1.3; ToolBar { }")
-            << QByteArray("import QtQuick.Controls 2.0; ToolBar { }");
+            << QByteArray("import Qt.labs.controls 1.0; ToolBar { }");
 
     QTest::newRow("ToolButton")
             << QByteArray("import QtQuick.Controls 1.3; ToolButton { }")
-            << QByteArray("import QtQuick.Controls 2.0; ToolButton { }");
+            << QByteArray("import Qt.labs.controls 1.0; ToolButton { }");
 }
 
 QTEST_MAIN(tst_ObjectCount)

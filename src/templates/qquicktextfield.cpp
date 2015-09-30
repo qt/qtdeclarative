@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextField
     \inherits TextInput
     \instantiates QQuickTextField
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup editors
     \brief A single line text input control.
 
@@ -63,11 +63,11 @@ QT_BEGIN_NAMESPACE
     with a \l placeholder text functionality, and adds decoration.
 
     \table
-    \row \li \image qtquickcontrols2-textfield-normal.png
+    \row \li \image qtlabscontrols-textfield-normal.png
          \li A text field in its normal state.
-    \row \li \image qtquickcontrols2-textfield-focused.png
+    \row \li \image qtlabscontrols-textfield-focused.png
          \li A text field that has active focus.
-    \row \li \image qtquickcontrols2-textfield-disabled.png
+    \row \li \image qtlabscontrols-textfield-disabled.png
          \li A text field that is disabled.
     \endtable
 
@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal QtQuick.Controls::TextField::pressAndHold(MouseEvent mouse)
+    \qmlsignal Qt.labs.controls::TextField::pressAndHold(MouseEvent mouse)
 
     This signal is emitted when there is a long press (the delay depends on the platform plugin).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -200,7 +200,7 @@ void QQuickTextField::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::TextField::background
+    \qmlproperty Item Qt.labs.controls::TextField::background
 
     This property holds the background item.
 
@@ -234,7 +234,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text QtQuick.Controls::TextField::placeholder
+    \qmlproperty Text Qt.labs.controls::TextField::placeholder
 
     This property holds the placeholder text item.
 

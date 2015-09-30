@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ExclusiveGroup
     \inherits QtObject
     \instantiates QQuickExclusiveGroup
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup utilities
     \brief An exclusive group of checkable controls.
 
@@ -221,7 +221,7 @@ QQuickExclusiveGroupAttached *QQuickExclusiveGroup::qmlAttachedProperties(QObjec
 }
 
 /*!
-    \qmlproperty QtObject QtQuick.Controls::ExclusiveGroup::current
+    \qmlproperty QtObject Qt.labs.controls::ExclusiveGroup::current
 
     This property holds the currently selected object or \c null if there is none.
 
@@ -247,7 +247,7 @@ void QQuickExclusiveGroup::setCurrent(QObject *current)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::ExclusiveGroup::checkables
+    \qmlproperty list<Object> Qt.labs.controls::ExclusiveGroup::checkables
     \default
 
     This property holds the list of checkables.
@@ -284,7 +284,7 @@ QQmlListProperty<QObject> QQuickExclusiveGroup::checkables()
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::ExclusiveGroup::addCheckable(QtObject object)
+    \qmlmethod void Qt.labs.controls::ExclusiveGroup::addCheckable(QtObject object)
 
     Adds an \a object to the exclusive group.
 
@@ -316,7 +316,7 @@ void QQuickExclusiveGroup::addCheckable(QObject *object)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::ExclusiveGroup::removeCheckable(QtObject object)
+    \qmlmethod void Qt.labs.controls::ExclusiveGroup::removeCheckable(QtObject object)
 
     Removes an \a object from the exclusive group.
 
@@ -359,7 +359,7 @@ QQuickExclusiveGroupAttached::QQuickExclusiveGroupAttached(QObject *parent) :
 }
 
 /*!
-    \qmlattachedproperty ExclusiveGroup QtQuick.Controls::ExclusiveGroup::group
+    \qmlattachedproperty ExclusiveGroup Qt.labs.controls::ExclusiveGroup::group
 
     This property attaches a checkable control or object to an exclusive group.
 

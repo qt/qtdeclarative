@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \qmltype RadioButton
     \inherits Checkable
     \instantiates QQuickRadioButton
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup buttons
     \brief A radio button control.
 
@@ -51,13 +51,13 @@ QT_BEGIN_NAMESPACE
     from a set of options.
 
     \table
-    \row \li \image qtquickcontrols2-radiobutton-normal.png
+    \row \li \image qtlabscontrols-radiobutton-normal.png
          \li A radio button in its normal state.
-    \row \li \image qtquickcontrols2-radiobutton-checked.png
+    \row \li \image qtlabscontrols-radiobutton-checked.png
          \li A radio button that is checked.
-    \row \li \image qtquickcontrols2-radiobutton-focused.png
+    \row \li \image qtlabscontrols-radiobutton-focused.png
          \li A radio button that has active focus.
-    \row \li \image qtquickcontrols2-radiobutton-disabled.png
+    \row \li \image qtlabscontrols-radiobutton-disabled.png
          \li A radio button that is disabled.
     \endtable
 

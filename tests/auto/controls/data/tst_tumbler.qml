@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 TestCase {
@@ -58,7 +58,7 @@ TestCase {
     readonly property real defaultListViewTumblerOffset: -defaultImplicitDelegateHeight
 
     function init() {
-        tumbler = Qt.createQmlObject("import QtQuick.Controls 2.0; Tumbler { }", testCase, "");
+        tumbler = Qt.createQmlObject("import Qt.labs.controls 1.0; Tumbler { }", testCase, "");
         verify(tumbler, "Tumbler: failed to create an instance");
         compare(tumbler.contentItem.parent, tumbler);
     }

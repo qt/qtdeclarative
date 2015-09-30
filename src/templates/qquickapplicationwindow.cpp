@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ApplicationWindow
     \inherits Window
     \instantiates QQuickApplicationWindow
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup application
     \brief Provides a top-level application window.
 
@@ -130,7 +130,7 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::header
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::header
 
     A header item for the window, for example a title bar, menu or tool-bar.
     By default this property is empty, no header will be shown.
@@ -163,7 +163,7 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::footer
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::footer
 
     A footer item for the window, for example a status bar or menu.
     By default this property is empty, no footer will be shown.

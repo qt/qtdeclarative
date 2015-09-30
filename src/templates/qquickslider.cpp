@@ -45,20 +45,20 @@ QT_BEGIN_NAMESPACE
     \qmltype Slider
     \inherits Control
     \instantiates QQuickSlider
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup sliders
     \brief A slider control.
 
-    \image qtquickcontrols2-slider.gif
+    \image qtlabscontrols-slider.gif
 
     Slider is used to select a value by sliding a handle along a track.
 
     \table
-    \row \li \image qtquickcontrols2-slider-normal.png
+    \row \li \image qtlabscontrols-slider-normal.png
          \li A slider in its normal state.
-    \row \li \image qtquickcontrols2-slider-focused.png
+    \row \li \image qtlabscontrols-slider-focused.png
          \li A slider that has active focus.
-    \row \li \image qtquickcontrols2-slider-disabled.png
+    \row \li \image qtlabscontrols-slider-disabled.png
          \li A slider that is disabled.
     \endtable
 
@@ -162,7 +162,7 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::from
+    \qmlproperty real Qt.labs.controls::Slider::from
 
     This property holds the starting value for the range. The default value is \c 0.0.
 
@@ -188,7 +188,7 @@ void QQuickSlider::setFrom(qreal from)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::to
+    \qmlproperty real Qt.labs.controls::Slider::to
 
     This property holds the end value for the range. The default value is \c 1.0.
 
@@ -214,7 +214,7 @@ void QQuickSlider::setTo(qreal to)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::value
+    \qmlproperty real Qt.labs.controls::Slider::value
 
     This property holds the value in the range \c from - \c to. The default value is \c 0.0.
 
@@ -244,7 +244,7 @@ void QQuickSlider::setValue(qreal value)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::position
+    \qmlproperty real Qt.labs.controls::Slider::position
 
     This property holds the logical position of the handle.
 
@@ -262,7 +262,7 @@ qreal QQuickSlider::position() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::visualPosition
+    \qmlproperty real Qt.labs.controls::Slider::visualPosition
     \readonly
 
     This property holds the visual position of the handle.
@@ -283,7 +283,7 @@ qreal QQuickSlider::visualPosition() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Slider::stepSize
+    \qmlproperty real Qt.labs.controls::Slider::stepSize
 
     This property holds the step size. The default value is \c 0.0.
 
@@ -305,7 +305,7 @@ void QQuickSlider::setStepSize(qreal step)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.Controls::Slider::snapMode
+    \qmlproperty enumeration Qt.labs.controls::Slider::snapMode
 
     This property holds the snap mode.
 
@@ -334,7 +334,7 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::Slider::pressed
+    \qmlproperty bool Qt.labs.controls::Slider::pressed
 
     This property holds whether the slider is pressed.
 */
@@ -355,7 +355,7 @@ void QQuickSlider::setPressed(bool pressed)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.Controls::Slider::orientation
+    \qmlproperty enumeration Qt.labs.controls::Slider::orientation
 
     This property holds the orientation.
 
@@ -381,7 +381,7 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Slider::handle
+    \qmlproperty Item Qt.labs.controls::Slider::handle
 
     This property holds the handle item.
 
@@ -406,7 +406,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Slider::track
+    \qmlproperty Item Qt.labs.controls::Slider::track
 
     This property holds the track item.
 
@@ -431,7 +431,7 @@ void QQuickSlider::setTrack(QQuickItem *track)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Slider::increase()
+    \qmlmethod void Qt.labs.controls::Slider::increase()
 
     Increases the value by \l stepSize or \c 0.1 if stepSize is not defined.
 
@@ -445,7 +445,7 @@ void QQuickSlider::increase()
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Slider::decrease()
+    \qmlmethod void Qt.labs.controls::Slider::decrease()
 
     Decreases the value by \l stepSize or \c 0.1 if stepSize is not defined.
 

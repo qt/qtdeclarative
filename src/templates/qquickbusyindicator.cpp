@@ -43,11 +43,11 @@ QT_BEGIN_NAMESPACE
     \qmltype BusyIndicator
     \inherits Control
     \instantiates QQuickBusyIndicator
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup indicators
     \brief A busy indicator.
 
-    \image qtquickcontrols2-busyindicator.gif
+    \image qtlabscontrols-busyindicator.gif
 
     The busy indicator should be used to indicate activity while content is
     being loaded or the UI is blocked waiting for a resource to become available.
@@ -83,7 +83,7 @@ QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::BusyIndicator::running
+    \qmlproperty bool Qt.labs.controls::BusyIndicator::running
 
     This property holds whether the busy indicator is currently indicating
     activity.
@@ -109,7 +109,7 @@ void QQuickBusyIndicator::setRunning(bool running)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::BusyIndicator::indicator
+    \qmlproperty Item Qt.labs.controls::BusyIndicator::indicator
 
     This property holds the \l[QML]{Item}, which graphically implements the busy indicator.
 */

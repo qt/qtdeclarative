@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \qmltype CheckBox
     \inherits Checkable
     \instantiates QQuickCheckBox
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup buttons
     \brief A check box control.
 
@@ -51,13 +51,13 @@ QT_BEGIN_NAMESPACE
     options from a set of options.
 
     \table
-    \row \li \image qtquickcontrols2-checkbox-normal.png
+    \row \li \image qtlabscontrols-checkbox-normal.png
          \li A check box in its normal state.
-    \row \li \image qtquickcontrols2-checkbox-checked.png
+    \row \li \image qtlabscontrols-checkbox-checked.png
          \li A check box that is checked.
-    \row \li \image qtquickcontrols2-checkbox-focused.png
+    \row \li \image qtlabscontrols-checkbox-focused.png
          \li A check box that has active focus.
-    \row \li \image qtquickcontrols2-checkbox-disabled.png
+    \row \li \image qtlabscontrols-checkbox-disabled.png
          \li A check box that is disabled.
     \endtable
 

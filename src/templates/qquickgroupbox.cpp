@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype GroupBox
     \inherits Frame
     \instantiates QQuickGroupBox
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup containers
     \brief A group box control.
 
@@ -88,7 +88,7 @@ QQuickGroupBox::QQuickGroupBox(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty string QtQuick.Controls::GroupBox::title
+    \qmlproperty string Qt.labs.controls::GroupBox::title
 
     This property holds the title.
 */
@@ -108,7 +108,7 @@ void QQuickGroupBox::setTitle(const QString &title)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::GroupBox::label
+    \qmlproperty Item Qt.labs.controls::GroupBox::label
 
     This property holds the label item that visualizes \l title.
 

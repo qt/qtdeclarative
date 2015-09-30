@@ -43,11 +43,11 @@ QT_BEGIN_NAMESPACE
     \qmltype Button
     \inherits AbstractButton
     \instantiates QQuickButton
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup buttons
     \brief A button control.
 
-    \image qtquickcontrols2-button.gif
+    \image qtlabscontrols-button.gif
 
     Button presents a push-button control that can be pushed or clicked by
     the user. Buttons are normally used to perform an action, or to answer
@@ -55,13 +55,13 @@ QT_BEGIN_NAMESPACE
     \e Yes, \e No, and \e Help.
 
     \table
-    \row \li \image qtquickcontrols2-button-normal.png
+    \row \li \image qtlabscontrols-button-normal.png
          \li A button in its normal state.
-    \row \li \image qtquickcontrols2-button-pressed.png
+    \row \li \image qtlabscontrols-button-pressed.png
          \li A button that is pressed.
-    \row \li \image qtquickcontrols2-button-focused.png
+    \row \li \image qtlabscontrols-button-focused.png
          \li A button that has active focus.
-    \row \li \image qtquickcontrols2-button-disabled.png
+    \row \li \image qtlabscontrols-button-disabled.png
          \li A button that is disabled.
     \endtable
 

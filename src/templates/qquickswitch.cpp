@@ -45,23 +45,23 @@ QT_BEGIN_NAMESPACE
     \qmltype Switch
     \inherits Checkable
     \instantiates QQuickSwitch
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup buttons
     \brief A switch control.
 
-    \image qtquickcontrols2-switch.gif
+    \image qtlabscontrols-switch.gif
 
     Switch is an option button that can be dragged or toggled on (checked) or
     off (unchecked). Switches are typically used to select between two states.
 
     \table
-    \row \li \image qtquickcontrols2-switch-normal.png
+    \row \li \image qtlabscontrols-switch-normal.png
          \li A switch in its normal state.
-    \row \li \image qtquickcontrols2-switch-checked.png
+    \row \li \image qtlabscontrols-switch-checked.png
          \li A switch that is checked.
-    \row \li \image qtquickcontrols2-switch-focused.png
+    \row \li \image qtlabscontrols-switch-focused.png
          \li A switch that has active focus.
-    \row \li \image qtquickcontrols2-switch-disabled.png
+    \row \li \image qtlabscontrols-switch-disabled.png
          \li A switch that is disabled.
     \endtable
 
@@ -107,7 +107,7 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Switch::position
+    \qmlproperty real Qt.labs.controls::Switch::position
 
     This property holds the logical position of the thumb indicator.
 
@@ -136,7 +136,7 @@ void QQuickSwitch::setPosition(qreal position)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Switch::visualPosition
+    \qmlproperty real Qt.labs.controls::Switch::visualPosition
 
     This property holds the visual position of the thumb indicator.
 

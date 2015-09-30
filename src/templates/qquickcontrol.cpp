@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Control
     \inherits Item
     \instantiates QQuickControl
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \brief A user interface control.
 
     Control is the base type of user interface controls.
@@ -335,7 +335,7 @@ void QQuickControl::resetFont()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::availableWidth
+    \qmlproperty real Qt.labs.controls::Control::availableWidth
 
     This property holds the width available after deducting horizontal padding.
 
@@ -347,7 +347,7 @@ qreal QQuickControl::availableWidth() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::availableHeight
+    \qmlproperty real Qt.labs.controls::Control::availableHeight
 
     This property holds the height available after deducting vertical padding.
 
@@ -359,7 +359,7 @@ qreal QQuickControl::availableHeight() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::padding
+    \qmlproperty real Qt.labs.controls::Control::padding
 
     This property holds the default padding.
 
@@ -401,7 +401,7 @@ void QQuickControl::resetPadding()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::topPadding
+    \qmlproperty real Qt.labs.controls::Control::topPadding
 
     This property holds the top padding.
 
@@ -428,7 +428,7 @@ void QQuickControl::resetTopPadding()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::leftPadding
+    \qmlproperty real Qt.labs.controls::Control::leftPadding
 
     This property holds the left padding.
 
@@ -455,7 +455,7 @@ void QQuickControl::resetLeftPadding()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::rightPadding
+    \qmlproperty real Qt.labs.controls::Control::rightPadding
 
     This property holds the right padding.
 
@@ -482,7 +482,7 @@ void QQuickControl::resetRightPadding()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::bottomPadding
+    \qmlproperty real Qt.labs.controls::Control::bottomPadding
 
     This property holds the bottom padding.
 
@@ -509,7 +509,7 @@ void QQuickControl::resetBottomPadding()
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::Control::spacing
+    \qmlproperty real Qt.labs.controls::Control::spacing
 
     This property holds the spacing.
 */
@@ -534,7 +534,7 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.Controls::Control::layoutDirection
+    \qmlproperty enumeration Qt.labs.controls::Control::layoutDirection
 
     This property holds the layout direction of the control.
 
@@ -555,7 +555,7 @@ Qt::LayoutDirection QQuickControl::layoutDirection() const
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.Controls::Control::effectiveLayoutDirection
+    \qmlproperty enumeration Qt.labs.controls::Control::effectiveLayoutDirection
     \readonly
 
     This property holds the effective layout direction of the control.
@@ -585,7 +585,7 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::Control::mirrored
+    \qmlproperty bool Qt.labs.controls::Control::mirrored
     \readonly
 
     This property holds whether the control is mirrored.
@@ -601,7 +601,7 @@ bool QQuickControl::isMirrored() const
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Control::background
+    \qmlproperty Item Qt.labs.controls::Control::background
 
     This property holds the background item.
 
@@ -633,7 +633,7 @@ void QQuickControl::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Control::contentItem
+    \qmlproperty Item Qt.labs.controls::Control::contentItem
 
     TODO
 */

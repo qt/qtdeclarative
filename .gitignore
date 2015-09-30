@@ -6,10 +6,10 @@
 /mkspecs
 
 /examples/labs/calendar/calendar
-/examples/quick/controls/mirroring/mirroring
-/examples/quick/controls/theme/theme
-/examples/quick/controls/tabs/tabs
-/examples/quick/controls/drawer/drawer
+/examples/labs/controls/mirroring/mirroring
+/examples/labs/controls/theme/theme
+/examples/labs/controls/tabs/tabs
+/examples/labs/controls/drawer/drawer
 
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/activeFocusOnTab/tst_activeFocusOnTab

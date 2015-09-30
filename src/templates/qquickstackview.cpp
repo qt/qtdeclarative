@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \qmltype StackView
     \inherits Control
     \instantiates QQuickStackView
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup navigation
     \brief Provides a stack-based navigation model.
 
@@ -284,7 +284,7 @@ QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::StackView::busy
+    \qmlproperty bool Qt.labs.controls::StackView::busy
     \readonly
     This property holds whether a transition is running.
 */
@@ -295,7 +295,7 @@ bool QQuickStackView::busy() const
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::StackView::depth
+    \qmlproperty int Qt.labs.controls::StackView::depth
     \readonly
     This property holds the number of items currently pushed onto the stack.
 */
@@ -306,7 +306,7 @@ int QQuickStackView::depth() const
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::StackView::currentItem
+    \qmlproperty Item Qt.labs.controls::StackView::currentItem
     \readonly
     This property holds the current top-most item in the stack.
 */
@@ -317,7 +317,7 @@ QQuickItem *QQuickStackView::currentItem() const
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::get(index, behavior = DontLoad)
+    \qmlmethod Item Qt.labs.controls::StackView::get(index, behavior = DontLoad)
 
     Supported behavior values:
     \list
@@ -340,7 +340,7 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::find(callback, behavior = DontLoad)
+    \qmlmethod Item Qt.labs.controls::StackView::find(callback, behavior = DontLoad)
 
     Supported behavior values:
     \list
@@ -373,7 +373,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation)
+    \qmlmethod Item Qt.labs.controls::StackView::push(item, properties, operation)
 
     TODO
 */
@@ -421,7 +421,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::pop(item = null, operation = Transition)
+    \qmlmethod Item Qt.labs.controls::StackView::pop(item = null, operation = Transition)
 
     TODO
 */
@@ -483,7 +483,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::replace(item, properties, operation = Transition)
+    \qmlmethod Item Qt.labs.controls::StackView::replace(item, properties, operation = Transition)
 
     TODO
 */
@@ -540,7 +540,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::StackView::clear()
+    \qmlmethod Item Qt.labs.controls::StackView::clear()
 
     TODO
 */
@@ -554,7 +554,7 @@ void QQuickStackView::clear()
 }
 
 /*!
-    \qmlproperty var QtQuick.Controls::StackView::initialItem
+    \qmlproperty var Qt.labs.controls::StackView::initialItem
 
     This property holds the initial item.
 
@@ -573,7 +573,7 @@ void QQuickStackView::setInitialItem(const QVariant &item)
 }
 
 /*!
-    \qmlproperty Transition QtQuick.Controls::StackView::popEnter
+    \qmlproperty Transition Qt.labs.controls::StackView::popEnter
 
     TODO
 */
@@ -596,7 +596,7 @@ void QQuickStackView::setPopEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition QtQuick.Controls::StackView::popExit
+    \qmlproperty Transition Qt.labs.controls::StackView::popExit
 
     TODO
 */
@@ -619,7 +619,7 @@ void QQuickStackView::setPopExit(QQuickTransition *exit)
 }
 
 /*!
-    \qmlproperty Transition QtQuick.Controls::StackView::pushEnter
+    \qmlproperty Transition Qt.labs.controls::StackView::pushEnter
 
     TODO
 */
@@ -642,7 +642,7 @@ void QQuickStackView::setPushEnter(QQuickTransition *enter)
 }
 
 /*!
-    \qmlproperty Transition QtQuick.Controls::StackView::pushExit
+    \qmlproperty Transition Qt.labs.controls::StackView::pushExit
 
     TODO
 */
@@ -742,7 +742,7 @@ QQuickStackAttached::QQuickStackAttached(QQuickItem *parent) :
 }
 
 /*!
-    \qmlattachedproperty int QtQuick.Controls::StackView::index
+    \qmlattachedproperty int Qt.labs.controls::StackView::index
 
     TODO
 */
@@ -755,7 +755,7 @@ int QQuickStackAttached::index() const
 }
 
 /*!
-    \qmlattachedproperty StackView QtQuick.Controls::StackView::view
+    \qmlattachedproperty StackView Qt.labs.controls::StackView::view
 
     TODO
 */
@@ -768,7 +768,7 @@ QQuickStackView *QQuickStackAttached::view() const
 }
 
 /*!
-    \qmlattachedproperty enumeration QtQuick.Controls::StackView::status
+    \qmlattachedproperty enumeration Qt.labs.controls::StackView::status
 
     TODO
 */

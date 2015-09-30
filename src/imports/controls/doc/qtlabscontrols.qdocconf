@@ -1,0 +1,52 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtLabsControls
+description             = Qt Labs Controls Reference Documentation
+version                 = $QT_VERSION
+
+qhp.projects            = QtLabsControls
+
+qhp.QtLabsControls.file          = qtlabscontrols.qhp
+qhp.QtLabsControls.namespace     = org.qt-project.qtlabscontrols.$QT_VERSION_TAG
+qhp.QtLabsControls.virtualFolder = qtlabscontrols
+qhp.QtLabsControls.indexTitle    = Qt Labs Controls
+qhp.QtLabsControls.indexRoot     =
+
+qhp.QtLabsControls.filterAttributes                  = qtlabscontrols $QT_VERSION qtrefdoc
+qhp.QtLabsControls.customFilters.Qt.name             = QtLabsControls $QT_VERSION
+qhp.QtLabsControls.customFilters.Qt.filterAttributes = qtlabscontrols $QT_VERSION
+
+qhp.QtLabsControls.subprojects = qtlabscontrolsqmltypes
+
+qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.title      = Controls QML Types
+qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.indexTitle = Qt Labs Controls QML Types
+qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.selectors  = qmlclass
+qhp.QtLabsControls.subprojects.qtlabscontrolsqmltypes.sortPages  = true
+
+depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquickcontrols
+
+# Specify the install path under QT_INSTALL_EXAMPLES
+# Note: paths passed to \example command must contain the parent directory, e.g.
+# \example controls/tabs
+exampledirs += ../../../../examples/quick \
+               ../ \
+               ../../../templates \
+               ../../calendar \
+               ../../../../tests/auto/controls/data \
+               ../../../../tests/auto/snippets/data \
+               snippets
+
+examplesinstallpath = quick
+
+headerdirs += ../../../templates \
+              ../../calendar \
+
+sourcedirs += ../../../templates \
+              ../../calendar
+
+imagedirs += images
+
+navigation.landingpage  = "Qt Labs Controls"
+navigation.qmltypespage = "Qt Labs Controls QML Types"
+
+tagfile                 = qtlabscontrols.tags

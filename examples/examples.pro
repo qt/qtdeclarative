@@ -1,4 +1,3 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    labs \
-    quick
+    labs

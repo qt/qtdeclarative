@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TabButton
     \inherits Checkable
     \instantiates QQuickTabButton
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup tabs
     \brief A tab button control.
 

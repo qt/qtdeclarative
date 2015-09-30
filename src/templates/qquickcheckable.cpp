@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Checkable
     \inherits AbstractButton
     \instantiates QQuickCheckable
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \qmlabstract
     \internal
 */
@@ -64,7 +64,7 @@ QQuickCheckable::QQuickCheckable(QQuickCheckablePrivate &dd, QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty bool QtQuick.Controls::Checkable::checked
+    \qmlproperty bool Qt.labs.controls::Checkable::checked
 
     This property holds whether the control is checked.
 */
@@ -97,7 +97,7 @@ void QQuickCheckable::setExclusive(bool exclusive)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Checkable::indicator
+    \qmlproperty Item Qt.labs.controls::Checkable::indicator
 
     This property holds the indicator item.
 */
@@ -123,7 +123,7 @@ void QQuickCheckable::setIndicator(QQuickItem *indicator)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Checkable::toggle()
+    \qmlmethod void Qt.labs.controls::Checkable::toggle()
 
     Toggles the checked state of the control.
 */

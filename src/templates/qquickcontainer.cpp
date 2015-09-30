@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Container
     \inherits Control
     \instantiates QQuickContainer
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \qmlabstract
     \internal
 */
@@ -247,7 +247,7 @@ QQuickContainer::~QQuickContainer()
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::Container::count
+    \qmlproperty int Qt.labs.controls::Container::count
     \readonly
 
     This property holds the number of items.
@@ -259,7 +259,7 @@ int QQuickContainer::count() const
 }
 
 /*!
-    \qmlmethod Item QtQuick.Controls::Container::itemAt(int index)
+    \qmlmethod Item Qt.labs.controls::Container::itemAt(int index)
 
     Returns the item at \a index, or \c null if it does not exist.
 */
@@ -270,7 +270,7 @@ QQuickItem *QQuickContainer::itemAt(int index) const
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Container::addItem(Item item)
+    \qmlmethod void Qt.labs.controls::Container::addItem(Item item)
 
     Adds an \a item.
 */
@@ -281,7 +281,7 @@ void QQuickContainer::addItem(QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Container::insertItem(int index, Item item)
+    \qmlmethod void Qt.labs.controls::Container::insertItem(int index, Item item)
 
     Inserts an \a item at \a index.
 */
@@ -306,7 +306,7 @@ void QQuickContainer::insertItem(int index, QQuickItem *item)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Container::moveItem(int from, int to)
+    \qmlmethod void Qt.labs.controls::Container::moveItem(int from, int to)
 
     Moves an item \a from one index \a to another.
 */
@@ -324,7 +324,7 @@ void QQuickContainer::moveItem(int from, int to)
 }
 
 /*!
-    \qmlmethod void QtQuick.Controls::Container::removeItem(int index)
+    \qmlmethod void Qt.labs.controls::Container::removeItem(int index)
 
     Removes an item at \a index.
 
@@ -343,7 +343,7 @@ void QQuickContainer::removeItem(int index)
 }
 
 /*!
-    \qmlproperty model QtQuick.Controls::Container::contentModel
+    \qmlproperty model Qt.labs.controls::Container::contentModel
     \readonly
 
     This property holds the content model of items.
@@ -355,7 +355,7 @@ QVariant QQuickContainer::contentModel() const
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::Container::contentData
+    \qmlproperty list<Object> Qt.labs.controls::Container::contentData
     \default
 
     This property holds the list of content data.
@@ -373,7 +373,7 @@ QQmlListProperty<QObject> QQuickContainer::contentData()
 }
 
 /*!
-    \qmlproperty list<Item> QtQuick.Controls::Container::contentChildren
+    \qmlproperty list<Item> Qt.labs.controls::Container::contentChildren
 
     This property holds the list of content children.
 
@@ -390,7 +390,7 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::Container::currentIndex
+    \qmlproperty int Qt.labs.controls::Container::currentIndex
 
     TODO
 */
@@ -411,7 +411,7 @@ void QQuickContainer::setCurrentIndex(int index)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Container::currentItem
+    \qmlproperty Item Qt.labs.controls::Container::currentItem
 
     TODO
 */

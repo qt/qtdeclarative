@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \qmltype SwipeView
     \inherits Container
     \instantiates QQuickSwipeView
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup navigation
     \brief A swipe view control.
 
@@ -149,7 +149,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 }
 
 /*!
-    \qmlattachedproperty int QtQuick.Controls::SwipeView::index
+    \qmlattachedproperty int Qt.labs.controls::SwipeView::index
 
     This attached property holds the index of each child item in the SwipeView.
 
@@ -157,7 +157,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty bool QtQuick.Controls::SwipeView::isCurrentItem
+    \qmlattachedproperty bool Qt.labs.controls::SwipeView::isCurrentItem
 
     This attached property is \c true if this child is the current item.
 
@@ -165,7 +165,7 @@ void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 */
 
 /*!
-    \qmlattachedproperty SwipeView QtQuick.Controls::SwipeView::view
+    \qmlattachedproperty SwipeView Qt.labs.controls::SwipeView::view
 
     This attached property holds the view that manages this child item.
 

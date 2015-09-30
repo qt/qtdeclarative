@@ -1,5 +1,5 @@
 QML_FILES += \
-    $$PWD/qtquickcontrols2.metainfo
+    $$PWD/qtlabscontrols.metainfo
 
 QML_FILES += \
     $$PWD/BusyIndicatorSpecifics.qml \

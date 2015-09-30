@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     \qmltype TextArea
     \inherits TextEdit
     \instantiates QQuickTextArea
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup editors
     \brief A multi line text input control.
 
@@ -168,7 +168,7 @@ void QQuickTextArea::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::TextArea::background
+    \qmlproperty Item Qt.labs.controls::TextArea::background
 
     This property holds the background item.
 
@@ -202,7 +202,7 @@ void QQuickTextArea::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text QtQuick.Controls::TextArea::placeholder
+    \qmlproperty Text Qt.labs.controls::TextArea::placeholder
 
     This property holds the placeholder text item.
 

@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Tumbler
     \inherits Control
     \instantiates QQuickTumbler
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup containers
     \brief A spinnable wheel of items that can be selected.
 
@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet tst_tumbler.qml contentItem
 
-    \image qtquickcontrols2-tumbler-wrap.gif
+    \image qtlabscontrols-tumbler-wrap.gif
 */
 
 class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
@@ -194,7 +194,7 @@ QQuickTumbler::~QQuickTumbler()
 }
 
 /*!
-    \qmlproperty variant QtQuick.Controls::Tumbler::model
+    \qmlproperty variant Qt.labs.controls::Tumbler::model
 
     This property holds the model that provides data for this tumbler.
 */
@@ -214,7 +214,7 @@ void QQuickTumbler::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::Tumbler::count
+    \qmlproperty int Qt.labs.controls::Tumbler::count
 
     This property holds the number of items in the model.
 */
@@ -225,7 +225,7 @@ int QQuickTumbler::count() const
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::Tumbler::currentIndex
+    \qmlproperty int Qt.labs.controls::Tumbler::currentIndex
 
     This property holds the index of the current item.
 */
@@ -242,7 +242,7 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
 }
 
 /*!
-    \qmlproperty Item QtQuick.Controls::Tumbler::currentItem
+    \qmlproperty Item Qt.labs.controls::Tumbler::currentItem
 
     This property holds the item at the current index.
 */
@@ -253,7 +253,7 @@ QQuickItem *QQuickTumbler::currentItem() const
 }
 
 /*!
-    \qmlproperty component QtQuick.Controls::Tumbler::delegate
+    \qmlproperty component Qt.labs.controls::Tumbler::delegate
 
     This property holds the delegate used to display each item.
 */
@@ -273,7 +273,7 @@ void QQuickTumbler::setDelegate(QQmlComponent *delegate)
 }
 
 /*!
-    \qmlproperty int QtQuick.Controls::Tumbler::visibleItemCount
+    \qmlproperty int Qt.labs.controls::Tumbler::visibleItemCount
 
     This property holds the number of items visible in the tumbler. It must be
     an odd number, as the current item is always vertically centered.

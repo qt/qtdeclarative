@@ -101,14 +101,14 @@ void tst_CreationTime::controls()
 {
     QFETCH(QByteArray, control);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.0;" + control + "{}", QUrl());
+    component.setData("import Qt.labs.controls 1.0;" + control + "{}", QUrl());
     doBenchmark(&component);
 }
 
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Controls.2");
+    addTestRows(engine.importPathList(), "Qt/labs/controls");
 }
 
 void tst_CreationTime::calendar()
