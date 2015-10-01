@@ -4,3 +4,4 @@ classname QtLabsCalendarPlugin
 CalendarView 1.0 CalendarView.qml
 DayOfWeekRow 1.0 DayOfWeekRow.qml
 WeekNumberColumn 1.0 WeekNumberColumn.qml
+depends Qt.labs.controls 1.0

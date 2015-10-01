@@ -1,4 +1,4 @@
 module Qt.labs.controls
 plugin qtlabscontrolsplugin
 classname QtLabsControlsPlugin
-depends QtQuick.Templates 2.0
+depends Qt.labs.templates 1.0
