@@ -7,7 +7,7 @@ MetaInfo {
             name: "Busy Indicator"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
         }
     }
@@ -20,7 +20,7 @@ MetaInfo {
             name: "Button"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Button')" }
@@ -35,7 +35,7 @@ MetaInfo {
             name: "Check Box"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Check Box')" }
@@ -50,7 +50,7 @@ MetaInfo {
             name: "Frame"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "width"; type: "int"; value: 200 }
@@ -66,7 +66,7 @@ MetaInfo {
             name: "Group Box"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "width"; type: "int"; value: 200 }
@@ -83,7 +83,7 @@ MetaInfo {
             name: "Label"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Label')" }
@@ -98,7 +98,7 @@ MetaInfo {
             name: "Page Indicator"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "count"; type: "int"; value: 3 }
@@ -113,7 +113,7 @@ MetaInfo {
             name: "Progress Bar"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "value"; type: "real"; value: 0.5 }
@@ -128,7 +128,7 @@ MetaInfo {
             name: "Radio Button"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Radio Button')" }
@@ -143,7 +143,7 @@ MetaInfo {
             name: "Slider"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "value"; type: "real"; value: 0.5 }
@@ -158,7 +158,7 @@ MetaInfo {
             name: "Switch"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Switch')" }
@@ -173,7 +173,7 @@ MetaInfo {
             name: "Text Area"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Text Area')" }
@@ -188,7 +188,7 @@ MetaInfo {
             name: "Text Field"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Text Field')" }
@@ -203,7 +203,7 @@ MetaInfo {
             name: "Tool Button"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr('Tool Button')" }
@@ -218,7 +218,7 @@ MetaInfo {
             name: "Tool Bar"
             category: "Qt Labs - Controls"
             libraryIcon: "images/todo.png"
-            version: "2.0"
+            version: "1.0"
             requiredImport: "Qt.labs.controls"
 
             Property { name: "width"; type: "int"; value: 360 }
