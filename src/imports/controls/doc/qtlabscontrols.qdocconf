@@ -28,7 +28,7 @@ depends = qtcore qtgui qtdoc qtqml qtquick qtquicklayouts qtquickdialogs qtquick
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
 # \example controls/tabs
-exampledirs += ../../../../examples/quick \
+exampledirs += ../../../../examples/labs \
                ../ \
                ../../../templates \
                ../../calendar \
@@ -36,7 +36,7 @@ exampledirs += ../../../../examples/quick \
                ../../../../tests/auto/snippets/data \
                snippets
 
-examplesinstallpath = quick
+examplesinstallpath = labs
 
 headerdirs += ../../../templates \
               ../../calendar \
