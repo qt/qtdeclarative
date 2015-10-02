@@ -211,6 +211,8 @@ void QQuickWidgetPrivate::render(bool needsSync)
     if (!fbo)
         return;
 
+    Q_ASSERT(context);
+
     if (!context->makeCurrent(offscreenSurface)) {
         qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
         return;
@@ -1089,7 +1091,10 @@ void QQuickWidget::showEvent(QShowEvent *)
     Q_D(QQuickWidget);
     d->updatePending = false;
     d->createContext();
-    d->render(true);
+    if (d->offscreenWindow->openglContext())
+        d->render(true);
+    else
+        triggerUpdate();
 }
 
 /*! \reimp */

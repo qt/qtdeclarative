@@ -851,7 +851,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
   */
 
 /*!
-    \qmlattachedproperty list QtQuick::ViewTransition::index
+    \qmlattachedproperty int QtQuick::ViewTransition::index
 
     This attached property holds the index of the item that is being
     transitioned.
@@ -861,7 +861,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 
 /*!
-    \qmlattachedproperty list QtQuick::ViewTransition::item
+    \qmlattachedproperty item QtQuick::ViewTransition::item
 
     This attached property holds the item that is being transitioned.
 
@@ -870,7 +870,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 */
 
 /*!
-    \qmlattachedproperty list QtQuick::ViewTransition::destination
+    \qmlattachedproperty point QtQuick::ViewTransition::destination
 
     This attached property holds the final destination position for the transitioned
     item within the view.

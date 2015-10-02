@@ -351,15 +351,24 @@ void QQuickScreenAttached::screenChanged(QScreen *screen)
             emit orientationUpdateMaskChanged();
         }
 
-        emit widthChanged();
-        emit heightChanged();
-        emit nameChanged();
-        emit orientationChanged();
-        emit primaryOrientationChanged();
-        emit desktopGeometryChanged();
-        emit logicalPixelDensityChanged();
-        emit pixelDensityChanged();
-        emit devicePixelRatioChanged();
+        if (!oldScreen || screen->size() != oldScreen->size()) {
+            emit widthChanged();
+            emit heightChanged();
+        }
+        if (!oldScreen || screen->name() != oldScreen->name())
+            emit nameChanged();
+        if (!oldScreen || screen->orientation() != oldScreen->orientation())
+            emit orientationChanged();
+        if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
+            emit primaryOrientationChanged();
+        if (!oldScreen || screen->availableVirtualGeometry() != oldScreen->availableVirtualGeometry())
+            emit desktopGeometryChanged();
+        if (!oldScreen || screen->logicalDotsPerInch() != oldScreen->logicalDotsPerInch())
+            emit logicalPixelDensityChanged();
+        if (!oldScreen || screen->physicalDotsPerInch() != oldScreen->physicalDotsPerInch())
+            emit pixelDensityChanged();
+        if (!oldScreen || screen->devicePixelRatio() != oldScreen->devicePixelRatio())
+            emit devicePixelRatioChanged();
 
         connect(screen, SIGNAL(geometryChanged(QRect)),
                 this, SIGNAL(widthChanged()));

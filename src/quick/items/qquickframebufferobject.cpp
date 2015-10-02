@@ -342,6 +342,12 @@ bool QQuickFramebufferObject::isTextureProvider() const
 */
 QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
 {
+    // When Item::layer::enabled == true, QQuickItem will be a texture
+    // provider. In this case we should prefer to return the layer rather
+    // than the fbo texture.
+    if (QQuickItem::isTextureProvider())
+        return QQuickItem::textureProvider();
+
     Q_D(const QQuickFramebufferObject);
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
