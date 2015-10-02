@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickcalendarview_p.h"
+#include "qquickmonthgrid_p.h"
 #include "qquickmonthmodel_p.h"
 
 #include <QtGui/qstylehints.h>
@@ -45,38 +45,38 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype CalendarView
+    \qmltype MonthGrid
     \inherits Control
-    \instantiates QQuickCalendarView
+    \instantiates QQuickMonthGrid
     \inqmlmodule Qt.labs.calendar
     \brief A calendar view.
 
-    CalendarView presents a calendar month in a grid. The contents
-    are calculated for a given \l month and \l year, using the specified
+    MonthGrid presents a calendar month in a grid. The contents are
+    calculated for a given \l month and \l year, using the specified
     \l locale.
 
-    \image qtlabscalendar-calendarview.png
-    \snippet calendarview/qtlabscalendar-calendarview.qml 1
+    \image qtlabscalendar-monthgrid.png
+    \snippet monthgrid/qtlabscalendar-monthgrid.qml 1
 
-    CalendarView can be used as a standalone control, but it is most often
+    MonthGrid can be used as a standalone control, but it is most often
     used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
     of the use case, positioning of the grid is left to the user.
 
-    \image qtlabscalendar-calendarview-layout.png
-    \snippet calendarview/qtlabscalendar-calendarview-layout.qml 1
+    \image qtlabscalendar-monthgrid-layout.png
+    \snippet monthgrid/qtlabscalendar-monthgrid-layout.qml 1
 
-    The visual appearance of CalendarView can be changed by
+    The visual appearance of MonthGrid can be changed by
     implementing a \l {delegate}{custom delegate}.
 
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */
 
-class QQuickCalendarViewPrivate : public QQuickControlPrivate
+class QQuickMonthGridPrivate : public QQuickControlPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickCalendarView)
+    Q_DECLARE_PUBLIC(QQuickMonthGrid)
 
 public:
-    QQuickCalendarViewPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR), delegate(Q_NULLPTR) { }
+    QQuickMonthGridPrivate() : pressTimer(0), pressedItem(Q_NULLPTR), model(Q_NULLPTR), delegate(Q_NULLPTR) { }
 
     void resizeItems();
 
@@ -97,7 +97,7 @@ public:
     QQmlComponent *delegate;
 };
 
-void QQuickCalendarViewPrivate::resizeItems()
+void QQuickMonthGridPrivate::resizeItems()
 {
     if (!contentItem)
         return;
@@ -110,9 +110,9 @@ void QQuickCalendarViewPrivate::resizeItems()
         item->setSize(itemSize);
 }
 
-QQuickItem *QQuickCalendarViewPrivate::cellAt(const QPoint &pos) const
+QQuickItem *QQuickMonthGridPrivate::cellAt(const QPoint &pos) const
 {
-    Q_Q(const QQuickCalendarView);
+    Q_Q(const QQuickMonthGrid);
     if (contentItem) {
         QPointF mapped = q->mapToItem(contentItem, pos);
         return contentItem->childAt(mapped.x(), mapped.y());
@@ -120,16 +120,16 @@ QQuickItem *QQuickCalendarViewPrivate::cellAt(const QPoint &pos) const
     return Q_NULLPTR;
 }
 
-QDate QQuickCalendarViewPrivate::dateOf(QQuickItem *cell) const
+QDate QQuickMonthGridPrivate::dateOf(QQuickItem *cell) const
 {
     if (contentItem)
         return model->dateAt(contentItem->childItems().indexOf(cell));
     return QDate();
 }
 
-void QQuickCalendarViewPrivate::updatePress(const QPoint &pos)
+void QQuickMonthGridPrivate::updatePress(const QPoint &pos)
 {
-    Q_Q(QQuickCalendarView);
+    Q_Q(QQuickMonthGrid);
     clearPress(false);
     pressedItem = cellAt(pos);
     setContextProperty(pressedItem, QStringLiteral("pressed"), true);
@@ -138,9 +138,9 @@ void QQuickCalendarViewPrivate::updatePress(const QPoint &pos)
         emit q->pressed(pressedDate);
 }
 
-void QQuickCalendarViewPrivate::clearPress(bool clicked)
+void QQuickMonthGridPrivate::clearPress(bool clicked)
 {
-    Q_Q(QQuickCalendarView);
+    Q_Q(QQuickMonthGrid);
     setContextProperty(pressedItem, QStringLiteral("pressed"), false);
     if (pressedDate.isValid()) {
         emit q->released(pressedDate);
@@ -151,7 +151,7 @@ void QQuickCalendarViewPrivate::clearPress(bool clicked)
     pressedItem = Q_NULLPTR;
 }
 
-void QQuickCalendarViewPrivate::setContextProperty(QQuickItem *item, const QString &name, const QVariant &value)
+void QQuickMonthGridPrivate::setContextProperty(QQuickItem *item, const QString &name, const QVariant &value)
 {
     QQmlContext *context = qmlContext(item);
     if (context && context->isValid()) {
@@ -161,39 +161,39 @@ void QQuickCalendarViewPrivate::setContextProperty(QQuickItem *item, const QStri
     }
 }
 
-QQuickCalendarView::QQuickCalendarView(QQuickItem *parent) :
-    QQuickControl(*(new QQuickCalendarViewPrivate), parent)
+QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
+    QQuickControl(*(new QQuickMonthGridPrivate), parent)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 
     d->model = new QQuickMonthModel(this);
     d->source = QVariant::fromValue(d->model);
-    connect(d->model, &QQuickMonthModel::monthChanged, this, &QQuickCalendarView::monthChanged);
-    connect(d->model, &QQuickMonthModel::yearChanged, this, &QQuickCalendarView::yearChanged);
-    connect(d->model, &QQuickMonthModel::localeChanged, this, &QQuickCalendarView::localeChanged);
-    connect(d->model, &QQuickMonthModel::titleChanged, this, &QQuickCalendarView::titleChanged);
+    connect(d->model, &QQuickMonthModel::monthChanged, this, &QQuickMonthGrid::monthChanged);
+    connect(d->model, &QQuickMonthModel::yearChanged, this, &QQuickMonthGrid::yearChanged);
+    connect(d->model, &QQuickMonthModel::localeChanged, this, &QQuickMonthGrid::localeChanged);
+    connect(d->model, &QQuickMonthModel::titleChanged, this, &QQuickMonthGrid::titleChanged);
 }
 
 /*!
-    \qmlproperty int Qt.labs.calendar::CalendarView::month
+    \qmlproperty int Qt.labs.calendar::MonthGrid::month
 
     This property holds the number of the month.
 
     The value must be in the range from \c 0 (January) to \c 11 (December). The default
     value is the current month.
 */
-int QQuickCalendarView::month() const
+int QQuickMonthGrid::month() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     return d->model->month() - 1;
 }
 
-void QQuickCalendarView::setMonth(int month)
+void QQuickMonthGrid::setMonth(int month)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (month < 0 || month > 11) {
         qmlInfo(this) << "month " << month << " is out of range [0...11]";
         return;
@@ -202,22 +202,22 @@ void QQuickCalendarView::setMonth(int month)
 }
 
 /*!
-    \qmlproperty int Qt.labs.calendar::CalendarView::year
+    \qmlproperty int Qt.labs.calendar::MonthGrid::year
 
     This property holds the number of the year.
 
     The value must be in the range from \c -271820 to \c 275759. The default
     value is the current year.
 */
-int QQuickCalendarView::year() const
+int QQuickMonthGrid::year() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     return d->model->year();
 }
 
-void QQuickCalendarView::setYear(int year)
+void QQuickMonthGrid::setYear(int year)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (year < -271820 || year > 275759) {
         qmlInfo(this) << "year " << year << " is out of range [-271820...275759]";
         return;
@@ -226,38 +226,38 @@ void QQuickCalendarView::setYear(int year)
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.calendar::CalendarView::locale
+    \qmlproperty Locale Qt.labs.calendar::MonthGrid::locale
 
     This property holds the locale that is used to calculate the contents.
 */
-QLocale QQuickCalendarView::locale() const
+QLocale QQuickMonthGrid::locale() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     return d->model->locale();
 }
 
-void QQuickCalendarView::setLocale(const QLocale &locale)
+void QQuickMonthGrid::setLocale(const QLocale &locale)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     d->model->setLocale(locale);
 }
 
 /*!
     \internal
-    \qmlproperty model Qt.labs.calendar::CalendarView::source
+    \qmlproperty model Qt.labs.calendar::MonthGrid::source
 
     This property holds the source model that is used as a data model
     for the internal content column.
 */
-QVariant QQuickCalendarView::source() const
+QVariant QQuickMonthGrid::source() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     return d->source;
 }
 
-void QQuickCalendarView::setSource(const QVariant &source)
+void QQuickMonthGrid::setSource(const QVariant &source)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (d->source != source) {
         d->source = source;
         emit sourceChanged();
@@ -265,25 +265,25 @@ void QQuickCalendarView::setSource(const QVariant &source)
 }
 
 /*!
-    \qmlproperty string Qt.labs.calendar::CalendarView::title
+    \qmlproperty string Qt.labs.calendar::MonthGrid::title
 
     This property holds a title for the calendar.
 
-    This property is provided for convenience. CalendarView itself does
+    This property is provided for convenience. MonthGrid itself does
     not visualize the title. The default value consists of the month name,
     formatted using \l locale, and the year number.
 */
-QString QQuickCalendarView::title() const
+QString QQuickMonthGrid::title() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     if (d->title.isNull())
         return d->model->title();
     return d->title;
 }
 
-void QQuickCalendarView::setTitle(const QString &title)
+void QQuickMonthGrid::setTitle(const QString &title)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (d->title != title) {
         d->title = title;
         emit titleChanged();
@@ -291,7 +291,7 @@ void QQuickCalendarView::setTitle(const QString &title)
 }
 
 /*!
-    \qmlproperty Component Qt.labs.calendar::CalendarView::delegate
+    \qmlproperty Component Qt.labs.calendar::MonthGrid::delegate
 
     This property holds the item delegate that visualizes each day.
 
@@ -310,26 +310,26 @@ void QQuickCalendarView::setTitle(const QString &title)
     delegate. It can be used as a starting point for implementing custom
     delegates.
 
-    \snippet CalendarView.qml delegate
+    \snippet MonthGrid.qml delegate
 */
-QQmlComponent *QQuickCalendarView::delegate() const
+QQmlComponent *QQuickMonthGrid::delegate() const
 {
-    Q_D(const QQuickCalendarView);
+    Q_D(const QQuickMonthGrid);
     return d->delegate;
 }
 
-void QQuickCalendarView::setDelegate(QQmlComponent *delegate)
+void QQuickMonthGrid::setDelegate(QQmlComponent *delegate)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (d->delegate != delegate) {
         d->delegate = delegate;
         emit delegateChanged();
     }
 }
 
-void QQuickCalendarView::componentComplete()
+void QQuickMonthGrid::componentComplete()
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     QQuickControl::componentComplete();
     if (d->contentItem) {
         foreach (QQuickItem *child, d->contentItem->childItems()) {
@@ -340,61 +340,61 @@ void QQuickCalendarView::componentComplete()
     d->resizeItems();
 }
 
-void QQuickCalendarView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickMonthGrid::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
 }
 
-void QQuickCalendarView::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
+void QQuickMonthGrid::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     QQuickControl::paddingChange(newPadding, oldPadding);
     if (isComponentComplete())
         d->resizeItems();
 }
 
-void QQuickCalendarView::updatePolish()
+void QQuickMonthGrid::updatePolish()
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     QQuickControl::updatePolish();
     d->resizeItems();
 }
 
-void QQuickCalendarView::mousePressEvent(QMouseEvent *event)
+void QQuickMonthGrid::mousePressEvent(QMouseEvent *event)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     d->updatePress(event->pos());
     if (d->pressedDate.isValid())
         d->pressTimer = startTimer(qGuiApp->styleHints()->mousePressAndHoldInterval());
     event->accept();
 }
 
-void QQuickCalendarView::mouseMoveEvent(QMouseEvent *event)
+void QQuickMonthGrid::mouseMoveEvent(QMouseEvent *event)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     d->updatePress(event->pos());
     event->accept();
 }
 
-void QQuickCalendarView::mouseReleaseEvent(QMouseEvent *event)
+void QQuickMonthGrid::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     d->clearPress(true);
     event->accept();
 }
 
-void QQuickCalendarView::mouseUngrabEvent()
+void QQuickMonthGrid::mouseUngrabEvent()
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     d->clearPress(false);
 }
 
-void QQuickCalendarView::timerEvent(QTimerEvent *event)
+void QQuickMonthGrid::timerEvent(QTimerEvent *event)
 {
-    Q_D(QQuickCalendarView);
+    Q_D(QQuickMonthGrid);
     if (event->timerId() == d->pressTimer) {
         if (d->pressedDate.isValid())
             emit pressAndHold(d->pressedDate);

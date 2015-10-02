@@ -5,10 +5,10 @@ import Qt.labs.calendar 1.0
 Window {
     visible: true
 
-    CalendarView {
-        id: calendarview
-        objectName: "calendarview"
-        title: "CalendarView"
+    MonthGrid {
+        id: monthgrid
+        objectName: "monthgrid"
+        title: "MonthGrid"
         Accessible.name: title
     }
 }

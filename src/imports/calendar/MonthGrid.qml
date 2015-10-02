@@ -38,7 +38,7 @@ import QtQuick 2.6
 import Qt.labs.controls 1.0
 import Qt.labs.calendar 1.0
 
-AbstractCalendarView {
+AbstractMonthGrid {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,

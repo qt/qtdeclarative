@@ -17,7 +17,7 @@ ListView {
         to: new Date(2015, 11, 31)
     }
 
-    delegate: CalendarView {
+    delegate: MonthGrid {
         width: listview.width
         height: listview.height
 

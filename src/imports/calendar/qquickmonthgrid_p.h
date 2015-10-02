@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKCALENDARVIEW_P_H
-#define QQUICKCALENDARVIEW_P_H
+#ifndef QQUICKMONTHGRID_P_H
+#define QQUICKMONTHGRID_P_H
 
 //
 //  W A R N I N G
@@ -54,9 +54,9 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
-class QQuickCalendarViewPrivate;
+class QQuickMonthGridPrivate;
 
-class QQuickCalendarView : public QQuickControl
+class QQuickMonthGrid : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
@@ -67,7 +67,7 @@ class QQuickCalendarView : public QQuickControl
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
-    explicit QQuickCalendarView(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickMonthGrid(QQuickItem *parent = Q_NULLPTR);
 
     int month() const;
     void setMonth(int month);
@@ -113,12 +113,12 @@ protected:
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickCalendarView)
-    Q_DECLARE_PRIVATE(QQuickCalendarView)
+    Q_DISABLE_COPY(QQuickMonthGrid)
+    Q_DECLARE_PRIVATE(QQuickMonthGrid)
 };
 
-Q_DECLARE_TYPEINFO(QQuickCalendarView, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickMonthGrid, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQUICKCALENDARVIEW_P_H
+#endif // QQUICKMONTHGRID_P_H

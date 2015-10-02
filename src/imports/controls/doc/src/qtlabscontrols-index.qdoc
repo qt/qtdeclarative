@@ -219,7 +219,7 @@
         \li \l [QtLabsControls] {Button}
     \row
         \li \l [QtQuickControls] {Calendar}
-        \li No equivalent; see \l [QML] {CalendarView} instead.
+        \li No equivalent; see \l [QML] {MonthGrid}, \l [QML] {DayOfWeekRow} and \l [QML] {WeekNumberColumn} instead.
     \row
         \li \l [QtQuickControls] {CheckBox}
         \li \l [QtLabsControls] {CheckBox}

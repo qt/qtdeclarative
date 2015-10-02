@@ -94,7 +94,7 @@ ApplicationWindow {
             highlightRangeMode: ListView.StrictlyEnforceRange
             orientation: parent.width > parent.height ? ListView.Vertical : ListView.Horizontal
 
-            delegate: CalendarView {
+            delegate: MonthGrid {
                 id: delegate
 
                 width: calendar.width

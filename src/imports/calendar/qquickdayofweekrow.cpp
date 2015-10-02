@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
     \snippet dayofweekrow/qtlabscalendar-dayofweekrow.qml 1
 
     DayOfWeekRow can be used as a standalone control, but it is most
-    often used in conjunction with CalendarView. Regardless of the use case,
+    often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the row is left to the user.
 
     \image qtlabscalendar-dayofweekrow-layout.png
@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
     The visual appearance of DayOfWeekRow can be changed by
     implementing a \l {delegate}{custom delegate}.
 
-    \sa CalendarView, WeekNumberColumn
+    \sa MonthGrid, WeekNumberColumn
 */
 
 class QQuickDayOfWeekRowPrivate : public QQuickControlPrivate

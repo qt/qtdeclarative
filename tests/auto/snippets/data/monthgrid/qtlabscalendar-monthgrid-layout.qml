@@ -14,15 +14,15 @@ GridLayout {
     }
 
     WeekNumberColumn {
-        month: view.month
-        year: view.year
-        locale: view.locale
+        month: grid.month
+        year: grid.year
+        locale: grid.locale
 
         Layout.fillHeight: true
     }
 
-    CalendarView {
-        id: view
+    MonthGrid {
+        id: grid
         month: 11
         year: 2015
         locale: Qt.locale("en_US")

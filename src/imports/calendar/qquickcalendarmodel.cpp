@@ -47,9 +47,9 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.calendar
     \brief A calendar model.
 
-    CalendarModel provides a way of creating a range of CalendarView
+    CalendarModel provides a way of creating a range of MonthGrid
     instances. It is typically used as a model for a ListView that uses
-    CalendarView as a delegate.
+    MonthGrid as a delegate.
 
     \snippet calendarmodel/qtlabscalendar-calendarmodel.qml 1
 
@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
         \row \li \b model.year : int \li The number of the year
     \endtable
 
-    \sa CalendarView
+    \sa MonthGrid
 */
 
 class QQuickCalendarModelPrivate : public QAbstractItemModelPrivate

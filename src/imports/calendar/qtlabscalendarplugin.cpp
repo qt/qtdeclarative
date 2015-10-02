@@ -36,8 +36,8 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include "qquickcalendarview_p.h"
 #include "qquickdayofweekrow_p.h"
+#include "qquickmonthgrid_p.h"
 #include "qquickweeknumbercolumn_p.h"
 #include "qquickcalendarmodel_p.h"
 
@@ -54,8 +54,8 @@ public:
 
 void QtLabsCalendarPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterType<QQuickCalendarView>(uri, 1, 0, "AbstractCalendarView");
     qmlRegisterType<QQuickDayOfWeekRow>(uri, 1, 0, "AbstractDayOfWeekRow");
+    qmlRegisterType<QQuickMonthGrid>(uri, 1, 0, "AbstractMonthGrid");
     qmlRegisterType<QQuickWeekNumberColumn>(uri, 1, 0, "AbstractWeekNumberColumn");
     qmlRegisterType<QQuickCalendarModel>(uri, 1, 0, "CalendarModel");
 }

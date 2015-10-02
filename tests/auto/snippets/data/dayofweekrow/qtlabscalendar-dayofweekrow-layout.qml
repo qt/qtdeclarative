@@ -5,12 +5,12 @@ import Qt.labs.calendar 1.0
 //! [1]
 ColumnLayout {
     DayOfWeekRow {
-        locale: view.locale
+        locale: grid.locale
         Layout.fillWidth: true
     }
 
-    CalendarView {
-        id: view
+    MonthGrid {
+        id: grid
         month: 11
         year: 2015
         locale: Qt.locale("en_US")

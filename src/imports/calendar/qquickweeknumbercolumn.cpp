@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     \snippet weeknumbercolumn/qtlabscalendar-weeknumbercolumn.qml 1
 
     WeekNumberColumn can be used as a standalone control, but it is most
-    often used in conjunction with CalendarView. Regardless of the use case,
+    often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the column is left to the user.
 
     \image qtlabscalendar-weeknumbercolumn-layout.png
@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     The visual appearance of WeekNumberColumn can be changed by
     implementing a \l {delegate}{custom delegate}.
 
-    \sa CalendarView, DayOfWeekRow
+    \sa MonthGrid, DayOfWeekRow
 */
 
 class QQuickWeekNumberColumnPrivate : public QQuickControlPrivate

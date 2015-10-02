@@ -44,10 +44,10 @@ Module {
         }
     }
     Component {
-        name: "QQuickCalendarView"
+        name: "QQuickMonthGrid"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["Qt.labs.calendar/AbstractCalendarView 1.0"]
+        exports: ["Qt.labs.calendar/AbstractMonthGrid 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "month"; type: "int" }
         Property { name: "year"; type: "int" }

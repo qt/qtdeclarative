@@ -95,8 +95,8 @@ void tst_accessibility::a11y_data()
     // SwipeView
     // Tumbler
 
-    QTest::newRow("CalendarView") << "calendarview" << 0x0 << "CalendarView"; //QAccessible::NoRole
     QTest::newRow("DayOfWeekRow") << "dayofweekrow" << 0x0 << "DayOfWeekRow"; //QAccessible::NoRole
+    QTest::newRow("MonthGrid") << "monthgrid" << 0x0 << "MonthGrid"; //QAccessible::NoRole
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
 }
 
@@ -111,8 +111,8 @@ void tst_accessibility::a11y()
 #ifdef QT_NO_ACCESSIBILITY
     if (name == QLatin1Literal("textarea")
             || name == QLatin1Literal("textfield")
-            || name == QLatin1Literal("calendarview")
             || name == QLatin1Literal("dayofweekrow")
+            || name == QLatin1Literal("monthgrid")
             || name == QLatin1Literal("weeknumbercolumn"))
         fn += QLatin1Literal("-2");
 #endif
