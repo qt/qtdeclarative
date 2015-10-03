@@ -94,7 +94,7 @@ public:
         bool explicitLeftPadding : 1;
         bool explicitRightPadding : 1;
         bool explicitBottomPadding : 1;
-        bool explicitImplicitSize : 1;
+        bool implicitResize : 1;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -154,6 +154,13 @@ public:
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
+
+    void setImplicitResizeEnabled(bool enabled) {
+        if (!enabled)
+            extra.value().implicitResize = false;
+        else if (extra.isAllocated())
+            extra->implicitResize = true;
+    }
 
     QColor color;
     QColor selectionColor;

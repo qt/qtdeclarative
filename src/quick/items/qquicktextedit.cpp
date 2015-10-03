@@ -2115,7 +2115,7 @@ QQuickTextEditPrivate::ExtraData::ExtraData()
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)
-    , explicitImplicitSize(false)
+    , implicitResize(true)
 {
 }
 
@@ -2346,7 +2346,7 @@ void QQuickTextEdit::updateSize()
 
             const bool wasInLayout = d->inLayout;
             d->inLayout = true;
-            if (!d->extra.isAllocated() || !d->extra->explicitImplicitSize)
+            if (!d->extra.isAllocated() || d->extra->implicitResize)
                 setImplicitWidth(naturalWidth + leftPadding() + rightPadding());
             d->inLayout = wasInLayout;
             if (d->inLayout)    // probably the result of a binding loop, but by letting it
@@ -2366,7 +2366,7 @@ void QQuickTextEdit::updateSize()
     QFontMetricsF fm(d->font);
     qreal newHeight = d->document->isEmpty() ? qCeil(fm.height()) : d->document->size().height();
 
-    if (!d->extra.isAllocated() || !d->extra->explicitImplicitSize) {
+    if (!d->extra.isAllocated() || d->extra->implicitResize) {
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
         if (!widthValid() && !d->requireImplicitWidth)
             setImplicitSize(newWidth + leftPadding() + rightPadding(), newHeight + topPadding() + bottomPadding());

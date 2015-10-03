@@ -2518,7 +2518,7 @@ QQuickTextInputPrivate::ExtraData::ExtraData()
     , explicitLeftPadding(false)
     , explicitRightPadding(false)
     , explicitBottomPadding(false)
-    , explicitImplicitSize(false)
+    , implicitResize(true)
 {
 }
 
@@ -2821,7 +2821,7 @@ void QQuickTextInputPrivate::updateLayout()
         line.setLineWidth(INT_MAX);
         const bool wasInLayout = inLayout;
         inLayout = true;
-        if (!extra.isAllocated() || !extra->explicitImplicitSize)
+        if (!extra.isAllocated() || extra->implicitResize)
             q->setImplicitWidth(qCeil(line.naturalTextWidth()) + q->leftPadding() + q->rightPadding());
         inLayout = wasInLayout;
         if (inLayout)       // probably the result of a binding loop, but by letting it
@@ -2853,7 +2853,7 @@ void QQuickTextInputPrivate::updateLayout()
     q->polish();
     q->update();
 
-    if (!extra.isAllocated() || !extra->explicitImplicitSize) {
+    if (!extra.isAllocated() || extra->implicitResize) {
         if (!requireImplicitWidth && !q->widthValid())
             q->setImplicitSize(width + q->leftPadding() + q->rightPadding(), height + q->topPadding() + q->bottomPadding());
         else
