@@ -11,7 +11,7 @@ ColumnLayout {
 
     MonthGrid {
         id: grid
-        month: 11
+        month: Calendar.December
         year: 2015
         locale: Qt.locale("en_US")
         Layout.fillWidth: true

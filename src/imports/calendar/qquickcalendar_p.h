@@ -34,41 +34,51 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
+#ifndef QQUICKCALENDAR_P_H
+#define QQUICKCALENDAR_P_H
 
-#include "qquickdayofweekrow_p.h"
-#include "qquickmonthgrid_p.h"
-#include "qquickweeknumbercolumn_p.h"
-#include "qquickcalendarmodel_p.h"
-#include "qquickcalendar_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qobject.h>
+#include <QtCore/qdatetime.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsCalendarPlugin: public QQmlExtensionPlugin
+class QQuickCalendar : public QObject
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    void registerTypes(const char *uri);
+    explicit QQuickCalendar(QObject *parent = Q_NULLPTR);
+
+    enum Month {
+        January,
+        February,
+        March,
+        April,
+        May,
+        June,
+        July,
+        August,
+        September,
+        October,
+        November,
+        December
+    };
+    Q_ENUM(Month)
 };
 
-static QObject *calendarSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return new QQuickCalendar;
-}
-
-void QtLabsCalendarPlugin::registerTypes(const char *uri)
-{
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 1, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickMonthGrid>(uri, 1, 0, "AbstractMonthGrid");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 1, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 1, 0, "CalendarModel");
-    qmlRegisterSingletonType<QQuickCalendar>(uri, 1, 0, "Calendar", calendarSingleton);
-}
+Q_DECLARE_TYPEINFO(QQuickCalendar, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-#include "qtlabscalendarplugin.moc"
+#endif // QQUICKCALENDAR_P_H

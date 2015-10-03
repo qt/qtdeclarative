@@ -3,7 +3,7 @@ import Qt.labs.calendar 1.0
 
 //! [1]
 MonthGrid {
-    month: 11
+    month: Calendar.December
     year: 2015
     locale: Qt.locale("en_US")
 }

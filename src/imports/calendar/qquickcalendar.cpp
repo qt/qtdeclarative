@@ -34,41 +34,25 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-
-#include "qquickdayofweekrow_p.h"
-#include "qquickmonthgrid_p.h"
-#include "qquickweeknumbercolumn_p.h"
-#include "qquickcalendarmodel_p.h"
 #include "qquickcalendar_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtLabsCalendarPlugin: public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
+/*!
+    \qmltype Calendar
+    \inherits QObject
+    \instantiates QQuickCalendar
+    \inqmlmodule Qt.labs.calendar
+    \brief A calendar namespace.
 
-public:
-    void registerTypes(const char *uri);
-};
+    The Calendar singleton provides miscellaneous calendar related
+    utilities.
 
-static QObject *calendarSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return new QQuickCalendar;
-}
+    \sa MonthGrid, DayOfWeekRow, WeekNumberColumn
+*/
 
-void QtLabsCalendarPlugin::registerTypes(const char *uri)
+QQuickCalendar::QQuickCalendar(QObject *parent) : QObject(parent)
 {
-    qmlRegisterType<QQuickDayOfWeekRow>(uri, 1, 0, "AbstractDayOfWeekRow");
-    qmlRegisterType<QQuickMonthGrid>(uri, 1, 0, "AbstractMonthGrid");
-    qmlRegisterType<QQuickWeekNumberColumn>(uri, 1, 0, "AbstractWeekNumberColumn");
-    qmlRegisterType<QQuickCalendarModel>(uri, 1, 0, "CalendarModel");
-    qmlRegisterSingletonType<QQuickCalendar>(uri, 1, 0, "Calendar", calendarSingleton);
 }
 
 QT_END_NAMESPACE
-
-#include "qtlabscalendarplugin.moc"

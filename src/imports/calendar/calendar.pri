@@ -4,6 +4,7 @@ QML_FILES = \
     WeekNumberColumn.qml
 
 HEADERS += \
+    $$PWD/qquickcalendar_p.h \
     $$PWD/qquickcalendarmodel_p.h \
     $$PWD/qquickdayofweekmodel_p.h \
     $$PWD/qquickdayofweekrow_p.h \
@@ -13,6 +14,7 @@ HEADERS += \
     $$PWD/qquickweeknumbermodel_p.h
 
 SOURCES += \
+    $$PWD/qquickcalendar.cpp \
     $$PWD/qquickcalendarmodel.cpp \
     $$PWD/qquickdayofweekmodel.cpp \
     $$PWD/qquickdayofweekrow.cpp \

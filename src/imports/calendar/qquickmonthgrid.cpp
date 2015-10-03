@@ -182,8 +182,23 @@ QQuickMonthGrid::QQuickMonthGrid(QQuickItem *parent) :
 
     This property holds the number of the month.
 
-    The value must be in the range from \c 0 (January) to \c 11 (December). The default
-    value is the current month.
+    Supported values:
+    \list
+    \li \c Calendar.January (0)
+    \li \c Calendar.February (1)
+    \li \c Calendar.March (2)
+    \li \c Calendar.April (3)
+    \li \c Calendar.May (4)
+    \li \c Calendar.June (5)
+    \li \c Calendar.July (6)
+    \li \c Calendar.August (7)
+    \li \c Calendar.September (8)
+    \li \c Calendar.October (9)
+    \li \c Calendar.November (10)
+    \li \c Calendar.December (11)
+    \endlist
+
+    The default value is the current month.
 */
 int QQuickMonthGrid::month() const
 {
