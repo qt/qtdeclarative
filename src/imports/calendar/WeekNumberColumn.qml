@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.calendar 1.0
 
 AbstractWeekNumberColumn {
@@ -55,7 +54,6 @@ AbstractWeekNumberColumn {
     delegate: Text {
         text: model.weekNumber
         font: control.font
-        color: control.Theme.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

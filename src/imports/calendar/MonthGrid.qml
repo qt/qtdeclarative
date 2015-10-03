@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.calendar 1.0
 
 AbstractMonthGrid {
@@ -53,7 +52,6 @@ AbstractMonthGrid {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         opacity: model.month === control.month ? 1 : 0
-        color: model.today ? control.Theme.accentColor : control.Theme.textColor
         text: model.day
         font: control.font
     }
