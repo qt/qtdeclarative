@@ -155,12 +155,8 @@ public:
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
 
-    void setImplicitResizeEnabled(bool enabled) {
-        if (!enabled)
-            extra.value().implicitResize = false;
-        else if (extra.isAllocated())
-            extra->implicitResize = true;
-    }
+    bool isImplicitResizeEnabled() const;
+    void setImplicitResizeEnabled(bool enabled);
 
     QColor color;
     QColor selectionColor;
