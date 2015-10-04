@@ -48,6 +48,26 @@ QT_BEGIN_NAMESPACE
     The Calendar singleton provides miscellaneous calendar related
     utilities.
 
+    The Qt Labs Calendar module uses 0-based month numbers to be consistent
+    with the JavaScript Date type, that is used by the QML language. This
+    means that \c Date::getMonth() can be assigned to MonthGrid::month and
+    WeekNumberColumn::month as is. When dealing with dealing with month numbers
+    diretly, it is highly recommended to use the following enumeration values
+    to avoid confusion.
+
+    \value Calendar.January January (0)
+    \value Calendar.February February (1)
+    \value Calendar.March March (2)
+    \value Calendar.April April (3)
+    \value Calendar.May May (4)
+    \value Calendar.June June (5)
+    \value Calendar.July July (6)
+    \value Calendar.August August (7)
+    \value Calendar.September September (8)
+    \value Calendar.October October (9)
+    \value Calendar.November November (10)
+    \value Calendar.December December (11)
+
     \sa MonthGrid, DayOfWeekRow, WeekNumberColumn
 */
 

@@ -108,25 +108,29 @@ QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
 /*!
     \qmlproperty int Qt.labs.calendar::WeekNumberColumn::month
 
-    This property holds the number of the month that the week numbers are calculated for.
+    This property holds the number of the month that the week numbers are
+    calculated for. The default value is the current month.
 
-    Supported values:
-    \list
-    \li \c Calendar.January (0)
-    \li \c Calendar.February (1)
-    \li \c Calendar.March (2)
-    \li \c Calendar.April (3)
-    \li \c Calendar.May (4)
-    \li \c Calendar.June (5)
-    \li \c Calendar.July (6)
-    \li \c Calendar.August (7)
-    \li \c Calendar.September (8)
-    \li \c Calendar.October (9)
-    \li \c Calendar.November (10)
-    \li \c Calendar.December (11)
-    \endlist
+    The Qt Labs Calendar module uses 0-based month numbers to be consistent
+    with the JavaScript Date type, that is used by the QML language. This
+    means that \c Date::getMonth() can be assigned to this property as is.
+    When dealing with dealing with month numbers diretly, it is highly
+    recommended to use the following enumeration values to avoid confusion.
 
-    The default value is the current month.
+    \value Calendar.January January (0)
+    \value Calendar.February February (1)
+    \value Calendar.March March (2)
+    \value Calendar.April April (3)
+    \value Calendar.May May (4)
+    \value Calendar.June June (5)
+    \value Calendar.July July (6)
+    \value Calendar.August August (7)
+    \value Calendar.September September (8)
+    \value Calendar.October October (9)
+    \value Calendar.November November (10)
+    \value Calendar.December December (11)
+
+    \sa Calendar
 */
 int QQuickWeekNumberColumn::month() const
 {
