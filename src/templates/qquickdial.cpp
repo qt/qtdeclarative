@@ -316,11 +316,9 @@ void QQuickDial::setStepSize(qreal step)
     certain points along the dial.
 
     Possible values:
-    \list
-    \li \c Dial.NoSnap (default) - The dial does not snap.
-    \li \c Dial.SnapAlways - The dial snaps while the handle is dragged.
-    \li \c Dial.SnapOnRelease - The dial does not snap while being dragged, but only after the handle is released.
-    \endlist
+    \value Dial.NoSnap The dial does not snap (default).
+    \value Dial.SnapAlways The dial snaps while the handle is dragged.
+    \value Dial.SnapOnRelease The dial does not snap while being dragged, but only after the handle is released.
 
     \sa stepSize
 */

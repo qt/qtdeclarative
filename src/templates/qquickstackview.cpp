@@ -320,10 +320,8 @@ QQuickItem *QQuickStackView::currentItem() const
     \qmlmethod Item Qt.labs.controls::StackView::get(index, behavior = DontLoad)
 
     Supported behavior values:
-    \list
-    \li StackView.DontLoad
-    \li StackView.ForceLoad
-    \endlist
+    \value StackView.DontLoad
+    \value StackView.ForceLoad
 
     TODO
 */
@@ -343,10 +341,8 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
     \qmlmethod Item Qt.labs.controls::StackView::find(callback, behavior = DontLoad)
 
     Supported behavior values:
-    \list
-    \li StackView.DontLoad
-    \li StackView.ForceLoad
-    \endlist
+    \value StackView.DontLoad
+    \value StackView.ForceLoad
 
     TODO
 */

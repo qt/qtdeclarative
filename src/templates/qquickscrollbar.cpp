@@ -211,10 +211,8 @@ void QQuickScrollBar::setPressed(bool pressed)
     This property holds the orientation of the scroll bar.
 
     Possible values:
-    \list
-    \li \c Qt.Horizontal
-    \li \c Qt.Vertical (default)
-    \endlist
+    \value Qt.Horizontal Horizontal
+    \value Qt.Vertical Vertical (default)
 */
 Qt::Orientation QQuickScrollBar::orientation() const
 {

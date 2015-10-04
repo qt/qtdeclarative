@@ -309,11 +309,9 @@ void QQuickSlider::setStepSize(qreal step)
     This property holds the snap mode.
 
     Possible values:
-    \list
-    \li \c Slider.NoSnap (default) - The slider does not snap.
-    \li \c Slider.SnapAlways - The slider snaps while the handle is dragged.
-    \li \c Slider.SnapOnRelease - The slider does not snap while being dragged, but only after the handle is released.
-    \endlist
+    \value Slider.NoSnap The slider does not snap (default).
+    \value Slider.SnapAlways The slider snaps while the handle is dragged.
+    \value Slider.SnapOnRelease The slider does not snap while being dragged, but only after the handle is released.
 
     \sa stepSize
 */
@@ -359,10 +357,8 @@ void QQuickSlider::setPressed(bool pressed)
     This property holds the orientation.
 
     Possible values:
-    \list
-    \li \c Qt.Horizontal (default)
-    \li \c Qt.Vertical
-    \endlist
+    \value Qt.Horizontal Horizontal (default)
+    \value Qt.Vertical Vertical
 */
 Qt::Orientation QQuickSlider::orientation() const
 {

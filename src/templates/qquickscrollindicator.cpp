@@ -177,10 +177,8 @@ void QQuickScrollIndicator::setActive(bool active)
     This property holds the orientation of the indicator.
 
     Possible values:
-    \list
-    \li \c Qt.Horizontal
-    \li \c Qt.Vertical (default)
-    \endlist
+    \value Qt.Horizontal Horizontal
+    \value Qt.Vertical Vertical (default)
 */
 Qt::Orientation QQuickScrollIndicator::orientation() const
 {

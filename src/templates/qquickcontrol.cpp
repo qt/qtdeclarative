@@ -539,12 +539,10 @@ void QQuickControl::resetSpacing()
     This property holds the layout direction of the control.
 
     Possible values:
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
-    the left anchor remains to the left of the row.
-    \li Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
+    \value Qt.LeftToRight Items are laid out from left to right. If the width of the row is explicitly set,
+    the left anchor remains to the left of the row (default).
+    \value Qt.RightToLeft Items are laid out from right to left. If the width of the row is explicitly set,
     the right anchor remains to the right of the row.
-    \endlist
 
     \sa effectiveLayoutDirection
 */
