@@ -34,6 +34,17 @@
 #ifndef PARTICLESYSTEM_H
 #define PARTICLESYSTEM_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtQuick/QQuickItem>
 #include <QElapsedTimer>
 #include <QVector>

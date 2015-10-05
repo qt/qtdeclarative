@@ -34,6 +34,17 @@
 #ifndef QABSTRACTANIMATIONJOB_P_H
 #define QABSTRACTANIMATIONJOB_P_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <private/qtqmlglobal_p.h>
 #include <QtCore/QObject>
 #include <QtCore/private/qabstractanimation_p.h>

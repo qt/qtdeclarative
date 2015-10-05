@@ -34,6 +34,17 @@
 #ifndef QQUICKFLICKABLEBEHAVIOR_H
 #define QQUICKFLICKABLEBEHAVIOR_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 /* ### Platform specific flickable mechanics are defined either here, or in
        mkspec files. Long-term (QtQuick 3) Flickable needs to allow such
        mechanic details to be controlled via QML so that platforms can easily
