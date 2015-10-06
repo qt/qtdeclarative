@@ -183,7 +183,6 @@ void QQuickTabBar::componentComplete()
 {
     Q_D(QQuickTabBar);
     QQuickContainer::componentComplete();
-    d->updateCurrent();
     d->updateLayout();
 }
 

@@ -60,6 +60,31 @@ TestCase {
         TabBar { }
     }
 
+    Component {
+        id: tabBarStaticTabs
+        TabBar {
+            TabButton {
+                text: "0"
+            }
+            TabButton {
+                text: "1"
+            }
+        }
+    }
+
+    Component {
+        id: tabBarStaticTabsCurrent
+        TabBar {
+            currentIndex: 1
+            TabButton {
+                text: "0"
+            }
+            TabButton {
+                text: "1"
+            }
+        }
+    }
+
     SignalSpy {
         id: contentChildrenSpy
         signalName: "contentChildrenChanged"
@@ -113,6 +138,24 @@ TestCase {
         control.currentIndex = 2
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
+
+        control.destroy()
+    }
+
+    function test_current_static() {
+        var control = tabBarStaticTabs.createObject(testCase)
+
+        compare(control.count, 2)
+        compare(control.currentIndex, 0)
+        compare(control.currentItem.text, "0")
+
+        control.destroy()
+
+        control = tabBarStaticTabsCurrent.createObject(testCase)
+
+        compare(control.count, 2)
+        compare(control.currentIndex, 1)
+        compare(control.currentItem.text, "1")
 
         control.destroy()
     }
