@@ -1584,6 +1584,12 @@ bool QQuickWindowPrivate::deliverMouseEvent(QMouseEvent *event)
     }
 
     if (mouseGrabberItem) {
+        if (event->button() != Qt::NoButton
+            && mouseGrabberItem->acceptedMouseButtons()
+            && !(mouseGrabberItem->acceptedMouseButtons() & event->button())) {
+            event->ignore();
+            return false;
+        }
         QPointF localPos = mouseGrabberItem->mapFromScene(event->windowPos());
         QScopedPointer<QMouseEvent> me(cloneMouseEvent(event, &localPos));
         me->accept();

@@ -172,6 +172,8 @@ private slots:
     void contains_data();
     void contains();
 
+    void ignoreButtonPressNotInAcceptedMouseButtons();
+
 private:
 
     enum PaintOrderOp {
@@ -1971,6 +1973,27 @@ void tst_qquickitem::contains()
     QCOMPARE(result.toBool(), contains);
 }
 
+void tst_qquickitem::ignoreButtonPressNotInAcceptedMouseButtons()
+{
+    // Verify the fix for QTBUG-31861
+    TestItem item;
+    QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::NoButton));
+
+    QQuickWindow window;
+    item.setSize(QSizeF(200,100));
+    item.setParentItem(window.contentItem());
+
+    item.setAcceptedMouseButtons(Qt::LeftButton);
+    QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::LeftButton));
+
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50)); // ignored because it's not LeftButton
+    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50)); // ignored because it didn't grab the RightButton press
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+
+    QCOMPARE(item.pressCount, 1);
+    QCOMPARE(item.releaseCount, 1);
+}
 
 QTEST_MAIN(tst_qquickitem)
 
