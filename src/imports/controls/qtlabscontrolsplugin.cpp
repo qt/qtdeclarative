@@ -81,6 +81,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/PageIndicator.qml"))), uri, 1, 0, "PageIndicator");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ProgressBar.qml"))), uri, 1, 0, "ProgressBar");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/RadioButton.qml"))), uri, 1, 0, "RadioButton");
+    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/RangeSlider.qml"))), uri, 1, 0, "RangeSlider");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollBar.qml"))), uri, 1, 0, "ScrollBar");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollIndicator.qml"))), uri, 1, 0, "ScrollIndicator");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Slider.qml"))), uri, 1, 0, "Slider");

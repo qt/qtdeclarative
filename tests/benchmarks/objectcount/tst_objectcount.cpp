@@ -189,6 +189,10 @@ void tst_ObjectCount::testCount_data()
             << QByteArray("import QtQuick.Controls 1.3; RadioButton { }")
             << QByteArray("import Qt.labs.controls 1.0; RadioButton { }");
 
+    QTest::newRow("RangeSlider")
+            << QByteArray()
+            << QByteArray("import Qt.labs.controls 1.0; RangeSlider { }");
+
     QTest::newRow("ScrollView")
             << QByteArray("import QtQuick.Controls 1.3; ScrollView { }")
             << QByteArray();

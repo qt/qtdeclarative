@@ -11,6 +11,7 @@ QML_FILES = \
     PageIndicator.qml \
     ProgressBar.qml \
     RadioButton.qml \
+    RangeSlider.qml \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \

@@ -162,7 +162,27 @@ void tst_activeFocusOnTab::allControls()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // Tab: radiobutton2->slider
+    // Tab: radiobutton2->rangeslider.first.handle
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
+    QVERIFY(item);
+    item = item->property("first").value<QObject*>()->property("handle").value<QQuickItem*>();
+    QVERIFY(item->hasActiveFocus());
+
+    // Tab: rangeslider.first.handle->rangeslider.second.handle
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
+    QVERIFY(item);
+    item = item->property("second").value<QObject*>()->property("handle").value<QQuickItem*>();
+    QVERIFY(item->hasActiveFocus());
+
+    // Tab: rangeslider.second.handle->slider
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
@@ -279,7 +299,27 @@ void tst_activeFocusOnTab::allControls()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // BackTab: slider->radiobutton2
+    // BackTab: slider->rangeslider.second.handle
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
+    QVERIFY(item);
+    item = item->property("second").value<QObject*>()->property("handle").value<QQuickItem*>();
+    QVERIFY(item->hasActiveFocus());
+
+    // BackTab: rangeslider.second.handle->rangeslider.first.handle
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "rangeslider");
+    QVERIFY(item);
+    item = item->property("first").value<QObject*>()->property("handle").value<QQuickItem*>();
+    QVERIFY(item->hasActiveFocus());
+
+    // BackTab: rangeslider.first.handle->radiobutton2
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());

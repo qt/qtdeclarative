@@ -127,6 +127,10 @@ Item {
                 }
             }
         }
+        RangeSlider {
+            id: rangeslider
+            objectName: "rangeslider"
+        }
         // ScrollBar
         ScrollIndicator {
             id: scrollindicator

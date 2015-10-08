@@ -51,12 +51,17 @@ private slots:
 
     void tumblerWrap();
     void slider();
+    void rangeSlider();
     void busyIndicator();
     void switchGif();
     void button();
     void tabBar();
 
 private:
+    void moveSmoothly(const QPoint &from, const QPoint &to, int movements,
+        QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint,
+        int movementDelay = 15);
+
     QQuickView view;
     QString dataDirPath;
     QDir outputDir;
@@ -73,6 +78,19 @@ void tst_Gifs::initTestCase()
     qInfo() << "output directory:" << outputDir.absolutePath();
 
     view.setFlags(view.flags() | Qt::FramelessWindowHint);
+}
+
+void tst_Gifs::moveSmoothly(const QPoint &from, const QPoint &to, int movements, QEasingCurve::Type easingCurveType, int movementDelay)
+{
+    QEasingCurve curve(easingCurveType);
+    int xDifference = to.x() - from.x();
+    int yDifference = to.y() - from.y();
+    for (int movement = 0; movement < movements; ++movement) {
+        QPoint pos = QPoint(
+            from.x() + curve.valueForProgress(movement / qreal(qAbs(xDifference))) * xDifference,
+            from.y() + curve.valueForProgress(movement / qreal(qAbs(yDifference))) * yDifference);
+        QTest::mouseMove(&view, pos, movementDelay);
+    }
 }
 
 void tst_Gifs::tumblerWrap()
@@ -262,6 +280,39 @@ void tst_Gifs::slider()
     QTest::mouseMove(&view, QPoint(8, 15), 17);
     QTest::mouseMove(&view, QPoint(0, 15), 16);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(0, 15), 215);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::rangeSlider()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(5);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName("qtlabscontrols-rangeslider.qml");
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(17, 18), 200);
+    moveSmoothly(QPoint(0, 17), QPoint(54, 17), 54);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(54, 17), 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(182, 14), 200);
+    moveSmoothly(QPoint(183, 17), QPoint(145, 17), 183 - 145);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(145, 17), 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(142, 13), 200);
+    moveSmoothly(QPoint(143, 17), QPoint(189, 17), 189 - 143);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(189, 12), 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(63, 14), 200);
+    moveSmoothly(QPoint(62, 17), QPoint(6, 17), 62 - 6);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(6, 17), 20);
 
     gifRecorder.waitForFinish();
 }

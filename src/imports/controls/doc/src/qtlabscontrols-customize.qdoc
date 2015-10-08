@@ -207,6 +207,38 @@
             \snippet RadioButton.qml indicator
 
 
+    \section1 Customizing RangeSlider
+
+        RangeSlider consists of four visual items:
+        \l {Control::background}{background}, \l {RangeSlider::track}{track},
+        \l {RangeSlider::first}{first.handle} and
+        \l {RangeSlider::second.handle}{second.handle}.
+
+        \section3 Background
+
+            \image qtlabscontrols-rangeslider-background.png
+
+            RangeSlider has no background item by default.
+
+        \section3 Track
+
+            \image qtlabscontrols-rangeslider-track.png
+
+            \snippet RangeSlider.qml track
+
+        \section3 First Handle
+
+            \image qtlabscontrols-rangeslider-first-handle.png
+
+            \snippet RangeSlider.qml firstHandle
+
+        \section3 Second Handle
+
+            \image qtlabscontrols-rangeslider-second-handle.png
+
+            \snippet RangeSlider.qml secondHandle
+
+
     \section1 Customizing ScrollBar
 
         ScrollBar consists of two visual items: \l {Control::background}{background}

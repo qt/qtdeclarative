@@ -50,6 +50,7 @@
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
 #include <QtLabsTemplates/private/qquickprogressbar_p.h>
 #include <QtLabsTemplates/private/qquickradiobutton_p.h>
+#include <QtLabsTemplates/private/qquickrangeslider_p.h>
 #include <QtLabsTemplates/private/qquickscrollbar_p.h>
 #include <QtLabsTemplates/private/qquickscrollindicator_p.h>
 #include <QtLabsTemplates/private/qquickslider_p.h>
@@ -91,6 +92,8 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
     qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
+    qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");
+    qmlRegisterType<QQuickRangeSliderNode>();
     qmlRegisterType<QQuickScrollBar>(uri, 1, 0, "ScrollBar");
     qmlRegisterType<QQuickScrollIndicator>(uri, 1, 0, "ScrollIndicator");
     qmlRegisterType<QQuickSlider>(uri, 1, 0, "Slider");

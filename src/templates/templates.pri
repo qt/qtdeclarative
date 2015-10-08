@@ -23,6 +23,7 @@ HEADERS += \
     $$PWD/qquickpressandholdhelper_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
+    $$PWD/qquickrangeslider_p.h \
     $$PWD/qquickscrollbar_p.h \
     $$PWD/qquickscrollindicator_p.h \
     $$PWD/qquickslider_p.h \
@@ -58,6 +59,7 @@ SOURCES += \
     $$PWD/qquickpressandholdhelper.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \
+    $$PWD/qquickrangeslider.cpp \
     $$PWD/qquickscrollbar.cpp \
     $$PWD/qquickscrollindicator.cpp \
     $$PWD/qquickslider.cpp \
