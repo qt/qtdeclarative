@@ -43,7 +43,8 @@ For example, below is a document that declares a \l Rectangle with a child \l Mo
 import QtQuick 2.0
 
 Rectangle {
-    width: 100; height: 100
+    property int side: 100
+    width: side; height: side
     color: "red"
 
     MouseArea {
@@ -87,7 +88,7 @@ For example, the root object type in the \c SquareButton.qml file above is \l Re
 import QtQuick 2.0
 
 Column {
-    SquareButton { width: 50; height: 50 }
+    SquareButton { side: 50 }
     SquareButton { x: 50; color: "blue" }
     SquareButton { radius: 10 }
 }
@@ -112,7 +113,8 @@ Rectangle {
         root.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
     }
 
-    width: 100; height: 100
+    property int side: 100
+    width: side; height: side
     color: "red"
 
     MouseArea {
