@@ -99,6 +99,7 @@ HEADERS += \
 
 HEADERS += \
     $$PWD/qv4runtime_p.h \
+    $$PWD/qv4runtimeapi_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
     $$PWD/qv4value_p.h
