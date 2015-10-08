@@ -94,14 +94,6 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     QList<QVector<QV4::Primitive> > constantValues;
 };
 
-struct RelativeCall {
-    JSC::MacroAssembler::Address addr;
-
-    explicit RelativeCall(const JSC::MacroAssembler::Address &addr)
-        : addr(addr)
-    {}
-};
-
 struct LookupCall {
     JSC::MacroAssembler::Address addr;
     uint getterSetterOffset;
@@ -360,11 +352,6 @@ public:
 
     void callAbsolute(const char* /*functionName*/, Address addr) {
         call(addr);
-    }
-
-    void callAbsolute(const char* /*functionName*/, const RelativeCall &relativeCall)
-    {
-        call(relativeCall.addr);
     }
 
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
@@ -1250,19 +1237,11 @@ void Assembler::copyValue(Result result, IR::Expr* source)
 template <typename T> inline bool prepareCall(T &, Assembler *)
 { return true; }
 
-template <> inline bool prepareCall(RelativeCall &relativeCall, Assembler *as)
-{
-    as->loadPtr(Assembler::Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
-    as->loadPtr(Assembler::Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
-                relativeCall.addr.base);
-    return true;
-}
-
 template <> inline bool prepareCall(LookupCall &lookupCall, Assembler *as)
 {
     // IMPORTANT! See generateLookupCall in qv4isel_masm_p.h for details!
 
-    // same as prepareCall(RelativeCall ....) : load the table from the context
+    // load the table from the context
     as->loadPtr(Assembler::Address(Assembler::EngineRegister, qOffsetOf(QV4::ExecutionEngine, current)), Assembler::ScratchRegister);
     as->loadPtr(Assembler::Address(Assembler::ScratchRegister, qOffsetOf(QV4::Heap::ExecutionContext, lookups)),
                 lookupCall.addr.base);
