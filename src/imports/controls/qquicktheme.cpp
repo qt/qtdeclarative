@@ -102,11 +102,12 @@ Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1
 
 static QQuickThemeAttached *themeInstance(QQmlEngine *engine)
 {
-    static QHash<QQmlEngine *, QQuickThemeAttached *> themes;
-    QHash<QQmlEngine *, QQuickThemeAttached *>::iterator it = themes.find(engine);
-    if (it == themes.end())
-        it = themes.insert(engine, new QQuickThemeAttached(*globalThemeData(), engine));
-    return it.value();
+    QQuickThemeAttached *theme = engine->property("_q_quicktheme").value<QQuickThemeAttached *>();
+    if (!theme) {
+        theme = new QQuickThemeAttached(*globalThemeData(), engine);
+        engine->setProperty("_q_quicktheme", QVariant::fromValue(theme));
+    }
+    return theme;
 }
 
 static QQuickThemeAttached *attachedTheme(QObject *object)

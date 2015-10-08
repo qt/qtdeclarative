@@ -6,4 +6,5 @@ SUBDIRS += \
     calendar \
     controls \
     sanity \
-    snippets
+    snippets \
+    theme

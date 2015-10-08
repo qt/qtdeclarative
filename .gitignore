@@ -18,6 +18,7 @@
 /tests/auto/controls/tst_controls
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
+/tests/auto/theme/tst_theme
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
 
