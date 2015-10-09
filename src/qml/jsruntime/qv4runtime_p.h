@@ -412,7 +412,7 @@ inline Bool Runtime::compareStrictNotEqual(const Value &left, const Value &right
     return ! RuntimeHelpers::strictEqual(left, right);
 }
 
-inline Bool Runtime::toBoolean(const Value &value)
+inline Bool Runtime::method_toBoolean(const Value &value)
 {
     return value.toBoolean();
 }

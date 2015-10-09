@@ -100,6 +100,24 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(regexpLiteral)
         , INIT_RUNTIME_METHOD(foreachIterator)
         , INIT_RUNTIME_METHOD(foreachNextPropertyName)
+        , INIT_RUNTIME_METHOD(toBoolean)
+        , INIT_RUNTIME_METHOD(toDouble)
+        , INIT_RUNTIME_METHOD(toInt)
+        , INIT_RUNTIME_METHOD(doubleToInt)
+        , INIT_RUNTIME_METHOD(toUInt)
+        , INIT_RUNTIME_METHOD(doubleToUInt)
+        , INIT_RUNTIME_METHOD(getQmlContext)
+        , INIT_RUNTIME_METHOD(getQmlImportedScripts)
+        , INIT_RUNTIME_METHOD(getQmlSingleton)
+        , INIT_RUNTIME_METHOD(getQmlAttachedProperty)
+        , INIT_RUNTIME_METHOD(getQmlScopeObjectProperty)
+        , INIT_RUNTIME_METHOD(getQmlContextObjectProperty)
+        , INIT_RUNTIME_METHOD(getQmlQObjectProperty)
+        , INIT_RUNTIME_METHOD(getQmlSingletonQObjectProperty)
+        , INIT_RUNTIME_METHOD(getQmlIdObject)
+        , INIT_RUNTIME_METHOD(setQmlScopeObjectProperty)
+        , INIT_RUNTIME_METHOD(setQmlContextObjectProperty)
+        , INIT_RUNTIME_METHOD(setQmlQObjectProperty)
     { }
 
     // call
@@ -217,27 +235,27 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static Bool compareIn(ExecutionEngine *engine, const Value &left, const Value &right);
 
     // conversions
-    static Bool toBoolean(const Value &value);
-    static ReturnedValue toDouble(const Value &value);
-    static int toInt(const Value &value);
-    static int doubleToInt(const double &d);
-    static unsigned toUInt(const Value &value);
-    static unsigned doubleToUInt(const double &d);
+    RUNTIME_METHOD(Bool, toBoolean, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, toDouble, (const Value &value));
+    RUNTIME_METHOD(int, toInt, (const Value &value));
+    RUNTIME_METHOD(int, doubleToInt, (const double &d));
+    RUNTIME_METHOD(unsigned, toUInt, (const Value &value));
+    RUNTIME_METHOD(unsigned, doubleToUInt, (const double &d));
 
     // qml
-    static ReturnedValue getQmlContext(NoThrowEngine *engine);
-    static ReturnedValue getQmlImportedScripts(NoThrowEngine *engine);
-    static ReturnedValue getQmlSingleton(NoThrowEngine *engine, int nameIndex);
-    static ReturnedValue getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex);
-    static ReturnedValue getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
-    static ReturnedValue getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired);
-    static ReturnedValue getQmlIdObject(ExecutionEngine *engine, const Value &context, uint index);
+    RUNTIME_METHOD(ReturnedValue, getQmlContext, (NoThrowEngine *engine));
+    RUNTIME_METHOD(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine));
+    RUNTIME_METHOD(ReturnedValue, getQmlSingleton, (NoThrowEngine *engine, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlAttachedProperty, (ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, getQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
+    RUNTIME_METHOD(ReturnedValue, getQmlSingletonQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired));
+    RUNTIME_METHOD(ReturnedValue, getQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index));
 
-    static void setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
-    static void setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
-    static void setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value);
+    RUNTIME_METHOD(void, setQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value));
+    RUNTIME_METHOD(void, setQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value));
+    RUNTIME_METHOD(void, setQmlQObjectProperty, (ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value));
 };
 
 #undef RUNTIME_METHOD

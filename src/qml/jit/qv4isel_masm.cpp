@@ -660,17 +660,17 @@ void InstructionSelection::loadThisObject(IR::Expr *temp)
 
 void InstructionSelection::loadQmlContext(IR::Expr *temp)
 {
-    generateFunctionCall(temp, Runtime::getQmlContext, Assembler::EngineRegister);
+    generateRuntimeCall(temp, getQmlContext, Assembler::EngineRegister);
 }
 
 void InstructionSelection::loadQmlImportedScripts(IR::Expr *temp)
 {
-    generateFunctionCall(temp, Runtime::getQmlImportedScripts, Assembler::EngineRegister);
+    generateRuntimeCall(temp, getQmlImportedScripts, Assembler::EngineRegister);
 }
 
 void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *temp)
 {
-    generateFunctionCall(temp, Runtime::getQmlSingleton, Assembler::EngineRegister, Assembler::StringToIndex(name));
+    generateRuntimeCall(temp, getQmlSingleton, Assembler::EngineRegister, Assembler::StringToIndex(name));
 }
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *target)
@@ -757,11 +757,11 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
 void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int index, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateFunctionCall(target, Runtime::getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateFunctionCall(target, Runtime::getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else if (kind == IR::Member::MemberOfIdObjectsArray)
-        generateFunctionCall(target, Runtime::getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
+        generateRuntimeCall(target, getQmlIdObject, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(index));
     else
         Q_ASSERT(false);
 }
@@ -769,12 +769,12 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *base, IR::Member::Mem
 void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingleton, int attachedPropertiesId, IR::Expr *target)
 {
     if (attachedPropertiesId != 0)
-        generateFunctionCall(target, Runtime::getQmlAttachedProperty, Assembler::EngineRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
+        generateRuntimeCall(target, getQmlAttachedProperty, Assembler::EngineRegister, Assembler::TrustedImm32(attachedPropertiesId), Assembler::TrustedImm32(propertyIndex));
     else if (isSingleton)
-        generateFunctionCall(target, Runtime::getQmlSingletonQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
+        generateRuntimeCall(target, getQmlSingletonQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
                              Assembler::TrustedImm32(captureRequired));
     else
-        generateFunctionCall(target, Runtime::getQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
+        generateRuntimeCall(target, getQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::TrustedImm32(propertyIndex),
                              Assembler::TrustedImm32(captureRequired));
 }
 
@@ -797,10 +797,10 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
 void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *targetBase, IR::Member::MemberKind kind, int propertyIndex)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateFunctionCall(Assembler::Void, Runtime::setQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
+        generateRuntimeCall(Assembler::Void, setQmlScopeObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
                              Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateFunctionCall(Assembler::Void, Runtime::setQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
+        generateRuntimeCall(Assembler::Void, setQmlContextObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
                              Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
     else
         Q_ASSERT(false);
@@ -808,7 +808,7 @@ void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *tar
 
 void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
 {
-    generateFunctionCall(Assembler::Void, Runtime::setQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
+    generateRuntimeCall(Assembler::Void, setQmlQObjectProperty, Assembler::EngineRegister, Assembler::PointerToValue(targetBase),
                          Assembler::TrustedImm32(propertyIndex), Assembler::PointerToValue(source));
 }
 
@@ -1119,7 +1119,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
                                               Assembler::TrustedImm32(Value::NotDouble_Mask));
 #endif
 
-        generateFunctionCall(target, Runtime::toDouble, Assembler::PointerToValue(source));
+        generateRuntimeCall(target, toDouble, Assembler::PointerToValue(source));
         Assembler::Jump noDoubleDone = _as->jump();
 
         // it is a double:
@@ -1184,7 +1184,7 @@ void InstructionSelection::convertTypeToBool(IR::Expr *source, IR::Expr *target)
     case IR::StringType:
     case IR::VarType:
     default:
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toBoolean,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
                              Assembler::PointerToValue(source));
         _as->storeBool(Assembler::ReturnValueRegister, target);
         break;
@@ -1216,7 +1216,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
 
         // not an int:
         fallback.link(_as);
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
                              _as->loadAddress(Assembler::ScratchRegister, source));
 
         isInt.link(_as);
@@ -1254,7 +1254,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
 
         // not an int:
         fallback.link(_as);
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
                              _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
 
@@ -1267,7 +1267,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
                 _as->branchTruncateDoubleToInt32(_as->toDoubleRegister(source),
                                                  Assembler::ReturnValueRegister,
                                                  Assembler::BranchIfTruncateSuccessful);
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::doubleToInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, doubleToInt,
                              Assembler::PointerToValue(source));
         success.link(_as);
         _as->storeInt32(Assembler::ReturnValueRegister, target);
@@ -1285,7 +1285,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
         break;
     case IR::StringType:
     default:
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toInt,
                              _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
         break;
@@ -1310,7 +1310,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *targe
 
         // not an int:
         isNoInt.link(_as);
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toUInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toUInt,
                              _as->loadAddress(Assembler::ScratchRegister, source));
         _as->storeInt32(Assembler::ReturnValueRegister, target);
 
@@ -1321,7 +1321,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *targe
         Assembler::Jump success =
                 _as->branchTruncateDoubleToUint32(reg, Assembler::ReturnValueRegister,
                                                   Assembler::BranchIfTruncateSuccessful);
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::doubleToUInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, doubleToUInt,
                              Assembler::PointerToValue(source));
         success.link(_as);
         _as->storeUInt32(Assembler::ReturnValueRegister, target);
@@ -1332,7 +1332,7 @@ void InstructionSelection::convertTypeToUInt32(IR::Expr *source, IR::Expr *targe
         _as->storeUInt32(Assembler::ReturnValueRegister, target);
         break;
     case IR::StringType:
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toUInt,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toUInt,
                              Assembler::PointerToValue(source));
         _as->storeUInt32(Assembler::ReturnValueRegister, target);
         break;
@@ -1423,7 +1423,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
 
             booleanConversion.link(_as);
             reg = Assembler::ReturnValueRegister;
-            generateFunctionCall(reg, Runtime::toBoolean, Assembler::Reference(s->cond));
+            generateRuntimeCall(reg, toBoolean, Assembler::Reference(s->cond));
 
             testBoolean.link(_as);
         }
@@ -1433,7 +1433,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
     } else if (IR::Const *c = s->cond->asConst()) {
         // TODO: SSA optimization for constant condition evaluation should remove this.
         // See also visitCJump() in RegAllocInfo.
-        generateFunctionCall(Assembler::ReturnValueRegister, Runtime::toBoolean,
+        generateRuntimeCall(Assembler::ReturnValueRegister, toBoolean,
                              Assembler::PointerToValue(c));
         _as->generateCJumpOnNonZero(Assembler::ReturnValueRegister, _block, s->iftrue, s->iffalse);
         return;
