@@ -2346,7 +2346,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
         scope.engine->catchException();
         return false;
     }
-    return QV4::Runtime::strictEqual(value, result);
+    return QV4::Runtime::method_strictEqual(value, result);
 }
 
 static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o,

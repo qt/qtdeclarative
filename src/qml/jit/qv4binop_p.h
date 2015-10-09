@@ -77,8 +77,8 @@ struct Binop {
 
     struct OpInfo {
         const char *name;
-        QV4::Runtime::BinaryOperation fallbackImplementation;
-        QV4::Runtime::BinaryOperationContext contextImplementation;
+        int fallbackImplementation; // offsetOf(Runtime,...)
+        int contextImplementation; // offsetOf(Runtime,...)
         MemRegOp inlineMemRegOp;
         ImmRegOp inlineImmRegOp;
     };

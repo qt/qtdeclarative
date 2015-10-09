@@ -75,11 +75,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-#define OP(op) \
-    { isel_stringIfy(op), op, 0, 0, 0 }
-#define OPCONTEXT(op) \
-    { isel_stringIfy(op), 0, op, 0, 0 }
-
 class InstructionSelection;
 
 struct CompilationUnit : public QV4::CompiledData::CompilationUnit

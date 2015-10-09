@@ -342,7 +342,7 @@ ReturnedValue Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
     return Encode(engine->currentContext->deleteProperty(name));
 }
 
-QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
+QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     Scope scope(engine);
     ScopedFunctionObject f(scope, right.as<FunctionObject>());
@@ -372,7 +372,7 @@ QV4::ReturnedValue Runtime::instanceof(ExecutionEngine *engine, const Value &lef
     return Encode(false);
 }
 
-QV4::ReturnedValue Runtime::in(ExecutionEngine *engine, const Value &left, const Value &right)
+QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     if (!right.isObject())
         return engine->throwTypeError();
@@ -561,7 +561,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
     return Encode(x + y);
 }
 
-QV4::ReturnedValue Runtime::addString(ExecutionEngine *engine, const Value &left, const Value &right)
+QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     Q_ASSERT(left.isString() || right.isString());
 
@@ -917,7 +917,7 @@ Bool Runtime::method_compareInstanceof(ExecutionEngine *engine, const Value &lef
     TRACE2(left, right);
 
     Scope scope(engine);
-    ScopedValue v(scope, Runtime::instanceof(engine, left, right));
+    ScopedValue v(scope, method_instanceof(engine, left, right));
     return v->booleanValue();
 }
 
@@ -926,7 +926,7 @@ uint Runtime::method_compareIn(ExecutionEngine *engine, const Value &left, const
     TRACE2(left, right);
 
     Scope scope(engine);
-    ScopedValue v(scope, Runtime::in(engine, left, right));
+    ScopedValue v(scope, method_in(engine, left, right));
     return v->booleanValue();
 }
 

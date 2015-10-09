@@ -839,19 +839,19 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Add)
-        STOREVALUE(instr.result, Runtime::add(engine, VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.add(engine, VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(Add)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        STOREVALUE(instr.result, Runtime::bitAnd(VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.bitAnd(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        STOREVALUE(instr.result, Runtime::bitOr(VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.bitOr(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        STOREVALUE(instr.result, Runtime::bitXor(VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.bitXor(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
@@ -886,11 +886,11 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(Mul)
-        STOREVALUE(instr.result, Runtime::mul(VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.mul(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(Sub)
-        STOREVALUE(instr.result, Runtime::sub(VALUE(instr.lhs), VALUE(instr.rhs)));
+        STOREVALUE(instr.result, engine->runtime.sub(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(Sub)
 
     MOTH_BEGIN_INSTR(BinopContext)

@@ -180,7 +180,7 @@ inline ReturnedValue Runtime::method_uNot(const Value &value)
 }
 
 // binary operators
-inline ReturnedValue Runtime::bitOr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitOr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -189,7 +189,7 @@ inline ReturnedValue Runtime::bitOr(const Value &left, const Value &right)
     return Encode(lval | rval);
 }
 
-inline ReturnedValue Runtime::bitXor(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitXor(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -198,7 +198,7 @@ inline ReturnedValue Runtime::bitXor(const Value &left, const Value &right)
     return Encode(lval ^ rval);
 }
 
-inline ReturnedValue Runtime::bitAnd(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_bitAnd(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -208,7 +208,7 @@ inline ReturnedValue Runtime::bitAnd(const Value &left, const Value &right)
 }
 
 #ifndef V4_BOOTSTRAP
-inline ReturnedValue Runtime::add(ExecutionEngine *engine, const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -221,7 +221,7 @@ inline ReturnedValue Runtime::add(ExecutionEngine *engine, const Value &left, co
 }
 #endif // V4_BOOTSTRAP
 
-inline ReturnedValue Runtime::sub(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -234,7 +234,7 @@ inline ReturnedValue Runtime::sub(const Value &left, const Value &right)
     return Primitive::fromDouble(lval - rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::mul(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -247,7 +247,7 @@ inline ReturnedValue Runtime::mul(const Value &left, const Value &right)
     return Primitive::fromDouble(lval * rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::div(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_div(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -265,7 +265,7 @@ inline ReturnedValue Runtime::div(const Value &left, const Value &right)
     return Primitive::fromDouble(lval / rval).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::mod(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -280,7 +280,7 @@ inline ReturnedValue Runtime::mod(const Value &left, const Value &right)
     return Primitive::fromDouble(std::fmod(lval, rval)).asReturnedValue();
 }
 
-inline ReturnedValue Runtime::shl(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_shl(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -289,7 +289,7 @@ inline ReturnedValue Runtime::shl(const Value &left, const Value &right)
     return Encode((int)(lval << rval));
 }
 
-inline ReturnedValue Runtime::shr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_shr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -298,7 +298,7 @@ inline ReturnedValue Runtime::shr(const Value &left, const Value &right)
     return Encode((int)(lval >> rval));
 }
 
-inline ReturnedValue Runtime::ushr(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_ushr(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -309,7 +309,7 @@ inline ReturnedValue Runtime::ushr(const Value &left, const Value &right)
     return Encode(res);
 }
 
-inline ReturnedValue Runtime::greaterThan(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_greaterThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -317,7 +317,7 @@ inline ReturnedValue Runtime::greaterThan(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::lessThan(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_lessThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -325,7 +325,7 @@ inline ReturnedValue Runtime::lessThan(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::greaterEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_greaterEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -333,7 +333,7 @@ inline ReturnedValue Runtime::greaterEqual(const Value &left, const Value &right
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::lessEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_lessEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -359,7 +359,7 @@ inline Bool Runtime::method_compareEqual(const Value &left, const Value &right)
     return RuntimeHelpers::equalHelper(left, right);
 }
 
-inline ReturnedValue Runtime::equal(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_equal(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -367,7 +367,7 @@ inline ReturnedValue Runtime::equal(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::notEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_notEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -375,7 +375,7 @@ inline ReturnedValue Runtime::notEqual(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::strictEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_strictEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -383,7 +383,7 @@ inline ReturnedValue Runtime::strictEqual(const Value &left, const Value &right)
     return Encode(r);
 }
 
-inline ReturnedValue Runtime::strictNotEqual(const Value &left, const Value &right)
+inline ReturnedValue Runtime::method_strictNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 

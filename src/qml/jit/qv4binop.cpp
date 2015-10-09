@@ -45,14 +45,14 @@ using namespace QV4;
 using namespace JIT;
 
 #define OP(op) \
-    { isel_stringIfy(op), op, 0, 0, 0 }
+    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, 0, 0 }
 #define OPCONTEXT(op) \
-    { isel_stringIfy(op), 0, op, 0, 0 }
+    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), 0, 0 }
 
 #define INLINE_OP(op, memOp, immOp) \
-    { isel_stringIfy(op), op, 0, memOp, immOp }
+    { "Runtime::" isel_stringIfy(op), offsetof(QV4::Runtime, op), INT_MIN, memOp, immOp }
 #define INLINE_OPCONTEXT(op, memOp, immOp) \
-    { isel_stringIfy(op), 0, op, memOp, immOp }
+    { "Runtime::" isel_stringIfy(op), INT_MIN, offsetof(QV4::Runtime, op), memOp, immOp }
 
 #define NULL_OP \
     { 0, 0, 0, 0, 0 }
@@ -67,32 +67,32 @@ const Binop::OpInfo Binop::operations[IR::LastAluOp + 1] = {
     NULL_OP, // OpIncrement
     NULL_OP, // OpDecrement
 
-    INLINE_OP(Runtime::bitAnd, &Binop::inline_and32, &Binop::inline_and32), // OpBitAnd
-    INLINE_OP(Runtime::bitOr, &Binop::inline_or32, &Binop::inline_or32), // OpBitOr
-    INLINE_OP(Runtime::bitXor, &Binop::inline_xor32, &Binop::inline_xor32), // OpBitXor
+    INLINE_OP(bitAnd, &Binop::inline_and32, &Binop::inline_and32), // OpBitAnd
+    INLINE_OP(bitOr, &Binop::inline_or32, &Binop::inline_or32), // OpBitOr
+    INLINE_OP(bitXor, &Binop::inline_xor32, &Binop::inline_xor32), // OpBitXor
 
-    INLINE_OPCONTEXT(Runtime::add, &Binop::inline_add32, &Binop::inline_add32), // OpAdd
-    INLINE_OP(Runtime::sub, &Binop::inline_sub32, &Binop::inline_sub32), // OpSub
-    INLINE_OP(Runtime::mul, &Binop::inline_mul32, &Binop::inline_mul32), // OpMul
+    INLINE_OPCONTEXT(add, &Binop::inline_add32, &Binop::inline_add32), // OpAdd
+    INLINE_OP(sub, &Binop::inline_sub32, &Binop::inline_sub32), // OpSub
+    INLINE_OP(mul, &Binop::inline_mul32, &Binop::inline_mul32), // OpMul
 
-    OP(Runtime::div), // OpDiv
-    OP(Runtime::mod), // OpMod
+    OP(div), // OpDiv
+    OP(mod), // OpMod
 
-    INLINE_OP(Runtime::shl, &Binop::inline_shl32, &Binop::inline_shl32), // OpLShift
-    INLINE_OP(Runtime::shr, &Binop::inline_shr32, &Binop::inline_shr32), // OpRShift
-    INLINE_OP(Runtime::ushr, &Binop::inline_ushr32, &Binop::inline_ushr32), // OpURShift
+    INLINE_OP(shl, &Binop::inline_shl32, &Binop::inline_shl32), // OpLShift
+    INLINE_OP(shr, &Binop::inline_shr32, &Binop::inline_shr32), // OpRShift
+    INLINE_OP(ushr, &Binop::inline_ushr32, &Binop::inline_ushr32), // OpURShift
 
-    OP(Runtime::greaterThan), // OpGt
-    OP(Runtime::lessThan), // OpLt
-    OP(Runtime::greaterEqual), // OpGe
-    OP(Runtime::lessEqual), // OpLe
-    OP(Runtime::equal), // OpEqual
-    OP(Runtime::notEqual), // OpNotEqual
-    OP(Runtime::strictEqual), // OpStrictEqual
-    OP(Runtime::strictNotEqual), // OpStrictNotEqual
+    OP(greaterThan), // OpGt
+    OP(lessThan), // OpLt
+    OP(greaterEqual), // OpGe
+    OP(lessEqual), // OpLe
+    OP(equal), // OpEqual
+    OP(notEqual), // OpNotEqual
+    OP(strictEqual), // OpStrictEqual
+    OP(strictNotEqual), // OpStrictNotEqual
 
-    OPCONTEXT(Runtime::instanceof), // OpInstanceof
-    OPCONTEXT(Runtime::in), // OpIn
+    OPCONTEXT(instanceof), // OpInstanceof
+    OPCONTEXT(in), // OpIn
 
     NULL_OP, // OpAnd
     NULL_OP // OpOr
@@ -121,16 +121,18 @@ void Binop::generate(IR::Expr *lhs, IR::Expr *rhs, IR::Expr *target)
 
     if (op == IR::OpAdd &&
             (lhs->type == IR::StringType || rhs->type == IR::StringType)) {
-        const Binop::OpInfo stringAdd = OPCONTEXT(Runtime::addString);
+        const Binop::OpInfo stringAdd = OPCONTEXT(addString);
         info = stringAdd;
     }
 
-    if (info.fallbackImplementation) {
-        as->generateFunctionCallImp(target, info.name, info.fallbackImplementation,
+    RuntimeCall fallBack(info.fallbackImplementation);
+    RuntimeCall context(info.contextImplementation);
+    if (fallBack.isValid()) {
+        as->generateFunctionCallImp(target, info.name, fallBack,
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));
-    } else if (info.contextImplementation) {
-        as->generateFunctionCallImp(target, info.name, info.contextImplementation,
+    } else if (context.isValid()) {
+        as->generateFunctionCallImp(target, info.name, context,
                                      Assembler::EngineRegister,
                                      Assembler::PointerToValue(lhs),
                                      Assembler::PointerToValue(rhs));

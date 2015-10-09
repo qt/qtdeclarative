@@ -106,6 +106,28 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(complement)
         , INIT_RUNTIME_METHOD(increment)
         , INIT_RUNTIME_METHOD(decrement)
+        , INIT_RUNTIME_METHOD(instanceof)
+        , INIT_RUNTIME_METHOD(in)
+        , INIT_RUNTIME_METHOD(add)
+        , INIT_RUNTIME_METHOD(addString)
+        , INIT_RUNTIME_METHOD(bitOr)
+        , INIT_RUNTIME_METHOD(bitXor)
+        , INIT_RUNTIME_METHOD(bitAnd)
+        , INIT_RUNTIME_METHOD(sub)
+        , INIT_RUNTIME_METHOD(mul)
+        , INIT_RUNTIME_METHOD(div)
+        , INIT_RUNTIME_METHOD(mod)
+        , INIT_RUNTIME_METHOD(shl)
+        , INIT_RUNTIME_METHOD(shr)
+        , INIT_RUNTIME_METHOD(ushr)
+        , INIT_RUNTIME_METHOD(greaterThan)
+        , INIT_RUNTIME_METHOD(lessThan)
+        , INIT_RUNTIME_METHOD(greaterEqual)
+        , INIT_RUNTIME_METHOD(lessEqual)
+        , INIT_RUNTIME_METHOD(equal)
+        , INIT_RUNTIME_METHOD(notEqual)
+        , INIT_RUNTIME_METHOD(strictEqual)
+        , INIT_RUNTIME_METHOD(strictNotEqual)
         , INIT_RUNTIME_METHOD(compareGreaterThan)
         , INIT_RUNTIME_METHOD(compareLessThan)
         , INIT_RUNTIME_METHOD(compareGreaterEqual)
@@ -212,28 +234,28 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
     typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
 
-    static ReturnedValue instanceof(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue in(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue add(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue addString(ExecutionEngine *engine, const Value &left, const Value &right);
-    static ReturnedValue bitOr(const Value &left, const Value &right);
-    static ReturnedValue bitXor(const Value &left, const Value &right);
-    static ReturnedValue bitAnd(const Value &left, const Value &right);
-    static ReturnedValue sub(const Value &left, const Value &right);
-    static ReturnedValue mul(const Value &left, const Value &right);
-    static ReturnedValue div(const Value &left, const Value &right);
-    static ReturnedValue mod(const Value &left, const Value &right);
-    static ReturnedValue shl(const Value &left, const Value &right);
-    static ReturnedValue shr(const Value &left, const Value &right);
-    static ReturnedValue ushr(const Value &left, const Value &right);
-    static ReturnedValue greaterThan(const Value &left, const Value &right);
-    static ReturnedValue lessThan(const Value &left, const Value &right);
-    static ReturnedValue greaterEqual(const Value &left, const Value &right);
-    static ReturnedValue lessEqual(const Value &left, const Value &right);
-    static ReturnedValue equal(const Value &left, const Value &right);
-    static ReturnedValue notEqual(const Value &left, const Value &right);
-    static ReturnedValue strictEqual(const Value &left, const Value &right);
-    static ReturnedValue strictNotEqual(const Value &left, const Value &right);
+    RUNTIME_METHOD(ReturnedValue, instanceof, (ExecutionEngine *engine, const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, in, (ExecutionEngine *engine, const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, add, (ExecutionEngine *engine, const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, addString, (ExecutionEngine *engine, const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, bitOr, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, bitXor, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, bitAnd, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, sub, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, mul, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, div, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, mod, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, shl, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, shr, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, ushr, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, greaterThan, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, lessThan, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, greaterEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, lessEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, equal, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, notEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, strictEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(ReturnedValue, strictNotEqual, (const Value &left, const Value &right));
 
     // comparisons
     typedef Bool (*CompareOperation)(const Value &left, const Value &right);

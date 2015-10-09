@@ -70,43 +70,43 @@ inline QV4::Runtime::BinaryOperation aluOpFunction(IR::AluOp op)
     case IR::OpCompl:
         return 0;
     case IR::OpBitAnd:
-        return QV4::Runtime::bitAnd;
+        return QV4::Runtime::method_bitAnd;
     case IR::OpBitOr:
-        return QV4::Runtime::bitOr;
+        return QV4::Runtime::method_bitOr;
     case IR::OpBitXor:
-        return QV4::Runtime::bitXor;
+        return QV4::Runtime::method_bitXor;
     case IR::OpAdd:
         return 0;
     case IR::OpSub:
-        return QV4::Runtime::sub;
+        return QV4::Runtime::method_sub;
     case IR::OpMul:
-        return QV4::Runtime::mul;
+        return QV4::Runtime::method_mul;
     case IR::OpDiv:
-        return QV4::Runtime::div;
+        return QV4::Runtime::method_div;
     case IR::OpMod:
-        return QV4::Runtime::mod;
+        return QV4::Runtime::method_mod;
     case IR::OpLShift:
-        return QV4::Runtime::shl;
+        return QV4::Runtime::method_shl;
     case IR::OpRShift:
-        return QV4::Runtime::shr;
+        return QV4::Runtime::method_shr;
     case IR::OpURShift:
-        return QV4::Runtime::ushr;
+        return QV4::Runtime::method_ushr;
     case IR::OpGt:
-        return QV4::Runtime::greaterThan;
+        return QV4::Runtime::method_greaterThan;
     case IR::OpLt:
-        return QV4::Runtime::lessThan;
+        return QV4::Runtime::method_lessThan;
     case IR::OpGe:
-        return QV4::Runtime::greaterEqual;
+        return QV4::Runtime::method_greaterEqual;
     case IR::OpLe:
-        return QV4::Runtime::lessEqual;
+        return QV4::Runtime::method_lessEqual;
     case IR::OpEqual:
-        return QV4::Runtime::equal;
+        return QV4::Runtime::method_equal;
     case IR::OpNotEqual:
-        return QV4::Runtime::notEqual;
+        return QV4::Runtime::method_notEqual;
     case IR::OpStrictEqual:
-        return QV4::Runtime::strictEqual;
+        return QV4::Runtime::method_strictEqual;
     case IR::OpStrictNotEqual:
-        return QV4::Runtime::strictNotEqual;
+        return QV4::Runtime::method_strictNotEqual;
     case IR::OpInstanceof:
         return 0;
     case IR::OpIn:
@@ -1040,11 +1040,11 @@ Param InstructionSelection::binopHelper(IR::AluOp oper, IR::Expr *leftSource, IR
     if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
         Instruction::BinopContext binop;
         if (oper == IR::OpInstanceof)
-            binop.alu = QV4::Runtime::instanceof;
+            binop.alu = QV4::Runtime::method_instanceof;
         else if (oper == IR::OpIn)
-            binop.alu = QV4::Runtime::in;
+            binop.alu = QV4::Runtime::method_in;
         else
-            binop.alu = QV4::Runtime::add;
+            binop.alu = QV4::Runtime::method_add;
         binop.lhs = getParam(leftSource);
         binop.rhs = getParam(rightSource);
         binop.result = getResultParam(target);
