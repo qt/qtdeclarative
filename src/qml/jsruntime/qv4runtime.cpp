@@ -297,7 +297,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
         result->prepend(QLatin1Char('-'));
 }
 
-ReturnedValue Runtime::closure(ExecutionEngine *engine, int functionId)
+ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
 {
     QV4::Function *clos = engine->current->compilationUnit->runtimeFunctions[functionId];
     Q_ASSERT(clos);
@@ -669,7 +669,7 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
     o->put(name, value);
 }
 
-ReturnedValue Runtime::foreachIterator(ExecutionEngine *engine, const Value &in)
+ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Value &in)
 {
     Scope scope(engine);
     ScopedObject o(scope, (Object *)0);
@@ -678,7 +678,7 @@ ReturnedValue Runtime::foreachIterator(ExecutionEngine *engine, const Value &in)
     return engine->newForEachIteratorObject(o)->asReturnedValue();
 }
 
-ReturnedValue Runtime::foreachNextPropertyName(const Value &foreach_iterator)
+ReturnedValue Runtime::method_foreachNextPropertyName(const Value &foreach_iterator)
 {
     Q_ASSERT(foreach_iterator.isObject());
 
@@ -1132,7 +1132,7 @@ ReturnedValue Runtime::method_constructPropertyLookup(ExecutionEngine *engine, u
 }
 
 
-void Runtime::throwException(ExecutionEngine *engine, const Value &value)
+void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)
 {
     if (!value.isEmpty())
         engine->throwError(value);
@@ -1219,7 +1219,7 @@ QV4::ReturnedValue Runtime::method_typeofElement(ExecutionEngine *engine, const 
     return method_typeofValue(engine, prop);
 }
 
-ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
+ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
 {
     if (!engine->hasException)
         return Primitive::emptyValue().asReturnedValue();
@@ -1231,39 +1231,39 @@ ReturnedValue Runtime::unwindException(ExecutionEngine *engine)
  *
  * Instead the push/pop pair acts as a non local scope.
  */
-void Runtime::pushWithScope(const Value &o, ExecutionEngine *engine)
+void Runtime::method_pushWithScope(const Value &o, ExecutionEngine *engine)
 {
     engine->pushContext(engine->currentContext->newWithContext(o.toObject(engine)));
     Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
 }
 
-void Runtime::pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
+void Runtime::method_pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
     ExecutionContext *c = engine->currentContext;
     engine->pushContext(c->newCatchContext(c->d()->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
     Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
 }
 
-void Runtime::popScope(ExecutionEngine *engine)
+void Runtime::method_popScope(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->jsStackTop = engine->currentContext + 2);
     engine->popContext();
     engine->jsStackTop -= 2;
 }
 
-void Runtime::declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
+void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
     engine->currentContext->createMutableBinding(name, deletable);
 }
 
-ReturnedValue Runtime::arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
+ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
 {
     return engine->newArrayObject(values, length)->asReturnedValue();
 }
 
-ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
+ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(engine);
     QV4::InternalClass *klass = engine->current->compilationUnit->runtimeClasses[classId];
@@ -1305,7 +1305,7 @@ ReturnedValue Runtime::objectLiteral(ExecutionEngine *engine, const QV4::Value *
     return o.asReturnedValue();
 }
 
-QV4::ReturnedValue Runtime::setupArgumentsObject(ExecutionEngine *engine)
+QV4::ReturnedValue Runtime::method_setupArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
     QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
@@ -1399,7 +1399,7 @@ ReturnedValue Runtime::getQmlContext(NoThrowEngine *engine)
     return engine->qmlContext()->asReturnedValue();
 }
 
-ReturnedValue Runtime::regexpLiteral(ExecutionEngine *engine, int id)
+ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 {
     return engine->current->compilationUnit->runtimeRegularExpressions[id].asReturnedValue();
 }
@@ -1501,7 +1501,7 @@ QV4::ReturnedValue Runtime::getQmlSingleton(QV4::NoThrowEngine *engine, int name
     return engine->qmlSingletonWrapper(name);
 }
 
-void Runtime::convertThisToObject(ExecutionEngine *engine)
+void Runtime::method_convertThisToObject(ExecutionEngine *engine)
 {
     Value *t = &engine->current->callData->thisObject;
     if (t->isObject())

@@ -451,7 +451,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        STOREVALUE(instr.result, Runtime::closure(engine, instr.value));
+        STOREVALUE(instr.result, engine->runtime.closure(engine, instr.value));
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
@@ -646,36 +646,36 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(SetExceptionHandler)
 
     MOTH_BEGIN_INSTR(CallBuiltinThrow)
-        Runtime::throwException(engine, VALUE(instr.arg));
+        engine->runtime.throwException(engine, VALUE(instr.arg));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinThrow)
 
     MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
-        STOREVALUE(instr.result, Runtime::unwindException(engine));
+        STOREVALUE(instr.result, engine->runtime.unwindException(engine));
     MOTH_END_INSTR(CallBuiltinUnwindException)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
-        Runtime::pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
+        engine->runtime.pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
         context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        Runtime::pushWithScope(VALUE(instr.arg), engine);
+        engine->runtime.pushWithScope(VALUE(instr.arg), engine);
         context = engine->currentContext;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
-        Runtime::popScope(engine);
+        engine->runtime.popScope(engine);
         context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
-        STOREVALUE(instr.result, Runtime::foreachIterator(engine, VALUE(instr.arg)));
+        STOREVALUE(instr.result, engine->runtime.foreachIterator(engine, VALUE(instr.arg)));
     MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-        STOREVALUE(instr.result, Runtime::foreachNextPropertyName(VALUE(instr.arg)));
+        STOREVALUE(instr.result, engine->runtime.foreachNextPropertyName(VALUE(instr.arg)));
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
@@ -715,26 +715,26 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallBuiltinTypeofValue)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
-        Runtime::declareVar(engine, instr.isDeletable, instr.varName);
+        engine->runtime.declareVar(engine, instr.isDeletable, instr.varName);
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
         Q_ASSERT(instr.args + instr.argc <= stackSize);
         QV4::Value *args = stack + instr.args;
-        STOREVALUE(instr.result, Runtime::arrayLiteral(engine, args, instr.argc));
+        STOREVALUE(instr.result, engine->runtime.arrayLiteral(engine, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
         QV4::Value *args = stack + instr.args;
-    STOREVALUE(instr.result, Runtime::objectLiteral(engine, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
+    STOREVALUE(instr.result, engine->runtime.objectLiteral(engine, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
-        STOREVALUE(instr.result, Runtime::setupArgumentsObject(engine));
+        STOREVALUE(instr.result, engine->runtime.setupArgumentsObject(engine));
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
-        Runtime::convertThisToObject(engine);
+        engine->runtime.convertThisToObject(engine);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 

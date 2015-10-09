@@ -476,7 +476,7 @@ void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
 
 void InstructionSelection::callBuiltinThrow(IR::Expr *arg)
 {
-    generateFunctionCall(Assembler::ReturnValueRegister, Runtime::throwException, Assembler::EngineRegister,
+    generateRuntimeCall(Assembler::ReturnValueRegister, throwException, Assembler::EngineRegister,
                          Assembler::PointerToValue(arg));
 }
 
@@ -487,13 +487,13 @@ void InstructionSelection::callBuiltinReThrow()
 
 void InstructionSelection::callBuiltinUnwindException(IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::unwindException, Assembler::EngineRegister);
+    generateRuntimeCall(result, unwindException, Assembler::EngineRegister);
 
 }
 
 void InstructionSelection::callBuiltinPushCatchScope(const QString &exceptionName)
 {
-    generateFunctionCall(Assembler::Void, Runtime::pushCatchScope, Assembler::EngineRegister, Assembler::StringToIndex(exceptionName));
+    generateRuntimeCall(Assembler::Void, pushCatchScope, Assembler::EngineRegister, Assembler::StringToIndex(exceptionName));
 }
 
 void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::Expr *result)
@@ -501,7 +501,7 @@ void InstructionSelection::callBuiltinForeachIteratorObject(IR::Expr *arg, IR::E
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateFunctionCall(result, Runtime::foreachIterator, Assembler::EngineRegister, Assembler::PointerToValue(arg));
+    generateRuntimeCall(result, foreachIterator, Assembler::EngineRegister, Assembler::PointerToValue(arg));
 }
 
 void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR::Expr *result)
@@ -509,24 +509,24 @@ void InstructionSelection::callBuiltinForeachNextPropertyname(IR::Expr *arg, IR:
     Q_ASSERT(arg);
     Q_ASSERT(result);
 
-    generateFunctionCall(result, Runtime::foreachNextPropertyName, Assembler::Reference(arg));
+    generateRuntimeCall(result, foreachNextPropertyName, Assembler::Reference(arg));
 }
 
 void InstructionSelection::callBuiltinPushWithScope(IR::Expr *arg)
 {
     Q_ASSERT(arg);
 
-    generateFunctionCall(Assembler::Void, Runtime::pushWithScope, Assembler::Reference(arg), Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, pushWithScope, Assembler::Reference(arg), Assembler::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinPopScope()
 {
-    generateFunctionCall(Assembler::Void, Runtime::popScope, Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, popScope, Assembler::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinDeclareVar(bool deletable, const QString &name)
 {
-    generateFunctionCall(Assembler::Void, Runtime::declareVar, Assembler::EngineRegister,
+    generateRuntimeCall(Assembler::Void, declareVar, Assembler::EngineRegister,
                          Assembler::TrustedImm32(deletable), Assembler::StringToIndex(name));
 }
 
@@ -535,7 +535,7 @@ void InstructionSelection::callBuiltinDefineArray(IR::Expr *result, IR::ExprList
     Q_ASSERT(result);
 
     int length = prepareVariableArguments(args);
-    generateFunctionCall(result, Runtime::arrayLiteral, Assembler::EngineRegister,
+    generateRuntimeCall(result, arrayLiteral, Assembler::EngineRegister,
                          baseAddressForCallArguments(), Assembler::TrustedImm32(length));
 }
 
@@ -615,19 +615,19 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
         it = it->next;
     }
 
-    generateFunctionCall(result, Runtime::objectLiteral, Assembler::EngineRegister,
+    generateRuntimeCall(result, objectLiteral, Assembler::EngineRegister,
                          baseAddressForCallArguments(), Assembler::TrustedImm32(classId),
                          Assembler::TrustedImm32(arrayValueCount), Assembler::TrustedImm32(arrayGetterSetterCount | (needSparseArray << 30)));
 }
 
 void InstructionSelection::callBuiltinSetupArgumentObject(IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::setupArgumentsObject, Assembler::EngineRegister);
+    generateRuntimeCall(result, setupArgumentsObject, Assembler::EngineRegister);
 }
 
 void InstructionSelection::callBuiltinConvertThisToObject()
 {
-    generateFunctionCall(Assembler::Void, Runtime::convertThisToObject, Assembler::EngineRegister);
+    generateRuntimeCall(Assembler::Void, convertThisToObject, Assembler::EngineRegister);
 }
 
 void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
@@ -717,7 +717,7 @@ void InstructionSelection::loadString(const QString &str, IR::Expr *target)
 void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target)
 {
     int id = registerRegExp(sourceRegexp);
-    generateFunctionCall(target, Runtime::regexpLiteral, Assembler::EngineRegister, Assembler::TrustedImm32(id));
+    generateRuntimeCall(target, regexpLiteral, Assembler::EngineRegister, Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr *target)
@@ -740,7 +740,7 @@ void InstructionSelection::setActivationProperty(IR::Expr *source, const QString
 void InstructionSelection::initClosure(IR::Closure *closure, IR::Expr *target)
 {
     int id = closure->value;
-    generateFunctionCall(target, Runtime::closure, Assembler::EngineRegister, Assembler::TrustedImm32(id));
+    generateRuntimeCall(target, closure, Assembler::EngineRegister, Assembler::TrustedImm32(id));
 }
 
 void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::Expr *target)

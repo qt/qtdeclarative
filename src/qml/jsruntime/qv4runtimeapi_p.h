@@ -86,6 +86,20 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(deleteMember)
         , INIT_RUNTIME_METHOD(deleteMemberString)
         , INIT_RUNTIME_METHOD(deleteName)
+        , INIT_RUNTIME_METHOD(throwException)
+        , INIT_RUNTIME_METHOD(unwindException)
+        , INIT_RUNTIME_METHOD(pushWithScope)
+        , INIT_RUNTIME_METHOD(pushCatchScope)
+        , INIT_RUNTIME_METHOD(popScope)
+        , INIT_RUNTIME_METHOD(closure)
+        , INIT_RUNTIME_METHOD(declareVar)
+        , INIT_RUNTIME_METHOD(setupArgumentsObject)
+        , INIT_RUNTIME_METHOD(convertThisToObject)
+        , INIT_RUNTIME_METHOD(arrayLiteral)
+        , INIT_RUNTIME_METHOD(objectLiteral)
+        , INIT_RUNTIME_METHOD(regexpLiteral)
+        , INIT_RUNTIME_METHOD(foreachIterator)
+        , INIT_RUNTIME_METHOD(foreachNextPropertyName)
     { }
 
     // call
@@ -128,28 +142,28 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(ReturnedValue, deleteName, (ExecutionEngine *engine, int nameIndex));
 
     // exceptions & scopes
-    static void throwException(ExecutionEngine *engine, const Value &value);
-    static ReturnedValue unwindException(ExecutionEngine *engine);
-    static void pushWithScope(const Value &o, ExecutionEngine *engine);
-    static void pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex);
-    static void popScope(ExecutionEngine *engine);
+    RUNTIME_METHOD(void, throwException, (ExecutionEngine *engine, const Value &value));
+    RUNTIME_METHOD(ReturnedValue, unwindException, (ExecutionEngine *engine));
+    RUNTIME_METHOD(void, pushWithScope, (const Value &o, ExecutionEngine *engine));
+    RUNTIME_METHOD(void, pushCatchScope, (NoThrowEngine *engine, int exceptionVarNameIndex));
+    RUNTIME_METHOD(void, popScope, (ExecutionEngine *engine));
 
     // closures
-    static ReturnedValue closure(ExecutionEngine *engine, int functionId);
+    RUNTIME_METHOD(ReturnedValue, closure, (ExecutionEngine *engine, int functionId));
 
     // function header
-    static void declareVar(ExecutionEngine *engine, bool deletable, int nameIndex);
-    static ReturnedValue setupArgumentsObject(ExecutionEngine *engine);
-    static void convertThisToObject(ExecutionEngine *engine);
+    RUNTIME_METHOD(void, declareVar, (ExecutionEngine *engine, bool deletable, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, setupArgumentsObject, (ExecutionEngine *engine));
+    RUNTIME_METHOD(void, convertThisToObject, (ExecutionEngine *engine));
 
     // literals
-    static ReturnedValue arrayLiteral(ExecutionEngine *engine, Value *values, uint length);
-    static ReturnedValue objectLiteral(ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags);
-    static ReturnedValue regexpLiteral(ExecutionEngine *engine, int id);
+    RUNTIME_METHOD(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length));
+    RUNTIME_METHOD(ReturnedValue, objectLiteral, (ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags));
+    RUNTIME_METHOD(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id));
 
     // foreach
-    static ReturnedValue foreachIterator(ExecutionEngine *engine, const Value &in);
-    static ReturnedValue foreachNextPropertyName(const Value &foreach_iterator);
+    RUNTIME_METHOD(ReturnedValue, foreachIterator, (ExecutionEngine *engine, const Value &in));
+    RUNTIME_METHOD(ReturnedValue, foreachNextPropertyName, (const Value &foreach_iterator));
 
     // unary operators
     typedef ReturnedValue (*UnaryOperation)(const Value &value);
