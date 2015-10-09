@@ -317,13 +317,14 @@ QQuickItem *QQuickStackView::currentItem() const
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::get(index, behavior = DontLoad)
+    \qmlmethod Item Qt.labs.controls::StackView::get(index, behavior)
+
+    Returns the item at position \a index in the stack, or \c null if the index
+    is out of bounds.
 
     Supported behavior values:
-    \value StackView.DontLoad
-    \value StackView.ForceLoad
-
-    TODO
+    \value StackView.DontLoad The item is not forced to load (and \c null is returned if not yet loaded).
+    \value StackView.ForceLoad The item is forced to load.
 */
 QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
 {
@@ -338,13 +339,21 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::find(callback, behavior = DontLoad)
+    \qmlmethod Item Qt.labs.controls::StackView::find(callback, behavior)
+
+    Search for a specific item inside the stack. The \a callback function is called
+    for each item in the stack (with the item and index as arguments) until the callback
+    function returns \c true. The return value is the item found. For example:
+
+    \code
+    stackView.find(function(item, index) {
+        return item.isTheOne
+    })
+    \endcode
 
     Supported behavior values:
-    \value StackView.DontLoad
-    \value StackView.ForceLoad
-
-    TODO
+    \value StackView.DontLoad Unloaded items are skipped (the callback function is not called for them).
+    \value StackView.ForceLoad Unloaded items are forced to load.
 */
 QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavior)
 {
@@ -371,7 +380,47 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 /*!
     \qmlmethod Item Qt.labs.controls::StackView::push(item, properties, operation)
 
-    TODO
+    Pushes an \a item onto the stack using the specified \a operation, and
+    optionally applies a set of \a properties on the item. The item can be
+    an \l Item, \l Component, or a \l [QML] url. Returns the item that became
+    current.
+
+    Pushing a single item:
+    \code
+    stackView.push(rect)
+
+    // or with properties:
+    stackView.push(rect, {"color": "red"})
+    \endcode
+
+    Multiple items can be pushed at the same time either by passing them as
+    additional arguments, or as an array. The last item becomes the current
+    item. Each item can be followed by a set of properties to apply.
+
+    Passing a variable amount of arguments:
+    \code
+    stackView.push(rect1, rect2, rect3)
+
+    // or with properties:
+    stackView.push(rect1, {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"})
+    \endcode
+
+    Pushing an array of items:
+    \code
+    stackView.push([rect1, rect2, rect3])
+
+    // or with properties:
+    stackView.push([rect1 {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
+    \endcode
+
+    An \a operation can be optionally specified as the last argument. Supported
+    operations:
+
+    \value StackView.Transition An operation with transitions.
+    \value StackView.Immediate An immediate operation without transitions.
+
+    \sa initialItem
+    \sa {Pushing items}
 */
 void QQuickStackView::push(QQmlV4Function *args)
 {
@@ -417,9 +466,30 @@ void QQuickStackView::push(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::pop(item = null, operation = Transition)
+    \qmlmethod Item Qt.labs.controls::StackView::pop(item, operation)
 
-    TODO
+    Pops one or more items off the stack. Returns the last item removed from the stack.
+
+    If the \a item argument is specified, all items down to (but not
+    including) \a item will be popped. If \a item is \c null, all
+    items down to (but not including) the first item is popped.
+    If not specified, only the current item is popped.
+
+    An \a operation can be optionally specified as the last argument. Supported
+    operations:
+
+    \value StackView.Transition An operation with transitions.
+    \value StackView.Immediate An immediate operation without transitions.
+
+    Examples:
+    \code
+    stackView.pop()
+    stackView.pop(someItem, StackView.Immediate)
+    stackView.pop(StackView.Immediate)
+    stackView.pop(null)
+    \endcode
+
+    \sa clear()
 */
 void QQuickStackView::pop(QQmlV4Function *args)
 {
@@ -479,9 +549,52 @@ void QQuickStackView::pop(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::replace(item, properties, operation = Transition)
+    \qmlmethod Item Qt.labs.controls::StackView::replace(target, item, properties, operation)
 
-    TODO
+    Replaces one or more items on the stack with the specified \a item and
+    \a operation, and optionally applies a set of \a properties on the
+    item. The item can be an \l Item, \l Component, or a \l [QML] url.
+    Returns the item that became current.
+
+    If the \a target argument is specified, all items down to the \target
+    item will be replaced. If \a target is \c null, all items in the stack
+    will be replaced. If not specified, only the top item will be replaced.
+
+    Replace the top item:
+    \code
+    stackView.replace(rect)
+
+    // or with properties:
+    stackView.replace(rect, {"color": "red"})
+    \endcode
+
+    Multiple items can be replaced at the same time either by passing them as
+    additional arguments, or as an array. Each item can be followed by a set
+    of properties to apply.
+
+    Passing a variable amount of arguments:
+    \code
+    stackView.replace(rect1, rect2, rect3)
+
+    // or with properties:
+    stackView.replace(rect1, {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"})
+    \endcode
+
+    Replacing an array of items:
+    \code
+    stackView.replace([rect1, rect2, rect3])
+
+    // or with properties:
+    stackView.replace([rect1 {"color": "red"}, rect2, {"color": "green"}, rect3, {"color": "blue"}])
+    \endcode
+
+    An \a operation can be optionally specified as the last argument. Supported
+    operations:
+
+    \value StackView.Transition An operation with transitions.
+    \value StackView.Immediate An immediate operation without transitions.
+
+    \sa push()
 */
 void QQuickStackView::replace(QQmlV4Function *args)
 {
@@ -536,9 +649,9 @@ void QQuickStackView::replace(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod Item Qt.labs.controls::StackView::clear()
+    \qmlmethod void Qt.labs.controls::StackView::clear()
 
-    TODO
+    Removes all items from the stack. No animations are applied.
 */
 void QQuickStackView::clear()
 {
@@ -552,7 +665,12 @@ void QQuickStackView::clear()
 /*!
     \qmlproperty var Qt.labs.controls::StackView::initialItem
 
-    This property holds the initial item.
+    This property holds the initial item that should be shown when the StackView
+    is created. The initial item can be an \l Item, \l Component, or a \l [QML] url.
+    Specifying an initial item is equivalent to:
+    \code
+    Component.onCompleted: stackView.push(myInitialItem)
+    \endcode
 
     \sa push()
 */
@@ -571,7 +689,10 @@ void QQuickStackView::setInitialItem(const QVariant &item)
 /*!
     \qmlproperty Transition Qt.labs.controls::StackView::popEnter
 
-    TODO
+    This property holds the transition that is applied to the item that
+    enters the stack when another item is popped off of it.
+
+    \sa {Customizing StackView}
 */
 QQuickTransition *QQuickStackView::popEnter() const
 {
@@ -594,7 +715,10 @@ void QQuickStackView::setPopEnter(QQuickTransition *enter)
 /*!
     \qmlproperty Transition Qt.labs.controls::StackView::popExit
 
-    TODO
+    This property holds the transition that is applied to the item that
+    exits the stack when the item is popped off of it.
+
+    \sa {Customizing StackView}
 */
 QQuickTransition *QQuickStackView::popExit() const
 {
@@ -617,7 +741,10 @@ void QQuickStackView::setPopExit(QQuickTransition *exit)
 /*!
     \qmlproperty Transition Qt.labs.controls::StackView::pushEnter
 
-    TODO
+    This property holds the transition that is applied to the item that
+    enters the stack when the item is pushed onto it.
+
+    \sa {Customizing StackView}
 */
 QQuickTransition *QQuickStackView::pushEnter() const
 {
@@ -640,7 +767,10 @@ void QQuickStackView::setPushEnter(QQuickTransition *enter)
 /*!
     \qmlproperty Transition Qt.labs.controls::StackView::pushExit
 
-    TODO
+    This property holds the transition that is applied to the item that
+    exits the stack when another item is pushed onto it.
+
+    \sa {Customizing StackView}
 */
 QQuickTransition *QQuickStackView::pushExit() const
 {
@@ -742,7 +872,8 @@ QQuickStackAttached::~QQuickStackAttached()
 /*!
     \qmlattachedproperty int Qt.labs.controls::StackView::index
 
-    TODO
+    This attached property holds the stack index of the item it's
+    attached to, or \c -1 if the item is not in a stack.
 */
 int QQuickStackAttached::index() const
 {
@@ -753,7 +884,8 @@ int QQuickStackAttached::index() const
 /*!
     \qmlattachedproperty StackView Qt.labs.controls::StackView::view
 
-    TODO
+    This attached property holds the stack view of the item it's
+    attached to, or \c null if the item is not in a stack.
 */
 QQuickStackView *QQuickStackAttached::view() const
 {
@@ -764,7 +896,14 @@ QQuickStackView *QQuickStackAttached::view() const
 /*!
     \qmlattachedproperty enumeration Qt.labs.controls::StackView::status
 
-    TODO
+    This attached property holds the stack status of the item it's
+    attached to, or \c StackView.Inactive if the item is not in a stack.
+
+    Available values:
+    \value StackView.Inactive The item is inactive (or not in a stack).
+    \value StackView.Deactivating The item is being deactivated (popped off).
+    \value StackView.Activating The item is being activated (becoming the current item).
+    \value StackView.Active The item is active, that is, the current item.
 */
 QQuickStackView::Status QQuickStackAttached::status() const
 {

@@ -269,7 +269,25 @@
 
     \section1 Customizing StackView
 
-        TODO
+        StackView can have a visual \l {Control::background}{background}
+        item, and it allows customizing the transitions that are used for
+        push and pop operations.
+
+        \section3 Push enter
+
+            \snippet StackView.qml pushEnter
+
+        \section3 Push exit
+
+            \snippet StackView.qml pushExit
+
+        \section3 Pop enter
+
+            \snippet StackView.qml popEnter
+
+        \section3 Pop exit
+
+            \snippet StackView.qml popExit
 
 
     \section1 Customizing Switch
