@@ -159,13 +159,6 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
     JSC::JSGlobalData dummy(_executableAllocator);
     JSC::LinkBuffer linkBuffer(dummy, this, 0);
 
-    QHash<void*, const char*> functions;
-    foreach (CallToLink ctl, _callsToLink) {
-        if (ctl.externalFunction.value())
-            linkBuffer.link(ctl.call, ctl.externalFunction);
-        functions[linkBuffer.locationOf(ctl.label).dataLocation()] = ctl.functionName;
-    }
-
     foreach (const DataLabelPatch &p, _dataLabelPatches)
         linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
 
@@ -194,6 +187,12 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
     if (showCode) {
+        QHash<void*, const char*> functions;
+#ifndef QT_NO_DEBUG
+        foreach (CallInfo call, _callInfos)
+            functions[linkBuffer.locationOf(call.label).dataLocation()] = call.functionName;
+#endif
+
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);
         WTF::setDataFile(new QIODevicePrintStream(&buf));

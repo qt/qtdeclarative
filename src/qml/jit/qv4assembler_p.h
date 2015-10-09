@@ -317,12 +317,12 @@ public:
 
     typedef JSC::FunctionPtr FunctionPtr;
 
-    struct CallToLink {
-        Call call;
-        FunctionPtr externalFunction;
+#ifndef QT_NO_DEBUG
+    struct CallInfo {
         Label label;
         const char* functionName;
     };
+#endif
     struct PointerToValue {
         PointerToValue(IR::Expr *value)
             : value(value)
@@ -345,19 +345,6 @@ public:
         IR::BasicBlock *block;
     };
 
-    void callAbsolute(const char* functionName, FunctionPtr function) {
-        CallToLink ctl;
-        ctl.call = call();
-        ctl.externalFunction = function;
-        ctl.functionName = functionName;
-        ctl.label = label();
-        _callsToLink.append(ctl);
-    }
-
-    void callAbsolute(const char* /*functionName*/, Address addr) {
-        call(addr);
-    }
-
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
     {
         call(lookupCall.addr);
@@ -366,12 +353,15 @@ public:
     void callAbsolute(const char *functionName, const RuntimeCall &runtimeCall)
     {
         call(runtimeCall.addr);
+#ifndef QT_NO_DEBUG
         // the code below is to get proper function names in the disassembly
-        CallToLink ctl;
-        ctl.externalFunction = FunctionPtr();
-        ctl.functionName = functionName;
-        ctl.label = label();
-        _callsToLink.append(ctl);
+        CallInfo info;
+        info.functionName = functionName;
+        info.label = label();
+        _callInfos.append(info);
+#else
+        Q_UNUSED(functionName)
+#endif
     }
 
     void registerBlock(IR::BasicBlock*, IR::BasicBlock *nextBlock);
@@ -1186,7 +1176,9 @@ private:
     IR::Function *_function;
     QHash<IR::BasicBlock *, Label> _addrs;
     QHash<IR::BasicBlock *, QVector<Jump> > _patches;
-    QList<CallToLink> _callsToLink;
+#ifndef QT_NO_DEBUG
+    QVector<CallInfo> _callInfos;
+#endif
 
     struct DataLabelPatch {
         DataLabelPtr dataLabel;

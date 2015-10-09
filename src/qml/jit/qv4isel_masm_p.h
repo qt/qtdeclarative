@@ -244,8 +244,6 @@ private:
     #define isel_stringIfyx(s) #s
     #define isel_stringIfy(s) isel_stringIfyx(s)
 
-    #define generateFunctionCall(t, function, ...) \
-        _as->generateFunctionCallImp(t, isel_stringIfy(function), function, __VA_ARGS__)
     #define generateRuntimeCall(t, function, ...) \
         _as->generateFunctionCallImp(t, "Runtime::" isel_stringIfy(function), RuntimeCall(qOffsetOf(QV4::Runtime, function)), __VA_ARGS__)
 
