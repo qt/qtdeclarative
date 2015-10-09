@@ -161,7 +161,8 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     QHash<void*, const char*> functions;
     foreach (CallToLink ctl, _callsToLink) {
-        linkBuffer.link(ctl.call, ctl.externalFunction);
+        if (ctl.externalFunction.value())
+            linkBuffer.link(ctl.call, ctl.externalFunction);
         functions[linkBuffer.locationOf(ctl.label).dataLocation()] = ctl.functionName;
     }
 
@@ -393,7 +394,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateFunctionCall(result, Runtime::callGlobalLookup,
+        generateRuntimeCall(result, callGlobalLookup,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());

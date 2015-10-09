@@ -110,6 +110,8 @@ public:
     Value *jsStackLimit;
     quintptr cStackLimit;
 
+    Runtime runtime;
+
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
     enum { JSStackLimit = 4*1024*1024 };

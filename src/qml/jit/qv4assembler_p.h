@@ -104,6 +104,12 @@ struct LookupCall {
     {}
 };
 
+struct RuntimeCall {
+    JSC::MacroAssembler::Address addr;
+
+    inline RuntimeCall(uint offset);
+};
+
 template <typename T>
 struct ExceptionCheck {
     enum { NeedsCheck = 1 };
@@ -357,6 +363,17 @@ public:
     void callAbsolute(const char* /*functionName*/, const LookupCall &lookupCall)
     {
         call(lookupCall.addr);
+    }
+
+    void callAbsolute(const char *functionName, const RuntimeCall &runtimeCall)
+    {
+        call(runtimeCall.addr);
+        // the code below is to get proper function names in the disassembly
+        CallToLink ctl;
+        ctl.externalFunction = FunctionPtr();
+        ctl.functionName = functionName;
+        ctl.label = label();
+        _callsToLink.append(ctl);
     }
 
     void registerBlock(IR::BasicBlock*, IR::BasicBlock *nextBlock);
@@ -1230,6 +1247,11 @@ void Assembler::copyValue(Result result, IR::Expr* source)
     } else {
         Q_UNREACHABLE();
     }
+}
+
+inline RuntimeCall::RuntimeCall(uint offset)
+    : addr(Assembler::EngineRegister, offset + qOffsetOf(QV4::ExecutionEngine, runtime))
+{
 }
 
 

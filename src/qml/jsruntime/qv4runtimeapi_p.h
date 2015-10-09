@@ -47,9 +47,20 @@ namespace QV4 {
 
 struct NoThrowEngine;
 
+#define RUNTIME_METHOD(returnvalue, name, args) \
+    typedef returnvalue (*Method_##name)args; \
+    static returnvalue method_##name args; \
+    const Method_##name name
+
+#define INIT_RUNTIME_METHOD(name) \
+    name(method_##name)
+
 struct Q_QML_PRIVATE_EXPORT Runtime {
+    Runtime()
+        : INIT_RUNTIME_METHOD(callGlobalLookup)
+    { }
     // call
-    static ReturnedValue callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
+    RUNTIME_METHOD(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData));
     static ReturnedValue callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
     static ReturnedValue callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
     static ReturnedValue callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
@@ -185,6 +196,9 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     static void setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value);
     static void setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value);
 };
+
+#undef RUNTIME_METHOD
+#undef INIT_RUNTIME_METHOD
 
 } // namespace QV4
 

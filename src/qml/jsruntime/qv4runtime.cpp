@@ -931,7 +931,7 @@ uint Runtime::compareIn(ExecutionEngine *engine, const Value &left, const Value 
 }
 
 
-ReturnedValue Runtime::callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData)
+ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData)
 {
     Scope scope(engine);
     Q_ASSERT(callData->thisObject.isUndefined());
