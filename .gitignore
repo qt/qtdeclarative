@@ -21,6 +21,7 @@
 /tests/auto/theme/tst_theme
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
+/tests/manual/gifs/tst_gifs
 
 /tests/auto/snippets/screenshots/*.png
 /src/controls/doc/qtquickcontrols2.tags
