@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal Qt.labs.controls::AbstractButton::clicked()
 
-    This signal is emitted when the button is clicked.
+    This signal is emitted when the button is interactively clicked by the user.
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() : pressed(false), label(Q_NULLPTR)
