@@ -74,6 +74,12 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the button is interactively clicked by the user.
 */
 
+/*!
+    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked()
+
+    This signal is emitted when the button is interactively double clicked by the user.
+*/
+
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() : pressed(false), label(Q_NULLPTR)
 {
 }
@@ -222,6 +228,12 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
+}
+
+void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    QQuickControl::mouseDoubleClickEvent(event);
+    emit doubleClicked();
 }
 
 void QQuickAbstractButton::mouseUngrabEvent()

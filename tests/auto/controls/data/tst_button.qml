@@ -57,7 +57,7 @@ TestCase {
 
             property ControlSpy spy: ControlSpy {
                 target: control
-                signals: ["pressed", "released", "canceled", "clicked", "pressedChanged"]
+                signals: ["pressed", "released", "canceled", "clicked", "doubleClicked", "pressedChanged"]
             }
         }
     }
@@ -115,6 +115,21 @@ TestCase {
 
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
         compare(control.pressed, false)
+        verify(control.spy.success)
+
+        // double click
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        ["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked",
+                                        ["pressedChanged", { "pressed": true }],
+                                        "pressed",
+                                        "doubleClicked",
+                                        ["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
+        mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton)
         verify(control.spy.success)
 
         control.destroy()

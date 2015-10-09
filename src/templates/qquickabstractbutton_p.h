@@ -78,6 +78,7 @@ Q_SIGNALS:
     void released();
     void canceled();
     void clicked();
+    void doubleClicked();
     void textChanged();
     void pressedChanged();
     void labelChanged();
@@ -91,6 +92,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
 private:
