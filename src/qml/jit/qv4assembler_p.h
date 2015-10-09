@@ -63,6 +63,8 @@
 #include <config.h>
 #include <wtf/Vector.h>
 
+#include <climits>
+
 #if ENABLE(ASSEMBLER)
 
 #include <assembler/MacroAssembler.h>
@@ -107,7 +109,8 @@ struct LookupCall {
 struct RuntimeCall {
     JSC::MacroAssembler::Address addr;
 
-    inline RuntimeCall(uint offset);
+    inline RuntimeCall(uint offset = INT_MIN);
+    bool isValid() const { return addr.offset >= 0; }
 };
 
 template <typename T>

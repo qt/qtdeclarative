@@ -106,6 +106,16 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(complement)
         , INIT_RUNTIME_METHOD(increment)
         , INIT_RUNTIME_METHOD(decrement)
+        , INIT_RUNTIME_METHOD(compareGreaterThan)
+        , INIT_RUNTIME_METHOD(compareLessThan)
+        , INIT_RUNTIME_METHOD(compareGreaterEqual)
+        , INIT_RUNTIME_METHOD(compareLessEqual)
+        , INIT_RUNTIME_METHOD(compareEqual)
+        , INIT_RUNTIME_METHOD(compareNotEqual)
+        , INIT_RUNTIME_METHOD(compareStrictEqual)
+        , INIT_RUNTIME_METHOD(compareStrictNotEqual)
+        , INIT_RUNTIME_METHOD(compareInstanceof)
+        , INIT_RUNTIME_METHOD(compareIn)
         , INIT_RUNTIME_METHOD(toBoolean)
         , INIT_RUNTIME_METHOD(toDouble)
         , INIT_RUNTIME_METHOD(toInt)
@@ -227,18 +237,18 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 
     // comparisons
     typedef Bool (*CompareOperation)(const Value &left, const Value &right);
-    static Bool compareGreaterThan(const Value &l, const Value &r);
-    static Bool compareLessThan(const Value &l, const Value &r);
-    static Bool compareGreaterEqual(const Value &l, const Value &r);
-    static Bool compareLessEqual(const Value &l, const Value &r);
-    static Bool compareEqual(const Value &left, const Value &right);
-    static Bool compareNotEqual(const Value &left, const Value &right);
-    static Bool compareStrictEqual(const Value &left, const Value &right);
-    static Bool compareStrictNotEqual(const Value &left, const Value &right);
+    RUNTIME_METHOD(Bool, compareGreaterThan, (const Value &l, const Value &r));
+    RUNTIME_METHOD(Bool, compareLessThan, (const Value &l, const Value &r));
+    RUNTIME_METHOD(Bool, compareGreaterEqual, (const Value &l, const Value &r));
+    RUNTIME_METHOD(Bool, compareLessEqual, (const Value &l, const Value &r));
+    RUNTIME_METHOD(Bool, compareEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(Bool, compareNotEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(Bool, compareStrictEqual, (const Value &left, const Value &right));
+    RUNTIME_METHOD(Bool, compareStrictNotEqual, (const Value &left, const Value &right));
 
     typedef Bool (*CompareOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
-    static Bool compareInstanceof(ExecutionEngine *engine, const Value &left, const Value &right);
-    static Bool compareIn(ExecutionEngine *engine, const Value &left, const Value &right);
+    RUNTIME_METHOD(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right));
+    RUNTIME_METHOD(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right));
 
     // conversions
     RUNTIME_METHOD(Bool, toBoolean, (const Value &value));

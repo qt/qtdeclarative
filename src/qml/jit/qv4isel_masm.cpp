@@ -982,9 +982,9 @@ void InstructionSelection::swapValues(IR::Expr *source, IR::Expr *target)
 }
 
 #define setOp(op, opName, operation) \
-    do { op = operation; opName = isel_stringIfy(operation); } while (0)
+    do { op = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
 #define setOpContext(op, opName, operation) \
-    do { opContext = operation; opName = isel_stringIfy(operation); } while (0)
+    do { opContext = RuntimeCall(qOffsetOf(QV4::Runtime, operation)); opName = "Runtime::" isel_stringIfy(operation); } while (0)
 
 void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *target)
 {
@@ -1455,8 +1455,8 @@ void InstructionSelection::visitCJump(IR::CJump *s)
             return;
         }
 
-        Runtime::CompareOperation op = 0;
-        Runtime::CompareOperationContext opContext = 0;
+        RuntimeCall op;
+        RuntimeCall opContext;
         const char *opName = 0;
         switch (b->op) {
         default: Q_UNREACHABLE(); Q_ASSERT(!"todo"); break;
@@ -1477,7 +1477,7 @@ void InstructionSelection::visitCJump(IR::CJump *s)
         //   if (true === true) .....
         // Of course, after folding the CJUMP to a JUMP, dead-code (dead-basic-block)
         // elimination (which isn't there either) would remove the whole else block.
-        if (opContext)
+        if (opContext.isValid())
             _as->generateFunctionCallImp(Assembler::ReturnValueRegister, opName, opContext,
                                          Assembler::EngineRegister,
                                          Assembler::PointerToValue(b->left),
@@ -1801,7 +1801,7 @@ void InstructionSelection::visitCJumpStrict(IR::Binop *binop, IR::BasicBlock *tr
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, "Runtime::compareStrictEqual", Runtime::compareStrictEqual,
+    generateRuntimeCall(Assembler::ReturnValueRegister, compareStrictEqual,
                                  Assembler::PointerToValue(left), Assembler::PointerToValue(right));
     _as->generateCJumpOnCompare(binop->op == IR::OpStrictEqual ? Assembler::NotEqual : Assembler::Equal,
                                 Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),
@@ -1955,7 +1955,7 @@ void InstructionSelection::visitCJumpEqual(IR::Binop *binop, IR::BasicBlock *tru
     IR::Expr *left = binop->left;
     IR::Expr *right = binop->right;
 
-    _as->generateFunctionCallImp(Assembler::ReturnValueRegister, "Runtime::compareEqual", Runtime::compareEqual,
+    generateRuntimeCall(Assembler::ReturnValueRegister, compareEqual,
                                  Assembler::PointerToValue(left), Assembler::PointerToValue(right));
     _as->generateCJumpOnCompare(binop->op == IR::OpEqual ? Assembler::NotEqual : Assembler::Equal,
                                 Assembler::ReturnValueRegister, Assembler::TrustedImm32(0),

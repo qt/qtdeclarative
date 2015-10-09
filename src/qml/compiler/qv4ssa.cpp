@@ -3748,42 +3748,42 @@ bool tryOptimizingComparison(Expr *&expr)
 
     switch (b->op) {
     case OpGt:
-        leftConst->value = Runtime::compareGreaterThan(l, r);
+        leftConst->value = Runtime::method_compareGreaterThan(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLt:
-        leftConst->value = Runtime::compareLessThan(l, r);
+        leftConst->value = Runtime::method_compareLessThan(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpGe:
-        leftConst->value = Runtime::compareGreaterEqual(l, r);
+        leftConst->value = Runtime::method_compareGreaterEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpLe:
-        leftConst->value = Runtime::compareLessEqual(l, r);
+        leftConst->value = Runtime::method_compareLessEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpStrictEqual:
-        leftConst->value = Runtime::compareStrictEqual(l, r);
+        leftConst->value = Runtime::method_compareStrictEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpEqual:
-        leftConst->value = Runtime::compareEqual(l, r);
+        leftConst->value = Runtime::method_compareEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpStrictNotEqual:
-        leftConst->value = Runtime::compareStrictNotEqual(l, r);
+        leftConst->value = Runtime::method_compareStrictNotEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;
     case OpNotEqual:
-        leftConst->value = Runtime::compareNotEqual(l, r);
+        leftConst->value = Runtime::method_compareNotEqual(l, r);
         leftConst->type = BoolType;
         expr = leftConst;
         return true;

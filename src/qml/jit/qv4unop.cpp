@@ -51,7 +51,7 @@ using namespace JIT;
 
 void Unop::generate(IR::Expr *source, IR::Expr *target)
 {
-    RuntimeCall call(-1);
+    RuntimeCall call;
     const char *name = 0;
     switch (op) {
     case IR::OpNot:
@@ -70,7 +70,7 @@ void Unop::generate(IR::Expr *source, IR::Expr *target)
         Q_UNREACHABLE();
     } // switch
 
-    Q_ASSERT(call.addr.offset >= 0);
+    Q_ASSERT(call.isValid());
     _as->generateFunctionCallImp(target, name, call, Assembler::PointerToValue(source));
 }
 

@@ -742,9 +742,9 @@ uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
         double dx = RuntimeHelpers::toNumber(x);
         return dx == y.asDouble();
     } else if (x.isBoolean()) {
-        return Runtime::compareEqual(Primitive::fromDouble((double) x.booleanValue()), y);
+        return Runtime::method_compareEqual(Primitive::fromDouble((double) x.booleanValue()), y);
     } else if (y.isBoolean()) {
-        return Runtime::compareEqual(x, Primitive::fromDouble((double) y.booleanValue()));
+        return Runtime::method_compareEqual(x, Primitive::fromDouble((double) y.booleanValue()));
     } else {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
@@ -752,11 +752,11 @@ uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
         if ((x.isNumber() || x.isString()) && y.isObject()) {
             Scope scope(y.objectValue()->engine());
             ScopedValue py(scope, RuntimeHelpers::toPrimitive(y, PREFERREDTYPE_HINT));
-            return Runtime::compareEqual(x, py);
+            return Runtime::method_compareEqual(x, py);
         } else if (x.isObject() && (y.isNumber() || y.isString())) {
             Scope scope(x.objectValue()->engine());
             ScopedValue px(scope, RuntimeHelpers::toPrimitive(x, PREFERREDTYPE_HINT));
-            return Runtime::compareEqual(px, y);
+            return Runtime::method_compareEqual(px, y);
         }
 #endif
     }
@@ -779,7 +779,7 @@ Bool RuntimeHelpers::strictEqual(const Value &x, const Value &y)
     return false;
 }
 
-QV4::Bool Runtime::compareGreaterThan(const Value &l, const Value &r)
+QV4::Bool Runtime::method_compareGreaterThan(const Value &l, const Value &r)
 {
     TRACE2(l, r);
     if (l.isInteger() && r.isInteger())
@@ -803,7 +803,7 @@ QV4::Bool Runtime::compareGreaterThan(const Value &l, const Value &r)
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
-        return Runtime::compareGreaterThan(pl, pr);
+        return Runtime::method_compareGreaterThan(pl, pr);
 #endif
     }
 
@@ -812,7 +812,7 @@ QV4::Bool Runtime::compareGreaterThan(const Value &l, const Value &r)
     return dl > dr;
 }
 
-QV4::Bool Runtime::compareLessThan(const Value &l, const Value &r)
+QV4::Bool Runtime::method_compareLessThan(const Value &l, const Value &r)
 {
     TRACE2(l, r);
     if (l.isInteger() && r.isInteger())
@@ -836,7 +836,7 @@ QV4::Bool Runtime::compareLessThan(const Value &l, const Value &r)
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
-        return Runtime::compareLessThan(pl, pr);
+        return Runtime::method_compareLessThan(pl, pr);
 #endif
     }
 
@@ -845,7 +845,7 @@ QV4::Bool Runtime::compareLessThan(const Value &l, const Value &r)
     return dl < dr;
 }
 
-QV4::Bool Runtime::compareGreaterEqual(const Value &l, const Value &r)
+QV4::Bool Runtime::method_compareGreaterEqual(const Value &l, const Value &r)
 {
     TRACE2(l, r);
     if (l.isInteger() && r.isInteger())
@@ -869,7 +869,7 @@ QV4::Bool Runtime::compareGreaterEqual(const Value &l, const Value &r)
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
-        return Runtime::compareGreaterEqual(pl, pr);
+        return Runtime::method_compareGreaterEqual(pl, pr);
 #endif
     }
 
@@ -878,7 +878,7 @@ QV4::Bool Runtime::compareGreaterEqual(const Value &l, const Value &r)
     return dl >= dr;
 }
 
-QV4::Bool Runtime::compareLessEqual(const Value &l, const Value &r)
+QV4::Bool Runtime::method_compareLessEqual(const Value &l, const Value &r)
 {
     TRACE2(l, r);
     if (l.isInteger() && r.isInteger())
@@ -902,7 +902,7 @@ QV4::Bool Runtime::compareLessEqual(const Value &l, const Value &r)
         QV4::Scope scope(e);
         QV4::ScopedValue pl(scope, RuntimeHelpers::toPrimitive(l, QV4::NUMBER_HINT));
         QV4::ScopedValue pr(scope, RuntimeHelpers::toPrimitive(r, QV4::NUMBER_HINT));
-        return Runtime::compareLessEqual(pl, pr);
+        return Runtime::method_compareLessEqual(pl, pr);
 #endif
     }
 
@@ -912,7 +912,7 @@ QV4::Bool Runtime::compareLessEqual(const Value &l, const Value &r)
 }
 
 #ifndef V4_BOOTSTRAP
-Bool Runtime::compareInstanceof(ExecutionEngine *engine, const Value &left, const Value &right)
+Bool Runtime::method_compareInstanceof(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -921,7 +921,7 @@ Bool Runtime::compareInstanceof(ExecutionEngine *engine, const Value &left, cons
     return v->booleanValue();
 }
 
-uint Runtime::compareIn(ExecutionEngine *engine, const Value &left, const Value &right)
+uint Runtime::method_compareIn(ExecutionEngine *engine, const Value &left, const Value &right)
 {
     TRACE2(left, right);
 

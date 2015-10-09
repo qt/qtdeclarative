@@ -313,7 +313,7 @@ inline ReturnedValue Runtime::greaterThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareGreaterThan(left, right);
+    bool r = method_compareGreaterThan(left, right);
     return Encode(r);
 }
 
@@ -321,7 +321,7 @@ inline ReturnedValue Runtime::lessThan(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareLessThan(left, right);
+    bool r = method_compareLessThan(left, right);
     return Encode(r);
 }
 
@@ -329,7 +329,7 @@ inline ReturnedValue Runtime::greaterEqual(const Value &left, const Value &right
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareGreaterEqual(left, right);
+    bool r = method_compareGreaterEqual(left, right);
     return Encode(r);
 }
 
@@ -337,11 +337,11 @@ inline ReturnedValue Runtime::lessEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareLessEqual(left, right);
+    bool r = method_compareLessEqual(left, right);
     return Encode(r);
 }
 
-inline Bool Runtime::compareEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
@@ -363,7 +363,7 @@ inline ReturnedValue Runtime::equal(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = Runtime::compareEqual(left, right);
+    bool r = method_compareEqual(left, right);
     return Encode(r);
 }
 
@@ -371,7 +371,7 @@ inline ReturnedValue Runtime::notEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    bool r = !Runtime::compareEqual(left, right);
+    bool r = !method_compareEqual(left, right);
     return Encode(r);
 }
 
@@ -391,21 +391,21 @@ inline ReturnedValue Runtime::strictNotEqual(const Value &left, const Value &rig
     return Encode(r);
 }
 
-inline Bool Runtime::compareNotEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    return !Runtime::compareEqual(left, right);
+    return !Runtime::method_compareEqual(left, right);
 }
 
-inline Bool Runtime::compareStrictEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareStrictEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
     return RuntimeHelpers::strictEqual(left, right);
 }
 
-inline Bool Runtime::compareStrictNotEqual(const Value &left, const Value &right)
+inline Bool Runtime::method_compareStrictNotEqual(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
