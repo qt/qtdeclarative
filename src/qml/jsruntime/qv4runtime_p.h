@@ -137,7 +137,7 @@ inline double RuntimeHelpers::toNumber(const Value &value)
     return value.toNumber();
 }
 
-inline ReturnedValue Runtime::uPlus(const Value &value)
+inline ReturnedValue Runtime::method_uPlus(const Value &value)
 {
     TRACE1(value);
 
@@ -150,7 +150,7 @@ inline ReturnedValue Runtime::uPlus(const Value &value)
     return Encode(n);
 }
 
-inline ReturnedValue Runtime::uMinus(const Value &value)
+inline ReturnedValue Runtime::method_uMinus(const Value &value)
 {
     TRACE1(value);
 
@@ -163,7 +163,7 @@ inline ReturnedValue Runtime::uMinus(const Value &value)
     }
 }
 
-inline ReturnedValue Runtime::complement(const Value &value)
+inline ReturnedValue Runtime::method_complement(const Value &value)
 {
     TRACE1(value);
 
@@ -171,7 +171,7 @@ inline ReturnedValue Runtime::complement(const Value &value)
     return Encode((int)~n);
 }
 
-inline ReturnedValue Runtime::uNot(const Value &value)
+inline ReturnedValue Runtime::method_uNot(const Value &value)
 {
     TRACE1(value);
 

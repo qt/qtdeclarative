@@ -802,7 +802,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(JumpNe)
 
     MOTH_BEGIN_INSTR(UNot)
-        STOREVALUE(instr.result, Runtime::uNot(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.uNot(VALUE(instr.source)));
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UNotBool)
@@ -811,15 +811,15 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(UNotBool)
 
     MOTH_BEGIN_INSTR(UPlus)
-        STOREVALUE(instr.result, Runtime::uPlus(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.uPlus(VALUE(instr.source)));
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        STOREVALUE(instr.result, Runtime::uMinus(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.uMinus(VALUE(instr.source)));
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        STOREVALUE(instr.result, Runtime::complement(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.complement(VALUE(instr.source)));
     MOTH_END_INSTR(UCompl)
 
     MOTH_BEGIN_INSTR(UComplInt)
@@ -827,11 +827,11 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(UComplInt)
 
     MOTH_BEGIN_INSTR(Increment)
-        STOREVALUE(instr.result, Runtime::increment(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.increment(VALUE(instr.source)));
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
-        STOREVALUE(instr.result, Runtime::decrement(VALUE(instr.source)));
+        STOREVALUE(instr.result, engine->runtime.decrement(VALUE(instr.source)));
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)

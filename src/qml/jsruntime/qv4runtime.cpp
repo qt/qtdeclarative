@@ -1315,7 +1315,7 @@ QV4::ReturnedValue Runtime::method_setupArgumentsObject(ExecutionEngine *engine)
 
 #endif // V4_BOOTSTRAP
 
-QV4::ReturnedValue Runtime::increment(const Value &value)
+QV4::ReturnedValue Runtime::method_increment(const Value &value)
 {
     TRACE1(value);
 
@@ -1327,7 +1327,7 @@ QV4::ReturnedValue Runtime::increment(const Value &value)
     }
 }
 
-QV4::ReturnedValue Runtime::decrement(const Value &value)
+QV4::ReturnedValue Runtime::method_decrement(const Value &value)
 {
     TRACE1(value);
 

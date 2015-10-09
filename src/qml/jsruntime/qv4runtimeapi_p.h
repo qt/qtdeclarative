@@ -100,6 +100,12 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         , INIT_RUNTIME_METHOD(regexpLiteral)
         , INIT_RUNTIME_METHOD(foreachIterator)
         , INIT_RUNTIME_METHOD(foreachNextPropertyName)
+        , INIT_RUNTIME_METHOD(uPlus)
+        , INIT_RUNTIME_METHOD(uMinus)
+        , INIT_RUNTIME_METHOD(uNot)
+        , INIT_RUNTIME_METHOD(complement)
+        , INIT_RUNTIME_METHOD(increment)
+        , INIT_RUNTIME_METHOD(decrement)
         , INIT_RUNTIME_METHOD(toBoolean)
         , INIT_RUNTIME_METHOD(toDouble)
         , INIT_RUNTIME_METHOD(toInt)
@@ -185,12 +191,12 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 
     // unary operators
     typedef ReturnedValue (*UnaryOperation)(const Value &value);
-    static ReturnedValue uPlus(const Value &value);
-    static ReturnedValue uMinus(const Value &value);
-    static ReturnedValue uNot(const Value &value);
-    static ReturnedValue complement(const Value &value);
-    static ReturnedValue increment(const Value &value);
-    static ReturnedValue decrement(const Value &value);
+    RUNTIME_METHOD(ReturnedValue, uPlus, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, uMinus, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, uNot, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, complement, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, increment, (const Value &value));
+    RUNTIME_METHOD(ReturnedValue, decrement, (const Value &value));
 
     // binary operators
     typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
