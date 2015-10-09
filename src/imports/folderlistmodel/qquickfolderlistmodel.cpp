@@ -49,7 +49,7 @@ public:
         : q_ptr(q),
           sortField(QQuickFolderListModel::Name), sortReversed(false), showFiles(true),
           showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false),
-          showHidden(false)
+          showHidden(false), caseSensitive(true)
     {
         nameFilters << QLatin1String("*");
     }
@@ -70,6 +70,7 @@ public:
     bool showDotAndDotDot;
     bool showOnlyReadable;
     bool showHidden;
+    bool caseSensitive;
 
     ~QQuickFolderListModelPrivate() {}
     void init();
@@ -758,6 +759,30 @@ void QQuickFolderListModel::setShowOnlyReadable(bool on)
 
     if (on != d->showOnlyReadable) {
         d->fileInfoThread.setShowOnlyReadable(on);
+    }
+}
+
+/*!
+ * \qmlproperty bool FolderListModel::caseSensitive
+ * \since 5.7
+ *
+ * Use case sensitive pattern matching.
+ *
+ * By default, this property is true.
+ *
+ */
+bool QQuickFolderListModel::caseSensitive() const
+{
+    Q_D(const QQuickFolderListModel);
+    return d->caseSensitive;
+}
+
+void QQuickFolderListModel::setCaseSensitive(bool on)
+{
+    Q_D(QQuickFolderListModel);
+
+    if (on != d->caseSensitive) {
+        d->fileInfoThread.setCaseSensitive(on);
     }
 }
 

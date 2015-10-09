@@ -52,6 +52,7 @@ public:
         qmlRegisterType<QQuickFolderListModel>(uri,1,0,"FolderListModel");
         qmlRegisterType<QQuickFolderListModel>(uri,2,0,"FolderListModel");
         qmlRegisterType<QQuickFolderListModel,1>(uri,2,1,"FolderListModel");
+        qmlRegisterType<QQuickFolderListModel,2>(uri,2,2,"FolderListModel");
 #endif
     }
 };

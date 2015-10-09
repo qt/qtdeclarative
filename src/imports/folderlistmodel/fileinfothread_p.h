@@ -68,6 +68,7 @@ public:
     void setShowDotAndDotDot(bool on);
     void setShowHidden(bool on);
     void setShowOnlyReadable(bool on);
+    void setCaseSensitive(bool on);
 
 public Q_SLOTS:
 #ifndef QT_NO_FILESYSTEMWATCHER
@@ -102,6 +103,7 @@ private:
     bool showDotAndDotDot;
     bool showHidden;
     bool showOnlyReadable;
+    bool caseSensitive;
 };
 
 #endif // FILEINFOTHREAD_P_H

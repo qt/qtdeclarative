@@ -52,7 +52,8 @@ FileInfoThread::FileInfoThread(QObject *parent)
       showDirsFirst(false),
       showDotAndDotDot(false),
       showHidden(false),
-      showOnlyReadable(false)
+      showOnlyReadable(false),
+      caseSensitive(true)
 {
 #ifndef QT_NO_FILESYSTEMWATCHER
     watcher = new QFileSystemWatcher(this);
@@ -190,6 +191,14 @@ void FileInfoThread::setShowOnlyReadable(bool on)
     condition.wakeAll();
 }
 
+void FileInfoThread::setCaseSensitive(bool on)
+{
+    QMutexLocker locker(&mutex);
+    caseSensitive = on;
+    folderUpdate = true;
+    condition.wakeAll();
+}
+
 #ifndef QT_NO_FILESYSTEMWATCHER
 void FileInfoThread::updateFile(const QString &path)
 {
@@ -228,7 +237,8 @@ void FileInfoThread::run()
 void FileInfoThread::getFileInfos(const QString &path)
 {
     QDir::Filters filter;
-    filter = QDir::CaseSensitive;
+    if (caseSensitive)
+        filter = QDir::CaseSensitive;
     if (showFiles)
         filter = filter | QDir::Files;
     if (showDirs)

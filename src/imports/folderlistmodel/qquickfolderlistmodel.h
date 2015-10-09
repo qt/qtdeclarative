@@ -67,6 +67,7 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
     Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden REVISION 1)
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
+    Q_PROPERTY(bool caseSensitive READ caseSensitive WRITE setCaseSensitive REVISION 2)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 //![class props]
 
@@ -128,6 +129,8 @@ public:
     void setShowHidden(bool on);
     bool showOnlyReadable() const;
     void setShowOnlyReadable(bool on);
+    bool caseSensitive() const;
+    void setCaseSensitive(bool on);
 //![prop funcs]
 
     Q_INVOKABLE bool isFolder(int index) const;
