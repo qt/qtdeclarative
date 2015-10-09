@@ -69,6 +69,7 @@ T.CheckBox {
             y: (parent.height - height) / 2
             width: 12
             height: 12
+            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
             color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
                            control.checked && control.activeFocus ? control.Theme.focusColor :
                            control.checked ? control.Theme.accentColor : control.Theme.baseColor,

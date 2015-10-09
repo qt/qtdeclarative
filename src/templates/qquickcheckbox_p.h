@@ -52,12 +52,34 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickCheckBoxPrivate;
+
 class Q_LABSTEMPLATES_EXPORT QQuickCheckBox : public QQuickAbstractButton
 {
     Q_OBJECT
+    Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
+    Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL)
 
 public:
     explicit QQuickCheckBox(QQuickItem *parent = Q_NULLPTR);
+
+    bool isTristate() const;
+    void setTristate(bool tristate);
+
+    Qt::CheckState checkState() const;
+    void setCheckState(Qt::CheckState state);
+
+Q_SIGNALS:
+    void tristateChanged();
+    void checkStateChanged();
+
+protected:
+    void checkStateSet() Q_DECL_OVERRIDE;
+    void nextCheckState() Q_DECL_OVERRIDE;
+
+private:
+    Q_DISABLE_COPY(QQuickCheckBox)
+    Q_DECLARE_PRIVATE(QQuickCheckBox)
 };
 
 Q_DECLARE_TYPEINFO(QQuickCheckBox, Q_COMPLEX_TYPE);

@@ -180,6 +180,7 @@ void QQuickAbstractButton::setChecked(bool checked)
     if (d->checked != checked) {
         d->checked = checked;
         setAccessibleProperty("checked", checked);
+        checkStateSet();
         emit checkedChanged();
     }
 }
@@ -303,7 +304,6 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 
 void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 {
-    Q_D(QQuickAbstractButton);
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
@@ -312,8 +312,7 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
         emit released(&mre);
         QQuickMouseEvent mce(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers(), true /* isClick */);
         emit clicked(&mce);
-        if (d->checkable)
-            setChecked(d->exclusive || !d->checked);
+        nextCheckState();
         event->setAccepted(mre.isAccepted() || mce.isAccepted());
     }
 }
@@ -350,8 +349,8 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
-    if (d->checkable && contains(event->pos()))
-        setChecked(d->exclusive || !d->checked);
+    if (contains(event->pos()))
+        nextCheckState();
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
@@ -371,6 +370,17 @@ void QQuickAbstractButton::mouseUngrabEvent()
         setPressed(false);
         emit canceled();
     }
+}
+
+void QQuickAbstractButton::checkStateSet()
+{
+}
+
+void QQuickAbstractButton::nextCheckState()
+{
+    Q_D(QQuickAbstractButton);
+    if (d->checkable)
+        setChecked(d->exclusive || !d->checked);
 }
 
 QT_END_NAMESPACE

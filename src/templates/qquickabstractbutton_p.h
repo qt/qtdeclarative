@@ -117,6 +117,9 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
+    virtual void checkStateSet();
+    virtual void nextCheckState();
+
 private:
     Q_DISABLE_COPY(QQuickAbstractButton)
     Q_DECLARE_PRIVATE(QQuickAbstractButton)

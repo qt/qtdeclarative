@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickcheckbox_p.h"
+#include "qquickabstractbutton_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -80,11 +81,91 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing CheckBox}
 */
 
+class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickCheckBox)
+
+public:
+    QQuickCheckBoxPrivate() : tristate(false), checkState(Qt::Unchecked) { }
+
+    bool tristate;
+    Qt::CheckState checkState;
+};
+
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
-    QQuickAbstractButton(parent)
+    QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
 {
     setCheckable(true);
     setAccessibleRole(0x0000002C); //QAccessible::CheckBox
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::CheckBox::tristate
+
+    This property holds whether the checkbox is a tri-state checkbox.
+
+    The default is \c false, i.e., the checkbox has only two states.
+*/
+bool QQuickCheckBox::isTristate() const
+{
+    Q_D(const QQuickCheckBox);
+    return d->tristate;
+}
+
+void QQuickCheckBox::setTristate(bool tristate)
+{
+    Q_D(QQuickCheckBox);
+    if (d->tristate != tristate) {
+        d->tristate = tristate;
+        emit tristateChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::CheckBox::checkState
+
+    This property holds the check state of the checkbox.
+
+    Available states:
+    \value Qt.Unchecked The checkbox is unchecked.
+    \value Qt.PartiallyChecked The checkbox is partially checked. This state is only used when \l tristate is enabled.
+    \value Qt.Checked The checkbox is checked.
+
+    \sa tristate, {AbstractButton::checked}{checked}
+*/
+Qt::CheckState QQuickCheckBox::checkState() const
+{
+    Q_D(const QQuickCheckBox);
+    return d->checkState;
+}
+
+void QQuickCheckBox::setCheckState(Qt::CheckState state)
+{
+    Q_D(QQuickCheckBox);
+    if (!d->tristate && state == Qt::PartiallyChecked)
+        setTristate(true);
+    if (d->checkState != state) {
+        bool wasChecked = isChecked();
+        d->checked = state != Qt::Unchecked;
+        d->checkState = state;
+        emit checkStateChanged();
+        if (d->checked != wasChecked)
+            emit checkedChanged();
+    }
+}
+
+void QQuickCheckBox::checkStateSet()
+{
+    setCheckState(isChecked() ? Qt::Checked : Qt::Unchecked);
+}
+
+void QQuickCheckBox::nextCheckState()
+{
+    Q_D(QQuickCheckBox);
+    if (d->tristate)
+        setCheckState(static_cast<Qt::CheckState>((d->checkState + 1) % 3));
+    else
+        QQuickAbstractButton::nextCheckState();
 }
 
 QT_END_NAMESPACE
