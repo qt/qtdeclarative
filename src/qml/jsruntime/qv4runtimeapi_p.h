@@ -58,45 +58,74 @@ struct NoThrowEngine;
 struct Q_QML_PRIVATE_EXPORT Runtime {
     Runtime()
         : INIT_RUNTIME_METHOD(callGlobalLookup)
+        , INIT_RUNTIME_METHOD(callActivationProperty)
+        , INIT_RUNTIME_METHOD(callQmlScopeObjectProperty)
+        , INIT_RUNTIME_METHOD(callQmlContextObjectProperty)
+        , INIT_RUNTIME_METHOD(callProperty)
+        , INIT_RUNTIME_METHOD(callPropertyLookup)
+        , INIT_RUNTIME_METHOD(callElement)
+        , INIT_RUNTIME_METHOD(callValue)
+        , INIT_RUNTIME_METHOD(constructGlobalLookup)
+        , INIT_RUNTIME_METHOD(constructActivationProperty)
+        , INIT_RUNTIME_METHOD(constructProperty)
+        , INIT_RUNTIME_METHOD(constructPropertyLookup)
+        , INIT_RUNTIME_METHOD(constructValue)
+        , INIT_RUNTIME_METHOD(setActivationProperty)
+        , INIT_RUNTIME_METHOD(setProperty)
+        , INIT_RUNTIME_METHOD(setElement)
+        , INIT_RUNTIME_METHOD(getProperty)
+        , INIT_RUNTIME_METHOD(getActivationProperty)
+        , INIT_RUNTIME_METHOD(getElement)
+        , INIT_RUNTIME_METHOD(typeofValue)
+        , INIT_RUNTIME_METHOD(typeofName)
+        , INIT_RUNTIME_METHOD(typeofScopeObjectProperty)
+        , INIT_RUNTIME_METHOD(typeofContextObjectProperty)
+        , INIT_RUNTIME_METHOD(typeofMember)
+        , INIT_RUNTIME_METHOD(typeofElement)
+        , INIT_RUNTIME_METHOD(deleteElement)
+        , INIT_RUNTIME_METHOD(deleteMember)
+        , INIT_RUNTIME_METHOD(deleteMemberString)
+        , INIT_RUNTIME_METHOD(deleteName)
     { }
+
     // call
     RUNTIME_METHOD(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData));
-    static ReturnedValue callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
-    static ReturnedValue callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData);
-    static ReturnedValue callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue callElement(ExecutionEngine *engine, const Value &index, CallData *callData);
-    static ReturnedValue callValue(ExecutionEngine *engine, const Value &func, CallData *callData);
+    RUNTIME_METHOD(ReturnedValue, callActivationProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callQmlScopeObjectProperty, (ExecutionEngine *engine, int propertyIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callQmlContextObjectProperty, (ExecutionEngine *engine, int propertyIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callElement, (ExecutionEngine *engine, const Value &index, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, CallData *callData));
 
     // construct
-    static ReturnedValue constructGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue constructActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue constructProperty(ExecutionEngine *engine, int nameIndex, CallData *callData);
-    static ReturnedValue constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData);
-    static ReturnedValue constructValue(ExecutionEngine *engine, const Value &func, CallData *callData);
+    RUNTIME_METHOD(ReturnedValue, constructGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, constructActivationProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, constructProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, constructPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData));
+    RUNTIME_METHOD(ReturnedValue, constructValue, (ExecutionEngine *engine, const Value &func, CallData *callData));
 
     // set & get
-    static void setActivationProperty(ExecutionEngine *engine, int nameIndex, const Value &value);
-    static void setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value);
-    static void setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value);
-    static ReturnedValue getProperty(ExecutionEngine *engine, const Value &object, int nameIndex);
-    static ReturnedValue getActivationProperty(ExecutionEngine *engine, int nameIndex);
-    static ReturnedValue getElement(ExecutionEngine *engine, const Value &object, const Value &index);
+    RUNTIME_METHOD(void, setActivationProperty, (ExecutionEngine *engine, int nameIndex, const Value &value));
+    RUNTIME_METHOD(void, setProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value));
+    RUNTIME_METHOD(void, setElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value));
+    RUNTIME_METHOD(ReturnedValue, getProperty, (ExecutionEngine *engine, const Value &object, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, getActivationProperty, (ExecutionEngine *engine, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, getElement, (ExecutionEngine *engine, const Value &object, const Value &index));
 
     // typeof
-    static ReturnedValue typeofValue(ExecutionEngine *engine, const Value &val);
-    static ReturnedValue typeofName(ExecutionEngine *engine, int nameIndex);
-    static ReturnedValue typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
-    static ReturnedValue typeofMember(ExecutionEngine *engine, const Value &base, int nameIndex);
-    static ReturnedValue typeofElement(ExecutionEngine *engine, const Value &base, const Value &index);
+    RUNTIME_METHOD(ReturnedValue, typeofValue, (ExecutionEngine *engine, const Value &val));
+    RUNTIME_METHOD(ReturnedValue, typeofName, (ExecutionEngine *engine, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, typeofScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, typeofContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex));
+    RUNTIME_METHOD(ReturnedValue, typeofMember, (ExecutionEngine *engine, const Value &base, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, typeofElement, (ExecutionEngine *engine, const Value &base, const Value &index));
 
     // delete
-    static ReturnedValue deleteElement(ExecutionEngine *engine, const Value &base, const Value &index);
-    static ReturnedValue deleteMember(ExecutionEngine *engine, const Value &base, int nameIndex);
-    static ReturnedValue deleteMemberString(ExecutionEngine *engine, const Value &base, String *name);
-    static ReturnedValue deleteName(ExecutionEngine *engine, int nameIndex);
+    RUNTIME_METHOD(ReturnedValue, deleteElement, (ExecutionEngine *engine, const Value &base, const Value &index));
+    RUNTIME_METHOD(ReturnedValue, deleteMember, (ExecutionEngine *engine, const Value &base, int nameIndex));
+    RUNTIME_METHOD(ReturnedValue, deleteMemberString, (ExecutionEngine *engine, const Value &base, String *name));
+    RUNTIME_METHOD(ReturnedValue, deleteName, (ExecutionEngine *engine, int nameIndex));
 
     // exceptions & scopes
     static void throwException(ExecutionEngine *engine, const Value &value);

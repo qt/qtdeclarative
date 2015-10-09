@@ -399,7 +399,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateFunctionCall(result, Runtime::callActivationProperty,
+        generateRuntimeCall(result, callActivationProperty,
                              Assembler::EngineRegister,
                              Assembler::StringToIndex(*func->id),
                              baseAddressForCallData());
@@ -411,11 +411,11 @@ void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
                                                                int propertyIndex, IR::Expr *result)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
-        generateFunctionCall(result, Runtime::typeofScopeObjectProperty, Assembler::EngineRegister,
+        generateRuntimeCall(result, typeofScopeObjectProperty, Assembler::EngineRegister,
                              Assembler::PointerToValue(base),
                              Assembler::TrustedImm32(propertyIndex));
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
-        generateFunctionCall(result, Runtime::typeofContextObjectProperty,
+        generateRuntimeCall(result, typeofContextObjectProperty,
                              Assembler::EngineRegister, Assembler::PointerToValue(base),
                              Assembler::TrustedImm32(propertyIndex));
     } else {
@@ -426,46 +426,46 @@ void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
                                                    IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::typeofMember, Assembler::EngineRegister,
+    generateRuntimeCall(result, typeofMember, Assembler::EngineRegister,
                          Assembler::PointerToValue(base), Assembler::StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::typeofElement,
+    generateRuntimeCall(result, typeofElement,
                          Assembler::EngineRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinTypeofName(const QString &name, IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::typeofName, Assembler::EngineRegister,
+    generateRuntimeCall(result, typeofName, Assembler::EngineRegister,
                          Assembler::StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinTypeofValue(IR::Expr *value, IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::typeofValue, Assembler::EngineRegister,
+    generateRuntimeCall(result, typeofValue, Assembler::EngineRegister,
                          Assembler::PointerToValue(value));
 }
 
 void InstructionSelection::callBuiltinDeleteMember(IR::Expr *base, const QString &name, IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::deleteMember, Assembler::EngineRegister,
+    generateRuntimeCall(result, deleteMember, Assembler::EngineRegister,
                          Assembler::Reference(base), Assembler::StringToIndex(name));
 }
 
 void InstructionSelection::callBuiltinDeleteSubscript(IR::Expr *base, IR::Expr *index,
                                                       IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::deleteElement, Assembler::EngineRegister,
+    generateRuntimeCall(result, deleteElement, Assembler::EngineRegister,
                          Assembler::Reference(base), Assembler::PointerToValue(index));
 }
 
 void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Expr *result)
 {
-    generateFunctionCall(result, Runtime::deleteName, Assembler::EngineRegister,
+    generateRuntimeCall(result, deleteName, Assembler::EngineRegister,
                          Assembler::StringToIndex(name));
 }
 
@@ -636,11 +636,11 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
 
     prepareCallData(args, 0);
     if (value->asConst())
-        generateFunctionCall(result, Runtime::callValue, Assembler::EngineRegister,
+        generateRuntimeCall(result, callValue, Assembler::EngineRegister,
                              Assembler::PointerToValue(value),
                              baseAddressForCallData());
     else
-        generateFunctionCall(result, Runtime::callValue, Assembler::EngineRegister,
+        generateRuntimeCall(result, callValue, Assembler::EngineRegister,
                              Assembler::Reference(value),
                              baseAddressForCallData());
 }
@@ -727,13 +727,13 @@ void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr 
         generateLookupCall(target, index, qOffsetOf(QV4::Lookup, globalGetter), Assembler::EngineRegister, Assembler::Void);
         return;
     }
-    generateFunctionCall(target, Runtime::getActivationProperty, Assembler::EngineRegister, Assembler::StringToIndex(*name->id));
+    generateRuntimeCall(target, getActivationProperty, Assembler::EngineRegister, Assembler::StringToIndex(*name->id));
 }
 
 void InstructionSelection::setActivationProperty(IR::Expr *source, const QString &targetName)
 {
     // ### should use a lookup call here
-    generateFunctionCall(Assembler::Void, Runtime::setActivationProperty,
+    generateRuntimeCall(Assembler::Void, setActivationProperty,
                          Assembler::EngineRegister, Assembler::StringToIndex(targetName), Assembler::PointerToValue(source));
 }
 
@@ -749,7 +749,7 @@ void InstructionSelection::getProperty(IR::Expr *base, const QString &name, IR::
         uint index = registerGetterLookup(name);
         generateLookupCall(target, index, qOffsetOf(QV4::Lookup, getter), Assembler::EngineRegister, Assembler::PointerToValue(base), Assembler::Void);
     } else {
-        generateFunctionCall(target, Runtime::getProperty, Assembler::EngineRegister,
+        generateRuntimeCall(target, getProperty, Assembler::EngineRegister,
                              Assembler::PointerToValue(base), Assembler::StringToIndex(name));
     }
 }
@@ -788,7 +788,7 @@ void InstructionSelection::setProperty(IR::Expr *source, IR::Expr *targetBase,
                            Assembler::PointerToValue(targetBase),
                            Assembler::PointerToValue(source));
     } else {
-        generateFunctionCall(Assembler::Void, Runtime::setProperty, Assembler::EngineRegister,
+        generateRuntimeCall(Assembler::Void, setProperty, Assembler::EngineRegister,
                              Assembler::PointerToValue(targetBase), Assembler::StringToIndex(targetName),
                              Assembler::PointerToValue(source));
     }
@@ -822,7 +822,7 @@ void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr 
         return;
     }
 
-    generateFunctionCall(target, Runtime::getElement, Assembler::EngineRegister,
+    generateRuntimeCall(target, getElement, Assembler::EngineRegister,
                          Assembler::PointerToValue(base), Assembler::PointerToValue(index));
 }
 
@@ -835,7 +835,7 @@ void InstructionSelection::setElement(IR::Expr *source, IR::Expr *targetBase, IR
                            Assembler::PointerToValue(source));
         return;
     }
-    generateFunctionCall(Assembler::Void, Runtime::setElement, Assembler::EngineRegister,
+    generateRuntimeCall(Assembler::Void, setElement, Assembler::EngineRegister,
                          Assembler::PointerToValue(targetBase), Assembler::PointerToValue(targetIndex),
                          Assembler::PointerToValue(source));
 }
@@ -1004,12 +1004,12 @@ void InstructionSelection::callQmlContextProperty(IR::Expr *base, IR::Member::Me
     prepareCallData(args, base);
 
     if (kind == IR::Member::MemberOfQmlScopeObject)
-        generateFunctionCall(result, Runtime::callQmlScopeObjectProperty,
+        generateRuntimeCall(result, callQmlScopeObjectProperty,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(propertyIndex),
                              baseAddressForCallData());
     else if (kind == IR::Member::MemberOfQmlContextObject)
-        generateFunctionCall(result, Runtime::callQmlContextObjectProperty,
+        generateRuntimeCall(result, callQmlContextObjectProperty,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(propertyIndex),
                              baseAddressForCallData());
@@ -1026,12 +1026,12 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
 
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateFunctionCall(result, Runtime::callPropertyLookup,
+        generateRuntimeCall(result, callPropertyLookup,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
     } else {
-        generateFunctionCall(result, Runtime::callProperty, Assembler::EngineRegister,
+        generateRuntimeCall(result, callProperty, Assembler::EngineRegister,
                              Assembler::StringToIndex(name),
                              baseAddressForCallData());
     }
@@ -1043,7 +1043,7 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
     Q_ASSERT(base != 0);
 
     prepareCallData(args, base);
-    generateFunctionCall(result, Runtime::callElement, Assembler::EngineRegister,
+    generateRuntimeCall(result, callElement, Assembler::EngineRegister,
                          Assembler::PointerToValue(index),
                          baseAddressForCallData());
 }
@@ -1352,13 +1352,13 @@ void InstructionSelection::constructActivationProperty(IR::Name *func, IR::ExprL
 
     if (useFastLookups && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
-        generateFunctionCall(result, Runtime::constructGlobalLookup,
+        generateRuntimeCall(result, constructGlobalLookup,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(index), baseAddressForCallData());
         return;
     }
 
-    generateFunctionCall(result, Runtime::constructActivationProperty,
+    generateRuntimeCall(result, constructActivationProperty,
                          Assembler::EngineRegister,
                          Assembler::StringToIndex(*func->id),
                          baseAddressForCallData());
@@ -1370,14 +1370,14 @@ void InstructionSelection::constructProperty(IR::Expr *base, const QString &name
     prepareCallData(args, base);
     if (useFastLookups) {
         uint index = registerGetterLookup(name);
-        generateFunctionCall(result, Runtime::constructPropertyLookup,
+        generateRuntimeCall(result, constructPropertyLookup,
                              Assembler::EngineRegister,
                              Assembler::TrustedImm32(index),
                              baseAddressForCallData());
         return;
     }
 
-    generateFunctionCall(result, Runtime::constructProperty, Assembler::EngineRegister,
+    generateRuntimeCall(result, constructProperty, Assembler::EngineRegister,
                          Assembler::StringToIndex(name),
                          baseAddressForCallData());
 }
@@ -1387,7 +1387,7 @@ void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, I
     Q_ASSERT(value != 0);
 
     prepareCallData(args, 0);
-    generateFunctionCall(result, Runtime::constructValue,
+    generateRuntimeCall(result, constructValue,
                          Assembler::EngineRegister,
                          Assembler::Reference(value),
                          baseAddressForCallData());
