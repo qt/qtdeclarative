@@ -52,6 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickMouseEvent;
 class QQuickAbstractButtonPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
@@ -74,11 +75,11 @@ public:
     void setLabel(QQuickItem *label);
 
 Q_SIGNALS:
-    void pressed();
-    void released();
+    void pressed(QQuickMouseEvent *mouse);
+    void released(QQuickMouseEvent *mouse);
     void canceled();
-    void clicked();
-    void doubleClicked();
+    void clicked(QQuickMouseEvent *mouse);
+    void doubleClicked(QQuickMouseEvent *mouse);
     void textChanged();
     void pressedChanged();
     void labelChanged();

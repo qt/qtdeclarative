@@ -38,6 +38,7 @@
 #include "qquickcheckable_p_p.h"
 
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -213,11 +214,13 @@ bool QQuickSwitch::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event
         setChecked(position() > 0.5);
         setPosition(isChecked() ? 1.0 : 0.0);
         child->setKeepMouseGrab(false);
+        event->accept();
     } else {
-        emit clicked();
+        QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
+        emit clicked(&me);
+        event->setAccepted(me.isAccepted());
         toggle();
     }
-    event->accept();
     return true;
 }
 

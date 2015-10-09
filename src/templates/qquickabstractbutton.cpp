@@ -37,6 +37,8 @@
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtQuick/private/qquickevents_p_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -49,15 +51,21 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::pressed()
+    \qmlsignal Qt.labs.controls::AbstractButton::pressed(MouseEvent mouse)
 
     This signal is emitted when the button is interactively pressed by the user.
+
+    The mouse parameter provides information about the press, including the x
+    and y position and which button was pressed.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::released()
+    \qmlsignal Qt.labs.controls::AbstractButton::released(MouseEvent mouse)
 
     This signal is emitted when the button is interactively released by the user.
+
+    The mouse parameter provides information about the click, including the x
+    and y position of the release of the click, and whether the click was held.
 */
 
 /*!
@@ -69,15 +77,21 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::clicked()
+    \qmlsignal Qt.labs.controls::AbstractButton::clicked(MouseEvent mouse)
 
     This signal is emitted when the button is interactively clicked by the user.
+
+    The mouse parameter provides information about the click, including the x
+    and y position of the release of the click, and whether the click was held.
 */
 
 /*!
-    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked()
+    \qmlsignal Qt.labs.controls::AbstractButton::doubleClicked(MouseEvent mouse)
 
     This signal is emitted when the button is interactively double clicked by the user.
+
+    The mouse parameter provides information about the click, including the x
+    and y position of the release of the click, and whether the click was held.
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() : pressed(false), label(Q_NULLPTR)
@@ -187,8 +201,10 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(true);
-        emit pressed();
-        event->accept();
+
+        QQuickMouseEvent me(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        emit pressed(&me);
+        event->setAccepted(me.isAccepted());
     }
 }
 
@@ -197,9 +213,12 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
-        emit released();
-        emit clicked();
-        event->accept();
+
+        QQuickMouseEvent mre(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        emit released(&mre);
+        QQuickMouseEvent mce(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers(), true /* isClick */);
+        emit clicked(&mce);
+        event->setAccepted(mre.isAccepted() || mce.isAccepted());
     }
 }
 
@@ -207,7 +226,10 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
     QQuickControl::mousePressEvent(event);
     setPressed(true);
-    emit pressed();
+
+    QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
+    emit pressed(&me);
+    event->setAccepted(me.isAccepted());
 }
 
 void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
@@ -222,9 +244,13 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     QQuickControl::mouseReleaseEvent(event);
     bool wasPressed = d->pressed;
     setPressed(false);
+
     if (wasPressed) {
-        emit released();
-        emit clicked();
+        QQuickMouseEvent mre(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
+        emit released(&mre);
+        QQuickMouseEvent mce(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
+        emit clicked(&mce);
+        event->setAccepted(mre.isAccepted() || mce.isAccepted());
     } else {
         emit canceled();
     }
@@ -233,7 +259,10 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QQuickControl::mouseDoubleClickEvent(event);
-    emit doubleClicked();
+
+    QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
+    emit doubleClicked(&me);
+    event->setAccepted(me.isAccepted());
 }
 
 void QQuickAbstractButton::mouseUngrabEvent()
