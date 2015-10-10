@@ -58,11 +58,11 @@ private slots:
     void initTestCase();
     void cleanup();
 
-    void activeFocusOnTab();
-    void activeFocusOnTab2();
+    void allControls();
+    void textControls();
 private:
     QQmlEngine engine;
-    bool qt_tab_all_widgets() {
+    bool qt_tab_all_controls() {
         return QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
     }
 };
@@ -80,10 +80,10 @@ void tst_activeFocusOnTab::cleanup()
 {
 }
 
-void tst_activeFocusOnTab::activeFocusOnTab()
+void tst_activeFocusOnTab::allControls()
 {
-    if (!qt_tab_all_widgets())
-        QSKIP("This function doesn't support NOT iterating all.");
+    if (!qt_tab_all_controls())
+        QSKIP("This platform iterates only text controls. Cannot test iterating all controls.");
 
     QQuickView *window = new QQuickView(0);
     window->setBaseSize(QSize(800,600));
@@ -372,10 +372,10 @@ void tst_activeFocusOnTab::activeFocusOnTab()
     delete window;
 }
 
-void tst_activeFocusOnTab::activeFocusOnTab2()
+void tst_activeFocusOnTab::textControls()
 {
-    if (qt_tab_all_widgets())
-        QSKIP("This function doesn't support iterating all.");
+    if (qt_tab_all_controls())
+        QSKIP("This platform iterates all controls. Cannot test iterating text controls only.");
 
     QQuickView *window = new QQuickView(0);
     window->setBaseSize(QSize(800,600));
