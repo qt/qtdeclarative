@@ -62,9 +62,9 @@ public:
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}
     virtual void itemDestroyed(QQuickItem *) {}
-    virtual void itemChildAdded(QQuickItem *, QQuickItem *) {}
-    virtual void itemChildRemoved(QQuickItem *, QQuickItem *) {}
-    virtual void itemParentChanged(QQuickItem *, QQuickItem *) {}
+    virtual void itemChildAdded(QQuickItem *, QQuickItem * /* child */ ) {}
+    virtual void itemChildRemoved(QQuickItem *, QQuickItem * /* child */ ) {}
+    virtual void itemParentChanged(QQuickItem *, QQuickItem * /* parent */ ) {}
     virtual void itemRotationChanged(QQuickItem *) {}
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}
