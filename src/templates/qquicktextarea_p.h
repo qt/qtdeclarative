@@ -61,6 +61,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
+    Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
 
@@ -79,6 +81,8 @@ public:
 
 Q_SIGNALS:
     void fontChanged();
+    void implicitWidthChanged();
+    void implicitHeightChanged();
     void backgroundChanged();
     void placeholderChanged();
     void pressAndHold(QQuickMouseEvent *event);

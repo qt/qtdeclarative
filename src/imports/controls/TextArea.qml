@@ -41,6 +41,15 @@ import Qt.labs.templates 1.0 as T
 T.TextArea {
     id: control
 
+    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
+                            background ? background.implicitWidth : 0,
+                            placeholder ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             background ? background.implicitHeight : 0,
+                             placeholder ? placeholder.implicitHeight + topPadding + bottomPadding : 0)
+
+    padding: 6
+
     color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor
@@ -49,12 +58,13 @@ T.TextArea {
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
 
         font: control.font
         color: control.Theme.disabledColor
         visible: !control.length
+        elide: Text.ElideRight
     }
     //! [placeholder]
 }

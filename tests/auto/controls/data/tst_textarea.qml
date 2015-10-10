@@ -52,7 +52,7 @@ TestCase {
 
     Component {
         id: textArea
-        TextArea { }
+        TextArea { background: Item { } }
     }
 
     function test_creation() {
@@ -72,6 +72,15 @@ TestCase {
     function test_pressAndHoldKeepsSelection() {
         var control = textArea.createObject(testCase)
         pah.pressAndHoldKeepsSelection(control)
+        control.destroy()
+    }
+
+    function test_implicitSize() {
+        var control = textArea.createObject(testCase)
+        control.background.implicitWidth = 400
+        control.background.implicitHeight = 200
+        compare(control.implicitWidth, 400)
+        compare(control.implicitHeight, 200)
         control.destroy()
     }
 }

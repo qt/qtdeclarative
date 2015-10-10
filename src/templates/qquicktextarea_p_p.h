@@ -70,6 +70,12 @@ public:
     void resizeBackground();
     void resolveFont();
 
+    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+    qreal getImplicitHeight() const Q_DECL_OVERRIDE;
+
+    void implicitWidthChanged() Q_DECL_OVERRIDE;
+    void implicitHeightChanged() Q_DECL_OVERRIDE;
+
     void _q_readOnlyChanged(bool isReadOnly);
     void _q_placeholderTextChanged(const QString &text);
 
