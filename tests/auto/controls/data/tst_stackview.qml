@@ -540,4 +540,39 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: attachedItem
+        Item {
+            property int index: StackView.index
+            property StackView view: StackView.view
+            property int status: StackView.status
+        }
+    }
+
+    function test_attached() {
+        var control = stackView.createObject(testCase, {initialItem: attachedItem})
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Active)
+
+        control.push(attachedItem, StackView.Immediate)
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Inactive)
+
+        compare(control.get(1).index, 1)
+        compare(control.get(1).view, control)
+        compare(control.get(1).status, StackView.Active)
+
+        control.pop(StackView.Immediate)
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Active)
+
+        control.destroy()
+    }
 }

@@ -139,22 +139,20 @@ public:
     QQuickItemViewTransitioner *transitioner;
 };
 
-class QQuickStackAttachedPrivate : public QObjectPrivate
+class QQuickStackAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickStackAttached)
 
 public:
-    QQuickStackAttachedPrivate() : initialized(false), element(Q_NULLPTR) { }
+    QQuickStackAttachedPrivate() : element(Q_NULLPTR) { }
 
     static QQuickStackAttachedPrivate *get(QQuickStackAttached *attached)
     {
         return attached->d_func();
     }
 
-    void init();
-    void reset();
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent);
 
-    bool initialized;
     QQuickStackElement *element;
 };
 

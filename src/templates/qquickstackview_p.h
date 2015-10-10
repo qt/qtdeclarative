@@ -157,6 +157,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickStackAttached : public QObject
 
 public:
     explicit QQuickStackAttached(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickStackAttached();
 
     int index() const;
     QQuickStackView *view() const;

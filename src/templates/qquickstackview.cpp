@@ -673,6 +673,7 @@ void QQuickStackView::componentComplete()
     if (d->pushElement(element)) {
         emit depthChanged();
         d->setCurrentItem(element->item);
+        element->setStatus(QQuickStackView::Active);
     }
 }
 
@@ -702,39 +703,40 @@ bool QQuickStackView::childMouseEventFilter(QQuickItem *, QEvent *)
     return true;
 }
 
-void QQuickStackAttachedPrivate::init()
-{
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
-    if (item) {
-        QQuickStackView *view = qobject_cast<QQuickStackView *>(item->parentItem());
-        if (view) {
-            element = QQuickStackViewPrivate::get(view)->findElement(item);
-            if (element)
-                initialized = true;
-        }
-    }
-}
-
-void QQuickStackAttachedPrivate::reset()
+void QQuickStackAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
     Q_Q(QQuickStackAttached);
     int oldIndex = element ? element->index : -1;
     QQuickStackView *oldView = element ? element->view : Q_NULLPTR;
     QQuickStackView::Status oldStatus = element ? element->status : QQuickStackView::Inactive;
 
-    element = Q_NULLPTR;
+    QQuickStackView *newView = qobject_cast<QQuickStackView *>(parent);
+    element = newView ? QQuickStackViewPrivate::get(newView)->findElement(item) : Q_NULLPTR;
 
-    if (oldIndex != -1)
+    int newIndex = element ? element->index : -1;
+    QQuickStackView::Status newStatus = element ? element->status : QQuickStackView::Inactive;
+
+    if (oldIndex != newIndex)
         emit q->indexChanged();
-    if (oldView)
+    if (oldView != newView)
         emit q->viewChanged();
-    if (oldStatus != QQuickStackView::Inactive)
+    if (oldStatus != newStatus)
         emit q->statusChanged();
 }
 
 QQuickStackAttached::QQuickStackAttached(QQuickItem *parent) :
     QObject(*(new QQuickStackAttachedPrivate), parent)
 {
+    Q_D(QQuickStackAttached);
+    QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Parent);
+    d->itemParentChanged(parent, parent->parentItem());
+}
+
+QQuickStackAttached::~QQuickStackAttached()
+{
+    Q_D(QQuickStackAttached);
+    QQuickItem *parentItem = static_cast<QQuickItem *>(parent());
+    QQuickItemPrivate::get(parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
 }
 
 /*!
@@ -745,8 +747,6 @@ QQuickStackAttached::QQuickStackAttached(QQuickItem *parent) :
 int QQuickStackAttached::index() const
 {
     Q_D(const QQuickStackAttached);
-    if (!d->initialized)
-        const_cast<QQuickStackAttachedPrivate *>(d)->init();
     return d->element ? d->element->index : -1;
 }
 
@@ -758,8 +758,6 @@ int QQuickStackAttached::index() const
 QQuickStackView *QQuickStackAttached::view() const
 {
     Q_D(const QQuickStackAttached);
-    if (!d->initialized)
-        const_cast<QQuickStackAttachedPrivate *>(d)->init();
     return d->element ? d->element->view : Q_NULLPTR;
 }
 
@@ -771,8 +769,6 @@ QQuickStackView *QQuickStackAttached::view() const
 QQuickStackView::Status QQuickStackAttached::status() const
 {
     Q_D(const QQuickStackAttached);
-    if (!d->initialized)
-        const_cast<QQuickStackAttachedPrivate *>(d)->init();
     return d->element ? d->element->status : QQuickStackView::Inactive;
 }
 

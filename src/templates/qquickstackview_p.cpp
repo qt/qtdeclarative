@@ -48,9 +48,12 @@
 
 QT_BEGIN_NAMESPACE
 
-static QQuickStackAttached *attachedStackObject(QQuickItem *item)
+static QQuickStackAttached *attachedStackObject(QQuickStackElement *element)
 {
-    return qobject_cast<QQuickStackAttached *>(qmlAttachedPropertiesObject<QQuickStackView>(item, false));
+    QQuickStackAttached *attached = qobject_cast<QQuickStackAttached *>(qmlAttachedPropertiesObject<QQuickStackView>(element->item, false));
+    if (attached)
+        QQuickStackAttachedPrivate::get(attached)->element = element;
+    return attached;
 }
 
 class QQuickStackIncubator : public QQmlIncubator
@@ -74,13 +77,8 @@ QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(Q_NU
 
 QQuickStackElement::~QQuickStackElement()
 {
-    if (item) {
+    if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
-
-        QQuickStackAttached *attached = attachedStackObject(item);
-        if (attached)
-            QQuickStackAttachedPrivate::get(attached)->reset();
-    }
 
     if (ownComponent)
         delete component;
@@ -91,7 +89,13 @@ QQuickStackElement::~QQuickStackElement()
         item = Q_NULLPTR;
     } else if (item) {
         item->setVisible(false);
-        item->setParentItem(originalParent);
+        if (item->parentItem() != originalParent) {
+            item->setParentItem(originalParent);
+        } else {
+            QQuickStackAttached *attached = attachedStackObject(this);
+            if (attached)
+                QQuickStackAttachedPrivate::get(attached)->itemParentChanged(item, Q_NULLPTR);
+        }
     }
 
     delete context;
@@ -182,7 +186,7 @@ void QQuickStackElement::setIndex(int value)
 {
     if (index != value) {
         index = value;
-        QQuickStackAttached *attached = attachedStackObject(item);
+        QQuickStackAttached *attached = attachedStackObject(this);
         if (attached)
             emit attached->indexChanged();
     }
@@ -192,7 +196,7 @@ void QQuickStackElement::setView(QQuickStackView *value)
 {
     if (view != value) {
         view = value;
-        QQuickStackAttached *attached = attachedStackObject(item);
+        QQuickStackAttached *attached = attachedStackObject(this);
         if (attached)
             emit attached->viewChanged();
     }
@@ -202,7 +206,7 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
 {
     if (status != value) {
         status = value;
-        QQuickStackAttached *attached = attachedStackObject(item);
+        QQuickStackAttached *attached = attachedStackObject(this);
         if (attached)
             emit attached->statusChanged();
     }
