@@ -82,6 +82,7 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ScrollBar") << "scrollbar" << 0x00000003 << ""; //QAccessible::ScrollBar
     QTest::newRow("ScrollIndicator") << "scrollindicator" << 0x00000027 << ""; //QAccessible::Indicator
     QTest::newRow("Slider") << "slider" << 0x00000033 << ""; //QAccessible::Slider
+    QTest::newRow("SpinBox") << "spinbox" << 0x00000034 << ""; //QAccessible::SpinBox
     // StackView
     QTest::newRow("Switch") << "switch" << 0x0000002B << "Switch"; //QAccessible::Button
     QTest::newRow("TabBar") << "tabbar" << 0x0000003C << ""; //QAccessible::PageTabList

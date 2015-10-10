@@ -141,6 +141,11 @@ Item {
             objectName: "slider"
             value: 0.5
         }
+        SpinBox {
+            id: spinbox
+            objectName: "spinbox"
+            value: 50
+        }
         // StackView
         Switch {
             id: swtich // switch

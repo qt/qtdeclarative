@@ -305,6 +305,37 @@
             \snippet Slider.qml handle
 
 
+    \section1 Customizing SpinBox
+
+        SpinBox consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, \l {SpinBox::up.indicator}{up indicator},
+        and \l {SpinBox::down.indicator}{down indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-spinbox-background.png
+
+            \snippet SpinBox.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-spinbox-contentItem.png
+
+            \snippet SpinBox.qml contentItem
+
+        \section3 Down indicator
+
+            \image qtlabscontrols-spinbox-down.png
+
+            \snippet Spinbox.qml down.indicator
+
+        \section3 Up indicator
+
+            \image qtlabscontrols-spinbox-up.png
+
+            \snippet Spinbox.qml up.indicator
+
+
     \section1 Customizing StackView
 
         StackView can have a visual \l {Control::background}{background}

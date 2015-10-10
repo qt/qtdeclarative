@@ -191,7 +191,16 @@ void tst_activeFocusOnTab::allControls()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // Tab: slider->switch
+    // Tab: slider->spinbox
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    // Tab: spinbox->switch
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
@@ -290,7 +299,16 @@ void tst_activeFocusOnTab::allControls()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // BackTab: switch->switch
+    // BackTab: switch->spinbox
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    // BackTab: spinbox->slider
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
@@ -450,7 +468,16 @@ void tst_activeFocusOnTab::textControls()
     QVERIFY(item);
     QVERIFY(item->hasActiveFocus());
 
-    // BackTab: textfield->textarea
+    // BackTab: textfield->spinbox
+    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+
+    item = findItem<QQuickItem>(window->rootObject(), "spinbox");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    // BackTab: spinbox->textarea
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());

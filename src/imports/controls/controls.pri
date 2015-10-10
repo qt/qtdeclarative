@@ -15,6 +15,7 @@ QML_FILES = \
     ScrollBar.qml \
     ScrollIndicator.qml \
     Slider.qml \
+    SpinBox.qml \
     StackView.qml \
     Switch.qml \
     SwipeView.qml \

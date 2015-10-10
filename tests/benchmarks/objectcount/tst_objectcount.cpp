@@ -209,6 +209,10 @@ void tst_ObjectCount::testCount_data()
             << QByteArray("import QtQuick.Controls 1.3; Slider { }")
             << QByteArray("import Qt.labs.controls 1.0; Slider { }");
 
+    QTest::newRow("SpinBox")
+            << QByteArray("import QtQuick.Controls 1.3; SpinBox { }")
+            << QByteArray("import Qt.labs.controls 1.0; SpinBox { }");
+
     QTest::newRow("StackView")
             << QByteArray("import QtQuick.Controls 1.3; StackView { }")
             << QByteArray("import Qt.labs.controls 1.0; StackView { }");

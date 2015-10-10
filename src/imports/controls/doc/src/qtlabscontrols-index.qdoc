@@ -250,7 +250,7 @@
         \li \l [QtLabsControls] {Slider}
     \row
         \li \l [QtQuickControls] {SpinBox}
-        \li No equivalent; see \l [QtLabsControls] {Tumbler} instead.
+        \li \l [QtLabsControls] {SpinBox}
     \row
         \li \l [QtQuickControls] {Stack},
             \l [QtQuickControls] {StackView},
