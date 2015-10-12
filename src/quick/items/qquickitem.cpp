@@ -724,6 +724,7 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
 {
     QQuickItem *initialItem = currentItem;
     bool isNextItem = false;
+    QVector<QQuickItem *> visitedItems;
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {
@@ -734,13 +735,14 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
             if (attached) {
                 QQuickItem *tempItem = qvariant_cast<QQuickItem*>(attached->property(dir));
                 if (tempItem) {
+                    visitedItems.append(currentItem);
                     currentItem = tempItem;
                     isNextItem = true;
                 }
             }
         }
     }
-    while (currentItem != initialItem && isNextItem);
+    while (currentItem != initialItem && isNextItem && !visitedItems.contains(currentItem));
 }
 
 struct SigMap {

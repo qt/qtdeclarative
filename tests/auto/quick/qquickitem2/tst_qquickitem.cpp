@@ -85,6 +85,7 @@ private slots:
     void keyNavigation_skipNotVisible();
     void keyNavigation_implicitSetting();
     void keyNavigation_focusReason();
+    void keyNavigation_loop();
     void layoutMirroring();
     void layoutMirroringIllegalParent();
     void smooth();
@@ -2022,6 +2023,31 @@ void tst_QQuickItem::keyNavigation_focusReason()
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
     QCOMPARE(focusEventFilter.lastFocusReason, Qt::OtherFocusReason);
+
+    delete window;
+}
+
+void tst_QQuickItem::keyNavigation_loop()
+{
+    // QTBUG-47229
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
+
+    window->setSource(testFileUrl("keynavigationtest_loop.qml"));
+    window->show();
+    window->requestActivate();
+
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QCOMPARE(QGuiApplication::focusWindow(), window);
+
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QVERIFY(item->hasActiveFocus());
 
     delete window;
 }
