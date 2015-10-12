@@ -82,7 +82,6 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = (QV4::CompiledData::String*)(stringData);
-        s->flags = 0; // ###
         s->size = qstr.length();
         memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
 
