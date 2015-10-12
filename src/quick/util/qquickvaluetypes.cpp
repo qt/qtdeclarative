@@ -80,6 +80,36 @@ qreal QQuickColorValueType::a() const
     return v.alphaF();
 }
 
+qreal QQuickColorValueType::hsvHue() const
+{
+    return v.hsvHueF();
+}
+
+qreal QQuickColorValueType::hsvSaturation() const
+{
+    return v.hsvSaturationF();
+}
+
+qreal QQuickColorValueType::hsvValue() const
+{
+    return v.valueF();
+}
+
+qreal QQuickColorValueType::hslHue() const
+{
+    return v.hslHueF();
+}
+
+qreal QQuickColorValueType::hslSaturation() const
+{
+    return v.hslSaturationF();
+}
+
+qreal QQuickColorValueType::hslLightness() const
+{
+    return v.lightnessF();
+}
+
 void QQuickColorValueType::setR(qreal r)
 {
     v.setRedF(r);
@@ -98,6 +128,48 @@ void QQuickColorValueType::setB(qreal b)
 void QQuickColorValueType::setA(qreal a)
 {
     v.setAlphaF(a);
+}
+
+void QQuickColorValueType::setHsvHue(qreal hsvHue)
+{
+    qreal hue, saturation, value, alpha;
+    v.getHsvF(&hue, &saturation, &value, &alpha);
+    v.setHsvF(hsvHue, saturation, value, alpha);
+}
+
+void QQuickColorValueType::setHsvSaturation(qreal hsvSaturation)
+{
+    qreal hue, saturation, value, alpha;
+    v.getHsvF(&hue, &saturation, &value, &alpha);
+    v.setHsvF(hue, hsvSaturation, value, alpha);
+}
+
+void QQuickColorValueType::setHsvValue(qreal hsvValue)
+{
+    qreal hue, saturation, value, alpha;
+    v.getHsvF(&hue, &saturation, &value, &alpha);
+    v.setHsvF(hue, saturation, hsvValue, alpha);
+}
+
+void QQuickColorValueType::setHslHue(qreal hslHue)
+{
+    qreal hue, saturation, lightness, alpha;
+    v.getHslF(&hue, &saturation, &lightness, &alpha);
+    v.setHslF(hslHue, saturation, lightness, alpha);
+}
+
+void QQuickColorValueType::setHslSaturation(qreal hslSaturation)
+{
+    qreal hue, saturation, lightness, alpha;
+    v.getHslF(&hue, &saturation, &lightness, &alpha);
+    v.setHslF(hue, hslSaturation, lightness, alpha);
+}
+
+void QQuickColorValueType::setHslLightness(qreal hslLightness)
+{
+    qreal hue, saturation, lightness, alpha;
+    v.getHslF(&hue, &saturation, &lightness, &alpha);
+    v.setHslF(hue, saturation, hslLightness, alpha);
 }
 
 QString QQuickVector2DValueType::toString() const

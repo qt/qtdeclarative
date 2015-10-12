@@ -907,6 +907,15 @@ void tst_qqmlvaluetypes::color()
         QCOMPARE((float)object->property("v_g").toDouble(), (float)0.88);
         QCOMPARE((float)object->property("v_b").toDouble(), (float)0.6);
         QCOMPARE((float)object->property("v_a").toDouble(), (float)0.34);
+
+        QCOMPARE(qRound(object->property("hsv_h").toDouble() * 100), 43);
+        QCOMPARE(qRound(object->property("hsv_s").toDouble() * 100), 77);
+        QCOMPARE(qRound(object->property("hsv_v").toDouble() * 100), 88);
+
+        QCOMPARE(qRound(object->property("hsl_h").toDouble() * 100), 43);
+        QCOMPARE(qRound(object->property("hsl_s").toDouble() * 100), 74);
+        QCOMPARE(qRound(object->property("hsl_l").toDouble() * 100), 54);
+
         QColor comparison;
         comparison.setRedF(0.2);
         comparison.setGreenF(0.88);
@@ -927,6 +936,30 @@ void tst_qqmlvaluetypes::color()
         newColor.setGreenF(0.38);
         newColor.setBlueF(0.3);
         newColor.setAlphaF(0.7);
+        QCOMPARE(object->color(), newColor);
+
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("color_write_HSV.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QColor newColor;
+        newColor.setHsvF(0.43, 0.77, 0.88, 0.7);
+        QCOMPARE(object->color(), newColor);
+
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("color_write_HSL.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QColor newColor;
+        newColor.setHslF(0.43, 0.74, 0.54, 0.7);
         QCOMPARE(object->color(), newColor);
 
         delete object;

@@ -78,6 +78,12 @@ class QQuickColorValueType
     Q_PROPERTY(qreal g READ g WRITE setG FINAL)
     Q_PROPERTY(qreal b READ b WRITE setB FINAL)
     Q_PROPERTY(qreal a READ a WRITE setA FINAL)
+    Q_PROPERTY(qreal hsvHue READ hsvHue WRITE setHsvHue FINAL)
+    Q_PROPERTY(qreal hsvSaturation READ hsvSaturation WRITE setHsvSaturation FINAL)
+    Q_PROPERTY(qreal hsvValue READ hsvValue WRITE setHsvValue FINAL)
+    Q_PROPERTY(qreal hslHue READ hslHue WRITE setHslHue FINAL)
+    Q_PROPERTY(qreal hslSaturation READ hslSaturation WRITE setHslSaturation FINAL)
+    Q_PROPERTY(qreal hslLightness READ hslLightness WRITE setHslLightness FINAL)
     Q_GADGET
 public:
     Q_INVOKABLE QString toString() const;
@@ -86,10 +92,22 @@ public:
     qreal g() const;
     qreal b() const;
     qreal a() const;
+    qreal hsvHue() const;
+    qreal hsvSaturation() const;
+    qreal hsvValue() const;
+    qreal hslHue() const;
+    qreal hslSaturation() const;
+    qreal hslLightness() const;
     void setR(qreal);
     void setG(qreal);
     void setB(qreal);
     void setA(qreal);
+    void setHsvHue(qreal);
+    void setHsvSaturation(qreal);
+    void setHsvValue(qreal);
+    void setHslHue(qreal);
+    void setHslSaturation(qreal);
+    void setHslLightness(qreal);
 };
 
 class QQuickVector2DValueType
