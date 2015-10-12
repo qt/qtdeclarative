@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
     }\
     QList<QJsonObject> metaDataFor##interfaceName()\
     {\
-        return QList<QJsonObject();\
+        return QList<QJsonObject>();\
     }
 #define Q_QML_IMPORT_DEBUG_PLUGIN(className)
 
