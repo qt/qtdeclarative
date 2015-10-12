@@ -835,7 +835,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)
-        STOREVALUE(instr.result, instr.alu(VALUE(instr.lhs), VALUE(instr.rhs)));
+        QV4::Runtime::BinaryOperation op = *reinterpret_cast<QV4::Runtime::BinaryOperation *>(reinterpret_cast<char *>(&engine->runtime) + instr.alu);
+        STOREVALUE(instr.result, op(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Add)
@@ -894,7 +895,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(Sub)
 
     MOTH_BEGIN_INSTR(BinopContext)
-        STOREVALUE(instr.result, instr.alu(engine, VALUE(instr.lhs), VALUE(instr.rhs)));
+        QV4::Runtime::BinaryOperationContext op = *reinterpret_cast<QV4::Runtime::BinaryOperationContext *>(reinterpret_cast<char *>(&engine->runtime) + instr.alu);
+        STOREVALUE(instr.result, op(engine, VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(Ret)
