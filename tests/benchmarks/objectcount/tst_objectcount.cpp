@@ -157,6 +157,14 @@ void tst_ObjectCount::testCount_data()
             << QByteArray("import QtQuick.Controls 1.3; CheckBox { }")
             << QByteArray("import Qt.labs.controls 1.0; CheckBox { }");
 
+    QTest::newRow("Dial")
+            << QByteArray("import QtQuick.Extras 1.3; Dial { }")
+            << QByteArray("import Qt.labs.controls 1.0; Dial { }");
+
+    QTest::newRow("Drawer")
+            << QByteArray()
+            << QByteArray("import Qt.labs.controls 1.0; Drawer { }");
+
     QTest::newRow("Frame")
             << QByteArray()
             << QByteArray("import Qt.labs.controls 1.0; Frame { }");
@@ -201,6 +209,10 @@ void tst_ObjectCount::testCount_data()
             << QByteArray("import QtQuick.Controls 1.3; StackView { }")
             << QByteArray("import Qt.labs.controls 1.0; StackView { }");
 
+    QTest::newRow("SwipeView")
+            << QByteArray()
+            << QByteArray("import Qt.labs.controls 1.0; SwipeView { }");
+
     QTest::newRow("Switch")
             << QByteArray("import QtQuick.Controls 1.3; Switch { }")
             << QByteArray("import Qt.labs.controls 1.0; Switch { }");
@@ -212,6 +224,10 @@ void tst_ObjectCount::testCount_data()
     QTest::newRow("TabButton")
             << QByteArray()
             << QByteArray("import Qt.labs.controls 1.0; TabButton { }");
+
+    QTest::newRow("TabView")
+            << QByteArray("import QtQuick.Controls 1.3; TabView { }")
+            << QByteArray();
 
     QTest::newRow("TextArea")
             << QByteArray("import QtQuick.Controls 1.3; TextArea { }")
@@ -228,6 +244,10 @@ void tst_ObjectCount::testCount_data()
     QTest::newRow("ToolButton")
             << QByteArray("import QtQuick.Controls 1.3; ToolButton { }")
             << QByteArray("import Qt.labs.controls 1.0; ToolButton { }");
+
+    QTest::newRow("Tumbler")
+            << QByteArray("import QtQuick.Extras 1.3; Tumbler { }")
+            << QByteArray("import Qt.labs.controls 1.0; Tumbler { }");
 }
 
 QTEST_MAIN(tst_ObjectCount)
