@@ -258,7 +258,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(ReturnedValue, strictNotEqual, (const Value &left, const Value &right));
 
     // comparisons
-    typedef Bool (*CompareOperation)(const Value &left, const Value &right);
     RUNTIME_METHOD(Bool, compareGreaterThan, (const Value &l, const Value &r));
     RUNTIME_METHOD(Bool, compareLessThan, (const Value &l, const Value &r));
     RUNTIME_METHOD(Bool, compareGreaterEqual, (const Value &l, const Value &r));
@@ -268,7 +267,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     RUNTIME_METHOD(Bool, compareStrictEqual, (const Value &left, const Value &right));
     RUNTIME_METHOD(Bool, compareStrictNotEqual, (const Value &left, const Value &right));
 
-    typedef Bool (*CompareOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
     RUNTIME_METHOD(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right));
     RUNTIME_METHOD(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right));
 
