@@ -821,7 +821,8 @@ Renderer::Renderer(QSGRenderContext *ctx)
         m_vao->create();
     }
 
-    m_useDepthBuffer = ctx->openglContext()->format().depthBufferSize() > 0;
+    bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+    m_useDepthBuffer = useDepth && ctx->openglContext()->format().depthBufferSize() > 0;
 }
 
 static void qsg_wipeBuffer(Buffer *buffer, QOpenGLFunctions *funcs)
@@ -1087,8 +1088,10 @@ void Renderer::nodeWasRemoved(Node *node)
             e->removed = true;
             m_elementsToDelete.add(e);
 
-            if (m_renderNodeElements.isEmpty())
-                m_useDepthBuffer = context()->openglContext()->format().depthBufferSize() > 0;
+            if (m_renderNodeElements.isEmpty()) {
+                static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+                m_useDepthBuffer = useDepth && context()->openglContext()->format().depthBufferSize() > 0;
+            }
         }
     }
 
