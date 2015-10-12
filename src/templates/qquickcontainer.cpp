@@ -393,7 +393,7 @@ QQmlListProperty<QQuickItem> QQuickContainer::contentChildren()
 /*!
     \qmlproperty int Qt.labs.controls::Container::currentIndex
 
-    TODO
+    This property holds the index of the current item in the container.
 */
 int QQuickContainer::currentIndex() const
 {
@@ -414,7 +414,7 @@ void QQuickContainer::setCurrentIndex(int index)
 /*!
     \qmlproperty Item Qt.labs.controls::Container::currentItem
 
-    TODO
+    This property holds the current item.
 */
 QQuickItem *QQuickContainer::currentItem() const
 {
