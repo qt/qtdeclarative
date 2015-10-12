@@ -8,5 +8,8 @@ osx:CONFIG -= app_bundle
 SOURCES += \
     $$PWD/tst_snippets.cpp
 
+OTHER_FILES += \
+    $$PWD/data/*
+
 TESTDATA += \
     $$PWD/data/*
