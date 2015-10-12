@@ -52,14 +52,14 @@ QT_BEGIN_NAMESPACE
     the days are ordered and formatted using the specified \l locale.
 
     \image qtlabscalendar-dayofweekrow.png
-    \snippet dayofweekrow/qtlabscalendar-dayofweekrow.qml 1
+    \snippet qtlabscalendar-dayofweekrow.qml 1
 
     DayOfWeekRow can be used as a standalone control, but it is most
     often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the row is left to the user.
 
     \image qtlabscalendar-dayofweekrow-layout.png
-    \snippet dayofweekrow/qtlabscalendar-dayofweekrow-layout.qml 1
+    \snippet qtlabscalendar-dayofweekrow-layout.qml 1
 
     The visual appearance of DayOfWeekRow can be changed by
     implementing a \l {delegate}{custom delegate}.

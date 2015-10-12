@@ -54,14 +54,14 @@ QT_BEGIN_NAMESPACE
     \l locale.
 
     \image qtlabscalendar-weeknumbercolumn.png
-    \snippet weeknumbercolumn/qtlabscalendar-weeknumbercolumn.qml 1
+    \snippet qtlabscalendar-weeknumbercolumn.qml 1
 
     WeekNumberColumn can be used as a standalone control, but it is most
     often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the column is left to the user.
 
     \image qtlabscalendar-weeknumbercolumn-layout.png
-    \snippet weeknumbercolumn/qtlabscalendar-weeknumbercolumn-layout.qml 1
+    \snippet qtlabscalendar-weeknumbercolumn-layout.qml 1
 
     The visual appearance of WeekNumberColumn can be changed by
     implementing a \l {delegate}{custom delegate}.

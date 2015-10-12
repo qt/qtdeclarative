@@ -56,14 +56,14 @@ QT_BEGIN_NAMESPACE
     \l locale.
 
     \image qtlabscalendar-monthgrid.png
-    \snippet monthgrid/qtlabscalendar-monthgrid.qml 1
+    \snippet qtlabscalendar-monthgrid.qml 1
 
     MonthGrid can be used as a standalone control, but it is most often
     used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
     of the use case, positioning of the grid is left to the user.
 
     \image qtlabscalendar-monthgrid-layout.png
-    \snippet monthgrid/qtlabscalendar-monthgrid-layout.qml 1
+    \snippet qtlabscalendar-monthgrid-layout.qml 1
 
     The visual appearance of MonthGrid can be changed by
     implementing a \l {delegate}{custom delegate}.
