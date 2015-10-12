@@ -322,6 +322,20 @@
             \snippet StackView.qml popExit
 
 
+    \section1 Customizing SwipeView
+
+        SwipeView can have a visual \l {Control::background}{background}
+        item. The navigation is implemented by the \l {Control::contentItem}
+        {content item}.
+
+        \section3 Background
+
+        SwipeView has no background item by default.
+
+        \section3 Content item
+
+        \snippet SwipeView.qml contentItem
+
     \section1 Customizing Switch
 
         Switch consists of three visual items: \l {Control::background}{background},

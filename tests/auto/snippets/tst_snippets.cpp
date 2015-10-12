@@ -89,6 +89,8 @@ void tst_Snippets::screenshots()
     QVERIFY(spy.isValid());
     QVERIFY(spy.wait());
     QVERIFY(result->saveToFile(output));
+
+    QGuiApplication::processEvents();
 }
 
 void tst_Snippets::screenshots_data()

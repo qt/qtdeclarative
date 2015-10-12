@@ -48,7 +48,25 @@ QT_BEGIN_NAMESPACE
     \ingroup navigation
     \brief A swipe view control.
 
-    TODO
+    SwipeView provides a swipe-based navigation model.
+
+    \image qtlabscontrols-swipeview-wireframe.png
+
+    SwipeView is populated with a set of pages. One page is visible at a time.
+    The user can navigate between the pages by swiping sideways. Notice that
+    SwipeView itself is entirely non-visual. It is recommended to combine it
+    with PageIndicator, to give the user a visual clue that there are multiple
+    pages.
+
+    \snippet qtlabscontrols-swipeview-indicator.qml 1
+
+    As shown above, SwipeView is typically populated with a static set of
+    pages that are defined inline as children of the view. It is also possible
+    to \l {Container::addItem()}{add}, \l {Container::insertItem()}{insert},
+    \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
+    pages dynamically at run time.
+
+    \sa TabBar, PageIndicator, {Customizing SwipeView}
 */
 
 class QQuickSwipeViewPrivate : public QQuickContainerPrivate
