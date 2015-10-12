@@ -44,8 +44,9 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickContainer
     \inqmlmodule Qt.labs.controls
-    \qmlabstract
-    \internal
+    \brief A container control base type.
+
+    Container is the base type of container-like user interface controls.
 */
 
 QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1)
