@@ -1380,13 +1380,13 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
-            result.append(QStringLiteral("[") + ctx->args()[i].toQStringNoThrow() + QStringLiteral("]"));
+            result.append(QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']'));
         else
             result.append(ctx->args()[i].toQStringNoThrow());
     }
 
     if (printStack) {
-        result.append(QLatin1String("\n"));
+        result.append(QLatin1Char('\n'));
         result.append(jsStack(v4));
     }
 

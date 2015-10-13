@@ -1274,19 +1274,19 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         if (data->propType != 0)
             returnType = QMetaType::typeName(data->propType);
 
-        QByteArray signature = methods.at(ii).first.toUtf8() + "(";
+        QByteArray signature = methods.at(ii).first.toUtf8() + '(';
 
         QQmlPropertyCacheMethodArguments *arguments = 0;
         if (data->hasArguments()) {
             arguments = (QQmlPropertyCacheMethodArguments *)data->arguments;
             Q_ASSERT(arguments->argumentsValid);
             for (int ii = 0; ii < arguments->arguments[0]; ++ii) {
-                if (ii != 0) signature.append(",");
+                if (ii != 0) signature.append(',');
                 signature.append(QMetaType::typeName(arguments->arguments[1 + ii]));
             }
         }
 
-        signature.append(")");
+        signature.append(')');
 
         QMetaMethodBuilder method;
         if (data->isSignal()) {

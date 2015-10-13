@@ -197,7 +197,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     QUrl localUrl = QUrl(localPath);
     QString fullPath = localUrl.path();
     if (localUrl.scheme().length())
-      fullPath = localUrl.scheme() + ":" + fullPath;
+      fullPath = localUrl.scheme() + QLatin1Char(':') + fullPath;
     return QDir::cleanPath(fullPath);
 }
 

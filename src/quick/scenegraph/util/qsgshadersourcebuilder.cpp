@@ -373,7 +373,7 @@ QString QSGShaderSourceBuilder::resolveShaderPath(const QString &path) const
     if (contextProfile() != QSurfaceFormat::CoreProfile) {
         return path;
     } else {
-        int idx = path.lastIndexOf(QStringLiteral("."));
+        int idx = path.lastIndexOf(QLatin1Char('.'));
         QString resolvedPath;
         if (idx != -1)
             resolvedPath = path.left(idx)

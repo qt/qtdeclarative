@@ -5712,7 +5712,7 @@ QString QQuickItemPrivate::dirtyToString() const
 {
 #define DIRTY_TO_STRING(value) if (dirtyAttributes & value) { \
     if (!rv.isEmpty()) \
-        rv.append(QLatin1String("|")); \
+        rv.append(QLatin1Char('|')); \
     rv.append(QLatin1String(#value)); \
 }
 

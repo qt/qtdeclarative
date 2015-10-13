@@ -148,7 +148,7 @@ public:
     {
         QString msg = QStringLiteral("unimplemented command \"");
         msg += req.value(QStringLiteral("command")).toString();
-        msg += QStringLiteral("\"");
+        msg += QLatin1Char('"');
         createErrorResponse(msg);
     }
 };
