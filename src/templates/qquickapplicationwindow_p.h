@@ -68,7 +68,7 @@ public:
     explicit QQuickApplicationWindow(QWindow *parent = Q_NULLPTR);
     ~QQuickApplicationWindow();
 
-    QQuickItem *contentItem();
+    QQuickItem *contentItem() const;
     QQmlListProperty<QObject> contentData();
 
     QQuickItem *header() const;

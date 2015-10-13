@@ -209,12 +209,13 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
     return QQuickItemPrivate::get(contentItem())->data();
 }
 
-QQuickItem *QQuickApplicationWindow::contentItem()
+QQuickItem *QQuickApplicationWindow::contentItem() const
 {
-    Q_D(QQuickApplicationWindow);
+    Q_D(const QQuickApplicationWindow);
     if (!d->contentItem) {
-        d->contentItem = new QQuickItem(QQuickWindow::contentItem());
-        d->relayout();
+        QQuickApplicationWindowPrivate *ncd = const_cast<QQuickApplicationWindowPrivate *>(d);
+        ncd->contentItem = new QQuickItem(QQuickWindow::contentItem());
+        ncd->relayout();
     }
     return d->contentItem;
 }
