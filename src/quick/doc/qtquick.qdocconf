@@ -4,7 +4,7 @@ project                 = QtQuick
 description             = Qt Quick Reference Documentation
 version                 = $QT_VERSION
 
-examplesinstallpath     = quick
+examplesinstallpath     = qtdeclarative/quick
 
 qhp.projects            = QtQuick
 
