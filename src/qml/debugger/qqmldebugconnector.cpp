@@ -45,10 +45,12 @@
 
 QT_BEGIN_NAMESPACE
 
-// We could add more plugins here, and distinguish by arguments to instance()
+// Connectors. We could add more plugins here, and distinguish by arguments to instance()
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugConnector)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebugServerFactory)
+Q_QML_IMPORT_DEBUG_PLUGIN(QQmlNativeDebugConnectorFactory)
 
+// Services
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugService)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlInspectorServiceFactory)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlProfilerServiceFactory)
@@ -116,13 +118,20 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
     }
 
     if (!params->instance) {
+        const QString serverConnector = QStringLiteral("QQmlDebugServer");
+        const QString nativeConnector = QStringLiteral("QQmlNativeDebugConnector");
+        const bool isNative = params->arguments.startsWith(QStringLiteral("native"));
         if (!params->pluginKey.isEmpty()) {
-            if (params->pluginKey != QLatin1String("QQmlDebugServer"))
+            if (params->pluginKey == serverConnector || params->pluginKey == nativeConnector)
+                params->instance = loadQQmlDebugConnector(params->pluginKey);
+            else
                 return 0; // We cannot load anything else, yet
         } else if (params->arguments.isEmpty()) {
             return 0; // no explicit class name given and no command line arguments
+        } else {
+            params->instance = loadQQmlDebugConnector(isNative ? nativeConnector : serverConnector);
         }
-        params->instance = loadQQmlDebugConnector(QLatin1String("QQmlDebugServer"));
+
         if (params->instance) {
             foreach (const QJsonObject &object, metaDataForQQmlDebugService()) {
                 foreach (const QJsonValue &key, object.value(QLatin1String("MetaData")).toObject()

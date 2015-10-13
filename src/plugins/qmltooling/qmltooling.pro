@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 
 # Connectors
 SUBDIRS += \
+    qmldbg_native \
     qmldbg_server \
         qmldbg_local \
         qmldbg_tcp
