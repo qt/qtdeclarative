@@ -84,7 +84,7 @@ void tst_qmlplugindump::builtins()
     if (dumper.error() != QProcess::UnknownError
             || dumper.exitStatus() != QProcess::NormalExit) {
         qWarning() << QString("Error while running '%1 %2'").arg(
-                          qmlplugindumpPath, args.join(QLatin1String(" ")));
+                          qmlplugindumpPath, args.join(QLatin1Char(' ')));
     }
 
     if (dumper.error() == QProcess::FailedToStart) {

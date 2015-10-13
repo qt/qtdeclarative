@@ -2436,7 +2436,7 @@ void tst_QJSValue::prettyPrinter()
     QFETCH(QString, function);
     QFETCH(QString, expected);
     QJSEngine eng;
-    QJSValue val = eng.evaluate("(" + function + ")");
+    QJSValue val = eng.evaluate(QLatin1Char('(') + function + QLatin1Char(')'));
     QVERIFY(val.isCallable());
     QString actual = val.toString();
     QSKIP("Function::toString() doesn't give the whole function on v4");

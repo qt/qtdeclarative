@@ -98,7 +98,7 @@ bool tst_QQmlDebuggingEnabler::init(bool blockMode, bool qmlscene, int portFrom,
 
     if (qmlscene) {
         process->start(QStringList() << QLatin1String("-qmljsdebugger=port:") +
-                       QString::number(portFrom) + QLatin1String(",") + QString::number(portTo) +
+                       QString::number(portFrom) + QLatin1Char(',') + QString::number(portTo) +
                        QLatin1String(blockMode ? ",block": "") <<
                        testFile(QLatin1String("test.qml")));
     } else {

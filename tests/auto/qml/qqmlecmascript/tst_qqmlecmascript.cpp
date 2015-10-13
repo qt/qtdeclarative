@@ -7330,7 +7330,7 @@ void tst_qqmlecmascript::sequenceSort_data()
     for (size_t t=0 ; t < sizeof(types)/sizeof(types[0]) ; ++t) {
         for (size_t s=0 ; s < sizeof(sort)/sizeof(sort[0]) ; ++s) {
             for (int c=0 ; c < 2 ; ++c) {
-                QString testName = QLatin1String(types[t]) + QLatin1String("_") + QLatin1String(sort[s]);
+                QString testName = QLatin1String(types[t]) + QLatin1Char('_') + QLatin1String(sort[s]);
                 QString fnName = QLatin1String("test_") + testName;
                 bool useComparer = c != 0;
                 testName += useComparer ? QLatin1String("[custom]") : QLatin1String("[default]");

@@ -73,7 +73,7 @@ namespace {
 
     QString toString(const QQmlDirParser::Plugin &p)
     {
-        return p.name + "|" + p.path;
+        return p.name + QLatin1Char('|') + p.path;
     }
 
     QStringList toStringList(const QList<QQmlDirParser::Plugin> &plugins)
@@ -88,7 +88,9 @@ namespace {
 
     QString toString(const QQmlDirParser::Component &c)
     {
-        return c.typeName + "|" + c.fileName + "|" + QString::number(c.majorVersion) + "|" + QString::number(c.minorVersion) + "|" + (c.internal ? "true" : "false");
+        return c.typeName + QLatin1Char('|') + c.fileName + QLatin1Char('|')
+            + QString::number(c.majorVersion) + QLatin1Char('|') + QString::number(c.minorVersion)
+            + QLatin1Char('|') + (c.internal ? "true" : "false");
     }
 
     QStringList toStringList(const QQmlDirComponents &components)
@@ -104,7 +106,8 @@ namespace {
 
     QString toString(const QQmlDirParser::Script &s)
     {
-        return s.nameSpace + "|" + s.fileName + "|" + QString::number(s.majorVersion) + "|" + QString::number(s.minorVersion);
+        return s.nameSpace + QLatin1Char('|') + s.fileName + QLatin1Char('|')
+            + QString::number(s.majorVersion) + '|' + QString::number(s.minorVersion);
     }
 
     QStringList toStringList(const QList<QQmlDirParser::Script> &scripts)

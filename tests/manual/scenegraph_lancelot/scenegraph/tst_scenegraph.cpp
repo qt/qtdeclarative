@@ -244,7 +244,7 @@ quint16 tst_Scenegraph::checksumFileOrDir(const QString &path)
         static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
         quint16 cs = 0;
         foreach (QString item, QDir(fi.filePath()).entryList(nameFilters, QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
-            cs ^= checksumFileOrDir(path + "/" + item);
+            cs ^= checksumFileOrDir(path + QLatin1Char('/') + item);
         return cs;
     }
     return 0;

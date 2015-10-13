@@ -93,8 +93,8 @@ void tst_qquickfolderlistmodel::checkNoErrors(const QQmlComponent& component)
         QList<QQmlError> errors = component.errors();
         for (int ii = 0; ii < errors.count(); ++ii) {
             const QQmlError &error = errors.at(ii);
-            QByteArray errorStr = QByteArray::number(error.line()) + ":" +
-                                  QByteArray::number(error.column()) + ":" +
+            QByteArray errorStr = QByteArray::number(error.line()) + ':' +
+                                  QByteArray::number(error.column()) + ':' +
                                   error.description().toUtf8();
             qWarning() << errorStr;
         }

@@ -110,7 +110,7 @@ QJsonValue tst_qjsonbinding::valueFromJson(const QByteArray &json)
 
     // QJsonDocument::fromJson() only handles objects and arrays...
     // Wrap the JSON inside a dummy object and extract the value.
-    QByteArray wrappedJson = "{\"prop\":" + json + "}";
+    QByteArray wrappedJson = "{\"prop\":" + json + '}';
     doc = QJsonDocument::fromJson(wrappedJson);
     Q_ASSERT(doc.isObject());
     return doc.object().value("prop");

@@ -72,7 +72,7 @@ QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& 
     QString persistent_dir = QQmlDataTest::instance()->dataDirectory();
     QString arch = "unknown-architecture"; // QTest needs to help with this.
 
-    QString expectfile = persistent_dir + QDir::separator() + filebasename + "-" + arch + ".png";
+    QString expectfile = persistent_dir + QDir::separator() + filebasename + QLatin1Char('-') + arch + ".png";
 
     if (!QFile::exists(expectfile)) {
         actual.save(expectfile);
