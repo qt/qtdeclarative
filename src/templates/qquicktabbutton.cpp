@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
     QQuickAbstractButton(parent)
 {
+    setCheckable(true);
     setExclusive(true);
     setAccessibleRole(0x00000025); //QAccessible::PageTab
 }
