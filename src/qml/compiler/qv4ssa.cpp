@@ -2028,33 +2028,16 @@ private:
     }
 };
 
-class EliminateDeadCode: public ExprVisitor {
-    DefUses &_defUses;
-    StatementWorklist &_worklist;
+class SideEffectsChecker: public ExprVisitor
+{
     bool _sideEffect;
-    QVector<Temp *> _collectedTemps;
 
 public:
-    EliminateDeadCode(DefUses &defUses, StatementWorklist &worklist)
-        : _defUses(defUses)
-        , _worklist(worklist)
-        , _sideEffect(false)
-    {
-        _collectedTemps.reserve(8);
-    }
+    SideEffectsChecker()
+        : _sideEffect(false)
+    {}
 
-    void run(Expr *&expr, Stmt *stmt) {
-        if (!checkForSideEffects(expr)) {
-            expr = 0;
-            foreach (Temp *t, _collectedTemps) {
-                _defUses.removeUse(stmt, *t);
-                _worklist += _defUses.defStmt(*t);
-            }
-        }
-    }
-
-private:
-    bool checkForSideEffects(Expr *expr)
+    bool hasSideEffects(Expr *expr)
     {
         bool sideEffect = false;
         qSwap(_sideEffect, sideEffect);
@@ -2063,19 +2046,20 @@ private:
         return sideEffect;
     }
 
+protected:
     void markAsSideEffect()
     {
         _sideEffect = true;
-        _collectedTemps.clear();
     }
 
-protected:
-    virtual void visitConst(Const *) {}
-    virtual void visitString(IR::String *) {}
-    virtual void visitRegExp(IR::RegExp *) {}
+    bool seenSideEffects() const { return _sideEffect; }
 
-    virtual void visitName(Name *e)
-    {
+protected:
+    void visitConst(Const *) Q_DECL_OVERRIDE {}
+    void visitString(IR::String *) Q_DECL_OVERRIDE {}
+    void visitRegExp(IR::RegExp *) Q_DECL_OVERRIDE {}
+
+    void visitName(Name *e) Q_DECL_OVERRIDE {
         if (e->freeOfSideEffects)
             return;
         // TODO: maybe we can distinguish between built-ins of which we know that they do not have
@@ -2084,19 +2068,14 @@ protected:
             markAsSideEffect();
     }
 
-    virtual void visitTemp(Temp *e)
-    {
-        _collectedTemps.append(e);
-    }
+    void visitTemp(Temp *) Q_DECL_OVERRIDE {}
+    void visitArgLocal(ArgLocal *) Q_DECL_OVERRIDE {}
 
-    virtual void visitArgLocal(ArgLocal *) {}
-
-    virtual void visitClosure(Closure *)
-    {
+    void visitClosure(Closure *) Q_DECL_OVERRIDE {
         markAsSideEffect();
     }
 
-    virtual void visitConvert(Convert *e) {
+    void visitConvert(Convert *e) Q_DECL_OVERRIDE {
         e->expr->accept(this);
 
         switch (e->expr->type) {
@@ -2110,7 +2089,7 @@ protected:
         }
     }
 
-    virtual void visitUnop(Unop *e) {
+    void visitUnop(Unop *e) Q_DECL_OVERRIDE {
         e->expr->accept(this);
 
         switch (e->op) {
@@ -2128,43 +2107,75 @@ protected:
         }
     }
 
-    virtual void visitBinop(Binop *e) {
+    void visitBinop(Binop *e) Q_DECL_OVERRIDE {
         // TODO: prune parts that don't have a side-effect. For example, in:
         //   function f(x) { +x+1; return 0; }
         // we can prune the binop and leave the unop/conversion.
-        _sideEffect = checkForSideEffects(e->left);
-        _sideEffect |= checkForSideEffects(e->right);
+        _sideEffect = hasSideEffects(e->left);
+        _sideEffect |= hasSideEffects(e->right);
 
         if (e->left->type == VarType || e->left->type == StringType || e->left->type == QObjectType
                 || e->right->type == VarType || e->right->type == StringType || e->right->type == QObjectType)
             markAsSideEffect();
     }
 
-    virtual void visitSubscript(Subscript *e) {
+    void visitSubscript(Subscript *e) Q_DECL_OVERRIDE {
         e->base->accept(this);
         e->index->accept(this);
         markAsSideEffect();
     }
 
-    virtual void visitMember(Member *e) {
+    void visitMember(Member *e) Q_DECL_OVERRIDE {
         e->base->accept(this);
         if (e->freeOfSideEffects)
             return;
         markAsSideEffect();
     }
 
-    virtual void visitCall(Call *e) {
+    void visitCall(Call *e) Q_DECL_OVERRIDE {
         e->base->accept(this);
         for (ExprList *args = e->args; args; args = args->next)
             args->expr->accept(this);
         markAsSideEffect(); // TODO: there are built-in functions that have no side effect.
     }
 
-    virtual void visitNew(New *e) {
+    void visitNew(New *e) Q_DECL_OVERRIDE {
         e->base->accept(this);
         for (ExprList *args = e->args; args; args = args->next)
             args->expr->accept(this);
         markAsSideEffect(); // TODO: there are built-in types that have no side effect.
+    }
+};
+
+class EliminateDeadCode: public SideEffectsChecker
+{
+    DefUses &_defUses;
+    StatementWorklist &_worklist;
+    QVector<Temp *> _collectedTemps;
+
+public:
+    EliminateDeadCode(DefUses &defUses, StatementWorklist &worklist)
+        : _defUses(defUses)
+        , _worklist(worklist)
+    {
+        _collectedTemps.reserve(8);
+    }
+
+    void run(Expr *&expr, Stmt *stmt) {
+        _collectedTemps.clear();
+        if (!hasSideEffects(expr)) {
+            expr = 0;
+            foreach (Temp *t, _collectedTemps) {
+                _defUses.removeUse(stmt, *t);
+                _worklist += _defUses.defStmt(*t);
+            }
+        }
+    }
+
+protected:
+    void visitTemp(Temp *e) Q_DECL_OVERRIDE
+    {
+        _collectedTemps.append(e);
     }
 };
 
@@ -4928,6 +4939,39 @@ static void verifyNoPointerSharing(IR::Function *function)
     V(function);
 }
 
+class RemoveLineNumbers: public SideEffectsChecker, public StmtVisitor
+{
+public:
+    static void run(IR::Function *function)
+    {
+        foreach (BasicBlock *bb, function->basicBlocks()) {
+            if (bb->isRemoved())
+                continue;
+
+            foreach (Stmt *s, bb->statements()) {
+                if (!hasSideEffects(s)) {
+                    s->location = QQmlJS::AST::SourceLocation();
+                }
+            }
+        }
+    }
+
+private:
+    static bool hasSideEffects(Stmt *stmt)
+    {
+        RemoveLineNumbers checker;
+        stmt->accept(&checker);
+        return checker.seenSideEffects();
+    }
+
+    void visitExp(Exp *s) Q_DECL_OVERRIDE { s->expr->accept(this); }
+    void visitMove(Move *s) Q_DECL_OVERRIDE { s->source->accept(this); s->target->accept(this); }
+    void visitJump(Jump *) Q_DECL_OVERRIDE {}
+    void visitCJump(CJump *s) Q_DECL_OVERRIDE { s->cond->accept(this); }
+    void visitRet(Ret *s) Q_DECL_OVERRIDE { s->expr->accept(this); }
+    void visitPhi(Phi *) Q_DECL_OVERRIDE {}
+};
+
 } // anonymous namespace
 
 void LifeTimeInterval::setFrom(int from) {
@@ -5259,6 +5303,11 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
 #ifndef QT_NO_DEBUG
         checkCriticalEdges(function->basicBlocks());
 #endif
+
+        if (!function->module->debugMode) {
+            RemoveLineNumbers::run(function);
+            showMeTheCode(function, "After line number removal");
+        }
 
 //        qout << "Finished SSA." << endl;
         inSSA = true;
