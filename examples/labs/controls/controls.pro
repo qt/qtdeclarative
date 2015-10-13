@@ -4,3 +4,6 @@ SUBDIRS += \
     theme \
     tabs \
     drawer
+
+EXAMPLE_FILES += \
+    shared
