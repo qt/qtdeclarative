@@ -36,7 +36,7 @@ exampledirs += ../../../../examples/labs \
                ../../../../tests/auto/snippets/data \
                snippets
 
-examplesinstallpath = labs
+examplesinstallpath = qtquickcontrols2/labs
 
 headerdirs += ../../../templates \
               ../../calendar \
