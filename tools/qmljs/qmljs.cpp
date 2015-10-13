@@ -126,8 +126,8 @@ static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exceptio
     foreach (const QV4::StackFrame &frame, trace) {
         std::cerr << "    at " << qPrintable(frame.function) << " (" << qPrintable(frame.source);
         if (frame.line >= 0)
-            std::cerr << ":" << frame.line;
-        std::cerr << ")" << std::endl;
+            std::cerr << ':' << frame.line;
+        std::cerr << ')' << std::endl;
     }
 }
 

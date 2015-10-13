@@ -485,7 +485,7 @@ void QmlProfilerApplication::run()
         connect(m_process, SIGNAL(finished(int,QProcess::ExitStatus)), this,
                 SLOT(processFinished()));
         logStatus(QString("Starting '%1 %2' ...").arg(m_programPath,
-                                                      arguments.join(" ")));
+                                                      arguments.join(QLatin1Char(' '))));
         m_process->start(m_programPath, arguments);
         if (!m_process->waitForStarted()) {
             logError(QString("Could not run '%1': %2").arg(m_programPath,

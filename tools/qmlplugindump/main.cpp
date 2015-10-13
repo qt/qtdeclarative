@@ -375,7 +375,7 @@ public:
         if (qmlTyName.startsWith("./")) {
             qmlTyName.remove(0, 2);
         }
-        if (qmlTyName.startsWith("/")) {
+        if (qmlTyName.startsWith(QLatin1Char('/'))) {
             qmlTyName.remove(0, 1);
         }
         const QString exportString = enquote(
@@ -736,7 +736,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
         std::cerr << "parsing "
                   << qPrintable( dependenciesFile ) << " skipping";
         foreach (const QString &uriToSkip, urisToSkip)
-            std::cerr << " "  << qPrintable(uriToSkip);
+            std::cerr << ' '  << qPrintable(uriToSkip);
         std::cerr << std::endl;
     }
     QJsonParseError parseError;
@@ -829,7 +829,7 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     if (!importScanner.waitForFinished()) {
         std::cerr << "failure to start " << qPrintable(command);
         foreach (const QString &arg, commandArgs)
-            std::cerr << " " << qPrintable(arg);
+            std::cerr << ' ' << qPrintable(arg);
         std::cerr << std::endl;
         return false;
     }

@@ -262,8 +262,8 @@ void QmlProfilerData::addQmlEvent(QQmlProfilerDefinitions::RangeType type,
     if (data.isEmpty())
         details = tr("Source code not available");
     else {
-        details = data.join(QStringLiteral(" ")).replace(
-                    QLatin1Char('\n'),QStringLiteral(" ")).simplified();
+        details = data.join(QLatin1Char(' ')).replace(
+                    QLatin1Char('\n'), QLatin1Char(' ')).simplified();
         QRegExp rewrite(QStringLiteral("\\(function \\$(\\w+)\\(\\) \\{ (return |)(.+) \\}\\)"));
         bool match = rewrite.exactMatch(details);
         if (match) {

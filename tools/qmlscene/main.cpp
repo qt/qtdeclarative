@@ -204,7 +204,7 @@ static int displayOptionsDialog(Options *options)
     QFileInfoList fileInfos = findQmlFiles(":/bundle") + findQmlFiles("./qmlscene-resources");
 
     foreach (QFileInfo fileInfo, fileInfos)
-        qmlFileComboBox->addItem(fileInfo.dir().dirName() + "/" + fileInfo.fileName(), QVariant::fromValue(fileInfo));
+        qmlFileComboBox->addItem(fileInfo.dir().dirName() + QLatin1Char('/') + fileInfo.fileName(), QVariant::fromValue(fileInfo));
 
     QCheckBox *originalCheckBox = new QCheckBox(&dialog);
     originalCheckBox->setText("Use original QML viewer");
@@ -235,7 +235,7 @@ static int displayOptionsDialog(Options *options)
         QVariant variant = qmlFileComboBox->itemData(qmlFileComboBox->currentIndex());
         QFileInfo fileInfo = variant.value<QFileInfo>();
 
-        if (fileInfo.canonicalFilePath().startsWith(":"))
+        if (fileInfo.canonicalFilePath().startsWith(QLatin1Char(':')))
             options->file = QUrl("qrc" + fileInfo.canonicalFilePath());
         else
             options->file = QUrl::fromLocalFile(fileInfo.canonicalFilePath());
@@ -270,7 +270,7 @@ static bool checkVersion(const QUrl &url)
     bool codeFound= false;
     while (!codeFound) {
         QString line = stream.readLine();
-        if (line.contains("{")) {
+        if (line.contains(QLatin1Char('{'))) {
             codeFound = true;
         } else {
             QString import;
