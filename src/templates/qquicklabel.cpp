@@ -49,6 +49,25 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Label
+    \inherits Text
+    \instantiates QQuickLabel
+    \inqmlmodule Qt.labs.controls
+    \ingroup text
+    \brief A text label.
+
+    Label extends \l Text with styling and \l {Control::font}{font}
+    inheritance. The default colors and font are style specific. Label
+    can also have a visual \l background item.
+
+    \image qtlabscontrols-label.png
+
+    \snippet qtlabscontrols-label.qml 1
+
+    \sa {Customizing Label}
+*/
+
 QQuickLabel::QQuickLabel(QQuickItem *parent) :
     QQuickText(*(new QQuickLabelPrivate), parent)
 {
@@ -130,6 +149,17 @@ void QQuickLabel::classBegin()
 #endif
 }
 
+/*!
+    \qmlproperty Item Qt.labs.controls::Label::background
+
+    This property holds the background item.
+
+    \note If the background item has no explicit size specified, it automatically
+          follows the control's size. In most cases, there is no need to specify
+          width or height for a background item.
+
+    \sa {Customizing Label}
+*/
 QQuickItem *QQuickLabel::background() const
 {
     Q_D(const QQuickLabel);

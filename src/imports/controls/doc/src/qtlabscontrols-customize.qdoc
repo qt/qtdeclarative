@@ -157,7 +157,13 @@
 
     \section1 Customizing Label
 
-        TODO
+        Label can have a visual \l {Label::background}{background} item.
+
+        \section3 Background
+
+            \image qtlabscontrols-label-background.png
+
+            Label has no background item by default.
 
 
     \section1 Customizing PageIndicator
