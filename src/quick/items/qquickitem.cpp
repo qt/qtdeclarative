@@ -5766,7 +5766,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
     In Qt Quick 2.0, this property has minimal impact on performance.
 
-    By default is true.
+    By default, this property is set to \c true.
 */
 /*!
     \property QQuickItem::smooth
@@ -5778,7 +5778,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
     In Qt Quick 2.0, this property has minimal impact on performance.
 
-    By default is true.
+    By default, this property is set to \c true.
 */
 bool QQuickItem::smooth() const
 {
@@ -5800,10 +5800,10 @@ void QQuickItem::setSmooth(bool smooth)
 /*!
     \qmlproperty bool QtQuick::Item::activeFocusOnTab
 
-    This property holds whether the item wants to be in tab focus
-    chain. By default this is set to false.
+    This property holds whether the item wants to be in the tab focus
+    chain. By default, this is set to \c false.
 
-    The tab focus chain traverses elements by visiting first the
+    The tab focus chain traverses elements by first visiting the
     parent, and then its children in the order they occur in the
     children property. Pressing the tab key on an item in the tab
     focus chain will move keyboard focus to the next item in the
@@ -5812,14 +5812,14 @@ void QQuickItem::setSmooth(bool smooth)
 
     To set up a manual tab focus chain, see \l KeyNavigation. Tab
     key events used by Keys or KeyNavigation have precedence over
-    focus chain behavior, ignore the events in other key handlers
+    focus chain behavior; ignore the events in other key handlers
     to allow it to propagate.
 */
 /*!
     \property QQuickItem::activeFocusOnTab
 
-    This property holds whether the item wants to be in tab focus
-    chain. By default this is set to false.
+    This property holds whether the item wants to be in the tab focus
+    chain. By default, this is set to \c false.
 */
 bool QQuickItem::activeFocusOnTab() const
 {
