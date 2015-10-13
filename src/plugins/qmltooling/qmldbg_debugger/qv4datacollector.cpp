@@ -208,13 +208,13 @@ QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
     return ref;
 }
 
-void QV4DataCollector::collectScope(QJsonObject *dict, QV4::Debugging::Debugger *debugger,
+void QV4DataCollector::collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger,
                                     int frameNr, int scopeNr)
 {
     QStringList names;
 
     Refs refs;
-    if (debugger->state() == QV4::Debugging::Debugger::Paused) {
+    if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
         RefHolder holder(this, &refs);
         ArgumentCollectJob argumentsJob(m_engine, this, &names, frameNr, scopeNr);
         debugger->runInEngine(&argumentsJob);
@@ -359,7 +359,8 @@ void GatherSourcesJob::run()
             sources.append(fileName);
     }
 
-    QV4::Debugging::Debugger *debugger = engine->debugger;
+    QV4::Debugging::V4Debugger *debugger
+            = static_cast<QV4::Debugging::V4Debugger *>(engine->debugger);
     emit debugger->sourcesCollected(debugger, sources, seq);
 }
 

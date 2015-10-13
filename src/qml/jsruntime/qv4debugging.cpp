@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 using namespace QV4::Debugging;
 
-Debugger::JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr,
+V4Debugger::JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr,
                                        const QString &script)
     : engine(engine)
     , frameNr(frameNr)
@@ -62,7 +62,7 @@ Debugger::JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr
     , resultIsException(false)
 {}
 
-void Debugger::JavaScriptJob::run()
+void V4Debugger::JavaScriptJob::run()
 {
     Scope scope(engine);
 
@@ -92,18 +92,18 @@ void Debugger::JavaScriptJob::run()
     handleResult(result);
 }
 
-bool Debugger::JavaScriptJob::hasExeption() const
+bool V4Debugger::JavaScriptJob::hasExeption() const
 {
     return resultIsException;
 }
 
-class EvalJob: public Debugger::JavaScriptJob
+class EvalJob: public V4Debugger::JavaScriptJob
 {
     bool result;
 
 public:
     EvalJob(QV4::ExecutionEngine *engine, const QString &script)
-        : Debugger::JavaScriptJob(engine, /*frameNr*/-1, script)
+        : V4Debugger::JavaScriptJob(engine, /*frameNr*/-1, script)
         , result(false)
     {}
 
@@ -118,7 +118,7 @@ public:
     }
 };
 
-Debugger::Debugger(QV4::ExecutionEngine *engine)
+V4Debugger::V4Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
     , m_state(Running)
     , m_stepping(NotStepping)
@@ -129,11 +129,11 @@ Debugger::Debugger(QV4::ExecutionEngine *engine)
     , m_gatherSources(0)
     , m_runningJob(0)
 {
-    qMetaTypeId<Debugger*>();
+    qMetaTypeId<V4Debugger*>();
     qMetaTypeId<PauseReason>();
 }
 
-void Debugger::pause()
+void V4Debugger::pause()
 {
     QMutexLocker locker(&m_lock);
     if (m_state == Paused)
@@ -141,7 +141,7 @@ void Debugger::pause()
     m_pauseRequested = true;
 }
 
-void Debugger::resume(Speed speed)
+void V4Debugger::resume(Speed speed)
 {
     QMutexLocker locker(&m_lock);
     if (m_state != Paused)
@@ -155,28 +155,28 @@ void Debugger::resume(Speed speed)
     m_runningCondition.wakeAll();
 }
 
-void Debugger::addBreakPoint(const QString &fileName, int lineNumber, const QString &condition)
+void V4Debugger::addBreakPoint(const QString &fileName, int lineNumber, const QString &condition)
 {
     QMutexLocker locker(&m_lock);
     m_breakPoints.insert(DebuggerBreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1), lineNumber), condition);
     m_haveBreakPoints = true;
 }
 
-void Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
+void V4Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
 {
     QMutexLocker locker(&m_lock);
     m_breakPoints.remove(DebuggerBreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1), lineNumber));
     m_haveBreakPoints = !m_breakPoints.isEmpty();
 }
 
-void Debugger::setBreakOnThrow(bool onoff)
+void V4Debugger::setBreakOnThrow(bool onoff)
 {
     QMutexLocker locker(&m_lock);
 
     m_breakOnThrow = onoff;
 }
 
-Debugger::ExecutionState Debugger::currentExecutionState() const
+V4Debugger::ExecutionState V4Debugger::currentExecutionState() const
 {
     ExecutionState state;
     state.fileName = getFunction()->sourceFile();
@@ -185,12 +185,12 @@ Debugger::ExecutionState Debugger::currentExecutionState() const
     return state;
 }
 
-QVector<StackFrame> Debugger::stackTrace(int frameLimit) const
+QVector<StackFrame> V4Debugger::stackTrace(int frameLimit) const
 {
     return m_engine->stackTrace(frameLimit);
 }
 
-void Debugger::maybeBreakAtInstruction()
+void V4Debugger::maybeBreakAtInstruction()
 {
     if (m_runningJob) // do not re-enter when we're doing a job for the debugger.
         return;
@@ -228,7 +228,7 @@ void Debugger::maybeBreakAtInstruction()
     }
 }
 
-void Debugger::enteringFunction()
+void V4Debugger::enteringFunction()
 {
     if (m_runningJob)
         return;
@@ -239,7 +239,7 @@ void Debugger::enteringFunction()
     }
 }
 
-void Debugger::leavingFunction(const ReturnedValue &retVal)
+void V4Debugger::leavingFunction(const ReturnedValue &retVal)
 {
     if (m_runningJob)
         return;
@@ -254,7 +254,7 @@ void Debugger::leavingFunction(const ReturnedValue &retVal)
     }
 }
 
-void Debugger::aboutToThrow()
+void V4Debugger::aboutToThrow()
 {
     if (!m_breakOnThrow)
         return;
@@ -266,7 +266,7 @@ void Debugger::aboutToThrow()
     pauseAndWait(Throwing);
 }
 
-Function *Debugger::getFunction() const
+Function *V4Debugger::getFunction() const
 {
     Scope scope(m_engine);
     ExecutionContext *context = m_engine->currentContext;
@@ -277,7 +277,7 @@ Function *Debugger::getFunction() const
         return context->d()->engine->globalCode;
 }
 
-void Debugger::pauseAndWait(PauseReason reason)
+void V4Debugger::pauseAndWait(PauseReason reason)
 {
     if (m_runningJob)
         return;
@@ -298,7 +298,7 @@ void Debugger::pauseAndWait(PauseReason reason)
     m_state = Running;
 }
 
-bool Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
+bool V4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
 {
     BreakPoints::iterator it = m_breakPoints.find(DebuggerBreakPoint(filename.mid(filename.lastIndexOf('/') + 1), linenr));
     if (it == m_breakPoints.end())
@@ -316,13 +316,13 @@ bool Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
     return evilJob.resultAsBoolean();
 }
 
-void Debugger::runInEngine(Debugger::Job *job)
+void V4Debugger::runInEngine(V4Debugger::Job *job)
 {
     QMutexLocker locker(&m_lock);
     runInEngine_havingLock(job);
 }
 
-void Debugger::runInEngine_havingLock(Debugger::Job *job)
+void V4Debugger::runInEngine_havingLock(V4Debugger::Job *job)
 {
     Q_ASSERT(job);
     Q_ASSERT(m_runningJob == 0);
@@ -333,7 +333,7 @@ void Debugger::runInEngine_havingLock(Debugger::Job *job)
     m_runningJob = 0;
 }
 
-Debugger::Job::~Job()
+V4Debugger::Job::~Job()
 {
 }
 
