@@ -1107,7 +1107,7 @@ void Object::copyArrayData(Object *other)
             dd->len = other->d()->arrayData->len;
             dd->offset = other->d()->arrayData->offset;
         }
-        memcpy(d()->arrayData->arrayData, other->d()->arrayData->arrayData, d()->arrayData->alloc*sizeof(Value));
+        memcpy(d()->arrayData->arrayData, other->d()->arrayData->arrayData, other->d()->arrayData->alloc*sizeof(Value));
     }
     setArrayLengthUnchecked(other->getLength());
 }
