@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickButton
     \inqmlmodule Qt.labs.controls
-    \ingroup buttons
+    \ingroup qtlabscontrols-buttons
     \brief A button control.
 
     \image qtlabscontrols-button.gif
@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Button}
+    \sa {Customizing Button}, Buttons
 */
 
 class QQuickButtonPrivate : public QQuickAbstractButtonPrivate

@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickSwitch
     \inqmlmodule Qt.labs.controls
-    \ingroup buttons
+    \ingroup qtlabscontrols-buttons
     \brief A switch control.
 
     \image qtlabscontrols-switch.gif
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Switch}
+    \sa {Customizing Switch}, Buttons
 */
 
 class QQuickSwitchPrivate : public QQuickAbstractButtonPrivate

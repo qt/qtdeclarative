@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickRadioButton
     \inqmlmodule Qt.labs.controls
-    \ingroup buttons
+    \ingroup qtlabscontrols-buttons
     \brief A radio button control.
 
     RadioButton presents an option button that can be toggled on (checked) or
@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ExclusiveGroup, {Customizing RadioButton}
+    \sa ExclusiveGroup, {Customizing RadioButton}, Buttons
 */
 
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :

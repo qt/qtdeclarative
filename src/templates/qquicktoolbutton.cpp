@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \inherits Button
     \instantiates QQuickToolButton
     \inqmlmodule Qt.labs.controls
-    \ingroup buttons
+    \ingroup qtlabscontrols-buttons
     \brief A tool button control.
 
     ToolButton is functionally similar to \l Button, but provides a look that
@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ToolBar, {Customizing ToolButton}
+    \sa ToolBar, {Customizing ToolButton}, Buttons
 */
 
 QQuickToolButton::QQuickToolButton(QQuickItem *parent) :

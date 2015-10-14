@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickCheckBox
     \inqmlmodule Qt.labs.controls
-    \ingroup buttons
+    \ingroup qtlabscontrols-buttons
     \brief A check box control.
 
     CheckBox presents an option button that can be toggled on (checked) or
@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing CheckBox}
+    \sa {Customizing CheckBox}, Buttons
 */
 
 class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
