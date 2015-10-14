@@ -837,7 +837,7 @@ void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickMouseArea);
     if (!d->enabled && !d->pressed) {
         QQuickItem::hoverMoveEvent(event);
-    } else {
+    } else if (d->lastPos != event->posF()) {
         d->lastPos = event->posF();
         d->lastModifiers = event->modifiers();
         QQuickMouseEvent &me = d->quickMouseEvent;
@@ -1083,8 +1083,7 @@ void QQuickMouseArea::setHoverEnabled(bool h)
     \qmlproperty bool QtQuick::MouseArea::containsMouse
     This property holds whether the mouse is currently inside the mouse area.
 
-    \warning This property is not updated if the area moves under the mouse: \e containsMouse will not change.
-    In addition, if hoverEnabled is false, containsMouse will only be valid
+    \warning If hoverEnabled is false, containsMouse will only be valid
     when the mouse is pressed while the mouse cursor is inside the MouseArea.
 */
 bool QQuickMouseArea::hovered() const

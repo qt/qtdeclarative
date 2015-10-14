@@ -434,7 +434,7 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
         }
     }
 
-    d->flushDelayedTouchEvent();
+    d->flushFrameSynchronousEvents();
     // Event delivery or processing has caused the window to stop rendering.
     if (!windowData(window))
         return;
