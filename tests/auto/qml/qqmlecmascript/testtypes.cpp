@@ -325,6 +325,38 @@ bool MyInheritedQmlObject::isItYouMyInheritedQmlObject(MyInheritedQmlObject *o)
     return o && o == theSingletonObject;
 }
 
+class TestTypeCppSingleton : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int foo READ foo)
+
+    Q_CLASSINFO("DefaultProperty", "foo")
+public:
+    int foo() { return 0; }
+    static TestTypeCppSingleton *instance() {
+        static TestTypeCppSingleton cppSingleton;
+        return &cppSingleton;
+    }
+private:
+    TestTypeCppSingleton(){}
+    ~TestTypeCppSingleton() {
+        // just to make sure it crashes on double delete
+        static int a = 0;
+        static int *ptr = &a;
+        *ptr = 1;
+        ptr = 0;
+    }
+};
+
+QObject *testTypeCppProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    TestTypeCppSingleton *o = TestTypeCppSingleton::instance();
+    QQmlEngine::setObjectOwnership(o, QQmlEngine::CppOwnership);
+    return o;
+}
+
 static QObject *create_singletonWithEnum(QQmlEngine *, QJSEngine *)
 {
     return new SingletonWithEnum;
@@ -391,6 +423,7 @@ void registerTypes()
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObject");
     qmlRegisterSingletonType<MyInheritedQmlObject>("Test", 1, 0, "MyInheritedQmlObjectSingleton", inheritedQmlObject_provider);
+    qmlRegisterSingletonType<TestTypeCppSingleton>("Test", 1, 0, "TestTypeCppSingleton", testTypeCppProvider);
     qmlRegisterType<MyDeferredObject>("Qt.test", 1,0, "MyDeferredObject");
     qmlRegisterType<MyVeryDeferredObject>("Qt.test", 1,0, "MyVeryDeferredObject");
     qmlRegisterType<MyQmlContainer>("Qt.test", 1,0, "MyQmlContainer");
