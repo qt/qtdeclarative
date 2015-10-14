@@ -20,6 +20,9 @@
 #include "renderloop.h"
 
 #include "context.h"
+
+#include <QtCore/QCoreApplication>
+
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
 #include <private/qquickprofiler_p.h>

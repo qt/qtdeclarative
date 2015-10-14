@@ -20,6 +20,7 @@
 
 #include "threadedrenderloop.h"
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QMutex>
 #include <QtCore/QWaitCondition>
 #include <QtCore/QAnimationDriver>
