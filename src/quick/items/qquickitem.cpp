@@ -622,7 +622,7 @@ void QQuickKeyNavigationAttached::keyPressed(QKeyEvent *event, bool post)
             mirror = QQuickItemPrivate::get(parentItem)->effectiveLayoutMirror;
         QQuickItem* leftItem = mirror ? d->right : d->left;
         if (leftItem) {
-            setFocusNavigation(leftItem, mirror ? "right" : "left");
+            setFocusNavigation(leftItem, mirror ? "right" : "left", mirror ? Qt::TabFocusReason : Qt::BacktabFocusReason);
             event->accept();
         }
         break;
@@ -632,20 +632,20 @@ void QQuickKeyNavigationAttached::keyPressed(QKeyEvent *event, bool post)
             mirror = QQuickItemPrivate::get(parentItem)->effectiveLayoutMirror;
         QQuickItem* rightItem = mirror ? d->left : d->right;
         if (rightItem) {
-            setFocusNavigation(rightItem, mirror ? "left" : "right");
+            setFocusNavigation(rightItem, mirror ? "left" : "right", mirror ? Qt::BacktabFocusReason : Qt::TabFocusReason);
             event->accept();
         }
         break;
     }
     case Qt::Key_Up:
         if (d->up) {
-            setFocusNavigation(d->up, "up");
+            setFocusNavigation(d->up, "up", Qt::BacktabFocusReason);
             event->accept();
         }
         break;
     case Qt::Key_Down:
         if (d->down) {
-            setFocusNavigation(d->down, "down");
+            setFocusNavigation(d->down, "down", Qt::TabFocusReason);
             event->accept();
         }
         break;

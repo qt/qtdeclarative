@@ -2089,10 +2089,14 @@ void tst_QQuickItem::keyNavigation_focusReason()
     QVERIFY(key.isAccepted());
     QCOMPARE(focusEventFilter.lastFocusReason, Qt::BacktabFocusReason);
 
-    // some arbitrary cursor key
+    // right - it's also one kind of key navigation
     key = QKeyEvent(QEvent::KeyPress, Qt::Key_Right, Qt::NoModifier, "", false, 1);
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
+    QCOMPARE(focusEventFilter.lastFocusReason, Qt::TabFocusReason);
+
+    item->setFocus(true, Qt::OtherFocusReason);
+    QVERIFY(item->hasActiveFocus());
     QCOMPARE(focusEventFilter.lastFocusReason, Qt::OtherFocusReason);
 
     delete window;
