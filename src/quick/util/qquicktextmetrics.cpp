@@ -244,7 +244,7 @@ QRectF QQuickTextMetrics::tightBoundingRect() const
 }
 
 /*!
-    \qmlmethod string QtQuick::TextMetrics::elidedText
+    \qmlproperty string QtQuick::TextMetrics::elidedText
 
     This property holds an elided version of the string (i.e., a string with
     "..." in it) if the string \l text is wider than \l elideWidth. If the

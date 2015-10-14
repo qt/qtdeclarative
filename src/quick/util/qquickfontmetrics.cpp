@@ -319,8 +319,7 @@ QRectF QQuickFontMetrics::tightBoundingRect(const QString &text) const
 }
 
 /*!
-    \qmlmethod string QtQuick::FontMetrics::elidedText(string text, enum mode,
-        qreal width, int flags)
+    \qmlmethod string QtQuick::FontMetrics::elidedText(string text, enumeration mode, real width, int flags)
 
     This method returns a returns an elided version of the string (i.e., a
     string with "..." in it) if the string \a text is wider than \a width.

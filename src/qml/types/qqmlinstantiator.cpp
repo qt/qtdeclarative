@@ -426,7 +426,7 @@ void QQmlInstantiator::setModel(const QVariant &v)
 }
 
 /*!
-    \qmlproperty QtQml::QtObject QtQml::Instantiator::object
+    \qmlproperty QtObject QtQml::Instantiator::object
 
     This is a reference to the first created object, intended as a convenience
     for the case where only one object has been created.
@@ -440,7 +440,7 @@ QObject *QQmlInstantiator::object() const
 }
 
 /*!
-    \qmlmethod QtQml::QtObject QtQml::Instantiator::objectAt
+    \qmlmethod QtObject QtQml::Instantiator::objectAt(int index)
 
     Returns a reference to the object with the given \a index.
 */
