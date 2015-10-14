@@ -289,7 +289,7 @@ void tst_Gifs::rangeSlider()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(5);
+    gifRecorder.setRecordingDuration(6);
     gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtlabscontrols-rangeslider.qml");
     gifRecorder.setView(&view);
@@ -298,21 +298,39 @@ void tst_Gifs::rangeSlider()
 
     gifRecorder.start();
 
-    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(17, 18), 200);
-    moveSmoothly(QPoint(0, 17), QPoint(54, 17), 54);
-    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(54, 17), 20);
+    QQuickItem *slider = view.rootObject()->property("slider").value<QQuickItem*>();
+    QVERIFY(slider);
+    QObject *first = slider->property("first").value<QObject*>();
+    QVERIFY(first);
+    QQuickItem *firstHandle = first->property("handle").value<QQuickItem*>();
+    QVERIFY(firstHandle);
+    QObject *second = slider->property("second").value<QObject*>();
+    QVERIFY(second);
+    QQuickItem *secondHandle = second->property("handle").value<QQuickItem*>();
+    QVERIFY(secondHandle);
 
-    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(182, 14), 200);
-    moveSmoothly(QPoint(183, 17), QPoint(145, 17), 183 - 145);
-    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(145, 17), 20);
+    const QPoint firstCenter = firstHandle->mapToItem(slider,
+        QPoint(firstHandle->width() / 2, firstHandle->height() / 2)).toPoint();
+    const QPoint secondCenter = secondHandle->mapToItem(slider,
+        QPoint(secondHandle->width() / 2, secondHandle->height() / 2)).toPoint();
 
-    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(142, 13), 200);
-    moveSmoothly(QPoint(143, 17), QPoint(189, 17), 189 - 143);
-    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(189, 12), 20);
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, firstCenter, 100);
+    const QPoint firstTarget = firstCenter + QPoint(slider->width() * 0.25, 0);
+    moveSmoothly(firstCenter, firstTarget, firstTarget.x() - firstCenter.x());
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, firstTarget, 20);
 
-    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(63, 14), 200);
-    moveSmoothly(QPoint(62, 17), QPoint(6, 17), 62 - 6);
-    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(6, 17), 20);
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, secondCenter, 100);
+    const QPoint secondTarget = secondCenter - QPoint(slider->width() * 0.25, 0);
+    moveSmoothly(secondCenter, secondTarget, qAbs(secondTarget.x() - secondCenter.x()));
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, secondTarget, 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, secondTarget, 100);
+    moveSmoothly(secondTarget, secondCenter, qAbs(secondTarget.x() - secondCenter.x()));
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, secondCenter, 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, firstTarget, 100);
+    moveSmoothly(firstTarget, firstCenter, firstTarget.x() - firstCenter.x());
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, firstCenter, 20);
 
     gifRecorder.waitForFinish();
 }

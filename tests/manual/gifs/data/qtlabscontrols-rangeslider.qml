@@ -45,6 +45,8 @@ Item {
     width: slider.implicitWidth
     height: slider.implicitHeight
 
+    property alias slider: slider
+
     RangeSlider {
         id: slider
         anchors.centerIn: parent
