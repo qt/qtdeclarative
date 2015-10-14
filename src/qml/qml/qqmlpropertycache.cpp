@@ -346,25 +346,6 @@ void QQmlPropertyCache::appendProperty(const QString &name,
     setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index, (old != 0));
 }
 
-void QQmlPropertyCache::appendProperty(const QHashedCStringRef &name,
-                                       quint32 flags, int coreIndex, int propType, int notifyIndex)
-{
-    QQmlPropertyData data;
-    data.propType = propType;
-    data.coreIndex = coreIndex;
-    data.notifyIndex = notifyIndex;
-    data.flags = flags;
-
-    QQmlPropertyData *old = findNamedProperty(name);
-    if (old)
-        data.markAsOverrideOf(old);
-
-    int index = propertyIndexCache.count();
-    propertyIndexCache.append(data);
-
-    setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index, (old != 0));
-}
-
 void QQmlPropertyCache::appendSignal(const QString &name, quint32 flags, int coreIndex,
                                      const int *types, const QList<QByteArray> &names)
 {
@@ -402,71 +383,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, quint32 flags, int cor
     setNamedProperty(handlerName, signalHandlerIndex + signalOffset(), signalHandlerIndexCache.data() + signalHandlerIndex, (old != 0));
 }
 
-void QQmlPropertyCache::appendSignal(const QHashedCStringRef &name, quint32 flags, int coreIndex,
-                                     const int *types, const QList<QByteArray> &names)
-{
-    QQmlPropertyData data;
-    data.propType = QVariant::Invalid;
-    data.coreIndex = coreIndex;
-    data.flags = flags;
-    data.arguments = 0;
-
-    QQmlPropertyData handler = data;
-    handler.flags |= QQmlPropertyData::IsSignalHandler;
-
-    if (types) {
-        int argumentCount = *types;
-        QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
-        ::memcpy(args->arguments, types, (argumentCount + 1) * sizeof(int));
-        args->argumentsValid = true;
-        data.arguments = args;
-    }
-
-    QQmlPropertyData *old = findNamedProperty(name);
-    if (old)
-        data.markAsOverrideOf(old);
-
-    int methodIndex = methodIndexCache.count();
-    methodIndexCache.append(data);
-
-    int signalHandlerIndex = signalHandlerIndexCache.count();
-    signalHandlerIndexCache.append(handler);
-
-    QString handlerName = QLatin1String("on") + name.toUtf16();
-    handlerName[2] = handlerName[2].toUpper();
-
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
-    setNamedProperty(handlerName, signalHandlerIndex + signalOffset(), signalHandlerIndexCache.data() + signalHandlerIndex, (old != 0));
-}
-
 void QQmlPropertyCache::appendMethod(const QString &name, quint32 flags, int coreIndex,
-                                     const QList<QByteArray> &names)
-{
-    int argumentCount = names.count();
-
-    QQmlPropertyData data;
-    data.propType = QMetaType::QVariant;
-    data.coreIndex = coreIndex;
-
-    QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
-    for (int ii = 0; ii < argumentCount; ++ii)
-        args->arguments[ii + 1] = QMetaType::QVariant;
-    args->argumentsValid = true;
-    data.arguments = args;
-
-    data.flags = flags;
-
-    QQmlPropertyData *old = findNamedProperty(name);
-    if (old)
-        data.markAsOverrideOf(old);
-
-    int methodIndex = methodIndexCache.count();
-    methodIndexCache.append(data);
-
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
-}
-
-void QQmlPropertyCache::appendMethod(const QHashedCStringRef &name, quint32 flags, int coreIndex,
                                      const QList<QByteArray> &names)
 {
     int argumentCount = names.count();
@@ -893,19 +810,17 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     This is different from QMetaMethod::methodIndex().
 */
 QQmlPropertyData *
-QQmlPropertyCache::signal(int index, QQmlPropertyCache **c) const
+QQmlPropertyCache::signal(int index) const
 {
     if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
         return 0;
 
     if (index < signalHandlerIndexCacheStart)
-        return _parent->signal(index, c);
+        return _parent->signal(index);
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
-    if (rv->notFullyResolved()) resolve(rv);
     Q_ASSERT(rv->isSignal() || rv->coreIndex == -1);
-    if (c) *c = const_cast<QQmlPropertyCache *>(this);
-    return rv;
+    return ensureResolved(rv);
 }
 
 int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
@@ -1099,52 +1014,6 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     args->next = argumentsCache;
     argumentsCache = args;
     return args;
-}
-
-/*! \internal
-    \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
-    This is different from QMetaMethod::methodIndex().
-*/
-QString QQmlPropertyCache::signalParameterStringForJS(int index, QString *errorString)
-{
-    QQmlPropertyCache *c = 0;
-    QQmlPropertyData *signalData = signal(index, &c);
-    if (!signalData)
-        return QString();
-
-    typedef QQmlPropertyCacheMethodArguments A;
-
-    if (signalData->arguments) {
-        A *arguments = static_cast<A *>(signalData->arguments);
-        if (arguments->signalParameterStringForJS) {
-            if (arguments->parameterError) {
-                if (errorString)
-                    *errorString = *arguments->signalParameterStringForJS;
-                return QString();
-            }
-            return *arguments->signalParameterStringForJS;
-        }
-    }
-
-    QList<QByteArray> parameterNameList = signalParameterNames(index);
-
-    if (!signalData->arguments) {
-        A *args = c->createArgumentsObject(parameterNameList.count(), parameterNameList);
-        signalData->arguments = args;
-    }
-
-    QString error;
-    QString parameters = signalParameterStringForJS(engine, parameterNameList, &error);
-
-    A *arguments = static_cast<A *>(signalData->arguments);
-    arguments->signalParameterStringForJS = new QString(!error.isEmpty() ? error : parameters);
-    if (!error.isEmpty()) {
-        arguments->parameterError = true;
-        if (errorString)
-            *errorString = *arguments->signalParameterStringForJS;
-        return QString();
-    }
-    return *arguments->signalParameterStringForJS;
 }
 
 QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString)
@@ -1405,19 +1274,19 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         if (data->propType != 0)
             returnType = QMetaType::typeName(data->propType);
 
-        QByteArray signature = methods.at(ii).first.toUtf8() + "(";
+        QByteArray signature = methods.at(ii).first.toUtf8() + '(';
 
         QQmlPropertyCacheMethodArguments *arguments = 0;
         if (data->hasArguments()) {
             arguments = (QQmlPropertyCacheMethodArguments *)data->arguments;
             Q_ASSERT(arguments->argumentsValid);
             for (int ii = 0; ii < arguments->arguments[0]; ++ii) {
-                if (ii != 0) signature.append(",");
+                if (ii != 0) signature.append(',');
                 signature.append(QMetaType::typeName(arguments->arguments[1 + ii]));
             }
         }
 
-        signature.append(")");
+        signature.append(')');
 
         QMetaMethodBuilder method;
         if (data->isSignal()) {

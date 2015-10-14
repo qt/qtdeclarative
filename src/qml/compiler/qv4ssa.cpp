@@ -2038,6 +2038,7 @@ public:
     EliminateDeadCode(DefUses &defUses, StatementWorklist &worklist)
         : _defUses(defUses)
         , _worklist(worklist)
+        , _sideEffect(false)
     {
         _collectedTemps.reserve(8);
     }

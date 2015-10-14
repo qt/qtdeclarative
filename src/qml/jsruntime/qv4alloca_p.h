@@ -34,6 +34,17 @@
 #ifndef QV4_ALLOCA_H
 #define QV4_ALLOCA_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <qglobal.h>
 
 #if defined(Q_OS_WIN)

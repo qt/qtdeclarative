@@ -185,7 +185,7 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
                 // Fall through to base implementation
 
             } else if (w->d()->object) {
-                QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
+                QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(QQmlEnginePrivate::get(v4->qmlEngine())), object);
                 if (ao)
                     return QV4::QObjectWrapper::getQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
 
@@ -241,7 +241,8 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
     QQmlType *type = w->d()->type;
     if (type && !type->isSingleton() && w->d()->object) {
         QObject *object = w->d()->object;
-        QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
+        QQmlEngine *e = scope.engine->qmlEngine();
+        QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(QQmlEnginePrivate::get(e)), object);
         if (ao)
             QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
     } else if (type && type->isSingleton()) {

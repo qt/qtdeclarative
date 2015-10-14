@@ -8,12 +8,18 @@ Flickable {
     contentHeight: 320
     flickableDirection: Flickable.HorizontalFlick
     pressDelay: 10000
-    Rectangle {
+    MouseArea {
+        objectName: "filteringMouseArea"
         x: 20
         y: 20
         width: 400
         height: 300
-        color: "yellow"
+        drag.filterChildren: true
+        Rectangle {
+            id: rectangle
+            color: "yellow"
+            anchors.fill: parent
+        }
         Flickable {
             objectName: "innerFlickable"
             anchors.fill: parent

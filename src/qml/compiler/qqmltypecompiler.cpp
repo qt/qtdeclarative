@@ -520,7 +520,24 @@ bool QQmlPropertyCacheCreator::buildMetaObjectRecursively(int objectIndex, int r
     } else if (instantiatingBinding && instantiatingBinding->isAttachedProperty()) {
         QQmlCompiledData::TypeReference *typeRef = resolvedTypes->value(instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
-        const QMetaObject *attachedMo = typeRef->type ? typeRef->type->attachedPropertiesType() : 0;
+        QQmlType *qmltype = typeRef->type;
+        if (!qmltype) {
+            QString propertyName = stringAt(instantiatingBinding->propertyNameIndex);
+            if (imports->resolveType(propertyName, &qmltype, 0, 0, 0)) {
+                if (qmltype->isComposite()) {
+                    QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype->sourceUrl());
+                    Q_ASSERT(tdata);
+                    Q_ASSERT(tdata->isComplete());
+
+                    QQmlCompiledData *data = tdata->compiledData();
+                    qmltype = QQmlMetaType::qmlType(data->metaTypeId);
+
+                    tdata->release();
+                }
+            }
+        }
+
+        const QMetaObject *attachedMo = qmltype ? qmltype->attachedPropertiesType(enginePrivate) : 0;
         if (!attachedMo) {
             recordError(instantiatingBinding->location, tr("Non-existent attached object"));
             return false;
@@ -880,7 +897,9 @@ bool QQmlPropertyCacheCreator::createMetaObject(int objectIndex, const QmlIR::Ob
 
 SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
+    , enginePrivate(typeCompiler->enginePrivate())
     , qmlObjects(*typeCompiler->qmlObjects())
+    , imports(typeCompiler->imports())
     , customParsers(typeCompiler->customParserCache())
     , resolvedTypes(*typeCompiler->resolvedTypes())
     , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(typeCompiler->enginePrivate()))->illegalNames())
@@ -918,7 +937,22 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             QQmlCompiledData::TypeReference *typeRef = resolvedTypes.value(binding->propertyNameIndex);
             QQmlType *type = typeRef ? typeRef->type : 0;
-            const QMetaObject *attachedType = type ? type->attachedPropertiesType() : 0;
+            if (!type) {
+                if (imports->resolveType(propertyName, &type, 0, 0, 0)) {
+                    if (type->isComposite()) {
+                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(type->sourceUrl());
+                        Q_ASSERT(tdata);
+                        Q_ASSERT(tdata->isComplete());
+
+                        QQmlCompiledData *data = tdata->compiledData();
+                        type = QQmlMetaType::qmlType(data->metaTypeId);
+
+                        tdata->release();
+                    }
+                }
+            }
+
+            const QMetaObject *attachedType = type ? type->attachedPropertiesType(enginePrivate) : 0;
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
             QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);

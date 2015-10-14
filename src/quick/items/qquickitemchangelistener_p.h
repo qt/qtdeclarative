@@ -55,16 +55,16 @@ class QQuickAnchorsPrivate;
 class QQuickItemChangeListener
 {
 public:
-    virtual ~QQuickItemChangeListener() {};
+    virtual ~QQuickItemChangeListener() {}
 
     virtual void itemGeometryChanged(QQuickItem *, const QRectF & /* new */, const QRectF & /* old */ ) {}
     virtual void itemSiblingOrderChanged(QQuickItem *) {}
     virtual void itemVisibilityChanged(QQuickItem *) {}
     virtual void itemOpacityChanged(QQuickItem *) {}
     virtual void itemDestroyed(QQuickItem *) {}
-    virtual void itemChildAdded(QQuickItem *, QQuickItem *) {}
-    virtual void itemChildRemoved(QQuickItem *, QQuickItem *) {}
-    virtual void itemParentChanged(QQuickItem *, QQuickItem *) {}
+    virtual void itemChildAdded(QQuickItem *, QQuickItem * /* child */ ) {}
+    virtual void itemChildRemoved(QQuickItem *, QQuickItem * /* child */ ) {}
+    virtual void itemParentChanged(QQuickItem *, QQuickItem * /* parent */ ) {}
     virtual void itemRotationChanged(QQuickItem *) {}
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}

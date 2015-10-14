@@ -103,7 +103,7 @@ void SegmentProperties::invalidate()
 {
     m_blockSignals = true;
 
-     m_ui_pane_p.label->setText(QLatin1String("p") + QString::number(m_segment));
+     m_ui_pane_p.label->setText(QLatin1Char('p') + QString::number(m_segment));
      m_ui_pane_p.smooth->setChecked(m_smooth);
      m_ui_pane_p.smooth->parentWidget()->setEnabled(!m_last);
 

@@ -81,7 +81,19 @@ public:
 
     void collectGarbage();
 
-    void installTranslatorFunctions(const QJSValue &object = QJSValue());
+#if QT_DEPRECATED_SINCE(5, 6)
+    QT_DEPRECATED void installTranslatorFunctions(const QJSValue &object = QJSValue());
+#endif
+
+    enum Extension {
+        TranslationExtension = 0x1,
+        ConsoleExtension = 0x2,
+        GarbageCollectionExtension = 0x4,
+        AllExtensions = 0xffffffff
+    };
+    Q_DECLARE_FLAGS(Extensions, Extension)
+
+    void installExtensions(Extensions extensions, const QJSValue &object = QJSValue());
 
     QV8Engine *handle() const { return d; }
 
@@ -101,6 +113,8 @@ private:
     Q_DECLARE_PRIVATE(QJSEngine)
     friend class QV8Engine;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QJSEngine::Extensions)
 
 inline bool qjsvalue_cast_helper(const QJSValue &value, int type, void *ptr)
 {

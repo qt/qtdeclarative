@@ -195,7 +195,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
         if (name.isEmpty()) {
             name = QByteArray::number(quintptr(_function), 16);
             name.prepend("IR::Function(0x");
-            name.append(")");
+            name.append(')');
         }
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
@@ -236,7 +236,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
             if (name.isEmpty()) {
                 name = QByteArray::number(quintptr(_function), 16);
                 name.prepend("IR::Function(0x");
-                name.append(")");
+                name.append(')');
             }
         }
 

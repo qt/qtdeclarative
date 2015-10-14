@@ -211,7 +211,6 @@ public:
     bool interactive : 1;
     bool calcVelocity : 1;
     bool pixelAligned : 1;
-    bool replayingPressEvent : 1;
     QElapsedTimer timer;
     qint64 lastPosTime;
     qint64 lastPressTime;

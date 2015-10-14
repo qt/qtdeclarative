@@ -48,7 +48,11 @@ namespace QtQml {
     Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QQmlError &error);
     Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors);
 }
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
+// This is necessary to allow for QtQuick1 and QtQuick2 scenes in a single application.
 using namespace QtQml;
+QT_WARNING_POP
 
 class QQmlInfoPrivate;
 class Q_QML_EXPORT QQmlInfo : public QDebug

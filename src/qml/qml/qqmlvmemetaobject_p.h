@@ -155,8 +155,7 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data,
-                      QV4::ExecutionContext *qmlBindingContext = 0, QQmlCompiledData *compiledData = 0);
+    QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
@@ -201,9 +200,7 @@ public:
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue properties;
-    bool propertiesInitialized;
     inline void allocateProperties();
-    inline bool ensurePropertiesAllocated();
     QV4::MemberData *propertiesAsMemberData();
 
     int readPropertyAsInt(int id);
@@ -216,7 +213,8 @@ public:
     QDate readPropertyAsDate(int id);
     QDateTime readPropertyAsDateTime(int id);
     QRectF readPropertyAsRectF(int id);
-    QObject* readPropertyAsQObject(int id);
+    QObject *readPropertyAsQObject(int id);
+    QList<QObject *> *readPropertyAsList(int id);
 
     void writeProperty(int id, int v);
     void writeProperty(int id, bool v);
@@ -235,7 +233,6 @@ public:
     void mark(QV4::ExecutionEngine *e);
 
     void connectAlias(int aliasId);
-    QBitArray aConnected;
 
     QQmlPropertyValueInterceptor *interceptors;
 
@@ -252,14 +249,6 @@ public:
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
     void listChanged(int);
-    class List : public QList<QObject*>
-    {
-    public:
-        List(int lpi, QQmlVMEMetaObject *mo) : notifyIndex(lpi), mo(mo) {}
-        int notifyIndex;
-        QQmlVMEMetaObject *mo;
-    };
-    QList<List> listProperties;
 
     static void list_append(QQmlListProperty<QObject> *, QObject *);
     static int list_count(QQmlListProperty<QObject> *);

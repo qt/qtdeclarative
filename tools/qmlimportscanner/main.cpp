@@ -129,10 +129,10 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
         line = qmldirFile.readLine();
         if (line.startsWith("plugin")) {
             plugins += QString::fromUtf8(line.split(' ').at(1));
-            plugins += QStringLiteral(" ");
+            plugins += QLatin1Char(' ');
         } else if (line.startsWith("classname")) {
             classnames += QString::fromUtf8(line.split(' ').at(1));
-            classnames += QStringLiteral(" ");
+            classnames += QLatin1Char(' ');
         } else if (line.startsWith("depends")) {
             QList<QByteArray> dep = line.split(' ');
             if (dep.length() != 3)
@@ -199,7 +199,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             if (plugininfo.contains(QStringLiteral("dependencies"))) {
                 QStringList dependencies = plugininfo.value(QStringLiteral("dependencies")).toStringList();
                 foreach (const QString &line, dependencies) {
-                    QList<QString> dep = line.split(QStringLiteral(" "));
+                    QList<QString> dep = line.split(QLatin1Char(' '));
                     QVariantMap depImport;
                     depImport[QStringLiteral("type")] = QStringLiteral("module");
                     depImport[QStringLiteral("name")] = dep[0];

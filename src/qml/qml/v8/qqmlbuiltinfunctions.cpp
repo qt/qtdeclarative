@@ -1380,37 +1380,40 @@ static QV4::ReturnedValue writeToConsole(ConsoleLogTypes logType, CallContext *c
             result.append(QLatin1Char(' '));
 
         if (ctx->args()[i].as<ArrayObject>())
-            result.append(QStringLiteral("[") + ctx->args()[i].toQStringNoThrow() + QStringLiteral("]"));
+            result.append(QLatin1Char('[') + ctx->args()[i].toQStringNoThrow() + QLatin1Char(']'));
         else
             result.append(ctx->args()[i].toQStringNoThrow());
     }
 
     if (printStack) {
-        result.append(QLatin1String("\n"));
+        result.append(QLatin1Char('\n'));
         result.append(jsStack(v4));
     }
 
-    static QLoggingCategory loggingCategory("qml");
+    static QLoggingCategory qmlLoggingCategory("qml");
+    static QLoggingCategory jsLoggingCategory("js");
+
+    QLoggingCategory *loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
-    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData(), loggingCategory.categoryName());
+    QMessageLogger logger(baSource.constData(), frame.line, baFunction.constData(), loggingCategory->categoryName());
 
     switch (logType) {
     case Log:
-        if (loggingCategory.isDebugEnabled())
+        if (loggingCategory->isDebugEnabled())
             logger.debug("%s", result.toUtf8().constData());
         break;
     case Info:
-        if (loggingCategory.isInfoEnabled())
+        if (loggingCategory->isInfoEnabled())
             logger.info("%s", result.toUtf8().constData());
         break;
     case Warn:
-        if (loggingCategory.isWarningEnabled())
+        if (loggingCategory->isWarningEnabled())
             logger.warning("%s", result.toUtf8().constData());
         break;
     case Error:
-        if (loggingCategory.isCriticalEnabled())
+        if (loggingCategory->isCriticalEnabled())
             logger.critical("%s", result.toUtf8().constData());
         break;
     default:
@@ -1442,6 +1445,9 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
+    if (!v4->qmlEngine())
+        return QV4::Encode::undefined(); // Not yet implemented for JavaScript.
+
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
@@ -1460,6 +1466,9 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
+
+    if (!v4->qmlEngine())
+        return QV4::Encode::undefined(); // Not yet implemented for JavaScript.
 
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
@@ -1590,31 +1599,36 @@ QV4::ReturnedValue ConsoleObject::method_exception(CallContext *ctx)
 
 
 
-void QV4::GlobalExtensions::init(QQmlEngine *qmlEngine, Object *globalObject)
+void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions extensions)
 {
     ExecutionEngine *v4 = globalObject->engine();
     Scope scope(v4);
 
-#ifndef QT_NO_TRANSLATION
-    globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), method_qsTranslate);
-    globalObject->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), method_qsTranslateNoOp);
-    globalObject->defineDefaultProperty(QStringLiteral("qsTr"), method_qsTr);
-    globalObject->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), method_qsTrNoOp);
-    globalObject->defineDefaultProperty(QStringLiteral("qsTrId"), method_qsTrId);
-    globalObject->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), method_qsTrIdNoOp);
-#endif
+    if (extensions.testFlag(QJSEngine::TranslationExtension)) {
+    #ifndef QT_NO_TRANSLATION
+        globalObject->defineDefaultProperty(QStringLiteral("qsTranslate"), QV4::GlobalExtensions::method_qsTranslate);
+        globalObject->defineDefaultProperty(QStringLiteral("QT_TRANSLATE_NOOP"), QV4::GlobalExtensions::method_qsTranslateNoOp);
+        globalObject->defineDefaultProperty(QStringLiteral("qsTr"), QV4::GlobalExtensions::method_qsTr);
+        globalObject->defineDefaultProperty(QStringLiteral("QT_TR_NOOP"), QV4::GlobalExtensions::method_qsTrNoOp);
+        globalObject->defineDefaultProperty(QStringLiteral("qsTrId"), QV4::GlobalExtensions::method_qsTrId);
+        globalObject->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
 
-    globalObject->defineDefaultProperty(QStringLiteral("print"), ConsoleObject::method_log);
-    globalObject->defineDefaultProperty(QStringLiteral("gc"), method_gc);
+        // string prototype extension
+        scope.engine->stringPrototype()->defineDefaultProperty(QStringLiteral("arg"), QV4::GlobalExtensions::method_string_arg);
+    #endif
+    }
 
-    ScopedObject console(scope, v4->memoryManager->allocObject<QV4::ConsoleObject>());
-    globalObject->defineDefaultProperty(QStringLiteral("console"), console);
+    if (extensions.testFlag(QJSEngine::ConsoleExtension)) {
+        globalObject->defineDefaultProperty(QStringLiteral("print"), QV4::ConsoleObject::method_log);
 
-    ScopedObject qt(scope, v4->memoryManager->allocObject<QV4::QtObject>(qmlEngine));
-    globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
-    // string prototype extension
-    v4->stringPrototype()->defineDefaultProperty(QStringLiteral("arg"), method_string_arg);
+        QV4::ScopedObject console(scope, globalObject->engine()->memoryManager->allocObject<QV4::ConsoleObject>());
+        globalObject->defineDefaultProperty(QStringLiteral("console"), console);
+    }
+
+    if (extensions.testFlag(QJSEngine::GarbageCollectionExtension)) {
+        globalObject->defineDefaultProperty(QStringLiteral("gc"), QV4::GlobalExtensions::method_gc);
+    }
 }
 
 

@@ -218,7 +218,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , hMoved(false), vMoved(false)
     , stealMouse(false), pressed(false)
     , scrollingPhase(false), interactive(true), calcVelocity(false)
-    , pixelAligned(false), replayingPressEvent(false)
+    , pixelAligned(false)
     , lastPosTime(-1)
     , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
@@ -1640,10 +1640,8 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
     bool changed = false;
     if (newGeometry.width() != oldGeometry.width()) {
         changed = true; // we must update visualArea.widthRatio
-        if (d->hData.viewSize < 0) {
+        if (d->hData.viewSize < 0)
             d->contentItem->setWidth(width());
-            emit contentWidthChanged();
-        }
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;
@@ -1652,10 +1650,8 @@ void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
     }
     if (newGeometry.height() != oldGeometry.height()) {
         changed = true; // we must update visualArea.heightRatio
-        if (d->vData.viewSize < 0) {
+        if (d->vData.viewSize < 0)
             d->contentItem->setHeight(height());
-            emit contentHeightChanged();
-        }
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;
@@ -2206,10 +2202,6 @@ bool QQuickFlickable::sendMouseEvent(QQuickItem *item, QMouseEvent *event)
             d->handleMouseMoveEvent(mouseEvent.data());
             break;
         case QEvent::MouseButtonPress:
-            // Don't process a replayed event during replay
-            if (d->replayingPressEvent)
-                return false;
-
             d->handleMousePressEvent(mouseEvent.data());
             d->captureDelayedPress(item, event);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above

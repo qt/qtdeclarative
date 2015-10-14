@@ -106,8 +106,8 @@ JavaScript expressions allow QML code to contain application logic. Qt QML
 provides the framework for running JavaScript expressions in QML and from C++.
 
 These sections are from \l{The QML Reference}.
-\l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
     \list
+    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
     \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
     \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
     \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
@@ -140,8 +140,6 @@ Further information for writing QML applications:
     - essential information for application development with QML and Qt Quick
 \li \l{Qt Quick} - a module which provides a set of QML types and C++ classes
     for building user interfaces and applications with QML
-\li \l{Qt QML Release Notes} - list of changes and
-    additions in the Qt QML module
 \endlist
 
 \section2 Reference

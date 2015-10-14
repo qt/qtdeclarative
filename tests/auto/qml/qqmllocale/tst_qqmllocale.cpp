@@ -676,7 +676,7 @@ void tst_qqmllocale::addDateTimeFormatData(const QString &l)
     int i = 0;
     while (formats[i]) {
         QByteArray t(locale);
-        t += " ";
+        t += ' ';
         t += formats[i];
         QTest::newRow(t.constData()) << l << QString(formats[i]);
         ++i;
@@ -768,7 +768,7 @@ void tst_qqmllocale::addDateFormatData(const QString &l)
     int i = 0;
     while (formats[i]) {
         QByteArray t(locale);
-        t += " ";
+        t += ' ';
         t += formats[i];
         QTest::newRow(t.constData()) << l << QString(formats[i]);
         ++i;
@@ -860,7 +860,7 @@ void tst_qqmllocale::addTimeFormatData(const QString &l)
     int i = 0;
     while (formats[i]) {
         QByteArray t(locale);
-        t += " ";
+        t += ' ';
         t += formats[i];
         QTest::newRow(t.constData()) << l << QString(formats[i]);
         ++i;

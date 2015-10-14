@@ -621,7 +621,7 @@ void tst_qqmlxmlhttprequest::send_options()
     QVERIFY(!object.isNull());
     QString url = server.baseUrl().toString();
     if (url_suffix != "/")
-        url.append("/");
+        url.append(QLatin1Char('/'));
     if (!url_suffix.isEmpty())
         url.append(url_suffix);
     object->setProperty("url", url);

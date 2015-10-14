@@ -71,7 +71,7 @@ public:
     virtual ~QQmlProxyMetaObject();
 
 protected:
-    virtual int metaCall(QMetaObject::Call _c, int _id, void **_a);
+    virtual int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a);
 
 private:
     QList<ProxyData> *metaObjects;

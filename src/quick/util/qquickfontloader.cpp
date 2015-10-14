@@ -47,6 +47,8 @@
 #include <qqmlinfo.h>
 #include <qqmlfile.h>
 
+#include <QtCore/QCoreApplication>
+
 QT_BEGIN_NAMESPACE
 
 #define FONTLOADER_MAXIMUM_REDIRECT_RECURSION 16
@@ -132,10 +134,50 @@ public:
     QUrl url;
     QString name;
     QQuickFontLoader::Status status;
-    static QHash<QUrl, QQuickFontObject*> fonts;
 };
 
-QHash<QUrl, QQuickFontObject*> QQuickFontLoaderPrivate::fonts;
+static void q_QFontLoaderFontsStaticReset();
+static void q_QFontLoaderFontsAddReset()
+{
+    qAddPostRoutine(q_QFontLoaderFontsStaticReset);
+}
+class QFontLoaderFonts
+{
+public:
+    QFontLoaderFonts()
+    {
+        qAddPostRoutine(q_QFontLoaderFontsStaticReset);
+        qAddPreRoutine(q_QFontLoaderFontsAddReset);
+    }
+
+    ~QFontLoaderFonts()
+    {
+        qRemovePostRoutine(q_QFontLoaderFontsStaticReset);
+        reset();
+    }
+
+
+    void reset()
+    {
+        QVector<QQuickFontObject *> deleted;
+        QHash<QUrl, QQuickFontObject*>::iterator it;
+        for (it = map.begin(); it != map.end(); ++it) {
+            if (!deleted.contains(it.value())) {
+                deleted.append(it.value());
+                delete it.value();
+            }
+        }
+        map.clear();
+    }
+
+    QHash<QUrl, QQuickFontObject *> map;
+};
+Q_GLOBAL_STATIC(QFontLoaderFonts, fontLoaderFonts);
+
+static void q_QFontLoaderFontsStaticReset()
+{
+    fontLoaderFonts()->reset();
+}
 
 /*!
     \qmltype FontLoader
@@ -193,29 +235,29 @@ void QQuickFontLoader::setSource(const QUrl &url)
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(d->url);
     if (!localFile.isEmpty()) {
-        if (!d->fonts.contains(d->url)) {
+        if (!fontLoaderFonts()->map.contains(d->url)) {
             int id = QFontDatabase::addApplicationFont(localFile);
             if (id != -1) {
                 updateFontInfo(QFontDatabase::applicationFontFamilies(id).at(0), Ready);
                 QQuickFontObject *fo = new QQuickFontObject(id);
-                d->fonts[d->url] = fo;
+                fontLoaderFonts()->map[d->url] = fo;
             } else {
                 updateFontInfo(QString(), Error);
             }
         } else {
-            updateFontInfo(QFontDatabase::applicationFontFamilies(d->fonts[d->url]->id).at(0), Ready);
+            updateFontInfo(QFontDatabase::applicationFontFamilies(fontLoaderFonts()->map[d->url]->id).at(0), Ready);
         }
     } else {
-        if (!d->fonts.contains(d->url)) {
+        if (!fontLoaderFonts()->map.contains(d->url)) {
             QQuickFontObject *fo = new QQuickFontObject;
-            d->fonts[d->url] = fo;
+            fontLoaderFonts()->map[d->url] = fo;
             fo->download(d->url, qmlEngine(this)->networkAccessManager());
             d->status = Loading;
             emit statusChanged();
             QObject::connect(fo, SIGNAL(fontDownloaded(QString,QQuickFontLoader::Status)),
                 this, SLOT(updateFontInfo(QString,QQuickFontLoader::Status)));
         } else {
-            QQuickFontObject *fo = d->fonts[d->url];
+            QQuickFontObject *fo = fontLoaderFonts()->map[d->url];
             if (fo->id == -1) {
                 d->status = Loading;
                 emit statusChanged();

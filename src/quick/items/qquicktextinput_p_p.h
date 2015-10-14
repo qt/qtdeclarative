@@ -84,7 +84,7 @@ public:
         bool explicitLeftPadding : 1;
         bool explicitRightPadding : 1;
         bool explicitBottomPadding : 1;
-        bool explicitImplicitSize : 1;
+        bool implicitResize : 1;
     };
     QLazilyAllocated<ExtraData> extra;
 
@@ -446,6 +446,9 @@ public:
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
+
+    bool isImplicitResizeEnabled() const;
+    void setImplicitResizeEnabled(bool enabled);
 
 private:
     void removeSelectedText();

@@ -245,7 +245,7 @@ void Minify::escape(const QChar &ch, QString *out)
     switch (hx.length()) {
     case 1: out->append(QLatin1String("000")); break;
     case 2: out->append(QLatin1String("00")); break;
-    case 3: out->append(QLatin1String("0")); break;
+    case 3: out->append(QLatin1Char('0')); break;
     case 4: break;
     default: Q_ASSERT(!"unreachable");
     }
@@ -274,7 +274,8 @@ bool Minify::parse(int startToken)
             _tokens.append(tokenKind());
             _tokenStrings.append(tokenText());
         } else {
-            std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+            std::cerr << qPrintable(fileName()) << ':' << tokenStartLine() << ':'
+                << tokenStartColumn() << ": syntax error" << std::endl;
             return false;
         }
     }
@@ -394,7 +395,8 @@ bool Minify::parse(int startToken)
         goto again;
     }
 
-    std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+    std::cerr << qPrintable(fileName()) << ':' << tokenStartLine() << ':' << tokenStartColumn()
+         << ": syntax error" << std::endl;
     return false;
 }
 
@@ -447,7 +449,8 @@ bool Tokenize::parse(int startToken)
             _tokens.append(tokenKind());
             _tokenStrings.append(tokenText());
         } else {
-            std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+            std::cerr << qPrintable(fileName()) << ':' << tokenStartLine() << ':'
+                << tokenStartColumn() << ": syntax error" << std::endl;
             return false;
         }
     }
@@ -511,7 +514,8 @@ bool Tokenize::parse(int startToken)
         goto again;
     }
 
-    std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+    std::cerr << qPrintable(fileName()) << ':' << tokenStartLine() << ':'
+        << tokenStartColumn() << ": syntax error" << std::endl;
     return false;
 }
 
@@ -599,7 +603,7 @@ int runQmlmin(int argc, char *argv[])
             else {
                 usage(/*show help*/ isInvalidOpt);
                 if (isInvalidOpt)
-                    std::cerr << "qmlmin: invalid option '" << qPrintable(arg) << "'" << std::endl;
+                    std::cerr << "qmlmin: invalid option '" << qPrintable(arg) << '\'' << std::endl;
                 else
                     std::cerr << "qmlmin: too many input files specified" << std::endl;
                 return EXIT_FAILURE;
@@ -632,7 +636,7 @@ int runQmlmin(int argc, char *argv[])
     //
     QQmlJS::Minify secondMinify(width);
     if (! secondMinify(fileName, minify.minifiedCode()) || secondMinify.minifiedCode() != minify.minifiedCode()) {
-        std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "'" << std::endl;
+        std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << '\'' << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -641,7 +645,7 @@ int runQmlmin(int argc, char *argv[])
     minimizedTokens(fileName, minify.minifiedCode());
 
     if (originalTokens.tokenStream().size() != minimizedTokens.tokenStream().size()) {
-        std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "'" << std::endl;
+        std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << '\'' << std::endl;
         return EXIT_FAILURE;
     }
 

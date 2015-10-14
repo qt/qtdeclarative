@@ -33,6 +33,17 @@
 #ifndef QV4_OBJECT_H
 #define QV4_OBJECT_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "qv4managed_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraydata_p.h"
@@ -73,6 +84,9 @@ struct Object : Base {
         Data *d() const { return static_cast<Data *>(m()); }
 
 #define V4_OBJECT2(DataClass, superClass) \
+    private: \
+        DataClass() Q_DECL_EQ_DELETE; \
+        Q_DISABLE_COPY(DataClass) \
     public: \
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \

@@ -248,10 +248,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
             QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
             if (r.isValid()) {
                 if (r.type) {
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction();
+                    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
                     if (!func) return; // Not an attachable type
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(), currentObject);
+                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
                     if (!currentObject) return; // Something is broken with the attachable type
                 } else if (r.importNamespace) {
                     if ((ii + 1) == path.count()) return; // No type following the namespace
@@ -259,10 +260,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                     ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
                     if (!r.type) return; // Invalid type in namespace
 
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction();
+                    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
                     if (!func) return; // Not an attachable type
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(), currentObject);
+                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
                     if (!currentObject) return; // Something is broken with the attachable type
 
                 } else if (r.scriptIndex != -1) {

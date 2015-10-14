@@ -211,6 +211,8 @@ void QQuickWidgetPrivate::render(bool needsSync)
     if (!fbo)
         return;
 
+    Q_ASSERT(context);
+
     if (!context->makeCurrent(offscreenSurface)) {
         qWarning("QQuickWidget: Cannot render due to failing makeCurrent()");
         return;
@@ -345,8 +347,8 @@ QObject *QQuickWidgetPrivate::focusObject()
     This limitation only applies when there are other widgets underneath the QQuickWidget
     inside the same window. Making the window semi-transparent, with other applications
     and the desktop visible in the background, is done in the traditional way: Set
-    Qt::WA_TranslucentBackground and change the Qt Quick Scenegraph's clear color to
-    Qt::transparent via setClearColor().
+    Qt::WA_TranslucentBackground on the top-level window, request an alpha channel, and
+    change the Qt Quick Scenegraph's clear color to Qt::transparent via setClearColor().
 
     \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
@@ -1089,7 +1091,10 @@ void QQuickWidget::showEvent(QShowEvent *)
     Q_D(QQuickWidget);
     d->updatePending = false;
     d->createContext();
-    d->render(true);
+    if (d->offscreenWindow->openglContext())
+        d->render(true);
+    else
+        triggerUpdate();
 }
 
 /*! \reimp */
@@ -1293,9 +1298,10 @@ QImage QQuickWidget::grabFramebuffer() const
 /*!
   Sets the clear \a color. By default this is an opaque color.
 
-  To get a semi- or fully transparent QQuickWidget, call this function with \a
-  color set to Qt::transparent and set the Qt::WA_TranslucentBackground widget
-  attribute.
+  To get a semi-transparent QQuickWidget, call this function with
+  \a color set to Qt::transparent, set the Qt::WA_TranslucentBackground
+  widget attribute on the top-level window, and request an alpha
+  channel via setFormat().
 
   \sa QQuickWindow::setColor()
  */

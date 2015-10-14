@@ -261,8 +261,10 @@ void QQmlOpenMetaObject::emitPropertyNotification(const QByteArray &propertyName
     activate(d->object, *iter + d->type->d->signalOffset, 0);
 }
 
-int QQmlOpenMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
+int QQmlOpenMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
 {
+    Q_ASSERT(d->object == o);
+
     if (( c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty)
             && id >= d->type->d->propertyOffset) {
         int propId = id - d->type->d->propertyOffset;
@@ -276,15 +278,15 @@ int QQmlOpenMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
                 prop.first = propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0]));
                 prop.second = true;
                 propertyWritten(propId);
-                activate(d->object, d->type->d->signalOffset + propId, 0);
+                activate(o, d->type->d->signalOffset + propId, 0);
             }
         }
         return -1;
     } else {
         if (d->parent)
-            return d->parent->metaCall(c, id, a);
+            return d->parent->metaCall(o, c, id, a);
         else
-            return d->object->qt_metacall(c, id, a);
+            return o->qt_metacall(c, id, a);
     }
 }
 

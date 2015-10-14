@@ -437,9 +437,7 @@ void tst_QQuickLoader::noResize()
 
 void tst_QQuickLoader::networkRequestUrl()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"" + server.baseUrl().toString() + "/Rect120x60.qml\"; onLoaded: signalCount += 1 }";
@@ -462,9 +460,7 @@ void tst_QQuickLoader::networkRequestUrl()
 /* XXX Component waits until all dependencies are loaded.  Is this actually possible? */
 void tst_QQuickLoader::networkComponent()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
+    ThreadedTestHTTPServer server(dataDirectory(), TestHTTPServer::Delay);
 
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\n"
@@ -473,8 +469,9 @@ void tst_QQuickLoader::networkComponent()
                         " Component { id: comp; NW.Rect120x60 {} }\n"
                         " Loader { sourceComponent: comp } }";
     component.setData(qml.toUtf8(), dataDirectory());
-    QCOMPARE(component.status(), QQmlComponent::Loading);
-    server.sendDelayedItem();
+    // The component may be loaded synchronously or asynchronously, so we cannot test for
+    // status == Loading here. Also, it makes no sense to instruct the server to send here
+    // because in the synchronous case we're already done loading.
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
 
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
@@ -494,9 +491,7 @@ void tst_QQuickLoader::networkComponent()
 
 void tst_QQuickLoader::failNetworkRequest()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QTest::ignoreMessage(QtWarningMsg, QString(server.baseUrl().toString() + "/IDontExist.qml: File not found").toUtf8());
 
@@ -710,9 +705,7 @@ void tst_QQuickLoader::initialPropertyValues()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());

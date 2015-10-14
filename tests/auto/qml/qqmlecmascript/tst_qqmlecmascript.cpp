@@ -4203,9 +4203,7 @@ void tst_qqmlecmascript::importScripts()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory() + "/remote");
+    ThreadedTestHTTPServer server(dataDirectory() + "/remote");
 
     QStringList importPathList = engine.importPathList();
 
@@ -7117,6 +7115,7 @@ void tst_qqmlecmascript::onDestruction()
         QObject *obj = c.create();
         QVERIFY(obj != 0);
         delete obj;
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 
     {
@@ -7128,6 +7127,7 @@ void tst_qqmlecmascript::onDestruction()
         QQmlComponent c(&engine, testFileUrl("onDestruction.qml"));
         QObject *obj = c.create();
         QVERIFY(obj != 0);
+        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 }
 
@@ -7326,7 +7326,7 @@ void tst_qqmlecmascript::sequenceSort_data()
     for (size_t t=0 ; t < sizeof(types)/sizeof(types[0]) ; ++t) {
         for (size_t s=0 ; s < sizeof(sort)/sizeof(sort[0]) ; ++s) {
             for (int c=0 ; c < 2 ; ++c) {
-                QString testName = QLatin1String(types[t]) + QLatin1String("_") + QLatin1String(sort[s]);
+                QString testName = QLatin1String(types[t]) + QLatin1Char('_') + QLatin1String(sort[s]);
                 QString fnName = QLatin1String("test_") + testName;
                 bool useComparer = c != 0;
                 testName += useComparer ? QLatin1String("[custom]") : QLatin1String("[default]");

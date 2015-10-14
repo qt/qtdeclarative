@@ -281,11 +281,11 @@ void QQuickViewTestUtil::QaimModel::resetItems(const QList<QPair<QString, QStrin
 void QQuickViewTestUtil::QaimModel::matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2) {
     for (int i=0; i<other.count(); i++) {
         QVERIFY2(list.contains(other[i]),
-                 QTest::toString(other[i].first + " " + other[i].second + " " + error1));
+                 QTest::toString(other[i].first + QLatin1Char(' ') + other[i].second + QLatin1Char(' ') + error1));
     }
     for (int i=0; i<list.count(); i++) {
         QVERIFY2(other.contains(list[i]),
-                 QTest::toString(list[i].first + " " + list[i].second + " " + error2));
+                 QTest::toString(list[i].first + QLatin1Char(' ') + list[i].second + QLatin1Char(' ') + error2));
     }
 }
 

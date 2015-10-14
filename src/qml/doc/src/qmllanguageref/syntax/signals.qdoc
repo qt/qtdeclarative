@@ -42,7 +42,7 @@ and the signal is responded to through a \e {signal handler}. When a signal
 is emitted, the corresponding signal handler is invoked. Placing logic such as scripts or other
 operations in the handler allows the component to respond to the event.
 
-\keyword qml-signals-and-handlers
+\target qml-signals-and-handlers
 \section1 Receiving Signals with Signal Handlers
 
 To receive a notification when a particular signal is emitted for a particular object, the object definition should declare a signal handler named \e on<Signal> where \e <Signal> is the name of the signal, with the first letter capitalized. The signal handler should contain the JavaScript code to be executed when the signal handler is invoked.
@@ -208,7 +208,7 @@ SquareButton {
 See \l {Signal Attributes} for more details on writing signals for custom QML types.
 
 
-\keyword qml-connect-signals-to-method
+\target qml-connect-signals-to-method
 \section1 Connecting Signals to Methods and Signals
 
 Signal objects have a \c connect() method to a connect a signal either to a

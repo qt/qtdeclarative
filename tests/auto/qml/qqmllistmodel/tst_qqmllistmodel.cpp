@@ -625,7 +625,7 @@ void tst_qqmllistmodel::enumerate()
 
     int expectedStringCount = sizeof(expectedStrings) / sizeof(expectedStrings[0]);
 
-    QStringList r = item->property("result").toString().split(":");
+    QStringList r = item->property("result").toString().split(QLatin1Char(':'));
 
     int matchCount = 0;
     for (int i=0 ; i < expectedStringCount ; ++i) {

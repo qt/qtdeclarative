@@ -765,11 +765,11 @@ bool QQuickPinchArea::event(QEvent *event)
             d->pinchRotation = angle;
             updatePinchTarget();
         } break;
-#endif // QT_NO_GESTURES
         default:
             return QQuickItem::event(event);
         }
     } break;
+#endif // QT_NO_GESTURES
     case QEvent::Wheel:
         event->ignore();
         return false;

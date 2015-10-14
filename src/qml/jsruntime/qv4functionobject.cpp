@@ -263,7 +263,7 @@ ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1String("}");
+    QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1Char('}');
 
     QQmlJS::Engine ee, *engine = &ee;
     QQmlJS::Lexer lexer(engine);

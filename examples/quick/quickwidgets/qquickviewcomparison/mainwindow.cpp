@@ -47,10 +47,10 @@
 #include <QLabel>
 #include <QQuickItem>
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(bool transparency)
     : m_currentView(0),
       m_currentRootObject(0),
-      m_transparent(false)
+      m_transparent(transparency)
 {
     QVBoxLayout *layout = new QVBoxLayout;
 
@@ -102,13 +102,6 @@ MainWindow::MainWindow()
     m_checkboxOverlayVisible = new QCheckBox(tr("Show widget overlay"));
     connect(m_checkboxOverlayVisible, &QCheckBox::toggled, m_overlayLabel, &QWidget::setVisible);
     layout->addWidget(m_checkboxOverlayVisible);
-
-    m_checkboxTransparent = new QCheckBox(tr("Transparent background in QQuickWidget"));
-    connect(m_radioWidget, &QCheckBox::toggled, m_checkboxTransparent, &QWidget::setEnabled);
-#ifdef Q_OS_LINUX
-    connect(m_checkboxTransparent, &QCheckBox::toggled, this, &MainWindow::onTransparentChanged);
-    layout->addWidget(m_checkboxTransparent);
-#endif
 
     setLayout(layout);
 
@@ -170,10 +163,8 @@ void MainWindow::updateView()
         switchTo(QWidget::createWindowContainer(quickView));
     } else if (m_state == UseWidget) {
         QQuickWidget *quickWidget = new QQuickWidget;
-        if (m_transparent) {
+        if (m_transparent)
             quickWidget->setClearColor(Qt::transparent);
-            quickWidget->setAttribute(Qt::WA_TranslucentBackground);
-        }
         quickWidget->setFormat(m_format);
         quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
         connect(quickWidget, &QQuickWidget::statusChanged, this, &MainWindow::onStatusChangedWidget);
@@ -186,7 +177,8 @@ void MainWindow::updateView()
     if (m_currentRootObject) {
         m_currentRootObject->setProperty("currentText", text);
         m_currentRootObject->setProperty("multisample", m_checkboxMultiSample->isChecked());
-        m_currentRootObject->setProperty("translucency", m_transparent);
+        if (!QCoreApplication::arguments().contains(QStringLiteral("--no_render_alpha")))
+            m_currentRootObject->setProperty("translucency", m_transparent);
     }
 
     m_overlayLabel->raise();
@@ -241,10 +233,4 @@ void MainWindow::onStatusChangedWidget(QQuickWidget::Status status)
 void MainWindow::onSceneGraphError(QQuickWindow::SceneGraphError error, const QString &message)
 {
     m_labelStatus->setText(tr("Scenegraph error %1: %2").arg(error).arg(message));
-}
-
-void MainWindow::onTransparentChanged(bool enabled)
-{
-    m_transparent = enabled;
-    updateView();
 }

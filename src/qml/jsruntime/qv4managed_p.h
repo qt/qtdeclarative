@@ -33,6 +33,17 @@
 #ifndef QMLJS_MANAGED_H
 #define QMLJS_MANAGED_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "qv4global_p.h"
 #include "qv4value_p.h"
 #include <private/qv4heap_p.h>
@@ -60,7 +71,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->~Data(); }
 
 
-#define V4_MANAGED(DataClass, superClass) \
+#define V4_MANAGED_ITSELF(DataClass, superClass) \
     public: \
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \
@@ -69,6 +80,12 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); }
+
+#define V4_MANAGED(DataClass, superClass) \
+    private: \
+        DataClass() Q_DECL_EQ_DELETE; \
+        Q_DISABLE_COPY(DataClass) \
+        V4_MANAGED_ITSELF(DataClass, superClass)
 
 #define Q_MANAGED_TYPE(type) \
     public: \
@@ -100,7 +117,7 @@ const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
 {
-    V4_MANAGED(Base, Managed)
+    V4_MANAGED_ITSELF(Base, Managed)
     enum {
         IsExecutionContext = false,
         IsString = false,

@@ -256,19 +256,6 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     The default render target is Canvas.Image and the default renderStrategy is
     Canvas.Immediate.
 
-    \section1 Tiled Canvas
-    The Canvas item supports tiled rendering by setting \l canvasSize, \l tileSize
-    and \l canvasWindow properties.
-
-    Tiling allows efficient display of a very large virtual canvas via a smaller
-    canvas window. The actual memory consumption is in relation to the canvas
-    window size.  The painting code can draw within the virtual canvas without
-    handling coordinate system transformations.
-
-    The tiles overlapping with the canvas window may be cached eliminating the
-    need to redraw, which can lead to significantly improved performance in
-    some situations.
-
     \section1 Pixel Operations
     All HTML5 2D context pixel operations are supported. In order to ensure
     improved pixel reading/writing performance the \a Canvas.Image render
@@ -431,6 +418,8 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
 
     By default the tileSize is the same as the canvasSize.
 
+    \obsolete This feature is incomplete. For details, see QTBUG-33129.
+
     \sa canvasSize, canvasWindow
 */
 QSize QQuickCanvasItem::tileSize() const
@@ -463,6 +452,8 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
      If the canvasSize is different to the Canvas item size, the Canvas item
      can display different visible areas by changing the canvas windowSize
      and/or position.
+
+    \obsolete This feature is incomplete. For details, see QTBUG-33129
 
     \sa canvasSize, tileSize
 */
@@ -783,6 +774,12 @@ bool QQuickCanvasItem::isTextureProvider() const
 
 QSGTextureProvider *QQuickCanvasItem::textureProvider() const
 {
+    // When Item::layer::enabled == true, QQuickItem will be a texture
+    // provider. In this case we should prefer to return the layer rather
+    // than the canvas itself.
+    if (QQuickItem::isTextureProvider())
+        return QQuickItem::textureProvider();
+
     Q_D(const QQuickCanvasItem);
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {

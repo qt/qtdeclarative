@@ -267,15 +267,9 @@ public:
                                       int methodCount, int signalCount);
     void appendProperty(const QString &,
                         quint32 flags, int coreIndex, int propType, int notifyIndex);
-    void appendProperty(const QHashedCStringRef &,
-                        quint32 flags, int coreIndex, int propType, int notifyIndex);
     void appendSignal(const QString &, quint32, int coreIndex, const int *types = 0,
                       const QList<QByteArray> &names = QList<QByteArray>());
-    void appendSignal(const QHashedCStringRef &, quint32, int coreIndex, const int *types = 0,
-                      const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, quint32 flags, int coreIndex,
-                      const QList<QByteArray> &names = QList<QByteArray>());
-    void appendMethod(const QHashedCStringRef &, quint32 flags, int coreIndex,
                       const QList<QByteArray> &names = QList<QByteArray>());
 
     const QMetaObject *metaObject() const;
@@ -290,7 +284,7 @@ public:
 
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
-    QQmlPropertyData *signal(int index) const { return signal(index, 0); }
+    QQmlPropertyData *signal(int index) const;
     int methodIndexToSignalIndex(int) const;
     QStringList propertyNames() const;
 
@@ -313,7 +307,6 @@ public:
     static int originalClone(QObject *, int index);
 
     QList<QByteArray> signalParameterNames(int index) const;
-    QString signalParameterStringForJS(int index, QString *errorString = 0);
     static QString signalParameterStringForJS(QV4::ExecutionEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = 0);
 
     const char *className() const;
@@ -347,9 +340,7 @@ private:
                 QQmlPropertyData::Flag methodFlags = QQmlPropertyData::NoFlags,
                 QQmlPropertyData::Flag signalFlags = QQmlPropertyData::NoFlags);
 
-    QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
-                                                            const QList<QByteArray> &names);
-    QQmlPropertyData *signal(int, QQmlPropertyCache **) const;
+    QQmlPropertyCacheMethodArguments *createArgumentsObject(int count, const QList<QByteArray> &names);
 
     typedef QVector<QQmlPropertyData> IndexCache;
     typedef QStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;

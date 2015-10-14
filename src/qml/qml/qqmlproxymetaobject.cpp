@@ -59,8 +59,10 @@ QQmlProxyMetaObject::~QQmlProxyMetaObject()
     proxies = 0;
 }
 
-int QQmlProxyMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
+int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
 {
+    Q_ASSERT(object == o);
+
     if ((c == QMetaObject::ReadProperty ||
         c == QMetaObject::WriteProperty) &&
             id >= metaObjects->last().propertyOffset) {
@@ -108,7 +110,7 @@ int QQmlProxyMetaObject::metaCall(QMetaObject::Call c, int id, void **a)
     }
 
     if (parent)
-        return parent->metaCall(c, id, a);
+        return parent->metaCall(o, c, id, a);
     else
         return object->qt_metacall(c, id, a);
 }

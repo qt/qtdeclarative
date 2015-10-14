@@ -110,8 +110,8 @@ void tst_qqmlmoduleplugin::initTestCase()
         QList<QByteArray> actual; \
         for (int ii = 0; ii < errors.count(); ++ii) { \
             const QQmlError &error = errors.at(ii); \
-            QByteArray errorStr = QByteArray::number(error.line()) + ":" +  \
-                                  QByteArray::number(error.column()) + ":" + \
+            QByteArray errorStr = QByteArray::number(error.line()) + ':' +  \
+                                  QByteArray::number(error.column()) + ':' + \
                                   error.description().toUtf8(); \
             actual << errorStr; \
         } \
@@ -202,8 +202,11 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     caseSensitive = false;
     QString libname = "PluGin.dll";
 #endif
-    if (!caseSensitive)
-        expectedError = QLatin1String("plugin cannot be loaded for module \"org.qtproject.WrongCase\": File name case mismatch for \"") + QDir(m_importsDirectory).filePath("org/qtproject/WrongCase/" + libname) + QLatin1String("\"");
+    if (!caseSensitive) {
+        expectedError = QLatin1String("plugin cannot be loaded for module \"org.qtproject.WrongCase\": File name case mismatch for \"")
+            + QDir(m_importsDirectory).filePath("org/qtproject/WrongCase/" + libname)
+            + QLatin1Char('"');
+    }
 #endif
 
     QCOMPARE(errors.at(0).description(), expectedError);
@@ -236,9 +239,7 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
 
 void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
 {
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(m_dataImportsDirectory);
+    ThreadedTestHTTPServer server(m_dataImportsDirectory);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);

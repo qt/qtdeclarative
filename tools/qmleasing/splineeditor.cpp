@@ -293,10 +293,11 @@ QString SplineEditor::generateCode()
 {
     QString s = QLatin1String("[");
     foreach (const QPointF &point, m_controlPoints) {
-        s += QString::number(point.x(), 'g', 2) + "," + QString::number(point.y(), 'g', 3) + ",";
+        s += QString::number(point.x(), 'g', 2) + QLatin1Char(',')
+             + QString::number(point.y(), 'g', 3) + QLatin1Char(',');
     }
     s.chop(1); //removing last ","
-    s += "]";
+    s += QLatin1Char(']');
 
     return s;
 }
@@ -675,7 +676,7 @@ void SplineEditor::setEasingCurve(const QString &code)
 {
     if (m_block)
         return;
-    if (code.left(1) == QLatin1String("[") && code.right(1) == QLatin1String("]")) {
+    if (code.startsWith(QLatin1Char('[')) && code.endsWith(QLatin1Char(']'))) {
         QString cleanCode = code;
         cleanCode.remove(0, 1);
         cleanCode.chop(1);

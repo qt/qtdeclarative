@@ -801,10 +801,11 @@ QString Stringify::JO(Object *o)
     if (partial.isEmpty()) {
         result = QStringLiteral("{}");
     } else if (gap.isEmpty()) {
-        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QStringLiteral("}");
+        result = QStringLiteral("{") + partial.join(QLatin1Char(',')) + QLatin1Char('}');
     } else {
         QString separator = QStringLiteral(",\n") + indent;
-        result = QStringLiteral("{\n") + indent + partial.join(separator) + QStringLiteral("\n") + stepback + QStringLiteral("}");
+        result = QStringLiteral("{\n") + indent + partial.join(separator) + QLatin1Char('\n')
+                 + stepback + QLatin1Char('}');
     }
 
     indent = stepback;

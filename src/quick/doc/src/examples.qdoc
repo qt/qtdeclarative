@@ -32,7 +32,7 @@
 \brief Building UIs with QML
 \ingroup all-examples
 \ingroup qtquick
-\target qtquick-samples
+\keyword qtquick-samples
 
 Qt includes several examples to demonstrate a particular usage. The examples
 run as applications or as non-GUI examples in Qt Creator. Qt tutorials show

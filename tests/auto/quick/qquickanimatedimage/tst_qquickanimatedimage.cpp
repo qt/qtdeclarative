@@ -252,9 +252,7 @@ void tst_qquickanimatedimage::remote()
     QFETCH(QString, fileName);
     QFETCH(bool, paused);
 
-    TestHTTPServer server;
-    QVERIFY2(server.listen(), qPrintable(server.errorString()));
-    server.serveDirectory(dataDirectory());
+    ThreadedTestHTTPServer server(dataDirectory());
 
     QQmlEngine engine;
     QQmlComponent component(&engine, server.url(fileName));

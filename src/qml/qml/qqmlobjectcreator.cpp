@@ -706,7 +706,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QQmlCompiledData::TypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
         Q_ASSERT(tr);
         QQmlType *attachedType = tr->type;
-        const int id = attachedType->attachedPropertiesId();
+        if (!attachedType) {
+            QQmlTypeNameCache::Result res = context->imports->query(stringAt(binding->propertyNameIndex));
+            if (res.isValid())
+                attachedType = res.type;
+        }
+        const int id = attachedType->attachedPropertiesId(QQmlEnginePrivate::get(engine));
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
         if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/0))
             return false;

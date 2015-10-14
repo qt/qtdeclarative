@@ -115,15 +115,15 @@ private:
         QString xml;
 
         if (!data.isEmpty()) {
-            QStringList items = data.split(";");
+            QStringList items = data.split(QLatin1Char(';'));
             foreach(const QString &item, items) {
                 if (item.isEmpty())
                     continue;
                 QVariantList variants;
                 xml += QLatin1String("<item>");
-                QStringList fields = item.split(",");
+                QStringList fields = item.split(QLatin1Char(','));
                 foreach(const QString &field, fields) {
-                    QStringList values = field.split("=");
+                    QStringList values = field.split(QLatin1Char('='));
                     if (values.count() != 2) {
                         qWarning() << "makeItemXmlAndData: invalid field:" << field;
                         continue;
@@ -857,22 +857,22 @@ void tst_qquickxmllistmodel::threading()
             QModelIndex index = m1->index(i, 0);
             QList<int> roles = m1->roleNames().keys();
             std::sort(roles.begin(), roles.end());
-            QCOMPARE(m1->data(index, roles.at(0)).toString(), QString("A" + QString::number(i)));
-            QCOMPARE(m1->data(index, roles.at(1)).toString(), QString("1" + QString::number(i)));
+            QCOMPARE(m1->data(index, roles.at(0)).toString(), QLatin1Char('A') + QString::number(i));
+            QCOMPARE(m1->data(index, roles.at(1)).toString(), QLatin1Char('1') + QString::number(i));
             QCOMPARE(m1->data(index, roles.at(2)).toString(), QString("Football"));
 
             index = m2->index(i, 0);
             roles = m2->roleNames().keys();
             std::sort(roles.begin(), roles.end());
-            QCOMPARE(m2->data(index, roles.at(0)).toString(), QString("B" + QString::number(i)));
-            QCOMPARE(m2->data(index, roles.at(1)).toString(), QString("2" + QString::number(i)));
+            QCOMPARE(m2->data(index, roles.at(0)).toString(), QLatin1Char('B') + QString::number(i));
+            QCOMPARE(m2->data(index, roles.at(1)).toString(), QLatin1Char('2') + QString::number(i));
             QCOMPARE(m2->data(index, roles.at(2)).toString(), QString("Athletics"));
 
             index = m3->index(i, 0);
             roles = m3->roleNames().keys();
             std::sort(roles.begin(), roles.end());
-            QCOMPARE(m3->data(index, roles.at(0)).toString(), QString("C" + QString::number(i)));
-            QCOMPARE(m3->data(index, roles.at(1)).toString(), QString("3" + QString::number(i)));
+            QCOMPARE(m3->data(index, roles.at(0)).toString(), QLatin1Char('C') + QString::number(i));
+            QCOMPARE(m3->data(index, roles.at(1)).toString(), QLatin1Char('3') + QString::number(i));
             QCOMPARE(m3->data(index, roles.at(2)).toString(), QString("Curling"));
         }
     }
