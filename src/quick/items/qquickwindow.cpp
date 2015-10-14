@@ -1732,13 +1732,15 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             return false;
     }
 
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
-            return true;
+    if (itemPrivate->hasHoverInChild) {
+        QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+        for (int ii = children.count() - 1; ii >= 0; --ii) {
+            QQuickItem *child = children.at(ii);
+            if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
+                continue;
+            if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
+                return true;
+        }
     }
 
     if (itemPrivate->hoverEnabled) {
