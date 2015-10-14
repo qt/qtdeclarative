@@ -308,6 +308,26 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         d->resolveFont();
 }
 
+/*!
+    \qmlproperty font Qt.labs.controls::Control::font
+
+    This property holds the font currently set for the control.
+
+    This property describes the control's requested font. The font is used by the control's
+    style when rendering standard components, and is available as a means to ensure that custom
+    controls can maintain consistency with the native platform's native look and feel. It's common
+    that different platforms, or different styles, define different fonts for an application.
+
+    The default font depends on the system environment. QGuiApplication maintains a system/theme
+    font which serves as a default for all controls. There may also be special font defaults for
+    certain types of controls. You can also set the default font for controls by passing a custom
+    font to QGuiApplication::setFont(), before loading the QML. Finally, the font is matched
+    against Qt's font database to find the best match.
+
+    Control propagates explicit font properties from parent to children. If you change a specific
+    property on a control's font, that property propagates to all of the control's children,
+    overriding any system defaults for that property.
+*/
 QFont QQuickControl::font() const
 {
     Q_D(const QQuickControl);
