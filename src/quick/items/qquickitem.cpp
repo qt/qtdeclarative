@@ -2714,7 +2714,15 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
 /*!
     Moves the specified \a sibling item to the index before this item
-    within the visual stacking order.
+    within the list of children. The order of children affects both the
+    visual stacking order and tab focus navigation order.
+
+    Assuming the z values of both items are the same, this will cause \a
+    sibling to be rendered above this item.
+
+    If both items have activeFocusOnTab set to \c true, this will also cause
+    the tab focus order to change, with \a sibling receiving focus after this
+    item.
 
     The given \a sibling must be a sibling of this item; that is, they must
     have the same immediate \l parent.
@@ -2750,7 +2758,15 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 
 /*!
     Moves the specified \a sibling item to the index after this item
-    within the visual stacking order.
+    within the list of children. The order of children affects both the
+    visual stacking order and tab focus navigation order.
+
+    Assuming the z values of both items are the same, this will cause \a
+    sibling to be rendered below this item.
+
+    If both items have activeFocusOnTab set to \c true, this will also cause
+    the tab focus order to change, with \a sibling receiving focus before this
+    item.
 
     The given \a sibling must be a sibling of this item; that is, they must
     have the same immediate \l parent.
