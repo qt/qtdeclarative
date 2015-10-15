@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickBusyIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup indicators
+    \ingroup qtlabscontrols-indicators
     \brief A busy indicator.
 
     \image qtlabscontrols-busyindicator.gif
@@ -65,6 +65,8 @@ QT_BEGIN_NAMESPACE
 
     The default implementation uses this QML item as indicator:
     \snippet BusyIndicator.qml indicator
+
+    \sa Indicators
 */
 
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate

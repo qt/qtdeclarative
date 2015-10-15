@@ -47,19 +47,18 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup indicators
+    \ingroup qtlabscontrols-indicators
     \brief A non-interactive scroll indicator control.
 
     ScrollIndicator is a non-interactive indicator that indicates the current scroll
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-scrollindicator.png
 
     \code
-    ListView {
-        model: 200
-        delegate: Text { text: index }
+    Flickable {
+        // ...
         ScrollIndicator.vertical: ScrollIndicator { }
     }
     \endcode
@@ -74,7 +73,7 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
-    \sa ScrollBar, {Customizing ScrollIndicator}
+    \sa ScrollBar, {Customizing ScrollIndicator}, Indicators
 */
 
 class QQuickScrollIndicatorPrivate : public QQuickControlPrivate

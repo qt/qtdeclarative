@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickProgressBar
     \inqmlmodule Qt.labs.controls
-    \ingroup indicators
+    \ingroup qtlabscontrols-indicators
     \brief A progress bar control.
 
     ProgressBar indicates the progress of an operation.

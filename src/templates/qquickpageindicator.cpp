@@ -44,25 +44,18 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickPageIndicator
     \inqmlmodule Qt.labs.controls
-    \ingroup indicators
+    \ingroup qtlabscontrols-indicators
     \brief A page indicator control.
 
     PageIndicator is used to indicate the currently active page
     in a container of multiple pages. PageIndicator consists of
     delegate items that present pages.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-pageindicator.png
 
-    \code
-    PageIndicator {
-        count: view.count
-        currentIndex: view.currentIndex
-        anchors.bottom: view.bottom
-        anchors.horizontalCenter: view.horizontalCenter
-    }
-    \endcode
+    \snippet qtlabscontrols-pageindicator.qml 1
 
-    \sa SwipeView, {Customizing PageIndicator}
+    \sa SwipeView, {Customizing PageIndicator}, Indicators
 */
 
 class QQuickPageIndicatorPrivate : public QQuickControlPrivate
