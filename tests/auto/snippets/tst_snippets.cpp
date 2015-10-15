@@ -72,13 +72,24 @@ void tst_Snippets::initTestCase()
     QVERIFY(!filePaths.isEmpty());
 }
 
+Q_DECLARE_METATYPE(QList<QQmlError>)
+
 void tst_Snippets::screenshots()
 {
     QFETCH(QString, input);
     QFETCH(QString, output);
 
+    qRegisterMetaType<QList<QQmlError> >();
+
+    QSignalSpy warnings(view.engine(), SIGNAL(warnings(QList<QQmlError>)));
+    QVERIFY(warnings.isValid());
+
     view.setSource(QUrl::fromLocalFile(input));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    QVERIFY(view.errors().isEmpty());
     QVERIFY(view.rootObject());
+
+    QVERIFY(warnings.isEmpty());
 
     view.show();
     view.requestActivate();
