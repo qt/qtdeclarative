@@ -114,21 +114,30 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     Scope scope(this);
 
     // find the right context to create the binding on
-    ScopedObject activation(scope, d()->engine->globalObject);
+    ScopedObject activation(scope);
     ScopedContext ctx(scope, this);
     while (ctx) {
         switch (ctx->d()->type) {
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            if (!c->activation)
-                c->activation = scope.engine->newObject();
-            activation = c->activation;
+            if (!activation) {
+                if (!c->activation)
+                    c->activation = scope.engine->newObject();
+                activation = c->activation;
+            }
             break;
         }
         case Heap::ExecutionContext::Type_QmlContext: {
+            // this is ugly, as it overrides the inner callcontext, but has to stay as long
+            // as bindings still get their own callcontext
             Heap::QmlContext *qml = static_cast<Heap::QmlContext *>(ctx->d());
             activation = qml->qml;
+            break;
+        }
+        case Heap::ExecutionContext::Type_GlobalContext: {
+            if (!activation)
+                activation = scope.engine->globalObject;
             break;
         }
         default:
