@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickSlider
     \inqmlmodule Qt.labs.controls
-    \ingroup sliders
+    \ingroup qtlabscontrols-input
     \brief A slider control.
 
     \image qtlabscontrols-slider.gif
@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Slider}
+    \sa {Customizing Slider}, Input
 */
 
 class QQuickSliderPrivate : public QQuickControlPrivate

@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickTumbler
     \inqmlmodule Qt.labs.controls
-    \ingroup containers
+    \ingroup qtlabscontrols-input
     \brief A spinnable wheel of items that can be selected.
 
     \code
@@ -65,6 +65,8 @@ QT_BEGIN_NAMESPACE
     \snippet tst_tumbler.qml contentItem
 
     \image qtlabscontrols-tumbler-wrap.gif
+
+    \sa {Customizing Tumbler}, Input
 */
 
 class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener

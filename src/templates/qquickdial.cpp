@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickDial
     \inqmlmodule Qt.labs.controls
-    \ingroup sliders
+    \ingroup qtlabscontrols-input
     \brief A circular dial that is rotated to set a value.
 
     The Dial is similar to a traditional dial knob that is found on devices
@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     \row \li Set \l value to \l to \li \c Qt.Key_End
     \endtable
 
-    \sa {Customizing Dial}
+    \sa {Customizing Dial}, Input
 */
 
 static const qreal startAngle = -140;
