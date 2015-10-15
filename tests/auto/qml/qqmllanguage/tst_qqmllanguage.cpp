@@ -247,6 +247,8 @@ private slots:
 
     void earlyIdObjectAccess();
 
+    void dataAlignment();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4077,6 +4079,14 @@ void tst_qqmllanguage::earlyIdObjectAccess()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     QVERIFY(o->property("success").toBool());
+}
+
+void tst_qqmllanguage::dataAlignment()
+{
+    QVERIFY(sizeof(QQmlVMEMetaData) % sizeof(int) == 0);
+    QVERIFY(sizeof(QQmlVMEMetaData::AliasData) % sizeof(int) == 0);
+    QVERIFY(sizeof(QQmlVMEMetaData::PropertyData) % sizeof(int) == 0);
+    QVERIFY(sizeof(QQmlVMEMetaData::MethodData) % sizeof(int) == 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
