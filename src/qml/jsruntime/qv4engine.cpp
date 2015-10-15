@@ -522,7 +522,6 @@ void ExecutionEngine::setDebugger(Debugging::Debugger *debugger_)
 {
     Q_ASSERT(!debugger);
     debugger = debugger_;
-    iselFactory.reset(new Moth::ISelFactory);
 }
 
 void ExecutionEngine::enableProfiler()

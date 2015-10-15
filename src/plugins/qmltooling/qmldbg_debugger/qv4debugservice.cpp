@@ -34,6 +34,7 @@
 #include "qv4debugservice.h"
 #include "qqmlengine.h"
 #include <private/qv4engine_p.h>
+#include <private/qv4isel_moth_p.h>
 #include <private/qv4function_p.h>
 #include <private/qqmldebugconnector_p.h>
 
@@ -621,8 +622,10 @@ void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (QQmlDebugConnector *server = QQmlDebugConnector::instance()) {
             if (ee) {
+                ee->iselFactory.reset(new QV4::Moth::ISelFactory);
                 QV4::Debugging::V4Debugger *debugger = new QV4::Debugging::V4Debugger(ee);
-                ee->setDebugger(debugger);
+                if (state() == Enabled)
+                    ee->setDebugger(debugger);
                 debuggerMap.insert(debuggerIndex++, debugger);
                 debuggerAgent.addDebugger(debugger);
                 debuggerAgent.moveToThread(server->thread());
@@ -639,19 +642,36 @@ void QV4DebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
         const QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (ee) {
             QV4::Debugging::V4Debugger *debugger
-                    = static_cast<QV4::Debugging::V4Debugger *>(ee->debugger);
-            typedef QMap<int, QV4::Debugging::V4Debugger *>::const_iterator DebuggerMapIterator;
-            const DebuggerMapIterator end = debuggerMap.constEnd();
-            for (DebuggerMapIterator i = debuggerMap.constBegin(); i != end; ++i) {
-                if (i.value() == debugger) {
-                    debuggerMap.remove(i.key());
-                    break;
+                    = qobject_cast<QV4::Debugging::V4Debugger *>(ee->debugger);
+            if (debugger) {
+                typedef QMap<int, QV4::Debugging::V4Debugger *>::const_iterator DebuggerMapIterator;
+                const DebuggerMapIterator end = debuggerMap.constEnd();
+                for (DebuggerMapIterator i = debuggerMap.constBegin(); i != end; ++i) {
+                    if (i.value() == debugger) {
+                        debuggerMap.remove(i.key());
+                        break;
+                    }
                 }
+                debuggerAgent.removeDebugger(debugger);
             }
-            debuggerAgent.removeDebugger(debugger);
         }
     }
     QQmlConfigurableDebugService<QV4DebugService>::engineAboutToBeRemoved(engine);
+}
+
+void QV4DebugServiceImpl::stateAboutToBeChanged(State state)
+{
+    QMutexLocker lock(&m_configMutex);
+    if (state == Enabled) {
+        typedef QMap<int, QV4::Debugging::V4Debugger *>::const_iterator DebuggerMapIterator;
+        const DebuggerMapIterator end = debuggerMap.constEnd();
+        for (DebuggerMapIterator i = debuggerMap.constBegin(); i != end; ++i) {
+            QV4::ExecutionEngine *ee = i.value()->engine();
+            if (!ee->debugger)
+                ee->setDebugger(i.value());
+        }
+    }
+    QQmlConfigurableDebugService<QV4DebugService>::stateAboutToBeChanged(state);
 }
 
 void QV4DebugServiceImpl::signalEmitted(const QString &signal)

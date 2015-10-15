@@ -73,6 +73,8 @@ public:
     void engineAboutToBeAdded(QQmlEngine *engine);
     void engineAboutToBeRemoved(QQmlEngine *engine);
 
+    void stateAboutToBeChanged(State state);
+
     void signalEmitted(const QString &signal);
     void send(QJsonObject v8Payload);
 

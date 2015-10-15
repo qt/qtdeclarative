@@ -41,6 +41,7 @@
 #include <private/qv4debugging_p.h>
 #include <private/qv8engine_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qv4isel_moth_p.h>
 
 using namespace QV4;
 using namespace QV4::Debugging;
@@ -317,6 +318,7 @@ void tst_qv4debugger::init()
     m_javaScriptThread = new QThread;
     m_engine = new TestEngine;
     m_v4 = m_engine->v4Engine();
+    m_v4->iselFactory.reset(new QV4::Moth::ISelFactory);
     m_v4->setDebugger(new V4Debugger(m_v4));
     m_engine->moveToThread(m_javaScriptThread);
     m_javaScriptThread->start();
@@ -464,6 +466,7 @@ void tst_qv4debugger::conditionalBreakPointInQml()
     QQmlEngine engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     V4Debugger *v4Debugger = new V4Debugger(v4);
+    v4->iselFactory.reset(new QV4::Moth::ISelFactory);
     v4->setDebugger(v4Debugger);
 
     QScopedPointer<QThread> debugThread(new QThread);
