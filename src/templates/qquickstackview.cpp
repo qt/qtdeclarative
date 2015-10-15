@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickStackView
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
+    \ingroup qtlabscontrols-containers
     \brief Provides a stack-based navigation model.
 
     \image qtlabscontrols-stackview-wireframe.png
@@ -256,7 +257,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa {Customizing StackView}, Navigation
+    \sa {Customizing StackView}, Navigation, Containers
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent) :

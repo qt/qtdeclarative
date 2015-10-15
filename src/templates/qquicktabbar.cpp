@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickTabBar
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-navigation
+    \ingroup qtlabscontrols-containers
     \brief A tab bar control.
 
     TabBar provides a tab-based navigation model.
@@ -58,7 +59,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-tabbar.qml 1
 
-    \sa TabButton, {Customizing TabBar}, Navigation
+    \sa TabButton, {Customizing TabBar}, Navigation, Containers
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate

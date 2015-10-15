@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Frame
     \instantiates QQuickGroupBox
     \inqmlmodule Qt.labs.controls
-    \ingroup containers
+    \ingroup qtlabscontrols-containers
     \brief A group box control.
 
     GroupBox is used to layout a logical group of controls together, within
@@ -56,21 +56,11 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-groupbox.png
 
-    \code
-    GroupBox {
-        title: qsTr("Synchronize")
-        ColumnLayout {
-            anchors.fill: parent
-            CheckBox { text: qsTr("E-mail") }
-            CheckBox { text: qsTr("Calendar") }
-            CheckBox { text: qsTr("Contacts") }
-        }
-    }
-    \endcode
+    \snippet qtlabscontrols-groupbox.qml 1
 
-    \sa {Customizing GroupBox}
+    \sa {Customizing GroupBox}, Containers
 */
 
 class QQuickGroupBoxPrivate : public QQuickFramePrivate

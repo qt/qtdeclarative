@@ -46,13 +46,17 @@ QT_BEGIN_NAMESPACE
     \inherits Window
     \instantiates QQuickApplicationWindow
     \inqmlmodule Qt.labs.controls
-    \ingroup application
+    \ingroup qtlabscontrols-containers
     \brief Provides a top-level application window.
 
     ApplicationWindow is a \l Window which makes it convenient to add
     a \l header and \l footer item to the window.
 
+    \image qtlabscontrols-applicationwindow-wireframe.png
+
     \note By default, an ApplicationWindow is not visible.
+
+    \sa Containers
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener

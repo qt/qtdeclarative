@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     \inherits Frame
     \instantiates QQuickToolBar
     \inqmlmodule Qt.labs.controls
-    \ingroup containers
+    \ingroup qtlabscontrols-containers
     \brief A tool bar control.
 
     ToolBar is a container of application-wide and context sensitive
@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-toolbar.png
 
     \code
     ApplicationWindow {
@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
             RowLayout {
                 anchors.fill: parent
                 ToolButton {
-                    text: qsTr("< %1").arg(Qt.application.name)
+                    text: qsTr("\u25C0 %1").arg(Qt.application.name)
                     enabled: stack.depth > 1
                     onClicked: stack.pop()
                 }
@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ApplicationWindow, ToolButton, {Customizing ToolBar}
+    \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, Containers
 */
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :

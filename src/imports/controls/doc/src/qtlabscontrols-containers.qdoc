@@ -1,0 +1,87 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtlabscontrols-containers.html
+    \title Containers
+
+    Qt Labs Controls offers a selection of container-like controls.
+
+    \annotatedlist qtlabscontrols-containers
+
+    Each type of container can be used to group a set of controls together.
+    The following sections offer guidelines for choosing the appropriate type
+    of container, depending on the use case.
+
+    \section1 ApplicationWindow
+
+    \image qtlabscontrols-applicationwindow-wireframe.png
+
+    \l {Qt.labs.controls::ApplicationWindow}{ApplicationWindow} contains
+    optional header and footer items.
+
+    \section1 Frame
+
+    \image qtlabscontrols-frame.png
+
+    \l {Qt.labs.controls::Frame}{Frame} is used to layout a logical group of
+    controls together, within a visual frame.
+
+    \section1 GroupBox
+
+    \image qtlabscontrols-groupbox.png
+
+    \l {Qt.labs.controls::GroupBox}{GroupBox} is used to layout a logical
+    group of controls together, within a titled visual frame.
+
+    \section1 StackView
+
+    \image qtlabscontrols-stackview-wireframe.png
+
+    \l {Qt.labs.controls::StackView}{StackView} organizes content pages into
+    a stack.
+
+    \section1 SwipeView
+
+    \image qtlabscontrols-swipeview-wireframe.png
+
+    \l {Qt.labs.controls::SwipeView}{SwipeView} organizes content pages into
+    a swipable strip.
+
+    \section1 TabBar
+
+    \image qtlabscontrols-tabbar-wireframe.png
+
+    \l {Qt.labs.controls::TabBar}{TabBar} organizes content pages into tabs.
+
+    \section1 ToolBar
+
+    \image qtlabscontrols-toolbar.png
+
+    \l {Qt.labs.controls::ToolBar}{ToolBar} is a container of application-wide
+    and context-sensitive actions and controls.
+*/
