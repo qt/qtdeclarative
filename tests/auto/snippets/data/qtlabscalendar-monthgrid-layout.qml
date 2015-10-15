@@ -7,7 +7,7 @@ GridLayout {
     columns: 2
 
     DayOfWeekRow {
-        locale: view.locale
+        locale: grid.locale
 
         Layout.column: 1
         Layout.fillWidth: true
