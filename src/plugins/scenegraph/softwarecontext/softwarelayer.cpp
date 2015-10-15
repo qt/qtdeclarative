@@ -1,22 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc
-** All rights reserved.
-** For any questions to Digia, please use contact form at http://qt.digia.com
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt SceneGraph Raster Add-on.
+** This file is part of Qt Quick 2d Renderer module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE$
-** Licensees holding valid Qt Commercial licenses may use this file in
-** accordance with the Qt Commercial License Agreement provided with the
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.
-**
-** If you have questions regarding the use of this file, please use
-** contact form at http://qt.digia.com
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "softwarelayer.h"
 
 #include "context.h"
@@ -26,6 +26,8 @@ SoftwareLayer::SoftwareLayer(QSGRenderContext *renderContext)
     , m_context(renderContext)
     , m_renderer(0)
     , m_device_pixel_ratio(1)
+    , m_mirrorHorizontal(false)
+    , m_mirrorVertical(false)
     , m_live(true)
     , m_grab(true)
     , m_recursive(false)
@@ -151,6 +153,22 @@ void SoftwareLayer::setDevicePixelRatio(qreal ratio)
     m_device_pixel_ratio = ratio;
 }
 
+void SoftwareLayer::setMirrorHorizontal(bool mirror)
+{
+    if (m_mirrorHorizontal == mirror)
+        return;
+    m_mirrorHorizontal = mirror;
+    markDirtyTexture();
+}
+
+void SoftwareLayer::setMirrorVertical(bool mirror)
+{
+    if (m_mirrorVertical == mirror)
+        return;
+    m_mirrorVertical = mirror;
+    markDirtyTexture();
+}
+
 void SoftwareLayer::markDirtyTexture()
 {
     m_dirtyTexture = true;
@@ -198,10 +216,11 @@ void SoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    m_renderer->m_projectionRect = QRect(m_rect.x() * m_device_pixel_ratio,
-                                         m_rect.y() * m_device_pixel_ratio,
-                                         m_rect.width() * m_device_pixel_ratio,
-                                         m_rect.height() * m_device_pixel_ratio);
+    QRect mirrored(m_mirrorHorizontal ? m_rect.right() * m_device_pixel_ratio : m_rect.left() * m_device_pixel_ratio,
+                   m_mirrorVertical ? m_rect.top() * m_device_pixel_ratio : m_rect.bottom() * m_device_pixel_ratio,
+                   m_mirrorHorizontal ? -m_rect.width() * m_device_pixel_ratio : m_rect.width() * m_device_pixel_ratio,
+                   m_mirrorVertical ? m_rect.height() * m_device_pixel_ratio : -m_rect.height() * m_device_pixel_ratio);
+    m_renderer->m_projectionRect = mirrored;
     m_renderer->setClearColor(Qt::transparent);
 
     m_renderer->renderScene();

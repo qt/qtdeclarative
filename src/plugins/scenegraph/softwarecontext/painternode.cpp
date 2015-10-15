@@ -1,22 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc
-** All rights reserved.
-** For any questions to Digia, please use contact form at http://qt.digia.com
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt SceneGraph Raster Add-on.
+** This file is part of Qt Quick 2d Renderer module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE$
-** Licensees holding valid Qt Commercial licenses may use this file in
-** accordance with the Qt Commercial License Agreement provided with the
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.
-**
-** If you have questions regarding the use of this file, please use
-** contact form at http://qt.digia.com
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "painternode.h"
 #include "pixmaptexture.h"
 #include <qmath.h>
@@ -136,7 +136,7 @@ QImage PainterNode::toImage() const
 void PainterNode::update()
 {
     if (m_dirtyGeometry) {
-        m_pixmap = QPixmap(m_size);
+        m_pixmap = QPixmap(m_textureSize);
         if (!m_opaquePainting)
             m_pixmap.fill(Qt::transparent);
 
@@ -168,22 +168,43 @@ void PainterNode::paint()
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     }
 
-    painter.scale(m_contentsScale, m_contentsScale);
+    QRect clipRect;
 
-    QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
-                qFloor(dirtyRect.y()/m_contentsScale),
-                qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
-                qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+    if (m_contentsScale == 1) {
+        qreal scaleX = m_textureSize.width() / (qreal) m_size.width();
+        qreal scaleY = m_textureSize.height() / (qreal) m_size.height();
+        painter.scale(scaleX, scaleY);
+        clipRect = dirtyRect;
+    } else {
+        painter.scale(m_contentsScale, m_contentsScale);
+
+        QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
+                    qFloor(dirtyRect.y()/m_contentsScale),
+                    qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
+                    qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
+
+        clipRect = sclip;
+    }
 
     if (!m_dirtyRect.isNull())
-        painter.setClipRect(sclip);
+        painter.setClipRect(clipRect);
 
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(sclip, m_fillColor);
+    painter.fillRect(clipRect, m_fillColor);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     m_item->paint(&painter);
     painter.end();
 
     m_dirtyRect = QRect();
+}
+
+
+void PainterNode::setTextureSize(const QSize &size)
+{
+    if (size == m_textureSize)
+        return;
+
+    m_textureSize = size;
+    m_dirtyGeometry = true;
 }

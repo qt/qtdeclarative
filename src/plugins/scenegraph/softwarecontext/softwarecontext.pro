@@ -6,6 +6,9 @@ PLUGIN_TYPE = scenegraph
 PLUGIN_CLASS_NAME = ContextPlugin
 load(qt_plugin)
 
+QMAKE_TARGET_PRODUCT = "Qt Quick 2D Renderer (Qt $$QT_VERSION)"
+QMAKE_TARGET_DESCRIPTION = "Quick 2D Renderer for Qt."
+
 SOURCES += \
     context.cpp \
     pluginmain.cpp \

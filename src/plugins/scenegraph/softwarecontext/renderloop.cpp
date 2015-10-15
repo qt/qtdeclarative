@@ -1,25 +1,28 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc
-** All rights reserved.
-** For any questions to Digia, please use contact form at http://qt.digia.com
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt SceneGraph Raster Add-on.
+** This file is part of Qt Quick 2d Renderer module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE$
-** Licensees holding valid Qt Commercial licenses may use this file in
-** accordance with the Qt Commercial License Agreement provided with the
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.
-**
-** If you have questions regarding the use of this file, please use
-** contact form at http://qt.digia.com
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "renderloop.h"
 
 #include "context.h"
+
+#include <QtCore/QCoreApplication>
+
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
 #include <private/qquickprofiler_p.h>
@@ -49,25 +52,18 @@ void RenderLoop::show(QQuickWindow *window)
 
 void RenderLoop::hide(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
-        return;
-
-    m_windows.remove(window);
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->fireAboutToStop();
-    cd->cleanupNodesOnShutdown();
-
-    if (m_windows.size() == 0) {
-        if (!cd->persistentSceneGraph) {
-            rc->invalidate();
-            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-        }
-    }
 }
 
 void RenderLoop::windowDestroyed(QQuickWindow *window)
 {
+    m_windows.remove(window);
     hide(window);
+
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    d->cleanupNodesOnShutdown();
+
     if (m_windows.size() == 0) {
         rc->invalidate();
         QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
@@ -98,15 +94,17 @@ void RenderLoop::renderWindow(QQuickWindow *window)
     }
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
-    bool profileFrames = QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled() || QQuickProfiler::featuresEnabled;
+    bool profileFrames = QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames)
         renderTimer.start();
+    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
 
     cd->polishItems();
 
-    if (profileFrames) {
+    if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
-    }
+    Q_QUICK_SG_PROFILE_SWITCH(QQuickProfiler::SceneGraphPolishFrame,
+                              QQuickProfiler::SceneGraphRenderLoopFrame);
 
     emit window->afterAnimating();
 
@@ -114,14 +112,16 @@ void RenderLoop::renderWindow(QQuickWindow *window)
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     cd->renderSceneGraph(window->size());
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
-        // #### grabContent = qt_gl_read_framebuffer(window->size() * window->devicePixelRatio(), false, false);
+        // #### grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), false, false);
         data.grabOnly = false;
     }
 
@@ -133,6 +133,7 @@ void RenderLoop::renderWindow(QQuickWindow *window)
     qint64 swapTime = 0;
     if (profileFrames)
         swapTime = renderTimer.nsecsElapsed();
+    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (QSG_RASTER_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
         static QTime lastFrameTime = QTime::currentTime();
