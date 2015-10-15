@@ -43,22 +43,16 @@ QT_BEGIN_NAMESPACE
     \inherits AbstractButton
     \instantiates QQuickTabButton
     \inqmlmodule Qt.labs.controls
-    \ingroup tabs
+    \ingroup qtlabscontrols-navigation
     \brief A tab button control.
+
+    \image qtlabscontrols-tabbutton.png
 
     TabButton is used in conjunction with a \l TabBar.
 
-    ### TODO: screenshot
+    \snippet qtlabscontrols-tabbutton.qml 1
 
-    \code
-    TabBar {
-        TabButton { text: qsTr("Home") }
-        TabButton { text: qsTr("Discover") }
-        TabButton { text: qsTr("Activity") }
-    }
-    \endcode
-
-    \sa TabBar, {Customizing TabButton}
+    \sa TabBar, {Customizing TabButton}, Navigation
 */
 
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :

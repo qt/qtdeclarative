@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \inherits Container
     \instantiates QQuickSwipeView
     \inqmlmodule Qt.labs.controls
-    \ingroup navigation
+    \ingroup qtlabscontrols-navigation
     \brief A swipe view control.
 
     SwipeView provides a swipe-based navigation model.
@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
     pages dynamically at run time.
 
-    \sa TabBar, PageIndicator, {Customizing SwipeView}
+    \sa TabBar, PageIndicator, {Customizing SwipeView}, Navigation
 */
 
 class QQuickSwipeViewPrivate : public QQuickContainerPrivate

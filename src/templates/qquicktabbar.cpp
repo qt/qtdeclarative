@@ -45,50 +45,20 @@ QT_BEGIN_NAMESPACE
     \inherits Container
     \instantiates QQuickTabBar
     \inqmlmodule Qt.labs.controls
-    \ingroup tabs
+    \ingroup qtlabscontrols-navigation
     \brief A tab bar control.
 
-    TabBar provides a tab-based navigation model. TabBar is populated with
-    TabButton controls, and can be used together with any layout or container
-    control that provides \c currentIndex -property, such as \l StackLayout
-    or \l SwipeView
+    TabBar provides a tab-based navigation model.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-tabbar-wireframe.png
 
-    \code
-    ApplicationWindow {
-        visible:true
+    TabBar is populated with TabButton controls, and can be used together with
+    any layout or container control that provides \c currentIndex -property,
+    such as \l StackLayout or \l SwipeView
 
-        header: TabBar {
-            id: bar
-            TabButton {
-                text: qsTr("Home")
-            }
-            TabButton {
-                text: qsTr("Discover")
-            }
-            TabButton {
-                text: qsTr("Activity")
-            }
-        }
+    \snippet qtlabscontrols-tabbar.qml 1
 
-        StackLayout {
-            anchors.fill: parent
-            currentIndex: bar.currentIndex
-            Item {
-                id: homeTab
-            }
-            Item {
-                id: discoverTab
-            }
-            Item {
-                id: activityTab
-            }
-        }
-    }
-    \endcode
-
-    \sa TabButton, {Customizing TabBar}
+    \sa TabButton, {Customizing TabBar}, Navigation
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate
