@@ -5195,12 +5195,15 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
     cleanupBasicBlocks(function);
 
     function->removeSharedExpressions();
-
+    int statementCount = 0;
+    foreach (BasicBlock *bb, function->basicBlocks())
+        if (!bb->isRemoved())
+            statementCount += bb->statementCount();
 //    showMeTheCode(function);
 
     static bool doSSA = qEnvironmentVariableIsEmpty("QV4_NO_SSA");
 
-    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
+    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA && statementCount <= 300) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
 
         ConvertArgLocals(function).toTemps();
