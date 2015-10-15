@@ -37,6 +37,8 @@
 #include "qquickpageindicator_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -58,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing PageIndicator}, Indicators
 */
 
-class QQuickPageIndicatorPrivate : public QQuickControlPrivate
+class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 
@@ -69,6 +71,8 @@ public:
     QQuickItem *itemAt(const QPoint &pos) const;
     void updatePressed(bool pressed, const QPoint &pos = QPoint());
     void setContextProperty(QQuickItem *item, const QString &name, const QVariant &value);
+
+    void itemChildAdded(QQuickItem *, QQuickItem *child);
 
     int count;
     int currentIndex;
@@ -106,6 +110,12 @@ void QQuickPageIndicatorPrivate::setContextProperty(QQuickItem *item, const QStr
         if (context && context->isValid())
             context->setContextProperty(name, value);
     }
+}
+
+void QQuickPageIndicatorPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
+{
+    if (!QQuickItemPrivate::get(child)->isTransparentForPositioner())
+        setContextProperty(child, QStringLiteral("pressed"), false);
 }
 
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
@@ -229,16 +239,14 @@ void QQuickPageIndicator::setColor(const QColor &color)
     }
 }
 
-void QQuickPageIndicator::componentComplete()
+void QQuickPageIndicator::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickPageIndicator);
-    QQuickControl::componentComplete();
-    if (d->contentItem) {
-        foreach (QQuickItem *child, d->contentItem->childItems()) {
-            if (!QQuickItemPrivate::get(child)->isTransparentForPositioner())
-                d->setContextProperty(child, QStringLiteral("pressed"), false);
-        }
-    }
+    QQuickControl::contentItemChange(newItem, oldItem);
+    if (oldItem)
+        QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
+    if (newItem)
+        QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
 }
 
 void QQuickPageIndicator::mousePressEvent(QMouseEvent *event)
