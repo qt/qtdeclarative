@@ -849,6 +849,14 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
         std::cerr << "failed to proecess output of qmlimportscanner" << std::endl;
         return false;
     }
+
+    QStringList aux;
+    foreach (const QString &str, *dependencies) {
+        if (!str.startsWith("Qt.test.qtestroot"))
+            aux += str;
+    }
+    *dependencies = aux;
+
     return true;
 }
 
