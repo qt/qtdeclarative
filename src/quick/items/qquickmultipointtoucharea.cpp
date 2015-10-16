@@ -502,8 +502,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         else if (event->type() == QEvent::MouseButtonRelease)
             _mouseQpaTouchPoint.setState(Qt::TouchPointReleased);
         else { // QEvent::MouseButtonPress
+            addTouchPoint(me);
+            started = true;
             _mouseQpaTouchPoint.setState(Qt::TouchPointPressed);
-            _pressedTouchPoints.append(_mouseTouchPoint);
         }
         touchPoints << _mouseQpaTouchPoint;
         isMouseEvent = true;
@@ -729,9 +730,7 @@ void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
         return;
 
     if (_touchPoints.count() >= _minimumTouchPoints - 1 && _touchPoints.count() < _maximumTouchPoints) {
-        addTouchPoint(event);
         updateTouchData(event);
-        emit pressed(_pressedTouchPoints);
     }
 }
 
@@ -762,10 +761,7 @@ void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
 
     if (_mouseTouchPoint) {
         updateTouchData(event);
-        _mouseTouchPoint->setPressed(false);
         _mouseTouchPoint->setInUse(false);
-        _releasedTouchPoints.append(_mouseTouchPoint);
-        emit released(_releasedTouchPoints);
         _releasedTouchPoints.removeAll(_mouseTouchPoint);
         _mouseTouchPoint = Q_NULLPTR;
     }
