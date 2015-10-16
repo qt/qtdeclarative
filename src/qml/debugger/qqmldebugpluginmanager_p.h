@@ -70,7 +70,9 @@ QT_BEGIN_NAMESPACE
 
 #ifdef QT_STATIC
 #define Q_QML_IMPORT_DEBUG_PLUGIN(className)\
-    Q_IMPORT_PLUGIN(className)
+    QT_END_NAMESPACE\
+    Q_IMPORT_PLUGIN(className)\
+    QT_BEGIN_NAMESPACE
 #else
 #define Q_QML_IMPORT_DEBUG_PLUGIN(className)
 #endif // QT_STATIC
