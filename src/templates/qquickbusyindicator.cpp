@@ -60,13 +60,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    You can create a custom appearance for a Busy Indicator by
-    assigning an item to the \l indicator property.
-
-    The default implementation uses this QML item as indicator:
-    \snippet BusyIndicator.qml indicator
-
-    \sa Indicators
+    \sa {Customizing BusyIndicator}, Indicators
 */
 
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
