@@ -29,10 +29,13 @@
     \page qtlabscontrols-buttons.html
     \title Buttons
 
+    Qt Labs Controls offers a selection of button-like controls.
+
     \annotatedlist qtlabscontrols-buttons
 
-    Qt Labs Controls offers a selection of button-like controls. Each type
-    of button has its own target use case.
+    Each type of button has its own specific target use case. The following
+    sections offer guidelines for choosing the appropriate type of button,
+    depending on the use case.
 
     \section1 Button
 

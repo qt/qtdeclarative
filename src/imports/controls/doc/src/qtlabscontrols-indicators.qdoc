@@ -29,10 +29,13 @@
     \page qtlabscontrols-indicators.html
     \title Indicators
 
+    Qt Labs Controls offers a selection of indicator-like controls.
+
     \annotatedlist qtlabscontrols-indicators
 
-    Qt Labs Controls offers a selection of indicator-like controls. Each type
-    of indicator has its own target use case.
+    Each type of indicator has its own specific target use case. The following
+    sections offer guidelines for choosing the appropriate type of indicator,
+    depending on the use case.
 
     \section1 BusyIndicator
 
