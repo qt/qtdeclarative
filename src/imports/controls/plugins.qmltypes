@@ -150,6 +150,14 @@ Module {
         defaultProperty: "data"
     }
     Component {
+        prototype: "QQuickRangeSlider"
+        name: "Qt.labs.controls/RangeSlider"
+        exports: ["Qt.labs.controls/RangeSlider 1.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
         prototype: "QQuickScrollBar"
         name: "Qt.labs.controls/ScrollBar"
         exports: ["Qt.labs.controls/ScrollBar 1.0"]

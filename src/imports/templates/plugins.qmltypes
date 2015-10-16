@@ -14,11 +14,28 @@ Module {
         prototype: "QQuickControl"
         Property { name: "text"; type: "string" }
         Property { name: "pressed"; type: "bool" }
+        Property { name: "checked"; type: "bool" }
+        Property { name: "checkable"; type: "bool" }
+        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "label"; type: "QQuickItem"; isPointer: true }
-        Signal { name: "pressed" }
-        Signal { name: "released" }
+        Signal {
+            name: "pressed"
+            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
+        }
+        Signal {
+            name: "released"
+            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
+        }
         Signal { name: "canceled" }
-        Signal { name: "clicked" }
+        Signal {
+            name: "clicked"
+            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
+        }
+        Signal {
+            name: "doubleClicked"
+            Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
+        }
+        Method { name: "toggle" }
     }
     Component {
         name: "QQuickApplicationWindow"
@@ -26,6 +43,8 @@ Module {
         prototype: "QQuickWindowQmlImpl"
         exports: ["Qt.labs.templates/ApplicationWindow 1.0"]
         exportMetaObjectRevisions: [0]
+        Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
     }
@@ -48,17 +67,11 @@ Module {
     Component {
         name: "QQuickCheckBox"
         defaultProperty: "data"
-        prototype: "QQuickCheckable"
+        prototype: "QQuickAbstractButton"
         exports: ["Qt.labs.templates/CheckBox 1.0"]
         exportMetaObjectRevisions: [0]
-    }
-    Component {
-        name: "QQuickCheckable"
-        defaultProperty: "data"
-        prototype: "QQuickAbstractButton"
-        Property { name: "checked"; type: "bool" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
-        Method { name: "toggle" }
+        Property { name: "tristate"; type: "bool" }
+        Property { name: "checkState"; type: "Qt::CheckState" }
     }
     Component {
         name: "QQuickContainer"
@@ -383,9 +396,48 @@ Module {
     Component {
         name: "QQuickRadioButton"
         defaultProperty: "data"
-        prototype: "QQuickCheckable"
+        prototype: "QQuickAbstractButton"
         exports: ["Qt.labs.templates/RadioButton 1.0"]
         exportMetaObjectRevisions: [0]
+    }
+    Component {
+        name: "QQuickRangeSlider"
+        defaultProperty: "data"
+        prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/RangeSlider 1.0"]
+        exportMetaObjectRevisions: [0]
+        Enum {
+            name: "SnapMode"
+            values: {
+                "NoSnap": 0,
+                "SnapAlways": 1,
+                "SnapOnRelease": 2
+            }
+        }
+        Property { name: "from"; type: "double" }
+        Property { name: "to"; type: "double" }
+        Property { name: "first"; type: "QQuickRangeSliderNode"; isReadonly: true; isPointer: true }
+        Property { name: "second"; type: "QQuickRangeSliderNode"; isReadonly: true; isPointer: true }
+        Property { name: "stepSize"; type: "double" }
+        Property { name: "snapMode"; type: "SnapMode" }
+        Property { name: "orientation"; type: "Qt::Orientation" }
+        Property { name: "track"; type: "QQuickItem"; isPointer: true }
+        Method {
+            name: "setValues"
+            Parameter { name: "firstValue"; type: "double" }
+            Parameter { name: "secondValue"; type: "double" }
+        }
+    }
+    Component {
+        name: "QQuickRangeSliderNode"
+        prototype: "QObject"
+        Property { name: "value"; type: "double" }
+        Property { name: "position"; type: "double"; isReadonly: true }
+        Property { name: "visualPosition"; type: "double"; isReadonly: true }
+        Property { name: "handle"; type: "QQuickItem"; isPointer: true }
+        Property { name: "pressed"; type: "bool" }
+        Method { name: "increase" }
+        Method { name: "decrease" }
     }
     Component {
         name: "QQuickScrollBar"
@@ -569,7 +621,7 @@ Module {
     Component {
         name: "QQuickSwitch"
         defaultProperty: "data"
-        prototype: "QQuickCheckable"
+        prototype: "QQuickAbstractButton"
         exports: ["Qt.labs.templates/Switch 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "position"; type: "double" }
@@ -585,7 +637,7 @@ Module {
     Component {
         name: "QQuickTabButton"
         defaultProperty: "data"
-        prototype: "QQuickCheckable"
+        prototype: "QQuickAbstractButton"
         exports: ["Qt.labs.templates/TabButton 1.0"]
         exportMetaObjectRevisions: [0]
     }
@@ -773,6 +825,8 @@ Module {
         exports: ["Qt.labs.templates/TextArea 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "font"; type: "QFont" }
+        Property { name: "implicitWidth"; type: "double" }
+        Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
         Signal {
@@ -1048,6 +1102,8 @@ Module {
         exports: ["Qt.labs.templates/TextField 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "font"; type: "QFont" }
+        Property { name: "implicitWidth"; type: "double" }
+        Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
         Signal {
