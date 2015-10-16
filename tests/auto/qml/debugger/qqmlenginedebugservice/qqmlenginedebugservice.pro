@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmlenginedebugservice
-macx:CONFIG -= app_bundle
+osx:CONFIG -= app_bundle
 
 SOURCES += \
     tst_qqmlenginedebugservice.cpp

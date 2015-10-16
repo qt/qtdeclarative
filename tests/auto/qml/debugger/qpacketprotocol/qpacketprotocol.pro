@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qpacketprotocol
-macx:CONFIG -= app_bundle
+osx:CONFIG -= app_bundle
 
 SOURCES += tst_qpacketprotocol.cpp
 

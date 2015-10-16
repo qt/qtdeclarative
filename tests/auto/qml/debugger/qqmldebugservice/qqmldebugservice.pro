@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmldebugservice
-macx:CONFIG -= app_bundle
+osx:CONFIG -= app_bundle
 
 HEADERS += ../shared/qqmldebugtestservice.h
 

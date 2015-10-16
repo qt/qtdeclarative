@@ -1,6 +1,6 @@
 CONFIG += testcase
 TARGET = tst_qqmlprofilerservice
-macx:CONFIG -= app_bundle
+osx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlprofilerservice.cpp
 
