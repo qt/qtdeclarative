@@ -26,7 +26,6 @@
 ****************************************************************************/
 
 /*!
-\ingroup qtquick-text
 \page qtquick-input-textinput.html
 \title Qt Quick Text Input Handling and Validators
 \brief Text input and validation
@@ -37,8 +36,6 @@ Qt Quick provides several types to display text onto the screen. The \l Text
 type will display formatted text onto the screen, the \l TextEdit type
 will place a multiline line edit onto the screen, and the \l TextInput will
 place a single editable line field onto the screen.
-
-\generatelist{related}
 
 To learn more about their specific features and properties, visit their
 respective documentation.
@@ -63,11 +60,11 @@ Note that QML parses JavaScript regular expressions, while Qt's
 */
 
 /*!
+\page qtquick-text-validator.html
 \ingroup qtquick-text-validator
 \title Qt Quick Text Validators
 \brief Types that validate text input
 
-The \l{qtquick-concepts-input-text.html}
-{Qt Quick Text Input Handling and Validators} page has information about
+The \l {Qt Quick Text Input Handling and Validators} page has information about
 validating user text input.
 */
