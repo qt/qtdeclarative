@@ -895,11 +895,11 @@ void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
         if (byteSize > pool.size())
             pool.resize(byteSize);
         buffer->data = pool.data();
-    } else {
+    } else if (buffer->size != byteSize) {
+        free(buffer->data);
         buffer->data = (char *) malloc(byteSize);
     }
     buffer->size = byteSize;
-
 }
 
 void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
