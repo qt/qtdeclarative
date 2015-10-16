@@ -39,12 +39,30 @@
 #include <QtCore/qmath.h>
 #include <QtCore/QDebug>
 #include <cassert>
-#include <double-conversion.h>
 
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(NumberCtor);
 DEFINE_OBJECT_VTABLE(NumberObject);
+
+struct NumberLocaleHolder : public NumberLocale
+{
+    NumberLocaleHolder() {}
+};
+
+Q_GLOBAL_STATIC(NumberLocaleHolder, numberLocaleHolder)
+
+NumberLocale::NumberLocale() : QLocale(QLocale::C),
+    // -128 means shortest string that can accurately represent the number.
+    defaultDoublePrecision(0xffffff80)
+{
+    setNumberOptions(QLocale::OmitGroupSeparator | QLocale::OmitLeadingZeroInExponent);
+}
+
+const NumberLocale *NumberLocale::instance()
+{
+    return numberLocaleHolder();
+}
 
 Heap::NumberCtor::NumberCtor(QV4::ExecutionContext *scope)
     : Heap::FunctionObject(scope, QStringLiteral("Number"))
@@ -201,15 +219,9 @@ ReturnedValue NumberPrototype::method_toFixed(CallContext *ctx)
         str = QStringLiteral("NaN");
     else if (qIsInf(v))
         str = QString::fromLatin1(v < 0 ? "-Infinity" : "Infinity");
-    else if (v < 1.e21) {
-        char buf[100];
-        double_conversion::StringBuilder builder(buf, sizeof(buf));
-        double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToFixed(v, fdigits, &builder);
-        str = QString::fromLatin1(builder.Finalize());
-        // At some point, the 3rd party double-conversion code should be moved to qtcore.
-        // When that's done, we can use:
-//        str = QString::number(v, 'f', int (fdigits));
-    } else
+    else if (v < 1.e21)
+        str = NumberLocale::instance()->toString(v, 'f', int(fdigits));
+    else
         return RuntimeHelpers::stringFromNumber(ctx->engine(), v)->asReturnedValue();
     return scope.engine->newString(str)->asReturnedValue();
 }
@@ -221,7 +233,7 @@ ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
     if (scope.engine->hasException)
         return Encode::undefined();
 
-    int fdigits = -1;
+    int fdigits = NumberLocale::instance()->defaultDoublePrecision;
 
     if (ctx->argc() && !ctx->args()[0].isUndefined()) {
         fdigits = ctx->args()[0].toInt32();
@@ -231,11 +243,7 @@ ReturnedValue NumberPrototype::method_toExponential(CallContext *ctx)
         }
     }
 
-    char str[100];
-    double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToExponential(d, fdigits, &builder);
-    QString result = QString::fromLatin1(builder.Finalize());
-
+    QString result = NumberLocale::instance()->toString(d, 'e', fdigits);
     return scope.engine->newString(result)->asReturnedValue();
 }
 
@@ -255,10 +263,6 @@ ReturnedValue NumberPrototype::method_toPrecision(CallContext *ctx)
         return ctx->engine()->throwRangeError(error);
     }
 
-    char str[100];
-    double_conversion::StringBuilder builder(str, sizeof(str));
-    double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToPrecision(v->asDouble(), precision, &builder);
-    QString result = QString::fromLatin1(builder.Finalize());
-
+    QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
     return scope.engine->newString(result)->asReturnedValue();
 }

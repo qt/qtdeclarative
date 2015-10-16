@@ -60,6 +60,15 @@ struct NumberCtor : FunctionObject {
 
 }
 
+class NumberLocale : public QLocale
+{
+public:
+    static const NumberLocale *instance();
+    const int defaultDoublePrecision;
+protected:
+    NumberLocale();
+};
+
 struct NumberCtor: FunctionObject
 {
     V4_OBJECT2(NumberCtor, FunctionObject)

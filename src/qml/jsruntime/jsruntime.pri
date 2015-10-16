@@ -112,5 +112,3 @@ valgrind {
 }
 
 ios: DEFINES += ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
-
-include(../../3rdparty/double-conversion/double-conversion.pri)

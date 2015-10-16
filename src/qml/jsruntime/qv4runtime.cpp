@@ -43,6 +43,7 @@
 #include "qv4dateobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
+#include "qv4numberobject_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 #include <private/qqmlcontextwrapper_p.h>
@@ -59,8 +60,6 @@
 #include <stdlib.h>
 
 #include <wtf/MathExtras.h>
-
-#include "../../3rdparty/double-conversion/double-conversion.h"
 
 #ifdef QV4_COUNT_RUNTIME_FUNCTIONS
 #  include <QtCore/QBuffer>
@@ -226,10 +225,8 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
     }
 
     if (radix == 10) {
-        char str[100];
-        double_conversion::StringBuilder builder(str, sizeof(str));
-        double_conversion::DoubleToStringConverter::EcmaScriptConverter().ToShortest(num, &builder);
-        *result = QString::fromLatin1(builder.Finalize());
+        const NumberLocale *locale = NumberLocale::instance();
+        *result = locale->toString(num, 'g', locale->defaultDoublePrecision);
         return;
     }
 

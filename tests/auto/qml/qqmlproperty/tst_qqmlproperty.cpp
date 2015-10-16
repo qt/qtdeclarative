@@ -2062,13 +2062,11 @@ void tst_qqmlproperty::floatToStringPrecision()
     QVERIFY(obj != 0);
 
     QCOMPARE(obj->property("a").toDouble(), 3.4);
-    QEXPECT_FAIL("", "QVariant's double-to-string conversion is worse than V4's.", Continue);
     QCOMPARE(obj->property("a").toString(), QLatin1String("3.4"));
     QCOMPARE(obj->property("b").toDouble(), 3.4);
     QCOMPARE(obj->property("b").toString(), QLatin1String("3.4"));
 
     QCOMPARE(obj->property("c").toDouble(), 0.035003945);
-    QEXPECT_FAIL("", "QVariant's double-to-string conversion is worse than V4's.", Continue);
     QCOMPARE(obj->property("c").toString(), QLatin1String("0.035003945"));
     QCOMPARE(obj->property("d").toDouble(), 0.035003945);
     QCOMPARE(obj->property("d").toString(), QLatin1String("0.035003945"));

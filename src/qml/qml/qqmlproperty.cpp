@@ -50,7 +50,6 @@
 #include "qqmlvaluetypeproxybinding_p.h"
 #include <private/qjsvalue_p.h>
 #include <private/qv4functionobject_p.h>
-#include <private/qv4runtime_p.h>
 
 #include <QStringList>
 #include <private/qmetaobject_p.h>
@@ -1353,12 +1352,7 @@ bool QQmlPropertyPrivate::write(QObject *object,
 
         if (!ok) {
             v = value;
-            if (variantType == QVariant::Double && propertyType == QVariant::String) {
-                QString number;
-                QV4::RuntimeHelpers::numberToString(&number, v.toDouble());
-                v = number;
-                ok = true;
-            } else if (v.convert(propertyType)) {
+            if (v.convert(propertyType)) {
                 ok = true;
             } else if (v.isValid() && value.isNull()) {
                 // For historical reasons converting a null QVariant to another type will do the trick
