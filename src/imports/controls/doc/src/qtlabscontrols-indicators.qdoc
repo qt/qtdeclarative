@@ -48,10 +48,18 @@
     \l {Qt.labs.controls::PageIndicator}{PageIndicator} is used to indicate
     the currently active page in a container of multiple pages.
 
+    \section1 ScrollBar
+
+    \image qtlabscontrols-scrollbar.png
+
+    \l {Qt.labs.controls::ScrollBar}{ScrollBar} is an interactive bar that
+    indicates the current scroll position, and can be used to scroll to a
+    specific position in a \l Flickable.
+
     \section1 ScrollIndicator
 
     \image qtlabscontrols-scrollindicator.png
 
-    \l {Qt.labs.controls::ScrollIndicator}{ScrollIndicator} indicates the
-    current scroll position in a \l Flickable.
+    \l {Qt.labs.controls::ScrollIndicator}{ScrollIndicator} is a non-interactive
+    indicator that indicates the current scroll position in a \l Flickable.
 */

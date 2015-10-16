@@ -47,19 +47,18 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickScrollBar
     \inqmlmodule Qt.labs.controls
-    \ingroup sliders
+    \ingroup qtlabscontrols-indicators
     \brief An interactive scroll bar control.
 
     ScrollBar is an interactive bar that can be used to scroll to a specific
     position. A scroll bar can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
 
-    ### TODO: screenshot
+    \image qtlabscontrols-scrollbar.png
 
     \code
-    ListView {
-        model: 200
-        delegate: Text { text: index }
+    Flickable {
+        // ...
         ScrollBar.vertical: ScrollBar { }
     }
     \endcode
@@ -74,7 +73,7 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
-    \sa ScrollIndicator, {Customizing ScrollBar}
+    \sa ScrollIndicator, {Customizing ScrollBar}, Indicators
 */
 
 class QQuickScrollBarPrivate : public QQuickControlPrivate
