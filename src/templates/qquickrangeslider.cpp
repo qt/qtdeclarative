@@ -423,8 +423,6 @@ void QQuickRangeSlider::setTo(qreal to)
     \qmlproperty real Qt.labs.controls::RangeSlider::first.visualPosition
     \qmlproperty Item Qt.labs.controls::RangeSlider::first.handle
     \qmlproperty bool Qt.labs.controls::RangeSlider::first.pressed
-    \qmlmethod void Qt.labs.controls::RangeSlider::first.increase()
-    \qmlmethod void Qt.labs.controls::RangeSlider::first.decrease()
 
     \table
     \header
@@ -467,19 +465,7 @@ void QQuickRangeSlider::setTo(qreal to)
         \li This property holds whether the first handle is pressed.
     \endtable
 
-    \table
-    \header
-        \li Function
-        \li Description
-    \row
-        \li increase
-        \li Increases the value of the handle by \l stepSize, or \c 0.1 if
-            stepSize is not defined.
-    \row
-        \li decrease
-        \li Decreases the value of the handle by \l stepSize, or \c 0.1 if
-            stepSize is not defined.
-    \endtable
+    \sa first.increase(), first.decrease()
 */
 QQuickRangeSliderNode *QQuickRangeSlider::first() const
 {
@@ -494,8 +480,6 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \qmlproperty real Qt.labs.controls::RangeSlider::second.visualPosition
     \qmlproperty Item Qt.labs.controls::RangeSlider::second.handle
     \qmlproperty bool Qt.labs.controls::RangeSlider::second.pressed
-    \qmlmethod void Qt.labs.controls::RangeSlider::second.increase()
-    \qmlmethod void Qt.labs.controls::RangeSlider::second.decrease()
 
     \table
     \header
@@ -538,19 +522,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li This property holds whether the second handle is pressed.
     \endtable
 
-    \table
-    \header
-        \li Function
-        \li Description
-    \row
-        \li increase
-        \li Increases the value of the handle by \l stepSize, or \c 0.1 if
-            stepSize is not defined.
-    \row
-        \li decrease
-        \li Decreases the value of the handle by \l stepSize, or \c 0.1 if
-            stepSize is not defined.
-    \endtable
+    \sa second.increase(), second.decrease()
 */
 QQuickRangeSliderNode *QQuickRangeSlider::second() const
 {
@@ -882,4 +854,35 @@ void QQuickRangeSlider::componentComplete()
     }
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::first.increase()
+
+    Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa first
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::first.decrease()
+
+    Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa first
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::second.increase()
+
+    Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa second
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::second.decrease()
+
+    Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa second
+*/
 QT_END_NAMESPACE
