@@ -31,14 +31,62 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserviceinterfaces_p.h"
+#ifndef QQML_NATIVE_DEBUG_SERVICE_H
+#define QQML_NATIVE_DEBUG_SERVICE_H
+
+#include <private/qqmldebugconnector_p.h>
+#include <private/qv4debugging_p.h>
+#include <private/qv8engine_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4debugging_p.h>
+#include <private/qv4script_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4objectiterator_p.h>
+#include <private/qv4identifier_p.h>
+#include <private/qv4runtime_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
+
+#include <QtCore/qjsonarray.h>
+
+#include <qqmlengine.h>
+
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QVector>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 
-const QString QV4DebugService::s_key = QStringLiteral("V8Debugger");
-const QString QQmlEngineDebugService::s_key = QStringLiteral("QmlDebugger");
-const QString QQmlInspectorService::s_key = QStringLiteral("QmlInspector");
-const QString QQmlProfilerService::s_key = QStringLiteral("CanvasFrameRate");
-const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
+class NativeDebugger;
+class BreakPointHandler;
+class QQmlDebuggerServiceFactory;
+
+class QQmlNativeDebugServiceImpl : public QQmlNativeDebugService
+{
+public:
+    QQmlNativeDebugServiceImpl(QObject *parent);
+
+    ~QQmlNativeDebugServiceImpl();
+
+    void engineAboutToBeAdded(QQmlEngine *engine);
+    void engineAboutToBeRemoved(QQmlEngine *engine);
+
+    void stateAboutToBeChanged(State state);
+
+    void messageReceived(const QByteArray &message);
+
+    void emitAsynchronousMessageToClient(const QJsonObject &message);
+
+private:
+    friend class QQmlDebuggerServiceFactory;
+    friend class NativeDebugger;
+
+    QList<QPointer<NativeDebugger> > m_debuggers;
+    BreakPointHandler *m_breakHandler;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQML_NATIVE_DEBUG_SERVICE_H

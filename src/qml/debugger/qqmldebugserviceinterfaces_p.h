@@ -127,6 +127,19 @@ protected:
     static const QString s_key;
 };
 
+class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : protected QQmlDebugService
+{
+    Q_OBJECT
+
+protected:
+    friend class QQmlDebugConnector;
+
+    QQmlNativeDebugService(float version, QObject *parent = 0)
+        : QQmlDebugService(s_key, version,  parent) {}
+
+    static const QString s_key;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLDEBUGSERVICEINTERFACES_P_H
