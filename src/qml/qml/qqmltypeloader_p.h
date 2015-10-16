@@ -215,7 +215,7 @@ class Q_AUTOTEST_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
-    enum Mode { PreferSynchronous, Asynchronous };
+    enum Mode { PreferSynchronous, Asynchronous, Synchronous };
 
     class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
     {
@@ -283,7 +283,7 @@ public:
     QQmlImportDatabase *importDatabase();
 
     QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
-    QQmlTypeData *getType(const QByteArray &, const QUrl &url);
+    QQmlTypeData *getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
@@ -362,6 +362,13 @@ private:
     QmldirCache m_qmldirCache;
     ImportDirCache m_importDirCache;
     ImportQmlDirCache m_importQmlDirCache;
+
+    template<typename Loader>
+    void doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode);
+
+    friend struct PlainLoader;
+    friend struct CachedLoader;
+    friend struct StaticLoader;
 };
 
 class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Canonical Limited and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -31,48 +31,12 @@
 **
 ****************************************************************************/
 
-#include <QtTest/QtTest>
-#include <QtQml/qqmlengine.h>
-#include <QtQuick/qquickview.h>
-#include <QtQuick/qquickitem.h>
-#include "../../shared/util.h"
+import QtQml 2.2
 
-class tst_QQMLTypeLoader : public QQmlDataTest
-{
-    Q_OBJECT
+QtObject {
+    id: top
 
-private slots:
-    void testLoadComplete();
-    void loadComponentSynchronously();
-};
-
-void tst_QQMLTypeLoader::testLoadComplete()
-{
-    QQuickView *window = new QQuickView();
-    window->engine()->addImportPath(QT_TESTCASE_BUILDDIR);
-    qDebug() << window->engine()->importPathList();
-    window->setGeometry(0,0,240,320);
-    window->setSource(testFileUrl("test_load_complete.qml"));
-    window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
-
-    QObject *rootObject = window->rootObject();
-    QTRY_VERIFY(rootObject != 0);
-    QTRY_COMPARE(rootObject->property("created").toInt(), 2);
-    QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
-    delete window;
+    Component.onCompleted: {
+        Qt.createQmlObject('QtObject {}', top, 'nonprotocol:');
+    }
 }
-
-void tst_QQMLTypeLoader::loadComponentSynchronously()
-{
-    QQmlEngine engine;
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
-                             QLatin1String(".*nonprotocol::1:1: QtObject is not a type.*")));
-    QQmlComponent component(&engine, testFileUrl("load_synchronous.qml"));
-    QObject *o = component.create();
-    QVERIFY(o);
-}
-
-QTEST_MAIN(tst_QQMLTypeLoader)
-
-#include "tst_qqmltypeloader.moc"

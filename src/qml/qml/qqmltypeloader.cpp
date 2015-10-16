@@ -911,6 +911,93 @@ void QQmlTypeLoader::unlock()
     m_thread->unlock();
 }
 
+struct PlainLoader {
+    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->loadThread(blob);
+    }
+    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->load(blob);
+    }
+    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->loadAsync(blob);
+    }
+};
+
+struct StaticLoader {
+    const QByteArray &data;
+    StaticLoader(const QByteArray &data) : data(data) {}
+
+    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->loadWithStaticDataThread(blob, data);
+    }
+    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->loadWithStaticData(blob, data);
+    }
+    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->loadWithStaticDataAsync(blob, data);
+    }
+};
+
+struct CachedLoader {
+    const QQmlPrivate::CachedQmlUnit *unit;
+    CachedLoader(const QQmlPrivate::CachedQmlUnit *unit) :  unit(unit) {}
+
+    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->loadWithCachedUnitThread(blob, unit);
+    }
+    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->loadWithCachedUnit(blob, unit);
+    }
+    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    {
+        loader->m_thread->loadWithCachedUnit(blob, unit);
+    }
+};
+
+template<typename Loader>
+void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
+{
+#ifdef DATABLOB_DEBUG
+    qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->m_url.toString()),
+             m_thread->isThisThread()?"Compile":"Engine");
+#endif
+    blob->startLoading();
+
+    if (m_thread->isThisThread()) {
+        unlock();
+        loader.loadThread(this, blob);
+        lock();
+    } else if (mode == Asynchronous) {
+        blob->m_data.setIsAsync(true);
+        unlock();
+        loader.loadAsync(this, blob);
+        lock();
+    } else {
+        unlock();
+        loader.load(this, blob);
+        lock();
+        if (mode == PreferSynchronous) {
+            if (!blob->isCompleteOrError())
+                blob->m_data.setIsAsync(true);
+        } else {
+            Q_ASSERT(mode == Synchronous);
+            while (!blob->isCompleteOrError()) {
+                unlock();
+                m_thread->waitForNextMessage();
+                lock();
+            }
+        }
+    }
+}
+
 /*!
 Load the provided \a blob from the network or filesystem.
 
@@ -918,29 +1005,7 @@ The loader must be locked.
 */
 void QQmlTypeLoader::load(QQmlDataBlob *blob, Mode mode)
 {
-#ifdef DATABLOB_DEBUG
-    qWarning("QQmlTypeLoader::load(%s): %s thread", qPrintable(blob->m_url.toString()),
-             m_thread->isThisThread()?"Compile":"Engine");
-#endif
-    blob->startLoading();
-
-    if (m_thread->isThisThread()) {
-        unlock();
-        loadThread(blob);
-        lock();
-    } else if (mode == PreferSynchronous) {
-        unlock();
-        m_thread->load(blob);
-        lock();
-        if (!blob->isCompleteOrError())
-            blob->m_data.setIsAsync(true);
-    } else {
-        Q_ASSERT(mode == Asynchronous);
-        blob->m_data.setIsAsync(true);
-        unlock();
-        m_thread->loadAsync(blob);
-        lock();
-    }
+    doLoad(PlainLoader(), blob, mode);
 }
 
 /*!
@@ -950,58 +1015,12 @@ The loader must be locked.
 */
 void QQmlTypeLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &data, Mode mode)
 {
-#ifdef DATABLOB_DEBUG
-    qWarning("QQmlTypeLoader::loadWithStaticData(%s, data): %s thread", qPrintable(blob->m_url.toString()),
-             m_thread->isThisThread()?"Compile":"Engine");
-#endif
-
-    blob->startLoading();
-
-    if (m_thread->isThisThread()) {
-        unlock();
-        loadWithStaticDataThread(blob, data);
-        lock();
-    } else if (mode == PreferSynchronous) {
-        unlock();
-        m_thread->loadWithStaticData(blob, data);
-        lock();
-        if (!blob->isCompleteOrError())
-            blob->m_data.setIsAsync(true);
-    } else {
-        Q_ASSERT(mode == Asynchronous);
-        blob->m_data.setIsAsync(true);
-        unlock();
-        m_thread->loadWithStaticDataAsync(blob, data);
-        lock();
-    }
+    doLoad(StaticLoader(data), blob, mode);
 }
 
 void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode)
 {
-#ifdef DATABLOB_DEBUG
-    qWarning("QQmlTypeLoader::loadWithUnitFcatory(%s, data): %s thread", qPrintable(blob->m_url.toString()),
-             m_thread->isThisThread()?"Compile":"Engine");
-#endif
-
-    blob->startLoading();
-
-    if (m_thread->isThisThread()) {
-        unlock();
-        loadWithCachedUnitThread(blob, unit);
-        lock();
-    } else if (mode == PreferSynchronous) {
-        unlock();
-        m_thread->loadWithCachedUnit(blob, unit);
-        lock();
-        if (!blob->isCompleteOrError())
-            blob->m_data.setIsAsync(true);
-    } else {
-        Q_ASSERT(mode == Asynchronous);
-        blob->m_data.setIsAsync(true);
-        unlock();
-        m_thread->loadWithCachedUnitAsync(blob, unit);
-        lock();
-    }
+    doLoad(CachedLoader(unit), blob, mode);
 }
 
 void QQmlTypeLoader::loadWithStaticDataThread(QQmlDataBlob *blob, const QByteArray &data)
@@ -1618,7 +1637,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         } else {
             QQmlTypeLoader::load(typeData, mode);
         }
-    } else if ((mode == PreferSynchronous) && QQmlFile::isSynchronous(url)) {
+    } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
 
@@ -1643,12 +1662,12 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 Returns a QQmlTypeData for the given \a data with the provided base \a url.  The
 QQmlTypeData will not be cached.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url)
+QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Mode mode)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlTypeData *typeData = new QQmlTypeData(url, this);
-    QQmlTypeLoader::loadWithStaticData(typeData, data);
+    QQmlTypeLoader::loadWithStaticData(typeData, data, mode);
 
     return typeData;
 }

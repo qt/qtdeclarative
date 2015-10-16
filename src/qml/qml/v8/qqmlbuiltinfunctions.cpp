@@ -1013,8 +1013,13 @@ ReturnedValue QtObject::method_createQmlObject(CallContext *ctx)
     if (!parentArg)
         V4THROW_ERROR("Qt.createQmlObject(): Missing parent object");
 
+    QQmlTypeData *typeData = QQmlEnginePrivate::get(engine)->typeLoader.getType(
+                qml.toUtf8(), url, QQmlTypeLoader::Synchronous);
+    Q_ASSERT(typeData->isCompleteOrError());
     QQmlComponent component(engine);
-    component.setData(qml.toUtf8(), url);
+    QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
+    componentPrivate->fromTypeData(typeData);
+    componentPrivate->progress = 1.0;
 
     if (component.isError()) {
         ScopedValue v(scope, Error::create(ctx->d()->engine, component.errors()));
