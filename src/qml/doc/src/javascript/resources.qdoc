@@ -57,7 +57,7 @@ parameters if they are required.
 
 An example of a code-behind implementation resource follows:
 
-\qml
+\code
 // MyButton.qml
 import QtQuick 2.0
 import "my_button_impl.js" as Logic // a new instance of this JavaScript resource is loaded for each instance of Button.qml
@@ -74,11 +74,11 @@ Rectangle {
         onClicked: Logic.onClicked(rect)
     }
 }
-\endqml
+\endcode
 
-\qml
+\code
 // my_button_impl.js
-var clickCount = 0;   // this state is separate for each instance of MyButton
+property var clickCount = 0;   // this state is separate for each instance of MyButton
 function onClicked(btn) {
     clickCount += 1;
     if ((clickCount % 5) == 0) {
@@ -87,7 +87,7 @@ function onClicked(btn) {
         obj.color = Qt.rgba(0,1,0,1);
     }
 }
-\endqml
+\endcode
 
 In general, simple logic should be defined in-line in the QML file, but more
 complex logic should be separated into code-behind implementation resources
@@ -138,7 +138,7 @@ within a QML document which never calls the factorial function.
 
 For example:
 
-\qml
+\code
 // Calculator.qml
 import QtQuick 2.0
 import "factorial.js" as FactorialCalculator // this JavaScript resource is only ever loaded once by the engine, even if multiple instances of Calculator.qml are created
@@ -149,7 +149,7 @@ Text {
     property int input: 17
     text: "The factorial of " + input + " is: " + FactorialCalculator.factorial(input)
 }
-\endqml
+\endcode
 
 As they are shared, .pragma library files cannot access QML component instance
 objects or properties directly, although QML values can be passed as function
