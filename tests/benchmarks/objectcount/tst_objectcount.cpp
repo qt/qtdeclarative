@@ -69,6 +69,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void universal();
+    void universal_data();
+
 private:
     QQmlEngine engine;
 };
@@ -214,6 +217,18 @@ void tst_ObjectCount::controls_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(QQC2_IMPORT_PATH "/controls");
+}
+
+void tst_ObjectCount::universal()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_ObjectCount::universal_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(QQC2_IMPORT_PATH "/controls/universal");
 }
 
 QTEST_MAIN(tst_ObjectCount)

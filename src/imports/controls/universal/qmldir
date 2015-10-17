@@ -1,0 +1,4 @@
+module Qt.labs.controls.universal
+plugin qtlabsuniversalstyleplugin
+classname QtLabsUniversalStylePlugin
+depends Qt.labs.controls 1.0

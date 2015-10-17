@@ -47,6 +47,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void universal();
+    void universal_data();
+
     void calendar();
     void calendar_data();
 
@@ -91,6 +94,20 @@ void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(QQC2_IMPORT_PATH "/controls");
+}
+
+void tst_CreationTime::universal()
+{
+    QFETCH(QUrl, url);
+    QQmlComponent component(&engine);
+    component.loadUrl(url);
+    doBenchmark(&component);
+}
+
+void tst_CreationTime::universal_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(QQC2_IMPORT_PATH "/controls/universal");
 }
 
 void tst_CreationTime::calendar()

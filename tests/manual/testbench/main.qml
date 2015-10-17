@@ -43,7 +43,7 @@ import QtQuick.Window 2.2
 import QtQuick.Layouts 1.0
 import Qt.labs.controls 1.0
 //import Qt.labs.controls.material 1.0
-//import Qt.labs.controls.universal 1.0
+import Qt.labs.controls.universal 1.0
 
 ApplicationWindow {
     id: window
@@ -58,7 +58,7 @@ ApplicationWindow {
     Theme.baseColor: themeSwitch.checked ? "#444" : "#eee"
 
 //    Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
-//    Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
+    Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
 
     property int controlSpacing: 10
 
