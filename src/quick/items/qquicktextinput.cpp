@@ -3533,7 +3533,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
         int remaining = m_maxLength - m_text.length();
         if (remaining != 0) {
             m_text.insert(m_cursor, s.left(remaining));
-            for (int i = 0; i < (int) s.left(remaining).length(); ++i)
+            for (int i = 0; i < (int) s.leftRef(remaining).length(); ++i)
                addCommand(Command(Insert, m_cursor++, s.at(i), -1, -1));
             m_textDirty = true;
         }
@@ -3886,14 +3886,14 @@ QString QQuickTextInputPrivate::maskString(uint pos, const QString &str, bool cl
                     int n = findInMask(i, true, true, str[(int)strIndex]);
                     if (n != -1) {
                         if (str.length() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[(int)strIndex]))) {
-                            s += fill.mid(i, n-i+1);
+                            s += fill.midRef(i, n-i+1);
                             i = n + 1; // update i to find + 1
                         }
                     } else {
                         // search for valid m_blank if not
                         n = findInMask(i, true, false, str[(int)strIndex]);
                         if (n != -1) {
-                            s += fill.mid(i, n-i);
+                            s += fill.midRef(i, n-i);
                             switch (m_maskData[n].caseMode) {
                             case MaskInputData::Upper:
                                 s += str[(int)strIndex].toUpper();

@@ -137,8 +137,8 @@ QPointF QQmlStringConverters::pointFFromString(const QString &s, bool *ok)
 
     bool xGood, yGood;
     int index = s.indexOf(QLatin1Char(','));
-    qreal xCoord = s.left(index).toDouble(&xGood);
-    qreal yCoord = s.mid(index+1).toDouble(&yGood);
+    qreal xCoord = s.leftRef(index).toDouble(&xGood);
+    qreal yCoord = s.midRef(index+1).toDouble(&yGood);
     if (!xGood || !yGood) {
         if (ok)
             *ok = false;
@@ -161,8 +161,8 @@ QSizeF QQmlStringConverters::sizeFFromString(const QString &s, bool *ok)
 
     bool wGood, hGood;
     int index = s.indexOf(QLatin1Char('x'));
-    qreal width = s.left(index).toDouble(&wGood);
-    qreal height = s.mid(index+1).toDouble(&hGood);
+    qreal width = s.leftRef(index).toDouble(&wGood);
+    qreal height = s.midRef(index+1).toDouble(&hGood);
     if (!wGood || !hGood) {
         if (ok)
             *ok = false;
@@ -185,12 +185,12 @@ QRectF QQmlStringConverters::rectFFromString(const QString &s, bool *ok)
 
     bool xGood, yGood, wGood, hGood;
     int index = s.indexOf(QLatin1Char(','));
-    qreal x = s.left(index).toDouble(&xGood);
+    qreal x = s.leftRef(index).toDouble(&xGood);
     int index2 = s.indexOf(QLatin1Char(','), index+1);
-    qreal y = s.mid(index+1, index2-index-1).toDouble(&yGood);
+    qreal y = s.midRef(index+1, index2-index-1).toDouble(&yGood);
     index = s.indexOf(QLatin1Char('x'), index2+1);
-    qreal width = s.mid(index2+1, index-index2-1).toDouble(&wGood);
-    qreal height = s.mid(index+1).toDouble(&hGood);
+    qreal width = s.midRef(index2+1, index-index2-1).toDouble(&wGood);
+    qreal height = s.midRef(index+1).toDouble(&hGood);
     if (!xGood || !yGood || !wGood || !hGood) {
         if (ok)
             *ok = false;

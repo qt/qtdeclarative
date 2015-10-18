@@ -342,7 +342,7 @@ void QQmlDebugServerImpl::parseArguments()
     for (; argsIt != argsItEnd; ++argsIt) {
         const QString strArgument = *argsIt;
         if (strArgument.startsWith(QLatin1String("port:"))) {
-            portFrom = strArgument.mid(5).toInt(&ok);
+            portFrom = strArgument.midRef(5).toInt(&ok);
             portTo = portFrom;
             QStringList::const_iterator argsNext = argsIt + 1;
             if (argsNext == argsItEnd)

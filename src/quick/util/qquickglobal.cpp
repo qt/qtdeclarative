@@ -231,10 +231,10 @@ public:
             int index3 = s.indexOf(QLatin1Char(','), index2+1);
 
             bool sGood, xGood, yGood, zGood;
-            qreal sCoord = s.left(index).toDouble(&sGood);
-            qreal xCoord = s.mid(index+1, index2-index-1).toDouble(&xGood);
-            qreal yCoord = s.mid(index2+1, index3-index2-1).toDouble(&yGood);
-            qreal zCoord = s.mid(index3+1).toDouble(&zGood);
+            qreal sCoord = s.leftRef(index).toDouble(&sGood);
+            qreal xCoord = s.midRef(index+1, index2-index-1).toDouble(&xGood);
+            qreal yCoord = s.midRef(index2+1, index3-index2-1).toDouble(&yGood);
+            qreal zCoord = s.midRef(index3+1).toDouble(&zGood);
 
             if (sGood && xGood && yGood && zGood) {
                 if (ok) *ok = true;
@@ -254,7 +254,7 @@ public:
             QString mutableStr = s;
             for (int i = 0; vOK && i < 16; ++i) {
                 int cidx = mutableStr.indexOf(QLatin1Char(','));
-                matValues[i] = mutableStr.left(cidx).toDouble(&vOK);
+                matValues[i] = mutableStr.leftRef(cidx).toDouble(&vOK);
                 mutableStr = mutableStr.mid(cidx + 1);
             }
 

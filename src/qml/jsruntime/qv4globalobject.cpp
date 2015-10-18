@@ -302,7 +302,7 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
                         ++r;
                     }
                     if (*r)
-                        output.append(input.mid(start, i - start + 1));
+                        output.append(input.midRef(start, i - start + 1));
                     else
                         output.append(QChar(b));
                 } else {

@@ -590,7 +590,7 @@ int runQmlmin(int argc, char *argv[])
             }
         } else if (arg.startsWith(QLatin1String("-w"))) {
             bool ok;
-            width = arg.mid(2).toInt(&ok);
+            width = arg.midRef(2).toInt(&ok);
 
             if (!ok) {
                 std::cerr << "qmlmin: argument to '-w' is invalid" << std::endl;

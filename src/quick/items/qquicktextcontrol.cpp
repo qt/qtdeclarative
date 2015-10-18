@@ -1419,7 +1419,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, QVar
             tmpCursor.movePosition(QTextCursor::NextBlock);
             --numBlocks;
         }
-        result += block.text().mid(0,localPos);
+        result += block.text().midRef(0,localPos);
         return QVariant(result);
     }
     default:
