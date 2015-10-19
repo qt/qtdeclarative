@@ -2721,7 +2721,10 @@ void tst_QQuickItem::parentLoop()
 {
     QQuickView *window = new QQuickView(0);
 
-    QTest::ignoreMessage(QtWarningMsg, "QQuickItem::setParentItem: Parent is already part of this items subtree.");
+#ifndef QT_NO_REGULAREXPRESSION
+    QRegularExpression msgRegexp = QRegularExpression("QQuickItem::setParentItem: Parent QQuickItem\\(.*\\) is already part of the subtree of QQuickItem\\(.*\\)");
+    QTest::ignoreMessage(QtWarningMsg, msgRegexp);
+#endif
     window->setSource(testFileUrl("parentLoop.qml"));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
