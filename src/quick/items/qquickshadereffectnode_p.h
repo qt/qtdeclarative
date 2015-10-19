@@ -62,7 +62,6 @@ struct QQuickShaderEffectMaterialKey {
 
 uint qHash(const QQuickShaderEffectMaterialKey &key);
 
-
 class QQuickCustomMaterialShader;
 class QQuickShaderEffectNode;
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMaterial : public QSGMaterial
@@ -106,13 +105,12 @@ public:
 protected:
     friend class QQuickCustomMaterialShader;
 
-    // The type pointer needs to be unique. It is not safe to let the type object be part of the
-    // QQuickShaderEffectMaterial, since it can be deleted and a new one constructed on top of the old
-    // one. The new QQuickShaderEffectMaterial would then get the same type pointer as the old one, and
-    // CustomMaterialShaders based on the old one would incorrectly be used together with the new
-    // one. To guarantee that the type pointer is unique, the type object must live as long as
-    // there are any CustomMaterialShaders of that type.
-    QSharedPointer<QSGMaterialType> m_type;
+    // Each material needs a unique type to ensure that the renderer has a one
+    // and exactly one GL program for every unique set of shader sources.
+    // setProgramSource() stores the sources in a cache along with the right
+    // type. The type is cleaned up in cleanupMaterialCache() which is called
+    // when the GL context is shut down.
+    QSGMaterialType *m_type;
     QQuickShaderEffectMaterialKey m_source;
 
     QQuickShaderEffectNode *m_node;
