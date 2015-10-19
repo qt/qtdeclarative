@@ -415,11 +415,11 @@ static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *windo
         window->setTitle(newTitle);
 }
 
-static QUrl parseUrlArgument(const char *arg)
+static QUrl parseUrlArgument(const QString &arg)
 {
-    const QUrl url = QUrl::fromUserInput(QFile::decodeName(arg), QDir::currentPath(), QUrl::AssumeLocalFile);
+    const QUrl url = QUrl::fromUserInput(arg, QDir::currentPath(), QUrl::AssumeLocalFile);
     if (!url.isValid()) {
-        fprintf(stderr, "Invalid URL: \"%s\"\n", arg);
+        fprintf(stderr, "Invalid URL: \"%s\"\n", qPrintable(arg));
         return QUrl();
     }
     if (url.isLocalFile()) {
@@ -439,11 +439,39 @@ int main(int argc, char ** argv)
 
     QStringList imports;
     QStringList pluginPaths;
+
+    // Parse arguments for application attributes to be applied before Q[Gui]Application creation.
     for (int i = 1; i < argc; ++i) {
-        if (*argv[i] != '-') {
-            options.url = parseUrlArgument(argv[i]);
+        const char *arg = argv[i];
+        if (!qstrcmp(arg, "--disable-context-sharing"))
+            options.applicationAttributes.removeAll(Qt::AA_ShareOpenGLContexts);
+        else if (!qstrcmp(arg, "--gles"))
+            options.applicationAttributes.append(Qt::AA_UseOpenGLES);
+        else if (!qstrcmp(arg, "--software"))
+            options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
+        else if (!qstrcmp(arg, "--desktop"))
+            options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
+        else if (!qstrcmp(arg, "--no-scaling"))
+            options.applicationAttributes.append(Qt::AA_NoHighDpiScaling);
+    }
+
+    foreach (Qt::ApplicationAttribute a, options.applicationAttributes)
+        QCoreApplication::setAttribute(a);
+#ifdef QT_WIDGETS_LIB
+    QApplication app(argc, argv);
+#else
+    QGuiApplication app(argc, argv);
+#endif
+    app.setApplicationName("QtQmlViewer");
+    app.setOrganizationName("QtProject");
+    app.setOrganizationDomain("qt-project.org");
+
+    const QStringList arguments = QCoreApplication::arguments();
+    for (int i = 1, size = arguments.size(); i < size; ++i) {
+        if (!arguments.at(i).startsWith(QLatin1Char('-'))) {
+            options.url = parseUrlArgument(arguments.at(i));
         } else {
-            const QString lowerArgument = QString::fromLatin1(argv[i]).toLower();
+            const QString lowerArgument = arguments.at(i).toLower();
             if (lowerArgument == QLatin1String("--maximized"))
                 options.maximized = true;
             else if (lowerArgument == QLatin1String("--fullscreen"))
@@ -464,22 +492,12 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
-            else if (lowerArgument == QLatin1String("--disable-context-sharing"))
-                options.applicationAttributes.removeAll(Qt::AA_ShareOpenGLContexts);
-            else if (lowerArgument == QLatin1String("--gles"))
-                options.applicationAttributes.append(Qt::AA_UseOpenGLES);
-            else if (lowerArgument == QLatin1String("--software"))
-                options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
-            else if (lowerArgument == QLatin1String("--desktop"))
-                options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
-            else if (lowerArgument == QLatin1String("--no-scaling"))
-                options.applicationAttributes.append(Qt::AA_NoHighDpiScaling);
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
-            else if (lowerArgument == QLatin1String("-i") && i + 1 < argc)
-                imports.append(QString::fromLatin1(argv[++i]));
-            else if (lowerArgument == QLatin1String("-p") && i + 1 < argc)
-                pluginPaths.append(QString::fromLatin1(argv[++i]));
+            else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
+                imports.append(arguments.at(++i));
+            else if (lowerArgument == QLatin1String("-p") && i + 1 < size)
+                pluginPaths.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("--help")
                      || lowerArgument == QLatin1String("-help")
                      || lowerArgument == QLatin1String("--h")
@@ -487,17 +505,6 @@ int main(int argc, char ** argv)
                 usage();
         }
     }
-
-    foreach (Qt::ApplicationAttribute a, options.applicationAttributes)
-        QCoreApplication::setAttribute(a);
-#ifdef QT_WIDGETS_LIB
-    QApplication app(argc, argv);
-#else
-    QGuiApplication app(argc, argv);
-#endif
-    app.setApplicationName("QtQmlViewer");
-    app.setOrganizationName("QtProject");
-    app.setOrganizationDomain("qt-project.org");
 
 #ifndef QT_NO_TRANSLATION
     QTranslator translator;
