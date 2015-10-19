@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     \row \li Set \l value to \l to \li \c Qt.Key_End
     \endtable
 
-    \sa {Customizing Dial}, Input
+    \sa {Customizing Dial}, {Input Controls}
 */
 
 static const qreal startAngle = -140;

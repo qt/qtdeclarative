@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
     \li \l active
     \endlist
 
-    \sa ScrollBar, {Customizing ScrollIndicator}, Indicators
+    \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */
 
 class QQuickScrollIndicatorPrivate : public QQuickControlPrivate

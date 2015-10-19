@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing CheckBox}, Buttons
+    \sa {Customizing CheckBox}, {Button Controls}
 */
 
 class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate

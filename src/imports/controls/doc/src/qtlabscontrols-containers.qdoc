@@ -27,7 +27,7 @@
 
 /*!
     \page qtlabscontrols-containers.html
-    \title Containers
+    \title Container Controls
 
     Qt Labs Controls offers a selection of container-like controls.
 
@@ -37,51 +37,48 @@
     The following sections offer guidelines for choosing the appropriate type
     of container, depending on the use case.
 
-    \section1 ApplicationWindow
+    \section1 ApplicationWindow Control
 
     \image qtlabscontrols-applicationwindow-wireframe.png
 
-    \l {Qt.labs.controls::ApplicationWindow}{ApplicationWindow} contains
-    optional header and footer items.
+    \l ApplicationWindow contains optional header and footer items.
 
-    \section1 Frame
+    \section1 Frame Control
 
     \image qtlabscontrols-frame.png
 
-    \l {Qt.labs.controls::Frame}{Frame} is used to layout a logical group of
-    controls together, within a visual frame.
+    \l Frame is used to layout a logical group of controls together, within
+    a visual frame.
 
-    \section1 GroupBox
+    \section1 GroupBox Control
 
     \image qtlabscontrols-groupbox.png
 
-    \l {Qt.labs.controls::GroupBox}{GroupBox} is used to layout a logical
-    group of controls together, within a titled visual frame.
+    \l GroupBox is used to layout a logical group of controls together,
+    within a titled visual frame.
 
-    \section1 StackView
+    \section1 StackView Control
 
     \image qtlabscontrols-stackview-wireframe.png
 
-    \l {Qt.labs.controls::StackView}{StackView} organizes content pages into
-    a stack.
+    \l StackView organizes content pages into a stack.
 
-    \section1 SwipeView
+    \section1 SwipeView Control
 
     \image qtlabscontrols-swipeview-wireframe.png
 
-    \l {Qt.labs.controls::SwipeView}{SwipeView} organizes content pages into
-    a swipable strip.
+    \l SwipeView organizes content pages into a swipable strip.
 
-    \section1 TabBar
+    \section1 TabBar Control
 
     \image qtlabscontrols-tabbar-wireframe.png
 
-    \l {Qt.labs.controls::TabBar}{TabBar} organizes content pages into tabs.
+    \l TabBar organizes content pages into tabs.
 
-    \section1 ToolBar
+    \section1 ToolBar Control
 
     \image qtlabscontrols-toolbar.png
 
-    \l {Qt.labs.controls::ToolBar}{ToolBar} is a container of application-wide
-    and context-sensitive actions and controls.
+    \l ToolBar is a container of application-wide and context-sensitive
+    actions and controls.
 */

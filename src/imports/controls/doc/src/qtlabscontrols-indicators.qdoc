@@ -27,7 +27,7 @@
 
 /*!
     \page qtlabscontrols-indicators.html
-    \title Indicators
+    \title Indicator Controls
 
     Qt Labs Controls offers a selection of indicator-like controls.
 
@@ -37,32 +37,31 @@
     sections offer guidelines for choosing the appropriate type of indicator,
     depending on the use case.
 
-    \section1 BusyIndicator
+    \section1 BusyIndicator Control
 
     \image qtlabscontrols-busyindicator.png
 
-    \l {Qt.labs.controls::BusyIndicator}{BusyIndicator} should be used to
-    indicate activity.
+    \l BusyIndicator should be used to indicate activity.
 
-    \section1 PageIndicator
+    \section1 PageIndicator Control
 
     \image qtlabscontrols-pageindicator.png
 
-    \l {Qt.labs.controls::PageIndicator}{PageIndicator} is used to indicate
-    the currently active page in a container of multiple pages.
+    \l PageIndicator is used to indicate the currently active page in
+    a container of multiple pages.
 
-    \section1 ScrollBar
+    \section1 ScrollBar Control
 
     \image qtlabscontrols-scrollbar.png
 
-    \l {Qt.labs.controls::ScrollBar}{ScrollBar} is an interactive bar that
-    indicates the current scroll position, and can be used to scroll to a
-    specific position in a \l Flickable.
+    \l ScrollBar is an interactive bar that indicates the current scroll
+    position, and can be used to scroll to a specific position in a
+    \l Flickable.
 
-    \section1 ScrollIndicator
+    \section1 ScrollIndicator Control
 
     \image qtlabscontrols-scrollindicator.png
 
-    \l {Qt.labs.controls::ScrollIndicator}{ScrollIndicator} is a non-interactive
-    indicator that indicates the current scroll position in a \l Flickable.
+    \l ScrollIndicator is a non-interactive indicator that indicates the
+    current scroll position in a \l Flickable.
 */

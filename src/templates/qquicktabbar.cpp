@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-tabbar.qml 1
 
-    \sa TabButton, {Customizing TabBar}, Navigation, Containers
+    \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls}
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate

@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-frame.qml 1
 
-    \sa {Customizing Frame}, Containers
+    \sa {Customizing Frame}, {Container Controls}
 */
 
 QQuickFramePrivate::QQuickFramePrivate() : contentWidth(0), contentHeight(0), frame(Q_NULLPTR)

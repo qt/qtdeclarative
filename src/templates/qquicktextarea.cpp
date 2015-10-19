@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa TextField, {Customizing TextArea}, Input
+    \sa TextField, {Customizing TextArea}, {Input Controls}
 */
 
 void QQuickTextAreaPrivate::resizeBackground()

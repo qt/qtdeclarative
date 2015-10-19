@@ -27,7 +27,7 @@
 
 /*!
     \page qtlabscontrols-buttons.html
-    \title Buttons
+    \title Button Controls
 
     Qt Labs Controls offers a selection of button-like controls.
 
@@ -37,43 +37,43 @@
     sections offer guidelines for choosing the appropriate type of button,
     depending on the use case.
 
-    \section1 Button
+    \section1 Button Control
 
     \image qtlabscontrols-button.png
 
-    \l {Qt.labs.controls::Button}{Button} presents a push-button control
-    that can be pushed or clicked by the user. Buttons are normally used
-    to perform an action, or to answer a question. Typical buttons are
-    \e OK, \e Apply, \e Cancel, \e Close, \e Yes, \e No, and \e Help.
+    \l Button presents a push-button control that can be pushed or clicked
+    by the user. Buttons are normally used to perform an action, or to answer
+    a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
+    \e Yes, \e No, and \e Help.
 
-    \section1 CheckBox
+    \section1 CheckBox Control
 
     \image qtlabscontrols-checkbox.png
 
-    \l {Qt.labs.controls::CheckBox}{CheckBox} presents an option button
-    that can be toggled on (checked) or off (unchecked). Check boxes are
-    typically used to select one or more options from a set of options.
+    \l CheckBox presents an option button that can be toggled on (checked)
+    or off (unchecked). Check boxes are typically used to select one or more
+    options from a set of options.
 
-    \section1 RadioButton
+    \section1 RadioButton Control
 
     \image qtlabscontrols-radiobutton.png
 
-    \l {Qt.labs.controls::RadioButton}{RadioButton} presents an option button
-    that can be toggled on (checked) or off (unchecked). Radio buttons are
-    typically used to select one option from a set of options.
+    \l RadioButton presents an option button that can be toggled on (checked)
+    or off (unchecked). Radio buttons are typically used to select one option
+    from a set of options.
 
-    \section1 Switch
+    \section1 Switch Control
 
     \image qtlabscontrols-switch.png
 
-    \l {Qt.labs.controls::Switch}{Switch} is an option button that can be
-    dragged or toggled on (checked) or off (unchecked). Switches are typically
-    used to select between two states.
+    \l Switch is an option button that can be dragged or toggled on (checked)
+    or off (unchecked). Switches are typically used to select between two
+    states.
 
-    \section1 ToolButton
+    \section1 ToolButton Control
 
     \image qtlabscontrols-toolbutton.png
 
-    \l {Qt.labs.controls::ToolButton}{ToolButton} is functionally similar to
-    \l Button, but provides a look that is more suitable within a \l ToolBar.
+    \l ToolButton is functionally similar to \l Button, but provides a look
+    that is more suitable within a \l ToolBar.
 */

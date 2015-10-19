@@ -27,7 +27,7 @@
 
 /*!
     \page qtlabscontrols-input.html
-    \title Input
+    \title Input Controls
 
     Qt Labs Controls offers a variety of input controls for both numeric
     and textual input.
@@ -38,43 +38,40 @@
     following sections offer guidelines for choosing the appropriate type
     of input control, depending on the use case.
 
-    \section1 Dial
+    \section1 Dial Control
 
     \image qtlabscontrols-dial.png
 
-    \l {Qt.labs.controls::Dial}{Dial} is a circular dial that is rotated
-    to set a value.
+    \l Dial is a circular dial that is rotated to set a value.
 
-    \section1 TextArea
+    \section1 TextArea Control
 
     \image qtlabscontrols-textarea.png
 
-    \l {Qt.labs.controls::TextArea}{TextArea} is a multi-line text editor.
+    \l TextArea is a multi-line text editor.
 
-    \section1 TextField
+    \section1 TextField Control
 
     \image qtlabscontrols-textfield.png
 
-    \l {Qt.labs.controls::TextField}{TextField} is a single line text editor.
+    \l TextField is a single line text editor.
 
-    \section1 Slider
+    \section1 Slider Control
 
     \image qtlabscontrols-slider.png
 
-    \l {Qt.labs.controls::Slider}{Slider} is used to select a value by
-    sliding a handle along a track.
+    \l Slider is used to select a value by sliding a handle along a track.
 
-    \section1 RangeSlider
+    \section1 RangeSlider Control
 
     \image qtlabscontrols-rangeslider.png
 
-    \l {Qt.labs.controls::RangeSlider}{RangeSlider} is used to select a
-    range specified by two values, by sliding each handle along a track.
+    \l RangeSlider is used to select a range specified by two values,
+    by sliding each handle along a track.
 
-    \section1 Tumbler
+    \section1 Tumbler Control
 
     \image qtlabscontrols-tumbler.png
 
-    \l {Qt.labs.controls::Tumbler}{Tumbler} is a spinnable wheel of items
-    that can be selected.
+    \l Tumbler is a spinnable wheel of items that can be selected.
 */

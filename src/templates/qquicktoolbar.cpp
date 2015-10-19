@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, Containers
+    \sa ApplicationWindow, ToolButton, {Customizing ToolBar}, {Container Controls}
 */
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent) :

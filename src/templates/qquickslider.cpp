@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Slider}, Input
+    \sa {Customizing Slider}, {Input Controls}
 */
 
 class QQuickSliderPrivate : public QQuickControlPrivate

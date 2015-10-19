@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing RangeSlider}, Input
+    \sa {Customizing RangeSlider}, {Input Controls}
 */
 
 class QQuickRangeSliderNodePrivate : public QObjectPrivate

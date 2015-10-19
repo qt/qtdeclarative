@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-groupbox.qml 1
 
-    \sa {Customizing GroupBox}, Containers
+    \sa {Customizing GroupBox}, {Container Controls}
 */
 
 class QQuickGroupBoxPrivate : public QQuickFramePrivate

@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ToolBar, {Customizing ToolButton}, Buttons
+    \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
 
 QQuickToolButton::QQuickToolButton(QQuickItem *parent) :

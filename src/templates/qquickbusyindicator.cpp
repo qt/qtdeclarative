@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa {Customizing BusyIndicator}, Indicators
+    \sa {Customizing BusyIndicator}, {Indicator Controls}
 */
 
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate

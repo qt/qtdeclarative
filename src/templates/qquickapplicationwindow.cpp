@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
     \note By default, an ApplicationWindow is not visible.
 
-    \sa Containers
+    \sa {Container Controls}
 */
 
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener

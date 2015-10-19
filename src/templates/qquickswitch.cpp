@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Switch}, Buttons
+    \sa {Customizing Switch}, {Button Controls}
 */
 
 class QQuickSwitchPrivate : public QQuickAbstractButtonPrivate

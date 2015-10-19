@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-tabbutton.qml 1
 
-    \sa TabBar, {Customizing TabButton}, Navigation
+    \sa TabBar, {Customizing TabButton}, {Navigation Controls}
 */
 
 QQuickTabButton::QQuickTabButton(QQuickItem *parent) :

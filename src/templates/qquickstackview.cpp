@@ -257,7 +257,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa {Customizing StackView}, Navigation, Containers
+    \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent) :

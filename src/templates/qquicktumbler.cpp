@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtlabscontrols-tumbler-wrap.gif
 
-    \sa {Customizing Tumbler}, Input
+    \sa {Customizing Tumbler}, {Input Controls}
 */
 
 class QQuickTumblerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener

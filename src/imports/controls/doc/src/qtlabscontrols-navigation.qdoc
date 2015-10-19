@@ -27,7 +27,7 @@
 
 /*!
     \page qtlabscontrols-navigation.html
-    \title Navigation
+    \title Navigation Controls
 
     Qt Labs Controls offers a selection of navigation models.
 
@@ -36,24 +36,21 @@
     The following sections offer guidelines for choosing the appropriate type
     of navigation model, depending on the use case.
 
-    \section1 StackView
+    \section1 StackView Control
 
     \image qtlabscontrols-stackview-wireframe.png
 
-    \l {Qt.labs.controls::StackView}{StackView} provides a stack-based navigation
-    model.
+    \l StackView provides a stack-based navigation model.
 
-    \section1 SwipeView
+    \section1 SwipeView Control
 
     \image qtlabscontrols-swipeview-wireframe.png
 
-    \l {Qt.labs.controls::SwipeView}{SwipeView} provides a swipe-based navigation
-    model.
+    \l SwipeView provides a swipe-based navigation model.
 
-    \section1 TabBar and TabButton
+    \section1 TabBar and TabButton Controls
 
     \image qtlabscontrols-tabbar-wireframe.png
 
-    \l {Qt.labs.controls::TabBar}{TabBar} and \l {Qt.labs.controls::TabButton}{TabButton}
-    provide a tab-based navigation model.
+    \l TabBar and \l TabButton provide a tab-based navigation model.
 */

@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing Button}, Buttons
+    \sa {Customizing Button}, {Button Controls}
 */
 
 class QQuickButtonPrivate : public QQuickAbstractButtonPrivate

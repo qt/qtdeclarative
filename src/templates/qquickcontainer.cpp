@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
     Container is the base type of container-like user interface controls.
 
-    \sa Containers
+    \sa {Container Controls}
 */
 
 QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1)
