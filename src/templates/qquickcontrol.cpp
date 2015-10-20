@@ -65,8 +65,18 @@ QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR),
-    accessibleAttached(Q_NULLPTR), accessibleRole(0) // QAccessible::NoRole
+    accessibleAttached(Q_NULLPTR), m_accessibleRole(0) // QAccessible::NoRole
 {
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::installActivationObserver(this);
+#endif
+}
+
+QQuickControlPrivate::~QQuickControlPrivate()
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::removeActivationObserver(this);
+#endif
 }
 
 void QQuickControlPrivate::mirrorChange()
@@ -156,6 +166,32 @@ void QQuickControlPrivate::resizeContent()
     }
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickControlPrivate::accessibilityActiveChanged(bool active)
+{
+    Q_Q(QQuickControl);
+    return q->accessibilityActiveChanged(active);
+}
+
+QAccessible::Role QQuickControlPrivate::accessibleRole() const
+{
+    return (QAccessible::Role)m_accessibleRole;
+}
+
+void QQuickControl::accessibilityActiveChanged(bool active)
+{
+    Q_D(QQuickControl);
+    if (d->accessibleAttached || !active)
+        return;
+
+    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
+    if (d->accessibleAttached)
+        d->accessibleAttached->setRole((QAccessible::Role)(d->m_accessibleRole));
+    else
+        qWarning() << "QQuickControl: " << this << " QQuickAccessibleAttached object creation failed!";
+}
+#endif
+
 /*!
     \internal
 
@@ -228,18 +264,14 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
 
 int QQuickControl::accessibleRole() const
 {
-#ifndef QT_NO_ACCESSIBILITY
     Q_D(const QQuickControl);
-    if (d->accessibleAttached)
-        return d->accessibleAttached->role();
-#endif
-    return 0; // QAccessible::NoRole
+    return d->m_accessibleRole;
 }
 
 void QQuickControl::setAccessibleRole(int role)
 {
     Q_D(QQuickControl);
-    d->accessibleRole = role;
+    d->m_accessibleRole = role;
 #ifndef QT_NO_ACCESSIBILITY
     if (d->accessibleAttached)
         d->accessibleAttached->setRole((QAccessible::Role)role);
@@ -676,19 +708,6 @@ void QQuickControl::setContentItem(QQuickItem *item)
         }
         emit contentItemChanged();
     }
-}
-
-void QQuickControl::classBegin()
-{
-    QQuickItem::classBegin();
-#ifndef QT_NO_ACCESSIBILITY
-    Q_D(QQuickControl);
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached)
-        d->accessibleAttached->setRole((QAccessible::Role)(d->accessibleRole));
-    else
-        qWarning() << "QQuickControl: QQuickAccessibleAttached object creation failed!";
-#endif
 }
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)

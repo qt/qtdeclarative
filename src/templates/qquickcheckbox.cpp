@@ -86,7 +86,11 @@ class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickCheckBox)
 
 public:
-    QQuickCheckBoxPrivate() : tristate(false), checkState(Qt::Unchecked) { }
+    QQuickCheckBoxPrivate()
+        : tristate(false), checkState(Qt::Unchecked)
+    {
+        m_accessibleRole = 0x0000002C; // QAccessible::CheckBox
+    }
 
     bool tristate;
     Qt::CheckState checkState;
@@ -96,7 +100,6 @@ QQuickCheckBox::QQuickCheckBox(QQuickItem *parent) :
     QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
 {
     setCheckable(true);
-    setAccessibleRole(0x0000002C); //QAccessible::CheckBox
 }
 
 /*!

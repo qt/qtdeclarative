@@ -50,16 +50,24 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtGui/qaccessible.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
 class Q_LABSTEMPLATES_EXPORT QQuickControlPrivate : public QQuickItemPrivate
+#ifndef QT_NO_ACCESSIBILITY
+    , public QAccessible::ActivationObserver
+#endif
 {
     Q_DECLARE_PUBLIC(QQuickControl)
 
 public:
     QQuickControlPrivate();
+    virtual ~QQuickControlPrivate();
 
     static QQuickControlPrivate *get(QQuickControl *control)
     {
@@ -75,6 +83,11 @@ public:
 
     void resizeBackground();
     void resizeContent();
+
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
 
     void updateFont(const QFont &);
     static void updateFontRecur(QQuickItem *item, const QFont &);
@@ -101,7 +114,7 @@ public:
     QQuickItem *background;
     QQuickItem *contentItem;
     QQuickAccessibleAttached *accessibleAttached;
-    int accessibleRole;
+    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);

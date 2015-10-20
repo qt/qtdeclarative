@@ -53,19 +53,24 @@
 
 #include "qquicktextfield_p.h"
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtGui/qaccessible.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
 class QQuickTextFieldPrivate : public QQuickTextInputPrivate
+#ifndef QT_NO_ACCESSIBILITY
+    , public QAccessible::ActivationObserver
+#endif
 {
     Q_DECLARE_PUBLIC(QQuickTextField)
 
 public:
-    QQuickTextFieldPrivate()
-        : background(Q_NULLPTR)
-        , placeholder(Q_NULLPTR)
-    { }
+    QQuickTextFieldPrivate();
+    ~QQuickTextFieldPrivate();
 
     static QQuickTextFieldPrivate *get(QQuickTextField *item) {
         return static_cast<QQuickTextFieldPrivate *>(QObjectPrivate::get(item)); }
@@ -83,10 +88,16 @@ public:
     void _q_placeholderTextChanged(const QString &text);
     void _q_echoModeChanged(QQuickTextField::EchoMode echoMode);
 
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
     QQuickItem *background;
     QQuickText *placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
+    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);

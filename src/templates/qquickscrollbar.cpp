@@ -81,7 +81,10 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
 public:
     QQuickScrollBarPrivate() : size(0), position(0), offset(0),
         active(false), pressed(false), moving(false),
-        orientation(Qt::Vertical), handle(Q_NULLPTR) { }
+        orientation(Qt::Vertical), handle(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000003; // QAccessible::ScrollBar
+    }
 
     static QQuickScrollBarPrivate *get(QQuickScrollBar *bar)
     {
@@ -103,7 +106,6 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent) :
 {
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
-    setAccessibleRole(0x00000003); //QAccessible::ScrollBar
 }
 
 QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
@@ -286,6 +288,17 @@ qreal QQuickScrollBar::positionAt(const QPoint &point) const
     else
         return point.y() / height();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickScrollBar::accessibilityActiveChanged(bool active)
+{
+    QQuickControl::accessibilityActiveChanged(active);
+
+    Q_D(QQuickScrollBar);
+    if (active)
+        setAccessibleProperty("pressed", d->pressed);
+}
+#endif
 
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {

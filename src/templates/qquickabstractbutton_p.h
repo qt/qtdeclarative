@@ -120,6 +120,10 @@ protected:
     virtual void checkStateSet();
     virtual void nextCheckState();
 
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickAbstractButton)
     Q_DECLARE_PRIVATE(QQuickAbstractButton)

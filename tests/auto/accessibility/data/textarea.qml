@@ -9,6 +9,5 @@ Window {
         id: textarea
         objectName: "textarea"
         text: "TextArea"
-        Accessible.name: text
     }
 }

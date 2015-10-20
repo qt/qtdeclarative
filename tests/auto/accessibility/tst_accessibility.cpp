@@ -86,8 +86,8 @@ void tst_accessibility::a11y_data()
     QTest::newRow("Switch") << "switch" << 0x0000002B << "Switch"; //QAccessible::Button
     QTest::newRow("TabBar") << "tabbar" << 0x0000003C << ""; //QAccessible::PageTabList
     QTest::newRow("TabButton") << "tabbutton" << 0x00000025 << "TabButton"; //QAccessible::PageTab
-    QTest::newRow("TextArea") << "textarea" << 0x0000002A << "TextArea"; //QAccessible::Accessible.EditableText
-    QTest::newRow("TextField") << "textfield" << 0x0000002A << "TextField"; //QAccessible::Accessible.EditableText
+    QTest::newRow("TextArea") << "textarea" << 0x0000002A << ""; //QAccessible::Accessible.EditableText
+    QTest::newRow("TextField") << "textfield" << 0x0000002A << ""; //QAccessible::Accessible.EditableText
     QTest::newRow("ToolBar") << "toolbar" << 0x00000016 << ""; //QAccessible::ToolBar
     QTest::newRow("ToolButton") << "toolbutton" << 0x0000002B << "ToolButton"; //QAccessible::Button
 
@@ -110,9 +110,7 @@ void tst_accessibility::a11y()
     QQmlComponent component(&engine);
     QString fn = name;
 #ifdef QT_NO_ACCESSIBILITY
-    if (name == QLatin1Literal("textarea")
-            || name == QLatin1Literal("textfield")
-            || name == QLatin1Literal("dayofweekrow")
+    if (name == QLatin1Literal("dayofweekrow")
             || name == QLatin1Literal("monthgrid")
             || name == QLatin1Literal("weeknumbercolumn"))
         fn += QLatin1Literal("-2");
@@ -133,6 +131,13 @@ void tst_accessibility::a11y()
 
 #ifndef QT_NO_ACCESSIBILITY
     QQuickAccessibleAttached *acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+    if (name != QLatin1Literal("dayofweekrow")
+            && name != QLatin1Literal("monthgrid")
+            && name != QLatin1Literal("weeknumbercolumn")) {
+        QVERIFY(!acc);
+        QAccessible::setActive(true);
+        acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+    }
     QVERIFY(acc);
     QCOMPARE(acc->role(), (QAccessible::Role)role);
     QCOMPARE(acc->name(), text);

@@ -136,6 +136,10 @@ protected:
     void mirrorChange() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickSlider)
     Q_DECLARE_PRIVATE(QQuickSlider)

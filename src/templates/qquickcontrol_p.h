@@ -149,8 +149,11 @@ protected:
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
 
-    void classBegin() Q_DECL_OVERRIDE;
+#ifndef QT_NO_ACCESSIBILITY
+    virtual void accessibilityActiveChanged(bool active);
+#endif
 
+    // helper functions which avoid to check QT_NO_ACCESSIBILITY
     int accessibleRole() const; // int for QAccessible::Role
     void setAccessibleRole(int role); // int for QAccessible::Role
 

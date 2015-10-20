@@ -78,7 +78,10 @@ class QQuickSliderPrivate : public QQuickControlPrivate
 public:
     QQuickSliderPrivate() : from(0), to(1), value(0), position(0), stepSize(0), pressed(false),
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
-        handle(Q_NULLPTR), track(Q_NULLPTR) { }
+        handle(Q_NULLPTR), track(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000033; // QAccessible::Slider
+    }
 
     qreal valueAt(qreal position) const;
     qreal snapPosition(qreal position) const;
@@ -157,7 +160,6 @@ QQuickSlider::QQuickSlider(QQuickItem *parent) :
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
-    setAccessibleRole(0x00000033); //QAccessible::Slider
 }
 
 /*!
@@ -554,5 +556,16 @@ void QQuickSlider::componentComplete()
     setValue(d->value);
     d->updatePosition();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickSlider::accessibilityActiveChanged(bool active)
+{
+    QQuickControl::accessibilityActiveChanged(active);
+
+    Q_D(QQuickSlider);
+    if (active)
+        setAccessibleProperty("pressed", d->pressed);
+}
+#endif
 
 QT_END_NAMESPACE

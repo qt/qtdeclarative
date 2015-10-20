@@ -66,7 +66,11 @@ QT_BEGIN_NAMESPACE
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickBusyIndicatorPrivate() : running(true), indicator(Q_NULLPTR) { }
+    QQuickBusyIndicatorPrivate()
+        : running(true), indicator(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000027; //QAccessible::Indicator
+    }
 
     bool running;
     QQuickItem *indicator;
@@ -75,7 +79,6 @@ public:
 QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickBusyIndicatorPrivate), parent)
 {
-    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 /*!

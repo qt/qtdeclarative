@@ -105,7 +105,6 @@ QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
     setCheckable(true);
     setFiltersChildMouseEvents(true);
     QObjectPrivate::connect(this, &QQuickAbstractButton::checkedChanged, d_func(), &QQuickSwitchPrivate::updatePosition);
-    setAccessibleRole(0x0000002B); //QAccessible::Button
 }
 
 /*!

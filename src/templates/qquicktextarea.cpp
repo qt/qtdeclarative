@@ -70,6 +70,23 @@ QT_BEGIN_NAMESPACE
     \sa TextField, {Customizing TextArea}, {Input Controls}
 */
 
+QQuickTextAreaPrivate::QQuickTextAreaPrivate()
+    : background(Q_NULLPTR), placeholder(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
+    , m_accessibleRole(0x0000002A) // Accessible.EditableText
+
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::installActivationObserver(this);
+#endif
+}
+
+QQuickTextAreaPrivate::~QQuickTextAreaPrivate()
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::removeActivationObserver(this);
+#endif
+}
+
 void QQuickTextAreaPrivate::resizeBackground()
 {
     Q_Q(QQuickTextArea);
@@ -149,9 +166,8 @@ void QQuickTextAreaPrivate::resolveFont()
 void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
-    Q_Q(QQuickTextArea);
     if (accessibleAttached)
-        QQuickAccessibleAttached::setProperty(q, "readOnly", isReadOnly);
+        accessibleAttached->set_readOnly(isReadOnly);
 #else
     Q_UNUSED(isReadOnly)
 #endif
@@ -166,6 +182,30 @@ void QQuickTextAreaPrivate::_q_placeholderTextChanged(const QString &text)
     Q_UNUSED(text)
 #endif
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
+{
+    if (accessibleAttached || !active)
+        return;
+
+    Q_Q(QQuickTextArea);
+    accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    if (accessibleAttached) {
+        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->set_readOnly(q->isReadOnly());
+        if (placeholder)
+            accessibleAttached->setDescription(placeholder->text());
+    } else {
+        qWarning() << "QQuickTextArea: " << q << " QQuickAccessibleAttached object creation failed!";
+    }
+}
+
+QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
+{
+    return QAccessible::Role(m_accessibleRole);
+}
+#endif
 
 QFont QQuickTextArea::font() const
 {
@@ -333,21 +373,6 @@ void QQuickTextArea::timerEvent(QTimerEvent *event)
     } else {
         QQuickTextEdit::timerEvent(event);
     }
-}
-
-void QQuickTextArea::classBegin()
-{
-    QQuickTextEdit::classBegin();
-#ifndef QT_NO_ACCESSIBILITY
-    Q_D(QQuickTextArea);
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached) {
-        d->accessibleAttached->setRole((QAccessible::Role)(0x0000002A)); // Accessible.EditableText
-        QQuickAccessibleAttached::setProperty(this, "multiLine", true);
-    } else {
-        qWarning() << "QQuickTextArea: QQuickAccessibleAttached object creation failed!";
-    }
-#endif
 }
 
 QT_END_NAMESPACE

@@ -92,6 +92,7 @@ public:
         snapMode(QQuickDial::NoSnap),
         handle(Q_NULLPTR)
     {
+        m_accessibleRole = 0x00000031; // QAccessible::Dial
     }
 
     qreal valueAt(qreal position) const;
@@ -163,7 +164,6 @@ QQuickDial::QQuickDial(QQuickItem *parent) :
     QQuickControl(*(new QQuickDialPrivate), parent)
 {
     setActiveFocusOnTab(true);
-    setAccessibleRole(0x00000031); //QAccessible::Dial
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
@@ -523,5 +523,16 @@ void QQuickDial::componentComplete()
     setValue(d->value);
     d->updatePosition();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickDial::accessibilityActiveChanged(bool active)
+{
+    QQuickControl::accessibilityActiveChanged(active);
+
+    Q_D(QQuickDial);
+    if (active)
+        setAccessibleProperty("pressed", d->pressed);
+}
+#endif
 
 QT_END_NAMESPACE

@@ -67,7 +67,10 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
-    QQuickTabBarPrivate() : group(Q_NULLPTR) { }
+    QQuickTabBarPrivate() : group(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x0000003C; //QAccessible::PageTabList
+    }
 
     void updateLayout();
     void updateCurrent();
@@ -134,7 +137,6 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
 {
     Q_D(QQuickTabBar);
     setFlag(ItemIsFocusScope);
-    setAccessibleRole(0x0000003C); //QAccessible::PageTabList
 
     d->group = new QQuickExclusiveGroup(this);
     connect(d->group, &QQuickExclusiveGroup::currentChanged, this, &QQuickTabBar::currentItemChanged);

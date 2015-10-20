@@ -105,6 +105,10 @@ protected:
 
     virtual qreal positionAt(const QPoint &point) const;
 
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickScrollBar)
     Q_DECLARE_PRIVATE(QQuickScrollBar)

@@ -66,7 +66,10 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickIte
 
 public:
     QQuickPageIndicatorPrivate() : count(0), currentIndex(0),
-        interactive(false), delegate(Q_NULLPTR), pressedItem(Q_NULLPTR) { }
+        interactive(false), delegate(Q_NULLPTR), pressedItem(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000027; //QAccessible::Indicator
+    }
 
     QQuickItem *itemAt(const QPoint &pos) const;
     void updatePressed(bool pressed, const QPoint &pos = QPoint());
@@ -121,7 +124,6 @@ void QQuickPageIndicatorPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
 QQuickPageIndicator::QQuickPageIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickPageIndicatorPrivate), parent)
 {
-    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 /*!

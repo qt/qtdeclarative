@@ -78,8 +78,6 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
-    void classBegin() Q_DECL_OVERRIDE;
-
 private:
     Q_DISABLE_COPY(QQuickLabel)
     Q_DECLARE_PRIVATE(QQuickLabel)

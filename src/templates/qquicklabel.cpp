@@ -71,13 +71,29 @@ QT_BEGIN_NAMESPACE
 QQuickLabel::QQuickLabel(QQuickItem *parent) :
     QQuickText(*(new QQuickLabelPrivate), parent)
 {
-    Q_D(const QQuickLabel);
+    Q_D(QQuickLabel);
     QObjectPrivate::connect(this, &QQuickText::textChanged,
                             d, &QQuickLabelPrivate::_q_textChanged);
 }
 
 QQuickLabel::~QQuickLabel()
 {
+}
+
+QQuickLabelPrivate::QQuickLabelPrivate()
+    : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
+    , m_accessibleRole(0x00000029) // Accessible.StaticText
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::installActivationObserver(this);
+#endif
+}
+
+QQuickLabelPrivate::~QQuickLabelPrivate()
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::removeActivationObserver(this);
+#endif
 }
 
 /*!
@@ -111,6 +127,28 @@ void QQuickLabelPrivate::_q_textChanged(const QString &text)
 #endif
 }
 
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
+{
+    if (accessibleAttached || !active)
+        return;
+
+    Q_Q(QQuickLabel);
+    accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    if (accessibleAttached) {
+        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setName(text);
+    } else {
+        qWarning() << "QQuickLabel: " << q << " QQuickAccessibleAttached object creation failed!";
+    }
+}
+
+QAccessible::Role QQuickLabelPrivate::accessibleRole() const
+{
+    return QAccessible::Role(m_accessibleRole);
+}
+#endif
+
 QFont QQuickLabel::font() const
 {
     return QQuickText::font();
@@ -134,19 +172,6 @@ void QQuickLabel::setFont(const QFont &font)
     QQuickText::setFont(font);
 
     emit fontChanged();
-}
-
-void QQuickLabel::classBegin()
-{
-    QQuickText::classBegin();
-#ifndef QT_NO_ACCESSIBILITY
-    Q_D(QQuickLabel);
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached)
-        d->accessibleAttached->setRole((QAccessible::Role)0x00000029); // Accessible.StaticText
-    else
-        qWarning() << "QQuickLabel: QQuickAccessibleAttached object creation failed!";
-#endif
 }
 
 /*!

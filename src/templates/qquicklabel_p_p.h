@@ -50,16 +50,24 @@
 
 #include <QtQuick/private/qquicktext_p_p.h>
 
+#ifndef QT_NO_ACCESSIBILITY
+#include <QtGui/qaccessible.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
 class QQuickLabelPrivate : public QQuickTextPrivate
+#ifndef QT_NO_ACCESSIBILITY
+    , public QAccessible::ActivationObserver
+#endif
 {
     Q_DECLARE_PUBLIC(QQuickLabel)
 
 public:
-    QQuickLabelPrivate() : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR) { }
+    QQuickLabelPrivate();
+    ~QQuickLabelPrivate();
 
     static QQuickLabelPrivate *get(QQuickLabel *item) {
         return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item)); }
@@ -69,8 +77,14 @@ public:
 
     void _q_textChanged(const QString &text);
 
+#ifndef QT_NO_ACCESSIBILITY
+    void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
+    virtual QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
+    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickLabelPrivate, Q_COMPLEX_TYPE);

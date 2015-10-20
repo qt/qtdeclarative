@@ -80,7 +80,10 @@ class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
 {
 public:
     QQuickScrollIndicatorPrivate() : size(0), position(0),
-        active(false), orientation(Qt::Vertical), indicator(Q_NULLPTR) { }
+        active(false), orientation(Qt::Vertical), indicator(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000027; //QAccessible::Indicator
+    }
 
     qreal size;
     qreal position;
@@ -92,7 +95,6 @@ public:
 QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent) :
     QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
 {
-    setAccessibleRole(0x00000027); //QAccessible::Indicator
 }
 
 QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObject *object)

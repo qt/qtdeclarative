@@ -301,6 +301,7 @@ public:
         snapMode(QQuickRangeSlider::NoSnap),
         track(Q_NULLPTR)
     {
+        m_accessibleRole = 0x00000033; //QAccessible::Slider
     }
 
     qreal from;
@@ -356,7 +357,6 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent) :
     d->second = new QQuickRangeSliderNode(1.0, this);
 
     setAcceptedMouseButtons(Qt::LeftButton);
-    setAccessibleRole(0x00000033); //QAccessible::Slider
     setFlag(QQuickItem::ItemIsFocusScope);
 }
 

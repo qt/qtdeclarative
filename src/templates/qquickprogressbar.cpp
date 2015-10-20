@@ -68,7 +68,10 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(Q_NULLPTR) { }
+    QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000030; //QAccessible::ProgressBar
+    }
 
     qreal from;
     qreal to;
@@ -80,7 +83,6 @@ public:
 QQuickProgressBar::QQuickProgressBar(QQuickItem *parent) :
     QQuickControl(*(new QQuickProgressBarPrivate), parent)
 {
-    setAccessibleRole(0x00000030); //QAccessible::ProgressBar
 }
 
 /*!

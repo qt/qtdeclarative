@@ -88,6 +88,24 @@ QT_BEGIN_NAMESPACE
     position of the press, and which button is pressed.
 */
 
+QQuickTextFieldPrivate::QQuickTextFieldPrivate()
+    : background(Q_NULLPTR)
+    , placeholder(Q_NULLPTR)
+    , accessibleAttached(Q_NULLPTR)
+    , m_accessibleRole(0x0000002A) // Accessible.EditableText
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::installActivationObserver(this);
+#endif
+}
+
+QQuickTextFieldPrivate::~QQuickTextFieldPrivate()
+{
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::removeActivationObserver(this);
+#endif
+}
+
 void QQuickTextFieldPrivate::resizeBackground()
 {
     Q_Q(QQuickTextField);
@@ -169,9 +187,8 @@ void QQuickTextFieldPrivate::resolveFont()
 void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
 {
 #ifndef QT_NO_ACCESSIBILITY
-    Q_Q(QQuickTextField);
     if (accessibleAttached)
-        QQuickAccessibleAttached::setProperty(q, "readOnly", isReadOnly);
+        accessibleAttached->set_readOnly(isReadOnly);
 #else
     Q_UNUSED(isReadOnly)
 #endif
@@ -190,14 +207,37 @@ void QQuickTextFieldPrivate::_q_placeholderTextChanged(const QString &text)
 void QQuickTextFieldPrivate::_q_echoModeChanged(QQuickTextField::EchoMode echoMode)
 {
 #ifndef QT_NO_ACCESSIBILITY
-    Q_Q(QQuickTextField);
     if (accessibleAttached)
-        QQuickAccessibleAttached::setProperty(q, "passwordEdit",
-            (echoMode == QQuickTextField::Password || echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
+        accessibleAttached->set_passwordEdit((echoMode == QQuickTextField::Password || echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
 #else
     Q_UNUSED(echoMode)
 #endif
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
+{
+    if (accessibleAttached || !active)
+        return;
+
+    Q_Q(QQuickTextField);
+    accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    if (accessibleAttached) {
+        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->set_readOnly(m_readOnly);
+        accessibleAttached->set_passwordEdit((m_echoMode == QQuickTextField::Password || m_echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
+        if (placeholder)
+            accessibleAttached->setDescription(placeholder->text());
+    } else {
+        qWarning() << "QQuickTextField: " << q << " QQuickAccessibleAttached object creation failed!";
+    }
+}
+
+QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
+{
+    return QAccessible::Role(m_accessibleRole);
+}
+#endif
 
 QFont QQuickTextField::font() const
 {
@@ -365,21 +405,6 @@ void QQuickTextField::timerEvent(QTimerEvent *event)
     } else {
         QQuickTextInput::timerEvent(event);
     }
-}
-
-void QQuickTextField::classBegin()
-{
-    QQuickTextInput::classBegin();
-#ifndef QT_NO_ACCESSIBILITY
-    Q_D(QQuickTextField);
-    d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
-    if (d->accessibleAttached) {
-        d->accessibleAttached->setRole((QAccessible::Role)(0x0000002A)); // Accessible.EditableText
-        QQuickAccessibleAttached::setProperty(this, "multiLine", true);
-    } else {
-        qWarning() << "QQuickTextField: QQuickAccessibleAttached object creation failed!";
-    }
-#endif
 }
 
 QT_END_NAMESPACE

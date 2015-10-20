@@ -9,6 +9,5 @@ Window {
         id: textfield
         objectName: "textfield"
         text: "TextField"
-        Accessible.name: text
     }
 }
