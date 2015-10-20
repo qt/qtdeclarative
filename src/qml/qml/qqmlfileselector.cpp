@@ -123,6 +123,12 @@ QQmlFileSelectorPrivate::QQmlFileSelectorPrivate()
     myInstance.reset(new QQmlFileSelectorInterceptor(this));
 }
 
+QQmlFileSelectorPrivate::~QQmlFileSelectorPrivate()
+{
+    if (ownSelector)
+        delete selector;
+}
+
 /*!
   Sets the QFileSelector instance for use by the QQmlFileSelector to \a selector.
   QQmlFileSelector does not take ownership of the new QFileSelector. To reset QQmlFileSelector
