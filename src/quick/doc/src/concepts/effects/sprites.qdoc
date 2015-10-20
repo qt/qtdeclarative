@@ -26,12 +26,9 @@
 ****************************************************************************/
 
 /*!
-\ingroup qtquick-images-sprites
 \page qtquick-effects-sprites.html
 \title Sprite Animations
 \brief Sprite-based animations with flexible transitioning
-
-\generatelist{related}
 
 \section1 Sprite Engine
 
@@ -167,9 +164,9 @@ Additionally, \l ImageParticle can use \l Sprite types to define sprites for eac
 sprite engine per type. This works similarly to SpriteSequence, but it also has the parametrized variability provided
 by the \l ImageParticle type.
 
-\section1 AnimatedSprite
+\section1 AnimatedSprite Type
 
-For use-cases which do not need to transition between animations, consider the \l AnimatedSprite type.
+For use-cases which do not need to transition between animations, consider the AnimatedSprite type.
 This type displays sprite animations with the same input format, but only one at a time. It also provides more fine-grained
 manual control, as there is no sprite engine managing the timing and transitions behind the scenes.
 

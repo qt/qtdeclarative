@@ -31,8 +31,6 @@
 \title Qt Quick Transformation Types
 \brief Types for applying transformations to visual types
 
-\generatelist{related}
-
 Transformations are applied to child hierarchies and also will also transform
 mouse and touch input so coordinates in event handlers behave as expected.
 
