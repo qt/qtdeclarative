@@ -8046,6 +8046,19 @@ QQuickItemPrivate::ExtraData::ExtraData()
 {
 }
 
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickItemPrivate::accessibleRole() const
+{
+    Q_Q(const QQuickItem);
+    QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, false));
+    if (accessibleAttached)
+        return accessibleAttached->role();
+
+    return QAccessible::NoRole;
+}
+#endif
+
 QT_END_NAMESPACE
 
 #include <moc_qquickitem.cpp>
