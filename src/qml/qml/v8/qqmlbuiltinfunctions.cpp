@@ -1074,10 +1074,23 @@ If the optional \a mode parameter is set to \c Component.Asynchronous, the
 component will be loaded in a background thread.  The Component::status property
 will be \c Component.Loading while it is loading.  The status will change to
 \c Component.Ready if the component loads successfully, or \c Component.Error
-if loading fails.
+if loading fails. This parameter defaults to \c Component.PreferSynchronous
+if omitted.
+
+If \a mode is set to \c Component.PreferSynchronous, Qt will attempt to load
+the component synchronously, but may end up loading it asynchronously if
+necessary. Scenarios that may cause asynchronous loading include, but are not
+limited to, the following:
+
+\list
+\li The URL refers to a network resource
+\li The component is being created as a result of another component that is
+being loaded asynchronously
+\endlist
 
 If the optional \a parent parameter is given, it should refer to the object
-that will become the parent for the created \l Component object.
+that will become the parent for the created \l Component object. If no mode
+was passed, this can be the second argument.
 
 Call \l {Component::createObject()}{Component.createObject()} on the returned
 component to create an object instance of the component.
