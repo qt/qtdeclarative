@@ -63,6 +63,8 @@ T.TextArea {
 
         font: control.font
         color: control.Theme.disabledColor
+        horizontalAlignment: control.horizontalAlignment
+        verticalAlignment: control.verticalAlignment
         visible: !control.length
         elide: Text.ElideRight
     }

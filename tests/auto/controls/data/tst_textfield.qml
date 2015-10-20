@@ -87,4 +87,18 @@ TestCase {
         compare(control.implicitHeight, 200)
         control.destroy()
     }
+
+    function test_alignment() {
+        var control = textField.createObject(testCase)
+
+        control.horizontalAlignment = TextField.AlignRight
+        compare(control.horizontalAlignment, TextField.AlignRight)
+        compare(control.placeholder.horizontalAlignment, Text.AlignRight)
+
+        control.verticalAlignment = TextField.AlignBottom
+        compare(control.verticalAlignment, TextField.AlignBottom)
+        compare(control.placeholder.verticalAlignment, Text.AlignBottom)
+
+        control.destroy()
+    }
 }
