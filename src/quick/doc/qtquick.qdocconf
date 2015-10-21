@@ -43,7 +43,6 @@ sourcedirs  += .. \
                ../../quickwidgets
 
 exampledirs +=  ../../../examples/quick \
-                ../../../examples/qml \
                 snippets
 
 
