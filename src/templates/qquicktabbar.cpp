@@ -36,7 +36,6 @@
 
 #include "qquicktabbar_p.h"
 #include "qquickcontainer_p_p.h"
-#include "qquickexclusivegroup_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -67,21 +66,12 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
-    QQuickTabBarPrivate() : group(Q_NULLPTR)
+    QQuickTabBarPrivate()
     {
         m_accessibleRole = 0x0000003C; //QAccessible::PageTabList
     }
 
     void updateLayout();
-    void updateCurrent();
-
-    void itemInserted(int index, QQuickItem *item)  Q_DECL_OVERRIDE;
-    void itemMoved(int from, int to) Q_DECL_OVERRIDE;
-    void itemRemoved(QQuickItem *item) Q_DECL_OVERRIDE;
-
-    void onCurrentIndexChanged();
-
-    QQuickExclusiveGroup *group;
 };
 
 void QQuickTabBarPrivate::updateLayout()
@@ -104,45 +94,11 @@ void QQuickTabBarPrivate::updateLayout()
     }
 }
 
-void QQuickTabBarPrivate::updateCurrent()
-{
-    Q_Q(QQuickTabBar);
-    q->setCurrentIndex(contentModel->indexOf(group->current(), Q_NULLPTR));
-}
-
-void QQuickTabBarPrivate::itemInserted(int, QQuickItem *item)
-{
-    group->addCheckable(item);
-}
-
-void QQuickTabBarPrivate::itemMoved(int, int)
-{
-    updateCurrent();
-}
-
-void QQuickTabBarPrivate::itemRemoved(QQuickItem *item)
-{
-    group->removeCheckable(item);
-}
-
-void QQuickTabBarPrivate::onCurrentIndexChanged()
-{
-    Q_Q(QQuickTabBar);
-    if (q->isComponentComplete())
-        group->setCurrent(contentModel->get(currentIndex));
-}
-
 QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
     QQuickContainer(*(new QQuickTabBarPrivate), parent)
 {
-    Q_D(QQuickTabBar);
+    setExclusive(true);
     setFlag(ItemIsFocusScope);
-
-    d->group = new QQuickExclusiveGroup(this);
-    connect(d->group, &QQuickExclusiveGroup::currentChanged, this, &QQuickTabBar::currentItemChanged);
-    QObjectPrivate::connect(d->group, &QQuickExclusiveGroup::currentChanged, d, &QQuickTabBarPrivate::updateCurrent);
-
-    QObjectPrivate::connect(this, &QQuickContainer::currentIndexChanged, d, &QQuickTabBarPrivate::onCurrentIndexChanged);
 }
 
 void QQuickTabBar::updatePolish()

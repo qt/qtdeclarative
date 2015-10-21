@@ -36,6 +36,7 @@
 
 #include "qquickcontainer_p.h"
 #include "qquickcontainer_p_p.h"
+#include "qquickexclusivegroup_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -52,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \sa {Container Controls}
 */
 
-QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1), updatingCurrent(false)
+QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1), updatingCurrent(false), exclusiveGroup(Q_NULLPTR)
 {
 }
 
@@ -86,9 +87,14 @@ QQuickItem *QQuickContainerPrivate::itemAt(int index) const
 
 void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 {
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentData.append(item);
+    if (exclusiveGroup && !exclusiveGroup->isCheckable(item))
+        return;
+
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
+    if (exclusiveGroup)
+        exclusiveGroup->addCheckable(item);
 
     itemInserted(index, item);
 
@@ -112,17 +118,25 @@ void QQuickContainerPrivate::itemMoved(int from, int to)
 {
     Q_Q(QQuickContainer);
     updatingCurrent = true;
-    if (from == currentIndex)
-        q->setCurrentIndex(to);
-    else if (from < currentIndex && to >= currentIndex)
-        q->setCurrentIndex(currentIndex - 1);
-    else if (from > currentIndex && to <= currentIndex)
-        q->setCurrentIndex(currentIndex + 1);
+    if (exclusiveGroup) {
+        q->setCurrentIndex(contentModel->indexOf(exclusiveGroup->current(), Q_NULLPTR));
+    } else {
+        if (from == currentIndex)
+            q->setCurrentIndex(to);
+        else if (from < currentIndex && to >= currentIndex)
+            q->setCurrentIndex(currentIndex - 1);
+        else if (from > currentIndex && to <= currentIndex)
+            q->setCurrentIndex(currentIndex + 1);
+    }
     updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 {
+    contentData.removeOne(item);
+    if (exclusiveGroup && !exclusiveGroup->isCheckable(item))
+        return;
+
     Q_Q(QQuickContainer);
     bool currentChanged = false;
     if (index == currentIndex) {
@@ -134,8 +148,9 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     item->setParentItem(Q_NULLPTR);
-    contentData.removeOne(item);
     contentModel->remove(index);
+    if (exclusiveGroup)
+        exclusiveGroup->removeCheckable(item);
 
     itemRemoved(item);
 
@@ -145,6 +160,13 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
 void QQuickContainerPrivate::itemRemoved(QQuickItem *)
 {
+}
+
+void QQuickContainerPrivate::_q_currentItemChanged()
+{
+    Q_Q(QQuickContainer);
+    if (!updatingCurrent)
+        q->setCurrentIndex(contentModel->indexOf(exclusiveGroup->current(), Q_NULLPTR));
 }
 
 void QQuickContainerPrivate::_q_currentIndexChanged()
@@ -427,6 +449,8 @@ void QQuickContainer::setCurrentIndex(int index)
         d->currentIndex = index;
         emit currentIndexChanged();
         emit currentItemChanged();
+        if (d->exclusiveGroup && isComponentComplete())
+            d->exclusiveGroup->setCurrent(d->contentModel->get(index));
     }
 }
 
@@ -439,6 +463,48 @@ QQuickItem *QQuickContainer::currentItem() const
 {
     Q_D(const QQuickContainer);
     return itemAt(d->currentIndex);
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Container::exclusive
+
+    This property holds whether the container is considered exclusive.
+    An exclusive container manages the the content children with an
+    ExclusiveGroup.
+
+    The default value is \c false.
+
+    \sa ExclusiveGroup
+*/
+bool QQuickContainer::isExclusive() const
+{
+    Q_D(const QQuickContainer);
+    return d->exclusiveGroup;
+}
+
+void QQuickContainer::setExclusive(bool exclusive)
+{
+    Q_D(QQuickContainer);
+    if (exclusive == isExclusive())
+        return;
+
+    if (exclusive) {
+        if (!d->exclusiveGroup) {
+            d->exclusiveGroup = new QQuickExclusiveGroup(this);
+            connect(d->exclusiveGroup, &QQuickExclusiveGroup::currentChanged, this, &QQuickContainer::currentItemChanged);
+            QObjectPrivate::connect(d->exclusiveGroup, &QQuickExclusiveGroup::currentChanged, d, &QQuickContainerPrivate::_q_currentItemChanged);
+
+            const int count = d->contentModel->count();
+            for (int i = 0; i < count; ++i) {
+                QObject *object = d->contentModel->get(i);
+                if (d->exclusiveGroup->isCheckable(object))
+                    d->exclusiveGroup->addCheckable(object);
+            }
+        }
+    } else {
+        delete d->exclusiveGroup;
+        d->exclusiveGroup = Q_NULLPTR;
+    }
 }
 
 void QQuickContainer::itemChange(ItemChange change, const ItemChangeData &data)
