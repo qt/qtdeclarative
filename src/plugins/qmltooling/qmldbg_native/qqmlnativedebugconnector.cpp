@@ -219,8 +219,8 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
         } else if (!services.isEmpty()) {
             services.append(strArgument);
         } else {
-            qWarning() << tr("QML Debugger: Invalid argument \"%1\" detected. Ignoring the same.")
-                          .arg(strArgument);
+            qWarning("QML Debugger: Invalid argument \"%s\" detected. Ignoring the same.",
+                     qUtf8Printable(strArgument));
         }
     }
     setServices(services);
