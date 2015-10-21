@@ -106,6 +106,11 @@ TestCase {
         QtObject { property bool checked }
     }
 
+    Component {
+        id: nonCheckable
+        QtObject { }
+    }
+
     function test_current() {
         var group = exclusiveGroup.createObject(testCase)
         verify(group)
@@ -225,6 +230,19 @@ TestCase {
 
         group.destroy()
     }
+
+    function test_isCheckable() {
+        var group = exclusiveGroup.createObject(testCase)
+        verify(group)
+
+        var checkable1 = checkable.createObject(testCase)
+        compare(group.isCheckable(checkable1), true)
+
+        var nonCheckable1 = nonCheckable.createObject(testCase)
+        compare(group.isCheckable(nonCheckable1), false)
+
+        group.destroy()
+     }
 
     Component {
         id: checkBoxes

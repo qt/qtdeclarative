@@ -284,6 +284,24 @@ QQmlListProperty<QObject> QQuickExclusiveGroup::checkables()
 }
 
 /*!
+    \qmlmethod bool Qt.labs.controls::ExclusiveGroup::isCheckable(QtObject object)
+
+    Returns \c true if the \a object is checkable, and \c false otherwise.
+*/
+bool QQuickExclusiveGroup::isCheckable(QObject *object) const
+{
+    if (!object)
+        return false;
+
+    QVariant checked = object->property(CHECKED_PROPERTY);
+    if (!checked.isValid())
+        return false;
+
+    QMetaMethod signal = checkableSignal(object);
+    return signal.isValid();
+}
+
+/*!
     \qmlmethod void Qt.labs.controls::ExclusiveGroup::addCheckable(QtObject object)
 
     Adds an \a object to the exclusive group.

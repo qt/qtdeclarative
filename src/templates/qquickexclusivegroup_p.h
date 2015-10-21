@@ -75,6 +75,8 @@ public:
 
     QQmlListProperty<QObject> checkables();
 
+    Q_INVOKABLE bool isCheckable(QObject *object) const;
+
 public Q_SLOTS:
     void addCheckable(QObject *object);
     void removeCheckable(QObject *object);
