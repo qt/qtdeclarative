@@ -1113,6 +1113,15 @@ void tst_QQuickPathView::setCurrentIndex()
     QCOMPARE(pathview->currentItem(), firstItem);
     QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
+    // check for bogus currentIndexChanged() signals
+    QSignalSpy currentIndexSpy(pathview, SIGNAL(currentIndexChanged()));
+    QVERIFY(currentIndexSpy.isValid());
+    pathview->setHighlightMoveDuration(100);
+    pathview->setHighlightRangeMode(QQuickPathView::StrictlyEnforceRange);
+    pathview->setSnapMode(QQuickPathView::SnapToItem);
+    pathview->setCurrentIndex(3);
+    QTRY_COMPARE(pathview->currentIndex(), 3);
+    QCOMPARE(currentIndexSpy.count(), 1);
 }
 
 void tst_QQuickPathView::resetModel()

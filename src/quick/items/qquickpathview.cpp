@@ -753,7 +753,7 @@ void QQuickPathView::setCurrentIndex(int idx)
         if (d->modelCount) {
             d->createCurrentItem();
             if (d->haveHighlightRange && d->highlightRangeMode == QQuickPathView::StrictlyEnforceRange)
-                d->snapToIndex(d->currentIndex);
+                d->snapToIndex(d->currentIndex, QQuickPathViewPrivate::SetIndex);
             d->currentItemOffset = d->positionOfIndex(d->currentIndex);
             d->updateHighlight();
         }
@@ -988,7 +988,7 @@ void QQuickPathView::setHighlightRangeMode(HighlightRangeMode mode)
         d->regenerate();
         int index = d->highlightRangeMode != NoHighlightRange ? d->currentIndex : d->calcCurrentIndex();
         if (index >= 0)
-            d->snapToIndex(index);
+            d->snapToIndex(index, QQuickPathViewPrivate::Other);
     }
     emit highlightRangeModeChanged();
 }
@@ -2306,12 +2306,12 @@ void QQuickPathViewPrivate::fixOffset()
             if (curr != currentIndex && highlightRangeMode == QQuickPathView::StrictlyEnforceRange)
                 q->setCurrentIndex(curr);
             else
-                snapToIndex(curr);
+                snapToIndex(curr, Other);
         }
     }
 }
 
-void QQuickPathViewPrivate::snapToIndex(int index)
+void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
 {
     if (!model || modelCount <= 0)
         return;
@@ -2321,7 +2321,7 @@ void QQuickPathViewPrivate::snapToIndex(int index)
     if (offset == targetOffset)
         return;
 
-    moveReason = Other;
+    moveReason = reason;
     offsetAdj = 0.0;
     tl.reset(moveOffset);
     moveOffset.setValue(offset);
