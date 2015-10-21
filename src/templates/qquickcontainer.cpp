@@ -87,6 +87,7 @@ QQuickItem *QQuickContainerPrivate::itemAt(int index) const
 
 void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 {
+    Q_Q(QQuickContainer);
     contentData.append(item);
     if (exclusiveGroup && !exclusiveGroup->isCheckable(item))
         return;
@@ -96,7 +97,7 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
     if (exclusiveGroup)
         exclusiveGroup->addCheckable(item);
 
-    itemInserted(index, item);
+    q->itemAdded(index, item);
 
     if (contentModel->count() == 1 && currentIndex == -1) {
         Q_Q(QQuickContainer);
@@ -104,19 +105,10 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
     }
 }
 
-void QQuickContainerPrivate::itemInserted(int, QQuickItem *)
-{
-}
-
 void QQuickContainerPrivate::moveItem(int from, int to)
 {
-    contentModel->move(from, to);
-    itemMoved(from, to);
-}
-
-void QQuickContainerPrivate::itemMoved(int from, int to)
-{
     Q_Q(QQuickContainer);
+    contentModel->move(from, to);
     updatingCurrent = true;
     if (exclusiveGroup) {
         q->setCurrentIndex(contentModel->indexOf(exclusiveGroup->current(), Q_NULLPTR));
@@ -133,11 +125,11 @@ void QQuickContainerPrivate::itemMoved(int from, int to)
 
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 {
+    Q_Q(QQuickContainer);
     contentData.removeOne(item);
     if (exclusiveGroup && !exclusiveGroup->isCheckable(item))
         return;
 
-    Q_Q(QQuickContainer);
     bool currentChanged = false;
     if (index == currentIndex) {
         q->setCurrentIndex(currentIndex - 1);
@@ -152,14 +144,10 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
     if (exclusiveGroup)
         exclusiveGroup->removeCheckable(item);
 
-    itemRemoved(item);
+    q->itemRemoved(index, item);
 
     if (currentChanged)
         emit q->currentIndexChanged();
-}
-
-void QQuickContainerPrivate::itemRemoved(QQuickItem *)
-{
 }
 
 void QQuickContainerPrivate::_q_currentItemChanged()
@@ -539,6 +527,18 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
         if (signalIndex != -1)
             QMetaObject::connect(newItem, signalIndex, this, slotIndex);
     }
+}
+
+void QQuickContainer::itemAdded(int index, QQuickItem *item)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(item);
+}
+
+void QQuickContainer::itemRemoved(int index, QQuickItem *item)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(item);
 }
 
 QT_END_NAMESPACE

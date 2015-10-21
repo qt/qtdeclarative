@@ -104,6 +104,9 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
+    virtual void itemAdded(int index, QQuickItem *item);
+    virtual void itemRemoved(int index, QQuickItem *item);
+
 private:
     Q_DISABLE_COPY(QQuickContainer)
     Q_DECLARE_PRIVATE(QQuickContainer)

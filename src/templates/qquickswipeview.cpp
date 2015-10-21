@@ -78,8 +78,6 @@ public:
     void resizeItem(QQuickItem *item);
     void resizeItems();
 
-    void itemInserted(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
 };
 
@@ -92,13 +90,6 @@ void QQuickSwipeViewPrivate::resizeItems()
         if (item)
             item->setSize(QSizeF(contentItem->width(), contentItem->height()));
     }
-}
-
-void QQuickSwipeViewPrivate::itemInserted(int, QQuickItem *item)
-{
-    Q_Q(QQuickSwipeView);
-    if (q->isComponentComplete())
-        item->setSize(QSizeF(contentItem->width(), contentItem->height()));
 }
 
 QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
@@ -129,6 +120,13 @@ void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     Q_D(QQuickSwipeView);
     QQuickContainer::geometryChanged(newGeometry, oldGeometry);
     d->resizeItems();
+}
+
+void QQuickSwipeView::itemAdded(int, QQuickItem *item)
+{
+    Q_D(QQuickSwipeView);
+    if (isComponentComplete())
+        item->setSize(QSizeF(d->contentItem->width(), d->contentItem->height()));
 }
 
 /*!

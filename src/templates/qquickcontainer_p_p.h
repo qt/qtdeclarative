@@ -68,11 +68,8 @@ public:
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
-    virtual void itemInserted(int index, QQuickItem *item);
     void moveItem(int from, int to);
-    virtual void itemMoved(int from, int to);
     void removeItem(int index, QQuickItem *item);
-    virtual void itemRemoved(QQuickItem *item);
 
     void _q_currentItemChanged();
     void _q_currentIndexChanged();
