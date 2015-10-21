@@ -65,14 +65,11 @@ public:
     static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
 
 protected:
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickSwipeView)
     Q_DECLARE_PRIVATE(QQuickSwipeView)
-
-    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
 class QQuickSwipeViewAttachedPrivate;

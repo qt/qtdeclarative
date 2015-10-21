@@ -75,18 +75,12 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate() : updatingCurrent(false) { }
-
     void resizeItem(QQuickItem *item);
     void resizeItems();
-    void _q_updateCurrent();
 
     void itemInserted(int index, QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemMoved(int from, int to) Q_DECL_OVERRIDE;
 
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
-
-    bool updatingCurrent;
 };
 
 void QQuickSwipeViewPrivate::resizeItems()
@@ -100,33 +94,12 @@ void QQuickSwipeViewPrivate::resizeItems()
     }
 }
 
-void QQuickSwipeViewPrivate::_q_updateCurrent()
-{
-    Q_Q(QQuickSwipeView);
-    if (!updatingCurrent)
-        q->setCurrentIndex(contentItem ? contentItem->property("currentIndex").toInt() : -1);
-}
-
 void QQuickSwipeViewPrivate::itemInserted(int, QQuickItem *item)
 {
     Q_Q(QQuickSwipeView);
     if (q->isComponentComplete())
         item->setSize(QSizeF(contentItem->width(), contentItem->height()));
 }
-
-void QQuickSwipeViewPrivate::itemMoved(int from, int to)
-{
-    Q_Q(QQuickSwipeView);
-    updatingCurrent = true;
-    if (from == currentIndex)
-        q->setCurrentIndex(to);
-    else if (from < currentIndex && to >= currentIndex)
-        q->setCurrentIndex(currentIndex - 1);
-    else if (from > currentIndex && to <= currentIndex)
-        q->setCurrentIndex(currentIndex + 1);
-    updatingCurrent = false;
-}
-
 
 QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
 {
@@ -156,15 +129,6 @@ void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     Q_D(QQuickSwipeView);
     QQuickContainer::geometryChanged(newGeometry, oldGeometry);
     d->resizeItems();
-}
-
-void QQuickSwipeView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
-{
-    QQuickContainer::contentItemChange(newItem, oldItem);
-    if (oldItem)
-        disconnect(oldItem, SIGNAL(currentIndexChanged()), this, SLOT(_q_updateCurrent()));
-    if (newItem)
-        connect(newItem, SIGNAL(currentIndexChanged()), this, SLOT(_q_updateCurrent()));
 }
 
 /*!
@@ -361,5 +325,3 @@ bool QQuickSwipeViewAttached::isCurrentItem() const
 }
 
 QT_END_NAMESPACE
-
-#include "moc_qquickswipeview_p.cpp"

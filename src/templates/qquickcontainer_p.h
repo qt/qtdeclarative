@@ -102,6 +102,7 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickContainer)
     Q_DECLARE_PRIVATE(QQuickContainer)
+    Q_PRIVATE_SLOT(d_func(), void _q_currentIndexChanged())
 };
 
 Q_DECLARE_TYPEINFO(QQuickContainer, Q_COMPLEX_TYPE);

@@ -72,6 +72,8 @@ public:
     void removeItem(int index, QQuickItem *item);
     virtual void itemRemoved(QQuickItem *item);
 
+    void _q_currentIndexChanged();
+
     void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
     void itemSiblingOrderChanged(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
@@ -90,6 +92,7 @@ public:
     QObjectList contentData;
     QQmlObjectModel *contentModel;
     int currentIndex;
+    bool updatingCurrent;
 };
 
 Q_DECLARE_TYPEINFO(QQuickContainerPrivate, Q_COMPLEX_TYPE);

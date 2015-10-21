@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \sa {Container Controls}
 */
 
-QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1)
+QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1), updatingCurrent(false)
 {
 }
 
@@ -108,8 +108,17 @@ void QQuickContainerPrivate::moveItem(int from, int to)
     itemMoved(from, to);
 }
 
-void QQuickContainerPrivate::itemMoved(int, int)
+void QQuickContainerPrivate::itemMoved(int from, int to)
 {
+    Q_Q(QQuickContainer);
+    updatingCurrent = true;
+    if (from == currentIndex)
+        q->setCurrentIndex(to);
+    else if (from < currentIndex && to >= currentIndex)
+        q->setCurrentIndex(currentIndex - 1);
+    else if (from > currentIndex && to <= currentIndex)
+        q->setCurrentIndex(currentIndex + 1);
+    updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
@@ -136,6 +145,13 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
 void QQuickContainerPrivate::itemRemoved(QQuickItem *)
 {
+}
+
+void QQuickContainerPrivate::_q_currentIndexChanged()
+{
+    Q_Q(QQuickContainer);
+    if (!updatingCurrent)
+        q->setCurrentIndex(contentItem ? contentItem->property("currentIndex").toInt() : -1);
 }
 
 void QQuickContainerPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
@@ -439,10 +455,26 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 {
     Q_D(QQuickContainer);
     QQuickControl::contentItemChange(newItem, oldItem);
-    if (oldItem)
+
+    static const int slotIndex = metaObject()->indexOfSlot("_q_currentIndexChanged()");
+
+    if (oldItem) {
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
-    if (newItem)
+
+        int signalIndex = oldItem->metaObject()->indexOfSignal("currentIndexChanged()");
+        if (signalIndex != -1)
+            QMetaObject::disconnect(oldItem, signalIndex, this, slotIndex);
+    }
+
+    if (newItem) {
         QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
+
+        int signalIndex = newItem->metaObject()->indexOfSignal("currentIndexChanged()");
+        if (signalIndex != -1)
+            QMetaObject::connect(newItem, signalIndex, this, slotIndex);
+    }
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontainer_p.cpp"
