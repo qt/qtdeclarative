@@ -869,7 +869,7 @@ public:
     template <int ArgumentIndex, typename Parameter>
     struct SizeOnStack
     {
-        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, QT_POINTER_SIZE, 0>::Chosen };
+        enum { Size = Select<ArgumentIndex >= RegisterArgumentCount, sizeof(void*), 0>::Chosen };
     };
 
     template <int ArgumentIndex>

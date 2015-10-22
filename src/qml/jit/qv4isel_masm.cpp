@@ -1120,7 +1120,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
         Assembler::Pointer addr2 = _as->loadAddress(Assembler::ScratchRegister, source);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-#if QT_POINTER_SIZE == 8
+#if Q_PROCESSOR_WORDSIZE == 8
             _as->load64(addr2, Assembler::ScratchRegister);
             _as->store64(Assembler::ScratchRegister, _as->loadAddress(Assembler::ReturnValueRegister, target));
 #else
