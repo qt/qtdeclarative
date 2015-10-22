@@ -242,7 +242,12 @@ void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)
     // cleans up the engine-specific singleton instances if they exist.
     scriptApis.remove(e);
     QObject *o = qobjectApis.take(e);
-    delete o;
+    if (o) {
+        QQmlData *ddata = QQmlData::get(o, false);
+        if (ddata && ddata->indestructible)
+            return;
+        delete o;
+    }
 }
 
 void QQmlType::SingletonInstanceInfo::setQObjectApi(QQmlEngine *e, QObject *o)

@@ -277,10 +277,15 @@ Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
 ReturnedValue MathObject::method_random(CallContext *context)
 {
     if (!seedCreatedStorage()->hasLocalData()) {
-        qsrand(QTime(0,0,0).msecsTo(QTime::currentTime()) ^ reinterpret_cast<quintptr>(context));
+        int msecs = QTime(0,0,0).msecsTo(QTime::currentTime());
+        Q_ASSERT(msecs >= 0);
+        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(context)));
         seedCreatedStorage()->setLocalData(new bool(true));
     }
-    return Encode(qrand() / (double) RAND_MAX);
+    // rand()/qrand() return a value where the upperbound is RAND_MAX inclusive. So, instead of
+    // dividing by RAND_MAX (which would return 0..RAND_MAX inclusive), we divide by RAND_MAX + 1.
+    qint64 upperLimit = qint64(RAND_MAX) + 1;
+    return Encode(qrand() / double(upperLimit));
 }
 
 ReturnedValue MathObject::method_round(CallContext *context)

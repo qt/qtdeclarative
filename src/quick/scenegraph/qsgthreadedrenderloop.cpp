@@ -421,7 +421,8 @@ bool QSGRenderThread::event(QEvent *e)
             QQuickWindowPrivate::get(ce->window)->renderSceneGraph(ce->window->size());
 
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- grabbing result";
-            *ce->image = qt_gl_read_framebuffer(windowSize * ce->window->effectiveDevicePixelRatio(), false, false);
+            bool alpha = ce->window->format().alphaBufferSize() > 0 && ce->window->color().alpha() != 255;
+            *ce->image = qt_gl_read_framebuffer(windowSize * ce->window->effectiveDevicePixelRatio(), alpha, alpha);
         }
         qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- waking gui to handle result";
         waitCondition.wakeOne();

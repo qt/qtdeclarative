@@ -44,7 +44,7 @@ QV4DebuggerAgent::QV4DebuggerAgent(QV4DebugServiceImpl *debugService)
     : m_breakOnThrow(false), m_debugService(debugService)
 {}
 
-QV4::Debugging::Debugger *QV4DebuggerAgent::firstDebugger() const
+QV4::Debugging::V4Debugger *QV4DebuggerAgent::firstDebugger() const
 {
     // Currently only 1 single engine is supported, so:
     if (m_debuggers.isEmpty())
@@ -56,13 +56,13 @@ QV4::Debugging::Debugger *QV4DebuggerAgent::firstDebugger() const
 bool QV4DebuggerAgent::isRunning() const
 {
     // Currently only 1 single engine is supported, so:
-    if (QV4::Debugging::Debugger *debugger = firstDebugger())
-        return debugger->state() == QV4::Debugging::Debugger::Running;
+    if (QV4::Debugging::V4Debugger *debugger = firstDebugger())
+        return debugger->state() == QV4::Debugging::V4Debugger::Running;
     else
         return false;
 }
 
-void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger,
+void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::V4Debugger *debugger,
                                       QV4::Debugging::PauseReason reason)
 {
     Q_UNUSED(reason);
@@ -105,7 +105,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4::Debugging::Debugger *debugger,
     m_debugService->send(event);
 }
 
-void QV4DebuggerAgent::addDebugger(QV4::Debugging::Debugger *debugger)
+void QV4DebuggerAgent::addDebugger(QV4::Debugging::V4Debugger *debugger)
 {
     Q_ASSERT(!m_debuggers.contains(debugger));
     m_debuggers << debugger;
@@ -118,49 +118,55 @@ void QV4DebuggerAgent::addDebugger(QV4::Debugging::Debugger *debugger)
 
     connect(debugger, SIGNAL(destroyed(QObject*)),
             this, SLOT(handleDebuggerDeleted(QObject*)));
-    connect(debugger, SIGNAL(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
-            this, SLOT(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
+    connect(debugger,
+            SIGNAL(debuggerPaused(QV4::Debugging::V4Debugger*,QV4::Debugging::PauseReason)),
+            this, SLOT(debuggerPaused(QV4::Debugging::V4Debugger*,QV4::Debugging::PauseReason)),
             Qt::QueuedConnection);
 }
 
-void QV4DebuggerAgent::removeDebugger(QV4::Debugging::Debugger *debugger)
+void QV4DebuggerAgent::removeDebugger(QV4::Debugging::V4Debugger *debugger)
 {
     m_debuggers.removeAll(debugger);
     disconnect(debugger, SIGNAL(destroyed(QObject*)),
                this, SLOT(handleDebuggerDeleted(QObject*)));
     disconnect(debugger,
-               SIGNAL(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)),
+               SIGNAL(debuggerPaused(QV4::Debugging::V4Debugger*,QV4::Debugging::PauseReason)),
                this,
-               SLOT(debuggerPaused(QV4::Debugging::Debugger*,QV4::Debugging::PauseReason)));
+               SLOT(debuggerPaused(QV4::Debugging::V4Debugger*,QV4::Debugging::PauseReason)));
+}
+
+const QList<QV4::Debugging::V4Debugger *> &QV4DebuggerAgent::debuggers()
+{
+    return m_debuggers;
 }
 
 void QV4DebuggerAgent::handleDebuggerDeleted(QObject *debugger)
 {
-    m_debuggers.removeAll(static_cast<QV4::Debugging::Debugger *>(debugger));
+    m_debuggers.removeAll(static_cast<QV4::Debugging::V4Debugger *>(debugger));
 }
 
-void QV4DebuggerAgent::pause(QV4::Debugging::Debugger *debugger) const
+void QV4DebuggerAgent::pause(QV4::Debugging::V4Debugger *debugger) const
 {
     debugger->pause();
 }
 
 void QV4DebuggerAgent::pauseAll() const
 {
-    foreach (QV4::Debugging::Debugger *debugger, m_debuggers)
+    foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers)
         pause(debugger);
 }
 
 void QV4DebuggerAgent::resumeAll() const
 {
-    foreach (QV4::Debugging::Debugger *debugger, m_debuggers)
-        if (debugger->state() == QV4::Debugging::Debugger::Paused)
-            debugger->resume(QV4::Debugging::Debugger::FullThrottle);
+    foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers)
+        if (debugger->state() == QV4::Debugging::V4Debugger::Paused)
+            debugger->resume(QV4::Debugging::V4Debugger::FullThrottle);
 }
 
 int QV4DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, bool enabled, const QString &condition)
 {
     if (enabled)
-        foreach (QV4::Debugging::Debugger *debugger, m_debuggers)
+        foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers)
             debugger->addBreakPoint(fileName, lineNumber, condition);
 
     int id = m_breakPoints.size();
@@ -177,7 +183,7 @@ void QV4DebuggerAgent::removeBreakPoint(int id)
     m_breakPoints.remove(id);
 
     if (breakPoint.enabled)
-        foreach (QV4::Debugging::Debugger *debugger, m_debuggers)
+        foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers)
             debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
 }
 
@@ -195,7 +201,7 @@ void QV4DebuggerAgent::enableBreakPoint(int id, bool onoff)
         return;
     breakPoint.enabled = onoff;
 
-    foreach (QV4::Debugging::Debugger *debugger, m_debuggers) {
+    foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers) {
         if (onoff)
             debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
         else
@@ -218,7 +224,7 @@ void QV4DebuggerAgent::setBreakOnThrow(bool onoff)
 {
     if (onoff != m_breakOnThrow) {
         m_breakOnThrow = onoff;
-        foreach (QV4::Debugging::Debugger *debugger, m_debuggers)
+        foreach (QV4::Debugging::V4Debugger *debugger, m_debuggers)
             debugger->setBreakOnThrow(onoff);
     }
 }

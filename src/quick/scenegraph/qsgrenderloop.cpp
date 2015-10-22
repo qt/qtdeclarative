@@ -398,7 +398,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame);
 
     if (data.grabOnly) {
-        grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), false, false);
+        bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
+        grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
         data.grabOnly = false;
     }
 

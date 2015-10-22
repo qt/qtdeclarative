@@ -366,7 +366,7 @@ public:
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
-    void enableDebugger();
+    void setDebugger(Debugging::Debugger *debugger);
     void enableProfiler();
 
     ExecutionContext *pushGlobalContext();

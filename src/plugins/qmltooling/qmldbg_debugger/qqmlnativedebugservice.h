@@ -31,30 +31,62 @@
 **
 ****************************************************************************/
 
-#include "qqmldebuggerservicefactory.h"
-#include "qqmlenginedebugservice.h"
-#include "qdebugmessageservice.h"
-#include "qv4debugservice.h"
-#include "qqmlnativedebugservice.h"
+#ifndef QQML_NATIVE_DEBUG_SERVICE_H
+#define QQML_NATIVE_DEBUG_SERVICE_H
+
+#include <private/qqmldebugconnector_p.h>
+#include <private/qv4debugging_p.h>
+#include <private/qv8engine_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4debugging_p.h>
+#include <private/qv4script_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4objectiterator_p.h>
+#include <private/qv4identifier_p.h>
+#include <private/qv4runtime_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
+
+#include <QtCore/qjsonarray.h>
+
+#include <qqmlengine.h>
+
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QVector>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 
-QQmlDebugService *QQmlDebuggerServiceFactory::create(const QString &key)
+class NativeDebugger;
+class BreakPointHandler;
+class QQmlDebuggerServiceFactory;
+
+class QQmlNativeDebugServiceImpl : public QQmlNativeDebugService
 {
-    if (key == QDebugMessageServiceImpl::s_key)
-        return new QDebugMessageServiceImpl(this);
+public:
+    QQmlNativeDebugServiceImpl(QObject *parent);
 
-    if (key == QQmlEngineDebugServiceImpl::s_key)
-        return new QQmlEngineDebugServiceImpl(this);
+    ~QQmlNativeDebugServiceImpl();
 
-    if (key == QV4DebugServiceImpl::s_key)
-        return new QV4DebugServiceImpl(this);
+    void engineAboutToBeAdded(QQmlEngine *engine);
+    void engineAboutToBeRemoved(QQmlEngine *engine);
 
-    if (key == QQmlNativeDebugServiceImpl::s_key)
-        return new QQmlNativeDebugServiceImpl(this);
+    void stateAboutToBeChanged(State state);
 
-    return 0;
-}
+    void messageReceived(const QByteArray &message);
+
+    void emitAsynchronousMessageToClient(const QJsonObject &message);
+
+private:
+    friend class QQmlDebuggerServiceFactory;
+    friend class NativeDebugger;
+
+    QList<QPointer<NativeDebugger> > m_debuggers;
+    BreakPointHandler *m_breakHandler;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQML_NATIVE_DEBUG_SERVICE_H

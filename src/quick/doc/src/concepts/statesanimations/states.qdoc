@@ -26,13 +26,12 @@
 ****************************************************************************/
 
 /*!
-\ingroup qtquick-states
 \page qtquick-statesanimations-states.html
 \title Qt Quick States
 \brief Creating and setting states
 
 \section1 Related Types
-\generatelist{related}
+\annotatedlist qtquick-states
 
 Many user interface designs are \e{state driven}; interfaces have configurations
 that differ depending on the current state. For example, a traffic signal will

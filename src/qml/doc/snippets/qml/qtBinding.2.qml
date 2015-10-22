@@ -52,7 +52,7 @@ Item {
         root.dynamicText = "Modified root text"
 
         var obj2 = c.createObject(root, { 'text': Qt.binding(function() { return this.dynamicText + ' extra text' }) })
-        obj2.dynamicText = "Modified text element text"
+        obj2.dynamicText = "Modified dynamic text"
     }
 }
 //![0]

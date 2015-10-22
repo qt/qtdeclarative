@@ -45,4 +45,5 @@ Item {
     property bool qobjectTest: MyInheritedQmlObjectSingleton.isItYouQObject(MyInheritedQmlObjectSingleton)
     property bool myQmlObjectTest: MyInheritedQmlObjectSingleton.isItYouMyQmlObject(MyInheritedQmlObjectSingleton)
     property bool myInheritedQmlObjectTest: MyInheritedQmlObjectSingleton.isItYouMyInheritedQmlObject(MyInheritedQmlObjectSingleton)
+    property int testFoo: TestTypeCppSingleton.foo
 }

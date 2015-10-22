@@ -204,11 +204,12 @@ QAccessible::Role QAccessibleQuickItem::role() const
     if (qobject_cast<QQuickText*>(const_cast<QQuickItem *>(item())))
         return QAccessible::StaticText;
 
-    QVariant v = QQuickAccessibleAttached::property(item(), "role");
-    bool ok;
-    QAccessible::Role role = (QAccessible::Role)v.toInt(&ok);
-    if (!ok)    // Not sure if this check is needed.
+    QAccessible::Role role = QAccessible::NoRole;
+    if (item())
+        role = QQuickItemPrivate::get(item())->accessibleRole();
+    if (role == QAccessible::NoRole)
         role = QAccessible::Client;
+
     return role;
 }
 

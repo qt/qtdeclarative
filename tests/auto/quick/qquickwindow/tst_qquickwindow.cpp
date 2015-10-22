@@ -277,6 +277,10 @@ class tst_qquickwindow : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qquickwindow()
+    {
+        QQuickWindow::setDefaultAlphaBuffer(true);
+    }
 
 private slots:
     void initTestCase()
@@ -1081,17 +1085,25 @@ void tst_qquickwindow::defaultState()
 void tst_qquickwindow::grab_data()
 {
     QTest::addColumn<bool>("visible");
-    QTest::newRow("visible") << true;
-    QTest::newRow("invisible") << false;
+    QTest::addColumn<bool>("alpha");
+    QTest::newRow("visible,opaque") << true << false;
+    QTest::newRow("invisible,opaque") << false << false;
+    QTest::newRow("visible,transparent") << true << true;
+    QTest::newRow("invisible,transparent") << false << true;
 }
 
 void tst_qquickwindow::grab()
 {
     QFETCH(bool, visible);
+    QFETCH(bool, alpha);
 
     QQuickWindow window;
     window.setTitle(QLatin1String(QTest::currentTestFunction()) + QLatin1Char(' ') + QLatin1String(QTest::currentDataTag()));
-    window.setColor(Qt::red);
+    if (alpha) {
+        window.setColor(QColor(0, 0, 0, 0));
+    } else {
+        window.setColor(Qt::red);
+    }
 
     window.resize(250, 250);
 
@@ -1103,9 +1115,14 @@ void tst_qquickwindow::grab()
     }
 
     QImage content = window.grabWindow();
-    QCOMPARE(content.width(), window.width());
-    QCOMPARE(content.height(), window.height());
-    QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+    QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
+    QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+
+    if (alpha) {
+        QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
+    } else {
+        QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+    }
 }
 
 void tst_qquickwindow::multipleWindows()

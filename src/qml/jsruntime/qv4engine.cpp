@@ -518,11 +518,10 @@ ExecutionEngine::~ExecutionEngine()
     delete [] argumentsAccessors;
 }
 
-void ExecutionEngine::enableDebugger()
+void ExecutionEngine::setDebugger(Debugging::Debugger *debugger_)
 {
     Q_ASSERT(!debugger);
-    debugger = new Debugging::Debugger(this);
-    iselFactory.reset(new Moth::ISelFactory);
+    debugger = debugger_;
 }
 
 void ExecutionEngine::enableProfiler()

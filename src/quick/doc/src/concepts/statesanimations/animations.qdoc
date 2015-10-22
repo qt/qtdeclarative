@@ -295,27 +295,3 @@ Rectangle {
 \endqml
 
 */
-
-/*!
-\ingroup qtquick-animation-properties
-\title Qt Quick Property Animation
-\brief Animate property changes
-
-\generatelist{related}
-*/
-
-/*!
-\ingroup qtquick-animation-control
-\title Qt Quick Animation Controls
-\brief Control animation sequences
-
-\generatelist{related}
-*/
-
-/*!
-\ingroup qtquick-animation-modifiers
-\title Qt Quick Animation Modifiers
-\brief Modify animation sequences
-
-\generatelist{related}
-*/

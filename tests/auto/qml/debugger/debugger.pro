@@ -9,7 +9,8 @@ PUBLICTESTS += \
     qpacketprotocol \
     qqmlenginedebuginspectorintegrationtest \
     qqmlenginecontrol \
-    qqmldebuggingenabler
+    qqmldebuggingenabler \
+    qqmlnativeconnector
 
 PRIVATETESTS += \
     qqmldebugclient \

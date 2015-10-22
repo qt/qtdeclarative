@@ -76,8 +76,7 @@ struct QQmlVMEMetaData
     short aliasCount;
     short signalCount;
     short methodCount;
-    short dummyForAlignment; // Add padding to ensure that the following
-                             // AliasData/PropertyData/MethodData is int aligned.
+    // Make sure this structure is always aligned to int
 
     struct AliasData {
         int contextIdx;

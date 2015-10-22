@@ -93,6 +93,19 @@ typedef QHash<DebuggerBreakPoint, QString> BreakPoints;
 class Q_QML_EXPORT Debugger : public QObject
 {
     Q_OBJECT
+
+public:
+    virtual ~Debugger() {}
+    virtual bool pauseAtNextOpportunity() const = 0;
+    virtual void maybeBreakAtInstruction() = 0;
+    virtual void enteringFunction() = 0;
+    virtual void leavingFunction(const ReturnedValue &retVal) = 0;
+    virtual void aboutToThrow() = 0;
+};
+
+class Q_QML_EXPORT V4Debugger : public Debugger
+{
+    Q_OBJECT
 public:
     class Q_QML_EXPORT Job
     {
@@ -131,7 +144,7 @@ public:
         NotStepping = FullThrottle
     };
 
-    Debugger(ExecutionEngine *engine);
+    V4Debugger(ExecutionEngine *engine);
 
     ExecutionEngine *engine() const
     { return m_engine; }
@@ -173,13 +186,13 @@ public: // execution hooks
     void aboutToThrow();
 
 signals:
-    void debuggerPaused(QV4::Debugging::Debugger *self, QV4::Debugging::PauseReason reason);
+    void debuggerPaused(QV4::Debugging::V4Debugger *self, QV4::Debugging::PauseReason reason);
 
 private:
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
     bool reallyHitTheBreakPoint(const QString &filename, int linenr);
-    void runInEngine_havingLock(Debugger::Job *job);
+    void runInEngine_havingLock(V4Debugger::Job *job);
 
 private:
     QV4::ExecutionEngine *m_engine;

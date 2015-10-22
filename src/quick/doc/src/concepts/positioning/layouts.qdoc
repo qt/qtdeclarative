@@ -26,7 +26,6 @@
 ****************************************************************************/
 
 /*!
-\ingroup qtquick-positioners
 \page qtquick-positioning-layouts.html
 \title Item Positioners
 
@@ -47,7 +46,7 @@ and are well suited for resizable user interfaces.
 A set of standard positioners are provided in the basic set of Qt Quick
 graphical types:
 
-\generatelist{related}
+\annotatedlist qtquick-positioners
 
 \section2 Column
 

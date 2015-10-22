@@ -534,6 +534,10 @@ public:
     virtual void implicitWidthChanged();
     virtual void implicitHeightChanged();
 
+#ifndef QT_NO_ACCESSIBILITY
+    virtual QAccessible::Role accessibleRole() const;
+#endif
+
     void setImplicitAntialiasing(bool antialiasing);
 
     void resolveLayoutMirror();

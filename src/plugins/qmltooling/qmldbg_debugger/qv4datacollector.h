@@ -60,7 +60,7 @@ public:
     Ref addFunctionRef(const QString &functionName);
     Ref addScriptRef(const QString &scriptName);
 
-    void collectScope(QJsonObject *dict, QV4::Debugging::Debugger *debugger, int frameNr,
+    void collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger, int frameNr,
                       int scopeNr);
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
@@ -101,7 +101,7 @@ private:
     QV4DataCollector::Refs *m_previousRefs;
 };
 
-class ExpressionEvalJob: public QV4::Debugging::Debugger::JavaScriptJob
+class ExpressionEvalJob: public QV4::Debugging::V4Debugger::JavaScriptJob
 {
     QV4DataCollector *collector;
     QString exception;
@@ -113,7 +113,7 @@ public:
     const QString &exceptionMessage() const;
 };
 
-class GatherSourcesJob: public QV4::Debugging::Debugger::Job
+class GatherSourcesJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QStringList sources;
@@ -124,7 +124,7 @@ public:
     const QStringList &result() const;
 };
 
-class ArgumentCollectJob: public QV4::Debugging::Debugger::Job
+class ArgumentCollectJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
@@ -138,7 +138,7 @@ public:
     void run();
 };
 
-class LocalCollectJob: public QV4::Debugging::Debugger::Job
+class LocalCollectJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
@@ -152,7 +152,7 @@ public:
     void run();
 };
 
-class ThisCollectJob: public QV4::Debugging::Debugger::Job
+class ThisCollectJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
@@ -166,7 +166,7 @@ public:
     bool myRun();
 };
 
-class ExceptionCollectJob: public QV4::Debugging::Debugger::Job
+class ExceptionCollectJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;

@@ -52,6 +52,7 @@ Item {
     property bool qobjectTest2: false
     property bool qobjectTest3: false
     property bool singletonEqualToItself: true
+    property int testFoo: -1
 
     Component.onCompleted: {
         MyInheritedQmlObjectSingleton.myInheritedQmlObjectProperty = MyInheritedQmlObjectSingleton;
@@ -70,5 +71,6 @@ Item {
         qobjectTest3 = MyInheritedQmlObjectSingleton == MyInheritedQmlObjectSingleton.qobjectProperty;
 
         singletonEqualToItself = MyInheritedQmlObjectSingleton == MyInheritedQmlObjectSingleton;
+        testFoo = TestTypeCppSingleton.foo
     }
 }
