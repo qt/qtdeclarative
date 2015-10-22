@@ -149,9 +149,9 @@ struct Q_QML_PRIVATE_EXPORT Value
     };
 
     enum ValueTypeInternal {
-        _Null_Type = Null_Type | ConvertibleToInt,
-        _Boolean_Type = Boolean_Type | ConvertibleToInt,
-        _Integer_Type = Integer_Type | ConvertibleToInt,
+        Null_Type_Internal = Null_Type | ConvertibleToInt,
+        Boolean_Type_Internal = Boolean_Type | ConvertibleToInt,
+        Integer_Type_Internal = Integer_Type | ConvertibleToInt,
 
     };
 #else
@@ -189,9 +189,9 @@ struct Q_QML_PRIVATE_EXPORT Value
 
 
     enum ValueTypeInternal {
-        _Null_Type = Null_Type,
-        _Boolean_Type = Boolean_Type,
-        _Integer_Type = Integer_Type
+        Null_Type_Internal = Null_Type,
+        Boolean_Type_Internal = Boolean_Type,
+        Integer_Type_Internal = Integer_Type
     };
 #endif
 
@@ -203,8 +203,8 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool isEmpty() const { return tag() == Empty_Type; }
 
     inline bool isUndefined() const { return tag() == Undefined_Type; }
-    inline bool isNull() const { return tag() == _Null_Type; }
-    inline bool isBoolean() const { return tag ()== _Boolean_Type; }
+    inline bool isNull() const { return tag() == Null_Type_Internal; }
+    inline bool isBoolean() const { return tag ()== Boolean_Type_Internal; }
 #ifdef QV4_USE_64_BIT_VALUE_ENCODING
     inline bool isInteger() const { return (_val >> IsNumber_Shift) == 1; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
@@ -220,9 +220,9 @@ struct Q_QML_PRIVATE_EXPORT Value
     }
     inline bool isNaN() const { return (tag() & 0x7fff8000) == 0x00078000; }
 #else
-    inline bool isInteger() const { return tag() == _Integer_Type; }
+    inline bool isInteger() const { return tag() == Integer_Type_Internal; }
     inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isNumber() const { return tag() == _Integer_Type || (tag() & NotDouble_Mask) != NotDouble_Mask; }
+    inline bool isNumber() const { return tag() == Integer_Type_Internal || (tag() & NotDouble_Mask) != NotDouble_Mask; }
     inline bool isManaged() const { return tag() == Managed_Type; }
     inline bool isNullOrUndefined() const { return (tag() & IsNullOrUndefined_Mask) == Undefined_Type; }
     inline bool integerCompatible() const { return (tag() & ConvertibleToInt) == ConvertibleToInt; }
@@ -254,21 +254,21 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool isString() const;
     inline bool isObject() const;
     inline bool isInt32() {
-        if (tag() == _Integer_Type)
+        if (tag() == Integer_Type_Internal)
             return true;
         if (isDouble()) {
             double d = doubleValue();
             int i = (int)d;
             if (i == d) {
                 setInt_32(i);
-                setTag(_Integer_Type);
+                setTag(Integer_Type_Internal);
                 return true;
             }
         }
         return false;
     }
     double asDouble() const {
-        if (tag() == _Integer_Type)
+        if (tag() == Integer_Type_Internal)
             return int_32();
         return doubleValue();
     }
@@ -329,7 +329,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     inline bool tryIntegerConversion() {
         bool b = integerCompatible();
         if (b)
-            setTag(_Integer_Type);
+            setTag(Integer_Type_Internal);
         return b;
     }
 
@@ -501,9 +501,9 @@ inline Primitive Primitive::nullValue()
 {
     Primitive v;
 #ifndef QV4_USE_64_BIT_VALUE_ENCODING
-    v.setRawValue(quint64(_Null_Type) << Tag_Shift);
+    v.setRawValue(quint64(Null_Type_Internal) << Tag_Shift);
 #else
-    v.setTagValue(_Null_Type, 0);
+    v.setTagValue(Null_Type_Internal, 0);
 #endif
     return v;
 }
@@ -511,7 +511,7 @@ inline Primitive Primitive::nullValue()
 inline Primitive Primitive::fromBoolean(bool b)
 {
     Primitive v;
-    v.setTagValue(_Boolean_Type, b);
+    v.setTagValue(Boolean_Type_Internal, b);
     return v;
 }
 
@@ -525,7 +525,7 @@ inline Primitive Primitive::fromDouble(double d)
 inline Primitive Primitive::fromInt32(int i)
 {
     Primitive v;
-    v.setTagValue(_Integer_Type, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
+    v.setTagValue(Integer_Type_Internal, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
     v.setInt_32(i);
     return v;
 }
@@ -534,7 +534,7 @@ inline Primitive Primitive::fromUInt32(uint i)
 {
     Primitive v;
     if (i < INT_MAX) {
-        v.setTagValue(_Integer_Type, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
+        v.setTagValue(Integer_Type_Internal, 0); // For mingw482, because it complains, and for VS9, because of internal compiler errors.
         v.setInt_32((int)i);
     } else {
         v.setDouble(i);
@@ -547,11 +547,11 @@ struct Encode {
         return quint64(Value::Undefined_Type) << Value::Tag_Shift;
     }
     static ReturnedValue null() {
-        return quint64(Value::_Null_Type) << Value::Tag_Shift;
+        return quint64(Value::Null_Type_Internal) << Value::Tag_Shift;
     }
 
     Encode(bool b) {
-        val = (quint64(Value::_Boolean_Type) << Value::Tag_Shift) | (uint)b;
+        val = (quint64(Value::Boolean_Type_Internal) << Value::Tag_Shift) | (uint)b;
     }
     Encode(double d) {
         Value v;
@@ -559,11 +559,11 @@ struct Encode {
         val = v.rawValue();
     }
     Encode(int i) {
-        val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | (uint)i;
+        val = (quint64(Value::Integer_Type_Internal) << Value::Tag_Shift) | (uint)i;
     }
     Encode(uint i) {
         if (i <= INT_MAX) {
-            val = (quint64(Value::_Integer_Type) << Value::Tag_Shift) | i;
+            val = (quint64(Value::Integer_Type_Internal) << Value::Tag_Shift) | i;
         } else {
             Value v;
             v.setDouble(i);

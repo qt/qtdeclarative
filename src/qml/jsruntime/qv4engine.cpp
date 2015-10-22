@@ -536,7 +536,7 @@ void ExecutionEngine::initRootContext()
     Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(sizeof(GlobalContext::Data) + sizeof(CallData)));
     new (r->d()) GlobalContext::Data(this);
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
-    r->d()->callData->tag = QV4::Value::_Integer_Type;
+    r->d()->callData->tag = QV4::Value::Integer_Type_Internal;
     r->d()->callData->argc = 0;
     r->d()->callData->thisObject = globalObject;
     r->d()->callData->args[0] = Encode::undefined();
