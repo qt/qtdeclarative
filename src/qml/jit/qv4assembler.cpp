@@ -333,7 +333,7 @@ Assembler::Jump Assembler::genTryDoubleConversion(IR::Expr *src, Assembler::FPRe
 
     // not an int, check if it's a double:
     isNoInt.link(this);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
     Assembler::Jump isNoDbl = branch32(Assembler::Equal, Assembler::ScratchRegister,
                                             Assembler::TrustedImm32(0));

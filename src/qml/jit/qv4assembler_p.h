@@ -745,7 +745,7 @@ public:
             moveDouble(source, (FPRegisterID) targetTemp->index);
             return;
         }
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         moveDoubleTo64(source, ReturnValueRegister);
         move(TrustedImm64(QV4::Value::NaNEncodeMask), ScratchRegister);
         xor64(ScratchRegister, ReturnValueRegister);
@@ -756,7 +756,7 @@ public:
         storeDouble(source, ptr);
 #endif
     }
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     // We need to (de)mangle the double
     void loadDouble(Address addr, FPRegisterID dest)
     {
@@ -1077,7 +1077,7 @@ public:
     FPRegisterID toDoubleRegister(IR::Expr *e, FPRegisterID target = FPGpr0)
     {
         if (IR::Const *c = e->asConst()) {
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
             union {
                 double d;
                 int64_t i;

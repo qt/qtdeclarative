@@ -698,7 +698,7 @@ void InstructionSelection::loadString(const QString &str, IR::Expr *target)
     Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
     _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
     Pointer destAddr = _as->loadAddress(Assembler::ScratchRegister, target);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     _as->store64(Assembler::ReturnValueRegister, destAddr);
 #else
     _as->store32(Assembler::ReturnValueRegister, destAddr);
@@ -1102,7 +1102,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
         Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                               Assembler::TrustedImm32(0));
@@ -1189,7 +1189,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
     switch (source->type) {
     case IR::VarType: {
 
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         _as->load64(addr, Assembler::ScratchRegister);
         _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);
