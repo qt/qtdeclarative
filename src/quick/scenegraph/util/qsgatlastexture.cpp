@@ -54,20 +54,12 @@ QT_BEGIN_NAMESPACE
 #define GL_BGRA 0x80E1
 #endif
 
+int qt_sg_envInt(const char *name, int defaultValue);
 
 static QElapsedTimer qsg_renderer_timer;
 
 namespace QSGAtlasTexture
 {
-
-static int qsg_envInt(const char *name, int defaultValue)
-{
-    QByteArray content = qgetenv(name);
-
-    bool ok = false;
-    int value = content.toInt(&ok);
-    return ok ? value : defaultValue;
-}
 
 Manager::Manager()
     : m_atlas(0)
@@ -79,8 +71,8 @@ Manager::Manager()
     int max;
     gl->functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
 
-    int w = qMin(max, qsg_envInt("QSG_ATLAS_WIDTH", qMax(512U, qNextPowerOfTwo(surfaceSize.width() - 1))));
-    int h = qMin(max, qsg_envInt("QSG_ATLAS_HEIGHT", qMax(512U, qNextPowerOfTwo(surfaceSize.height() - 1))));
+    int w = qMin(max, qt_sg_envInt("QSG_ATLAS_WIDTH", qMax(512U, qNextPowerOfTwo(surfaceSize.width() - 1))));
+    int h = qMin(max, qt_sg_envInt("QSG_ATLAS_HEIGHT", qMax(512U, qNextPowerOfTwo(surfaceSize.height() - 1))));
 
     if (surface->surfaceClass() == QSurface::Window) {
         QWindow *window = static_cast<QWindow *>(surface);
@@ -91,7 +83,7 @@ Manager::Manager()
         }
     }
 
-    m_atlas_size_limit = qsg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
+    m_atlas_size_limit = qt_sg_envInt("QSG_ATLAS_SIZE_LIMIT", qMax(w, h) / 2);
     m_atlas_size = QSize(w, h);
 
     qCDebug(QSG_LOG_INFO, "texture atlas dimensions: %dx%d", w, h);

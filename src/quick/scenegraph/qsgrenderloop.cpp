@@ -199,13 +199,15 @@ QSGRenderLoop *QSGRenderLoop::instance()
             else if (qmlForceThreadedRenderer())
                 loopType = ThreadedRenderLoop;
 
-            const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
-            if (loopName == QByteArrayLiteral("windows"))
-                loopType = WindowsRenderLoop;
-            else if (loopName == QByteArrayLiteral("basic"))
-                loopType = BasicRenderLoop;
-            else if (loopName == QByteArrayLiteral("threaded"))
-                loopType = ThreadedRenderLoop;
+            if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))) {
+                const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
+                if (loopName == QByteArrayLiteral("windows"))
+                    loopType = WindowsRenderLoop;
+                else if (loopName == QByteArrayLiteral("basic"))
+                    loopType = BasicRenderLoop;
+                else if (loopName == QByteArrayLiteral("threaded"))
+                    loopType = ThreadedRenderLoop;
+            }
 
             switch (loopType) {
             case ThreadedRenderLoop:

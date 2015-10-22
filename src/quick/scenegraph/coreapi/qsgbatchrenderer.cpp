@@ -61,6 +61,8 @@ QT_BEGIN_NAMESPACE
 
 extern QByteArray qsgShaderRewriter_insertZAttributes(const char *input, QSurfaceFormat::OpenGLContextProfile profile);
 
+int qt_sg_envInt(const char *name, int defaultValue);
+
 namespace QSGBatchRenderer
 {
 
@@ -785,30 +787,17 @@ Renderer::Renderer(QSGRenderContext *ctx)
     }
 
     m_bufferStrategy = GL_STATIC_DRAW;
-    QByteArray strategy = qgetenv("QSG_RENDERER_BUFFER_STRATEGY");
-    if (strategy == "dynamic") {
-        m_bufferStrategy = GL_DYNAMIC_DRAW;
-    } else if (strategy == "stream") {
-        m_bufferStrategy = GL_STREAM_DRAW;
+    if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDERER_BUFFER_STRATEGY"))) {
+        const QByteArray strategy = qgetenv("QSG_RENDERER_BUFFER_STRATEGY");
+        if (strategy == "dynamic")
+            m_bufferStrategy = GL_DYNAMIC_DRAW;
+        else if (strategy == "stream")
+            m_bufferStrategy = GL_STREAM_DRAW;
     }
 
-    m_batchNodeThreshold = 64;
-    QByteArray alternateThreshold = qgetenv("QSG_RENDERER_BATCH_NODE_THRESHOLD");
-    if (alternateThreshold.length() > 0) {
-        bool ok = false;
-        int threshold = alternateThreshold.toInt(&ok);
-        if (ok)
-            m_batchNodeThreshold = threshold;
-    }
+    m_batchNodeThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_NODE_THRESHOLD", 64);
+    m_batchVertexThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_VERTEX_THRESHOLD", 1024);
 
-    m_batchVertexThreshold = 1024;
-    alternateThreshold = qgetenv("QSG_RENDERER_BATCH_VERTEX_THRESHOLD");
-    if (alternateThreshold.length() > 0) {
-        bool ok = false;
-        int threshold = alternateThreshold.toInt(&ok);
-        if (ok)
-            m_batchVertexThreshold = threshold;
-    }
     if (Q_UNLIKELY(debug_build() || debug_render())) {
         qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
         qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));

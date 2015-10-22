@@ -65,7 +65,7 @@
 static QElapsedTimer qsg_renderer_timer;
 
 #ifndef QT_NO_DEBUG
-static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
 
 
