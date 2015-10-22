@@ -1323,7 +1323,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc)
         qDebug() << "*** Finished regalloc , result:";
 
-    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_IR");
     if (showCode) {
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);

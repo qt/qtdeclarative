@@ -218,7 +218,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     if (!factory) {
 
 #ifdef V4_ENABLE_JIT
-        static const bool forceMoth = !qgetenv("QV4_FORCE_INTERPRETER").isEmpty();
+        static const bool forceMoth = !qEnvironmentVariableIsEmpty("QV4_FORCE_INTERPRETER");
         if (forceMoth)
             factory = new Moth::ISelFactory;
         else

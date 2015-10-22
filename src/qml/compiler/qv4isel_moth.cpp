@@ -350,7 +350,7 @@ void InstructionSelection::run(int functionIndex)
     opt.run(qmlEngine, useTypeInference, /*peelLoops =*/ false);
     if (opt.isInSSA()) {
         static const bool doStackSlotAllocation =
-                qgetenv("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION").isEmpty();
+                qEnvironmentVariableIsEmpty("QV4_NO_INTERPRETER_STACK_SLOT_ALLOCATION");
 
         if (doStackSlotAllocation) {
             AllocateStackSlots(opt.lifeTimeIntervals()).forFunction(_function);

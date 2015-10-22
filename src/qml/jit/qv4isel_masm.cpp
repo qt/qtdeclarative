@@ -185,7 +185,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     JSC::MacroAssemblerCodeRef codeRef;
 
-    static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
     if (showCode) {
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);
@@ -275,7 +275,7 @@ void InstructionSelection::run(int functionIndex)
     IR::Optimizer opt(_function);
     opt.run(qmlEngine);
 
-    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
+    static const bool withRegisterAllocator = qEnvironmentVariableIsEmpty("QV4_NO_REGALLOC");
     if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
         RegisterAllocator regalloc(Assembler::getRegisterInfo());
         regalloc.run(_function, opt);

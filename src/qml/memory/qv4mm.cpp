@@ -70,6 +70,36 @@ using namespace WTF;
 
 QT_BEGIN_NAMESPACE
 
+static uint maxShiftValue()
+{
+    static uint result = 0;
+    if (!result) {
+        result = 6;
+        if (Q_UNLIKELY(qEnvironmentVariableIsSet("QV4_MM_MAXBLOCK_SHIFT"))) {
+            bool ok;
+            const uint overrideValue = qgetenv("QV4_MM_MAXBLOCK_SHIFT").toUInt(&ok);
+            if (ok && overrideValue <= 11 && overrideValue > 0)
+                result = overrideValue;
+        }
+    }
+    return result;
+}
+
+static std::size_t maxChunkSizeValue()
+{
+    static std::size_t result = 0;
+    if (!result) {
+        result = 32 * 1024;
+        if (Q_UNLIKELY(qEnvironmentVariableIsSet("QV4_MM_MAX_CHUNK_SIZE"))) {
+            bool ok;
+            const std::size_t overrideValue = qgetenv("QV4_MM_MAX_CHUNK_SIZE").toUInt(&ok);
+            if (ok)
+                result = overrideValue;
+        }
+    }
+    return result;
+}
+
 using namespace QV4;
 
 struct MemoryManager::Data
@@ -120,11 +150,13 @@ struct MemoryManager::Data
 
     Data()
         : gcBlocked(false)
+        , aggressiveGC(!qEnvironmentVariableIsEmpty("QV4_MM_AGGRESSIVE_GC"))
+        , gcStats(!qEnvironmentVariableIsEmpty("QV4_MM_STATS"))
         , engine(0)
         , totalItems(0)
         , totalAlloc(0)
-        , maxShift(6)
-        , maxChunkSize(32*1024)
+        , maxShift(maxShiftValue())
+        , maxChunkSize(maxChunkSizeValue())
         , unmanagedHeapSize(0)
         , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
         , largeItems(0)
@@ -134,19 +166,6 @@ struct MemoryManager::Data
         memset(nChunks, 0, sizeof(nChunks));
         memset(availableItems, 0, sizeof(availableItems));
         memset(allocCount, 0, sizeof(allocCount));
-        aggressiveGC = !qgetenv("QV4_MM_AGGRESSIVE_GC").isEmpty();
-        gcStats = !qgetenv("QV4_MM_STATS").isEmpty();
-
-        QByteArray overrideMaxShift = qgetenv("QV4_MM_MAXBLOCK_SHIFT");
-        bool ok;
-        uint override = overrideMaxShift.toUInt(&ok);
-        if (ok && override <= 11 && override > 0)
-            maxShift = override;
-
-        QByteArray maxChunkString = qgetenv("QV4_MM_MAX_CHUNK_SIZE");
-        std::size_t tmpMaxChunkSize = maxChunkString.toUInt(&ok);
-        if (ok)
-            maxChunkSize = tmpMaxChunkSize;
     }
 
     ~Data()
