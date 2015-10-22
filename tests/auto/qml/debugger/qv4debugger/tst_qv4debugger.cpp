@@ -33,6 +33,7 @@
 #include <QtTest/QtTest>
 
 #include "qv4datacollector.h"
+#include "qv4debugger.h"
 
 #include <QJSEngine>
 #include <QQmlEngine>
@@ -159,7 +160,7 @@ public:
     }
 
 public slots:
-    void debuggerPaused(V4Debugger *debugger, QV4::Debugging::PauseReason reason)
+    void debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason)
     {
         Q_ASSERT(debugger == m_debugger);
         Q_ASSERT(debugger->engine() == collector.engine());
@@ -167,7 +168,7 @@ public slots:
         m_pauseReason = reason;
         m_statesWhenPaused << debugger->currentExecutionState();
 
-        if (debugger->state() == V4Debugger::Paused &&
+        if (debugger->state() == QV4Debugger::Paused &&
                 debugger->engine()->hasException) {
             Refs refs;
             RefHolder holder(&collector, &refs);
@@ -184,7 +185,7 @@ public slots:
         m_stackTrace = debugger->stackTrace();
 
         while (!m_expressionRequests.isEmpty()) {
-            Q_ASSERT(debugger->state() == V4Debugger::Paused);
+            Q_ASSERT(debugger->state() == QV4Debugger::Paused);
             ExpressionRequest request = m_expressionRequests.takeFirst();
             m_expressionResults << Refs();
             RefHolder holder(&collector, &m_expressionResults.last());
@@ -196,7 +197,7 @@ public slots:
         if (m_captureContextInfo)
             captureContextInfo(debugger);
 
-        debugger->resume(V4Debugger::FullThrottle);
+        debugger->resume(QV4Debugger::FullThrottle);
     }
 
 public:
@@ -209,7 +210,7 @@ public:
         int lineNumber;
     };
 
-    void captureContextInfo(V4Debugger *debugger)
+    void captureContextInfo(QV4Debugger *debugger)
     {
         for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
             m_capturedArguments.append(NamedRefs(&collector));
@@ -226,18 +227,17 @@ public:
         }
     }
 
-    void addDebugger(V4Debugger *debugger)
+    void addDebugger(QV4Debugger *debugger)
     {
         Q_ASSERT(!m_debugger);
         m_debugger = debugger;
-        connect(m_debugger, &V4Debugger::debuggerPaused,
-                this, &TestAgent::debuggerPaused);
+        connect(m_debugger, &QV4Debugger::debuggerPaused, this, &TestAgent::debuggerPaused);
     }
 
     bool m_wasPaused;
-    PauseReason m_pauseReason;
+    QV4Debugger::PauseReason m_pauseReason;
     bool m_captureContextInfo;
-    QList<V4Debugger::ExecutionState> m_statesWhenPaused;
+    QList<QV4Debugger::ExecutionState> m_statesWhenPaused;
     QList<TestBreakPoint> m_breakPointsToAddWhenPaused;
     QVector<QV4::StackFrame> m_stackTrace;
     QVector<NamedRefs> m_capturedArguments;
@@ -251,7 +251,7 @@ public:
     };
     QVector<ExpressionRequest> m_expressionRequests;
     QVector<Refs> m_expressionResults;
-    V4Debugger *m_debugger;
+    QV4Debugger *m_debugger;
 
     // Utility methods:
     void dumpStackTrace() const
@@ -295,9 +295,9 @@ private slots:
     void evaluateExpression();
 
 private:
-    V4Debugger *debugger() const
+    QV4Debugger *debugger() const
     {
-        return static_cast<V4Debugger *>(m_v4->debugger);
+        return static_cast<QV4Debugger *>(m_v4->debugger);
     }
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
     {
@@ -319,7 +319,7 @@ void tst_qv4debugger::init()
     m_engine = new TestEngine;
     m_v4 = m_engine->v4Engine();
     m_v4->iselFactory.reset(new QV4::Moth::ISelFactory);
-    m_v4->setDebugger(new V4Debugger(m_v4));
+    m_v4->setDebugger(new QV4Debugger(m_v4));
     m_engine->moveToThread(m_javaScriptThread);
     m_javaScriptThread->start();
     m_debuggerAgent = new TestAgent(m_v4);
@@ -359,7 +359,7 @@ void tst_qv4debugger::pendingBreakpoint()
     evaluateJavaScript(script, "testfile");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("testfile"));
     QCOMPARE(state.lineNumber, 2);
 }
@@ -375,7 +375,7 @@ void tst_qv4debugger::liveBreakPoint()
     evaluateJavaScript(script, "liveBreakPoint");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 2);
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(1);
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(1);
     QCOMPARE(state.fileName, QString("liveBreakPoint"));
     QCOMPARE(state.lineNumber, 3);
 }
@@ -404,7 +404,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 2);
 
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(0);
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.at(0);
     QCOMPARE(state.fileName, QString("addBreakPointWhilePaused"));
     QCOMPARE(state.lineNumber, 1);
 
@@ -415,7 +415,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
 
 static QV4::ReturnedValue someCall(QV4::CallContext *ctx)
 {
-    static_cast<V4Debugger *>(ctx->d()->engine->debugger)
+    static_cast<QV4Debugger *>(ctx->d()->engine->debugger)
             ->removeBreakPoint("removeBreakPointForNextInstruction", 2);
     return QV4::Encode::undefined();
 }
@@ -450,7 +450,7 @@ void tst_qv4debugger::conditionalBreakPoint()
     evaluateJavaScript(script, "conditionalBreakPoint");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 4);
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("conditionalBreakPoint"));
     QCOMPARE(state.lineNumber, 3);
 
@@ -465,7 +465,7 @@ void tst_qv4debugger::conditionalBreakPointInQml()
 {
     QQmlEngine engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
-    V4Debugger *v4Debugger = new V4Debugger(v4);
+    QV4Debugger *v4Debugger = new QV4Debugger(v4);
     v4->iselFactory.reset(new QV4::Moth::ISelFactory);
     v4->setDebugger(v4Debugger);
 
@@ -644,7 +644,7 @@ void tst_qv4debugger::pauseOnThrow()
     debugger()->setBreakOnThrow(true);
     evaluateJavaScript(script, "pauseOnThrow");
     QVERIFY(m_debuggerAgent->m_wasPaused);
-    QCOMPARE(m_debuggerAgent->m_pauseReason, Throwing);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Throwing);
     QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 2);
     QVERIFY(m_debuggerAgent->m_thrownValue >= qint64(0));
     QJsonObject exception = m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_thrownValue);
@@ -665,9 +665,9 @@ void tst_qv4debugger::breakInCatch()
     debugger()->addBreakPoint("breakInCatch", 4);
     evaluateJavaScript(script, "breakInCatch");
     QVERIFY(m_debuggerAgent->m_wasPaused);
-    QCOMPARE(m_debuggerAgent->m_pauseReason, BreakPoint);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::BreakPointHit);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("breakInCatch"));
     QCOMPARE(state.lineNumber, 4);
 }
@@ -682,9 +682,9 @@ void tst_qv4debugger::breakInWith()
     debugger()->addBreakPoint("breakInWith", 2);
     evaluateJavaScript(script, "breakInWith");
     QVERIFY(m_debuggerAgent->m_wasPaused);
-    QCOMPARE(m_debuggerAgent->m_pauseReason, BreakPoint);
+    QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::BreakPointHit);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.count(), 1);
-    V4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("breakInWith"));
     QCOMPARE(state.lineNumber, 2);
 }

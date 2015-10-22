@@ -40,6 +40,7 @@
 #include <private/qv4runtime_p.h>
 
 #include <QtCore/qjsonarray.h>
+#include <QtCore/qjsonobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -208,13 +209,13 @@ QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
     return ref;
 }
 
-void QV4DataCollector::collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger,
-                                    int frameNr, int scopeNr)
+void QV4DataCollector::collectScope(QJsonObject *dict, QV4Debugger *debugger, int frameNr,
+                                    int scopeNr)
 {
     QStringList names;
 
     Refs refs;
-    if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
+    if (debugger->state() == QV4Debugger::Paused) {
         RefHolder holder(this, &refs);
         ArgumentCollectJob argumentsJob(m_engine, this, &names, frameNr, scopeNr);
         debugger->runInEngine(&argumentsJob);

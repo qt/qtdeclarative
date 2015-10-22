@@ -78,13 +78,12 @@ public:
     void signalEmitted(const QString &signal);
     void send(QJsonObject v8Payload);
 
-    QJsonObject buildScope(int frameNr, int scopeNr, QV4::Debugging::V4Debugger *debugger);
+    QJsonObject buildScope(int frameNr, int scopeNr, QV4Debugger *debugger);
     QJsonArray buildRefs();
     QJsonValue lookup(QV4DataCollector::Ref refId);
     QJsonValue toRef(QV4DataCollector::Ref ref);
 
-    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
-                           QV4::Debugging::V4Debugger *debugger);
+    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr, QV4Debugger *debugger);
     int selectedFrame() const;
     void selectFrame(int frameNr);
 

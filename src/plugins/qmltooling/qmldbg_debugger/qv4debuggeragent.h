@@ -34,7 +34,7 @@
 #ifndef QV4DEBUGGERAGENT_H
 #define QV4DEBUGGERAGENT_H
 
-#include <private/qv4debugging_p.h>
+#include "qv4debugger.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -46,14 +46,14 @@ class QV4DebuggerAgent : public QObject
 public:
     QV4DebuggerAgent(QV4DebugServiceImpl *m_debugService);
 
-    QV4::Debugging::V4Debugger *firstDebugger() const;
+    QV4Debugger *firstDebugger() const;
     bool isRunning() const;
 
-    void addDebugger(QV4::Debugging::V4Debugger *debugger);
-    void removeDebugger(QV4::Debugging::V4Debugger *debugger);
-    const QList<QV4::Debugging::V4Debugger *> &debuggers();
+    void addDebugger(QV4Debugger *debugger);
+    void removeDebugger(QV4Debugger *debugger);
+    const QList<QV4Debugger *> &debuggers();
 
-    void pause(QV4::Debugging::V4Debugger *debugger) const;
+    void pause(QV4Debugger *debugger) const;
     void pauseAll() const;
     void resumeAll() const;
     int addBreakPoint(const QString &fileName, int lineNumber, bool enabled = true, const QString &condition = QString());
@@ -66,11 +66,11 @@ public:
     void setBreakOnThrow(bool onoff);
 
 public slots:
-    void debuggerPaused(QV4::Debugging::V4Debugger *debugger, QV4::Debugging::PauseReason reason);
+    void debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason);
     void handleDebuggerDeleted(QObject *debugger);
 
 private:
-    QList<QV4::Debugging::V4Debugger *> m_debuggers;
+    QList<QV4Debugger *> m_debuggers;
 
     struct BreakPoint {
         QString fileName;

@@ -57,7 +57,6 @@ PRIVATETESTS += \
     qrcqml \
     qqmltimer \
     qqmlinstantiator \
-    qv4debugger \
     qqmlenginecleanup \
     v4misc \
     qqmltranslation \

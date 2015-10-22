@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef DEBUGGING_H
-#define DEBUGGING_H
+#ifndef QV4DEBUGGING_H
+#define QV4DEBUGGING_H
 
 //
 //  W A R N I N G
@@ -46,49 +46,12 @@
 //
 
 #include "qv4global_p.h"
-#include "qv4engine_p.h"
-#include "qv4context_p.h"
-#include "qv4scopedvalue_p.h"
-
-#include <QHash>
-#include <QThread>
-#include <QMutex>
-#include <QWaitCondition>
-
-#include <QtCore/QJsonObject>
+#include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct Function;
-
 namespace Debugging {
-
-enum PauseReason {
-    PauseRequest,
-    BreakPoint,
-    Throwing,
-    Step
-};
-
-struct DebuggerBreakPoint {
-    DebuggerBreakPoint(const QString &fileName, int line)
-        : fileName(fileName), lineNumber(line)
-    {}
-    QString fileName;
-    int lineNumber;
-};
-inline uint qHash(const DebuggerBreakPoint &b, uint seed = 0) Q_DECL_NOTHROW
-{
-    return qHash(b.fileName, seed) ^ b.lineNumber;
-}
-inline bool operator==(const DebuggerBreakPoint &a, const DebuggerBreakPoint &b)
-{
-    return a.lineNumber == b.lineNumber && a.fileName == b.fileName;
-}
-
-typedef QHash<DebuggerBreakPoint, QString> BreakPoints;
 
 class Q_QML_EXPORT Debugger : public QObject
 {
@@ -103,122 +66,9 @@ public:
     virtual void aboutToThrow() = 0;
 };
 
-class Q_QML_EXPORT V4Debugger : public Debugger
-{
-    Q_OBJECT
-public:
-    class Q_QML_EXPORT Job
-    {
-    public:
-        virtual ~Job() = 0;
-        virtual void run() = 0;
-    };
-
-    class Q_QML_EXPORT JavaScriptJob: public Job
-    {
-        QV4::ExecutionEngine *engine;
-        int frameNr;
-        const QString &script;
-        bool resultIsException;
-
-    public:
-        JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
-        void run();
-        bool hasExeption() const;
-
-    protected:
-        virtual void handleResult(QV4::ScopedValue &result) = 0;
-    };
-
-    enum State {
-        Running,
-        Paused
-    };
-
-    enum Speed {
-        FullThrottle = 0,
-        StepOut,
-        StepOver,
-        StepIn,
-
-        NotStepping = FullThrottle
-    };
-
-    V4Debugger(ExecutionEngine *engine);
-
-    ExecutionEngine *engine() const
-    { return m_engine; }
-
-    void pause();
-    void resume(Speed speed);
-
-    State state() const { return m_state; }
-
-    void addBreakPoint(const QString &fileName, int lineNumber, const QString &condition = QString());
-    void removeBreakPoint(const QString &fileName, int lineNumber);
-
-    void setBreakOnThrow(bool onoff);
-
-    // used for testing
-    struct ExecutionState
-    {
-        QString fileName;
-        int lineNumber;
-    };
-    ExecutionState currentExecutionState() const;
-
-    bool pauseAtNextOpportunity() const {
-        return m_pauseRequested || m_haveBreakPoints || m_gatherSources || m_stepping >= StepOver;
-    }
-
-    QVector<StackFrame> stackTrace(int frameLimit = -1) const;
-    QVector<Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
-
-    Function *getFunction() const;
-    void runInEngine(Job *job);
-
-public: // compile-time interface
-    void maybeBreakAtInstruction();
-
-public: // execution hooks
-    void enteringFunction();
-    void leavingFunction(const ReturnedValue &retVal);
-    void aboutToThrow();
-
-signals:
-    void debuggerPaused(QV4::Debugging::V4Debugger *self, QV4::Debugging::PauseReason reason);
-
-private:
-    // requires lock to be held
-    void pauseAndWait(PauseReason reason);
-    bool reallyHitTheBreakPoint(const QString &filename, int linenr);
-    void runInEngine_havingLock(V4Debugger::Job *job);
-
-private:
-    QV4::ExecutionEngine *m_engine;
-    QV4::PersistentValue m_currentContext;
-    QMutex m_lock;
-    QWaitCondition m_runningCondition;
-    State m_state;
-    Speed m_stepping;
-    bool m_pauseRequested;
-    bool m_haveBreakPoints;
-    bool m_breakOnThrow;
-
-    BreakPoints m_breakPoints;
-    QV4::PersistentValue m_returnedValue;
-
-    Job *m_gatherSources;
-    Job *m_runningJob;
-    QWaitCondition m_jobIsRunning;
-};
-
 } // namespace Debugging
 } // namespace QV4
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QV4::Debugging::Debugger*)
-Q_DECLARE_METATYPE(QV4::Debugging::PauseReason)
-
-#endif // DEBUGGING_H
+#endif // QV4DEBUGGING_H
