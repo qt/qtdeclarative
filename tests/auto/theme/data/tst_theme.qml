@@ -101,6 +101,14 @@ TestCase {
         }
     }
 
+    Component {
+        id: swipeView
+        SwipeView {
+            Theme.accentColor: "#111111"
+            Button { }
+        }
+    }
+
     function test_defaults() {
         var control = button.createObject(testCase)
         verify(control)
@@ -272,6 +280,16 @@ TestCase {
         control.Theme.accentColor = "#333333"
         control.active = true
         compare(control.item.Theme.accentColor, "#333333")
+        control.destroy()
+    }
+
+    function test_swipeView() {
+        var control = swipeView.createObject(testCase)
+        verify(control)
+        var child = control.itemAt(0)
+        verify(child)
+        compare(control.Theme.accentColor, "#111111")
+        compare(child.Theme.accentColor, "#111111")
         control.destroy()
     }
 }

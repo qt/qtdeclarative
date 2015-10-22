@@ -344,11 +344,11 @@ const QQuickThemeData &QQuickThemeAttachedPrivate::resolve() const
     return theme ? theme->d_func()->data : *globalThemeData();
 }
 
-void QQuickThemeAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *)
+void QQuickThemeAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parentItem)
 {
     QQuickThemeAttached *theme = QQuickStyle::instance<QQuickThemeAttached>(item);
     if (theme) {
-        QQuickThemeAttached *parent = QQuickStyle::findParent<QQuickThemeAttached>(theme);
+        QQuickThemeAttached *parent = QQuickStyle::findParent<QQuickThemeAttached>(parentItem);
         if (parent)
             theme->setParentTheme(parent);
     }
