@@ -73,6 +73,7 @@ class QQuickThemeAttached : public QObject
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor RESET resetTextColor NOTIFY textColorChanged FINAL)
 
 public:
+    explicit QQuickThemeAttached(QObject *parent = Q_NULLPTR);
     explicit QQuickThemeAttached(const QQuickThemeData &data, QObject *parent = Q_NULLPTR);
     ~QQuickThemeAttached();
 
