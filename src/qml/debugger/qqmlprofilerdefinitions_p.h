@@ -89,9 +89,6 @@ struct QQmlProfilerDefinitions {
 
     enum BindingType {
         QmlBinding,
-        V8Binding,
-        V4Binding,
-
         MaximumBindingType
     };
 

@@ -78,8 +78,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
 
             switch (decodedMessageType) {
             case QQmlProfilerDefinitions::RangeStart:
-                if (decodedDetailType == (int)QQmlProfilerDefinitions::Binding)
-                    ds << QQmlProfilerDefinitions::QmlBinding;
+            case QQmlProfilerDefinitions::RangeEnd:
                 break;
             case QQmlProfilerDefinitions::RangeData:
                 ds << (d->detailString.isEmpty() ? d->detailUrl.toString() : d->detailString);
@@ -88,7 +87,6 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData *d, QList<QByteA
                 ds << (d->detailUrl.isEmpty() ? d->detailString : d->detailUrl.toString()) << d->x
                    << d->y;
                 break;
-            case QQmlProfilerDefinitions::RangeEnd: break;
             default:
                 Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
                 break;

@@ -52,7 +52,6 @@ public:
     QStack<qint64> rangeStartTimes[QQmlProfilerDefinitions::MaximumRangeType];
     QStack<QStringList> rangeDatas[QQmlProfilerDefinitions::MaximumRangeType];
     QStack<QmlEventLocation> rangeLocations[QQmlProfilerDefinitions::MaximumRangeType];
-    QStack<QQmlProfilerDefinitions::BindingType> bindingTypes;
     int rangeCount[QQmlProfilerDefinitions::MaximumRangeType];
 
     quint64 features;
@@ -82,7 +81,6 @@ void QmlProfilerClient::clearData()
         d->rangeDatas[i].clear();
         d->rangeLocations[i].clear();
     }
-    d->bindingTypes.clear();
 }
 
 void QmlProfilerClient::sendRecordingStatus(bool record)
@@ -216,13 +214,6 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
             d->inProgressRanges |= (static_cast<qint64>(1) << range);
             ++d->rangeCount[range];
 
-            // read binding type
-            if (range == (int)QQmlProfilerDefinitions::Binding) {
-                int bindingType = (int)QQmlProfilerDefinitions::QmlBinding;
-                if (!stream.atEnd())
-                    stream >> bindingType;
-                d->bindingTypes.push((QQmlProfilerDefinitions::BindingType)bindingType);
-            }
         } else if (messageType == QQmlProfilerDefinitions::RangeData) {
             QString data;
             stream >> data;
@@ -259,12 +250,9 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
                             d->rangeLocations[range].pop() : QmlEventLocation();
 
                 qint64 startTime = d->rangeStartTimes[range].pop();
-                QQmlProfilerDefinitions::BindingType bindingType =
-                        QQmlProfilerDefinitions::QmlBinding;
-                if (range == (int)QQmlProfilerDefinitions::Binding)
-                    bindingType = d->bindingTypes.pop();
                 emit this->range((QQmlProfilerDefinitions::RangeType)range,
-                                 bindingType, startTime, time - startTime, data, location);
+                                 QQmlProfilerDefinitions::QmlBinding, startTime, time - startTime,
+                                 data, location);
                 if (d->rangeCount[range] == 0) {
                     int count = d->rangeDatas[range].count() +
                                 d->rangeStartTimes[range].count() +
