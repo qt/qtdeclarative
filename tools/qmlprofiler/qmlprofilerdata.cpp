@@ -183,7 +183,7 @@ QString QmlProfilerData::getHashStringForQmlEvent(const QmlEventLocation &locati
 
 QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type)
 {
-    if (type * sizeof(QString) < sizeof(RANGE_TYPE_STRINGS))
+    if (type * sizeof(char *) < sizeof(RANGE_TYPE_STRINGS))
         return QLatin1String(RANGE_TYPE_STRINGS[type]);
     else
         return QString::number(type);
@@ -191,7 +191,7 @@ QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType
 
 QString QmlProfilerData::qmlMessageAsString(QQmlProfilerDefinitions::Message type)
 {
-    if (type * sizeof(QString) < sizeof(MESSAGE_STRINGS))
+    if (type * sizeof(char *) < sizeof(MESSAGE_STRINGS))
         return QLatin1String(MESSAGE_STRINGS[type]);
     else
         return QString::number(type);
