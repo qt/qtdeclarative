@@ -62,7 +62,7 @@ QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager()
 
 QSGDistanceFieldGlyphCacheManager::~QSGDistanceFieldGlyphCacheManager()
 {
-    qDeleteAll(m_caches.values());
+    qDeleteAll(m_caches);
 }
 
 QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawFont &font)
