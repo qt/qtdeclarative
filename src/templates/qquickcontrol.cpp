@@ -395,7 +395,7 @@ void QQuickControl::resetFont()
 */
 qreal QQuickControl::availableWidth() const
 {
-    return width() - leftPadding() - rightPadding();
+    return qMax(0.0, width() - leftPadding() - rightPadding());
 }
 
 /*!
@@ -407,7 +407,7 @@ qreal QQuickControl::availableWidth() const
 */
 qreal QQuickControl::availableHeight() const
 {
-    return height() - topPadding() - bottomPadding();
+    return qMax(0.0, height() - topPadding() - bottomPadding());
 }
 
 /*!
@@ -731,9 +731,9 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
     QQuickItem::geometryChanged(newGeometry, oldGeometry);
     d->resizeBackground();
     d->resizeContent();
-    if (newGeometry.width() != oldGeometry.width())
+    if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width()))
         emit availableWidthChanged();
-    if (newGeometry.width() != oldGeometry.height())
+    if (!qFuzzyCompare(newGeometry.height(), oldGeometry.height()))
         emit availableHeightChanged();
 }
 

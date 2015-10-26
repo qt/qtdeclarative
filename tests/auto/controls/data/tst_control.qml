@@ -71,6 +71,16 @@ TestCase {
         signalName: "mirroredChanged"
     }
 
+    SignalSpy {
+        id: availableWidthSpy
+        signalName: "availableWidthChanged"
+    }
+
+    SignalSpy {
+        id: availableHeightSpy
+        signalName: "availableHeightChanged"
+    }
+
     function test_padding() {
         var control = component.createObject(testCase)
         verify(control)
@@ -135,34 +145,70 @@ TestCase {
         var control = component.createObject(testCase)
         verify(control)
 
+        availableWidthSpy.target = control
+        availableHeightSpy.target = control
+
+        verify(availableWidthSpy.valid)
+        verify(availableHeightSpy.valid)
+
+        var availableWidthChanges = 0
+        var availableHeightChanges = 0
+
         control.width = 100
-        control.height = 100
         compare(control.availableWidth, 100)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 100
         compare(control.availableHeight, 100)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.padding = 10
         compare(control.availableWidth, 80)
         compare(control.availableHeight, 80)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.topPadding = 20
         compare(control.availableWidth, 80)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.leftPadding = 30
         compare(control.availableWidth, 60)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
 
         control.rightPadding = 40
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
 
         control.bottomPadding = 50
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.padding = 60
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.width = 0
+        compare(control.availableWidth, 0)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 0
+        compare(control.availableHeight, 0)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.destroy()
     }
