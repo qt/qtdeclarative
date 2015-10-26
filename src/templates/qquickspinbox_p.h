@@ -49,9 +49,11 @@
 //
 
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
+class QValidator;
 class QQuickSpinner;
 class QQuickSpinnerPrivate;
 class QQuickSpinBoxPrivate;
@@ -64,6 +66,9 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(int stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
+    Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
+    Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
     Q_PROPERTY(QQuickSpinner *up READ up CONSTANT FINAL)
     Q_PROPERTY(QQuickSpinner *down READ down CONSTANT FINAL)
 
@@ -85,6 +90,15 @@ public:
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
+    QValidator *validator() const;
+    void setValidator(QValidator *validator);
+
+    QJSValue textFromValue() const;
+    void setTextFromValue(const QJSValue &callback);
+
+    QJSValue valueFromText() const;
+    void setValueFromText(const QJSValue &callback);
+
     QQuickSpinner *up() const;
     QQuickSpinner *down() const;
 
@@ -98,6 +112,9 @@ Q_SIGNALS:
     void valueChanged();
     void stepSizeChanged();
     void localeChanged();
+    void validatorChanged();
+    void textFromValueChanged();
+    void valueFromTextChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
@@ -105,6 +122,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
+    void componentComplete() Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 

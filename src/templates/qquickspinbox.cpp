@@ -40,6 +40,10 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 
+#include <QtQml/qqmlinfo.h>
+#include <QtQml/private/qqmllocale_p.h>
+#include <QtQml/private/qqmlengine_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // copied from qabstractbutton.cpp
@@ -65,6 +69,17 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     \snippet qtlabscontrols-spinbox.qml 1
 
+    \section2 Custom Values
+
+    \image qtlabscontrols-spinbox-textual.png
+
+    Even though SpinBox works on integer values, it can be customized to
+    accept arbitrary input values. The following snippet demonstrates how
+    \l validator, \l textFromValue and \l valueFromText can be used to
+    customize the default behavior.
+
+    \snippet qtlabscontrols-spinbox-textual.qml 1
+
     \sa Tumbler, {Customizing SpinBox}
 */
 
@@ -74,7 +89,7 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
 
 public:
     QQuickSpinBoxPrivate() : from(0), to(99), value(0), stepSize(1),
-        delayTimer(0), repeatTimer(0), up(Q_NULLPTR), down(Q_NULLPTR) { }
+        delayTimer(0), repeatTimer(0), up(Q_NULLPTR), down(Q_NULLPTR), validator(Q_NULLPTR) { }
 
     int boundValue(int value) const;
     void updateValue();
@@ -99,6 +114,9 @@ public:
     QQuickSpinner *up;
     QQuickSpinner *down;
     QLocale locale;
+    QValidator *validator;
+    QJSValue textFromValue;
+    QJSValue valueFromText;
 };
 
 int QQuickSpinBoxPrivate::boundValue(int value) const
@@ -111,8 +129,12 @@ void QQuickSpinBoxPrivate::updateValue()
     Q_Q(QQuickSpinBox);
     if (contentItem) {
         QVariant text = contentItem->property("text");
-        if (text.isValid())
-            q->setValue(locale.toInt(text.toString()));
+        if (text.isValid()) {
+            QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(q));
+            QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
+            QJSValue val = valueFromText.call(QJSValueList() << text.toString() << loc);
+            q->setValue(val.toInt());
+        }
     }
 }
 
@@ -335,6 +357,103 @@ void QQuickSpinBox::setLocale(const QLocale &locale)
 }
 
 /*!
+    \qmlproperty Validator Qt.labs.controls::SpinBox::validator
+
+    This property holds the input text validator. By default, SpinBox uses
+    \l IntValidator to accept input of integer numbers.
+
+    \snippet SpinBox.qml validator
+
+    \sa textFromValue, valueFromText, locale
+*/
+QValidator *QQuickSpinBox::validator() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->validator;
+}
+
+void QQuickSpinBox::setValidator(QValidator *validator)
+{
+    Q_D(QQuickSpinBox);
+    if (d->validator != validator) {
+        d->validator = validator;
+        emit validatorChanged();
+    }
+}
+
+/*!
+    \qmlproperty function Qt.labs.controls::SpinBox::textFromValue
+
+    This property holds a callback function that is called whenever
+    an integer value needs to be converted to display text.
+
+    The callback function signature is \c {string function(value, locale)}.
+    The function can have one or two arguments, where the first argument
+    is the value to be converted, and the optional second argument is the
+    locale that should be used for the conversion, if applicable.
+
+    The default implementation does the conversion using \l {QtQml::Locale}{Number.toLocaleString()}:
+
+    \code
+    textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }
+    \endcode
+
+    \sa valueFromText, validator, locale
+*/
+QJSValue QQuickSpinBox::textFromValue() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->textFromValue;
+}
+
+void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
+{
+    Q_D(QQuickSpinBox);
+    if (!callback.isCallable()) {
+        qmlInfo(this) << "textFromValue must be a callable function";
+        return;
+    }
+    d->textFromValue = callback;
+    emit textFromValueChanged();
+}
+
+/*!
+    \qmlproperty function Qt.labs.controls::SpinBox::valueFromText
+
+    This property holds a callback function that is called whenever
+    input text needs to be converted to an integer value.
+
+    The callback function signature is \c {int function(text, locale)}.
+    The function can have one or two arguments, where the first argument
+    is the text to be converted, and the optional second argument is the
+    locale that should be used for the conversion, if applicable.
+
+    The default implementation does the conversion using \l {QtQml::Locale}{Number.fromLocaleString()}:
+
+    \code
+    valueFromText: function(text, locale) { return Number.fromLocaleString(locale, text); }
+    \endcode
+
+    \sa textFromValue, validator, locale
+*/
+QJSValue QQuickSpinBox::valueFromText() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->valueFromText;
+}
+
+void QQuickSpinBox::setValueFromText(const QJSValue &callback)
+{
+    Q_D(QQuickSpinBox);
+    if (!callback.isCallable()) {
+        qmlInfo(this) << "valueFromText must be a callable function";
+        return;
+    }
+    d->valueFromText = callback;
+    emit valueFromTextChanged();
+}
+
+/*!
     \qmlpropertygroup Qt.labs.controls::SpinBox::up
     \qmlproperty bool Qt.labs.controls::SpinBox::up.pressed
     \qmlproperty Item Qt.labs.controls::SpinBox::up.indicator
@@ -456,6 +575,19 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
             increase();
         else if (d->down->isPressed())
             decrease();
+    }
+}
+
+void QQuickSpinBox::componentComplete()
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::componentComplete();
+    QQmlEngine *engine = qmlEngine(this);
+    if (engine) {
+        if (!d->textFromValue.isCallable())
+            setTextFromValue(engine->evaluate(QStringLiteral("function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }")));
+        if (!d->valueFromText.isCallable())
+            setValueFromText(engine->evaluate(QStringLiteral("function(text, locale) { return Number.fromLocaleString(locale, text); }")));
     }
 }
 
