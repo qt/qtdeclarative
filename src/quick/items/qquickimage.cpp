@@ -196,7 +196,6 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
 
     Set this property to define what happens when the source image has a different size
     than the item.
-
     \list
     \li Image.Stretch - the image is scaled to fit
     \li Image.PreserveAspectFit - the image is scaled uniformly to fit without cropping
@@ -309,8 +308,8 @@ void QQuickImage::setFillMode(FillMode mode)
     \qmlproperty real QtQuick::Image::paintedHeight
 
     These properties hold the size of the image that is actually painted.
-    In most cases it is the same as \c width and \c height, but when using a
-    \c fillMode \c PreserveAspectFit or \c fillMode \c PreserveAspectCrop
+    In most cases it is the same as \c width and \c height, but when using an
+     \l {fillMode}{Image.PreserveAspectFit} or an \l {fillMode}{Image.PreserveAspectCrop}
     \c paintedWidth or \c paintedHeight can be smaller or larger than
     \c width and \c height of the Image item.
 */
