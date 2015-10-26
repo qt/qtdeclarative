@@ -68,7 +68,7 @@ QQuickFileSelector::~QQuickFileSelector()
 QString QQuickFileSelector::select(const QString &filePath) const
 {
     Q_D(const QQuickFileSelector);
-    return d->select(filePath);
+    return select(QUrl(d->baseUrl.toString() + filePath)).toString();
 }
 
 static bool isLocalScheme(const QString &file)
@@ -156,6 +156,19 @@ QStringList QQuickFileSelector::allSelectors() const
     QMutexLocker locker(&sharedDataMutex);
     QQuickFileSelectorPrivate::updateSelectors();
     return d->extras + sharedData->staticSelectors;
+}
+
+void QQuickFileSelector::setBaseUrl(const QUrl &base)
+{
+    Q_D(QQuickFileSelector);
+    if (d->baseUrl != base)
+        d->baseUrl = base;
+}
+
+QUrl QQuickFileSelector::baseUrl() const
+{
+    Q_D(const QQuickFileSelector);
+    return d->baseUrl;
 }
 
 void QQuickFileSelectorPrivate::updateSelectors()

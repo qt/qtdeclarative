@@ -59,14 +59,18 @@ public:
     ~QQuickFileSelector();
 
     QString select(const QString &filePath) const;
-    QUrl select(const QUrl &filePath) const;
 
     QStringList extraSelectors() const;
     void setExtraSelectors(const QStringList &list);
 
     QStringList allSelectors() const;
 
+    void setBaseUrl(const QUrl &base);
+    QUrl baseUrl() const;
+
 private:
+    QUrl select(const QUrl &filePath) const;
+
     Q_DECLARE_PRIVATE(QQuickFileSelector)
 };
 

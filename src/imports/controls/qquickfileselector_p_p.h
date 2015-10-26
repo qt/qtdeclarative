@@ -46,6 +46,7 @@
 //
 
 #include <QtCore/QString>
+#include <QtCore/QUrl>
 #include <private/qobject_p.h>
 
 #include "qquickfileselector_p.h"
@@ -69,6 +70,7 @@ public:
     QString select(const QString &filePath) const;
 
     QStringList extras;
+    QUrl baseUrl;
 };
 
 QT_END_NAMESPACE

@@ -68,34 +68,34 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
 
     // TODO: read the style from application manifest file
     QQuickFileSelector selector;
-    QString base = baseUrl().toString();
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ApplicationWindow.qml"))), uri, 1, 0, "ApplicationWindow");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/BusyIndicator.qml"))), uri, 1, 0, "BusyIndicator");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Button.qml"))), uri, 1, 0, "Button");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/CheckBox.qml"))), uri, 1, 0, "CheckBox");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Dial.qml"))), uri, 1, 0, "Dial");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Drawer.qml"))), uri, 1, 0, "Drawer");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Frame.qml"))), uri, 1, 0, "Frame");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/GroupBox.qml"))), uri, 1, 0, "GroupBox");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Label.qml"))), uri, 1, 0, "Label");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/PageIndicator.qml"))), uri, 1, 0, "PageIndicator");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ProgressBar.qml"))), uri, 1, 0, "ProgressBar");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/RadioButton.qml"))), uri, 1, 0, "RadioButton");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/RangeSlider.qml"))), uri, 1, 0, "RangeSlider");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollBar.qml"))), uri, 1, 0, "ScrollBar");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ScrollIndicator.qml"))), uri, 1, 0, "ScrollIndicator");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Slider.qml"))), uri, 1, 0, "Slider");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/SpinBox.qml"))), uri, 1, 0, "SpinBox");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/StackView.qml"))), uri, 1, 0, "StackView");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/SwipeView.qml"))), uri, 1, 0, "SwipeView");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Switch.qml"))), uri, 1, 0, "Switch");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TabBar.qml"))), uri, 1, 0, "TabBar");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TabButton.qml"))), uri, 1, 0, "TabButton");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextArea.qml"))), uri, 1, 0, "TextArea");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/TextField.qml"))), uri, 1, 0, "TextField");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolBar.qml"))), uri, 1, 0, "ToolBar");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ToolButton.qml"))), uri, 1, 0, "ToolButton");
-    qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/Tumbler.qml"))), uri, 1, 0, "Tumbler");
+    selector.setBaseUrl(baseUrl());
+    qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
+    qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
+    qmlRegisterType(selector.select(QStringLiteral("/Button.qml")), uri, 1, 0, "Button");
+    qmlRegisterType(selector.select(QStringLiteral("/CheckBox.qml")), uri, 1, 0, "CheckBox");
+    qmlRegisterType(selector.select(QStringLiteral("/Dial.qml")), uri, 1, 0, "Dial");
+    qmlRegisterType(selector.select(QStringLiteral("/Drawer.qml")), uri, 1, 0, "Drawer");
+    qmlRegisterType(selector.select(QStringLiteral("/Frame.qml")), uri, 1, 0, "Frame");
+    qmlRegisterType(selector.select(QStringLiteral("/GroupBox.qml")), uri, 1, 0, "GroupBox");
+    qmlRegisterType(selector.select(QStringLiteral("/Label.qml")), uri, 1, 0, "Label");
+    qmlRegisterType(selector.select(QStringLiteral("/PageIndicator.qml")), uri, 1, 0, "PageIndicator");
+    qmlRegisterType(selector.select(QStringLiteral("/ProgressBar.qml")), uri, 1, 0, "ProgressBar");
+    qmlRegisterType(selector.select(QStringLiteral("/RadioButton.qml")), uri, 1, 0, "RadioButton");
+    qmlRegisterType(selector.select(QStringLiteral("/RangeSlider.qml")), uri, 1, 0, "RangeSlider");
+    qmlRegisterType(selector.select(QStringLiteral("/ScrollBar.qml")), uri, 1, 0, "ScrollBar");
+    qmlRegisterType(selector.select(QStringLiteral("/ScrollIndicator.qml")), uri, 1, 0, "ScrollIndicator");
+    qmlRegisterType(selector.select(QStringLiteral("/Slider.qml")), uri, 1, 0, "Slider");
+    qmlRegisterType(selector.select(QStringLiteral("/SpinBox.qml")), uri, 1, 0, "SpinBox");
+    qmlRegisterType(selector.select(QStringLiteral("/StackView.qml")), uri, 1, 0, "StackView");
+    qmlRegisterType(selector.select(QStringLiteral("/SwipeView.qml")), uri, 1, 0, "SwipeView");
+    qmlRegisterType(selector.select(QStringLiteral("/Switch.qml")), uri, 1, 0, "Switch");
+    qmlRegisterType(selector.select(QStringLiteral("/TabBar.qml")), uri, 1, 0, "TabBar");
+    qmlRegisterType(selector.select(QStringLiteral("/TabButton.qml")), uri, 1, 0, "TabButton");
+    qmlRegisterType(selector.select(QStringLiteral("/TextArea.qml")), uri, 1, 0, "TextArea");
+    qmlRegisterType(selector.select(QStringLiteral("/TextField.qml")), uri, 1, 0, "TextField");
+    qmlRegisterType(selector.select(QStringLiteral("/ToolBar.qml")), uri, 1, 0, "ToolBar");
+    qmlRegisterType(selector.select(QStringLiteral("/ToolButton.qml")), uri, 1, 0, "ToolButton");
+    qmlRegisterType(selector.select(QStringLiteral("/Tumbler.qml")), uri, 1, 0, "Tumbler");
 }
 
 void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
