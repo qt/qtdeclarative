@@ -117,6 +117,7 @@ void QmlProfilerClient::sendRecordingStatus(bool record)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::WriteOnly);
+    stream.setVersion(QDataStream::Qt_4_7);
     stream << record << -1 << d->features;
     sendMessage(ba);
 }
@@ -146,6 +147,7 @@ void QmlProfilerClient::messageReceived(const QByteArray &data)
 {
     QByteArray rwData = data;
     QDataStream stream(&rwData, QIODevice::ReadOnly);
+    stream.setVersion(QDataStream::Qt_4_7);
 
     // Force all the 1 << <FLAG> expressions to be done in 64 bit, to silence some warnings
     const quint64 one = static_cast<quint64>(1);

@@ -344,6 +344,7 @@ public Q_SLOTS:
         if (m_curFrame != arg) {
             m_curFrame = arg;
             Q_EMIT currentFrameChanged(arg); //TODO-C Only emitted on manual advance!
+            update();
         }
     }
 
