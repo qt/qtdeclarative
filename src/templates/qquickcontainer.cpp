@@ -515,17 +515,21 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
     if (oldItem) {
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
 
-        int signalIndex = oldItem->metaObject()->indexOfSignal("currentIndexChanged()");
-        if (signalIndex != -1)
-            QMetaObject::disconnect(oldItem, signalIndex, this, slotIndex);
+        if (!d->exclusiveGroup) {
+            int signalIndex = oldItem->metaObject()->indexOfSignal("currentIndexChanged()");
+            if (signalIndex != -1)
+                QMetaObject::disconnect(oldItem, signalIndex, this, slotIndex);
+        }
     }
 
     if (newItem) {
         QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
 
-        int signalIndex = newItem->metaObject()->indexOfSignal("currentIndexChanged()");
-        if (signalIndex != -1)
-            QMetaObject::connect(newItem, signalIndex, this, slotIndex);
+        if (!d->exclusiveGroup) {
+            int signalIndex = newItem->metaObject()->indexOfSignal("currentIndexChanged()");
+            if (signalIndex != -1)
+                QMetaObject::connect(newItem, signalIndex, this, slotIndex);
+        }
     }
 }
 
