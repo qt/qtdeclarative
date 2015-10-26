@@ -496,4 +496,19 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_layout() {
+        var control = tabBar.createObject(testCase, {spacing: 0, width: 200})
+
+        var tab1 = tabButton.createObject(control)
+        control.addItem(tab1)
+        tryCompare(tab1, "width", control.width)
+
+        var tab2 = tabButton.createObject(control)
+        control.addItem(tab2)
+        tryCompare(tab1, "width", control.width / 2)
+        tryCompare(tab2, "width", control.width / 2)
+
+        control.destroy()
+    }
 }

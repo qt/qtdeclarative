@@ -122,4 +122,20 @@ void QQuickTabBar::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
     d->updateLayout();
 }
 
+void QQuickTabBar::itemAdded(int index, QQuickItem *item)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(item);
+    if (isComponentComplete())
+        polish();
+}
+
+void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(item);
+    if (isComponentComplete())
+        polish();
+}
+
 QT_END_NAMESPACE
