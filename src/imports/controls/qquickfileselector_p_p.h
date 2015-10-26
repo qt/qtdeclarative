@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -46,25 +46,26 @@
 //
 
 #include <QtCore/QString>
-#include <QtCore/QFileSelector>
 #include <private/qobject_p.h>
+
+#include "qquickfileselector_p.h"
 
 QT_BEGIN_NAMESPACE
 
-struct QFileSelectorSharedData //Not QSharedData because currently is just a global store
+struct QQuickFileSelectorSharedData //Not QSharedData because currently is just a global store
 {
     QStringList staticSelectors;
     QStringList preloadedStatics;
 };
 
-class Q_CORE_EXPORT QFileSelectorPrivate : QObjectPrivate //Exported for use in other modules (like QtGui)
+class QQuickFileSelectorPrivate : QObjectPrivate //Exported for use in other modules (like QtGui)
 {
-    Q_DECLARE_PUBLIC(QFileSelector)
+    Q_DECLARE_PUBLIC(QQuickFileSelector)
 public:
     static void updateSelectors();
     static QStringList platformSelectors();
     static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
-    QFileSelectorPrivate();
+    QQuickFileSelectorPrivate();
     QString select(const QString &filePath) const;
 
     QStringList extras;

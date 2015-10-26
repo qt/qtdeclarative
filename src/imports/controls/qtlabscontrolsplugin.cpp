@@ -35,12 +35,12 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtCore/qfileselector.h>
 #include <QtCore/qurl.h>
 
 #include <QtLabsTemplates/private/qquickexclusivegroup_p.h>
 
 #include "qquicktheme_p.h"
+#include "qquickfileselector_p.h"
 
 void initResources()
 {
@@ -67,7 +67,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickExclusiveGroupAttached>();
 
     // TODO: read the style from application manifest file
-    QFileSelector selector;
+    QQuickFileSelector selector;
     QString base = baseUrl().toString();
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/ApplicationWindow.qml"))), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QUrl(base + QStringLiteral("/BusyIndicator.qml"))), uri, 1, 0, "BusyIndicator");

@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -34,18 +34,29 @@
 #ifndef QFILESELECTOR_H
 #define QFILESELECTOR_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 
 QT_BEGIN_NAMESPACE
 
-class QFileSelectorPrivate;
-class Q_CORE_EXPORT QFileSelector : public QObject
+class QQuickFileSelectorPrivate;
+class QQuickFileSelector : public QObject
 {
     Q_OBJECT
 public:
-    explicit QFileSelector(QObject *parent = Q_NULLPTR);
-    ~QFileSelector();
+    explicit QQuickFileSelector(QObject *parent = Q_NULLPTR);
+    ~QQuickFileSelector();
 
     QString select(const QString &filePath) const;
     QUrl select(const QUrl &filePath) const;
@@ -56,7 +67,7 @@ public:
     QStringList allSelectors() const;
 
 private:
-    Q_DECLARE_PRIVATE(QFileSelector)
+    Q_DECLARE_PRIVATE(QQuickFileSelector)
 };
 
 QT_END_NAMESPACE
