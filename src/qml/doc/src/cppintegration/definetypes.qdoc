@@ -195,6 +195,7 @@ be aware that properties of such a singleton type cannot be bound to.
 See \l{qmlRegisterSingletonType()} for more information on how implement and
 register a new singleton type, and how to use an existing singleton type.
 
+\note Enum values for registered types in QML should start with a capital.
 
 \section2 Type Revisions and Versions
 
