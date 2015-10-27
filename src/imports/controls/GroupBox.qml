@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractGroupBox {
+T.GroupBox {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
@@ -60,6 +61,7 @@ AbstractGroupBox {
         width: control.availableWidth
 
         text: control.title
+        font: control.font
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignLeft

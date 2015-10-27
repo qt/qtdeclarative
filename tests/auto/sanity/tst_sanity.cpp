@@ -135,21 +135,14 @@ private:
     QStringList m_errors;
 };
 
-static QMap<QString, QString> listQmlFiles(const QDir &dir)
-{
-    QMap<QString, QString> files;
-    foreach (const QFileInfo &entry, dir.entryInfoList(QStringList() << "*.qml" << "*.js", QDir::Files))
-        files.insert(entry.baseName(), entry.absoluteFilePath());
-    return files;
-}
-
 void tst_Sanity::initTestCase()
 {
-    QQmlEngine engine;
-    foreach (const QString &path, engine.importPathList()) {
-        files.unite(listQmlFiles(QDir(path + "/QtQuick/Calendar.2")));
-        files.unite(listQmlFiles(QDir(path + "/QtQuick/Controls.2")));
-        files.unite(listQmlFiles(QDir(path + "/QtQuick/Extras.2")));
+    QDirIterator it(QQC2_IMPORT_PATH, QStringList() << "*.qml" << "*.js", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        it.next();
+        QFileInfo info = it.fileInfo();
+        if (info.dir().dirName() != QStringLiteral("snippets") && info.dir().dirName() != QStringLiteral("designer"))
+            files.insert(info.baseName(), info.filePath());
     }
 }
 

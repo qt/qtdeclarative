@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -52,7 +52,7 @@ TestCase {
 
     Component {
         id: textArea
-        TextArea { }
+        TextArea { background: Item { } }
     }
 
     function test_creation() {
@@ -61,54 +61,39 @@ TestCase {
         control.destroy()
     }
 
-    SignalSpy {
-        id: pressAndHoldSpy
-        signalName: "pressAndHold"
-    }
+    PressAndHoldTests { id: pah }
 
     function test_pressAndHold() {
         var control = textArea.createObject(testCase)
-        control.width = 200
-        pressAndHoldSpy.target = control
+        pah.basicPressAndHold(control)
+        control.destroy()
+    }
 
-        mouseClick(control)
-        compare(pressAndHoldSpy.count, 0)
-        var interval = Qt.styleHints.mousePressAndHoldInterval
+    function test_pressAndHoldKeepsSelection() {
+        var control = textArea.createObject(testCase)
+        pah.pressAndHoldKeepsSelection(control)
+        control.destroy()
+    }
 
-        // Short press duration => nothing happens
-        mousePress(control)
-        wait(interval * 0.3)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 0)
+    function test_implicitSize() {
+        var control = textArea.createObject(testCase)
+        control.background.implicitWidth = 400
+        control.background.implicitHeight = 200
+        compare(control.implicitWidth, 400)
+        compare(control.implicitHeight, 200)
+        control.destroy()
+    }
 
-        // Long enough press duration => signal emitted
-        mousePress(control, 10, 10)
-        // Add 20% extra time to allow the control to
-        // receive the timer event before we come back here
-        wait(interval * 1.2)
-        compare(pressAndHoldSpy.count, 1)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 1)
+    function test_alignment() {
+        var control = textArea.createObject(testCase)
 
-        // Long enough, but move in between => nothing happens
-        pressAndHoldSpy.clear()
-        mousePress(control)
-        wait(interval * 0.6)
-        mouseMove(control, 5, 5, Qt.LeftButton)
-        wait(interval * 0.6)
-        compare(pressAndHoldSpy.count, 0)
-        mouseRelease(control)
-        compare(pressAndHoldSpy.count, 0)
+        control.horizontalAlignment = TextArea.AlignRight
+        compare(control.horizontalAlignment, TextArea.AlignRight)
+        compare(control.placeholder.horizontalAlignment, Text.AlignRight)
 
-        // Long enough, but 2nd press in between => nothing happens
-        pressAndHoldSpy.clear()
-        mousePress(control, 10, 10)
-        wait(interval * 0.6)
-        mousePress(control, 10, 10, Qt.RightButton)
-        wait(interval * 0.6)
-        compare(pressAndHoldSpy.count, 0)
-        mouseRelease(control, 10, 10, Qt.LeftButton|Qt.RightButton)
-        compare(pressAndHoldSpy.count, 0)
+        control.verticalAlignment = TextArea.AlignBottom
+        compare(control.verticalAlignment, TextArea.AlignBottom)
+        compare(control.placeholder.verticalAlignment, Text.AlignBottom)
 
         control.destroy()
     }

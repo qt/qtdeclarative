@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -94,7 +94,7 @@ TestCase {
         compare(vertical.active, false)
         compare(vertical.orientation, Qt.Vertical)
 
-        container.AbstractScrollBar.vertical = vertical
+        container.ScrollBar.vertical = vertical
         compare(vertical.parent, container)
         compare(vertical.orientation, Qt.Vertical)
         compare(vertical.size, container.visibleArea.heightRatio)
@@ -107,7 +107,7 @@ TestCase {
         compare(horizontal.active, false)
         compare(horizontal.orientation, Qt.Vertical)
 
-        container.AbstractScrollBar.horizontal = horizontal
+        container.ScrollBar.horizontal = horizontal
         compare(horizontal.parent, container)
         compare(horizontal.orientation, Qt.Horizontal)
         compare(horizontal.size, container.visibleArea.widthRatio)

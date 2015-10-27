@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -75,7 +75,7 @@ TestCase {
         verify(control)
 
         compare(control.stepSize, 0)
-        compare(control.snapMode, AbstractSlider.NoSnap)
+        compare(control.snapMode, Slider.NoSnap)
         compare(control.orientation, Qt.Horizontal)
 
         control.destroy()
@@ -355,6 +355,79 @@ TestCase {
             compare(control.pressed, false)
             compare(pressedSpy.count, ++pressedCount)
         }
+
+        control.destroy()
+    }
+
+    function test_padding() {
+        // test with "unbalanced" paddings (left padding != right padding) to ensure
+        // that the slider position calculation is done taking padding into account
+        // ==> the position is _not_ 0.5 in the middle of the control
+        var control = slider.createObject(testCase, {leftPadding: 10, rightPadding: 20})
+        verify(control)
+
+        pressedSpy.target = control
+        verify(pressedSpy.valid)
+
+        mousePress(control, 0, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+        compare(control.visualPosition, 0.0)
+
+        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.5)
+        compare(control.visualPosition, 0.5)
+
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 1)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        verify(control.position > 0.5)
+        verify(control.visualPosition > 0.5)
+
+        mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, Qt.LeftButton)
+        compare(pressedSpy.count, 2)
+        compare(control.pressed, false)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+        compare(control.visualPosition, 0.5)
+
+        // RTL
+        control.value = 0
+        control.layoutDirection = Qt.RightToLeft
+
+        mousePress(control, 0, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+        compare(control.visualPosition, 1.0)
+
+        mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        compare(control.position, 0.5)
+        compare(control.visualPosition, 0.5)
+
+        mouseMove(control, control.width * 0.5, control.height * 0.5, 0, Qt.LeftButton)
+        compare(pressedSpy.count, 3)
+        compare(control.pressed, true)
+        compare(control.value, 0.0)
+        verify(control.position < 0.5)
+        verify(control.visualPosition > 0.5)
+
+        mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, Qt.LeftButton)
+        compare(pressedSpy.count, 4)
+        compare(control.pressed, false)
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+        compare(control.visualPosition, 0.5)
 
         control.destroy()
     }

@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,16 +35,20 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractTextArea {
+T.TextArea {
     id: control
 
-    Accessible.name: text
-    Accessible.multiLine: true
-    Accessible.role: Accessible.EditableText
-    Accessible.readOnly: readOnly
-    Accessible.description: placeholder ? placeholder.text : ""
+    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
+                            background ? background.implicitWidth : 0,
+                            placeholder ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             background ? background.implicitHeight : 0,
+                             placeholder ? placeholder.implicitHeight + topPadding + bottomPadding : 0)
+
+    padding: 6
 
     color: enabled ? Theme.textColor : Theme.disabledColor
     selectionColor: Theme.selectionColor
@@ -54,11 +58,15 @@ AbstractTextArea {
     placeholder: Text {
         x: control.leftPadding
         y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
 
+        font: control.font
         color: control.Theme.disabledColor
+        horizontalAlignment: control.horizontalAlignment
+        verticalAlignment: control.verticalAlignment
         visible: !control.length
+        elide: Text.ElideRight
     }
     //! [placeholder]
 }

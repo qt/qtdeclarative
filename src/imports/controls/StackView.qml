@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.4
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractStackView {
+T.StackView {
     id: root
 
     //! [popEnter]
@@ -63,4 +64,16 @@ AbstractStackView {
         NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushExit]
+
+    //! [replaceEnter]
+    replaceEnter: Transition {
+        NumberAnimation { property: "x"; from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceEnter]
+
+    //! [replaceExit]
+    replaceExit: Transition {
+        NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceExit]
 }

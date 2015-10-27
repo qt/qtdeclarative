@@ -1,0 +1,79 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtlabscontrols-buttons.html
+    \title Button Controls
+
+    Qt Labs Controls offers a selection of button-like controls.
+
+    \annotatedlist qtlabscontrols-buttons
+
+    Each type of button has its own specific target use case. The following
+    sections offer guidelines for choosing the appropriate type of button,
+    depending on the use case.
+
+    \section1 Button Control
+
+    \image qtlabscontrols-button.png
+
+    \l Button presents a push-button control that can be pushed or clicked
+    by the user. Buttons are normally used to perform an action, or to answer
+    a question. Typical buttons are \e OK, \e Apply, \e Cancel, \e Close,
+    \e Yes, \e No, and \e Help.
+
+    \section1 CheckBox Control
+
+    \image qtlabscontrols-checkbox.png
+
+    \l CheckBox presents an option button that can be toggled on (checked)
+    or off (unchecked). Check boxes are typically used to select one or more
+    options from a set of options.
+
+    \section1 RadioButton Control
+
+    \image qtlabscontrols-radiobutton.png
+
+    \l RadioButton presents an option button that can be toggled on (checked)
+    or off (unchecked). Radio buttons are typically used to select one option
+    from a set of options.
+
+    \section1 Switch Control
+
+    \image qtlabscontrols-switch.png
+
+    \l Switch is an option button that can be dragged or toggled on (checked)
+    or off (unchecked). Switches are typically used to select between two
+    states.
+
+    \section1 ToolButton Control
+
+    \image qtlabscontrols-toolbutton.png
+
+    \l ToolButton is functionally similar to \l Button, but provides a look
+    that is more suitable within a \l ToolBar.
+*/

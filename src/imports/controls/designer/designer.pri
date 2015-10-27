@@ -1,5 +1,5 @@
 QML_FILES += \
-    $$PWD/qtquickcontrols2.metainfo
+    $$PWD/qtlabscontrols.metainfo
 
 QML_FILES += \
     $$PWD/BusyIndicatorSpecifics.qml \
@@ -18,7 +18,6 @@ QML_FILES += \
     $$PWD/SwitchSpecifics.qml \
     $$PWD/TextAreaSpecifics.qml \
     $$PWD/TextFieldSpecifics.qml \
-    $$PWD/ToggleButtonSpecifics.qml \
     $$PWD/ToolBarSpecifics.qml \
     $$PWD/ToolButtonSpecifics.qml
 

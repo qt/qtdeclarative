@@ -1,0 +1,888 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL3$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPLv3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or later as published by the Free
+** Software Foundation and appearing in the file LICENSE.GPL included in
+** the packaging of this file. Please review the following information to
+** ensure the GNU General Public License version 2.0 requirements will be
+** met: http://www.gnu.org/licenses/gpl-2.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qquickrangeslider_p.h"
+#include "qquickcontrol_p_p.h"
+
+#include <QtCore/qscopedpointer.h>
+#include <QtQuick/private/qquickwindow_p.h>
+
+QT_BEGIN_NAMESPACE
+
+/*!
+    \qmltype RangeSlider
+    \inherits Control
+    \instantiates QQuickRangeSlider
+    \inqmlmodule Qt.labs.controls
+    \ingroup qtlabscontrols-input
+    \brief A slider control used to select a range of values.
+
+    \image qtlabscontrols-rangeslider.gif
+
+    RangeSlider is used to select a range specified by two values, by sliding
+    each handle along a track.
+
+    \table
+    \row \li \image qtlabscontrols-rangeslider-normal.png
+         \li A range slider in its normal state.
+    \row \li \image qtlabscontrols-rangeslider-first-handle-focused.png
+         \li A range slider whose first handle has active focus.
+    \row \li \image qtlabscontrols-rangeslider-second-handle-focused.png
+         \li A range slider whose second handle has active focus.
+    \row \li \image qtlabscontrols-rangeslider-disabled.png
+         \li A range slider that is disabled.
+    \endtable
+
+    \code
+    RangeSlider {
+        first.value: 0.25
+        second.value: 0.75
+    }
+    \endcode
+
+    \sa {Customizing RangeSlider}, {Input Controls}
+*/
+
+class QQuickRangeSliderNodePrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickRangeSliderNode)
+public:
+    QQuickRangeSliderNodePrivate(qreal value, QQuickRangeSlider *slider) :
+        value(value),
+        isPendingValue(false),
+        pendingValue(0),
+        position(0),
+        handle(Q_NULLPTR),
+        slider(slider),
+        pressed(false)
+    {
+    }
+
+    bool isFirst() const;
+
+    void setPosition(qreal position, bool ignoreOtherPosition = false);
+    void updatePosition(bool ignoreOtherPosition = false);
+
+    static QQuickRangeSliderNodePrivate *get(QQuickRangeSliderNode *node);
+
+private:
+    friend class QQuickRangeSlider;
+
+    qreal value;
+    bool isPendingValue;
+    qreal pendingValue;
+    qreal position;
+    QQuickItem *handle;
+    QQuickRangeSlider *slider;
+    bool pressed;
+};
+
+bool QQuickRangeSliderNodePrivate::isFirst() const
+{
+    return this == get(slider->first());
+}
+
+void QQuickRangeSliderNodePrivate::setPosition(qreal position, bool ignoreOtherPosition)
+{
+    Q_Q(QQuickRangeSliderNode);
+
+    const qreal min = isFirst() || ignoreOtherPosition ? 0.0 : qMax(0.0, slider->first()->position());
+    const qreal max = !isFirst() || ignoreOtherPosition ? 1.0 : qMin(1.0, slider->second()->position());
+    position = qBound(min, position, max);
+    if (!qFuzzyCompare(this->position, position)) {
+        this->position = position;
+        emit q->positionChanged();
+        emit q->visualPositionChanged();
+    }
+}
+
+void QQuickRangeSliderNodePrivate::updatePosition(bool ignoreOtherPosition)
+{
+    qreal pos = 0;
+    if (!qFuzzyCompare(slider->from(), slider->to()))
+        pos = (value - slider->from()) / (slider->to() - slider->from());
+    setPosition(pos, ignoreOtherPosition);
+}
+
+QQuickRangeSliderNodePrivate *QQuickRangeSliderNodePrivate::get(QQuickRangeSliderNode *node)
+{
+    return node->d_func();
+}
+
+QQuickRangeSliderNode::QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider) :
+    QObject(*(new QQuickRangeSliderNodePrivate(value, slider)), slider)
+{
+}
+
+QQuickRangeSliderNode::~QQuickRangeSliderNode()
+{
+}
+
+qreal QQuickRangeSliderNode::value() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    return d->value;
+}
+
+void QQuickRangeSliderNode::setValue(qreal value)
+{
+    Q_D(QQuickRangeSliderNode);
+    if (!d->slider->isComponentComplete()) {
+        d->pendingValue = value;
+        d->isPendingValue = true;
+        return;
+    }
+
+    // First, restrict the first value to be within to and from.
+    const qreal smaller = qMin(d->slider->to(), d->slider->from());
+    const qreal larger = qMax(d->slider->to(), d->slider->from());
+    value = qBound(smaller, value, larger);
+
+    // Then, ensure that it doesn't go past the other value,
+    // a check that depends on whether or not the range is inverted.
+    const bool invertedRange = d->slider->from() > d->slider->to();
+    if (d->isFirst()) {
+        if (invertedRange) {
+            if (value < d->slider->second()->value())
+                value = d->slider->second()->value();
+        } else {
+            if (value > d->slider->second()->value())
+                value = d->slider->second()->value();
+        }
+    } else {
+        if (invertedRange) {
+            if (value > d->slider->first()->value())
+                value = d->slider->first()->value();
+        } else {
+            if (value < d->slider->first()->value())
+                value = d->slider->first()->value();
+        }
+    }
+
+    if (!qFuzzyCompare(d->value, value)) {
+        d->value = value;
+        d->updatePosition();
+        emit valueChanged();
+    }
+}
+
+qreal QQuickRangeSliderNode::position() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    return d->position;
+}
+
+qreal QQuickRangeSliderNode::visualPosition() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    if (d->slider->orientation() == Qt::Vertical || d->slider->isMirrored())
+        return 1.0 - d->position;
+    return d->position;
+}
+
+QQuickItem *QQuickRangeSliderNode::handle() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    return d->handle;
+}
+
+void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
+{
+    Q_D(QQuickRangeSliderNode);
+    if (d->handle != handle) {
+        delete d->handle;
+        d->handle = handle;
+        if (handle) {
+            if (!handle->parentItem())
+                handle->setParentItem(d->slider);
+
+            QQuickItem *firstHandle = d->slider->first()->handle();
+            QQuickItem *secondHandle = d->slider->second()->handle();
+            if (firstHandle && secondHandle) {
+                // The order of property assignments in QML is undefined,
+                // but we need the first handle to be before the second due
+                // to focus order constraints, so check for that here.
+                const QList<QQuickItem *> childItems = d->slider->childItems();
+                const int firstIndex = childItems.indexOf(firstHandle);
+                const int secondIndex = childItems.indexOf(secondHandle);
+                if (firstIndex != -1 && secondIndex != -1 && firstIndex > secondIndex) {
+                    firstHandle->stackBefore(secondHandle);
+                    // Ensure we have some way of knowing which handle is above
+                    // the other when it comes to mouse presses, and also that
+                    // they are rendered in the correct order.
+                    secondHandle->setZ(secondHandle->z() + 1);
+                }
+            }
+
+            handle->setActiveFocusOnTab(true);
+        }
+        emit handleChanged();
+    }
+}
+
+bool QQuickRangeSliderNode::isPressed() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    return d->pressed;
+}
+
+void QQuickRangeSliderNode::setPressed(bool pressed)
+{
+    Q_D(QQuickRangeSliderNode);
+    if (d->pressed != pressed) {
+        d->pressed = pressed;
+        d->slider->setAccessibleProperty("pressed", pressed || d->slider->second()->isPressed());
+        emit pressedChanged();
+    }
+}
+
+void QQuickRangeSliderNode::increase()
+{
+    Q_D(QQuickRangeSliderNode);
+    qreal step = qFuzzyIsNull(d->slider->stepSize()) ? 0.1 : d->slider->stepSize();
+    setValue(d->value + step);
+}
+
+void QQuickRangeSliderNode::decrease()
+{
+    Q_D(QQuickRangeSliderNode);
+    qreal step = qFuzzyIsNull(d->slider->stepSize()) ? 0.1 : d->slider->stepSize();
+    setValue(d->value - step);
+}
+
+static const qreal defaultFrom = 0.0;
+static const qreal defaultTo = 1.0;
+
+class QQuickRangeSliderPrivate : public QQuickControlPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickRangeSlider)
+
+public:
+    QQuickRangeSliderPrivate() :
+        from(defaultFrom),
+        to(defaultTo),
+        stepSize(0),
+        first(Q_NULLPTR),
+        second(Q_NULLPTR),
+        orientation(Qt::Horizontal),
+        snapMode(QQuickRangeSlider::NoSnap),
+        track(Q_NULLPTR)
+    {
+        m_accessibleRole = 0x00000033; //QAccessible::Slider
+    }
+
+    qreal from;
+    qreal to;
+    qreal stepSize;
+    QQuickRangeSliderNode *first;
+    QQuickRangeSliderNode *second;
+    QPoint pressPoint;
+    Qt::Orientation orientation;
+    QQuickRangeSlider::SnapMode snapMode;
+    QQuickItem *track;
+};
+
+static qreal valueAt(const QQuickRangeSlider *slider, qreal position)
+{
+    return slider->from() + (slider->to() - slider->from()) * position;
+}
+
+static qreal snapPosition(const QQuickRangeSlider *slider, qreal position)
+{
+    const qreal stepSize = slider->stepSize();
+    if (qFuzzyIsNull(stepSize))
+        return position;
+    return qRound(position / stepSize) * stepSize;
+}
+
+static qreal positionAt(const QQuickRangeSlider *slider, QQuickItem *handle, const QPoint &point)
+{
+    if (slider->orientation() == Qt::Horizontal) {
+        const qreal hw = handle ? handle->width() : 0;
+        const qreal offset = hw / 2;
+        const qreal extent = slider->availableWidth() - hw;
+        if (!qFuzzyIsNull(extent)) {
+            if (slider->isMirrored())
+                return (slider->width() - point.x() - slider->rightPadding() - offset) / extent;
+            return (point.x() - slider->leftPadding() - offset) / extent;
+        }
+    } else {
+        const qreal hh = handle ? handle->height() : 0;
+        const qreal offset = hh / 2;
+        const qreal extent = slider->availableHeight() - hh;
+        if (!qFuzzyIsNull(extent))
+            return (slider->height() - point.y() - slider->bottomPadding() - offset) / extent;
+    }
+    return 0;
+}
+
+QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent) :
+    QQuickControl(*(new QQuickRangeSliderPrivate), parent)
+{
+    Q_D(QQuickRangeSlider);
+    d->first = new QQuickRangeSliderNode(0.0, this);
+    d->second = new QQuickRangeSliderNode(1.0, this);
+
+    setAcceptedMouseButtons(Qt::LeftButton);
+    setFlag(QQuickItem::ItemIsFocusScope);
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::RangeSlider::from
+
+    This property holds the starting value for the range. The default value is \c 0.0.
+
+    \sa to, first.value, second.value
+*/
+qreal QQuickRangeSlider::from() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->from;
+}
+
+void QQuickRangeSlider::setFrom(qreal from)
+{
+    Q_D(QQuickRangeSlider);
+    if (qFuzzyCompare(d->from, from))
+        return;
+
+    d->from = from;
+    emit fromChanged();
+
+    if (isComponentComplete()) {
+        d->first->setValue(d->first->value());
+        d->second->setValue(d->second->value());
+    }
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::RangeSlider::to
+
+    This property holds the end value for the range. The default value is \c 1.0.
+
+    \sa from, first.value, second.value
+*/
+qreal QQuickRangeSlider::to() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->to;
+}
+
+void QQuickRangeSlider::setTo(qreal to)
+{
+    Q_D(QQuickRangeSlider);
+    if (qFuzzyCompare(d->to, to))
+        return;
+
+    d->to = to;
+    emit toChanged();
+
+    if (isComponentComplete()) {
+        d->first->setValue(d->first->value());
+        d->second->setValue(d->second->value());
+    }
+}
+
+/*!
+    \qmlpropertygroup Qt.labs.controls::RangeSlider::first
+    \qmlproperty real Qt.labs.controls::RangeSlider::first.value
+    \qmlproperty real Qt.labs.controls::RangeSlider::first.position
+    \qmlproperty real Qt.labs.controls::RangeSlider::first.visualPosition
+    \qmlproperty Item Qt.labs.controls::RangeSlider::first.handle
+    \qmlproperty bool Qt.labs.controls::RangeSlider::first.pressed
+
+    \table
+    \header
+        \li Property
+        \li Description
+    \row
+        \li value
+        \li This property holds the value of the first handle in the range
+            \c from - \c to.
+
+            If \l to is greater than \l from, the value of the first handle
+            must be greater than the second, and vice versa.
+
+            Unlike \l {first.position}{position}, value is not updated while the
+            handle is dragged, but rather when it has been released.
+
+            The default value is \c 0.0.
+    \row
+        \li handle
+        \li This property holds the first handle item.
+    \row
+        \li visualPosition
+        \li This property holds the visual position of the first handle.
+
+            The position is defined as a percentage of the control's size, scaled to
+            \c {0.0 - 1.0}. When the control is \l {Control::mirrored}{mirrored}, the
+            value is equal to \c {1.0 - position}. This makes the value suitable for
+            visualizing the slider, taking right-to-left support into account.
+    \row
+        \li position
+        \li This property holds the logical position of the first handle.
+
+            The position is defined as a percentage of the control's size, scaled
+            to \c {0.0 - 1.0}. Unlike \l {first.value}{value}, position is
+            continuously updated while the handle is dragged. For visualizing a
+            slider, the right-to-left aware
+            \l {first.visualPosition}{visualPosition} should be used instead.
+    \row
+        \li pressed
+        \li This property holds whether the first handle is pressed.
+    \endtable
+
+    \sa first.increase(), first.decrease()
+*/
+QQuickRangeSliderNode *QQuickRangeSlider::first() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->first;
+}
+
+/*!
+    \qmlpropertygroup Qt.labs.controls::RangeSlider::second
+    \qmlproperty real Qt.labs.controls::RangeSlider::second.value
+    \qmlproperty real Qt.labs.controls::RangeSlider::second.position
+    \qmlproperty real Qt.labs.controls::RangeSlider::second.visualPosition
+    \qmlproperty Item Qt.labs.controls::RangeSlider::second.handle
+    \qmlproperty bool Qt.labs.controls::RangeSlider::second.pressed
+
+    \table
+    \header
+        \li Property
+        \li Description
+    \row
+        \li value
+        \li This property holds the value of the second handle in the range
+            \c from - \c to.
+
+            If \l to is greater than \l from, the value of the first handle
+            must be greater than the second, and vice versa.
+
+            Unlike \l {second.position}{position}, value is not updated while the
+            handle is dragged, but rather when it has been released.
+
+            The default value is \c 0.0.
+    \row
+        \li handle
+        \li This property holds the second handle item.
+    \row
+        \li visualPosition
+        \li This property holds the visual position of the second handle.
+
+            The position is defined as a percentage of the control's size, scaled to
+            \c {0.0 - 1.0}. When the control is \l {Control::mirrored}{mirrored}, the
+            value is equal to \c {1.0 - position}. This makes the value suitable for
+            visualizing the slider, taking right-to-left support into account.
+    \row
+        \li position
+        \li This property holds the logical position of the second handle.
+
+            The position is defined as a percentage of the control's size, scaled
+            to \c {0.0 - 1.0}. Unlike \l {second.value}{value}, position is
+            continuously updated while the handle is dragged. For visualizing a
+            slider, the right-to-left aware
+            \l {second.visualPosition}{visualPosition} should be used instead.
+    \row
+        \li pressed
+        \li This property holds whether the second handle is pressed.
+    \endtable
+
+    \sa second.increase(), second.decrease()
+*/
+QQuickRangeSliderNode *QQuickRangeSlider::second() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->second;
+}
+
+/*!
+    \qmlproperty real Qt.labs.controls::RangeSlider::stepSize
+
+    This property holds the step size. The default value is \c 0.0.
+
+    \sa snapMode, first.increase(), first.decrease()
+*/
+qreal QQuickRangeSlider::stepSize() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->stepSize;
+}
+
+void QQuickRangeSlider::setStepSize(qreal step)
+{
+    Q_D(QQuickRangeSlider);
+    if (!qFuzzyCompare(d->stepSize, step)) {
+        d->stepSize = step;
+        emit stepSizeChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::RangeSlider::snapMode
+
+    This property holds the snap mode.
+
+    Possible values:
+    \value RangeSlider.NoSnap The slider does not snap (default).
+    \value RangeSlider.SnapAlways The slider snaps while the handle is dragged.
+    \value RangeSlider.SnapOnRelease The slider does not snap while being dragged, but only after the handle is released.
+
+    \sa stepSize
+*/
+QQuickRangeSlider::SnapMode QQuickRangeSlider::snapMode() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->snapMode;
+}
+
+void QQuickRangeSlider::setSnapMode(SnapMode mode)
+{
+    Q_D(QQuickRangeSlider);
+    if (d->snapMode != mode) {
+        d->snapMode = mode;
+        emit snapModeChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration Qt.labs.controls::RangeSlider::orientation
+
+    This property holds the orientation.
+
+    Possible values:
+    \value Qt.Horizontal Horizontal (default)
+    \value Qt.Vertical Vertical
+*/
+Qt::Orientation QQuickRangeSlider::orientation() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->orientation;
+}
+
+void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
+{
+    Q_D(QQuickRangeSlider);
+    if (d->orientation != orientation) {
+        d->orientation = orientation;
+        emit orientationChanged();
+    }
+}
+
+/*!
+    \qmlproperty Item Qt.labs.controls::RangeSlider::track
+
+    This property holds the track item.
+
+    \sa {Customizing Slider}
+*/
+QQuickItem *QQuickRangeSlider::track() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->track;
+}
+
+void QQuickRangeSlider::setTrack(QQuickItem *track)
+{
+    Q_D(QQuickRangeSlider);
+    if (d->track != track) {
+        delete d->track;
+        d->track = track;
+        if (track && !track->parentItem())
+            track->setParentItem(this);
+        emit trackChanged();
+    }
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::setValues(real firstValue, real secondValue)
+
+    Sets \l first.value and \l second.value with the given arguments.
+
+    If \a to is larger than \a from and \a firstValue is larger than
+    \a secondValue, \a firstValue will be clamped to \a secondValue.
+
+    If \a from is larger than \a to and \a secondValue is larger than
+    \a firstValue, \a secondValue will be clamped to \a firstValue.
+
+    This function may be necessary to set the first and second values
+    after the control has been completed, as there is a circular
+    dependency between firstValue and secondValue which can cause
+    assigned values to be clamped to each other.
+
+    \sa stepSize
+*/
+void QQuickRangeSlider::setValues(qreal firstValue, qreal secondValue)
+{
+    Q_D(QQuickRangeSlider);
+    // Restrict the values to be within to and from.
+    const qreal smaller = qMin(d->to, d->from);
+    const qreal larger = qMax(d->to, d->from);
+    firstValue = qBound(smaller, firstValue, larger);
+    secondValue = qBound(smaller, secondValue, larger);
+
+    if (d->from > d->to) {
+        // If the from and to values are reversed, the secondValue
+        // might be less than the first value, which is not allowed.
+        if (secondValue > firstValue)
+            secondValue = firstValue;
+    } else {
+        // Otherwise, clamp first to second if it's too large.
+        if (firstValue > secondValue)
+            firstValue = secondValue;
+    }
+
+    // Then set both values. If they didn't change, no change signal will be emitted.
+    QQuickRangeSliderNodePrivate *firstPrivate = QQuickRangeSliderNodePrivate::get(d->first);
+    if (firstValue != firstPrivate->value) {
+        firstPrivate->value = firstValue;
+        emit d->first->valueChanged();
+    }
+
+    QQuickRangeSliderNodePrivate *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
+    if (secondValue != secondPrivate->value) {
+        secondPrivate->value = secondValue;
+        emit d->second->valueChanged();
+    }
+
+    // After we've set both values, then we can update the positions.
+    // If we don't do this last, the positions may be incorrect.
+    firstPrivate->updatePosition(true);
+    secondPrivate->updatePosition();
+}
+
+void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::keyPressEvent(event);
+
+    QQuickRangeSliderNode *focusNode = d->first->handle()->hasActiveFocus()
+        ? d->first : (d->second->handle()->hasActiveFocus() ? d->second : Q_NULLPTR);
+    if (!focusNode)
+        return;
+
+    if (d->orientation == Qt::Horizontal) {
+        if (event->key() == Qt::Key_Left) {
+            focusNode->setPressed(true);
+            if (isMirrored())
+                focusNode->increase();
+            else
+                focusNode->decrease();
+            event->accept();
+        } else if (event->key() == Qt::Key_Right) {
+            focusNode->setPressed(true);
+            if (isMirrored())
+                focusNode->decrease();
+            else
+                focusNode->increase();
+            event->accept();
+        }
+    } else {
+        if (event->key() == Qt::Key_Up) {
+            focusNode->setPressed(true);
+            focusNode->increase();
+            event->accept();
+        } else if (event->key() == Qt::Key_Down) {
+            focusNode->setPressed(true);
+            focusNode->decrease();
+            event->accept();
+        }
+    }
+}
+
+void QQuickRangeSlider::keyReleaseEvent(QKeyEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::keyReleaseEvent(event);
+    d->first->setPressed(false);
+    d->second->setPressed(false);
+}
+
+void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::mousePressEvent(event);
+    d->pressPoint = event->pos();
+
+    QQuickItem *firstHandle = d->first->handle();
+    QQuickItem *secondHandle = d->second->handle();
+    const bool firstHit = firstHandle && firstHandle->contains(mapToItem(firstHandle, d->pressPoint));
+    const bool secondHit = secondHandle && secondHandle->contains(mapToItem(secondHandle, d->pressPoint));
+    QQuickRangeSliderNode *hitNode = Q_NULLPTR;
+    QQuickRangeSliderNode *otherNode = Q_NULLPTR;
+
+    if (firstHit && secondHit) {
+        // choose highest
+        hitNode = firstHandle->z() > secondHandle->z() ? d->first : d->second;
+        otherNode = firstHandle->z() > secondHandle->z() ? d->second : d->first;
+    } else if (firstHit) {
+        hitNode = d->first;
+        otherNode = d->second;
+    } else if (secondHit) {
+        hitNode = d->second;
+        otherNode = d->first;
+    }
+
+    if (hitNode) {
+        hitNode->setPressed(true);
+        hitNode->handle()->setZ(1);
+    }
+    if (otherNode)
+        otherNode->handle()->setZ(0);
+}
+
+void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::mouseMoveEvent(event);
+    if (!keepMouseGrab()) {
+        if (d->orientation == Qt::Horizontal)
+            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().x() - d->pressPoint.x(), Qt::XAxis, event));
+        else
+            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().y() - d->pressPoint.y(), Qt::YAxis, event));
+    }
+    if (keepMouseGrab()) {
+        QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : Q_NULLPTR);
+        if (pressedNode) {
+            qreal pos = positionAt(this, pressedNode->handle(), event->pos());
+            if (d->snapMode == SnapAlways)
+                pos = snapPosition(this, pos);
+            QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
+        }
+    }
+}
+
+void QQuickRangeSlider::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::mouseReleaseEvent(event);
+
+    d->pressPoint = QPoint();
+    if (!keepMouseGrab())
+        return;
+
+    QQuickRangeSliderNode *pressedNode = d->first->isPressed() ? d->first : (d->second->isPressed() ? d->second : Q_NULLPTR);
+    if (!pressedNode)
+        return;
+
+    qreal pos = positionAt(this, pressedNode->handle(), event->pos());
+    if (d->snapMode != NoSnap)
+        pos = snapPosition(this, pos);
+    pressedNode->setValue(valueAt(this, pos));
+    setKeepMouseGrab(false);
+    pressedNode->setPressed(false);
+}
+
+void QQuickRangeSlider::mouseUngrabEvent()
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::mouseUngrabEvent();
+    d->pressPoint = QPoint();
+    d->first->setPressed(false);
+    d->second->setPressed(false);
+}
+
+void QQuickRangeSlider::mirrorChange()
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::mirrorChange();
+    emit d->first->visualPositionChanged();
+    emit d->second->visualPositionChanged();
+}
+
+void QQuickRangeSlider::componentComplete()
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::componentComplete();
+
+    QQuickRangeSliderNodePrivate *firstPrivate = QQuickRangeSliderNodePrivate::get(d->first);
+    QQuickRangeSliderNodePrivate *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
+
+    if (firstPrivate->isPendingValue || secondPrivate->isPendingValue
+        || !qFuzzyCompare(d->from, defaultFrom) || !qFuzzyCompare(d->to, defaultTo)) {
+        // Properties were set while we were loading. To avoid clamping issues that occur when setting the
+        // values of first and second overriding values set by the user, set them all at once at the end.
+        // Another reason that we must set these values here is that the from and to values might have made the old range invalid.
+        setValues(firstPrivate->isPendingValue ? firstPrivate->pendingValue : firstPrivate->value,
+                      secondPrivate->isPendingValue ? secondPrivate->pendingValue : secondPrivate->value);
+
+        firstPrivate->pendingValue = 0;
+        firstPrivate->isPendingValue = false;
+        secondPrivate->pendingValue = 0;
+        secondPrivate->isPendingValue = false;
+    } else {
+        // If there was no pending data, we must still update the positions,
+        // as first.setValue()/second.setValue() won't be called as part of default construction.
+        // Don't need to ignore the second position when updating the first position here,
+        // as our default values are guaranteed to be valid.
+        firstPrivate->updatePosition();
+        secondPrivate->updatePosition();
+    }
+}
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::first.increase()
+
+    Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa first
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::first.decrease()
+
+    Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa first
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::second.increase()
+
+    Increases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa second
+*/
+
+/*!
+    \qmlmethod void Qt.labs.controls::RangeSlider::second.decrease()
+
+    Decreases the value of the handle by stepSize, or \c 0.1 if stepSize is not defined.
+
+    \sa second
+*/
+QT_END_NAMESPACE

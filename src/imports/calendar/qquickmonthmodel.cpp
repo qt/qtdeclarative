@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -194,7 +194,7 @@ QVariant QQuickMonthModel::data(const QModelIndex &index, int role) const
         case WeekNumberRole:
             return date.weekNumber();
         case MonthRole:
-            return date.month();
+            return date.month() - 1;
         case YearRole:
             return date.year();
         default:

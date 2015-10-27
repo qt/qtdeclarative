@@ -1,0 +1,325 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL3$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPLv3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or later as published by the Free
+** Software Foundation and appearing in the file LICENSE.GPL included in
+** the packaging of this file. Please review the following information to
+** ensure the GNU General Public License version 2.0 requirements will be
+** met: http://www.gnu.org/licenses/gpl-2.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qquickswipeview_p.h"
+
+#include <QtLabsTemplates/private/qquickcontainer_p_p.h>
+
+QT_BEGIN_NAMESPACE
+
+/*!
+    \qmltype SwipeView
+    \inherits Container
+    \instantiates QQuickSwipeView
+    \inqmlmodule Qt.labs.controls
+    \ingroup qtlabscontrols-navigation
+    \ingroup qtlabscontrols-containers
+    \brief A swipe view control.
+
+    SwipeView provides a swipe-based navigation model.
+
+    \image qtlabscontrols-swipeview-wireframe.png
+
+    SwipeView is populated with a set of pages. One page is visible at a time.
+    The user can navigate between the pages by swiping sideways. Notice that
+    SwipeView itself is entirely non-visual. It is recommended to combine it
+    with PageIndicator, to give the user a visual clue that there are multiple
+    pages.
+
+    \snippet qtlabscontrols-swipeview-indicator.qml 1
+
+    As shown above, SwipeView is typically populated with a static set of
+    pages that are defined inline as children of the view. It is also possible
+    to \l {Container::addItem()}{add}, \l {Container::insertItem()}{insert},
+    \l {Container::moveItem()}{move}, and \l {Container::removeItem()}{remove}
+    pages dynamically at run time.
+
+    \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls}
+*/
+
+class QQuickSwipeViewPrivate : public QQuickContainerPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickSwipeView)
+
+public:
+    void resizeItem(QQuickItem *item);
+    void resizeItems();
+
+    static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
+};
+
+void QQuickSwipeViewPrivate::resizeItems()
+{
+    Q_Q(QQuickSwipeView);
+    const int count = q->count();
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = itemAt(i);
+        if (item)
+            item->setSize(QSizeF(contentItem->width(), contentItem->height()));
+    }
+}
+
+QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
+{
+    return view->d_func();
+}
+
+QQuickSwipeView::QQuickSwipeView(QQuickItem *parent) :
+    QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
+{
+    setFlag(ItemIsFocusScope);
+    setActiveFocusOnTab(true);
+}
+
+QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
+{
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!item) {
+        qWarning() << "SwipeView: attached properties must be accessed from within a child item";
+        return Q_NULLPTR;
+    }
+
+    return new QQuickSwipeViewAttached(item);
+}
+
+void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickSwipeView);
+    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
+    d->resizeItems();
+}
+
+void QQuickSwipeView::itemAdded(int, QQuickItem *item)
+{
+    Q_D(QQuickSwipeView);
+    if (isComponentComplete())
+        item->setSize(QSizeF(d->contentItem->width(), d->contentItem->height()));
+}
+
+/*!
+    \qmlattachedproperty int Qt.labs.controls::SwipeView::index
+
+    This attached property holds the index of each child item in the SwipeView.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
+    \qmlattachedproperty bool Qt.labs.controls::SwipeView::isCurrentItem
+
+    This attached property is \c true if this child is the current item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+/*!
+    \qmlattachedproperty SwipeView Qt.labs.controls::SwipeView::view
+
+    This attached property holds the view that manages this child item.
+
+    It is attached to each child item of the SwipeView.
+*/
+
+class QQuickSwipeViewAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+{
+    Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
+public:
+    QQuickSwipeViewAttachedPrivate(QQuickItem *item) :
+        item(item),
+        swipeView(Q_NULLPTR),
+        index(-1),
+        isCurrent(false)
+    {
+    }
+
+    ~QQuickSwipeViewAttachedPrivate() {
+    }
+
+    void updateView(QQuickItem *parent);
+
+    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+
+    void updateIndex();
+    void updateIsCurrent();
+
+    void setView(QQuickSwipeView *view);
+    void setIndex(int i);
+    void setIsCurrent(bool current);
+
+    QQuickItem *item;
+    QQuickSwipeView *swipeView;
+    int index;
+    // Better to store this so that we don't need to lump its calculation
+    // together with index's calculation, as it would otherwise need to know
+    // the old index to know if it should emit the change signal.
+    bool isCurrent;
+};
+
+void QQuickSwipeViewAttachedPrivate::updateIndex()
+{
+    setIndex(swipeView ? QQuickSwipeViewPrivate::get(swipeView)->contentModel->indexOf(item, Q_NULLPTR) : -1);
+}
+
+void QQuickSwipeViewAttachedPrivate::updateIsCurrent()
+{
+    setIsCurrent(swipeView ? swipeView->currentIndex() == index : false);
+}
+
+void QQuickSwipeViewAttachedPrivate::setView(QQuickSwipeView *view)
+{
+    if (view == swipeView)
+        return;
+
+    if (swipeView) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(swipeView);
+        p->removeItemChangeListener(this, QQuickItemPrivate::Children);
+
+        disconnect(swipeView, &QQuickSwipeView::currentIndexChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+        disconnect(swipeView, &QQuickSwipeView::contentChildrenChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIndex);
+    }
+
+    swipeView = view;
+
+    if (swipeView) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(swipeView);
+        p->addItemChangeListener(this, QQuickItemPrivate::Children);
+
+        connect(swipeView, &QQuickSwipeView::currentIndexChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIsCurrent);
+        connect(swipeView, &QQuickSwipeView::contentChildrenChanged,
+            this, &QQuickSwipeViewAttachedPrivate::updateIndex);
+    }
+
+    Q_Q(QQuickSwipeViewAttached);
+    emit q->viewChanged();
+
+    updateIndex();
+    updateIsCurrent();
+}
+
+void QQuickSwipeViewAttachedPrivate::setIsCurrent(bool current)
+{
+    if (current != isCurrent) {
+        isCurrent = current;
+        Q_Q(QQuickSwipeViewAttached);
+        emit q->isCurrentItemChanged();
+    }
+}
+
+void QQuickSwipeViewAttachedPrivate::setIndex(int i)
+{
+    if (i != index) {
+        index = i;
+        Q_Q(QQuickSwipeViewAttached);
+        emit q->indexChanged();
+    }
+}
+
+void QQuickSwipeViewAttachedPrivate::updateView(QQuickItem *parent)
+{
+    // parent can be, e.g.:
+    // - The contentItem of a ListView (typically the case)
+    // - A non-visual or weird type like TestCase, when child items are created from components
+    //   wherein the attached properties are used
+    // - null, when the item was removed with removeItem()
+    QQuickSwipeView *view = Q_NULLPTR;
+    if (parent) {
+        view = qobject_cast<QQuickSwipeView*>(parent);
+        if (!view) {
+            if (parent->parentItem() && parent->parentItem()->property("contentItem").isValid()) {
+                // The parent is the contentItem of some kind of view.
+                view = qobject_cast<QQuickSwipeView*>(parent->parentItem()->parentItem());
+            }
+        }
+    }
+
+    setView(view);
+}
+
+void QQuickSwipeViewAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
+{
+    updateIndex();
+}
+
+void QQuickSwipeViewAttachedPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
+{
+    updateIndex();
+}
+
+void QQuickSwipeViewAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *parent)
+{
+    updateView(parent);
+}
+
+QQuickSwipeViewAttached::QQuickSwipeViewAttached(QQuickItem *item) :
+    QObject(*(new QQuickSwipeViewAttachedPrivate(item)), item)
+{
+    Q_D(QQuickSwipeViewAttached);
+    if (item->parentItem()) {
+        d->updateView(item->parentItem());
+    } else {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+        p->addItemChangeListener(d, QQuickItemPrivate::Parent);
+    }
+}
+
+QQuickSwipeViewAttached::~QQuickSwipeViewAttached()
+{
+}
+
+QQuickSwipeView *QQuickSwipeViewAttached::view() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView;
+}
+
+int QQuickSwipeViewAttached::index() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->index;
+}
+
+bool QQuickSwipeViewAttached::isCurrentItem() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView ? d->swipeView->currentIndex() == d->index : false;
+}
+
+QT_END_NAMESPACE

@@ -228,6 +228,7 @@ void EventCapturer::stopCapturing()
 
 void EventCapturer::captureEvent(const QEvent *event)
 {
+    qDebug() << "captured" << event->type();
     CapturedEvent capturedEvent(*event, mDelayTimer.elapsed() - mLastCaptureTime);
     mEvents.append(capturedEvent);
     mLastCaptureTime = mDelayTimer.elapsed();

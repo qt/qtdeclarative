@@ -1,7 +1,10 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    accessibility \
+    activeFocusOnTab \
     applicationwindow \
+    calendar \
     controls \
-    extras \
     sanity \
-    snippets
+    snippets \
+    theme

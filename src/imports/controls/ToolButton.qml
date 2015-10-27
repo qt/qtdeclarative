@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,19 +35,16 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractToolButton {
+T.ToolButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             label ? label.implicitWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
-
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.Button
 
     padding: 6
 
@@ -59,6 +56,7 @@ AbstractToolButton {
         height: control.availableHeight
 
         text: control.text
+        font: control.font
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
@@ -71,9 +69,9 @@ AbstractToolButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        opacity: 0.25
-        color: control.Theme.pressColor
-        visible: control.pressed
+        color: Qt.darker(control.Theme.pressColor, control.checkable && control.checked ? 1.5 : 1.0)
+        opacity: control.pressed ? 1.0 : control.checkable && control.checked ? 0.5 : 0
+        visible: control.pressed || (control.checkable && control.checked)
     }
     //! [background]
 }

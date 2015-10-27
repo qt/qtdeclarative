@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractCheckBox {
+T.CheckBox {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -47,11 +48,6 @@ AbstractCheckBox {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-
-    Accessible.name: text
-    Accessible.checked: checked
-    Accessible.pressed: pressed
-    Accessible.role: Accessible.CheckBox
 
     padding: 6
     spacing: 6
@@ -73,6 +69,7 @@ AbstractCheckBox {
             y: (parent.height - height) / 2
             width: 12
             height: 12
+            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
             color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
                            control.checked && control.activeFocus ? control.Theme.focusColor :
                            control.checked ? control.Theme.accentColor : control.Theme.baseColor,
@@ -91,6 +88,7 @@ AbstractCheckBox {
         height: control.availableHeight
 
         text: control.text
+        font: control.font
         color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
         elide: Text.ElideRight
         visible: control.text

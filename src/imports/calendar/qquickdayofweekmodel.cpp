@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -63,11 +63,9 @@ void QQuickDayOfWeekModel::setLocale(const QLocale &locale)
 {
     Q_D(QQuickDayOfWeekModel);
     if (d->locale != locale) {
-        bool changed = d->locale.firstDayOfWeek() != locale.firstDayOfWeek();
         d->locale = locale;
         emit localeChanged();
-        if (changed)
-            emit dataChanged(index(0, 0), index(6, 0));
+        emit dataChanged(index(0, 0), index(6, 0));
     }
 }
 

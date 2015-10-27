@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -46,21 +46,21 @@ class QQuickWeekNumberModelPrivate : public QAbstractItemModelPrivate
     Q_DECLARE_PUBLIC(QQuickWeekNumberModel)
 
 public:
-    QQuickWeekNumberModelPrivate()
+    QQuickWeekNumberModelPrivate() : month(-1), year(-1)
     {
         QDate date = QDate::currentDate();
+        init(date.month(), date.year(), locale);
         month = date.month();
         year = date.year();
-        first = calculateFirst(month, year, locale);
     }
 
     void init(int month, int year, const QLocale &locale = QLocale());
-    static int calculateFirst(int month, int year, const QLocale &locale);
+    static QDate calculateFirst(int month, int year, const QLocale &locale);
 
     int month;
     int year;
-    int first;
     QLocale locale;
+    int weekNumbers[6];
 };
 
 void QQuickWeekNumberModelPrivate::init(int m, int y, const QLocale &l)
@@ -69,21 +69,19 @@ void QQuickWeekNumberModelPrivate::init(int m, int y, const QLocale &l)
     if (m == month && y == year && l.firstDayOfWeek() == locale.firstDayOfWeek())
         return;
 
-    first = calculateFirst(m, y, l);
-
-    emit q->dataChanged(q->index(0, 0), q->index(5, 0));
-}
-
-int QQuickWeekNumberModelPrivate::calculateFirst(int month, int year, const QLocale &locale)
-{
     // The actual first (1st) day of the month.
-    QDate firstDayOfMonthDate(year, month, 1);
-    int difference = ((firstDayOfMonthDate.dayOfWeek() - locale.firstDayOfWeek()) + 7) % 7;
+    QDate firstDayOfMonthDate(y, m, 1);
+    int difference = ((firstDayOfMonthDate.dayOfWeek() - l.firstDayOfWeek()) + 7) % 7;
     // The first day to display should never be the 1st of the month, as we want some days from
     // the previous month to be visible.
     if (difference == 0)
         difference += 7;
-    return firstDayOfMonthDate.addDays(-difference).weekNumber();
+
+    for (int i = 0; i < 6; ++i)
+        weekNumbers[i] = firstDayOfMonthDate.addDays(i * 7 - difference).weekNumber();
+
+    if (q) // null at construction
+        emit q->dataChanged(q->index(0, 0), q->index(5, 0));
 }
 
 QQuickWeekNumberModel::QQuickWeekNumberModel(QObject *parent) :
@@ -144,15 +142,15 @@ int QQuickWeekNumberModel::weekNumberAt(int index) const
     Q_D(const QQuickWeekNumberModel);
     if (index < 0 || index > 5)
         return -1;
-    return d->first + index;
+    return d->weekNumbers[index];
 }
 
 int QQuickWeekNumberModel::indexOf(int weekNumber) const
 {
     Q_D(const QQuickWeekNumberModel);
-    if (weekNumber < d->first || weekNumber > d->first + 6)
+    if (weekNumber < d->weekNumbers[0] || weekNumber > d->weekNumbers[5])
         return -1;
-    return weekNumber - d->first;
+    return weekNumber - d->weekNumbers[0];
 }
 
 QVariant QQuickWeekNumberModel::data(const QModelIndex &index, int role) const

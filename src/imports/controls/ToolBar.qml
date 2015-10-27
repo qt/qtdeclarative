@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractToolBar {
+T.ToolBar {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
@@ -45,8 +46,6 @@ AbstractToolBar {
 
     contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
     contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
-
-    Accessible.role: Accessible.ToolBar
 
     //! [contentItem]
     contentItem: Item { }

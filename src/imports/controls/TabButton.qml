@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -35,9 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
-AbstractTabButton {
+T.TabButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
@@ -45,12 +46,9 @@ AbstractTabButton {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
 
-    Accessible.name: text
-    Accessible.pressed: pressed
-    Accessible.selected: checked
-    Accessible.role: Accessible.PageTab
-
     padding: 6
+
+    font.pointSize: 10
 
     //! [label]
     label: Text {
@@ -60,7 +58,7 @@ AbstractTabButton {
         height: control.availableHeight
 
         text: control.text
-        font.pointSize: 10
+        font: control.font
         elide: Text.ElideRight
         color: !control.enabled ? control.Theme.disabledColor : control.pressed ? control.Theme.accentColor : control.Theme.textColor
         horizontalAlignment: Text.AlignHCenter

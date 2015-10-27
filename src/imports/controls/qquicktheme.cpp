@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -36,6 +36,7 @@
 
 #include "qquicktheme_p.h"
 #include "qquickthemedata_p.h"
+#include "qquickstyle_p.h"
 
 #include <QtCore/qset.h>
 #include <QtCore/qpointer.h>
@@ -51,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Theme
     \inherits QtObject
     \instantiates QQuickThemeAttached
-    \inqmlmodule QtQuick.Controls
+    \inqmlmodule Qt.labs.controls
     \ingroup utilities
     \brief A theme interface.
 
@@ -59,139 +60,46 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::accentColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::accentColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::backgroundColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::backgroundColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::disabledColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::disabledColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::focusColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::focusColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::frameColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::frameColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::pressColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::pressColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::selectedTextColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::selectedTextColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::selectionColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::selectionColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::shadowColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::shadowColor
 */
 
 /*!
-    \qmlattachedproperty color QtQuickControls2::Theme::textColor
+    \qmlattachedproperty color Qt.labs.controls::Theme::textColor
 */
 
-Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtquickcontrols/theme.json")))
-
-static QQuickThemeAttached *themeInstance(QQmlEngine *engine)
-{
-    static QHash<QQmlEngine *, QQuickThemeAttached *> themes;
-    QHash<QQmlEngine *, QQuickThemeAttached *>::iterator it = themes.find(engine);
-    if (it == themes.end())
-        it = themes.insert(engine, new QQuickThemeAttached(*globalThemeData(), engine));
-    return it.value();
-}
-
-static QQuickThemeAttached *attachedTheme(QObject *object)
-{
-    if (object)
-        return qobject_cast<QQuickThemeAttached*>(qmlAttachedPropertiesObject<QQuickThemeAttached>(object, false));
-    return Q_NULLPTR;
-}
-
-static QQuickThemeAttached *findParentTheme(QObject *object)
-{
-    QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (item) {
-        // lookup parent items
-        QQuickItem *parent = item->parentItem();
-        while (parent) {
-            QQuickThemeAttached *attached = attachedTheme(parent);
-            if (attached)
-                return attached;
-            parent = parent->parentItem();
-        }
-
-        // fallback to item's window theme
-        QQuickWindow *window = item->window();
-        if (window) {
-            QQuickThemeAttached *attached = attachedTheme(window);
-            if (attached)
-                return attached;
-        }
-    }
-
-    // lookup parent window theme
-    QQuickWindow *window = qobject_cast<QQuickWindow *>(object);
-    if (window) {
-        QQuickWindow *parentWindow = qobject_cast<QQuickWindow *>(window->parent());
-        if (parentWindow) {
-            QQuickThemeAttached *attached = attachedTheme(window);
-            if (attached)
-                return attached;
-        }
-    }
-
-    // fallback to global theme
-    if (object) {
-        QQmlEngine *engine = qmlEngine(object);
-        if (engine)
-            return themeInstance(engine);
-    }
-
-    return Q_NULLPTR;
-}
-
-static QList<QQuickThemeAttached *> findChildThemes(QObject *object)
-{
-    QList<QQuickThemeAttached *> themes;
-
-    QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (!item) {
-        QQuickWindow *window = qobject_cast<QQuickWindow *>(object);
-        if (window) {
-            item = window->contentItem();
-
-            foreach (QObject *child, window->children()) {
-                QQuickWindow *childWindow = qobject_cast<QQuickWindow *>(child);
-                if (childWindow) {
-                    QQuickThemeAttached *theme = attachedTheme(childWindow);
-                    if (theme)
-                        themes += theme;
-                }
-            }
-        }
-    }
-
-    if (item) {
-        foreach (QQuickItem *child, item->childItems()) {
-            QQuickThemeAttached *theme = attachedTheme(child);
-            if (theme)
-                themes += theme;
-            else
-                themes += findChildThemes(child);
-        }
-    }
-
-    return themes;
-}
+Q_GLOBAL_STATIC_WITH_ARGS(QQuickThemeData, globalThemeData, (QString::fromLatin1(":/qtlabscontrols/theme.json")))
 
 class QQuickThemeAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
@@ -432,18 +340,27 @@ void QQuickThemeAttachedPrivate::inherit(QQuickThemeAttached *theme)
 const QQuickThemeData &QQuickThemeAttachedPrivate::resolve() const
 {
     Q_Q(const QQuickThemeAttached);
-    QQuickThemeAttached *theme = findParentTheme(const_cast<QQuickThemeAttached *>(q));
+    QQuickThemeAttached *theme = QQuickStyle::findParent<QQuickThemeAttached>(const_cast<QQuickThemeAttached *>(q));
     return theme ? theme->d_func()->data : *globalThemeData();
 }
 
-void QQuickThemeAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *)
+void QQuickThemeAttachedPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parentItem)
 {
-    QQuickThemeAttached *theme = attachedTheme(item);
+    QQuickThemeAttached *theme = QQuickStyle::instance<QQuickThemeAttached>(item);
     if (theme) {
-        QQuickThemeAttached *parent = findParentTheme(theme);
+        QQuickThemeAttached *parent = QQuickStyle::findParent<QQuickThemeAttached>(parentItem);
         if (parent)
             theme->setParentTheme(parent);
     }
+}
+
+QQuickThemeAttached::QQuickThemeAttached(QObject *parent) :
+    QObject(*(new QQuickThemeAttachedPrivate(*globalThemeData())), parent)
+{
+    Q_D(QQuickThemeAttached);
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
+    if (item)
+        QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
 }
 
 QQuickThemeAttached::QQuickThemeAttached(const QQuickThemeData &data, QObject *parent) :
@@ -468,15 +385,15 @@ QQuickThemeAttached::~QQuickThemeAttached()
 QQuickThemeAttached *QQuickThemeAttached::qmlAttachedProperties(QObject *object)
 {
     QQuickThemeAttached *theme = Q_NULLPTR;
-    QQuickThemeAttached *parent = findParentTheme(object);
+    QQuickThemeAttached *parent = QQuickStyle::findParent<QQuickThemeAttached>(object);
     if (parent) {
         theme = new QQuickThemeAttached(parent->d_func()->data, object);
         theme->setParentTheme(parent);
     } else {
-        theme = new QQuickThemeAttached(*globalThemeData(), object);
+        theme = new QQuickThemeAttached(object);
     }
 
-    QList<QQuickThemeAttached *> childThemes = findChildThemes(object);
+    QList<QQuickThemeAttached *> childThemes = QQuickStyle::findChildren<QQuickThemeAttached>(object);
     foreach (QQuickThemeAttached *child, childThemes)
         child->setParentTheme(theme);
     return theme;

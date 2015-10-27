@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -82,7 +82,7 @@ TestCase {
         compare(control.currentItem, item)
         control.push(component)
         verify(control.currentItem !== item)
-        control.pop(AbstractStackView.Immediate)
+        control.pop(StackView.Immediate)
         compare(control.currentItem, item)
         control.destroy()
     }
@@ -107,23 +107,23 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.AbstractStackView.status, AbstractStackView.Inactive)
+        compare(item1.StackView.status, StackView.Inactive)
         control.push(item1)
-        compare(item1.AbstractStackView.status, AbstractStackView.Active)
+        compare(item1.StackView.status, StackView.Active)
 
         var item2 = component.createObject(control)
-        compare(item2.AbstractStackView.status, AbstractStackView.Inactive)
+        compare(item2.StackView.status, StackView.Inactive)
         control.push(item2)
-        compare(item2.AbstractStackView.status, AbstractStackView.Activating)
-        compare(item1.AbstractStackView.status, AbstractStackView.Deactivating)
-        tryCompare(item2.AbstractStackView, "status", AbstractStackView.Active)
-        tryCompare(item1.AbstractStackView, "status", AbstractStackView.Inactive)
+        compare(item2.StackView.status, StackView.Activating)
+        compare(item1.StackView.status, StackView.Deactivating)
+        tryCompare(item2.StackView, "status", StackView.Active)
+        tryCompare(item1.StackView, "status", StackView.Inactive)
 
         control.pop()
-        compare(item2.AbstractStackView.status, AbstractStackView.Deactivating)
-        compare(item1.AbstractStackView.status, AbstractStackView.Activating)
-        tryCompare(item2.AbstractStackView, "status", AbstractStackView.Inactive)
-        tryCompare(item1.AbstractStackView, "status", AbstractStackView.Active)
+        compare(item2.StackView.status, StackView.Deactivating)
+        compare(item1.StackView.status, StackView.Activating)
+        tryCompare(item2.StackView, "status", StackView.Inactive)
+        tryCompare(item1.StackView, "status", StackView.Active)
 
         control.destroy()
     }
@@ -133,19 +133,19 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.AbstractStackView.index, -1)
-        control.push(item1, AbstractStackView.Immediate)
-        compare(item1.AbstractStackView.index, 0)
+        compare(item1.StackView.index, -1)
+        control.push(item1, StackView.Immediate)
+        compare(item1.StackView.index, 0)
 
         var item2 = component.createObject(control)
-        compare(item2.AbstractStackView.index, -1)
-        control.push(item2, AbstractStackView.Immediate)
-        compare(item2.AbstractStackView.index, 1)
-        compare(item1.AbstractStackView.index, 0)
+        compare(item2.StackView.index, -1)
+        control.push(item2, StackView.Immediate)
+        compare(item2.StackView.index, 1)
+        compare(item1.StackView.index, 0)
 
-        control.pop(AbstractStackView.Immediate)
-        compare(item2.AbstractStackView.index, -1)
-        compare(item1.AbstractStackView.index, 0)
+        control.pop(StackView.Immediate)
+        compare(item2.StackView.index, -1)
+        compare(item1.StackView.index, 0)
 
         control.destroy()
     }
@@ -155,19 +155,19 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        compare(item1.AbstractStackView.view, null)
-        control.push(item1, AbstractStackView.Immediate)
-        compare(item1.AbstractStackView.view, control)
+        compare(item1.StackView.view, null)
+        control.push(item1, StackView.Immediate)
+        compare(item1.StackView.view, control)
 
         var item2 = component.createObject(control)
-        compare(item2.AbstractStackView.view, null)
-        control.push(item2, AbstractStackView.Immediate)
-        compare(item2.AbstractStackView.view, control)
-        compare(item1.AbstractStackView.view, control)
+        compare(item2.StackView.view, null)
+        control.push(item2, StackView.Immediate)
+        compare(item2.StackView.view, control)
+        compare(item1.StackView.view, control)
 
-        control.pop(AbstractStackView.Immediate)
-        compare(item2.AbstractStackView.view, null)
-        compare(item1.AbstractStackView.view, control)
+        control.pop(StackView.Immediate)
+        compare(item2.StackView.view, null)
+        compare(item1.StackView.view, control)
 
         control.destroy()
     }
@@ -176,17 +176,17 @@ TestCase {
         var control = stackView.createObject(testCase)
         verify(control)
         compare(control.depth, 0)
-        control.push(item, AbstractStackView.Immediate)
+        control.push(item, StackView.Immediate)
         compare(control.depth, 1)
-        control.push(item, AbstractStackView.Immediate)
+        control.push(item, StackView.Immediate)
         compare(control.depth, 2)
-        control.pop(AbstractStackView.Immediate)
+        control.pop(StackView.Immediate)
         compare(control.depth, 1)
-        control.push(component, AbstractStackView.Immediate)
+        control.push(component, StackView.Immediate)
         compare(control.depth, 2)
-        control.pop(AbstractStackView.Immediate)
+        control.pop(StackView.Immediate)
         compare(control.depth, 1)
-        control.pop(AbstractStackView.Immediate) // ignored
+        control.pop(StackView.Immediate) // ignored
         compare(control.depth, 1)
         control.clear()
         compare(control.depth, 0)
@@ -212,12 +212,12 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        control.push(textField, AbstractStackView.Immediate)
+        control.push(textField, StackView.Immediate)
         compare(control.currentItem, textField)
         textField.forceActiveFocus()
         verify(textField.activeFocus)
 
-        control.pop(AbstractStackView.Immediate)
+        control.pop(StackView.Immediate)
         compare(control.currentItem, item)
         verify(control.activeFocus)
         verify(!textField.activeFocus)
@@ -233,9 +233,9 @@ TestCase {
         var item2 = component.createObject(control, {objectName: "2"})
         var item3 = component.createObject(control, {objectName: "3"})
 
-        control.push(item1, AbstractStackView.Immediate)
-        control.push(item2, AbstractStackView.Immediate)
-        control.push(item3, AbstractStackView.Immediate)
+        control.push(item1, StackView.Immediate)
+        control.push(item2, StackView.Immediate)
+        control.push(item3, StackView.Immediate)
 
         compare(control.find(function(item, index) { return index === 0 }), item1)
         compare(control.find(function(item) { return item.objectName === "1" }), item1)
@@ -256,15 +256,15 @@ TestCase {
         var control = stackView.createObject(testCase)
         verify(control)
 
-        control.push([item, component, component], AbstractStackView.Immediate)
+        control.push([item, component, component], StackView.Immediate)
 
-        verify(control.get(0, AbstractStackView.DontLoad))
-        compare(control.get(0, AbstractStackView.ForceLoad), item)
+        verify(control.get(0, StackView.DontLoad))
+        compare(control.get(0, StackView.ForceLoad), item)
 
-        verify(!control.get(1, AbstractStackView.DontLoad))
+        verify(!control.get(1, StackView.DontLoad))
 
-        verify(control.get(2, AbstractStackView.DontLoad))
-        verify(control.get(2, AbstractStackView.ForceLoad))
+        verify(control.get(2, StackView.DontLoad))
+        verify(control.get(2, StackView.ForceLoad))
 
         control.destroy()
     }
@@ -274,47 +274,47 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: push: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: missing arguments")
         compare(control.push(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: push: nothing to push")
-        compare(control.push(AbstractStackView.Immediate), null)
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: push: nothing to push")
+        compare(control.push(StackView.Immediate), null)
 
         // push(item)
         var item1 = component.createObject(control, {objectName:"1"})
-        compare(control.push(item1, AbstractStackView.Immediate), item1)
+        compare(control.push(item1, StackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
 
         // push([item])
         var item2 = component.createObject(control, {objectName:"2"})
-        compare(control.push([item2], AbstractStackView.Immediate), item2)
+        compare(control.push([item2], StackView.Immediate), item2)
         compare(control.depth, 2)
         compare(control.currentItem, item2)
 
         // push(item, {properties})
         var item3 = component.createObject(control)
-        compare(control.push(item3, {objectName:"3"}, AbstractStackView.Immediate), item3)
+        compare(control.push(item3, {objectName:"3"}, StackView.Immediate), item3)
         compare(item3.objectName, "3")
         compare(control.depth, 3)
         compare(control.currentItem, item3)
 
         // push([item, {properties}])
         var item4 = component.createObject(control)
-        compare(control.push([item4, {objectName:"4"}], AbstractStackView.Immediate), item4)
+        compare(control.push([item4, {objectName:"4"}], StackView.Immediate), item4)
         compare(item4.objectName, "4")
         compare(control.depth, 4)
         compare(control.currentItem, item4)
 
         // push(component, {properties})
-        var item5 = control.push(component, {objectName:"5"}, AbstractStackView.Immediate)
+        var item5 = control.push(component, {objectName:"5"}, StackView.Immediate)
         compare(item5.objectName, "5")
         compare(control.depth, 5)
         compare(control.currentItem, item5)
 
         // push([component, {properties}])
-        var item6 = control.push([component, {objectName:"6"}], AbstractStackView.Immediate)
+        var item6 = control.push([component, {objectName:"6"}], StackView.Immediate)
         compare(item6.objectName, "6")
         compare(control.depth, 6)
         compare(control.currentItem, item6)
@@ -330,34 +330,34 @@ TestCase {
         for (var i = 0; i < 7; ++i)
             items.push(component.createObject(control, {objectName:i}))
 
-        control.push(items, AbstractStackView.Immediate)
+        control.push(items, StackView.Immediate)
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: pop: too many arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: too many arguments")
         compare(control.pop(1, 2, 3), null)
 
         // pop the top most item
-        compare(control.pop(AbstractStackView.Immediate), items[6])
+        compare(control.pop(StackView.Immediate), items[6])
         compare(control.depth, 6)
         compare(control.currentItem, items[5])
 
         // pop down to (but not including) the Nth item
-        compare(control.pop(items[3], AbstractStackView.Immediate), items[5])
+        compare(control.pop(items[3], StackView.Immediate), items[5])
         compare(control.depth, 4)
         compare(control.currentItem, items[3])
 
         // pop the top most item
-        compare(control.pop(undefined, AbstractStackView.Immediate), items[3])
+        compare(control.pop(undefined, StackView.Immediate), items[3])
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: pop: unknown argument: " + testCase)
-        compare(control.pop(testCase, AbstractStackView.Immediate), null)
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: pop: unknown argument: " + testCase)
+        compare(control.pop(testCase, StackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
 
         // pop all items down to (but not including) the 1st item
-        control.pop(null, AbstractStackView.Immediate)
+        control.pop(null, StackView.Immediate)
         compare(control.depth, 1)
         compare(control.currentItem, items[0])
 
@@ -369,47 +369,47 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: replace: missing arguments")
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: missing arguments")
         compare(control.replace(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML AbstractStackView: replace: nothing to push")
-        compare(control.replace(AbstractStackView.Immediate), null)
+        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":59:9: QML StackView: replace: nothing to push")
+        compare(control.replace(StackView.Immediate), null)
 
         // replace(item)
         var item1 = component.createObject(control, {objectName:"1"})
-        compare(control.replace(item1, AbstractStackView.Immediate), item1)
+        compare(control.replace(item1, StackView.Immediate), item1)
         compare(control.depth, 1)
         compare(control.currentItem, item1)
 
         // replace([item])
         var item2 = component.createObject(control, {objectName:"2"})
-        compare(control.replace([item2], AbstractStackView.Immediate), item2)
+        compare(control.replace([item2], StackView.Immediate), item2)
         compare(control.depth, 1)
         compare(control.currentItem, item2)
 
         // replace(item, {properties})
         var item3 = component.createObject(control)
-        compare(control.replace(item3, {objectName:"3"}, AbstractStackView.Immediate), item3)
+        compare(control.replace(item3, {objectName:"3"}, StackView.Immediate), item3)
         compare(item3.objectName, "3")
         compare(control.depth, 1)
         compare(control.currentItem, item3)
 
         // replace([item, {properties}])
         var item4 = component.createObject(control)
-        compare(control.replace([item4, {objectName:"4"}], AbstractStackView.Immediate), item4)
+        compare(control.replace([item4, {objectName:"4"}], StackView.Immediate), item4)
         compare(item4.objectName, "4")
         compare(control.depth, 1)
         compare(control.currentItem, item4)
 
         // replace(component, {properties})
-        var item5 = control.replace(component, {objectName:"5"}, AbstractStackView.Immediate)
+        var item5 = control.replace(component, {objectName:"5"}, StackView.Immediate)
         compare(item5.objectName, "5")
         compare(control.depth, 1)
         compare(control.currentItem, item5)
 
         // replace([component, {properties}])
-        var item6 = control.replace([component, {objectName:"6"}], AbstractStackView.Immediate)
+        var item6 = control.replace([component, {objectName:"6"}], StackView.Immediate)
         compare(item6.objectName, "6")
         compare(control.depth, 1)
         compare(control.currentItem, item6)
@@ -429,7 +429,7 @@ TestCase {
         verify(control)
 
         var item1 = component.createObject(control)
-        control.push(item1, AbstractStackView.Immediate)
+        control.push(item1, StackView.Immediate)
         verify(item1.visible)
 
         var item2 = component.createObject(control)
@@ -451,6 +451,8 @@ TestCase {
             property int popExitRuns
             property int pushEnterRuns
             property int pushExitRuns
+            property int replaceEnterRuns
+            property int replaceExitRuns
             popEnter: Transition {
                 PauseAnimation { duration: 1 }
                 onRunningChanged: if (!running) ++popEnterRuns
@@ -466,6 +468,14 @@ TestCase {
             pushExit: Transition {
                 PauseAnimation { duration: 1 }
                 onRunningChanged: if (!running) ++pushExitRuns
+            }
+            replaceEnter: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++replaceEnterRuns
+            }
+            replaceExit: Transition {
+                PauseAnimation { duration: 1 }
+                onRunningChanged: if (!running) ++replaceExitRuns
             }
         }
     }
@@ -483,6 +493,11 @@ TestCase {
         tryCompare(control, "busy", false)
         compare(control.pushEnterRuns, 1)
         compare(control.pushExitRuns, 1)
+
+        control.replace(component)
+        tryCompare(control, "busy", false)
+        compare(control.replaceEnterRuns, 1)
+        compare(control.replaceExitRuns, 1)
 
         control.pop()
         tryCompare(control, "busy", false)
@@ -503,12 +518,12 @@ TestCase {
 
     function test_ownership_data() {
         return [
-            {tag:"item, transition", arg: indestructibleItem, operation: AbstractStackView.Transition, destroyed: false},
-            {tag:"item, immediate", arg: indestructibleItem, operation: AbstractStackView.Immediate, destroyed: false},
-            {tag:"component, transition", arg: destructibleComponent, operation: AbstractStackView.Transition, destroyed: true},
-            {tag:"component, immediate", arg: destructibleComponent, operation: AbstractStackView.Immediate, destroyed: true},
-            {tag:"url, transition", arg: Qt.resolvedUrl("TestItem.qml"), operation: AbstractStackView.Transition, destroyed: true},
-            {tag:"url, immediate", arg: Qt.resolvedUrl("TestItem.qml"), operation: AbstractStackView.Immediate, destroyed: true}
+            {tag:"item, transition", arg: indestructibleItem, operation: StackView.Transition, destroyed: false},
+            {tag:"item, immediate", arg: indestructibleItem, operation: StackView.Immediate, destroyed: false},
+            {tag:"component, transition", arg: destructibleComponent, operation: StackView.Transition, destroyed: true},
+            {tag:"component, immediate", arg: destructibleComponent, operation: StackView.Immediate, destroyed: true},
+            {tag:"url, transition", arg: Qt.resolvedUrl("TestItem.qml"), operation: StackView.Transition, destroyed: true},
+            {tag:"url, immediate", arg: Qt.resolvedUrl("TestItem.qml"), operation: StackView.Immediate, destroyed: true}
         ]
     }
 
@@ -517,7 +532,7 @@ TestCase {
         verify(control)
 
         // push-pop
-        control.push(data.arg, AbstractStackView.Immediate)
+        control.push(data.arg, StackView.Immediate)
         verify(control.currentItem)
         verify(control.currentItem.hasOwnProperty("destroyedCallback"))
         var destroyed = false
@@ -528,7 +543,7 @@ TestCase {
         compare(destroyed, data.destroyed)
 
         // push-replace
-        control.push(data.arg, AbstractStackView.Immediate)
+        control.push(data.arg, StackView.Immediate)
         verify(control.currentItem)
         verify(control.currentItem.hasOwnProperty("destroyedCallback"))
         destroyed = false
@@ -537,6 +552,41 @@ TestCase {
         tryCompare(control, "busy", false)
         wait(0) // deferred delete
         compare(destroyed, data.destroyed)
+
+        control.destroy()
+    }
+
+    Component {
+        id: attachedItem
+        Item {
+            property int index: StackView.index
+            property StackView view: StackView.view
+            property int status: StackView.status
+        }
+    }
+
+    function test_attached() {
+        var control = stackView.createObject(testCase, {initialItem: attachedItem})
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Active)
+
+        control.push(attachedItem, StackView.Immediate)
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Inactive)
+
+        compare(control.get(1).index, 1)
+        compare(control.get(1).view, control)
+        compare(control.get(1).status, StackView.Active)
+
+        control.pop(StackView.Immediate)
+
+        compare(control.get(0).index, 0)
+        compare(control.get(0).view, control)
+        compare(control.get(0).status, StackView.Active)
 
         control.destroy()
     }

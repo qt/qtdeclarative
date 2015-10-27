@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    controls \
-    imports
+    imports \
+    templates
 
-imports.depends = controls
+imports.depends = templates

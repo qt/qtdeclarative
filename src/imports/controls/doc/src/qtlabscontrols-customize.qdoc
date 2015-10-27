@@ -1,0 +1,500 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtlabscontrols-customize.html
+    \title Customizing Qt Labs Controls
+    \brief A set of UI controls to create user interfaces in Qt Quick
+
+    Qt Labs Controls consist of a hierarchy (tree) of items. In order to
+    provide a custom look and feel, the default QML implementation of each
+    item can be replaced with a custom one. The following snippets present
+    the default implementations of various items. These can be used as a
+    starting point to implement a custom look and feel.
+
+    \section1 Customizing BusyIndicator
+
+        BusyIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {BusyIndicator::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-busyindicator-background.png
+
+            BusyIndicator has no background item by default.
+
+        \section3 Indicator
+
+            \image qtlabscontrols-busyindicator-indicator.png
+
+            \snippet BusyIndicator.qml indicator
+
+
+    \section1 Customizing Button
+
+        Button consists of two visual items: \l {Control::background}{background}
+        and \l {AbstractButton::label}{label}.
+
+        \section3 Background
+
+            \image qtlabscontrols-button-background.png
+
+            \snippet Button.qml background
+
+        \section3 Label
+
+            \image qtlabscontrols-button-label.png
+
+            \snippet Button.qml label
+
+
+    \section1 Customizing CheckBox
+
+        CheckBox consists of three visual items: \l {Control::background}{background},
+        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-checkbox-background.png
+
+            CheckBox has no background item by default.
+
+        \section3 Label
+
+            \image qtlabscontrols-checkbox-label.png
+
+            \snippet CheckBox.qml label
+
+        \section3 Indicator
+
+            \image qtlabscontrols-checkbox-indicator.png
+
+            \snippet CheckBox.qml indicator
+
+    \section1 Customizing Dial
+
+        Dial consists of two visual items: \l {Control::background}{background}
+        and \l {Dial::handle}{handle}.
+
+        \section3 Background
+
+            \image qtlabscontrols-dial-background.png
+
+            \snippet Dial.qml background
+
+        \section3 Indicator
+
+            \image qtlabscontrols-dial-handle.png
+
+            \snippet Dial.qml handle
+
+
+    \section1 Customizing Frame
+
+        Frame consists of two visual items: \l {Control::background}{background}
+        and \l {Frame::frame}{frame}.
+
+        \section3 Background
+
+            \image qtlabscontrols-frame-background.png
+
+            Frame has no background item by default.
+
+        \section3 Frame
+
+            \image qtlabscontrols-frame-frame.png
+
+            \snippet Frame.qml frame
+
+
+    \section1 Customizing GroupBox
+
+        GroupBox consists of three visual items: \l {Control::background}{background},
+        \l {Frame::frame}{frame} and \l {GroupBox::label}{label}.
+
+        \section3 Background
+
+            \image qtlabscontrols-groupbox-background.png
+
+            GroupBox has no background item by default.
+
+        \section3 Frame
+
+            \image qtlabscontrols-groupbox-frame.png
+
+            \snippet GroupBox.qml frame
+
+        \section3 Label
+
+            \image qtlabscontrols-groupbox-label.png
+
+            \snippet GroupBox.qml label
+
+
+    \section1 Customizing Label
+
+        Label can have a visual \l {Label::background}{background} item.
+
+        \section3 Background
+
+            \image qtlabscontrols-label-background.png
+
+            Label has no background item by default.
+
+
+    \section1 Customizing PageIndicator
+
+        TODO
+
+
+    \section1 Customizing ProgressBar
+
+        ProgressBar consists of two visual items: \l {Control::background}{background}
+        and \l {ProgressBar::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-progressbar-background.png
+
+            \snippet ProgressBar.qml background
+
+        \section3 Indicator
+
+            \image qtlabscontrols-progressbar-indicator.png
+
+            \snippet ProgressBar.qml indicator
+
+
+    \section1 Customizing RadioButton
+
+        RadioButton consists of three visual items: \l {Control::background}{background},
+        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-radiobutton-background.png
+
+            RadioButton has no background item by default.
+
+        \section3 Label
+
+            \image qtlabscontrols-radiobutton-label.png
+
+            \snippet RadioButton.qml label
+
+        \section3 Indicator
+
+            \image qtlabscontrols-radiobutton-indicator.png
+
+            \snippet RadioButton.qml indicator
+
+
+    \section1 Customizing RangeSlider
+
+        RangeSlider consists of four visual items:
+        \l {Control::background}{background}, \l {RangeSlider::track}{track},
+        \l {RangeSlider::first}{first.handle} and
+        \l {RangeSlider::second.handle}{second.handle}.
+
+        \section3 Background
+
+            \image qtlabscontrols-rangeslider-background.png
+
+            RangeSlider has no background item by default.
+
+        \section3 Track
+
+            \image qtlabscontrols-rangeslider-track.png
+
+            \snippet RangeSlider.qml track
+
+        \section3 First Handle
+
+            \image qtlabscontrols-rangeslider-first-handle.png
+
+            \snippet RangeSlider.qml firstHandle
+
+        \section3 Second Handle
+
+            \image qtlabscontrols-rangeslider-second-handle.png
+
+            \snippet RangeSlider.qml secondHandle
+
+
+    \section1 Customizing ScrollBar
+
+        ScrollBar consists of two visual items: \l {Control::background}{background}
+        and \l {ScrollBar::handle}{handle}.
+
+        \section3 Background
+
+            \image qtlabscontrols-scrollbar-background.png
+
+            ScrollBar has no background item by default.
+
+        \section3 Handle
+
+            \image qtlabscontrols-scrollbar-handle.png
+
+            \snippet ScrollBar.qml handle
+
+
+    \section1 Customizing ScrollIndicator
+
+        ScrollIndicator consists of two visual items: \l {Control::background}{background}
+        and \l {ScrollIndicator::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-scrollindicator-background.png
+
+            ScrollIndicator has no background item by default.
+
+        \section3 Indicator
+
+            \image qtlabscontrols-scrollindicator-indicator.png
+
+            \snippet ScrollIndicator.qml indicator
+
+
+    \section1 Customizing Slider
+
+        Slider consists of three visual items: \l {Control::background}{background},
+        \l {Slider::track}{track} and \l {Slider::handle}{handle}.
+
+        \section3 Background
+
+            \image qtlabscontrols-slider-background.png
+
+            Slider has no background item by default.
+
+        \section3 Track
+
+            \image qtlabscontrols-slider-track.png
+
+            \snippet Slider.qml track
+
+        \section3 Handle
+
+            \image qtlabscontrols-slider-handle.png
+
+            \snippet Slider.qml handle
+
+
+    \section1 Customizing SpinBox
+
+        SpinBox consists of four visual items: \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, \l {SpinBox::up.indicator}{up indicator},
+        and \l {SpinBox::down.indicator}{down indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-spinbox-background.png
+
+            \snippet SpinBox.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-spinbox-contentItem.png
+
+            \snippet SpinBox.qml contentItem
+
+        \section3 Down indicator
+
+            \image qtlabscontrols-spinbox-down.png
+
+            \snippet Spinbox.qml down.indicator
+
+        \section3 Up indicator
+
+            \image qtlabscontrols-spinbox-up.png
+
+            \snippet Spinbox.qml up.indicator
+
+
+    \section1 Customizing StackView
+
+        StackView can have a visual \l {Control::background}{background}
+        item, and it allows customizing the transitions that are used for
+        push, pop, and replace operations.
+
+        \section3 Push enter
+
+            \snippet StackView.qml pushEnter
+
+        \section3 Push exit
+
+            \snippet StackView.qml pushExit
+
+        \section3 Pop enter
+
+            \snippet StackView.qml popEnter
+
+        \section3 Pop exit
+
+            \snippet StackView.qml popExit
+
+        \section3 Replace enter
+
+            \snippet StackView.qml replaceEnter
+
+        \section3 Replace exit
+
+            \snippet StackView.qml replaceExit
+
+
+    \section1 Customizing SwipeView
+
+        SwipeView can have a visual \l {Control::background}{background}
+        item. The navigation is implemented by the \l {Control::contentItem}
+        {content item}.
+
+        \section3 Background
+
+        SwipeView has no background item by default.
+
+        \section3 Content item
+
+        \snippet SwipeView.qml contentItem
+
+    \section1 Customizing Switch
+
+        Switch consists of three visual items: \l {Control::background}{background},
+        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+
+        \section3 Background
+
+            \image qtlabscontrols-switch-background.png
+
+            Switch has no background item by default.
+
+        \section3 Label
+
+            \image qtlabscontrols-switch-label.png
+
+            \snippet Switch.qml label
+
+        \section3 Indicator
+
+            \image qtlabscontrols-switch-indicator.png
+
+            \snippet Switch.qml indicator
+
+
+    \section1 Customizing TabBar
+
+        TODO
+
+
+    \section1 Customizing TabButton
+
+        TODO
+
+
+    \section1 Customizing TextArea
+
+        TODO
+
+
+    \section1 Customizing TextField
+
+        TextField consists of two visual items: \l {TextField::background}{background}
+        and \l {TextField::placeholder}{placeholder}.
+
+        \section3 Background
+
+            \image qtlabscontrols-textfield-background.png
+
+            \snippet TextField.qml background
+
+        \section3 Placeholder
+
+            \image qtlabscontrols-textfield-placeholder.png
+
+            \snippet TextField.qml placeholder
+
+
+    \section1 Customizing ToolBar
+
+        ToolBar consists of two visual items: \l {Control::background}{background} and
+        \l {Frame::frame}{frame}.
+
+        \section3 Background
+
+            \image qtlabscontrols-toolbar-background.png
+
+            \snippet ToolBar.qml background
+
+        \section3 Frame
+
+            \image qtlabscontrols-toolbar-frame.png
+
+            ToolBar has no frame item by default.
+
+
+    \section1 Customizing ToolButton
+
+        ToolButton consists of two visual items: \l {Control::background}{background}
+        and \l {AbstractButton::label}{label}.
+
+        \section3 Background
+
+            \image qtlabscontrols-toolbutton-background.png
+
+            \snippet ToolButton.qml background
+
+        \section3 Label
+
+            \image qtlabscontrols-toolbutton-label.png
+
+            \snippet ToolButton.qml label
+
+    \section1 Customizing Tumbler
+
+        Tumbler consists of three visual items:
+        \l {Control::background}{background},
+        \l {Control::contentItem}{contentItem}, and
+        \l {Tumbler::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtlabscontrols-tumbler-background.png
+
+            Tumbler has no background item by default.
+
+        \section3 Content Item
+
+            \image qtlabscontrols-tumbler-contentItem.png
+
+            \snippet Tumbler.qml contentItem
+
+        \section3 Delegate
+
+            \image qtlabscontrols-tumbler-delegate.png
+
+            \snippet Tumbler.qml delegate
+*/

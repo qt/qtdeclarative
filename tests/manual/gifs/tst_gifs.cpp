@@ -51,12 +51,17 @@ private slots:
 
     void tumblerWrap();
     void slider();
+    void rangeSlider();
     void busyIndicator();
     void switchGif();
     void button();
     void tabBar();
 
 private:
+    void moveSmoothly(const QPoint &from, const QPoint &to, int movements,
+        QEasingCurve::Type easingCurveType = QEasingCurve::OutQuint,
+        int movementDelay = 15);
+
     QQuickView view;
     QString dataDirPath;
     QDir outputDir;
@@ -75,13 +80,26 @@ void tst_Gifs::initTestCase()
     view.setFlags(view.flags() | Qt::FramelessWindowHint);
 }
 
+void tst_Gifs::moveSmoothly(const QPoint &from, const QPoint &to, int movements, QEasingCurve::Type easingCurveType, int movementDelay)
+{
+    QEasingCurve curve(easingCurveType);
+    int xDifference = to.x() - from.x();
+    int yDifference = to.y() - from.y();
+    for (int movement = 0; movement < movements; ++movement) {
+        QPoint pos = QPoint(
+            from.x() + curve.valueForProgress(movement / qreal(qAbs(xDifference))) * xDifference,
+            from.y() + curve.valueForProgress(movement / qreal(qAbs(yDifference))) * yDifference);
+        QTest::mouseMove(&view, pos, movementDelay);
+    }
+}
+
 void tst_Gifs::tumblerWrap()
 {
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
-    gifRecorder.setQmlFileName("qtquickextras2-tumbler-wrap.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-tumbler-wrap.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -154,7 +172,7 @@ void tst_Gifs::slider()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(4);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols2-slider.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-slider.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -266,6 +284,57 @@ void tst_Gifs::slider()
     gifRecorder.waitForFinish();
 }
 
+void tst_Gifs::rangeSlider()
+{
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setHighQuality(true);
+    gifRecorder.setQmlFileName("qtlabscontrols-rangeslider.qml");
+    gifRecorder.setView(&view);
+
+    view.show();
+
+    gifRecorder.start();
+
+    QQuickItem *slider = view.rootObject()->property("slider").value<QQuickItem*>();
+    QVERIFY(slider);
+    QObject *first = slider->property("first").value<QObject*>();
+    QVERIFY(first);
+    QQuickItem *firstHandle = first->property("handle").value<QQuickItem*>();
+    QVERIFY(firstHandle);
+    QObject *second = slider->property("second").value<QObject*>();
+    QVERIFY(second);
+    QQuickItem *secondHandle = second->property("handle").value<QQuickItem*>();
+    QVERIFY(secondHandle);
+
+    const QPoint firstCenter = firstHandle->mapToItem(slider,
+        QPoint(firstHandle->width() / 2, firstHandle->height() / 2)).toPoint();
+    const QPoint secondCenter = secondHandle->mapToItem(slider,
+        QPoint(secondHandle->width() / 2, secondHandle->height() / 2)).toPoint();
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, firstCenter, 100);
+    const QPoint firstTarget = firstCenter + QPoint(slider->width() * 0.25, 0);
+    moveSmoothly(firstCenter, firstTarget, firstTarget.x() - firstCenter.x());
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, firstTarget, 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, secondCenter, 100);
+    const QPoint secondTarget = secondCenter - QPoint(slider->width() * 0.25, 0);
+    moveSmoothly(secondCenter, secondTarget, qAbs(secondTarget.x() - secondCenter.x()));
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, secondTarget, 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, secondTarget, 100);
+    moveSmoothly(secondTarget, secondCenter, qAbs(secondTarget.x() - secondCenter.x()));
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, secondCenter, 20);
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, firstTarget, 100);
+    moveSmoothly(firstTarget, firstCenter, firstTarget.x() - firstCenter.x());
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, firstCenter, 20);
+
+    gifRecorder.waitForFinish();
+}
+
 void tst_Gifs::busyIndicator()
 {
     GifRecorder gifRecorder;
@@ -273,7 +342,7 @@ void tst_Gifs::busyIndicator()
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
     gifRecorder.setHighQuality(true);
-    gifRecorder.setQmlFileName("qtquickcontrols2-busyindicator.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-busyindicator.qml");
     gifRecorder.setView(&view);
 
     view.show();
@@ -302,7 +371,7 @@ void tst_Gifs::switchGif()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-switch.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-switch.qml");
     gifRecorder.setHighQuality(true);
     gifRecorder.setView(&view);
 
@@ -322,7 +391,7 @@ void tst_Gifs::button()
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
     gifRecorder.setRecordingDuration(3);
-    gifRecorder.setQmlFileName("qtquickcontrols2-button.qml");
+    gifRecorder.setQmlFileName("qtlabscontrols-button.qml");
     gifRecorder.setHighQuality(true);
     gifRecorder.setView(&view);
 
@@ -338,7 +407,7 @@ void tst_Gifs::button()
 
 void tst_Gifs::tabBar()
 {
-    const QString qmlFileName = QStringLiteral("qtquickcontrols2-tabbar.qml");
+    const QString qmlFileName = QStringLiteral("qtlabscontrols-tabbar.qml");
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);

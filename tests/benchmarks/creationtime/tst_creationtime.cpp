@@ -50,9 +50,6 @@ private slots:
     void calendar();
     void calendar_data();
 
-    void extras();
-    void extras_data();
-
 private:
     QQmlEngine engine;
 };
@@ -62,27 +59,17 @@ void tst_CreationTime::init()
     engine.clearComponentCache();
 }
 
-static QStringList listControls(const QDir &dir)
+static QStringList listControls(const QString &path)
 {
     QStringList controls;
-    foreach (const QFileInfo &entry, dir.entryInfoList(QStringList("*.qml"), QDir::Files))
+    foreach (const QFileInfo &entry, QDir(path).entryInfoList(QStringList("*.qml"), QDir::Files))
         controls += entry.baseName();
     return controls;
 }
 
-static void addTestRows(const QStringList &importPaths, const QString &importPath)
+static void addTestRows(const QString &path)
 {
-    QStringList controls;
-    foreach (const QString &path, importPaths) {
-        QDir dir(path);
-        if (dir.cd(importPath)) {
-            foreach (const QString &control, listControls(dir)) {
-                if (!controls.contains(control))
-                    controls += control;
-            }
-        }
-    }
-
+    QStringList controls = listControls(path);
     foreach (const QString &control, controls)
         QTest::newRow(qPrintable(control)) << control.toUtf8();
 }
@@ -104,42 +91,28 @@ void tst_CreationTime::controls()
 {
     QFETCH(QByteArray, control);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.0;" + control + "{}", QUrl());
+    component.setData("import Qt.labs.controls 1.0;" + control + "{}", QUrl());
     doBenchmark(&component);
 }
 
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Controls.2");
+    addTestRows(QQC2_IMPORT_PATH "/controls");
 }
 
 void tst_CreationTime::calendar()
 {
     QFETCH(QByteArray, control);
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Calendar 2.0;" + control + "{}", QUrl());
+    component.setData("import Qt.labs.calendar 1.0;" + control + "{}", QUrl());
     doBenchmark(&component);
 }
 
 void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Calendar.2");
-}
-
-void tst_CreationTime::extras()
-{
-    QFETCH(QByteArray, control);
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick.Extras 2.0;" + control + "{}", QUrl());
-    doBenchmark(&component);
-}
-
-void tst_CreationTime::extras_data()
-{
-    QTest::addColumn<QByteArray>("control");
-    addTestRows(engine.importPathList(), "QtQuick/Extras.2");
+    addTestRows(QQC2_IMPORT_PATH "/calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)

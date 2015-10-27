@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -58,6 +58,46 @@ TestCase {
     Component {
         id: tabBar
         TabBar { }
+    }
+
+    Component {
+        id: tabBarStaticTabs
+        TabBar {
+            TabButton {
+                text: "0"
+            }
+            TabButton {
+                text: "1"
+            }
+        }
+    }
+
+    Component {
+        id: tabBarStaticTabsCurrent
+        TabBar {
+            currentIndex: 1
+            TabButton {
+                text: "0"
+            }
+            TabButton {
+                text: "1"
+            }
+        }
+    }
+
+    SignalSpy {
+        id: contentChildrenSpy
+        signalName: "contentChildrenChanged"
+    }
+
+    function init() {
+        verify(!contentChildrenSpy.target)
+        compare(contentChildrenSpy.count, 0)
+    }
+
+    function cleanup() {
+        contentChildrenSpy.target = null
+        contentChildrenSpy.clear()
     }
 
     function test_defaults() {
@@ -102,6 +142,24 @@ TestCase {
         control.destroy()
     }
 
+    function test_current_static() {
+        var control = tabBarStaticTabs.createObject(testCase)
+
+        compare(control.count, 2)
+        compare(control.currentIndex, 0)
+        compare(control.currentItem.text, "0")
+
+        control.destroy()
+
+        control = tabBarStaticTabsCurrent.createObject(testCase)
+
+        compare(control.count, 2)
+        compare(control.currentIndex, 1)
+        compare(control.currentItem.text, "1")
+
+        control.destroy()
+    }
+
     function test_addRemove() {
         var control = tabBar.createObject(testCase)
 
@@ -111,18 +169,24 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
+        contentChildrenSpy.target = control
+        verify(contentChildrenSpy.valid)
+
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         control.addItem(tabButton.createObject(control, {text: "1"}))
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "1")
+        compare(contentChildrenSpy.count, 1)
+
         control.addItem(tabButton.createObject(control, {text: "2"}))
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "2")
+        compare(contentChildrenSpy.count, 2)
 
         control.currentIndex = 1
 
@@ -133,6 +197,7 @@ TestCase {
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "3")
         compare(control.itemAt(2).text, "2")
+        compare(contentChildrenSpy.count, 4) // append + insert->move
 
         control.insertItem(0, tabButton.createObject(control, {text: "4"}))
         compare(control.count, 4)
@@ -142,6 +207,7 @@ TestCase {
         compare(control.itemAt(1).text, "1")
         compare(control.itemAt(2).text, "3")
         compare(control.itemAt(3).text, "2")
+        compare(contentChildrenSpy.count, 6) // append + insert->move
 
         control.insertItem(control.count, tabButton.createObject(control, {text: "5"}))
         compare(control.count, 5)
@@ -152,6 +218,7 @@ TestCase {
         compare(control.itemAt(2).text, "3")
         compare(control.itemAt(3).text, "2")
         compare(control.itemAt(4).text, "5")
+        compare(contentChildrenSpy.count, 7)
 
         control.removeItem(control.count - 1)
         compare(control.count, 4)
@@ -161,6 +228,7 @@ TestCase {
         compare(control.itemAt(1).text, "1")
         compare(control.itemAt(2).text, "3")
         compare(control.itemAt(3).text, "2")
+        compare(contentChildrenSpy.count, 8)
 
         control.removeItem(0)
         compare(control.count, 3)
@@ -169,6 +237,7 @@ TestCase {
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "3")
         compare(control.itemAt(2).text, "2")
+        compare(contentChildrenSpy.count, 9)
 
         control.removeItem(1)
         compare(control.count, 2)
@@ -176,16 +245,19 @@ TestCase {
         compare(control.currentItem.text, "2")
         compare(control.itemAt(0).text, "1")
         compare(control.itemAt(1).text, "2")
+        compare(contentChildrenSpy.count, 10)
 
         control.removeItem(1)
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
+        compare(contentChildrenSpy.count, 11)
 
         control.removeItem(0)
         compare(control.count, 0)
         compare(control.currentIndex, -1)
+        compare(contentChildrenSpy.count, 12)
 
         control.destroy()
     }
@@ -214,24 +286,31 @@ TestCase {
             return true
         }
 
+        contentChildrenSpy.target = control
+        verify(contentChildrenSpy.valid)
+
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", ""]))
         verify(compareObjectNames(control.contentChildren, ["button1", "button2"]))
 
         control.addItem(tabButton.createObject(control, {objectName: "button3"}))
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3"]))
         verify(compareObjectNames(control.contentChildren, ["button1", "button2", "button3"]))
+        compare(contentChildrenSpy.count, 1)
 
         control.insertItem(0, tabButton.createObject(control, {objectName: "button4"}))
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3", "button4"]))
         verify(compareObjectNames(control.contentChildren, ["button4", "button1", "button2", "button3"]))
+        compare(contentChildrenSpy.count, 3) // append + insert->move
 
         control.moveItem(1, 2)
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3", "button4"]))
         verify(compareObjectNames(control.contentChildren, ["button4", "button2", "button1", "button3"]))
+        compare(contentChildrenSpy.count, 4)
 
         control.removeItem(0)
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3"]))
         verify(compareObjectNames(control.contentChildren, ["button2", "button1", "button3"]))
+        compare(contentChildrenSpy.count, 5)
 
         control.destroy()
     }
@@ -414,6 +493,21 @@ TestCase {
 //        tab.destroy()
 //        wait(0)
 //        compare(control.count, 4)
+
+        control.destroy()
+    }
+
+    function test_layout() {
+        var control = tabBar.createObject(testCase, {spacing: 0, width: 200})
+
+        var tab1 = tabButton.createObject(control)
+        control.addItem(tab1)
+        tryCompare(tab1, "width", control.width)
+
+        var tab2 = tabButton.createObject(control)
+        control.addItem(tab2)
+        tryCompare(tab1, "width", control.width / 2)
+        tryCompare(tab2, "width", control.width / 2)
 
         control.destroy()
     }

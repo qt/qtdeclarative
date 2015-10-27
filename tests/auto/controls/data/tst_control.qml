@@ -40,7 +40,8 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
+import Qt.labs.templates 1.0 as T
 
 TestCase {
     id: testCase
@@ -52,7 +53,7 @@ TestCase {
 
     Component {
         id: component
-        Control { }
+        T.Control { }
     }
 
     SignalSpy {
@@ -68,6 +69,16 @@ TestCase {
     SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
+    }
+
+    SignalSpy {
+        id: availableWidthSpy
+        signalName: "availableWidthChanged"
+    }
+
+    SignalSpy {
+        id: availableHeightSpy
+        signalName: "availableHeightChanged"
     }
 
     function test_padding() {
@@ -134,34 +145,70 @@ TestCase {
         var control = component.createObject(testCase)
         verify(control)
 
+        availableWidthSpy.target = control
+        availableHeightSpy.target = control
+
+        verify(availableWidthSpy.valid)
+        verify(availableHeightSpy.valid)
+
+        var availableWidthChanges = 0
+        var availableHeightChanges = 0
+
         control.width = 100
-        control.height = 100
         compare(control.availableWidth, 100)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 100
         compare(control.availableHeight, 100)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.padding = 10
         compare(control.availableWidth, 80)
         compare(control.availableHeight, 80)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.topPadding = 20
         compare(control.availableWidth, 80)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.leftPadding = 30
         compare(control.availableWidth, 60)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
 
         control.rightPadding = 40
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 70)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
 
         control.bottomPadding = 50
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.padding = 60
         compare(control.availableWidth, 30)
         compare(control.availableHeight, 30)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.width = 0
+        compare(control.availableWidth, 0)
+        compare(availableWidthSpy.count, ++availableWidthChanges)
+        compare(availableHeightSpy.count, availableHeightChanges)
+
+        control.height = 0
+        compare(control.availableHeight, 0)
+        compare(availableWidthSpy.count, availableWidthChanges)
+        compare(availableHeightSpy.count, ++availableHeightChanges)
 
         control.destroy()
     }
@@ -267,18 +314,19 @@ TestCase {
 
     Component {
         id: component2
-        Control {
+        T.Control {
             id: item2
             objectName: "item2"
             property alias item2_2: _item2_2;
             property alias item2_3: _item2_3;
             property alias item2_4: _item2_4;
             property alias item2_5: _item2_5;
+            property alias item2_6: _item2_6;
             font.family: "Arial"
-            Control {
+            T.Control {
                 id: _item2_2
                 objectName: "_item2_2"
-                Control {
+                T.Control {
                     id: _item2_3
                     objectName: "_item2_3"
                 }
@@ -293,6 +341,11 @@ TestCase {
                 objectName: "_item2_5"
                 text: "Text Field"
             }
+            Label {
+                id: _item2_6
+                objectName: "_item2_6"
+                text: "Label"
+            }
         }
     }
 
@@ -303,6 +356,7 @@ TestCase {
         verify(control2.item2_3)
         verify(control2.item2_4)
         verify(control2.item2_5)
+        verify(control2.item2_6)
 
         compare(control2.font.family, "Arial")
         compare(control2.item2_2.font.family, control2.font.family)
@@ -317,6 +371,9 @@ TestCase {
         compare(control2.item2_5.font.family, control2.font.family)
         compare(control2.item2_5.font.pointSize, control2.font.pointSize)
         compare(control2.item2_5.font.weight, control2.font.weight)
+        compare(control2.item2_6.font.family, control2.font.family)
+        compare(control2.item2_6.font.pointSize, control2.font.pointSize)
+        compare(control2.item2_6.font.weight, control2.font.weight)
 
         control2.font.pointSize = 48
         compare(control2.item2_2.font.pointSize, 48)
@@ -347,6 +404,7 @@ TestCase {
         compare(control2.item2_3.font.pointSize, 36)
         compare(control2.item2_4.font.pointSize, 50)
         compare(control2.item2_5.font.pointSize, 50)
+        compare(control2.item2_6.font.pointSize, 50)
 
         control2.item2_3.font.pointSize = 60
         compare(control2.item2_3.font.pointSize, 60)
@@ -365,6 +423,12 @@ TestCase {
 
         control2.item2_5.font.weight = Font.DemiBold
         compare(control2.item2_5.font.weight, Font.DemiBold)
+
+        control2.item2_6.font.pointSize = 36
+        compare(control2.item2_6.font.pointSize, 36)
+
+        control2.item2_6.font.weight = Font.Black
+        compare(control2.item2_6.font.weight, Font.Black)
 
         compare(control2.font.family, "Arial")
         compare(control2.font.pointSize, 50)
@@ -386,12 +450,16 @@ TestCase {
         compare(control2.item2_5.font.pointSize, 32)
         compare(control2.item2_5.font.weight, Font.DemiBold)
 
+        compare(control2.item2_6.font.family, "Arial")
+        compare(control2.item2_6.font.pointSize, 36)
+        compare(control2.item2_6.font.weight, Font.Black)
+
         control2.destroy()
     }
 
     Component {
         id: component3
-        Control {
+        T.Control {
             id: item3
             objectName: "item3"
             property alias item3_2: _item3_2;
@@ -400,17 +468,18 @@ TestCase {
             property alias item3_5: _item3_5;
             property alias item3_6: _item3_6;
             property alias item3_7: _item3_7;
+            property alias item3_8: _item3_8;
             font.family: "Arial"
             Item {
                 id: _item3_2
                 objectName: "_item3_2"
-                Control {
+                T.Control {
                     id: _item3_3
                     objectName: "_item3_3"
                     Item {
                         id: _item3_6
                         objectName: "_item3_6"
-                        Control {
+                        T.Control {
                             id: _item3_7
                             objectName: "_item3_7"
                         }
@@ -426,6 +495,11 @@ TestCase {
                     objectName: "_item3_5"
                     text: "Text Field"
                 }
+                Label {
+                    id: _item3_8
+                    objectName: "_item3_8"
+                    text: "Label"
+                }
             }
         }
     }
@@ -437,6 +511,9 @@ TestCase {
         verify(control3.item3_3)
         verify(control3.item3_4)
         verify(control3.item3_5)
+        verify(control3.item3_6)
+        verify(control3.item3_7)
+        verify(control3.item3_8)
 
         compare(control3.font.family, "Arial")
         compare(control3.item3_3.font.family, control3.font.family)
@@ -451,6 +528,9 @@ TestCase {
         compare(control3.item3_7.font.family, control3.font.family)
         compare(control3.item3_7.font.pointSize, control3.font.pointSize)
         compare(control3.item3_7.font.weight, control3.font.weight)
+        compare(control3.item3_8.font.family, control3.font.family)
+        compare(control3.item3_8.font.pointSize, control3.font.pointSize)
+        compare(control3.item3_8.font.weight, control3.font.weight)
 
         control3.font.pointSize = 48
         compare(control3.item3_3.font.pointSize, 48)
@@ -487,11 +567,18 @@ TestCase {
         control3.item3_5.font.weight = Font.DemiBold
         compare(control3.item3_5.font.weight, Font.DemiBold)
 
+        control3.item3_8.font.pointSize = 36
+        compare(control3.item3_8.font.pointSize, 36)
+
+        control3.item3_8.font.weight = Font.Black
+        compare(control3.item3_8.font.weight, Font.Black)
+
         control3.font.pointSize = 100
         compare(control3.font.pointSize, 100)
         compare(control3.item3_3.font.pointSize, 60)
         compare(control3.item3_4.font.pointSize, 16)
         compare(control3.item3_5.font.pointSize, 32)
+        compare(control3.item3_8.font.pointSize, 36)
 
         compare(control3.font.family, "Arial")
         compare(control3.font.pointSize, 100)
@@ -511,6 +598,10 @@ TestCase {
         compare(control3.item3_5.font.family, "Arial")
         compare(control3.item3_5.font.pointSize, 32)
         compare(control3.item3_5.font.weight, Font.DemiBold)
+
+        compare(control3.item3_8.font.family, "Arial")
+        compare(control3.item3_8.font.pointSize, 36)
+        compare(control3.item3_8.font.weight, Font.Black)
 
         control3.destroy()
     }

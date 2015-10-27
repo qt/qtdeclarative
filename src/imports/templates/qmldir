@@ -1,0 +1,4 @@
+module Qt.labs.templates
+plugin qtlabstemplatesplugin
+classname QtLabsTemplatesPlugin
+depends QtQuick.Window 2.2

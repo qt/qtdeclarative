@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Calendar module of the Qt Toolkit.
+** This file is part of the Qt Labs Calendar module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickControls/private/qquickcontrol_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
 #include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE

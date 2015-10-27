@@ -5,22 +5,27 @@
 /lib
 /mkspecs
 
-/examples/quick/calendar/calendar
-/examples/quick/controls/mirroring/mirroring
-/examples/quick/controls/theme/theme
-/examples/quick/controls/tabs/tabs
-/examples/quick/extras/drawer/drawer
+/examples/labs/calendar/calendar
+/examples/labs/controls/mirroring/mirroring
+/examples/labs/controls/theme/theme
+/examples/labs/controls/tabs/tabs
+/examples/labs/controls/drawer/drawer
 
+/tests/auto/accessibility/tst_accessibility
+/tests/auto/activeFocusOnTab/tst_activeFocusOnTab
 /tests/auto/applicationwindow/tst_applicationwindow
+/tests/auto/calendar/tst_calendar
 /tests/auto/controls/tst_controls
-/tests/auto/extras/tst_extras
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
+/tests/auto/theme/tst_theme
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
+/tests/manual/gifs/tst_gifs
 
 /tests/auto/snippets/screenshots/*.png
 /src/controls/doc/qtquickcontrols2.tags
+/src/templates/QtLabsTemplates.version
 
 *.so
 *.so.*

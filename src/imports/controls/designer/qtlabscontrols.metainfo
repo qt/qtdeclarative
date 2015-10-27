@@ -1,0 +1,227 @@
+MetaInfo {
+    Type {
+        name: "Qt.labs.controls.BusyIndicator"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Busy Indicator"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Button"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Button"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Button')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.CheckBox"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Check Box"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Check Box')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Frame"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Frame"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.GroupBox"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Group Box"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+            Property { name: "title"; type: "binding"; value: "qsTr('Group Box')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Label"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Label"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Label')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.PageIndicator"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Page Indicator"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "count"; type: "int"; value: 3 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.ProgressBar"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Progress Bar"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "value"; type: "real"; value: 0.5 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.RadioButton"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Radio Button"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Radio Button')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Slider"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Slider"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "value"; type: "real"; value: 0.5 }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.Switch"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Switch"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Switch')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.TextArea"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Text Area"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Text Area')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.TextField"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Text Field"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Text Field')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.ToolButton"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Tool Button"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr('Tool Button')" }
+        }
+    }
+
+    Type {
+        name: "Qt.labs.controls.ToolBar"
+        icon: "images/todo16.png"
+
+        ItemLibraryEntry {
+            name: "Tool Bar"
+            category: "Qt Labs - Controls"
+            libraryIcon: "images/todo.png"
+            version: "1.0"
+            requiredImport: "Qt.labs.controls"
+
+            Property { name: "width"; type: "int"; value: 360 }
+        }
+    }
+}

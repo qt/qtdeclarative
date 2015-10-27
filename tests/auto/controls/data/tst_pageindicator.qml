@@ -40,7 +40,7 @@
 
 import QtQuick 2.2
 import QtTest 1.0
-import QtQuick.Controls 2.0
+import Qt.labs.controls 1.0
 
 TestCase {
     id: testCase
@@ -73,6 +73,25 @@ TestCase {
         compare(control.currentIndex, 0)
         control.currentIndex = 5
         compare(control.currentIndex, 5)
+
+        control.destroy()
+    }
+
+    function test_interactive() {
+        var control = pageIndicator.createObject(testCase, {count: 5})
+        verify(control)
+
+        verify(!control.interactive)
+        compare(control.currentIndex, 0)
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.currentIndex, 0)
+
+        control.interactive = true
+        verify(control.interactive)
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        compare(control.currentIndex, 2)
 
         control.destroy()
     }
