@@ -76,11 +76,6 @@ protected:
     void mirrorChange() Q_DECL_OVERRIDE;
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
 
-    bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
-    bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
-    bool handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event);
-    bool handleMouseUngrabEvent(QQuickItem *child);
-
     virtual qreal positionAt(const QPoint &point) const;
 
 private:

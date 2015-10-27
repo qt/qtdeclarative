@@ -89,6 +89,11 @@ public:
 
     void updatePosition();
 
+    bool handleMousePressEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event);
+    bool handleMouseUngrabEvent(QQuickItem *child);
+
     qreal position;
     QPoint pressPoint;
 };
@@ -97,6 +102,58 @@ void QQuickSwitchPrivate::updatePosition()
 {
     Q_Q(QQuickSwitch);
     q->setPosition(checked ? 1.0 : 0.0);
+}
+
+bool QQuickSwitchPrivate::handleMousePressEvent(QQuickItem *child, QMouseEvent *event)
+{
+    Q_Q(QQuickSwitch);
+    Q_UNUSED(child);
+    pressPoint = event->pos();
+    q->setPressed(true);
+    event->accept();
+    return true;
+}
+
+bool QQuickSwitchPrivate::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event)
+{
+    Q_Q(QQuickSwitch);
+    if (!child->keepMouseGrab())
+        child->setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().x() - pressPoint.x(), Qt::XAxis, event));
+    if (child->keepMouseGrab()) {
+        q->setPosition(q->positionAt(event->pos()));
+        event->accept();
+    }
+    return true;
+}
+
+bool QQuickSwitchPrivate::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event)
+{
+    Q_Q(QQuickSwitch);
+    pressPoint = QPoint();
+    q->setPressed(false);
+    if (child->keepMouseGrab()) {
+        q->setChecked(position > 0.5);
+        q->setPosition(checked ? 1.0 : 0.0);
+        child->setKeepMouseGrab(false);
+        event->accept();
+    } else {
+        QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
+        emit q->clicked(&me);
+        event->setAccepted(me.isAccepted());
+        q->toggle();
+    }
+    return true;
+}
+
+bool QQuickSwitchPrivate::handleMouseUngrabEvent(QQuickItem *child)
+{
+    Q_Q(QQuickSwitch);
+    Q_UNUSED(child);
+    pressPoint = QPoint();
+    q->setChecked(position > 0.5);
+    q->setPosition(checked ? 1.0 : 0.0);
+    q->setPressed(false);
+    return true;
 }
 
 QQuickSwitch::QQuickSwitch(QQuickItem *parent) :
@@ -166,73 +223,22 @@ void QQuickSwitch::mirrorChange()
 
 bool QQuickSwitch::childMouseEventFilter(QQuickItem *child, QEvent *event)
 {
+    Q_D(QQuickSwitch);
     if (child == indicator()) {
         switch (event->type()) {
         case QEvent::MouseButtonPress:
-            return handleMousePressEvent(child, static_cast<QMouseEvent *>(event));
+            return d->handleMousePressEvent(child, static_cast<QMouseEvent *>(event));
         case QEvent::MouseMove:
-            return handleMouseMoveEvent(child, static_cast<QMouseEvent *>(event));
+            return d->handleMouseMoveEvent(child, static_cast<QMouseEvent *>(event));
         case QEvent::MouseButtonRelease:
-            return handleMouseReleaseEvent(child, static_cast<QMouseEvent *>(event));
+            return d->handleMouseReleaseEvent(child, static_cast<QMouseEvent *>(event));
         case QEvent::UngrabMouse:
-            return handleMouseUngrabEvent(child);
+            return d->handleMouseUngrabEvent(child);
         default:
             return false;
         }
     }
     return false;
-}
-
-bool QQuickSwitch::handleMousePressEvent(QQuickItem *child, QMouseEvent *event)
-{
-    Q_D(QQuickSwitch);
-    Q_UNUSED(child);
-    d->pressPoint = event->pos();
-    setPressed(true);
-    event->accept();
-    return true;
-}
-
-bool QQuickSwitch::handleMouseMoveEvent(QQuickItem *child, QMouseEvent *event)
-{
-    Q_D(QQuickSwitch);
-    if (!child->keepMouseGrab())
-        child->setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->pos().x() - d->pressPoint.x(), Qt::XAxis, event));
-    if (child->keepMouseGrab()) {
-        setPosition(positionAt(event->pos()));
-        event->accept();
-    }
-    return true;
-}
-
-bool QQuickSwitch::handleMouseReleaseEvent(QQuickItem *child, QMouseEvent *event)
-{
-    Q_D(QQuickSwitch);
-    d->pressPoint = QPoint();
-    setPressed(false);
-    if (child->keepMouseGrab()) {
-        setChecked(position() > 0.5);
-        setPosition(isChecked() ? 1.0 : 0.0);
-        child->setKeepMouseGrab(false);
-        event->accept();
-    } else {
-        QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers(), true /* isClick */);
-        emit clicked(&me);
-        event->setAccepted(me.isAccepted());
-        toggle();
-    }
-    return true;
-}
-
-bool QQuickSwitch::handleMouseUngrabEvent(QQuickItem *child)
-{
-    Q_D(QQuickSwitch);
-    Q_UNUSED(child);
-    d->pressPoint = QPoint();
-    setChecked(position() > 0.5);
-    setPosition(isChecked() ? 1.0 : 0.0);
-    setPressed(false);
-    return true;
 }
 
 qreal QQuickSwitch::positionAt(const QPoint &point) const
