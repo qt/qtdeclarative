@@ -48,8 +48,6 @@ QT_BEGIN_NAMESPACE
 //Environment variable to allow tooling full control of file selectors
 static const char env_override[] = "QT_QUICK_NO_BUILTIN_SELECTORS";
 
-static const ushort selectorIndicator = '+';
-
 Q_GLOBAL_STATIC(QQuickFileSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
 
@@ -107,7 +105,7 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     Q_ASSERT(path.isEmpty() || path.endsWith(QLatin1Char('/')));
 
     foreach (const QString &s, selectors) {
-        QString prospectiveBase = path + QLatin1Char(selectorIndicator) + s + QLatin1Char('/');
+        QString prospectiveBase = path + s + QLatin1Char('/');
         QStringList remainingSelectors = selectors;
         remainingSelectors.removeAll(s);
         if (!QDir(prospectiveBase).exists())
