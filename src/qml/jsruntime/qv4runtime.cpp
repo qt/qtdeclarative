@@ -1146,6 +1146,28 @@ QV4::ReturnedValue Runtime::typeofName(ExecutionEngine *engine, int nameIndex)
     return Runtime::typeofValue(engine, prop);
 }
 
+#ifndef V4_BOOTSTRAP
+ReturnedValue Runtime::typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context,
+                                                 int propertyIndex)
+{
+    Scope scope(engine);
+    ScopedValue prop(scope, getQmlScopeObjectProperty(engine, context, propertyIndex));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    return Runtime::typeofValue(engine, prop);
+}
+
+ReturnedValue Runtime::typeofContextObjectProperty(ExecutionEngine *engine, const Value &context,
+                                                   int propertyIndex)
+{
+    Scope scope(engine);
+    ScopedValue prop(scope, getQmlContextObjectProperty(engine, context, propertyIndex));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    return Runtime::typeofValue(engine, prop);
+}
+#endif // V4_BOOTSTRAP
+
 QV4::ReturnedValue Runtime::typeofMember(ExecutionEngine *engine, const Value &base, int nameIndex)
 {
     Scope scope(engine);

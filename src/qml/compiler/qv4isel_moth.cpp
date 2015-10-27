@@ -1177,6 +1177,25 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     addInstruction(call);
 }
 
+void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int propertyIndex, IR::Expr *result)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        Instruction::CallBuiltinTypeofScopeObjectProperty call;
+        call.base = getParam(base);
+        call.index = propertyIndex;
+        call.result = getResultParam(result);
+        addInstruction(call);
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        Instruction::CallBuiltinTypeofContextObjectProperty call;
+        call.base = getParam(base);
+        call.index = propertyIndex;
+        call.result = getResultParam(result);
+        addInstruction(call);
+    } else {
+        Q_UNREACHABLE();
+    }
+}
+
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
                                                    IR::Expr *result)
 {

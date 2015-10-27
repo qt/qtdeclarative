@@ -399,6 +399,23 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     }
 }
 
+void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
+                                                               IR::Member::MemberKind kind,
+                                                               int propertyIndex, IR::Expr *result)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        generateFunctionCall(result, Runtime::typeofScopeObjectProperty, Assembler::EngineRegister,
+                             Assembler::PointerToValue(base),
+                             Assembler::TrustedImm32(propertyIndex));
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        generateFunctionCall(result, Runtime::typeofContextObjectProperty,
+                             Assembler::EngineRegister, Assembler::PointerToValue(base),
+                             Assembler::TrustedImm32(propertyIndex));
+    } else {
+        Q_UNREACHABLE();
+    }
+}
+
 void InstructionSelection::callBuiltinTypeofMember(IR::Expr *base, const QString &name,
                                                    IR::Expr *result)
 {

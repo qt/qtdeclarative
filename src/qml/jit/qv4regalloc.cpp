@@ -267,6 +267,7 @@ public:
 
 protected: // IRDecoder
     virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Expr *) {}
+    virtual void callBuiltinTypeofQmlContextProperty(IR::Expr *, IR::Member::MemberKind, int, IR::Expr *) {}
     virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Expr *) {}
     virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
     virtual void callBuiltinTypeofName(const QString &, IR::Expr *) {}

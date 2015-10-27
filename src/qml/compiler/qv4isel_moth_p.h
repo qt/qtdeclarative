@@ -84,6 +84,7 @@ protected:
     virtual void visitRet(IR::Ret *);
 
     virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result);
+    virtual void callBuiltinTypeofQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int propertyIndex, IR::Expr *result);
     virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Expr *result);
     virtual void callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index, IR::Expr *result);
     virtual void callBuiltinTypeofName(const QString &name, IR::Expr *result);

@@ -75,6 +75,8 @@ private slots:
     void urlInterceptor_data();
     void urlInterceptor();
 
+    void qmlContextProperties();
+
 public slots:
     QObject *createAQObjectForOwnershipTest ()
     {
@@ -776,6 +778,18 @@ void tst_qqmlengine::urlInterceptor()
     //Test a URL as a resolveUrl() call
     QCOMPARE(o->property("resolvedUrl").toString(), expectedResolvedUrl);
     QCOMPARE(o->property("absoluteUrl").toString(), expectedAbsoluteUrl);
+}
+
+void tst_qqmlengine::qmlContextProperties()
+{
+    QQmlEngine e;
+
+    QQmlComponent c(&e, testFileUrl("TypeofQmlProperty.qml"));
+    QObject *o = c.create();
+    if (!o) {
+        qDebug() << c.errorString();
+    }
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_qqmlengine)
