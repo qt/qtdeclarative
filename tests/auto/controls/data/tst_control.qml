@@ -331,17 +331,17 @@ TestCase {
                     objectName: "_item2_3"
                 }
             }
-            TextArea {
+            T.TextArea {
                 id: _item2_4
                 objectName: "_item2_4"
                 text: "Text Area"
             }
-            TextField {
+            T.TextField {
                 id: _item2_5
                 objectName: "_item2_5"
                 text: "Text Field"
             }
-            Label {
+            T.Label {
                 id: _item2_6
                 objectName: "_item2_6"
                 text: "Label"
@@ -485,17 +485,17 @@ TestCase {
                         }
                     }
                 }
-                TextArea {
+                T.TextArea {
                     id: _item3_4
                     objectName: "_item3_4"
                     text: "Text Area"
                 }
-                TextField {
+                T.TextField {
                     id: _item3_5
                     objectName: "_item3_5"
                     text: "Text Field"
                 }
-                Label {
+                T.Label {
                     id: _item3_8
                     objectName: "_item3_8"
                     text: "Label"
