@@ -217,8 +217,8 @@ void QQuickAnimatorController::beforeNodeSync()
 void QQuickAnimatorController::afterNodeSync()
 {
     foreach (QQuickAnimatorJob *job, m_activeLeafAnimations) {
-        if (job->isUniform() && job->target())
-            static_cast<QQuickUniformAnimatorJob *>(job)->afterNodeSync();
+        if (job->target())
+            job->afterNodeSync();
     }
 }
 
