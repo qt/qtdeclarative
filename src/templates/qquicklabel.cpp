@@ -82,7 +82,6 @@ QQuickLabel::~QQuickLabel()
 
 QQuickLabelPrivate::QQuickLabelPrivate()
     : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
-    , m_accessibleRole(0x00000029) // Accessible.StaticText
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -136,7 +135,7 @@ void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickLabel);
     accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     if (accessibleAttached) {
-        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setRole(accessibleRole());
         accessibleAttached->setName(text);
     } else {
         qWarning() << "QQuickLabel: " << q << " QQuickAccessibleAttached object creation failed!";
@@ -145,7 +144,7 @@ void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickLabelPrivate::accessibleRole() const
 {
-    return QAccessible::Role(m_accessibleRole);
+    return QAccessible::StaticText;
 }
 #endif
 

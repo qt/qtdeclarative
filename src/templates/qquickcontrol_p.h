@@ -151,12 +151,10 @@ protected:
 
 #ifndef QT_NO_ACCESSIBILITY
     virtual void accessibilityActiveChanged(bool active);
+    virtual QAccessible::Role accessibleRole() const;
 #endif
 
     // helper functions which avoid to check QT_NO_ACCESSIBILITY
-    int accessibleRole() const; // int for QAccessible::Role
-    void setAccessibleRole(int role); // int for QAccessible::Role
-
     QString accessibleName() const;
     void setAccessibleName(const QString &name);
 

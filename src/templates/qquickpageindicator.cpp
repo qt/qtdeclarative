@@ -68,7 +68,6 @@ public:
     QQuickPageIndicatorPrivate() : count(0), currentIndex(0),
         interactive(false), delegate(Q_NULLPTR), pressedItem(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000027; //QAccessible::Indicator
     }
 
     QQuickItem *itemAt(const QPoint &pos) const;
@@ -286,5 +285,12 @@ void QQuickPageIndicator::mouseUngrabEvent()
     if (d->interactive)
         d->updatePressed(false);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPageIndicator::accessibleRole() const
+{
+    return QAccessible::Indicator;
+}
+#endif
 
 QT_END_NAMESPACE

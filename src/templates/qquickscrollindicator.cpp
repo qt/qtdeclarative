@@ -82,7 +82,6 @@ public:
     QQuickScrollIndicatorPrivate() : size(0), position(0),
         active(false), orientation(Qt::Vertical), indicator(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000027; //QAccessible::Indicator
     }
 
     qreal size;
@@ -381,5 +380,12 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
         emit verticalChanged();
     }
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickScrollIndicator::accessibleRole() const
+{
+    return QAccessible::Indicator;
+}
+#endif
 
 QT_END_NAMESPACE

@@ -114,7 +114,6 @@ public:
     QQuickItem *background;
     QQuickItem *contentItem;
     QQuickAccessibleAttached *accessibleAttached;
-    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickControlPrivate, Q_COMPLEX_TYPE);

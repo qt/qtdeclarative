@@ -108,6 +108,10 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickSpinBox)
     Q_DECLARE_PRIVATE(QQuickSpinBox)

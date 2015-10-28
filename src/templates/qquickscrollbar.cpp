@@ -83,7 +83,6 @@ public:
         active(false), pressed(false), moving(false),
         orientation(Qt::Vertical), handle(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000003; // QAccessible::ScrollBar
     }
 
     static QQuickScrollBarPrivate *get(QQuickScrollBar *bar)
@@ -297,6 +296,11 @@ void QQuickScrollBar::accessibilityActiveChanged(bool active)
     Q_D(QQuickScrollBar);
     if (active)
         setAccessibleProperty("pressed", d->pressed);
+}
+
+QAccessible::Role QQuickScrollBar::accessibleRole() const
+{
+    return QAccessible::ScrollBar;
 }
 #endif
 

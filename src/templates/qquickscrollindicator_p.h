@@ -93,6 +93,11 @@ Q_SIGNALS:
     void orientationChanged();
     void indicatorChanged();
 
+protected:
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickScrollIndicator)
     Q_DECLARE_PRIVATE(QQuickScrollIndicator)

@@ -118,6 +118,10 @@ protected:
     void mirrorChange() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     friend class QQuickRangeSliderNode;
 

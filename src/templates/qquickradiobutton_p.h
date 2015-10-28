@@ -58,6 +58,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickRadioButton : public QQuickAbstractButton
 
 public:
     explicit QQuickRadioButton(QQuickItem *parent = Q_NULLPTR);
+
+protected:
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
 };
 
 Q_DECLARE_TYPEINFO(QQuickRadioButton, Q_COMPLEX_TYPE);

@@ -98,6 +98,10 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickPageIndicator)
     Q_DECLARE_PRIVATE(QQuickPageIndicator)

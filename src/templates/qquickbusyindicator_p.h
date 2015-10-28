@@ -73,6 +73,11 @@ Q_SIGNALS:
     void runningChanged();
     void indicatorChanged();
 
+protected:
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickBusyIndicator)
     Q_DECLARE_PRIVATE(QQuickBusyIndicator)

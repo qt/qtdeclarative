@@ -70,7 +70,6 @@ class QQuickProgressBarPrivate : public QQuickControlPrivate
 public:
     QQuickProgressBarPrivate() : from(0), to(1.0), value(0), indeterminate(false), indicator(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000030; //QAccessible::ProgressBar
     }
 
     qreal from;
@@ -262,5 +261,12 @@ void QQuickProgressBar::componentComplete()
     QQuickControl::componentComplete();
     setValue(d->value);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickProgressBar::accessibleRole() const
+{
+    return QAccessible::ProgressBar;
+}
+#endif
 
 QT_END_NAMESPACE

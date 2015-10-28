@@ -98,7 +98,6 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
     pressed(false), checked(false), checkable(false), exclusive(false),
     label(Q_NULLPTR), indicator(Q_NULLPTR)
 {
-    m_accessibleRole = 0x0000002B; // QAccessible::Button
 }
 
 QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
@@ -394,6 +393,11 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
         setAccessibleProperty("checked", d->checked);
         setAccessibleProperty("checkable", d->checkable);
     }
+}
+
+QAccessible::Role QQuickAbstractButton::accessibleRole() const
+{
+    return QAccessible::Button;
 }
 #endif
 

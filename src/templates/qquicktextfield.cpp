@@ -92,7 +92,6 @@ QQuickTextFieldPrivate::QQuickTextFieldPrivate()
     : background(Q_NULLPTR)
     , placeholder(Q_NULLPTR)
     , accessibleAttached(Q_NULLPTR)
-    , m_accessibleRole(0x0000002A) // Accessible.EditableText
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -223,7 +222,7 @@ void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextField);
     accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     if (accessibleAttached) {
-        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setRole(accessibleRole());
         accessibleAttached->set_readOnly(m_readOnly);
         accessibleAttached->set_passwordEdit((m_echoMode == QQuickTextField::Password || m_echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
         if (placeholder)
@@ -235,7 +234,7 @@ void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 {
-    return QAccessible::Role(m_accessibleRole);
+    return QAccessible::EditableText;
 }
 #endif
 

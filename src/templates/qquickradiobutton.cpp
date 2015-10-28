@@ -88,7 +88,13 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
 {
     setCheckable(true);
     setExclusive(true);
-    setAccessibleRole(0x0000002D); //QAccessible::RadioButton
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickRadioButton::accessibleRole() const
+{
+    return QAccessible::RadioButton;
+}
+#endif
 
 QT_END_NAMESPACE

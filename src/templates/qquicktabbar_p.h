@@ -68,6 +68,10 @@ protected:
     void itemAdded(int index, QQuickItem *item) Q_DECL_OVERRIDE;
     void itemRemoved(int index, QQuickItem *item) Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickTabBar)
     Q_DECLARE_PRIVATE(QQuickTabBar)

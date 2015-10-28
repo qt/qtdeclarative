@@ -72,8 +72,6 @@ QT_BEGIN_NAMESPACE
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
     : background(Q_NULLPTR), placeholder(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
-    , m_accessibleRole(0x0000002A) // Accessible.EditableText
-
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -192,7 +190,7 @@ void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextArea);
     accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     if (accessibleAttached) {
-        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setRole(accessibleRole());
         accessibleAttached->set_readOnly(q->isReadOnly());
         if (placeholder)
             accessibleAttached->setDescription(placeholder->text());
@@ -203,7 +201,7 @@ void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
 {
-    return QAccessible::Role(m_accessibleRole);
+    return QAccessible::EditableText;
 }
 #endif
 

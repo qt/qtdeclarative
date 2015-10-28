@@ -219,7 +219,6 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
 
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
-    setAccessibleRole(0x00000034); //QAccessible::SpinBox
 }
 
 /*!
@@ -474,6 +473,13 @@ void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     if (newItem)
         newItem->setActiveFocusOnTab(true);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickSpinBox::accessibleRole() const
+{
+    return QAccessible::SpinBox;
+}
+#endif
 
 class QQuickSpinnerPrivate : public QObjectPrivate
 {

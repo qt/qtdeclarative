@@ -68,7 +68,6 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
 public:
     QQuickTabBarPrivate()
     {
-        m_accessibleRole = 0x0000003C; //QAccessible::PageTabList
     }
 
     void updateLayout();
@@ -137,5 +136,12 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
     if (isComponentComplete())
         polish();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickTabBar::accessibleRole() const
+{
+    return QAccessible::PageTabList;
+}
+#endif
 
 QT_END_NAMESPACE

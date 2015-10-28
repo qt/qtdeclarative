@@ -69,7 +69,6 @@ public:
     QQuickBusyIndicatorPrivate()
         : running(true), indicator(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000027; //QAccessible::Indicator
     }
 
     bool running;
@@ -129,5 +128,12 @@ void QQuickBusyIndicator::setIndicator(QQuickItem *indicator)
         emit indicatorChanged();
     }
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickBusyIndicator::accessibleRole() const
+{
+    return QAccessible::Indicator;
+}
+#endif
 
 QT_END_NAMESPACE

@@ -77,6 +77,10 @@ protected:
     void checkStateSet() Q_DECL_OVERRIDE;
     void nextCheckState() Q_DECL_OVERRIDE;
 
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
 private:
     Q_DISABLE_COPY(QQuickCheckBox)
     Q_DECLARE_PRIVATE(QQuickCheckBox)

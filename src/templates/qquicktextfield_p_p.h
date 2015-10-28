@@ -97,7 +97,6 @@ public:
     QQuickText *placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
-    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);

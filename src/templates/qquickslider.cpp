@@ -80,7 +80,6 @@ public:
         orientation(Qt::Horizontal), snapMode(QQuickSlider::NoSnap),
         handle(Q_NULLPTR), track(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000033; // QAccessible::Slider
     }
 
     qreal valueAt(qreal position) const;
@@ -565,6 +564,11 @@ void QQuickSlider::accessibilityActiveChanged(bool active)
     Q_D(QQuickSlider);
     if (active)
         setAccessibleProperty("pressed", d->pressed);
+}
+
+QAccessible::Role QQuickSlider::accessibleRole() const
+{
+    return QAccessible::Slider;
 }
 #endif
 

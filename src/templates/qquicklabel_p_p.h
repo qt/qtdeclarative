@@ -79,12 +79,11 @@ public:
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
-    virtual QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif
 
     QQuickItem *background;
     QQuickAccessibleAttached *accessibleAttached;
-    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickLabelPrivate, Q_COMPLEX_TYPE);

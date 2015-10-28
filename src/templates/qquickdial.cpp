@@ -92,7 +92,6 @@ public:
         snapMode(QQuickDial::NoSnap),
         handle(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000031; // QAccessible::Dial
     }
 
     qreal valueAt(qreal position) const;
@@ -532,6 +531,11 @@ void QQuickDial::accessibilityActiveChanged(bool active)
     Q_D(QQuickDial);
     if (active)
         setAccessibleProperty("pressed", d->pressed);
+}
+
+QAccessible::Role QQuickDial::accessibleRole() const
+{
+    return QAccessible::Dial;
 }
 #endif
 
