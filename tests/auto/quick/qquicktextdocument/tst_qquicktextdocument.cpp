@@ -36,7 +36,7 @@
 #include <QtQuick/QQuickTextDocument>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuick/private/qquicktextdocument_p.h>
 #include <QtGui/QTextDocument>
 #include <QtGui/QTextDocumentWriter>
 #include <QtQml/QQmlEngine>

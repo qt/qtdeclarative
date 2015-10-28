@@ -34,7 +34,7 @@
 #include "qquicktextedit_p.h"
 #include "qquicktextedit_p_p.h"
 #include "qquicktextcontrol_p.h"
-#include "qquicktext_p_p.h"
+#include "qquicktextdocument_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickwindow.h"
 #include "qquicktextnode_p.h"
