@@ -327,13 +327,13 @@
 
             \image qtlabscontrols-spinbox-down.png
 
-            \snippet Spinbox.qml down.indicator
+            \snippet SpinBox.qml down.indicator
 
         \section3 Up indicator
 
             \image qtlabscontrols-spinbox-up.png
 
-            \snippet Spinbox.qml up.indicator
+            \snippet SpinBox.qml up.indicator
 
 
     \section1 Customizing StackView
