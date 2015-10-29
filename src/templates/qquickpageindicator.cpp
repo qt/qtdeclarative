@@ -81,7 +81,6 @@ public:
     bool interactive;
     QQmlComponent *delegate;
     QQuickItem *pressedItem;
-    QColor color;
 };
 
 QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
@@ -200,8 +199,6 @@ void QQuickPageIndicator::setInteractive(bool interactive)
         \row \li \b index : int \li The index of the item
         \row \li \b pressed : bool \li Whether the item is pressed
     \endtable
-
-    \sa color
 */
 QQmlComponent *QQuickPageIndicator::delegate() const
 {
@@ -215,28 +212,6 @@ void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
     if (d->delegate != delegate) {
         d->delegate = delegate;
         emit delegateChanged();
-    }
-}
-
-/*!
-    \qmlproperty color Qt.labs.controls::PageIndicator::color
-
-    This property holds the color of the indicator.
-
-    \sa delegate
-*/
-QColor QQuickPageIndicator::color() const
-{
-    Q_D(const QQuickPageIndicator);
-    return d->color;
-}
-
-void QQuickPageIndicator::setColor(const QColor &color)
-{
-    Q_D(QQuickPageIndicator);
-    if (d->color != color) {
-        d->color = color;
-        emit colorChanged();
     }
 }
 

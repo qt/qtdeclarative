@@ -48,7 +48,6 @@ T.PageIndicator {
 
     padding: 6
     spacing: 6
-    color: Theme.shadowColor // TODO
 
     //! [delegate]
     delegate: Rectangle {
@@ -56,7 +55,7 @@ T.PageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: control.color
+        color: control.Theme.shadowColor // TODO
 
         opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }
