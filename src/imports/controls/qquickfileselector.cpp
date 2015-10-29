@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 //Environment variable to allow tooling full control of file selectors
-static const char env_override[] = "QT_QUICK_NO_BUILTIN_SELECTORS";
+static const char env_override[] = "QT_LABS_CONTROLS_NO_STYLE";
 
 Q_GLOBAL_STATIC(QQuickFileSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
@@ -177,7 +177,7 @@ void QQuickFileSelectorPrivate::updateSelectors()
         return; //Already loaded
 
     QLatin1Char pathSep(',');
-    QStringList envSelectors = QString::fromLatin1(qgetenv("QT_QUICK_FILE_SELECTORS"))
+    QStringList envSelectors = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"))
                                 .split(pathSep, QString::SkipEmptyParts);
     if (envSelectors.count())
         sharedData->staticSelectors << envSelectors;
