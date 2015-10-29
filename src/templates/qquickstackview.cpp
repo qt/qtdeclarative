@@ -292,10 +292,10 @@ QQuickStackAttached *QQuickStackView::qmlAttachedProperties(QObject *object)
     \readonly
     This property holds whether a transition is running.
 */
-bool QQuickStackView::busy() const
+bool QQuickStackView::isBusy() const
 {
     Q_D(const QQuickStackView);
-    return d->transitioner && !d->transitioner->runningJobs.isEmpty();
+    return d->busy;
 }
 
 /*!

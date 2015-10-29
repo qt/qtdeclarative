@@ -61,7 +61,7 @@ class QQuickStackViewPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)
+    Q_PROPERTY(bool busy READ isBusy NOTIFY busyChanged FINAL)
     Q_PROPERTY(int depth READ depth NOTIFY depthChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QVariant initialItem READ initialItem WRITE setInitialItem FINAL)
@@ -78,7 +78,7 @@ public:
 
     static QQuickStackAttached *qmlAttachedProperties(QObject *object);
 
-    bool busy() const;
+    bool isBusy() const;
     int depth() const;
     QQuickItem *currentItem() const;
 
