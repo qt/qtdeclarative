@@ -60,8 +60,8 @@ public:
 
     QString select(const QString &filePath) const;
 
-    QStringList extraSelectors() const;
-    void setExtraSelectors(const QStringList &list);
+    QString style() const;
+    void setStyle(const QString &s);
 
     QStringList allSelectors() const;
 

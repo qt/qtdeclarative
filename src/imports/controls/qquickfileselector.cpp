@@ -138,16 +138,16 @@ QString QQuickFileSelectorPrivate::select(const QString &filePath) const
     return filePath;
 }
 
-QStringList QQuickFileSelector::extraSelectors() const
+QString QQuickFileSelector::style() const
 {
     Q_D(const QQuickFileSelector);
-    return d->extras;
+    return d->style;
 }
 
-void QQuickFileSelector::setExtraSelectors(const QStringList &list)
+void QQuickFileSelector::setStyle(const QString &s)
 {
     Q_D(QQuickFileSelector);
-    d->extras = list;
+    d->style = s;
 }
 
 QStringList QQuickFileSelector::allSelectors() const
@@ -155,7 +155,7 @@ QStringList QQuickFileSelector::allSelectors() const
     Q_D(const QQuickFileSelector);
     QMutexLocker locker(&sharedDataMutex);
     QQuickFileSelectorPrivate::updateSelectors();
-    return d->extras + sharedData->staticSelectors;
+    return QStringList(d->style) + sharedData->staticSelectors;
 }
 
 void QQuickFileSelector::setBaseUrl(const QUrl &base)
