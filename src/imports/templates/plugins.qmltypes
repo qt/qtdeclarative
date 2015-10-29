@@ -853,7 +853,7 @@ Module {
         Property { name: "implicitWidth"; type: "double" }
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
-        Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
+        Property { name: "placeholderText"; type: "string" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1130,7 +1130,7 @@ Module {
         Property { name: "implicitWidth"; type: "double" }
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
-        Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
+        Property { name: "placeholderText"; type: "string" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }

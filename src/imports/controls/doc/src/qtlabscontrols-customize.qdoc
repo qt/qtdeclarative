@@ -422,20 +422,13 @@
 
     \section1 Customizing TextField
 
-        TextField consists of two visual items: \l {TextField::background}{background}
-        and \l {TextField::placeholder}{placeholder}.
+        TextField offers a customizable \l {TextField::background}{background} item.
 
         \section3 Background
 
             \image qtlabscontrols-textfield-background.png
 
             \snippet TextField.qml background
-
-        \section3 Placeholder
-
-            \image qtlabscontrols-textfield-placeholder.png
-
-            \snippet TextField.qml placeholder
 
 
     \section1 Customizing ToolBar

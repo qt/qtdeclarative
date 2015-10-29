@@ -85,7 +85,6 @@ public:
     void implicitHeightChanged() Q_DECL_OVERRIDE;
 
     void _q_readOnlyChanged(bool isReadOnly);
-    void _q_placeholderTextChanged(const QString &text);
 
 #ifndef QT_NO_ACCESSIBILITY
     void accessibilityActiveChanged(bool active) Q_DECL_OVERRIDE;
@@ -93,7 +92,7 @@ public:
 #endif
 
     QQuickItem *background;
-    QQuickText *placeholder;
+    QString placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
 };
