@@ -1363,12 +1363,12 @@ unsigned Runtime::doubleToUInt(const double &d)
     return Primitive::toUInt32(d);
 }
 
+#ifndef V4_BOOTSTRAP
+
 ReturnedValue Runtime::getQmlContext(NoThrowEngine *engine)
 {
     return engine->qmlContext()->asReturnedValue();
 }
-
-#ifndef V4_BOOTSTRAP
 
 ReturnedValue Runtime::regexpLiteral(ExecutionEngine *engine, int id)
 {
