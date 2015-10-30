@@ -22,9 +22,9 @@
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
 /tests/manual/gifs/tst_gifs
+/tests/manual/testbench/testbench
 
 /tests/auto/snippets/screenshots/*.png
-/src/controls/doc/qtquickcontrols2.tags
 /src/templates/QtLabsTemplates.version
 
 *.so
