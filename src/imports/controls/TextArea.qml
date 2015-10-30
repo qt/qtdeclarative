@@ -66,7 +66,7 @@ T.TextArea {
         color: control.Theme.disabledColor
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        visible: !control.length
+        visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
 }
