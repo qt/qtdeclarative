@@ -54,8 +54,8 @@
 QT_BEGIN_NAMESPACE
 
 class QValidator;
-class QQuickSpinner;
-class QQuickSpinnerPrivate;
+class QQuickSpinButton;
+class QQuickSpinButtonPrivate;
 class QQuickSpinBoxPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
@@ -69,8 +69,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
     Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
-    Q_PROPERTY(QQuickSpinner *up READ up CONSTANT FINAL)
-    Q_PROPERTY(QQuickSpinner *down READ down CONSTANT FINAL)
+    Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
+    Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = Q_NULLPTR);
@@ -99,8 +99,8 @@ public:
     QJSValue valueFromText() const;
     void setValueFromText(const QJSValue &callback);
 
-    QQuickSpinner *up() const;
-    QQuickSpinner *down() const;
+    QQuickSpinButton *up() const;
+    QQuickSpinButton *down() const;
 
 public Q_SLOTS:
     void increase();
@@ -135,14 +135,14 @@ private:
     Q_DECLARE_PRIVATE(QQuickSpinBox)
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickSpinner : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickSpinner(QQuickSpinBox *parent);
+    explicit QQuickSpinButton(QQuickSpinBox *parent);
 
     bool isPressed() const;
     void setPressed(bool pressed);
@@ -155,12 +155,12 @@ Q_SIGNALS:
     void indicatorChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickSpinner)
-    Q_DECLARE_PRIVATE(QQuickSpinner)
+    Q_DISABLE_COPY(QQuickSpinButton)
+    Q_DECLARE_PRIVATE(QQuickSpinButton)
 };
 
 Q_DECLARE_TYPEINFO(QQuickSpinBox, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickSpinner, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickSpinButton, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

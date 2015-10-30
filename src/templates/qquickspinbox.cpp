@@ -111,8 +111,8 @@ public:
     int stepSize;
     int delayTimer;
     int repeatTimer;
-    QQuickSpinner *up;
-    QQuickSpinner *down;
+    QQuickSpinButton *up;
+    QQuickSpinButton *down;
     QLocale locale;
     QValidator *validator;
     QJSValue textFromValue;
@@ -236,8 +236,8 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent) :
     QQuickControl(*(new QQuickSpinBoxPrivate), parent)
 {
     Q_D(QQuickSpinBox);
-    d->up = new QQuickSpinner(this);
-    d->down = new QQuickSpinner(this);
+    d->up = new QQuickSpinButton(this);
+    d->down = new QQuickSpinButton(this);
 
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
@@ -462,7 +462,7 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
 
     \sa increase()
 */
-QQuickSpinner *QQuickSpinBox::up() const
+QQuickSpinButton *QQuickSpinBox::up() const
 {
     Q_D(const QQuickSpinBox);
     return d->up;
@@ -477,7 +477,7 @@ QQuickSpinner *QQuickSpinBox::up() const
 
     \sa decrease()
 */
-QQuickSpinner *QQuickSpinBox::down() const
+QQuickSpinButton *QQuickSpinBox::down() const
 {
     Q_D(const QQuickSpinBox);
     return d->down;
@@ -613,43 +613,43 @@ QAccessible::Role QQuickSpinBox::accessibleRole() const
 }
 #endif
 
-class QQuickSpinnerPrivate : public QObjectPrivate
+class QQuickSpinButtonPrivate : public QObjectPrivate
 {
 public:
-    QQuickSpinnerPrivate() : pressed(false), indicator(Q_NULLPTR) { }
+    QQuickSpinButtonPrivate() : pressed(false), indicator(Q_NULLPTR) { }
     bool pressed;
     QQuickItem *indicator;
 };
 
-QQuickSpinner::QQuickSpinner(QQuickSpinBox *parent) :
-    QObject(*(new QQuickSpinnerPrivate), parent)
+QQuickSpinButton::QQuickSpinButton(QQuickSpinBox *parent) :
+    QObject(*(new QQuickSpinButtonPrivate), parent)
 {
 }
 
-bool QQuickSpinner::isPressed() const
+bool QQuickSpinButton::isPressed() const
 {
-    Q_D(const QQuickSpinner);
+    Q_D(const QQuickSpinButton);
     return d->pressed;
 }
 
-void QQuickSpinner::setPressed(bool pressed)
+void QQuickSpinButton::setPressed(bool pressed)
 {
-    Q_D(QQuickSpinner);
+    Q_D(QQuickSpinButton);
     if (d->pressed != pressed) {
         d->pressed = pressed;
         emit pressedChanged();
     }
 }
 
-QQuickItem *QQuickSpinner::indicator() const
+QQuickItem *QQuickSpinButton::indicator() const
 {
-    Q_D(const QQuickSpinner);
+    Q_D(const QQuickSpinButton);
     return d->indicator;
 }
 
-void QQuickSpinner::setIndicator(QQuickItem *indicator)
+void QQuickSpinButton::setIndicator(QQuickItem *indicator)
 {
-    Q_D(QQuickSpinner);
+    Q_D(QQuickSpinButton);
     if (d->indicator != indicator) {
         delete d->indicator;
         d->indicator = indicator;

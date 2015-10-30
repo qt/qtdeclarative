@@ -99,7 +99,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickScrollIndicator>(uri, 1, 0, "ScrollIndicator");
     qmlRegisterType<QQuickSlider>(uri, 1, 0, "Slider");
     qmlRegisterType<QQuickSpinBox>(uri, 1, 0, "SpinBox");
-    qmlRegisterType<QQuickSpinner>();
+    qmlRegisterType<QQuickSpinButton>();
     qmlRegisterType<QQuickStackView>(uri, 1, 0, "StackView");
     qmlRegisterType<QQuickSwipeViewAttached>();
     qmlRegisterType<QQuickSwipeView>(uri, 1, 0, "SwipeView");
