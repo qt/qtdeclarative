@@ -30,7 +30,7 @@ import Qt.labs.controls 1.0
 
 BusyIndicator {
     Rectangle {
-        anchors.fill: indicator
+        anchors.fill: contentItem
         color: 'transparent'
         border.color: 'red'
     }

@@ -58,7 +58,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickBusyIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
-    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
     explicit QQuickBusyIndicator(QQuickItem *parent = Q_NULLPTR);
@@ -66,12 +65,8 @@ public:
     bool isRunning() const;
     void setRunning(bool running);
 
-    QQuickItem *indicator() const;
-    void setIndicator(QQuickItem *indicator);
-
 Q_SIGNALS:
     void runningChanged();
-    void indicatorChanged();
 
 protected:
 #ifndef QT_NO_ACCESSIBILITY

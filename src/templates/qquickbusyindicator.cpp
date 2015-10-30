@@ -66,13 +66,9 @@ QT_BEGIN_NAMESPACE
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickBusyIndicatorPrivate()
-        : running(true), indicator(Q_NULLPTR)
-    {
-    }
+    QQuickBusyIndicatorPrivate() : running(true) { }
 
     bool running;
-    QQuickItem *indicator;
 };
 
 QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
@@ -103,29 +99,6 @@ void QQuickBusyIndicator::setRunning(bool running)
     if (d->running != running) {
         d->running = running;
         emit runningChanged();
-    }
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::BusyIndicator::indicator
-
-    This property holds the \l[QML]{Item}, which graphically implements the busy indicator.
-*/
-QQuickItem *QQuickBusyIndicator::indicator() const
-{
-    Q_D(const QQuickBusyIndicator);
-    return d->indicator;
-}
-
-void QQuickBusyIndicator::setIndicator(QQuickItem *indicator)
-{
-    Q_D(QQuickBusyIndicator);
-    if (d->indicator != indicator) {
-        delete d->indicator;
-        d->indicator = indicator;
-        if (indicator && !indicator->parentItem())
-            indicator->setParentItem(this);
-        emit indicatorChanged();
     }
 }
 
