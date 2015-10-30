@@ -92,3 +92,4 @@ android-build
 app_process
 qtc-debugging-helper
 android-*.so-deployment-settings.json
+*.directory
