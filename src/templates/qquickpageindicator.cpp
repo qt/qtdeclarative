@@ -37,6 +37,8 @@
 #include "qquickpageindicator_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtCore/qmath.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -86,11 +88,33 @@ public:
 QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
 {
     Q_Q(const QQuickPageIndicator);
-    if (contentItem) {
-        QPointF mapped = q->mapToItem(contentItem, pos);
-        return contentItem->childAt(mapped.x(), mapped.y());
+    if (!contentItem || !q->contains(pos))
+        return Q_NULLPTR;
+
+    QPointF contentPos = q->mapToItem(contentItem, pos);
+    QQuickItem *item = contentItem->childAt(contentPos.x(), contentPos.y());
+    while (item && item->parentItem() != contentItem)
+        item = item->parentItem();
+    if (item && !QQuickItemPrivate::get(item)->isTransparentForPositioner())
+        return item;
+
+    // find the nearest
+    qreal distance = qInf();
+    QQuickItem *nearest = Q_NULLPTR;
+    foreach (QQuickItem *child, contentItem->childItems()) {
+        if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
+            continue;
+
+        QPointF center = child->boundingRect().center();
+        QPointF pt = contentItem->mapToItem(child, contentPos);
+
+        qreal len = QLineF(center, pt).length();
+        if (len < distance) {
+            distance = len;
+            nearest = child;
+        }
     }
-    return Q_NULLPTR;
+    return nearest;
 }
 
 void QQuickPageIndicatorPrivate::updatePressed(bool pressed, const QPoint &pos)
