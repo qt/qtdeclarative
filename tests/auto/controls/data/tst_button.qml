@@ -232,4 +232,62 @@ TestCase {
 
         control.destroy()
     }
+
+    SignalSpy { id: clickSpy; signalName: "clicked" }
+
+    function test_autoRepeat() {
+        var control = button.createObject(testCase)
+        verify(control)
+
+        compare(control.autoRepeat, false)
+        control.autoRepeat = true
+        compare(control.autoRepeat, true)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        clickSpy.target = control
+        verify(clickSpy.valid)
+
+        var repeatCount = 2
+        var repeatSequence = [["pressedChanged", { "pressed": true }],
+                              "pressed",
+                              "released",
+                              "clicked",
+                              "pressed",
+                              "released",
+                              "clicked",
+                              "pressed"]
+
+        // auto-repeat a couple of mouse clicks
+        control.spy.expectedSequence = repeatSequence
+        mousePress(control)
+        compare(control.pressed, true)
+        tryCompare(clickSpy, "count", repeatCount)
+        verify(control.spy.success)
+
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
+        mouseRelease(control)
+        compare(control.pressed, false)
+        verify(control.spy.success)
+
+        // auto-repeat a couple of key clicks
+        clickSpy.clear()
+        control.spy.expectedSequence = repeatSequence
+        keyPress(Qt.Key_Space)
+        compare(control.pressed, true)
+        tryCompare(clickSpy, "count", repeatCount)
+        verify(control.spy.success)
+
+        control.spy.expectedSequence = [["pressedChanged", { "pressed": false }],
+                                        "released",
+                                        "clicked"]
+        keyRelease(Qt.Key_Space)
+        compare(control.pressed, false)
+        verify(control.spy.success)
+
+        control.destroy()
+    }
 }

@@ -62,6 +62,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
+    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
 
@@ -83,6 +84,9 @@ public:
     bool isExclusive() const;
     void setExclusive(bool exclusive);
 
+    bool autoRepeat() const;
+    void setAutoRepeat(bool repeat);
+
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
@@ -102,6 +106,7 @@ Q_SIGNALS:
     void pressedChanged();
     void checkedChanged();
     void checkableChanged();
+    void autoRepeatChanged();
     void indicatorChanged();
     void labelChanged();
 
@@ -116,6 +121,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseUngrabEvent() Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
     virtual void checkStateSet();
     virtual void nextCheckState();

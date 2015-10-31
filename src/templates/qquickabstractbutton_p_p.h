@@ -59,11 +59,20 @@ class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 public:
     QQuickAbstractButtonPrivate();
 
+    void startRepeatDelay();
+    void startPressRepeat();
+    void stopPressRepeat();
+
     QString text;
     bool pressed;
     bool checked;
     bool checkable;
     bool exclusive;
+    bool autoRepeat;
+    int delayTimer;
+    int repeatTimer;
+    QPointF pressPoint;
+    Qt::MouseButton repeatButton;
     QQuickItem *label;
     QQuickItem *indicator;
 };

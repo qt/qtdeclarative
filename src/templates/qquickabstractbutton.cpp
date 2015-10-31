@@ -37,9 +37,14 @@
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 
 QT_BEGIN_NAMESPACE
+
+// copied from qabstractbutton.cpp
+static const int AUTO_REPEAT_DELAY = 300;
+static const int AUTO_REPEAT_INTERVAL = 100;
 
 /*!
     \qmltype AbstractButton
@@ -95,9 +100,36 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), exclusive(false),
-    label(Q_NULLPTR), indicator(Q_NULLPTR)
+    pressed(false), checked(false), checkable(false), exclusive(false), autoRepeat(false),
+    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR)
 {
+}
+
+void QQuickAbstractButtonPrivate::startRepeatDelay()
+{
+    Q_Q(QQuickAbstractButton);
+    stopPressRepeat();
+    delayTimer = q->startTimer(AUTO_REPEAT_DELAY);
+}
+
+void QQuickAbstractButtonPrivate::startPressRepeat()
+{
+    Q_Q(QQuickAbstractButton);
+    stopPressRepeat();
+    repeatTimer = q->startTimer(AUTO_REPEAT_INTERVAL);
+}
+
+void QQuickAbstractButtonPrivate::stopPressRepeat()
+{
+    Q_Q(QQuickAbstractButton);
+    if (delayTimer > 0) {
+        q->killTimer(delayTimer);
+        delayTimer = 0;
+    }
+    if (repeatTimer > 0) {
+        q->killTimer(repeatTimer);
+        repeatTimer = 0;
+    }
 }
 
 QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
@@ -217,6 +249,30 @@ void QQuickAbstractButton::setExclusive(bool exclusive)
 }
 
 /*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::autoRepeat
+
+    This property holds whether the button repeats pressed(), released()
+    and clicked() signals while the button is pressed and held down.
+
+    The default value is \c false.
+*/
+bool QQuickAbstractButton::autoRepeat() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->autoRepeat;
+}
+
+void QQuickAbstractButton::setAutoRepeat(bool repeat)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->autoRepeat != repeat) {
+        d->stopPressRepeat();
+        d->autoRepeat = repeat;
+        emit autoRepeatChanged();
+    }
+}
+
+/*!
     \qmlproperty Item Qt.labs.controls::AbstractButton::indicator
 
     This property holds the indicator item.
@@ -290,11 +346,18 @@ void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
 
 void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(true);
+        d->pressPoint = QPoint(qRound(width() / 2), qRound(height() / 2));
 
-        QQuickMouseEvent me(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        if (d->autoRepeat) {
+            d->startRepeatDelay();
+            d->repeatButton = Qt::NoButton;
+        }
+
+        QQuickMouseEvent me(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
         emit pressed(&me);
         event->setAccepted(me.isAccepted());
     }
@@ -302,33 +365,48 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 
 void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
 
-        QQuickMouseEvent mre(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
         emit released(&mre);
-        QQuickMouseEvent mce(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers(), true /* isClick */);
+        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers(), true /* isClick */);
         emit clicked(&mce);
         nextCheckState();
         event->setAccepted(mre.isAccepted() || mce.isAccepted());
+
+        if (d->autoRepeat)
+            d->stopPressRepeat();
     }
 }
 
 void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::mousePressEvent(event);
     setPressed(true);
+    d->pressPoint = event->pos();
 
     QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
     emit pressed(&me);
     event->setAccepted(me.isAccepted());
+
+    if (d->autoRepeat) {
+        d->startRepeatDelay();
+        d->repeatButton = event->button();
+    }
 }
 
 void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::mouseMoveEvent(event);
     setPressed(contains(event->pos()));
+
+    if (d->autoRepeat)
+        d->stopPressRepeat();
 }
 
 void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
@@ -347,8 +425,12 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
+
     if (contains(event->pos()))
         nextCheckState();
+
+    if (d->autoRepeat)
+        d->stopPressRepeat();
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
@@ -366,7 +448,24 @@ void QQuickAbstractButton::mouseUngrabEvent()
     QQuickControl::mouseUngrabEvent();
     if (d->pressed) {
         setPressed(false);
+        d->stopPressRepeat();
         emit canceled();
+    }
+}
+
+void QQuickAbstractButton::timerEvent(QTimerEvent *event)
+{
+    Q_D(QQuickAbstractButton);
+    QQuickControl::timerEvent(event);
+    if (event->timerId() == d->delayTimer) {
+        d->startPressRepeat();
+    } else if (event->timerId() == d->repeatTimer) {
+        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
+        emit released(&mre);
+        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers(), true /* isClick */);
+        emit clicked(&mce);
+        QQuickMouseEvent mpe(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
+        emit pressed(&mpe);
     }
 }
 
