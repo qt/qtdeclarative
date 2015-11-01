@@ -59,7 +59,7 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
     QQuickAbstractButton(parent)
 {
     setCheckable(true);
-    setExclusive(true);
+    setAutoExclusive(true);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

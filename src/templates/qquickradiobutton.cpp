@@ -61,21 +61,22 @@ QT_BEGIN_NAMESPACE
          \li A radio button that is disabled.
     \endtable
 
+    Radio buttons are \l {AbstractButton::autoExclusive}{auto-exclusive}
+    by default. Only one button can be checked at any time amongst radio
+    buttons that belong to the same parent item; checking another button
+    automatically unchecks the previously checked one.
+
     \code
     ColumnLayout {
-        ExclusiveGroup { id: group }
         RadioButton {
             checked: true
             text: qsTr("First")
-            ExclusiveGroup.group: group
         }
         RadioButton {
             text: qsTr("Second")
-            ExclusiveGroup.group: group
         }
         RadioButton {
             text: qsTr("Third")
-            ExclusiveGroup.group: group
         }
     }
     \endcode
@@ -87,7 +88,7 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
     QQuickAbstractButton(parent)
 {
     setCheckable(true);
-    setExclusive(true);
+    setAutoExclusive(true);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

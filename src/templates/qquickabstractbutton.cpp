@@ -36,9 +36,11 @@
 
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
+#include "qquickexclusivegroup_p.h"
 
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -100,7 +102,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), exclusive(false), autoRepeat(false),
+    pressed(false), checked(false), checkable(false), autoExclusive(false), autoRepeat(false),
     delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR)
 {
 }
@@ -130,6 +132,60 @@ void QQuickAbstractButtonPrivate::stopPressRepeat()
         q->killTimer(repeatTimer);
         repeatTimer = 0;
     }
+}
+
+QQuickExclusiveGroup *QQuickAbstractButtonPrivate::exclusiveGroup() const
+{
+    Q_Q(const QQuickAbstractButton);
+    QQuickExclusiveGroupAttached *attached = qobject_cast<QQuickExclusiveGroupAttached *>(qmlAttachedPropertiesObject<QQuickExclusiveGroup>(q, false));
+    if (attached)
+        return attached->group();
+    return Q_NULLPTR;
+}
+
+QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
+{
+    Q_Q(const QQuickAbstractButton);
+    QQuickExclusiveGroup *group = exclusiveGroup();
+    if (group)
+        return qobject_cast<QQuickAbstractButton *>(group->current());
+
+    QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
+    // TODO: A singular QRadioButton can be unchecked, which seems logical,
+    // because there's nothing to be exclusive with. However, a RadioButton
+    // from QtQuick.Controls 1.x can never be unchecked, which is the behavior
+    // that QQuickRadioButton adopted. Uncommenting the following count check
+    // gives the QRadioButton behavior. Notice that tst_radiobutton.qml needs
+    // to be updated.
+    if (!autoExclusive /*|| buttons.count() == 1*/)
+        return Q_NULLPTR;
+
+    foreach (QQuickAbstractButton *button, buttons) {
+        if (button->isChecked() && button != q)
+            return button;
+    }
+    return checked ? const_cast<QQuickAbstractButton *>(q) : Q_NULLPTR;
+}
+
+QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons() const
+{
+    QList<QQuickAbstractButton *> buttons;
+    QQuickExclusiveGroup *group = exclusiveGroup();
+    if (group) {
+        QQmlListProperty<QObject> checkables = group->checkables();
+        int count = checkables.count(&checkables);
+        for (int i = 0; i < count; ++i) {
+            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(checkables.at(&checkables, i));
+            if (button)
+                buttons += button;
+        }
+    } else if (parentItem) {
+        foreach (QQuickAbstractButton *button, parentItem->findChildren<QQuickAbstractButton *>()) {
+            if (button->autoExclusive() && !button->d_func()->exclusiveGroup())
+                buttons += button;
+        }
+    }
+    return buttons;
 }
 
 QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
@@ -236,16 +292,33 @@ void QQuickAbstractButton::setCheckable(bool checkable)
     }
 }
 
-bool QQuickAbstractButton::isExclusive() const
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::autoExclusive
+
+    This property holds whether auto-exclusivity is enabled.
+
+    If auto-exclusivity is enabled, checkable buttons that belong to the same
+    parent item behave as if they were part of the same ExclusiveGroup. Only
+    one button can be checked at any time; checking another button automatically
+    unchecks the previously checked one.
+
+    \note The property has no effect on buttons that belong to an ExclusiveGroup.
+
+    RadioButton and TabButton are auto-exclusive by default.
+*/
+bool QQuickAbstractButton::autoExclusive() const
 {
     Q_D(const QQuickAbstractButton);
-    return d->exclusive;
+    return d->autoExclusive;
 }
 
-void QQuickAbstractButton::setExclusive(bool exclusive)
+void QQuickAbstractButton::setAutoExclusive(bool exclusive)
 {
     Q_D(QQuickAbstractButton);
-    d->exclusive = exclusive;
+    if (d->autoExclusive != exclusive) {
+        d->autoExclusive = exclusive;
+        emit autoExclusiveChanged();
+    }
 }
 
 /*!
@@ -471,13 +544,19 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
 
 void QQuickAbstractButton::checkStateSet()
 {
+    Q_D(QQuickAbstractButton);
+    if (d->checked) {
+        QQuickAbstractButton *button = d->findCheckedButton();
+        if (button && button != this)
+            button->setChecked(false);
+    }
 }
 
 void QQuickAbstractButton::nextCheckState()
 {
     Q_D(QQuickAbstractButton);
-    if (d->checkable)
-        setChecked(d->exclusive || !d->checked);
+    if (d->checkable && (!d->checked || d->findCheckedButton() != this))
+        setChecked(!d->checked);
 }
 
 #ifndef QT_NO_ACCESSIBILITY
