@@ -1373,7 +1373,7 @@ void QQuickTextInput::setInputMethodHints(Qt::InputMethodHints hints)
     If you set a cursorDelegate for a TextInput, this delegate will be used for
     drawing the cursor instead of the standard cursor. An instance of the
     delegate will be created and managed by the TextInput when a cursor is
-    needed, and the x property of delegate instance will be set so as
+    needed, and the x property of the delegate instance will be set so as
     to be one pixel before the top left of the current character.
 
     Note that the root item of the delegate component must be a QQuickItem or
