@@ -134,17 +134,34 @@ void QQuickShortcut::setSequence(const QVariant &sequence)
 }
 
 /*!
-    \qmlproperty string QtQuick::Shortcut::sequenceString
+    \qmlproperty string QtQuick::Shortcut::nativeText
     \since 5.6
 
-    This property provides the shortcut's key sequence as a string,
-    for display purposes (tooltips, for example).
+    This property provides the shortcut's key sequence as a platform specific
+    string. This means that it will be shown translated, and on OS X it will
+    resemble a key sequence from the menu bar. It is best to display this text
+    to the user (for example, on a tooltip).
 
-    \sa sequence
+    \sa sequence, portableText
 */
-QString QQuickShortcut::sequenceString() const
+QString QQuickShortcut::nativeText() const
 {
     return m_shortcut.toString(QKeySequence::NativeText);
+}
+
+/*!
+    \qmlproperty string QtQuick::Shortcut::portableText
+    \since 5.6
+
+    This property provides the shortcut's key sequence as a string in a
+    "portable" format, suitable for reading and writing to a file. In many
+    cases, it will look similar to the native text on Windows and X11.
+
+    \sa sequence, nativeText
+*/
+QString QQuickShortcut::portableText() const
+{
+    return m_shortcut.toString(QKeySequence::PortableText);
 }
 
 /*!
