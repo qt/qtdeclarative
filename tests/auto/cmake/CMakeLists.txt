@@ -13,3 +13,5 @@ test_module_includes(
   Qml QQmlEngine
   Quick QQuickWindow
 )
+
+expect_pass(test_plugins)
