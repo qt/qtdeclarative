@@ -185,7 +185,7 @@ JSC::MacroAssemblerCodeRef Assembler::link(int *codeSize)
 
     JSC::MacroAssemblerCodeRef codeRef;
 
-    static bool showCode = !qgetenv("QV4_SHOW_ASM").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
     if (showCode) {
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);
@@ -275,7 +275,7 @@ void InstructionSelection::run(int functionIndex)
     IR::Optimizer opt(_function);
     opt.run(qmlEngine);
 
-    static const bool withRegisterAllocator = qgetenv("QV4_NO_REGALLOC").isEmpty();
+    static const bool withRegisterAllocator = qEnvironmentVariableIsEmpty("QV4_NO_REGALLOC");
     if (Assembler::RegAllocIsSupported && opt.isInSSA() && withRegisterAllocator) {
         RegisterAllocator regalloc(Assembler::getRegisterInfo());
         regalloc.run(_function, opt);
@@ -396,6 +396,23 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
                              Assembler::EngineRegister,
                              Assembler::StringToIndex(*func->id),
                              baseAddressForCallData());
+    }
+}
+
+void InstructionSelection::callBuiltinTypeofQmlContextProperty(IR::Expr *base,
+                                                               IR::Member::MemberKind kind,
+                                                               int propertyIndex, IR::Expr *result)
+{
+    if (kind == IR::Member::MemberOfQmlScopeObject) {
+        generateFunctionCall(result, Runtime::typeofScopeObjectProperty, Assembler::EngineRegister,
+                             Assembler::PointerToValue(base),
+                             Assembler::TrustedImm32(propertyIndex));
+    } else if (kind == IR::Member::MemberOfQmlContextObject) {
+        generateFunctionCall(result, Runtime::typeofContextObjectProperty,
+                             Assembler::EngineRegister, Assembler::PointerToValue(base),
+                             Assembler::TrustedImm32(propertyIndex));
+    } else {
+        Q_UNREACHABLE();
     }
 }
 
@@ -681,7 +698,7 @@ void InstructionSelection::loadString(const QString &str, IR::Expr *target)
     Pointer srcAddr = _as->loadStringAddress(Assembler::ReturnValueRegister, str);
     _as->loadPtr(srcAddr, Assembler::ReturnValueRegister);
     Pointer destAddr = _as->loadAddress(Assembler::ScratchRegister, target);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     _as->store64(Assembler::ReturnValueRegister, destAddr);
 #else
     _as->store32(Assembler::ReturnValueRegister, destAddr);
@@ -1085,7 +1102,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
 
         // not an int, check if it's NOT a double:
         isNoInt.link(_as);
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         _as->and32(Assembler::TrustedImm32(Value::IsDouble_Mask), Assembler::ScratchRegister);
         Assembler::Jump isDbl = _as->branch32(Assembler::NotEqual, Assembler::ScratchRegister,
                                               Assembler::TrustedImm32(0));
@@ -1103,7 +1120,7 @@ void InstructionSelection::convertTypeToDouble(IR::Expr *source, IR::Expr *targe
         Assembler::Pointer addr2 = _as->loadAddress(Assembler::ScratchRegister, source);
         IR::Temp *targetTemp = target->asTemp();
         if (!targetTemp || targetTemp->kind == IR::Temp::StackSlot) {
-#if QT_POINTER_SIZE == 8
+#if Q_PROCESSOR_WORDSIZE == 8
             _as->load64(addr2, Assembler::ScratchRegister);
             _as->store64(Assembler::ScratchRegister, _as->loadAddress(Assembler::ReturnValueRegister, target));
 #else
@@ -1172,7 +1189,7 @@ void InstructionSelection::convertTypeToSInt32(IR::Expr *source, IR::Expr *targe
     switch (source->type) {
     case IR::VarType: {
 
-#if QT_POINTER_SIZE == 8
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, source);
         _as->load64(addr, Assembler::ScratchRegister);
         _as->move(Assembler::ScratchRegister, Assembler::ReturnValueRegister);

@@ -127,6 +127,8 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     // typeof
     static ReturnedValue typeofValue(ExecutionEngine *engine, const Value &val);
     static ReturnedValue typeofName(ExecutionEngine *engine, int nameIndex);
+    static ReturnedValue typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
+    static ReturnedValue typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex);
     static ReturnedValue typeofMember(ExecutionEngine *engine, const Value &base, int nameIndex);
     static ReturnedValue typeofElement(ExecutionEngine *engine, const Value &base, const Value &index);
 

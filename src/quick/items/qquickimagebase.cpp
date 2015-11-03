@@ -358,7 +358,7 @@ void QQuickImageBase::resolve2xLocalFile(const QUrl &url, qreal targetDevicePixe
     Q_ASSERT(sourceDevicePixelRatio);
 
     // Bail out if "@2x" image loading is disabled, don't change the source url or devicePixelRatio.
-    static bool disable2xImageLoading = !qgetenv("QT_HIGHDPI_DISABLE_2X_IMAGE_LOADING").isEmpty();
+    static const bool disable2xImageLoading = !qEnvironmentVariableIsEmpty("QT_HIGHDPI_DISABLE_2X_IMAGE_LOADING");
     if (disable2xImageLoading)
         return;
 

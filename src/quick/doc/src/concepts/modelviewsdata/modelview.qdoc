@@ -371,13 +371,12 @@ or removed from a positioner.
 Transitions for adding items apply to items that are created as part of a
 positioner, as well as those that are reparented to become children of a
 positioner.
+
 Transitions for removing items apply to items within a positioner that are
 deleted, as well as those that are removed from a positioner and given new
 parents in a document.
 
-Additionally, changing the opacity of items to zero will cause them to
-disappear using the remove transition, and making the opacity non-zero will
-cause them to appear using the add transition.
-
-
+\note Changing the opacity of items to zero will not cause them to
+disappear from the positioner. They can be removed and re-added by changing
+the visible property.
 */

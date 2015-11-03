@@ -2437,6 +2437,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
     Returns the QQmlEngine associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object)->engine(), but more efficient.
 
+    \note Add \c{#include <QtQml>} to use this function.
+
     \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlContext()
 */
 
@@ -2446,6 +2448,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     Returns the QQmlContext associated with \a object, if any.  This is equivalent to
     QQmlEngine::contextForObject(object).
+
+    \note Add \c{#include <QtQml>} to use this function.
 
     \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlEngine()
 */

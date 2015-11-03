@@ -267,6 +267,7 @@ public:
 
 protected: // IRDecoder
     virtual void callBuiltinInvalid(IR::Name *, IR::ExprList *, IR::Expr *) {}
+    virtual void callBuiltinTypeofQmlContextProperty(IR::Expr *, IR::Member::MemberKind, int, IR::Expr *) {}
     virtual void callBuiltinTypeofMember(IR::Expr *, const QString &, IR::Expr *) {}
     virtual void callBuiltinTypeofSubscript(IR::Expr *, IR::Expr *, IR::Expr *) {}
     virtual void callBuiltinTypeofName(const QString &, IR::Expr *) {}
@@ -1323,7 +1324,7 @@ void RegisterAllocator::run(IR::Function *function, const Optimizer &opt)
     if (DebugRegAlloc)
         qDebug() << "*** Finished regalloc , result:";
 
-    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_IR");
     if (showCode) {
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);

@@ -136,6 +136,7 @@ public:
     virtual void initialize(QQuickAnimatorController *controller);
     virtual void writeBack() = 0;
     virtual void nodeWasDestroyed() = 0;
+    virtual void afterNodeSync() { }
 
     bool isTransform() const { return m_isTransform; }
     bool isUniform() const { return m_isUniform; }
@@ -279,7 +280,7 @@ public:
     void setUniform(const QByteArray &uniform) { m_uniform = uniform; }
     QByteArray uniform() const { return m_uniform; }
 
-    void afterNodeSync();
+    void afterNodeSync() Q_DECL_OVERRIDE;
 
     void updateCurrentTime(int time);
     void writeBack();

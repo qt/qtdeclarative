@@ -221,6 +221,23 @@ void QQmlBind::setObject(QObject *obj)
     \qmlproperty string QtQml::Binding::property
 
     The property to be updated.
+
+    This can be a group property if the expression results in accessing a
+    property of a \l {QML Basic Types}{value type}. For example:
+
+    \qml
+    Item {
+        id: item
+
+        property rect rectangle: Qt.rect(0, 0, 200, 200)
+    }
+
+    Binding {
+        target: item
+        property: "rectangle.x"
+        value: 100
+    }
+    \endqml
 */
 QString QQmlBind::property() const
 {

@@ -72,14 +72,14 @@
 #endif
 
 #include <algorithm>
-#include <float.h>
+#include <limits>
 
 // XXX todo Check that elements that create items handle memory correctly after visual ownership change
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_DEBUG
-static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
@@ -217,8 +217,8 @@ bool QQuickContents::calcHeight(QQuickItem *changed)
         m_y = top;
         m_height = bottom - top;
     } else {
-        qreal top = FLT_MAX;
-        qreal bottom = 0;
+        qreal top = std::numeric_limits<qreal>::max();
+        qreal bottom = -std::numeric_limits<qreal>::max();
         QList<QQuickItem *> children = m_item->childItems();
         for (int i = 0; i < children.count(); ++i) {
             QQuickItem *child = children.at(i);
@@ -252,8 +252,8 @@ bool QQuickContents::calcWidth(QQuickItem *changed)
         m_x = left;
         m_width = right - left;
     } else {
-        qreal left = FLT_MAX;
-        qreal right = 0;
+        qreal left = std::numeric_limits<qreal>::max();
+        qreal right = -std::numeric_limits<qreal>::max();
         QList<QQuickItem *> children = m_item->childItems();
         for (int i = 0; i < children.count(); ++i) {
             QQuickItem *child = children.at(i);
@@ -724,6 +724,7 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
 {
     QQuickItem *initialItem = currentItem;
     bool isNextItem = false;
+    QVector<QQuickItem *> visitedItems;
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {
@@ -734,13 +735,14 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
             if (attached) {
                 QQuickItem *tempItem = qvariant_cast<QQuickItem*>(attached->property(dir));
                 if (tempItem) {
+                    visitedItems.append(currentItem);
                     currentItem = tempItem;
                     isNextItem = true;
                 }
             }
         }
     }
-    while (currentItem != initialItem && isNextItem);
+    while (currentItem != initialItem && isNextItem && !visitedItems.contains(currentItem));
 }
 
 struct SigMap {
@@ -2602,7 +2604,7 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
         QQuickItem *itemAncestor = parentItem;
         while (itemAncestor != 0) {
             if (itemAncestor == this) {
-                qWarning("QQuickItem::setParentItem: Parent is already part of this items subtree.");
+                qWarning() << "QQuickItem::setParentItem: Parent" << parentItem << "is already part of the subtree of" << this;
                 return;
             }
             itemAncestor = itemAncestor->parentItem();
@@ -5918,7 +5920,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
     In Qt Quick 2.0, this property has minimal impact on performance.
 
-    By default is true.
+    By default, this property is set to \c true.
 */
 /*!
     \property QQuickItem::smooth
@@ -5930,7 +5932,7 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
 
     In Qt Quick 2.0, this property has minimal impact on performance.
 
-    By default is true.
+    By default, this property is set to \c true.
 */
 bool QQuickItem::smooth() const
 {
@@ -5952,10 +5954,10 @@ void QQuickItem::setSmooth(bool smooth)
 /*!
     \qmlproperty bool QtQuick::Item::activeFocusOnTab
 
-    This property holds whether the item wants to be in tab focus
-    chain. By default this is set to false.
+    This property holds whether the item wants to be in the tab focus
+    chain. By default, this is set to \c false.
 
-    The tab focus chain traverses elements by visiting first the
+    The tab focus chain traverses elements by first visiting the
     parent, and then its children in the order they occur in the
     children property. Pressing the tab key on an item in the tab
     focus chain will move keyboard focus to the next item in the
@@ -5964,14 +5966,14 @@ void QQuickItem::setSmooth(bool smooth)
 
     To set up a manual tab focus chain, see \l KeyNavigation. Tab
     key events used by Keys or KeyNavigation have precedence over
-    focus chain behavior, ignore the events in other key handlers
+    focus chain behavior; ignore the events in other key handlers
     to allow it to propagate.
 */
 /*!
     \property QQuickItem::activeFocusOnTab
 
-    This property holds whether the item wants to be in tab focus
-    chain. By default this is set to false.
+    This property holds whether the item wants to be in the tab focus
+    chain. By default, this is set to \c false.
 */
 bool QQuickItem::activeFocusOnTab() const
 {

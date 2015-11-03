@@ -80,7 +80,7 @@ must import that module in their QML documents.
 \section1 Property Change Behavior for Basic Types
 
 Some basic types have properties: for example, the \l font type has
-\c pixelSize, \c family and \c b properties. Unlike properties of
+\c pixelSize, \c family and \c bold properties. Unlike properties of
 \l{qtqml-typesystem-topic.html#qml-object-types}{object types}, properties of
 basic types do not provide their own property change signals. It is only possible
 to create a property change signal handler for the basic type property itself:

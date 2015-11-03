@@ -39,18 +39,27 @@
 
 QT_BEGIN_NAMESPACE
 
+static float qt_sg_envFloat(const char *name, float defaultValue)
+{
+    if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))
+        return defaultValue;
+    bool ok = false;
+    const float value = qgetenv(name).toFloat(&ok);
+    return ok ? value : defaultValue;
+}
+
 static float defaultThresholdFunc(float glyphScale)
 {
-    static float base = qgetenv("QT_DF_BASE").isEmpty() ? 0.5f : qgetenv("QT_DF_BASE").toFloat();
-    static float baseDev = qgetenv("QT_DF_BASEDEVIATION").isEmpty() ? 0.065f : qgetenv("QT_DF_BASEDEVIATION").toFloat();
-    static float devScaleMin = qgetenv("QT_DF_SCALEFORMAXDEV").isEmpty() ? 0.15f : qgetenv("QT_DF_SCALEFORMAXDEV").toFloat();
-    static float devScaleMax = qgetenv("QT_DF_SCALEFORNODEV").isEmpty() ? 0.3f : qgetenv("QT_DF_SCALEFORNODEV").toFloat();
+    static const float base = qt_sg_envFloat("QT_DF_BASE", 0.5f);
+    static const float baseDev = qt_sg_envFloat("QT_DF_BASEDEVIATION", 0.065f);
+    static const float devScaleMin = qt_sg_envFloat("QT_DF_SCALEFORMAXDEV", 0.15f);
+    static const float devScaleMax = qt_sg_envFloat("QT_DF_SCALEFORNODEV", 0.3f);
     return base - ((qBound(devScaleMin, glyphScale, devScaleMax) - devScaleMin) / (devScaleMax - devScaleMin) * -baseDev + baseDev);
 }
 
 static float defaultAntialiasingSpreadFunc(float glyphScale)
 {
-    static float range = qgetenv("QT_DF_RANGE").isEmpty() ? 0.06f : qgetenv("QT_DF_RANGE").toFloat();
+    static const float range = qt_sg_envFloat("QT_DF_RANGE", 0.06f);
     return range / glyphScale;
 }
 

@@ -684,6 +684,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
         STOREVALUE(instr.result, Runtime::deleteName(engine, instr.name));
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofScopeObjectProperty)
+        STOREVALUE(instr.result, Runtime::typeofScopeObjectProperty(engine, VALUE(instr.base), instr.index));
+    MOTH_END_INSTR(CallBuiltinTypeofMember)
+
+    MOTH_BEGIN_INSTR(CallBuiltinTypeofContextObjectProperty)
+        STOREVALUE(instr.result, Runtime::typeofContextObjectProperty(engine, VALUE(instr.base), instr.index));
+    MOTH_END_INSTR(CallBuiltinTypeofMember)
+
     MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
         STOREVALUE(instr.result, Runtime::typeofMember(engine, VALUE(instr.base), instr.member));
     MOTH_END_INSTR(CallBuiltinTypeofMember)

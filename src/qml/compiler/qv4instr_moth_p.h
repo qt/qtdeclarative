@@ -102,6 +102,8 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
+    F(CallBuiltinTypeofScopeObjectProperty, callBuiltinTypeofScopeObjectProperty) \
+    F(CallBuiltinTypeofContextObjectProperty, callBuiltinTypeofContextObjectProperty) \
     F(CallBuiltinTypeofMember, callBuiltinTypeofMember) \
     F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
@@ -511,6 +513,18 @@ union Instr
         int name;
         Param result;
     };
+    struct instr_callBuiltinTypeofScopeObjectProperty {
+        MOTH_INSTR_HEADER
+        int index;
+        Param base;
+        Param result;
+    };
+    struct instr_callBuiltinTypeofContextObjectProperty {
+        MOTH_INSTR_HEADER
+        int index;
+        Param base;
+        Param result;
+    };
     struct instr_callBuiltinTypeofMember {
         MOTH_INSTR_HEADER
         int member;
@@ -809,6 +823,8 @@ union Instr
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
+    instr_callBuiltinTypeofScopeObjectProperty callBuiltinTypeofScopeObjectProperty;
+    instr_callBuiltinTypeofContextObjectProperty callBuiltinTypeofContextObjectProperty;
     instr_callBuiltinTypeofMember callBuiltinTypeofMember;
     instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
     instr_callBuiltinTypeofName callBuiltinTypeofName;

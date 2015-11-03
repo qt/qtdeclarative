@@ -40,11 +40,20 @@
 
 QT_BEGIN_NAMESPACE
 
-static bool qsg_sanity_check = qgetenv("QSG_SANITY_CHECK").toInt();
+static const bool qsg_sanity_check = qEnvironmentVariableIntValue("QSG_SANITY_CHECK");
 
 static QElapsedTimer frameTimer;
 static qint64 preprocessTime;
 static qint64 updatePassTime;
+
+int qt_sg_envInt(const char *name, int defaultValue)
+{
+    if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))
+        return defaultValue;
+    bool ok = false;
+    int value = qgetenv(name).toInt(&ok);
+    return ok ? value : defaultValue;
+}
 
 void QSGBindable::clear(QSGAbstractRenderer::ClearMode mode) const
 {

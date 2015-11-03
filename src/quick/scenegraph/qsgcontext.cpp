@@ -134,8 +134,8 @@ static bool qsg_useConsistentTiming()
 {
     static int use = -1;
     if (use < 0) {
-        QByteArray fixed = qgetenv("QSG_FIXED_ANIMATION_STEP");
-        use = !(fixed.isEmpty() || fixed == "no");
+        use = !qEnvironmentVariableIsEmpty("QSG_FIXED_ANIMATION_STEP") && qgetenv("QSG_FIXED_ANIMATION_STEP") != "no"
+            ? 1 : 0;
         qCDebug(QSG_LOG_INFO, "Using %s", bool(use) ? "fixed animation steps" : "sg animation driver");
     }
     return bool(use);
@@ -297,15 +297,16 @@ QSGContext::QSGContext(QObject *parent) :
     QObject(*(new QSGContextPrivate), parent)
 {
     Q_D(QSGContext);
-    QByteArray mode = qgetenv("QSG_DISTANCEFIELD_ANTIALIASING");
-    if (!mode.isEmpty())
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QSG_DISTANCEFIELD_ANTIALIASING"))) {
+        const QByteArray mode = qgetenv("QSG_DISTANCEFIELD_ANTIALIASING");
         d->distanceFieldAntialiasingDecided = true;
-    if (mode == "subpixel")
-        d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
-    else if (mode == "subpixel-lowq")
-        d->distanceFieldAntialiasing = QSGGlyphNode::LowQualitySubPixelAntialiasing;
-    else if (mode == "gray")
-        d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+        if (mode == "subpixel")
+            d->distanceFieldAntialiasing = QSGGlyphNode::HighQualitySubPixelAntialiasing;
+        else if (mode == "subpixel-lowq")
+            d->distanceFieldAntialiasing = QSGGlyphNode::LowQualitySubPixelAntialiasing;
+        else if (mode == "gray")
+            d->distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+    }
 
     // Adds compatibility with Qt 5.3 and earlier's QSG_RENDER_TIMING
     if (qEnvironmentVariableIsSet("QSG_RENDER_TIMING")) {
@@ -333,12 +334,14 @@ void QSGContext::renderContextInitialized(QSGRenderContext *renderContext)
 
     d->mutex.lock();
     if (d->antialiasingMethod == UndecidedAntialiasing) {
-        QByteArray aaType = qgetenv("QSG_ANTIALIASING_METHOD");
-        if (aaType == "msaa") {
-            d->antialiasingMethod = MsaaAntialiasing;
-        } else if (aaType == "vertex") {
-            d->antialiasingMethod = VertexAntialiasing;
-        } else {
+        if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_ANTIALIASING_METHOD"))) {
+            const QByteArray aaType = qgetenv("QSG_ANTIALIASING_METHOD");
+            if (aaType == "msaa")
+                d->antialiasingMethod = MsaaAntialiasing;
+            else if (aaType == "vertex")
+                d->antialiasingMethod = VertexAntialiasing;
+        }
+        if (d->antialiasingMethod == UndecidedAntialiasing) {
             if (renderContext->openglContext()->format().samples() > 0)
                 d->antialiasingMethod = MsaaAntialiasing;
             else

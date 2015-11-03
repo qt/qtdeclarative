@@ -82,7 +82,7 @@ private:
 };
 
 
-class Q_AUTOTEST_EXPORT QQmlLocale
+class Q_QML_PRIVATE_EXPORT QQmlLocale
 {
     Q_GADGET
 

@@ -23,6 +23,7 @@ HEADERS += \
     $$PWD/qquicktextcontrol_p.h \
     $$PWD/qquicktextcontrol_p_p.h \
     $$PWD/qquicktextdocument.h \
+    $$PWD/qquicktextdocument_p.h \
     $$PWD/qquicktextedit_p.h \
     $$PWD/qquicktextedit_p_p.h \
     $$PWD/qquicktextutil_p.h \

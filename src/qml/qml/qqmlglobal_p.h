@@ -59,10 +59,12 @@ QT_BEGIN_NAMESPACE
     { \
         static enum { Yes, No, Unknown } status = Unknown; \
         if (status == Unknown) { \
-            QByteArray v = qgetenv(#var); \
-            bool value = !v.isEmpty() && v != "0" && v != "false"; \
-            if (value) status = Yes; \
-            else status = No; \
+            status = No; \
+            if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(#var))) { \
+                const QByteArray v = qgetenv(#var); \
+                if (v != "0" && v != "false") \
+                    status = Yes; \
+            } \
         } \
         return status == Yes; \
     }

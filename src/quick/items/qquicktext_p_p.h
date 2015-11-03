@@ -196,45 +196,6 @@ public:
     static inline QQuickTextPrivate *get(QQuickText *t) { return t->d_func(); }
 };
 
-class QQuickPixmap;
-class QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
-{
-    Q_OBJECT
-    Q_INTERFACES(QTextObjectInterface)
-public:
-    QQuickTextDocumentWithImageResources(QQuickItem *parent);
-    virtual ~QQuickTextDocumentWithImageResources();
-
-    void setText(const QString &);
-    int resourcesLoading() const { return outstanding; }
-
-    QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format);
-    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format);
-
-    QImage image(const QTextImageFormat &format);
-
-public Q_SLOTS:
-    void clearResources();
-
-Q_SIGNALS:
-    void imagesLoaded();
-
-protected:
-    QVariant loadResource(int type, const QUrl &name);
-
-    QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
-
-private Q_SLOTS:
-    void reset();
-    void requestFinished();
-
-private:
-    QHash<QUrl, QQuickPixmap *> m_resources;
-
-    int outstanding;
-    static QSet<QUrl> errors;
-};
-
 QT_END_NAMESPACE
 
 #endif // QQUICKTEXT_P_P_H

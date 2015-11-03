@@ -356,7 +356,9 @@ static void usage()
     puts("  --desktop..........................Force use of desktop GL (AA_UseDesktopOpenGL)");
     puts("  --gles.............................Force use of GLES (AA_UseOpenGLES)");
     puts("  --software.........................Force use of software rendering (AA_UseOpenGLES)");
+#if 0 // FIXME: 5.6: Re-enable once attribute naming is final (QTBUG-46615)
     puts("  --no-scaling.......................Disable High DPI scaling (AA_NoHighDpiScaling)");
+#endif
     puts("  --verbose..........................Print version and graphical diagnostics for the run-time");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
@@ -451,8 +453,10 @@ int main(int argc, char ** argv)
             options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
         else if (!qstrcmp(arg, "--desktop"))
             options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
+#if 0 // FIXME: 5.6: Re-enable once attribute naming is final (QTBUG-46615)
         else if (!qstrcmp(arg, "--no-scaling"))
             options.applicationAttributes.append(Qt::AA_NoHighDpiScaling);
+#endif
     }
 
     foreach (Qt::ApplicationAttribute a, options.applicationAttributes)

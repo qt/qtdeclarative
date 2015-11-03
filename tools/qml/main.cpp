@@ -332,7 +332,9 @@ void printUsage()
     printf("\t-desktop.......................Force use of desktop GL (AA_UseDesktopOpenGL)\n");
     printf("\t-gles..........................Force use of GLES (AA_UseOpenGLES)\n");
     printf("\t-software......................Force use of software rendering (AA_UseOpenGLES)\n");
+#if 0 // FIXME: 5.6: Re-enable once attribute naming is final (QTBUG-46615)
     printf("\t-no-scaling....................Disable High DPI scaling (AA_NoHighDpiScaling)\n");
+#endif
     printf("\tDebugging options:\n");
     printf("\t-verbose ..................... Print information about what qml is doing, like specific file urls being loaded.\n");
     printf("\t-translation [file] .......... Load the given file as the translations file.\n");
@@ -504,8 +506,10 @@ int main(int argc, char *argv[])
             QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
         } else if (arg == QLatin1String("-desktop")) {
             QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+#if 0 // FIXME: 5.6: Re-enable once attribute naming is final (QTBUG-46615)
         } else if (arg == QLatin1String("-no-scaling")) {
             QCoreApplication::setAttribute(Qt::AA_NoHighDpiScaling);
+#endif
         } else {
             files << arg;
         }

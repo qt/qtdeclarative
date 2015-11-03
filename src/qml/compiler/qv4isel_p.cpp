@@ -282,8 +282,17 @@ void IRDecoder::callBuiltin(IR::Call *call, Expr *result)
         return;
 
     case IR::Name::builtin_typeof: {
-        if (IR::Member *m = call->args->expr->asMember()) {
-            callBuiltinTypeofMember(m->base, *m->name, result);
+        if (IR::Member *member = call->args->expr->asMember()) {
+#ifndef V4_BOOTSTRAP
+            Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
+            if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {
+                callBuiltinTypeofQmlContextProperty(member->base,
+                                                    IR::Member::MemberKind(member->kind),
+                                                    member->property->coreIndex, result);
+                return;
+            }
+#endif
+            callBuiltinTypeofMember(member->base, *member->name, result);
             return;
         } else if (IR::Subscript *ss = call->args->expr->asSubscript()) {
             callBuiltinTypeofSubscript(ss->base, ss->index, result);

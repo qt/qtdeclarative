@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 
 
 #ifndef QT_NO_DEBUG
-static bool qsg_leak_check = !qgetenv("QML_LEAK_CHECK").isEmpty();
+static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
 
 // The cache limit describes the maximum "junk" in the cache.

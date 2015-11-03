@@ -60,6 +60,8 @@ class Q_QML_PRIVATE_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQmlFileSelector)
 public:
     QQmlFileSelectorPrivate();
+    ~QQmlFileSelectorPrivate();
+
     QFileSelector* selector;
     QPointer<QQmlEngine> engine;
     bool ownSelector;

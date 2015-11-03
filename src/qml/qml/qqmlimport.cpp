@@ -1570,8 +1570,8 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     addImportPath(installImportsPath);
 
     // env import paths
-    QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
-    if (!envImportPath.isEmpty()) {
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
+        const QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
 #if defined(Q_OS_WIN)
         QLatin1Char pathSep(';');
 #else

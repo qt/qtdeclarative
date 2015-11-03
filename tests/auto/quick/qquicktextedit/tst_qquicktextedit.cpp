@@ -43,7 +43,8 @@
 #include <QtGui/qguiapplication.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
-#include <private/qquicktext_p_p.h>
+#include <private/qquicktext_p.h>
+#include <private/qquicktextdocument_p.h>
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>

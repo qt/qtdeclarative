@@ -43,6 +43,7 @@ class tst_QQMLTypeLoader : public QQmlDataTest
 
 private slots:
     void testLoadComplete();
+    void loadComponentSynchronously();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -60,6 +61,16 @@ void tst_QQMLTypeLoader::testLoadComplete()
     QTRY_COMPARE(rootObject->property("created").toInt(), 2);
     QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
     delete window;
+}
+
+void tst_QQMLTypeLoader::loadComponentSynchronously()
+{
+    QQmlEngine engine;
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                             QLatin1String(".*nonprotocol::1:1: QtObject is not a type.*")));
+    QQmlComponent component(&engine, testFileUrl("load_synchronous.qml"));
+    QObject *o = component.create();
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

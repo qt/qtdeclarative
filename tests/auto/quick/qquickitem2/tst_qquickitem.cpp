@@ -87,6 +87,7 @@ private slots:
     void keyNavigation_skipNotVisible();
     void keyNavigation_implicitSetting();
     void keyNavigation_focusReason();
+    void keyNavigation_loop();
     void layoutMirroring();
     void layoutMirroringIllegalParent();
     void smooth();
@@ -103,6 +104,7 @@ private slots:
     void childrenRectBug();
     void childrenRectBug2();
     void childrenRectBug3();
+    void childrenRectBottomRightCorner();
 
     void childrenProperty();
     void resourcesProperty();
@@ -2102,6 +2104,31 @@ void tst_QQuickItem::keyNavigation_focusReason()
     delete window;
 }
 
+void tst_QQuickItem::keyNavigation_loop()
+{
+    // QTBUG-47229
+    QQuickView *window = new QQuickView(0);
+    window->setBaseSize(QSize(240,320));
+
+    window->setSource(testFileUrl("keynavigationtest_loop.qml"));
+    window->show();
+    window->requestActivate();
+
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QCOMPARE(QGuiApplication::focusWindow(), window);
+
+    QQuickItem *item = findItem<QQuickItem>(window->rootObject(), "item1");
+    QVERIFY(item);
+    QVERIFY(item->hasActiveFocus());
+
+    QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier, "", false, 1);
+    QGuiApplication::sendEvent(window, &key);
+    QVERIFY(key.isAccepted());
+    QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
 void tst_QQuickItem::smooth()
 {
     QQmlComponent component(&engine);
@@ -2569,6 +2596,22 @@ void tst_QQuickItem::childrenRectBug3()
     delete window;
 }
 
+// QTBUG-38732
+void tst_QQuickItem::childrenRectBottomRightCorner()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setSource(testFileUrl("childrenRectBottomRightCorner.qml"));
+    window->show();
+
+    QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>("childrenRectProxy");
+    QCOMPARE(rect->x(), qreal(-100));
+    QCOMPARE(rect->y(), qreal(-100));
+    QCOMPARE(rect->width(), qreal(50));
+    QCOMPARE(rect->height(), qreal(50));
+
+    delete window;
+}
+
 // QTBUG-13893
 void tst_QQuickItem::transformCrash()
 {
@@ -2721,7 +2764,10 @@ void tst_QQuickItem::parentLoop()
 {
     QQuickView *window = new QQuickView(0);
 
-    QTest::ignoreMessage(QtWarningMsg, "QQuickItem::setParentItem: Parent is already part of this items subtree.");
+#ifndef QT_NO_REGULAREXPRESSION
+    QRegularExpression msgRegexp = QRegularExpression("QQuickItem::setParentItem: Parent QQuickItem\\(.*\\) is already part of the subtree of QQuickItem\\(.*\\)");
+    QTest::ignoreMessage(QtWarningMsg, msgRegexp);
+#endif
     window->setSource(testFileUrl("parentLoop.qml"));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());

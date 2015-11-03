@@ -69,7 +69,7 @@ enum { DoVerification = 1 };
 
 static void showMeTheCode(IR::Function *function, const char *marker)
 {
-    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_IR");
     if (showCode) {
         qDebug() << marker;
         QBuffer buf;
@@ -3899,7 +3899,7 @@ bool tryOptimizingComparison(Expr *&expr)
 
 void cfg2dot(IR::Function *f, const QVector<LoopDetection::LoopInfo *> &loops = QVector<LoopDetection::LoopInfo *>())
 {
-    static bool showCode = !qgetenv("QV4_SHOW_IR").isNull();
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_IR");
     if (!showCode)
         return;
 
@@ -5195,12 +5195,15 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
     cleanupBasicBlocks(function);
 
     function->removeSharedExpressions();
-
+    int statementCount = 0;
+    foreach (BasicBlock *bb, function->basicBlocks())
+        if (!bb->isRemoved())
+            statementCount += bb->statementCount();
 //    showMeTheCode(function);
 
-    static bool doSSA = qgetenv("QV4_NO_SSA").isEmpty();
+    static bool doSSA = qEnvironmentVariableIsEmpty("QV4_NO_SSA");
 
-    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA) {
+    if (!function->hasTry && !function->hasWith && !function->module->debugMode && doSSA && statementCount <= 300) {
 //        qout << "SSA for " << (function->name ? qPrintable(*function->name) : "<anonymous>") << endl;
 
         ConvertArgLocals(function).toTemps();
@@ -5266,7 +5269,7 @@ void Optimizer::run(QQmlEnginePrivate *qmlEngine, bool doTypeInference, bool pee
             verifyNoPointerSharing(function);
         }
 
-        static bool doOpt = qgetenv("QV4_NO_OPT").isEmpty();
+        static const bool doOpt = qEnvironmentVariableIsEmpty("QV4_NO_OPT");
         if (doOpt) {
 //            qout << "Running SSA optimization..." << endl;
             worklist.reset();

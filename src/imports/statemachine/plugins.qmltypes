@@ -1,4 +1,4 @@
-import QtQuick.tooling 1.1
+import QtQuick.tooling 1.2
 
 // This file describes the plugin-supplied types contained in the library.
 // It is used for QML tooling purposes only.
@@ -7,6 +7,7 @@ import QtQuick.tooling 1.1
 // 'qmlplugindump -nonrelocatable QtQml.StateMachine 1.0'
 
 Module {
+    dependencies: []
     Component {
         name: "FinalState"
         defaultProperty: "children"
@@ -32,9 +33,17 @@ Module {
     Component {
         name: "QAbstractTransition"
         prototype: "QObject"
+        Enum {
+            name: "TransitionType"
+            values: {
+                "ExternalTransition": 0,
+                "InternalTransition": 1
+            }
+        }
         Property { name: "sourceState"; type: "QState"; isReadonly: true; isPointer: true }
         Property { name: "targetState"; type: "QAbstractState"; isPointer: true }
         Property { name: "targetStates"; type: "QList<QAbstractState*>" }
+        Property { name: "transitionType"; revision: 1; type: "TransitionType" }
         Signal { name: "triggered" }
     }
     Component { name: "QFinalState"; prototype: "QAbstractState" }
@@ -51,6 +60,7 @@ Module {
             }
         }
         Property { name: "defaultState"; type: "QAbstractState"; isPointer: true }
+        Property { name: "defaultTransition"; type: "QAbstractTransition"; isPointer: true }
         Property { name: "historyType"; type: "HistoryType" }
     }
     Component {

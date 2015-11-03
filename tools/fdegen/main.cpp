@@ -140,7 +140,7 @@ static int createSectionCallback(
 }
 
 static unsigned char cie_init_instructions[] = {
-    DW_CFA_def_cfa, StackPointerRegister, /*offset in bytes */QT_POINTER_SIZE,
+    DW_CFA_def_cfa, StackPointerRegister, /*offset in bytes */sizeof(void*),
     DW_CFA_offset | InstructionPointerRegister, 1,
 };
 
@@ -158,8 +158,8 @@ int main()
 
     Dwarf_Unsigned cie = dwarf_add_frame_cie(dw,
                                              "",
-                                             /* code alignment factor */QT_POINTER_SIZE,
-                                             /* data alignment factor */-QT_POINTER_SIZE,
+                                             /* code alignment factor */sizeof(void*),
+                                             /* data alignment factor */-sizeof(void*),
                                              /* return address reg*/InstructionPointerRegister,
                                              cie_init_instructions,
                                              sizeof(cie_init_instructions),
@@ -270,7 +270,7 @@ int main()
 
     printf("static const int fde_offset = %d;\n", fde_offset);
     printf("static const int initial_location_offset = %d;\n", fde_offset + 8);
-    printf("static const int address_range_offset = %d;\n", fde_offset + 8 + QT_POINTER_SIZE);
+    printf("static const int address_range_offset = %d;\n", fde_offset + 8 + sizeof(void*));
 
 #ifdef DEBUG
     {

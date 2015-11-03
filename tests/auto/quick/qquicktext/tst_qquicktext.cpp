@@ -38,6 +38,7 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <private/qquicktext_p_p.h>
+#include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
 #include <qmath.h>

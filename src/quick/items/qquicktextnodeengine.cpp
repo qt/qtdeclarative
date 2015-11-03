@@ -42,7 +42,8 @@
 #include <QtGui/qtexttable.h>
 #include <QtGui/qtextlist.h>
 
-#include <private/qquicktext_p_p.h>
+#include <private/qquicktext_p.h>
+#include <private/qquicktextdocument_p.h>
 #include <private/qtextdocumentlayout_p.h>
 #include <private/qtextimagehandler_p.h>
 #include <private/qrawfont_p.h>

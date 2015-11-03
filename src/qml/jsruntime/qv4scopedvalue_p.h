@@ -120,7 +120,7 @@ struct ScopedValue
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setM(o);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
     }
@@ -144,7 +144,7 @@ struct ScopedValue
 
     ScopedValue &operator=(Heap::Base *o) {
         ptr->setM(o);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
         return *this;
@@ -186,7 +186,7 @@ struct Scoped
 
     inline void setPointer(const Managed *p) {
         ptr->setM(p ? p->m() : 0);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
     }
@@ -195,7 +195,7 @@ struct Scoped
     {
         ptr = scope.engine->jsStackTop++;
         ptr->setM(0);
-#if QT_POINTER_SIZE == 4
+#ifndef QV4_USE_64_BIT_VALUE_ENCODING
         ptr->setTag(QV4::Value::Managed_Type);
 #endif
     }

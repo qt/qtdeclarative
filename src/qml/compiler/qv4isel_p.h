@@ -118,6 +118,7 @@ public: // visitor methods for StmtVisitor:
 
 public: // to implement by subclasses:
     virtual void callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result) = 0;
+    virtual void callBuiltinTypeofQmlContextProperty(IR::Expr *base, IR::Member::MemberKind kind, int propertyIndex, IR::Expr *result) = 0;
     virtual void callBuiltinTypeofMember(IR::Expr *base, const QString &name, IR::Expr *result) = 0;
     virtual void callBuiltinTypeofSubscript(IR::Expr *base, IR::Expr *index, IR::Expr *result) = 0;
     virtual void callBuiltinTypeofName(const QString &name, IR::Expr *result) = 0;
