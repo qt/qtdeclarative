@@ -63,8 +63,8 @@ public:
     void connectToHost(const QString &hostName, quint16 port);
     void startLocalServer(const QString &fileName);
 
-    void setDataStreamVersion(int dataStreamVersion);
-    int dataStreamVersion();
+    int currentDataStreamVersion() const;
+    void setMaximumDataStreamVersion(int maximumVersion);
 
     bool isConnected() const;
     void close();

@@ -105,6 +105,12 @@ void QQmlDebugClient::sendMessage(const QByteArray &message)
     d->connection->sendMessage(d->name, message);
 }
 
+const QQmlDebugConnection *QQmlDebugClient::connection() const
+{
+    Q_D(const QQmlDebugClient);
+    return d->connection;
+}
+
 void QQmlDebugClient::stateChanged(QQmlDebugClient::State state)
 {
     Q_UNUSED(state);

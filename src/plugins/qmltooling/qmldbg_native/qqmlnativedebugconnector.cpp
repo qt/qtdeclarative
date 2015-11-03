@@ -32,9 +32,9 @@
 ****************************************************************************/
 
 #include "qqmlnativedebugconnector.h"
-#include <private/qhooks_p.h>
-#include <private/qpacket_p.h>
+#include "qqmldebugpacket.h"
 
+#include <private/qhooks_p.h>
 #include <qqmlengine.h>
 
 #include <QtCore/qdebug.h>
@@ -65,7 +65,7 @@ Q_DECL_EXPORT void qt_qmlDebugConnectorOpen();
 // member to some other place.
 Q_DECL_EXPORT void qt_qmlDebugSetStreamVersion(int version)
 {
-    QPacket::setDataStreamVersion(version);
+    QQmlNativeDebugConnector::setDataStreamVersion(version);
 }
 
 
@@ -309,6 +309,12 @@ bool QQmlNativeDebugConnector::open(const QVariantHash &configuration)
     qt_qmlDebugConnectionBlocker = m_blockingMode;
     qt_qmlDebugConnectorOpen();
     return true;
+}
+
+void QQmlNativeDebugConnector::setDataStreamVersion(int version)
+{
+    Q_ASSERT(version <= QDataStream::Qt_DefaultCompiledVersion);
+    s_dataStreamVersion = version;
 }
 
 void QQmlNativeDebugConnector::sendMessage(const QString &name, const QByteArray &message)

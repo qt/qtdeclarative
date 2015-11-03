@@ -39,6 +39,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QJsonArray>
+#include <QtCore/QDataStream>
 
 #include <private/qcoreapplication_p.h>
 #include <private/qqmlengine_p.h>
@@ -55,6 +56,8 @@ Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugService)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlInspectorServiceFactory)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlProfilerServiceFactory)
 Q_QML_IMPORT_DEBUG_PLUGIN(QQmlDebuggerServiceFactory)
+
+int QQmlDebugConnector::s_dataStreamVersion = QDataStream::Qt_4_7;
 
 struct QQmlDebugConnectorParams {
     QString pluginKey;

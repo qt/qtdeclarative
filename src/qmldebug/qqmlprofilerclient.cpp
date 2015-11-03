@@ -32,8 +32,7 @@
 ****************************************************************************/
 
 #include "qqmlprofilerclient_p_p.h"
-
-#include <QtCore/qdatastream.h>
+#include "qqmldebugconnection_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -63,10 +62,9 @@ void QQmlProfilerClient::sendRecordingStatus(bool record, int engineId, quint32 
 {
     Q_D(const QQmlProfilerClient);
 
-    QByteArray ba;
-    QDataStream stream(&ba, QIODevice::WriteOnly);
+    QPacket stream(d->connection->currentDataStreamVersion());
     stream << record << engineId << d->features << flushInterval;
-    sendMessage(ba);
+    sendMessage(stream.data());
 }
 
 void QQmlProfilerClient::traceStarted(qint64 time, int engineId)
@@ -172,7 +170,7 @@ void QQmlProfilerClient::unknownEvent(QQmlProfilerDefinitions::Message messageTy
     Q_UNUSED(detailType);
 }
 
-void QQmlProfilerClient::unknownData(QDataStream &stream)
+void QQmlProfilerClient::unknownData(QPacket &stream)
 {
     Q_UNUSED(stream);
 }
@@ -202,8 +200,7 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
 {
     Q_D(const QQmlProfilerClient);
 
-    QByteArray rwData = data;
-    QDataStream stream(&rwData, QIODevice::ReadOnly);
+    QPacket stream(d->connection->currentDataStreamVersion(), data);
 
     // Force all the 1 << <FLAG> expressions to be done in 64 bit, to silence some warnings
     const quint64 one = static_cast<quint64>(1);

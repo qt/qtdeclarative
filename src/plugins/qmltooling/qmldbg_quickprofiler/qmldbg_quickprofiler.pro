@@ -1,5 +1,5 @@
 TARGET = qmldbg_quickprofiler
-QT    += qml-private quick-private core-private
+QT    += qml-private quick-private core-private packetprotocol-private
 
 PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QQuickProfilerAdapterFactory
@@ -13,7 +13,8 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/qquickprofileradapter.h \
-    $$PWD/qquickprofileradapterfactory.h
+    $$PWD/qquickprofileradapterfactory.h \
+    $$PWD/../shared/qqmldebugpacket.h
 
 OTHER_FILES += \
     qquickprofileradapter.json

@@ -54,6 +54,7 @@ public:
     bool addService(const QString &name, QQmlDebugService *service);
     bool removeService(const QString &name);
     bool open(const QVariantHash &configuration);
+    static void setDataStreamVersion(int version);
 
 private slots:
     void sendMessage(const QString &name, const QByteArray &message);

@@ -32,9 +32,9 @@
 ****************************************************************************/
 
 #include "qquickprofileradapter.h"
+#include "qqmldebugpacket.h"
 #include <QCoreApplication>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qpacket_p.h>
 #include <private/qquickprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -86,7 +86,7 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
                 continue;
 
             //### using QDataStream is relatively expensive
-            QPacket ds;
+            QQmlDebugPacket ds;
             ds << data.time << decodedMessageType << decodedDetailType;
 
             switch (decodedMessageType) {

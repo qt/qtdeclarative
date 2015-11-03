@@ -37,6 +37,8 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qtqmlglobal_p.h>
 
+#include <QtCore/QIODevice>
+
 //
 //  W A R N I N G
 //  -------------

@@ -35,11 +35,11 @@
 #include "qv4profileradapter.h"
 #include "qqmlprofileradapter.h"
 #include "qqmlprofilerservicefactory.h"
+#include "qqmldebugpacket.h"
+
 #include <private/qqmlengine_p.h>
-#include <private/qpacket_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 
-#include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qthread.h>
@@ -212,7 +212,7 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
 {
     QMutexLocker lock(&m_configMutex);
 
-    QPacket d;
+    QQmlDebugPacket d;
 
     d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;
     bool startedAny = false;
@@ -308,7 +308,7 @@ void QQmlProfilerServiceImpl::sendMessages()
 {
     QList<QByteArray> messages;
 
-    QPacket traceEnd;
+    QQmlDebugPacket traceEnd;
     if (m_waitingForStop) {
         traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
 
@@ -340,7 +340,7 @@ void QQmlProfilerServiceImpl::sendMessages()
         //indicate completion
         messages << traceEnd.data();
 
-        QPacket ds;
+        QQmlDebugPacket ds;
         ds << (qint64)-1 << (int)Complete;
         messages << ds.data();
         m_waitingForStop = false;
@@ -375,7 +375,7 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&m_configMutex);
 
-    QPacket stream(message);
+    QQmlDebugPacket stream(message);
 
     int engineId = -1;
     quint64 features = std::numeric_limits<quint64>::max();

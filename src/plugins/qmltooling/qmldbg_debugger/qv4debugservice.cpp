@@ -33,11 +33,12 @@
 
 #include "qv4debugservice.h"
 #include "qqmlengine.h"
+#include "qqmldebugpacket.h"
+
 #include <private/qv4engine_p.h>
 #include <private/qv4isel_moth_p.h>
 #include <private/qv4function_p.h>
 #include <private/qqmldebugconnector_p.h>
-#include <private/qpacket_p.h>
 #include <private/qv8engine_p.h>
 
 #include <QtCore/QJsonArray>
@@ -694,7 +695,7 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&m_configMutex);
 
-    QPacket ms(message);
+    QQmlDebugPacket ms(message);
     QByteArray header;
     ms >> header;
 
@@ -735,7 +736,7 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
 
 void QV4DebugServiceImpl::sendSomethingToSomebody(const char *type, int magicNumber)
 {
-    QPacket rs;
+    QQmlDebugPacket rs;
     rs << QByteArray(type)
        << QByteArray::number(int(version())) << QByteArray::number(magicNumber);
     emit messageToClient(name(), packMessage(type, rs.data()));
@@ -758,7 +759,7 @@ void QV4DebugServiceImpl::handleV8Request(const QByteArray &payload)
 
 QByteArray QV4DebugServiceImpl::packMessage(const QByteArray &command, const QByteArray &message)
 {
-    QPacket rs;
+    QQmlDebugPacket rs;
     static const QByteArray cmd("V8DEBUG");
     rs << cmd << command << message;
     return rs.data();

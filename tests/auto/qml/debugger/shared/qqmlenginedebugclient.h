@@ -35,6 +35,7 @@
 #define QQMLENGINEDEBUGCLIENT_H
 
 #include <private/qqmldebugclient_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
@@ -205,9 +206,9 @@ public:
 
     quint32 getId() { return m_nextId++; }
 
-    void decode(QDataStream &, QmlDebugContextReference &);
-    void decode(QDataStream &, QmlDebugObjectReference &, bool simple);
-    void decode(QDataStream &ds, QList<QmlDebugObjectReference> &o, bool simple);
+    void decode(QPacket &ds, QmlDebugContextReference &);
+    void decode(QPacket &ds, QmlDebugObjectReference &, bool simple);
+    void decode(QPacket &ds, QList<QmlDebugObjectReference> &o, bool simple);
 
     QList<QmlDebugEngineReference> engines() { return m_engines; }
     QmlDebugContextReference rootContext() { return m_rootContext; }

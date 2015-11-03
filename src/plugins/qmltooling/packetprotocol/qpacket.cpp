@@ -50,22 +50,23 @@ QT_BEGIN_NAMESPACE
   Applications should construct a QPacket, propagate it with data and then
   transmit it over a QPacketProtocol instance.  For example:
   \code
+  int version = QDataStream::Qt_DefaultCompiledVersion;
   QPacketProtocol protocol(...);
 
-  QPacket myPacket;
+  QPacket myPacket(version);
   myPacket << "Hello world!" << 123;
-  protocol.send(myPacket);
+  protocol.send(myPacket.data());
   \endcode
 
-  As long as both ends of the connection are using the QPacketProtocol class,
-  the data within this packet will be delivered unfragmented at the other end,
-  ready for extraction.
+  As long as both ends of the connection are using the QPacketProtocol class
+  and the same data stream version, the data within this packet will be
+  delivered unfragmented at the other end, ready for extraction.
 
   \code
   QByteArray greeting;
   int count;
 
-  QPacket myPacket = protocol.read();
+  QPacket myPacket(version, protocol.read());
 
   myPacket >> greeting >> count;
   \endcode
@@ -78,48 +79,26 @@ QT_BEGIN_NAMESPACE
   \sa QPacketProtocol
  */
 
-int QPacket::s_dataStreamVersion = QDataStream::Qt_4_7;
-
-void QPacket::setDataStreamVersion(int dataStreamVersion)
-{
-    s_dataStreamVersion = dataStreamVersion;
-}
-
-int QPacket::dataStreamVersion()
-{
-    return s_dataStreamVersion;
-}
 
 /*!
   Constructs an empty write-only packet.
   */
-QPacket::QPacket()
+QPacket::QPacket(int version)
 {
-    init(QIODevice::WriteOnly);
+    buf.open(QIODevice::WriteOnly);
+    setDevice(&buf);
+    setVersion(version);
 }
 
 /*!
-  Creates a copy of \a other.  The initial stream positions are shared, but the
-  two packets are otherwise independent.
+  Constructs a read-only packet.
  */
-QPacket::QPacket(const QPacket &other) : QDataStream()
-{
-    assign(other);
-}
-
-QPacket &QPacket::operator=(const QPacket &other)
-{
-    if (this != &other) {
-        buf.close();
-        assign(other);
-    }
-    return *this;
-}
-
-QPacket::QPacket(const QByteArray &data)
+QPacket::QPacket(int version, const QByteArray &data)
 {
     buf.setData(data);
-    init(QIODevice::ReadOnly);
+    buf.open(QIODevice::ReadOnly);
+    setDevice(&buf);
+    setVersion(version);
 }
 
 /*!
@@ -128,20 +107,6 @@ QPacket::QPacket(const QByteArray &data)
 QByteArray QPacket::data() const
 {
     return buf.data();
-}
-
-void QPacket::init(QIODevice::OpenMode mode)
-{
-    buf.open(mode);
-    setDevice(&buf);
-    setVersion(s_dataStreamVersion);
-}
-
-void QPacket::assign(const QPacket &other)
-{
-    buf.setData(other.buf.data());
-    init(other.buf.openMode());
-    buf.seek(other.buf.pos());
 }
 
 QT_END_NAMESPACE

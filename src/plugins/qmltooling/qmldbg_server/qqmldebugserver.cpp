@@ -34,6 +34,7 @@
 #include "qqmldebugserver.h"
 #include "qqmldebugserverfactory.h"
 #include "qqmldebugserverconnection.h"
+#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugservice_p.h>
 #include <private/qqmlengine_p.h>
@@ -41,7 +42,6 @@
 #include <private/qqmldebugpluginmanager_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacketprotocol_p.h>
-#include <private/qpacket_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -429,7 +429,7 @@ void QQmlDebugServerImpl::receiveMessage()
     if (!m_protocol)
         return;
 
-    QPacket in(m_protocol->read().data());
+    QQmlDebugPacket in(m_protocol->read());
 
     QString name;
 
@@ -443,17 +443,15 @@ void QQmlDebugServerImpl::receiveMessage()
 
             //Get the supported QDataStream version
             if (!in.atEnd()) {
-                int dataStreamVersion;
-                in >> dataStreamVersion;
-                if (dataStreamVersion > QDataStream().version())
-                    dataStreamVersion = QDataStream().version();
-                QPacket::setDataStreamVersion(dataStreamVersion);
+                in >> s_dataStreamVersion;
+                if (s_dataStreamVersion > QDataStream::Qt_DefaultCompiledVersion)
+                    s_dataStreamVersion = QDataStream::Qt_DefaultCompiledVersion;
             }
 
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
 
-            QPacket out;
+            QQmlDebugPacket out;
             QStringList pluginNames;
             QList<float> pluginVersions;
             const int count = m_plugins.count();
@@ -466,9 +464,9 @@ void QQmlDebugServerImpl::receiveMessage()
             }
 
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
-                << pluginNames << pluginVersions << QPacket::dataStreamVersion();
+                << pluginNames << pluginVersions << dataStreamVersion();
 
-            m_protocol->send(out);
+            m_protocol->send(out.data());
             m_connection->flush();
 
             QMutexLocker helloLock(&m_helloMutex);
@@ -650,9 +648,9 @@ bool QQmlDebugServerImpl::canSendMessage(const QString &name)
 
 void QQmlDebugServerImpl::doSendMessage(const QString &name, const QByteArray &message)
 {
-    QPacket out;
+    QQmlDebugPacket out;
     out << name << message;
-    m_protocol->send(out);
+    m_protocol->send(out.data());
 }
 
 void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &message)

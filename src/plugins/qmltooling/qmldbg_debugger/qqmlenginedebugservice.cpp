@@ -33,6 +33,7 @@
 
 #include "qqmlenginedebugservice.h"
 #include "qqmlwatcher.h"
+#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlboundsignal_p.h>
@@ -45,7 +46,6 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlexpression_p.h>
-#include <private/qpacket_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
@@ -90,8 +90,7 @@ QDataStream &operator<<(QDataStream &ds,
     ds << (int)data.type << data.name;
     // check first whether the data can be saved
     // (otherwise we assert in QVariant::operator<<)
-    QByteArray buffer;
-    QDataStream fakeStream(&buffer, QIODevice::WriteOnly);
+    QQmlDebugPacket fakeStream;
     if (QMetaType::save(fakeStream, data.value.type(), data.value.constData()))
         ds << data.value;
     else
@@ -441,13 +440,13 @@ QList<QObject*> QQmlEngineDebugServiceImpl::objectForLocationInfo(const QString 
 
 void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 {
-    QPacket ds(message);
+    QQmlDebugPacket ds(message);
 
     QByteArray type;
     int queryId;
     ds >> type >> queryId;
 
-    QPacket rs;
+    QQmlDebugPacket rs;
 
     if (type == "LIST_ENGINES") {
         rs << QByteArray("LIST_ENGINES_R");
@@ -769,7 +768,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
 
 void QQmlEngineDebugServiceImpl::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)
 {
-    QPacket rs;
+    QQmlDebugPacket rs;
     rs << QByteArray("UPDATE_WATCH") << id << objectId << QByteArray(property.name()) << valueContents(value);
     emit messageToClient(name(), rs.data());
 }
@@ -801,7 +800,7 @@ void QQmlEngineDebugServiceImpl::objectCreated(QQmlEngine *engine, QObject *obje
     int objectId = QQmlDebugService::idForObject(object);
     int parentId = QQmlDebugService::idForObject(object->parent());
 
-    QPacket rs;
+    QQmlDebugPacket rs;
 
     //unique queryId -1
     rs << QByteArray("OBJECT_CREATED") << -1 << engineId << objectId << parentId;

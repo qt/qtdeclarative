@@ -31,12 +31,12 @@
 **
 ****************************************************************************/
 
-#ifndef QPACKET_P_H
-#define QPACKET_P_H
+#ifndef QQMLDEBUGPACKET_P_H
+#define QQMLDEBUGPACKET_P_H
 
-#include <QtCore/qdatastream.h>
 #include <QtCore/qbuffer.h>
-#include <QtQml/private/qtqmlglobal_p.h>
+#include <QtQml/private/qqmldebugconnector_p.h>
+#include <QtPacketProtocol/private/qpacket_p.h>
 
 //
 //  W A R N I N G
@@ -51,26 +51,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QPacket : public QDataStream
+// QPacket with a fixed data stream version, centrally set by QQmlDebugServer
+class QQmlDebugPacket : public QPacket
 {
 public:
-    QPacket();
-    QPacket(const QPacket &other);
-    explicit QPacket(const QByteArray &ba);
-    QPacket &operator=(const QPacket &other);
-
-    QByteArray data() const;
-
-    static int dataStreamVersion();
-    static void setDataStreamVersion(int dataStreamVersion);
-
-private:
-    static int s_dataStreamVersion;
-    void init(QIODevice::OpenMode mode);
-    void assign(const QPacket &other);
-    QBuffer buf;
+    QQmlDebugPacket() : QPacket(QQmlDebugConnector::dataStreamVersion()) {}
+    QQmlDebugPacket(const QByteArray &ba) : QPacket(QQmlDebugConnector::dataStreamVersion(), ba) {}
 };
 
 QT_END_NAMESPACE
 
-#endif // QPACKET_P_H
+#endif // QQMLDEBUGPACKET_P_H

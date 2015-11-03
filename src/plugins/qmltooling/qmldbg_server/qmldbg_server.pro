@@ -11,7 +11,8 @@ SOURCES += \
 HEADERS += \
     $$PWD/qqmldebugserverfactory.h \
     $$PWD/../shared/qqmldebugserver.h \
-    $$PWD/../shared/qqmldebugserverconnection.h
+    $$PWD/../shared/qqmldebugserverconnection.h \
+    $$PWD/../shared/qqmldebugpacket.h
 
 INCLUDEPATH += $$PWD \
     $$PWD/../shared

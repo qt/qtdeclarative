@@ -1,5 +1,5 @@
 TARGET = qmldbg_inspector
-QT    += qml-private quick-private core-private gui-private
+QT    += qml-private quick-private core-private gui-private packetprotocol-private
 
 PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QQmlInspectorServiceFactory
@@ -16,6 +16,7 @@ SOURCES += \
     $$PWD/qqmlinspectorservice.cpp
 
 HEADERS += \
+    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/highlight.h \
     $$PWD/qquickviewinspector.h \
     $$PWD/qqmlinspectorservicefactory.h \

@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qqmlnativedebugservice.h"
+#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4debugging_p.h>
@@ -313,16 +314,15 @@ void NativeDebugger::handleCommand(QJsonObject *response, const QString &cmd,
 
 static QString encodeContext(QV4::ExecutionContext *executionContext)
 {
-    QByteArray ba;
-    QDataStream ds(&ba, QIODevice::WriteOnly);
+    QQmlDebugPacket ds;
     ds << quintptr(executionContext);
-    return QString::fromLatin1(ba.toHex());
+    return QString::fromLatin1(ds.data().toHex());
 }
 
 static void decodeContext(const QString &context, QV4::ExecutionContext **executionContext)
 {
     quintptr rawContext;
-    QDataStream ds(QByteArray::fromHex(context.toLatin1()));
+    QQmlDebugPacket ds(QByteArray::fromHex(context.toLatin1()));
     ds >> rawContext;
     *executionContext = reinterpret_cast<QV4::ExecutionContext *>(rawContext);
 }

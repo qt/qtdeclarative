@@ -32,35 +32,34 @@
 ****************************************************************************/
 
 #include "qqmlinspectorclient.h"
-#include "qdatastream.h"
 
+#include <private/qpacket_p.h>
+#include <private/qqmldebugconnection_p.h>
 #include <QtCore/qdebug.h>
 
 void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
 {
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
+    QPacket ds(connection()->currentDataStreamVersion());
     ds << QByteArray("request") << m_requestId++
        << QByteArray("showAppOnTop") << showOnTop;
 
-    sendMessage(message);
+    sendMessage(ds.data());
 }
 
 void QQmlInspectorClient::reloadQml(const QHash<QString, QByteArray> &changesHash)
 {
-    QByteArray message;
-    QDataStream ds(&message, QIODevice::WriteOnly);
+    QPacket ds(connection()->currentDataStreamVersion());
     m_reloadRequestId = m_requestId;
 
     ds << QByteArray("request") << m_requestId++
        << QByteArray("reload") << changesHash;
 
-    sendMessage(message);
+    sendMessage(ds.data());
 }
 
 void QQmlInspectorClient::messageReceived(const QByteArray &message)
 {
-    QDataStream ds(message);
+    QPacket ds(connection()->currentDataStreamVersion(), message);
     QByteArray type;
     ds >> type;
 

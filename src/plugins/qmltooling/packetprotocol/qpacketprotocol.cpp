@@ -36,7 +36,6 @@
 #include <QtCore/QElapsedTimer>
 #include <private/qiodevice_p.h>
 #include <private/qobject_p.h>
-#include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,9 +62,8 @@ static const int MAX_PACKET_SIZE = 0x7FFFFFFF;
 
   QPacketProtocol does not perform any communications itself.  Instead it can
   operate on any QIODevice that supports the QIODevice::readyRead() signal.  A
-  logical "packet" is encapsulated by the companion QPacket class.  The
-  following example shows two ways to send data using QPacketProtocol.  The
-  transmitted data is equivalent in both.
+  logical "packet" is simply a QByteArray. The following example how to send
+  data using QPacketProtocol.
 
   \code
   QTcpSocket socket;
@@ -74,9 +72,9 @@ static const int MAX_PACKET_SIZE = 0x7FFFFFFF;
   QPacketProtocol protocol(&socket);
 
   // Send a packet
-  QPacket packet;
+  QDataStream packet;
   packet << "Hello world" << 123;
-  protocol.send(packet);
+  protocol.send(packet.data());
   \endcode
 
   Likewise, the following shows how to read data from QPacketProtocol, assuming
@@ -88,16 +86,12 @@ static const int MAX_PACKET_SIZE = 0x7FFFFFFF;
   int a;
   QByteArray b;
 
-  // Receive packet the quick way
-  protocol.read() >> a >> b;
-
-  // Receive packet the longer way
-  QPacket packet = protocol.read();
+  // Receive packet
+  QDataStream packet(protocol.read());
   p >> a >> b;
   \endcode
 
   \ingroup io
-  \sa QPacket
 */
 
 class QPacketProtocolPrivate : public QObjectPrivate
@@ -133,15 +127,14 @@ QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
 }
 
 /*!
-  \fn void QPacketProtocol::send(const QPacket & packet)
+  \fn void QPacketProtocol::send(const QByteArray &data)
 
   Transmit the \a packet.
  */
-void QPacketProtocol::send(const QPacket & p)
+void QPacketProtocol::send(const QByteArray &data)
 {
     Q_D(QPacketProtocol);
 
-    QByteArray data = p.data();
     if (data.isEmpty())
         return; // We don't send empty packets
     qint64 sendSize = data.size() + sizeof(qint32);
@@ -165,15 +158,13 @@ qint64 QPacketProtocol::packetsAvailable() const
 }
 
 /*!
-  Return the next unread packet, or an invalid QPacket instance if no packets
+  Return the next unread packet, or an empty QByteArray if no packets
   are available.  This method does NOT block.
   */
-QPacket QPacketProtocol::read()
+QByteArray QPacketProtocol::read()
 {
     Q_D(QPacketProtocol);
-
-    // Hope for in-place construction here, until we get move semantics for QBuffer
-    return QPacket(d->packets.isEmpty() ? QByteArray() : d->packets.takeFirst());
+    return d->packets.isEmpty() ? QByteArray() : d->packets.takeFirst();
 }
 
 /*!

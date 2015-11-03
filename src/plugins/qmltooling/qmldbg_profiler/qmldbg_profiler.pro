@@ -1,5 +1,5 @@
 TARGET = qmldbg_profiler
-QT = qml-private core-private
+QT = qml-private core-private packetprotocol-private
 
 PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QQmlProfilerServiceFactory
@@ -14,6 +14,7 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/../shared/qqmlconfigurabledebugservice.h \
+    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/qqmlenginecontrolservice.h \
     $$PWD/qqmlprofileradapter.h \
     $$PWD/qqmlprofilerservice.h \

@@ -37,6 +37,7 @@
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtCore/qprocess.h>
@@ -559,11 +560,9 @@ void QJSDebugClient::setBreakpoint(QString type, QString target, int line, int c
     //    }
 
     if (type == QLatin1String(EVENT)) {
-        QByteArray reply;
-        QDataStream rs(&reply, QIODevice::WriteOnly);
+        QPacket rs(connection()->currentDataStreamVersion());
         rs <<  target.toUtf8() << enabled;
-        sendMessage(packMessage(QByteArray("breakonsignal"), reply));
-
+        sendMessage(packMessage(QByteArray("breakonsignal"), rs.data()));
     } else {
         VARIANTMAPINIT;
         jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(SETBREAKPOINT)));
@@ -711,7 +710,7 @@ void QJSDebugClient::stateChanged(State state)
 
 void QJSDebugClient::messageReceived(const QByteArray &data)
 {
-    QDataStream ds(data);
+    QPacket ds(connection()->currentDataStreamVersion(), data);
     QByteArray command;
     ds >> command;
 
@@ -796,11 +795,10 @@ void QJSDebugClient::flushSendBuffer()
 
 QByteArray QJSDebugClient::packMessage(const QByteArray &type, const QByteArray &message)
 {
-    QByteArray reply;
-    QDataStream rs(&reply, QIODevice::WriteOnly);
+    QPacket rs(connection()->currentDataStreamVersion());
     QByteArray cmd = "V8DEBUG";
     rs << cmd << type << message;
-    return reply;
+    return rs.data();
 }
 
 void tst_QQmlDebugJS::initTestCase()

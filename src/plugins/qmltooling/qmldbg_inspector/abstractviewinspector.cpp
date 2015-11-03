@@ -33,6 +33,7 @@
 
 #include "abstractviewinspector.h"
 #include "abstracttool.h"
+#include "qqmldebugpacket.h"
 
 #include <QtCore/QDebug>
 #include <QtQml/QQmlEngine>
@@ -40,7 +41,6 @@
 #include <QtCore/private/qabstractanimation_p.h>
 #include <QtQml/private/qqmldebugconnector_p.h>
 #include <QtQml/private/qqmlcontext_p.h>
-#include <QtQml/private/qpacket_p.h>
 
 #include <QtGui/QMouseEvent>
 #include <QtGui/QTouchEvent>
@@ -263,7 +263,7 @@ void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
 
     QPair<int, int> ids = m_hashObjectsTobeDestroyed.take(object);
 
-    QPacket rs;
+    QQmlDebugPacket rs;
     rs << QByteArray(RESPONSE) << ids.first << true << ids.second;
 
     emit m_debugService->messageToClient(m_debugService->name(), rs.data());
@@ -272,7 +272,7 @@ void AbstractViewInspector::onQmlObjectDestroyed(QObject *object)
 void AbstractViewInspector::handleMessage(const QByteArray &message)
 {
     bool success = true;
-    QPacket ds(message);
+    QQmlDebugPacket ds(message);
 
     QByteArray type;
     ds >> type;
@@ -357,14 +357,14 @@ void AbstractViewInspector::handleMessage(const QByteArray &message)
 
     }
 
-    QPacket rs;
+    QQmlDebugPacket rs;
     rs << QByteArray(RESPONSE) << requestId << success;
     emit m_debugService->messageToClient(m_debugService->name(), rs.data());
 }
 
 void AbstractViewInspector::sendCurrentObjects(const QList<QObject*> &objects)
 {
-    QPacket ds;
+    QQmlDebugPacket ds;
 
     ds << QByteArray(EVENT) << m_eventId++ << QByteArray(SELECT);
 
@@ -384,7 +384,7 @@ void AbstractViewInspector::sendQmlFileReloaded(bool success)
 
     QByteArray response;
 
-    QPacket rs;
+    QQmlDebugPacket rs;
     rs << QByteArray(RESPONSE) << m_reloadEventId << success;
 
     emit m_debugService->messageToClient(m_debugService->name(), rs.data());

@@ -37,6 +37,7 @@
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qlibraryinfo.h>
@@ -119,7 +120,7 @@ void QQmlDebugMsgClient::stateChanged(State state)
 
 void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
 {
-    QDataStream ds(data);
+    QPacket ds(connection()->currentDataStreamVersion(), data);
     QByteArray command;
     ds >> command;
 

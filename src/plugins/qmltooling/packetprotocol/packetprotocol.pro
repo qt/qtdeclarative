@@ -3,9 +3,11 @@ QT     = core-private qml-private
 CONFIG += static internal_module
 
 HEADERS = \
-    qpacketprotocol_p.h
+    qpacketprotocol_p.h \
+    qpacket_p.h
 
 SOURCES = \
-    qpacketprotocol.cpp
+    qpacketprotocol.cpp \
+    qpacket.cpp
 
 load(qt_module)

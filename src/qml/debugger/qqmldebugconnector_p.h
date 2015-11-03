@@ -60,6 +60,10 @@ public:
     static void setPluginKey(const QString &key);
     static void setServices(const QStringList &services);
     static QQmlDebugConnector *instance();
+    static int dataStreamVersion()
+    {
+        return s_dataStreamVersion;
+    }
 
     virtual bool blockingMode() const = 0;
 
@@ -82,6 +86,7 @@ public:
 
 protected:
     static QString commandLineArguments();
+    static int s_dataStreamVersion;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugConnectorFactory : public QObject {

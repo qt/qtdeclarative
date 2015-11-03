@@ -38,7 +38,6 @@
 
 #include <QtCore/QStack>
 #include <QtCore/QStringList>
-#include <QtCore/QDataStream>
 
 #include <limits>
 

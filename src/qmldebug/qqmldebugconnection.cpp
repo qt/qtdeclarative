@@ -64,7 +64,8 @@ public:
     QTimer handshakeTimer;
 
     bool gotHello;
-    int dataStreamVersion;
+    int currentDataStreamVersion;
+    int maximumDataStreamVersion;
     QHash <QString, float> serverPlugins;
     QHash<QString, QQmlDebugClient *> plugins;
     QStringList removedPlugins;
@@ -75,7 +76,9 @@ public:
 };
 
 QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate() :
-    protocol(0), device(0), server(0), gotHello(false), dataStreamVersion(QDataStream::Qt_5_0)
+    protocol(0), device(0), server(0), gotHello(false),
+    currentDataStreamVersion(QDataStream::Qt_4_7),
+    maximumDataStreamVersion(QDataStream::Qt_DefaultCompiledVersion)
 {
     handshakeTimer.setSingleShot(true);
     handshakeTimer.setInterval(3000);
@@ -87,18 +90,18 @@ void QQmlDebugConnectionPrivate::advertisePlugins()
     if (!q->isConnected())
         return;
 
-    QPacket pack;
+    QPacket pack(currentDataStreamVersion);
     pack << serverId << 1 << plugins.keys();
-    protocol->send(pack);
+    protocol->send(pack.data());
     flush();
 }
 
 void QQmlDebugConnection::socketConnected()
 {
     Q_D(QQmlDebugConnection);
-    QPacket pack;
-    pack << serverId << 0 << protocolVersion << d->plugins.keys() << d->dataStreamVersion;
-    d->protocol->send(pack);
+    QPacket pack(d->currentDataStreamVersion);
+    pack << serverId << 0 << protocolVersion << d->plugins.keys() << d->maximumDataStreamVersion;
+    d->protocol->send(pack.data());
     d->flush();
 }
 
@@ -112,7 +115,7 @@ void QQmlDebugConnection::protocolReadyRead()
 {
     Q_D(QQmlDebugConnection);
     if (!d->gotHello) {
-        QPacket pack = d->protocol->read();
+        QPacket pack(d->currentDataStreamVersion, d->protocol->read());
         QString name;
 
         pack >> name;
@@ -140,7 +143,7 @@ void QQmlDebugConnection::protocolReadyRead()
                         d->serverPlugins.insert(pluginNames.at(i), pluginVersion);
                     }
 
-                    pack >> d->dataStreamVersion;
+                    pack >> d->currentDataStreamVersion;
                     validHello = true;
                 }
             }
@@ -167,7 +170,7 @@ void QQmlDebugConnection::protocolReadyRead()
     }
 
     while (d->protocol->packetsAvailable()) {
-        QPacket pack = d->protocol->read();
+        QPacket pack(d->currentDataStreamVersion, d->protocol->read());
         QString name;
         pack >> name;
 
@@ -252,16 +255,16 @@ QQmlDebugConnection::~QQmlDebugConnection()
         iter.value()->stateChanged(QQmlDebugClient::NotConnected);
 }
 
-void QQmlDebugConnection::setDataStreamVersion(int dataStreamVersion)
+int QQmlDebugConnection::currentDataStreamVersion() const
 {
-    Q_D(QQmlDebugConnection);
-    d->dataStreamVersion = dataStreamVersion;
+    Q_D(const QQmlDebugConnection);
+    return d->currentDataStreamVersion;
 }
 
-int QQmlDebugConnection::dataStreamVersion()
+void QQmlDebugConnection::setMaximumDataStreamVersion(int maximumVersion)
 {
     Q_D(QQmlDebugConnection);
-    return d->dataStreamVersion;
+    d->maximumDataStreamVersion = maximumVersion;
 }
 
 bool QQmlDebugConnection::isConnected() const
@@ -345,9 +348,9 @@ bool QQmlDebugConnection::sendMessage(const QString &name, const QByteArray &mes
     if (!isConnected() || !d->serverPlugins.contains(name))
         return false;
 
-    QPacket pack;
+    QPacket pack(d->currentDataStreamVersion);
     pack << name << message;
-    d->protocol->send(pack);
+    d->protocol->send(pack.data());
     d->flush();
 
     return true;

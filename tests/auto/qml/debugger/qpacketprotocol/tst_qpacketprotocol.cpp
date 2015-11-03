@@ -96,13 +96,13 @@ void tst_QPacketProtocol::send()
     QByteArray ba;
     int num;
 
-    QPacket packet;
+    QPacket packet(QDataStream::Qt_DefaultCompiledVersion);
     packet << "Hello world" << 123;
-    out.send(packet);
+    out.send(packet.data());
 
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
 
-    QPacket p = in.read();
+    QPacket p(QDataStream::Qt_DefaultCompiledVersion, in.read());
     p >> ba >> num;
     QCOMPARE(ba, QByteArray("Hello world") + '\0');
     QCOMPARE(num, 123);
@@ -119,9 +119,9 @@ void tst_QPacketProtocol::packetsAvailable()
     QCOMPARE(in.packetsAvailable(), qint64(0));
 
     for (int i=0; i<packetCount; i++) {
-        QPacket packet;
+        QPacket packet(QDataStream::Qt_DefaultCompiledVersion);
         packet << "Hello";
-        out.send(packet);
+        out.send(packet.data());
     }
 
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
@@ -142,30 +142,30 @@ void tst_QPacketProtocol::read()
     QPacketProtocol in(m_client);
     QPacketProtocol out(m_serverConn);
 
-    QVERIFY(in.read().atEnd());
+    QVERIFY(in.read().isEmpty());
 
-    QPacket packet;
+    QPacket packet(QDataStream::Qt_DefaultCompiledVersion);
     packet << 123;
-    out.send(packet);
+    out.send(packet.data());
 
-    QPacket packet2;
+    QPacket packet2(QDataStream::Qt_DefaultCompiledVersion);
     packet2 << 456;
-    out.send(packet2);
+    out.send(packet2.data());
     QVERIFY(QQmlDebugTest::waitForSignal(&in, SIGNAL(readyRead())));
 
     int num;
 
-    QPacket p1 = in.read();
+    QPacket p1(QDataStream::Qt_DefaultCompiledVersion, in.read());
     QVERIFY(!p1.atEnd());
     p1 >> num;
     QCOMPARE(num, 123);
 
-    QPacket p2 = in.read();
+    QPacket p2(QDataStream::Qt_DefaultCompiledVersion, in.read());
     QVERIFY(!p2.atEnd());
     p2 >> num;
     QCOMPARE(num, 456);
 
-    QVERIFY(in.read().atEnd());
+    QVERIFY(in.read().isEmpty());
 }
 
 QTEST_MAIN(tst_QPacketProtocol)

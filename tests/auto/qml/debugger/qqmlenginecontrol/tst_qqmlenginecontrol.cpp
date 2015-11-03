@@ -36,6 +36,7 @@
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
+#include <private/qpacket_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtCore/qlibraryinfo.h>
@@ -69,10 +70,9 @@ public:
 
 
     void command(CommandType command, int engine) {
-        QByteArray message;
-        QDataStream stream(&message, QIODevice::WriteOnly);
+        QPacket stream(connection()->currentDataStreamVersion());
         stream << (int)command << engine;
-        sendMessage(message);
+        sendMessage(stream.data());
     }
 
     QList<int> startingEngines;
@@ -119,8 +119,7 @@ private slots:
 
 void QQmlEngineControlClient::messageReceived(const QByteArray &message)
 {
-    QByteArray msg = message;
-    QDataStream stream(&msg, QIODevice::ReadOnly);
+    QPacket stream(connection()->currentDataStreamVersion(), message);
 
     int messageType;
     int engineId;

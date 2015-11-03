@@ -31,10 +31,11 @@
 **
 ****************************************************************************/
 
-#ifndef QPACKETPROTOCOL_P_H
-#define QPACKETPROTOCOL_P_H
+#ifndef QPACKET_H
+#define QPACKET_H
 
-#include <QtCore/qobject.h>
+#include <QtCore/qdatastream.h>
+#include <QtCore/qbuffer.h>
 
 //
 //  W A R N I N G
@@ -49,31 +50,18 @@
 
 QT_BEGIN_NAMESPACE
 
-class QIODevice;
-
-class QPacketProtocolPrivate;
-class QPacketProtocol : public QObject
+class QPacket : public QDataStream
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QPacketProtocol)
 public:
-    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
+    QPacket(int version);
+    explicit QPacket(int version, const QByteArray &ba);
+    QByteArray data() const;
 
-    void send(const QByteArray &data);
-    qint64 packetsAvailable() const;
-    QByteArray read();
-    bool waitForReadyRead(int msecs = 3000);
-
-Q_SIGNALS:
-    void readyRead();
-    void invalidPacket();
-
-private Q_SLOTS:
-    void aboutToClose();
-    void bytesWritten(qint64 bytes);
-    void readyToRead();
+private:
+    void init(QIODevice::OpenMode mode);
+    QBuffer buf;
 };
 
 QT_END_NAMESPACE
 
-#endif // QPACKETPROTOCOL_P_H
+#endif // QPACKET_H

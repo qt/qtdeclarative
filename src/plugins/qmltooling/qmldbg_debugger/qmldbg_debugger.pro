@@ -1,5 +1,5 @@
 TARGET = qmldbg_debugger
-QT = qml-private core-private
+QT = qml-private core-private packetprotocol-private
 
 PLUGIN_TYPE = qmltooling
 PLUGIN_CLASS_NAME = QQmlDebuggerServiceFactory
@@ -19,6 +19,7 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/../shared/qqmlconfigurabledebugservice.h \
+    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/qdebugmessageservice.h \
     $$PWD/qqmldebuggerservicefactory.h \
     $$PWD/qqmlenginedebugservice.h \

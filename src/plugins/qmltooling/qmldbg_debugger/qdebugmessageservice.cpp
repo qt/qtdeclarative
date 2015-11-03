@@ -32,10 +32,8 @@
 ****************************************************************************/
 
 #include "qdebugmessageservice.h"
+#include "qqmldebugpacket.h"
 #include <private/qqmldebugconnector_p.h>
-#include <private/qpacket_p.h>
-
-#include <QDataStream>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +62,7 @@ void QDebugMessageServiceImpl::sendDebugMessage(QtMsgType type,
     //We do not want to alter the message handling mechanism
     //We just eavesdrop and forward the messages to a port
     //only if a client is connected to it.
-    QPacket ws;
+    QQmlDebugPacket ws;
     ws << QByteArray("MESSAGE") << type << buf.toUtf8();
     ws << QString::fromLatin1(ctxt.file).toUtf8();
     ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();

@@ -37,6 +37,7 @@
 #include "qqmldebugclient_p.h"
 #include "qqmleventlocation_p.h"
 #include <private/qqmlprofilerdefinitions_p.h>
+#include <private/qpacket_p.h>
 
 //
 //  W A R N I N G
@@ -99,7 +100,7 @@ private:
 
     virtual void unknownEvent(QQmlProfilerDefinitions::Message messageType, qint64 time,
                               int detailType);
-    virtual void unknownData(QDataStream &stream);
+    virtual void unknownData(QPacket &stream);
 };
 
 QT_END_NAMESPACE

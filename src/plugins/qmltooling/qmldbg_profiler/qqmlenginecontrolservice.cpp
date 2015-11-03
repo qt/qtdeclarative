@@ -32,8 +32,8 @@
 ****************************************************************************/
 
 #include "qqmlenginecontrolservice.h"
+#include "qqmldebugpacket.h"
 #include <QQmlEngine>
-#include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -45,7 +45,7 @@ QQmlEngineControlServiceImpl::QQmlEngineControlServiceImpl(QObject *parent) :
 void QQmlEngineControlServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&dataMutex);
-    QPacket d(message);
+    QQmlDebugPacket d(message);
     int command;
     int engineId;
     d >> command >> engineId;
@@ -107,7 +107,7 @@ void QQmlEngineControlServiceImpl::engineRemoved(QQmlEngine *engine)
 
 void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QQmlEngine *engine)
 {
-    QPacket d;
+    QQmlDebugPacket d;
     d << type << idForObject(engine);
     emit messageToClient(name(), d.data());
 }

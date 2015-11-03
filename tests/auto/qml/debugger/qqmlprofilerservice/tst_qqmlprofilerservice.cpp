@@ -99,7 +99,7 @@ private:
     void complete();
 
     void unknownEvent(QQmlProfilerDefinitions::Message messageType, qint64 time, int detailType);
-    void unknownData(QDataStream &stream);
+    void unknownData(QPacket &stream);
 };
 
 void QQmlProfilerTestClient::traceStarted(qint64 time, int engineId)
@@ -230,7 +230,7 @@ void QQmlProfilerTestClient::unknownEvent(QQmlProfilerDefinitions::Message messa
                      .arg(messageType).arg(detailType).arg(time)));
 }
 
-void QQmlProfilerTestClient::unknownData(QDataStream &stream)
+void QQmlProfilerTestClient::unknownData(QPacket &stream)
 {
     QFAIL(qPrintable(QString::fromLatin1("%1 bytes of extra data after receiving message.")
                      .arg(stream.device()->bytesAvailable())));

@@ -207,7 +207,7 @@ void tst_QQmlDebugService::checkSupportForDataStreamVersion()
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
     QCOMPARE(resp, msg);
-    QCOMPARE(m_conn->dataStreamVersion(), int(QDataStream::Qt_5_0));
+    QCOMPARE(m_conn->currentDataStreamVersion(), int(QDataStream::Qt_DefaultCompiledVersion));
 }
 
 void tst_QQmlDebugService::idForObject()
@@ -250,7 +250,7 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     //create a new connection;
     delete m_conn;
     m_conn = new QQmlDebugConnection(this);
-    m_conn->setDataStreamVersion(QDataStream::Qt_4_7);
+    m_conn->setMaximumDataStreamVersion(QDataStream::Qt_5_0);
     for (int i = 0; i < 50; ++i) {
         // try for 5 seconds ...
         m_conn->connectToHost("127.0.0.1", PORT);
@@ -270,7 +270,7 @@ void tst_QQmlDebugService::checkSupportForOldDataStreamVersion()
     client.sendMessage(msg);
     QByteArray resp = client.waitForResponse();
     QCOMPARE(resp, msg);
-    QCOMPARE(m_conn->dataStreamVersion(), int(QDataStream::Qt_4_7));
+    QCOMPARE(m_conn->currentDataStreamVersion(), int(QDataStream::Qt_5_0));
 }
 
 QTEST_MAIN(tst_QQmlDebugService)
