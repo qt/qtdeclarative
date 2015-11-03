@@ -49,7 +49,7 @@ ApplicationWindow {
     property alias nextItem: nextItem
 
     function pushNextItem() {
-        stackView.push(nextItem);
+        stackView.push(nextItem, StackView.Immediate);
     }
 
     Rectangle {
