@@ -180,8 +180,9 @@ QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons(
                 buttons += button;
         }
     } else if (parentItem) {
-        foreach (QQuickAbstractButton *button, parentItem->findChildren<QQuickAbstractButton *>()) {
-            if (button->autoExclusive() && !button->d_func()->exclusiveGroup())
+        foreach (QQuickItem *child, parentItem->childItems()) {
+            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(child);
+            if (button && button->autoExclusive() && !button->d_func()->exclusiveGroup())
                 buttons += button;
         }
     }
