@@ -223,22 +223,22 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time);
-    void writeBack();
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickXAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time);
-    void writeBack();
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickYAnimatorJob : public QQuickTransformAnimatorJob
 {
 public:
-    void updateCurrentTime(int time);
-    void writeBack();
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimatorJob : public QQuickTransformAnimatorJob
@@ -246,8 +246,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimatorJob : public QQuickTransformA
 public:
     QQuickRotationAnimatorJob();
 
-    void updateCurrentTime(int time);
-    void writeBack();
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
 
     void setDirection(QQuickRotationAnimator::RotationDirection direction) { m_direction = direction; }
     QQuickRotationAnimator::RotationDirection direction() const { return m_direction; }
@@ -261,10 +261,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickOpacityAnimatorJob();
 
-    void initialize(QQuickAnimatorController *controller);
-    void updateCurrentTime(int time);
-    void writeBack();
-    void nodeWasDestroyed();
+    void initialize(QQuickAnimatorController *controller) Q_DECL_OVERRIDE;
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
 
 private:
     QSGOpacityNode *m_opacityNode;
@@ -275,16 +275,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 public:
     QQuickUniformAnimatorJob();
 
-    void setTarget(QQuickItem *target);
+    void setTarget(QQuickItem *target) Q_DECL_OVERRIDE;
 
     void setUniform(const QByteArray &uniform) { m_uniform = uniform; }
     QByteArray uniform() const { return m_uniform; }
 
     void afterNodeSync() Q_DECL_OVERRIDE;
 
-    void updateCurrentTime(int time);
-    void writeBack();
-    void nodeWasDestroyed();
+    void updateCurrentTime(int time) Q_DECL_OVERRIDE;
+    void writeBack() Q_DECL_OVERRIDE;
+    void nodeWasDestroyed() Q_DECL_OVERRIDE;
 
 private:
     QByteArray m_uniform;
