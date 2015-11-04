@@ -39,8 +39,9 @@
 QT_BEGIN_NAMESPACE
 
 QV4ProfilerAdapter::QV4ProfilerAdapter(QQmlProfilerService *service, QV4::ExecutionEngine *engine) :
-    QQmlAbstractProfilerAdapter(service), m_functionCallPos(0), m_memoryPos(0)
+    m_functionCallPos(0), m_memoryPos(0)
 {
+    setService(service);
     engine->enableProfiler();
     connect(this, SIGNAL(profilingEnabled(quint64)),
             this, SLOT(forwardEnabled(quint64)));

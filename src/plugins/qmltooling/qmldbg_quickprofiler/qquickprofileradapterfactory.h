@@ -31,14 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLABSTRACTPROFILERADAPTER_P_H
-#define QQMLABSTRACTPROFILERADAPTER_P_H
-
-#include <private/qtqmlglobal_p.h>
-#include <private/qqmlprofilerdefinitions_p.h>
-
-#include <QtCore/QObject>
-#include <QtCore/QElapsedTimer>
+#ifndef QQUICKPROFILERADAPTERFACTORY_H
+#define QQUICKPROFILERADAPTERFACTORY_H
 
 //
 //  W A R N I N G
@@ -51,61 +45,19 @@
 // We mean it.
 //
 
+#include <QtQml/private/qqmlabstractprofileradapter_p.h>
+#include <QtQuick/private/qquickprofiler_p.h>
+
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerService;
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public QQmlProfilerDefinitions {
-    Q_OBJECT
-
-public:
-    QQmlAbstractProfilerAdapter(QObject *parent = 0) :
-        QObject(parent), service(0), waiting(true), featuresEnabled(0) {}
-    virtual ~QQmlAbstractProfilerAdapter() {}
-    void setService(QQmlProfilerService *new_service) { service = new_service; }
-
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) = 0;
-
-    void startProfiling(quint64 features);
-
-    void stopProfiling();
-
-    void reportData() { emit dataRequested(); }
-
-    void stopWaiting() { waiting = false; }
-    void startWaiting() { waiting = true; }
-
-    bool isRunning() const { return featuresEnabled != 0; }
-    quint64 features() const { return featuresEnabled; }
-
-    void synchronize(const QElapsedTimer &t) { emit referenceTimeKnown(t); }
-
-signals:
-    void profilingEnabled(quint64 features);
-    void profilingEnabledWhileWaiting(quint64 features);
-
-    void profilingDisabled();
-    void profilingDisabledWhileWaiting();
-
-    void dataRequested();
-    void referenceTimeKnown(const QElapsedTimer &timer);
-
-protected:
-    QQmlProfilerService *service;
-
-private:
-    bool waiting;
-    quint64 featuresEnabled;
-};
-
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapterFactory : public QObject
+class QQuickProfilerAdapterFactory : public QQmlAbstractProfilerAdapterFactory
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlAbstractProfilerAdapterFactory_iid FILE "qquickprofileradapter.json")
 public:
-    virtual QQmlAbstractProfilerAdapter *create(const QString &key) = 0;
+    QQmlAbstractProfilerAdapter *create(const QString &key);
 };
-
-#define QQmlAbstractProfilerAdapterFactory_iid "org.qt-project.Qt.QQmlAbstractProfilerAdapterFactory"
 
 QT_END_NAMESPACE
 
-#endif // QQMLABSTRACTPROFILERADAPTER_P_H
+#endif // QQUICKPROFILERADAPTERFACTORY_H

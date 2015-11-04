@@ -1,0 +1,169 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL21$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qquickprofileradapter.h"
+#include <QCoreApplication>
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qpacket_p.h>
+#include <private/qquickprofiler_p.h>
+
+QT_BEGIN_NAMESPACE
+
+QQuickProfilerAdapter::QQuickProfilerAdapter(QObject *parent) :
+    QQmlAbstractProfilerAdapter(parent), next(0)
+{
+    QQuickProfiler::initialize(this);
+
+    // We can always do DirectConnection here as all methods are protected by mutexes
+    connect(this, SIGNAL(profilingEnabled(quint64)),
+            QQuickProfiler::s_instance, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
+    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
+            QQuickProfiler::s_instance, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
+    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
+            QQuickProfiler::s_instance, SLOT(setTimer(QElapsedTimer)), Qt::DirectConnection);
+    connect(this, SIGNAL(profilingDisabled()),
+            QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
+    connect(this, SIGNAL(profilingDisabledWhileWaiting()),
+            QQuickProfiler::s_instance, SLOT(stopProfilingImpl()), Qt::DirectConnection);
+    connect(this, SIGNAL(dataRequested()),
+            QQuickProfiler::s_instance, SLOT(reportDataImpl()), Qt::DirectConnection);
+    connect(QQuickProfiler::s_instance, SIGNAL(dataReady(QVector<QQuickProfilerData>)),
+            this, SLOT(receiveData(QVector<QQuickProfilerData>)), Qt::DirectConnection);
+}
+
+QQuickProfilerAdapter::~QQuickProfilerAdapter()
+{
+    if (service)
+        service->removeGlobalProfiler(this);
+}
+
+// convert to QByteArrays that can be sent to the debug client
+// use of QDataStream can skew results
+//     (see tst_qqmldebugtrace::trace() benchmark)
+static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
+                                           QList<QByteArray> &messages)
+{
+    Q_ASSERT_X(((data.messageType | data.detailType) & (1 << 31)) == 0, Q_FUNC_INFO,
+               "You can use at most 31 message types and 31 detail types.");
+    for (uint decodedMessageType = 0; (data.messageType >> decodedMessageType) != 0;
+         ++decodedMessageType) {
+        if ((data.messageType & (1 << decodedMessageType)) == 0)
+            continue;
+
+        for (uint decodedDetailType = 0; (data.detailType >> decodedDetailType) != 0;
+             ++decodedDetailType) {
+            if ((data.detailType & (1 << decodedDetailType)) == 0)
+                continue;
+
+            //### using QDataStream is relatively expensive
+            QPacket ds;
+            ds << data.time << decodedMessageType << decodedDetailType;
+
+            switch (decodedMessageType) {
+            case QQuickProfiler::Event:
+                switch (decodedDetailType) {
+                case QQuickProfiler::AnimationFrame:
+                    ds << data.framerate << data.count << data.threadId;
+                    break;
+                case QQuickProfiler::Key:
+                case QQuickProfiler::Mouse:
+                    ds << data.inputType << data.inputA << data.inputB;
+                    break;
+                }
+                break;
+            case QQuickProfiler::PixmapCacheEvent:
+                ds << data.detailUrl.toString();
+                switch (decodedDetailType) {
+                    case QQuickProfiler::PixmapSizeKnown: ds << data.x << data.y; break;
+                    case QQuickProfiler::PixmapReferenceCountChanged: ds << data.count; break;
+                    case QQuickProfiler::PixmapCacheCountChanged: ds << data.count; break;
+                    default: break;
+                }
+                break;
+            case QQuickProfiler::SceneGraphFrame:
+                switch (decodedDetailType) {
+                    // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
+                    case QQuickProfiler::SceneGraphRendererFrame: ds << data.subtime_1 << data.subtime_2 << data.subtime_3 << data.subtime_4; break;
+                    // AdaptationLayerFrame: glyphCount (which is an integer), glyphRenderTime, glyphStoreTime
+                    case QQuickProfiler::SceneGraphAdaptationLayerFrame: ds << data.subtime_3 << data.subtime_1 << data.subtime_2; break;
+                    // ContextFrame: compiling material time
+                    case QQuickProfiler::SceneGraphContextFrame: ds << data.subtime_1; break;
+                    // RenderLoop: syncTime, renderTime, swapTime
+                    case QQuickProfiler::SceneGraphRenderLoopFrame: ds << data.subtime_1 << data.subtime_2 << data.subtime_3; break;
+                    // TexturePrepare: bind, convert, swizzle, upload, mipmap
+                    case QQuickProfiler::SceneGraphTexturePrepare: ds << data.subtime_1 << data.subtime_2 << data.subtime_3 << data.subtime_4 << data.subtime_5; break;
+                    // TextureDeletion: deletionTime
+                    case QQuickProfiler::SceneGraphTextureDeletion: ds << data.subtime_1; break;
+                    // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
+                    case QQuickProfiler::SceneGraphPolishAndSync: ds << data.subtime_1 << data.subtime_2 << data.subtime_3 << data.subtime_4; break;
+                    // WindowsRenderLoop: GL time, make current time, SceneGraph time
+                    case QQuickProfiler::SceneGraphWindowsRenderShow: ds << data.subtime_1 << data.subtime_2 << data.subtime_3; break;
+                    // WindowsAnimations: update time
+                    case QQuickProfiler::SceneGraphWindowsAnimations: ds << data.subtime_1; break;
+                    // non-threaded rendering: polish time
+                    case QQuickProfiler::SceneGraphPolishFrame: ds << data.subtime_1; break;
+                    default:break;
+                }
+                break;
+            default:
+                Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
+                break;
+            }
+            messages << ds.data();
+        }
+    }
+}
+
+qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
+{
+    while (next < m_data.size()) {
+        if (m_data[next].time <= until)
+            qQuickProfilerDataToByteArrays(m_data[next++], messages);
+        else
+            return m_data[next].time;
+    }
+    m_data.clear();
+    next = 0;
+    return -1;
+}
+
+void QQuickProfilerAdapter::receiveData(const QVector<QQuickProfilerData> &new_data)
+{
+    if (m_data.isEmpty())
+        m_data = new_data;
+    else
+        m_data.append(new_data);
+    service->dataReady(this);
+}
+
+QT_END_NAMESPACE

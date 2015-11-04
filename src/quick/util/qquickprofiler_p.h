@@ -45,13 +45,14 @@
 // We mean it.
 //
 
-#include <private/qtquickglobal_p.h>
 #include <QtCore/private/qabstractanimation_p.h>
-#include <QtQml/private/qqmlabstractprofileradapter_p.h>
-#include <QUrl>
-#include <QSize>
-#include <QMutex>
-#include <QThreadStorage>
+#include <QtQml/private/qqmlprofilerdefinitions_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+
+#include <QtCore/qurl.h>
+#include <QtCore/qsize.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qthreadstorage.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -164,8 +165,6 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
         int threadId;
         int inputB;         //used by input events
     };
-
-    void toByteArrays(QList<QByteArray> &messages) const;
 };
 
 Q_DECLARE_TYPEINFO(QQuickProfilerData, Q_MOVABLE_TYPE);
@@ -203,7 +202,7 @@ public:
     }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QQmlAbstractProfilerAdapter {
+class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 
@@ -314,7 +313,6 @@ public:
 
     qint64 timestamp() { return m_timer.nsecsElapsed(); }
 
-    qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
     static quint64 featuresEnabled;
     static bool profilingSceneGraph()
@@ -322,25 +320,29 @@ public:
         return featuresEnabled & (1 << QQuickProfiler::ProfileSceneGraph);
     }
 
-    static void initialize(QQmlProfilerService *service);
+    static void initialize(QObject *parent);
 
     virtual ~QQuickProfiler();
 
 protected:
-    int next;
+    friend class QQuickProfilerAdapter;
+
     static QQuickProfiler *s_instance;
     QMutex m_dataMutex;
     QElapsedTimer m_timer;
-    QVarLengthArray<QQuickProfilerData> m_data;
+    QVector<QQuickProfilerData> m_data;
     QQuickProfilerSceneGraphData m_sceneGraphData;
 
-    QQuickProfiler(QQmlProfilerService *service);
+    QQuickProfiler(QObject *parent);
 
     void processMessage(const QQuickProfilerData &message)
     {
         QMutexLocker lock(&m_dataMutex);
         m_data.append(message);
     }
+
+signals:
+    void dataReady(const QVector<QQuickProfilerData> &data);
 
 protected slots:
     void startProfilingImpl(quint64 features);

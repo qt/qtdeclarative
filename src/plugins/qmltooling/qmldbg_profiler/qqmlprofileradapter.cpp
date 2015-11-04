@@ -38,8 +38,9 @@
 QT_BEGIN_NAMESPACE
 
 QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine) :
-    QQmlAbstractProfilerAdapter(service), next(0)
+    next(0)
 {
+    setService(service);
     engine->enableProfiler();
     connect(this, SIGNAL(profilingEnabled(quint64)), engine->profiler, SLOT(startProfiling(quint64)));
     connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),

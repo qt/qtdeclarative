@@ -190,10 +190,6 @@ void QQmlQtQuick2Module::defineModule()
     QQmlEngineDebugService *debugService = QQmlDebugConnector::service<QQmlEngineDebugService>();
     if (debugService)
         debugService->setStatesDelegate(new QQmlQtQuick2DebugStatesDelegate);
-
-    QQmlProfilerService *profilerService = QQmlDebugConnector::service<QQmlProfilerService>();
-    if (profilerService)
-        QQuickProfiler::initialize(profilerService);
 }
 
 void QQmlQtQuick2Module::undefineModule()

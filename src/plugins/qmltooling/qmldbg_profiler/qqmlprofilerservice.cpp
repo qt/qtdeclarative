@@ -37,6 +37,7 @@
 #include "qqmlprofilerservicefactory.h"
 #include <private/qqmlengine_p.h>
 #include <private/qpacket_p.h>
+#include <private/qqmldebugpluginmanager_p.h>
 
 #include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
@@ -46,11 +47,20 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_QML_DEBUG_PLUGIN_LOADER(QQmlAbstractProfilerAdapter)
+Q_QML_IMPORT_DEBUG_PLUGIN(QQuickProfilerAdapterFactory)
+
 QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QQmlProfilerService>(1, parent),
     m_waitingForStop(false)
 {
     m_timer.start();
+    QQmlAbstractProfilerAdapter *quickAdapter =
+            loadQQmlAbstractProfilerAdapter(QLatin1String("QQuickProfilerAdapter"));
+    if (quickAdapter) {
+        addGlobalProfiler(quickAdapter);
+        quickAdapter->setService(this);
+    }
 }
 
 QQmlProfilerServiceImpl::~QQmlProfilerServiceImpl()
@@ -177,7 +187,6 @@ void QQmlProfilerServiceImpl::removeGlobalProfiler(QQmlAbstractProfilerAdapter *
     QMutexLocker lock(&m_configMutex);
     removeProfilerFromStartTimes(profiler);
     m_globalProfilers.removeOne(profiler);
-    delete profiler;
 }
 
 void QQmlProfilerServiceImpl::removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler)

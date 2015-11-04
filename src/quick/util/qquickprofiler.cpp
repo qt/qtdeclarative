@@ -32,9 +32,11 @@
 ****************************************************************************/
 
 #include "qquickprofiler_p.h"
-#include <QCoreApplication>
-#include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qpacket_p.h>
+
+#include <QtQml/private/qqmlabstractprofileradapter_p.h>
+
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qthread.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -42,98 +44,10 @@ QT_BEGIN_NAMESPACE
 QQuickProfiler *QQuickProfiler::s_instance = 0;
 quint64 QQuickProfiler::featuresEnabled = 0;
 
-// convert to QByteArrays that can be sent to the debug client
-// use of QDataStream can skew results
-//     (see tst_qqmldebugtrace::trace() benchmark)
-void QQuickProfilerData::toByteArrays(QList<QByteArray> &messages) const
-{
-    Q_ASSERT_X(((messageType | detailType) & (1 << 31)) == 0, Q_FUNC_INFO, "You can use at most 31 message types and 31 detail types.");
-    for (uint decodedMessageType = 0; (messageType >> decodedMessageType) != 0; ++decodedMessageType) {
-        if ((messageType & (1 << decodedMessageType)) == 0)
-            continue;
-
-        for (uint decodedDetailType = 0; (detailType >> decodedDetailType) != 0; ++decodedDetailType) {
-            if ((detailType & (1 << decodedDetailType)) == 0)
-                continue;
-
-            //### using QDataStream is relatively expensive
-            QPacket ds;
-            ds << time << decodedMessageType << decodedDetailType;
-
-            switch (decodedMessageType) {
-            case QQuickProfiler::Event:
-                switch (decodedDetailType) {
-                case QQuickProfiler::AnimationFrame:
-                    ds << framerate << count << threadId;
-                    break;
-                case QQuickProfiler::Key:
-                case QQuickProfiler::Mouse:
-                    ds << inputType << inputA << inputB;
-                    break;
-                }
-                break;
-            case QQuickProfiler::PixmapCacheEvent:
-                ds << detailUrl.toString();
-                switch (decodedDetailType) {
-                    case QQuickProfiler::PixmapSizeKnown: ds << x << y; break;
-                    case QQuickProfiler::PixmapReferenceCountChanged: ds << count; break;
-                    case QQuickProfiler::PixmapCacheCountChanged: ds << count; break;
-                    default: break;
-                }
-                break;
-            case QQuickProfiler::SceneGraphFrame:
-                switch (decodedDetailType) {
-                    // RendererFrame: preprocessTime, updateTime, bindingTime, renderTime
-                    case QQuickProfiler::SceneGraphRendererFrame: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
-                    // AdaptationLayerFrame: glyphCount (which is an integer), glyphRenderTime, glyphStoreTime
-                    case QQuickProfiler::SceneGraphAdaptationLayerFrame: ds << subtime_3 << subtime_1 << subtime_2; break;
-                    // ContextFrame: compiling material time
-                    case QQuickProfiler::SceneGraphContextFrame: ds << subtime_1; break;
-                    // RenderLoop: syncTime, renderTime, swapTime
-                    case QQuickProfiler::SceneGraphRenderLoopFrame: ds << subtime_1 << subtime_2 << subtime_3; break;
-                    // TexturePrepare: bind, convert, swizzle, upload, mipmap
-                    case QQuickProfiler::SceneGraphTexturePrepare: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4 << subtime_5; break;
-                    // TextureDeletion: deletionTime
-                    case QQuickProfiler::SceneGraphTextureDeletion: ds << subtime_1; break;
-                    // PolishAndSync: polishTime, waitTime, syncTime, animationsTime,
-                    case QQuickProfiler::SceneGraphPolishAndSync: ds << subtime_1 << subtime_2 << subtime_3 << subtime_4; break;
-                    // WindowsRenderLoop: GL time, make current time, SceneGraph time
-                    case QQuickProfiler::SceneGraphWindowsRenderShow: ds << subtime_1 << subtime_2 << subtime_3; break;
-                    // WindowsAnimations: update time
-                    case QQuickProfiler::SceneGraphWindowsAnimations: ds << subtime_1; break;
-                    // non-threaded rendering: polish time
-                    case QQuickProfiler::SceneGraphPolishFrame: ds << subtime_1; break;
-                    default:break;
-                }
-                break;
-            default:
-                Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid message type.");
-                break;
-            }
-            messages << ds.data();
-        }
-    }
-}
-
-qint64 QQuickProfiler::sendMessages(qint64 until, QList<QByteArray> &messages)
-{
-    QMutexLocker lock(&m_dataMutex);
-    while (next < m_data.size()) {
-        if (m_data[next].time <= until)
-            m_data[next++].toByteArrays(messages);
-        else
-            return m_data[next].time;
-    }
-    m_data.clear();
-    next = 0;
-    return -1;
-}
-
-void QQuickProfiler::initialize(QQmlProfilerService *service)
+void QQuickProfiler::initialize(QObject *parent)
 {
     Q_ASSERT(s_instance == 0);
-    s_instance = new QQuickProfiler(service);
-    service->addGlobalProfiler(s_instance);
+    s_instance = new QQuickProfiler(parent);
 }
 
 void animationTimerCallback(qint64 delta)
@@ -160,26 +74,10 @@ public slots:
 
 #include "qquickprofiler.moc"
 
-QQuickProfiler::QQuickProfiler(QQmlProfilerService *service) :
-    QQmlAbstractProfilerAdapter(service), next(0)
+QQuickProfiler::QQuickProfiler(QObject *parent) : QObject(parent)
 {
     // This is safe because at this point the m_instance isn't initialized, yet.
     m_timer.start();
-
-    // We can always do DirectConnection here as all methods are protected by mutexes
-    connect(this, SIGNAL(profilingEnabled(quint64)), this, SLOT(startProfilingImpl(quint64)),
-            Qt::DirectConnection);
-    connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
-            this, SLOT(startProfilingImpl(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)), this, SLOT(setTimer(QElapsedTimer)),
-            Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabled()), this, SLOT(stopProfilingImpl()),
-            Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabledWhileWaiting()), this, SLOT(stopProfilingImpl()),
-            Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested()), this, SLOT(reportDataImpl()),
-            Qt::DirectConnection);
-
     CallbackRegistrationHelper *helper = new CallbackRegistrationHelper; // will delete itself
     helper->moveToThread(QCoreApplication::instance()->thread());
     QMetaObject::invokeMethod(helper, "registerAnimationTimerCallback", Qt::QueuedConnection);
@@ -195,7 +93,6 @@ QQuickProfiler::~QQuickProfiler()
 void QQuickProfiler::startProfilingImpl(quint64 features)
 {
     QMutexLocker lock(&m_dataMutex);
-    next = 0;
     m_data.clear();
     featuresEnabled = features;
 }
@@ -206,12 +103,12 @@ void QQuickProfiler::stopProfilingImpl()
         QMutexLocker lock(&m_dataMutex);
         featuresEnabled = 0;
     }
-    service->dataReady(this);
+    emit dataReady(m_data);
 }
 
 void QQuickProfiler::reportDataImpl()
 {
-    service->dataReady(this);
+    emit dataReady(m_data);
 }
 
 void QQuickProfiler::setTimer(const QElapsedTimer &t)

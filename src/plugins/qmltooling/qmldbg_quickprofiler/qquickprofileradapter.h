@@ -31,14 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLABSTRACTPROFILERADAPTER_P_H
-#define QQMLABSTRACTPROFILERADAPTER_P_H
-
-#include <private/qtqmlglobal_p.h>
-#include <private/qqmlprofilerdefinitions_p.h>
-
-#include <QtCore/QObject>
-#include <QtCore/QElapsedTimer>
+#ifndef QQUICKPROFILERADAPTER_H
+#define QQUICKPROFILERADAPTER_H
 
 //
 //  W A R N I N G
@@ -51,61 +45,26 @@
 // We mean it.
 //
 
+#include <QtQml/private/qqmlabstractprofileradapter_p.h>
+#include <QtQuick/private/qquickprofiler_p.h>
+
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerService;
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public QQmlProfilerDefinitions {
+class QQuickProfilerAdapter : public QQmlAbstractProfilerAdapter {
     Q_OBJECT
-
 public:
-    QQmlAbstractProfilerAdapter(QObject *parent = 0) :
-        QObject(parent), service(0), waiting(true), featuresEnabled(0) {}
-    virtual ~QQmlAbstractProfilerAdapter() {}
-    void setService(QQmlProfilerService *new_service) { service = new_service; }
+    QQuickProfilerAdapter(QObject *parent = 0);
+    ~QQuickProfilerAdapter();
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages);
 
-    virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) = 0;
-
-    void startProfiling(quint64 features);
-
-    void stopProfiling();
-
-    void reportData() { emit dataRequested(); }
-
-    void stopWaiting() { waiting = false; }
-    void startWaiting() { waiting = true; }
-
-    bool isRunning() const { return featuresEnabled != 0; }
-    quint64 features() const { return featuresEnabled; }
-
-    void synchronize(const QElapsedTimer &t) { emit referenceTimeKnown(t); }
-
-signals:
-    void profilingEnabled(quint64 features);
-    void profilingEnabledWhileWaiting(quint64 features);
-
-    void profilingDisabled();
-    void profilingDisabledWhileWaiting();
-
-    void dataRequested();
-    void referenceTimeKnown(const QElapsedTimer &timer);
-
-protected:
-    QQmlProfilerService *service;
+public slots:
+    void receiveData(const QVector<QQuickProfilerData> &new_data);
 
 private:
-    bool waiting;
-    quint64 featuresEnabled;
+    int next;
+    QVector<QQuickProfilerData> m_data;
 };
-
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapterFactory : public QObject
-{
-    Q_OBJECT
-public:
-    virtual QQmlAbstractProfilerAdapter *create(const QString &key) = 0;
-};
-
-#define QQmlAbstractProfilerAdapterFactory_iid "org.qt-project.Qt.QQmlAbstractProfilerAdapterFactory"
 
 QT_END_NAMESPACE
 
-#endif // QQMLABSTRACTPROFILERADAPTER_P_H
+#endif // QQUICKPROFILERADAPTER_H

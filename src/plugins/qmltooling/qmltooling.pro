@@ -15,4 +15,6 @@ SUBDIRS += \
 
 qmldbg_server.depends = packetprotocol
 
-qtHaveModule(quick): SUBDIRS += qmldbg_inspector
+qtHaveModule(quick): SUBDIRS += \
+    qmldbg_inspector \
+    qmldbg_quickprofiler

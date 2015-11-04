@@ -6,7 +6,7 @@ PLUGIN_CLASS_NAME = QQmlDebugServerFactory
 load(qt_plugin)
 
 SOURCES += \
-    $$PWD/qqmldebugserver.cpp \
+    $$PWD/qqmldebugserver.cpp
 
 HEADERS += \
     $$PWD/qqmldebugserverfactory.h \
