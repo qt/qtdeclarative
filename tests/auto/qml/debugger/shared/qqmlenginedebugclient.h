@@ -233,8 +233,6 @@ private:
     QmlDebugObjectReference m_object;
     QList<QmlDebugObjectReference> m_objects;
     QVariant m_exprResult;
-
-    QQmlDebugConnection *m_connection;
 };
 
 #endif // QQMLENGINEDEBUGCLIENT_H
