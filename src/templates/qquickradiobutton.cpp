@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ExclusiveGroup, {Customizing RadioButton}, {Button Controls}
+    \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}
 */
 
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :

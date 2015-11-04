@@ -130,7 +130,7 @@ ApplicationWindow {
                         color: Theme.frameColor
                     }
 
-                    ExclusiveGroup {
+                    ButtonGroup {
                         id: themeGroup
                     }
 
@@ -143,14 +143,14 @@ ApplicationWindow {
                             width: parent.width
                             checked: true
                             layoutDirection: Qt.RightToLeft
-                            ExclusiveGroup.group: themeGroup
+                            ButtonGroup.group: themeGroup
                         }
                         RadioButton {
                             id: darkButton
                             text: "Dark"
                             width: parent.width
                             layoutDirection: Qt.RightToLeft
-                            ExclusiveGroup.group: themeGroup
+                            ButtonGroup.group: themeGroup
                         }
                     }
 

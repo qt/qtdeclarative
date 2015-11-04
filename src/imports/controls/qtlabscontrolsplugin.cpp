@@ -39,7 +39,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcommandlineparser.h>
 
-#include <QtLabsTemplates/private/qquickexclusivegroup_p.h>
+#include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 
 #include "qquicktheme_p.h"
 #include "qquickfileselector_p.h"
@@ -65,8 +65,8 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 1, 0, "Theme", "Theme is an attached property");
 
-    qmlRegisterType<QQuickExclusiveGroup>(uri, 1, 0, "ExclusiveGroup");
-    qmlRegisterType<QQuickExclusiveGroupAttached>();
+    qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
+    qmlRegisterType<QQuickButtonGroupAttached>();
 
     QCommandLineParser parser;
     QCommandLineOption styleOption(QStringList() << "s" << "style", tr("the style to use for the application"), tr("style"));

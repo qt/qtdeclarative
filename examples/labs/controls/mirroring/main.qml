@@ -130,24 +130,24 @@ ApplicationWindow {
                     title: "RadioButton"
                     readonly property real preferredWidth: (flow.width - 12) / 2
                     width: window.width > window.height || contentWidth > preferredWidth ? flow.width : preferredWidth
-                    ExclusiveGroup { id: eg }
+                    ButtonGroup { id: eg }
                     ColumnLayout {
                         width: parent.width
                         RadioButton {
                             width: parent.width
                             text: "Portrait"
-                            ExclusiveGroup.group: eg
+                            ButtonGroup.group: eg
                         }
                         RadioButton {
                             width: parent.width
                             text: "Landscape"
-                            ExclusiveGroup.group: eg
+                            ButtonGroup.group: eg
                         }
                         RadioButton {
                             width: parent.width
                             text: "Automatic"
                             checked: true
-                            ExclusiveGroup.group: eg
+                            ButtonGroup.group: eg
                         }
                     }
                 }

@@ -13,32 +13,26 @@ Module {
         "QtQuick.Window 2.2"
     ]
     Component {
-        name: "QQuickExclusiveGroup"
-        defaultProperty: "checkables"
+        name: "QQuickButtonGroup"
         prototype: "QObject"
-        exports: ["Qt.labs.controls/ExclusiveGroup 1.0"]
+        exports: ["Qt.labs.controls/ButtonGroup 1.0"]
         exportMetaObjectRevisions: [0]
-        attachedType: "QQuickExclusiveGroupAttached"
-        Property { name: "current"; type: "QObject"; isPointer: true }
-        Property { name: "checkables"; type: "QObject"; isList: true; isReadonly: true }
+        attachedType: "QQuickButtonGroupAttached"
+        Property { name: "checkedButton"; type: "QQuickAbstractButton"; isPointer: true }
+        Property { name: "buttons"; type: "QQuickAbstractButton"; isList: true; isReadonly: true }
         Method {
-            name: "addCheckable"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
+            name: "addButton"
+            Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
         }
         Method {
-            name: "removeCheckable"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
-        }
-        Method {
-            name: "isCheckable"
-            type: "bool"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
+            name: "removeButton"
+            Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
         }
     }
     Component {
-        name: "QQuickExclusiveGroupAttached"
+        name: "QQuickButtonGroupAttached"
         prototype: "QObject"
-        Property { name: "group"; type: "QQuickExclusiveGroup"; isPointer: true }
+        Property { name: "group"; type: "QQuickButtonGroup"; isPointer: true }
     }
     Component {
         name: "QQuickThemeAttached"

@@ -90,7 +90,7 @@ ApplicationWindow {
             width: window.width / 3 * 2
             height: window.height
 
-            ExclusiveGroup {
+            ButtonGroup {
                 id: effect
             }
 
@@ -118,21 +118,21 @@ ApplicationWindow {
                     text: "Overlay"
                     checked: true
                     width: parent.width
-                    ExclusiveGroup.group: effect
+                    ButtonGroup.group: effect
                     layoutDirection: Qt.RightToLeft
                 }
                 RadioButton {
                     id: push
                     text: "Push"
                     width: parent.width
-                    ExclusiveGroup.group: effect
+                    ButtonGroup.group: effect
                     layoutDirection: Qt.RightToLeft
                 }
                 RadioButton {
                     id: uncover
                     text: "Uncover"
                     width: parent.width
-                    ExclusiveGroup.group: effect
+                    ButtonGroup.group: effect
                     layoutDirection: Qt.RightToLeft
                 }
                 Rectangle { width: parent.width; height: 1; color: Theme.frameColor }

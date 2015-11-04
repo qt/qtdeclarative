@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKEXCLUSIVEGROUP_P_H
-#define QQUICKEXCLUSIVEGROUP_P_H
+#ifndef QQUICKBUTTONGROUP_P_H
+#define QQUICKBUTTONGROUP_P_H
 
 //
 //  W A R N I N G
@@ -54,67 +54,64 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickExclusiveGroupPrivate;
-class QQuickExclusiveGroupAttached;
-class QQuickExclusiveGroupAttachedPrivate;
+class QQuickAbstractButton;
+class QQuickButtonGroupPrivate;
+class QQuickButtonGroupAttached;
+class QQuickButtonGroupAttachedPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickExclusiveGroup : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickButtonGroup : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QObject *current READ current WRITE setCurrent NOTIFY currentChanged)
-    Q_PROPERTY(QQmlListProperty<QObject> checkables READ checkables NOTIFY checkablesChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "checkables")
+    Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged)
+    Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
 
 public:
-    explicit QQuickExclusiveGroup(QObject *parent = Q_NULLPTR);
+    explicit QQuickButtonGroup(QObject *parent = Q_NULLPTR);
+    ~QQuickButtonGroup();
 
-    static QQuickExclusiveGroupAttached *qmlAttachedProperties(QObject *object);
+    static QQuickButtonGroupAttached *qmlAttachedProperties(QObject *object);
 
-    QObject *current() const;
-    void setCurrent(QObject *current);
+    QQuickAbstractButton *checkedButton() const;
+    void setCheckedButton(QQuickAbstractButton *checkedButton);
 
-    QQmlListProperty<QObject> checkables();
-
-    Q_INVOKABLE bool isCheckable(QObject *object) const;
+    QQmlListProperty<QQuickAbstractButton> buttons();
 
 public Q_SLOTS:
-    void addCheckable(QObject *object);
-    void removeCheckable(QObject *object);
+    void addButton(QQuickAbstractButton *button);
+    void removeButton(QQuickAbstractButton *button);
 
 Q_SIGNALS:
-    void currentChanged();
-    void checkablesChanged();
+    void checkedButtonChanged();
+    void buttonsChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickExclusiveGroup)
-    Q_DECLARE_PRIVATE(QQuickExclusiveGroup)
-
-    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
+    Q_DISABLE_COPY(QQuickButtonGroup)
+    Q_DECLARE_PRIVATE(QQuickButtonGroup)
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickExclusiveGroupAttached : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickButtonGroupAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickExclusiveGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
+    Q_PROPERTY(QQuickButtonGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
 
 public:
-    explicit QQuickExclusiveGroupAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickButtonGroupAttached(QObject *parent = Q_NULLPTR);
 
-    QQuickExclusiveGroup *group() const;
-    void setGroup(QQuickExclusiveGroup *group);
+    QQuickButtonGroup *group() const;
+    void setGroup(QQuickButtonGroup *group);
 
 Q_SIGNALS:
     void groupChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickExclusiveGroupAttached)
-    Q_DECLARE_PRIVATE(QQuickExclusiveGroupAttached)
+    Q_DISABLE_COPY(QQuickButtonGroupAttached)
+    Q_DECLARE_PRIVATE(QQuickButtonGroupAttached)
 };
 
-Q_DECLARE_TYPEINFO(QQuickExclusiveGroup, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickButtonGroup, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QQuickExclusiveGroup, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(QQuickButtonGroup, QML_HAS_ATTACHED_PROPERTIES)
 
-#endif // QQUICKEXCLUSIVEGROUP_H
+#endif // QQuickButtonGroup_H

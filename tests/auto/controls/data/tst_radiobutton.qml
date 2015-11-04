@@ -235,9 +235,13 @@ TestCase {
 
             // explicitly grouped buttons are only exclusive with each other, not with
             // auto-exclusive buttons, and the autoExclusive property is ignored
-            ExclusiveGroup { id: eg }
-            RadioButton { ExclusiveGroup.group: eg }
-            RadioButton { ExclusiveGroup.group: eg; autoExclusive: false }
+            ButtonGroup { id: eg }
+            RadioButton { ButtonGroup.group: eg }
+            RadioButton { ButtonGroup.group: eg; autoExclusive: false }
+
+            ButtonGroup { id: eg2 }
+            RadioButton { id: rb1; Component.onCompleted: eg2.addButton(rb1) }
+            RadioButton { id: rb2; Component.onCompleted: eg2.addButton(rb2) }
 
             // non-exclusive buttons don't affect the others
             RadioButton { autoExclusive: false }
@@ -247,48 +251,59 @@ TestCase {
 
     function test_autoExclusive() {
         var container = radioButtonGroup.createObject(testCase)
-        compare(container.children.length, 6)
+        compare(container.children.length, 8)
 
-        var checkStates = [false, false, false, false, false, false]
-        for (var i = 0; i < 6; ++i)
+        var checkStates = [false, false, false, false, false, false, false, false]
+        for (var i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[0].checked = true
         checkStates[0] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[1].checked = true
         checkStates[0] = false
         checkStates[1] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[2].checked = true
         checkStates[2] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[3].checked = true
         checkStates[2] = false
         checkStates[3] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[4].checked = true
         checkStates[4] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[5].checked = true
+        checkStates[4] = false
         checkStates[5] = true
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[6].checked = true
+        checkStates[6] = true
+        for (i = 0; i < 8; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[7].checked = true
+        checkStates[7] = true
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[0].checked = true
         checkStates[0] = true
         checkStates[1] = false
-        for (i = 0; i < 6; ++i)
+        for (i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.destroy()

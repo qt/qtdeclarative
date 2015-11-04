@@ -36,7 +36,7 @@
 
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
-#include "qquickexclusivegroup_p.h"
+#include "qquickbuttongroup_p.h"
 
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -111,7 +111,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
     pressed(false), checked(false), checkable(false), autoExclusive(false), autoRepeat(false),
-    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR)
+    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR), group(Q_NULLPTR)
 {
 }
 
@@ -142,21 +142,11 @@ void QQuickAbstractButtonPrivate::stopPressRepeat()
     }
 }
 
-QQuickExclusiveGroup *QQuickAbstractButtonPrivate::exclusiveGroup() const
-{
-    Q_Q(const QQuickAbstractButton);
-    QQuickExclusiveGroupAttached *attached = qobject_cast<QQuickExclusiveGroupAttached *>(qmlAttachedPropertiesObject<QQuickExclusiveGroup>(q, false));
-    if (attached)
-        return attached->group();
-    return Q_NULLPTR;
-}
-
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
 {
     Q_Q(const QQuickAbstractButton);
-    QQuickExclusiveGroup *group = exclusiveGroup();
     if (group)
-        return qobject_cast<QQuickAbstractButton *>(group->current());
+        return qobject_cast<QQuickAbstractButton *>(group->checkedButton());
 
     QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
     // TODO: A singular QRadioButton can be unchecked, which seems logical,
@@ -178,19 +168,18 @@ QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
 QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons() const
 {
     QList<QQuickAbstractButton *> buttons;
-    QQuickExclusiveGroup *group = exclusiveGroup();
     if (group) {
-        QQmlListProperty<QObject> checkables = group->checkables();
-        int count = checkables.count(&checkables);
+        QQmlListProperty<QQuickAbstractButton> groupButtons = group->buttons();
+        int count = groupButtons.count(&groupButtons);
         for (int i = 0; i < count; ++i) {
-            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(checkables.at(&checkables, i));
+            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(groupButtons.at(&groupButtons, i));
             if (button)
                 buttons += button;
         }
     } else if (parentItem) {
         foreach (QQuickItem *child, parentItem->childItems()) {
             QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(child);
-            if (button && button->autoExclusive() && !button->d_func()->exclusiveGroup())
+            if (button && button->autoExclusive() && !QQuickAbstractButtonPrivate::get(button)->group)
                 buttons += button;
         }
     }
@@ -209,6 +198,13 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
 {
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+}
+
+QQuickAbstractButton::~QQuickAbstractButton()
+{
+    Q_D(QQuickAbstractButton);
+    if (d->group)
+        d->group->removeButton(this);
 }
 
 /*!
@@ -307,11 +303,11 @@ void QQuickAbstractButton::setCheckable(bool checkable)
     This property holds whether auto-exclusivity is enabled.
 
     If auto-exclusivity is enabled, checkable buttons that belong to the same
-    parent item behave as if they were part of the same ExclusiveGroup. Only
+    parent item behave as if they were part of the same ButtonGroup. Only
     one button can be checked at any time; checking another button automatically
     unchecks the previously checked one.
 
-    \note The property has no effect on buttons that belong to an ExclusiveGroup.
+    \note The property has no effect on buttons that belong to an ButtonGroup.
 
     RadioButton and TabButton are auto-exclusive by default.
 */
