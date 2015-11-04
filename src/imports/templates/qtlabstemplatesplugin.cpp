@@ -36,6 +36,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
+#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
 #include <QtLabsTemplates/private/qquickbusyindicator_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
@@ -79,6 +80,7 @@ public:
 
 void QtLabsTemplatesPlugin::registerTypes(const char *uri)
 {
+    qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
