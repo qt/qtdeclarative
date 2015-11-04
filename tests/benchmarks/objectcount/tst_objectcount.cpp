@@ -60,8 +60,14 @@ private slots:
     void init();
     void cleanup();
 
-    void testCount();
-    void testCount_data();
+    void calendar();
+    void calendar_data();
+
+    void legacy();
+    void legacy_data();
+
+    void controls();
+    void controls_data();
 
 private:
     QQmlEngine engine;
@@ -84,178 +90,130 @@ void tst_ObjectCount::cleanup()
     qtHookData[QHooks::RemoveQObject] = 0;
 }
 
-static void printItems(const QString &prefix, const QList<QQuickItem *> &items)
+static void printItems(const QList<QQuickItem *> &items)
 {
-    qInfo() << prefix << "QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
+    qInfo() << "QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
     if (qt_verbose) {
         foreach (QObject *object, *qt_qobjects)
             qInfo() << "\t" << object;
     }
 }
 
-void tst_ObjectCount::testCount()
+static void addTestRows(const QString &path)
 {
-    QFETCH(QByteArray, v1);
-    QFETCH(QByteArray, v2);
-
-    if (!v1.isEmpty()) {
-        QQmlComponent component(&engine);
-
-        qt_qobjects->clear();
-
-        component.setData(v1, QUrl());
-        QScopedPointer<QObject> object(component.create());
-        QVERIFY2(object.data(), qPrintable(component.errorString()));
-
-        QList<QQuickItem *> items;
-        foreach (QObject *object, *qt_qobjects()) {
-            QQuickItem *item = qobject_cast<QQuickItem *>(object);
-            if (item)
-                items += item;
-        }
-        printItems("V1", items);
-    }
-
-
-    if (!v2.isEmpty()) {
-        QQmlComponent component(&engine);
-
-        qt_qobjects->clear();
-
-        component.setData(v2, QUrl());
-        QScopedPointer<QObject> object(component.create());
-        QVERIFY2(object.data(), qPrintable(component.errorString()));
-
-        QList<QQuickItem *> items;
-        foreach (QObject *object, *qt_qobjects()) {
-            QQuickItem *item = qobject_cast<QQuickItem *>(object);
-            if (item)
-                items += item;
-        }
-        printItems("V2", items);
-    }
+    QFileInfoList entries = QDir(path).entryInfoList(QStringList("*.qml"), QDir::Files);
+    foreach (const QFileInfo &entry, entries)
+        QTest::newRow(qPrintable(entry.baseName())) << QUrl::fromLocalFile(entry.absoluteFilePath());
 }
 
-void tst_ObjectCount::testCount_data()
+static void doBenchmark(QQmlEngine *engine, const QUrl &url)
 {
-    QTest::addColumn<QByteArray>("v1");
-    QTest::addColumn<QByteArray>("v2");
+    QQmlComponent component(engine);
+
+    qt_qobjects->clear();
+
+    component.loadUrl(url);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object.data(), qPrintable(component.errorString()));
+
+    QList<QQuickItem *> items;
+    foreach (QObject *object, *qt_qobjects()) {
+        QQuickItem *item = qobject_cast<QQuickItem *>(object);
+        if (item)
+            items += item;
+    }
+    printItems(items);
+}
+
+void tst_ObjectCount::calendar()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_ObjectCount::calendar_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(QQC2_IMPORT_PATH "/calendar");
+}
+
+void tst_ObjectCount::legacy()
+{
+    QFETCH(QByteArray, data);
+
+    QQmlComponent component(&engine);
+
+    qt_qobjects->clear();
+
+    component.setData(data, QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object.data(), qPrintable(component.errorString()));
+
+    QList<QQuickItem *> items;
+    foreach (QObject *object, *qt_qobjects()) {
+        QQuickItem *item = qobject_cast<QQuickItem *>(object);
+        if (item)
+            items += item;
+    }
+    printItems(items);
+}
+
+void tst_ObjectCount::legacy_data()
+{
+    QTest::addColumn<QByteArray>("data");
 
     QTest::newRow("ApplicationWindow")
-            << QByteArray("import QtQuick.Controls 1.3; ApplicationWindow { }")
-            << QByteArray("import Qt.labs.controls 1.0; ApplicationWindow { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; ApplicationWindow { }");
     QTest::newRow("BusyIndicator")
-            << QByteArray("import QtQuick.Controls 1.3; BusyIndicator { }")
-            << QByteArray("import Qt.labs.controls 1.0; BusyIndicator { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; BusyIndicator { }");
     QTest::newRow("Button")
-            << QByteArray("import QtQuick.Controls 1.3; Button { }")
-            << QByteArray("import Qt.labs.controls 1.0; Button { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; Button { }");
     QTest::newRow("CheckBox")
-            << QByteArray("import QtQuick.Controls 1.3; CheckBox { }")
-            << QByteArray("import Qt.labs.controls 1.0; CheckBox { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; CheckBox { }");
     QTest::newRow("Dial")
-            << QByteArray("import QtQuick.Extras 1.3; Dial { }")
-            << QByteArray("import Qt.labs.controls 1.0; Dial { }");
-
-    QTest::newRow("Drawer")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; Drawer { }");
-
-    QTest::newRow("Frame")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; Frame { }");
-
+            << QByteArray("import QtQuick.Extras 1.3; Dial { }");
     QTest::newRow("GroupBox")
-            << QByteArray("import QtQuick.Controls 1.3; GroupBox { }")
-            << QByteArray("import Qt.labs.controls 1.0; GroupBox { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; GroupBox { }");
     QTest::newRow("Label")
-            << QByteArray("import QtQuick.Controls 1.3; Label { }")
-            << QByteArray("import Qt.labs.controls 1.0; Label { }");
-
-    QTest::newRow("PageIndicator")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; PageIndicator { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; Label { }");
     QTest::newRow("ProgressBar")
-            << QByteArray("import QtQuick.Controls 1.3; ProgressBar { }")
-            << QByteArray("import Qt.labs.controls 1.0; ProgressBar { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; ProgressBar { }");
     QTest::newRow("RadioButton")
-            << QByteArray("import QtQuick.Controls 1.3; RadioButton { }")
-            << QByteArray("import Qt.labs.controls 1.0; RadioButton { }");
-
-    QTest::newRow("RangeSlider")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; RangeSlider { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; RadioButton { }");
     QTest::newRow("ScrollView")
-            << QByteArray("import QtQuick.Controls 1.3; ScrollView { }")
-            << QByteArray();
-
-    QTest::newRow("ScrollIndicator")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; ScrollIndicator { }");
-
-    QTest::newRow("ScrollBar")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; ScrollBar { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; ScrollView { }");
     QTest::newRow("Slider")
-            << QByteArray("import QtQuick.Controls 1.3; Slider { }")
-            << QByteArray("import Qt.labs.controls 1.0; Slider { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; Slider { }");
     QTest::newRow("SpinBox")
-            << QByteArray("import QtQuick.Controls 1.3; SpinBox { }")
-            << QByteArray("import Qt.labs.controls 1.0; SpinBox { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; SpinBox { }");
     QTest::newRow("StackView")
-            << QByteArray("import QtQuick.Controls 1.3; StackView { }")
-            << QByteArray("import Qt.labs.controls 1.0; StackView { }");
-
-    QTest::newRow("SwipeView")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; SwipeView { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; StackView { }");
     QTest::newRow("Switch")
-            << QByteArray("import QtQuick.Controls 1.3; Switch { }")
-            << QByteArray("import Qt.labs.controls 1.0; Switch { }");
-
-    QTest::newRow("TabBar")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; TabBar { }");
-
-    QTest::newRow("TabButton")
-            << QByteArray()
-            << QByteArray("import Qt.labs.controls 1.0; TabButton { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; Switch { }");
     QTest::newRow("TabView")
-            << QByteArray("import QtQuick.Controls 1.3; TabView { }")
-            << QByteArray();
-
+            << QByteArray("import QtQuick.Controls 1.3; TabView { }");
     QTest::newRow("TextArea")
-            << QByteArray("import QtQuick.Controls 1.3; TextArea { }")
-            << QByteArray("import Qt.labs.controls 1.0; TextArea { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; TextArea { }");
     QTest::newRow("TextField")
-            << QByteArray("import QtQuick.Controls 1.3; TextField { }")
-            << QByteArray("import Qt.labs.controls 1.0; TextField { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; TextField { }");
     QTest::newRow("ToolBar")
-            << QByteArray("import QtQuick.Controls 1.3; ToolBar { }")
-            << QByteArray("import Qt.labs.controls 1.0; ToolBar { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; ToolBar { }");
     QTest::newRow("ToolButton")
-            << QByteArray("import QtQuick.Controls 1.3; ToolButton { }")
-            << QByteArray("import Qt.labs.controls 1.0; ToolButton { }");
-
+            << QByteArray("import QtQuick.Controls 1.3; ToolButton { }");
     QTest::newRow("Tumbler")
-            << QByteArray("import QtQuick.Extras 1.3; Tumbler { }")
-            << QByteArray("import Qt.labs.controls 1.0; Tumbler { }");
+            << QByteArray("import QtQuick.Extras 1.3; Tumbler { }");
+}
+
+void tst_ObjectCount::controls()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_ObjectCount::controls_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(QQC2_IMPORT_PATH "/controls");
 }
 
 QTEST_MAIN(tst_ObjectCount)
