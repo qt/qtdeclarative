@@ -59,19 +59,11 @@ void tst_CreationTime::init()
     engine.clearComponentCache();
 }
 
-static QStringList listControls(const QString &path)
-{
-    QStringList controls;
-    foreach (const QFileInfo &entry, QDir(path).entryInfoList(QStringList("*.qml"), QDir::Files))
-        controls += entry.baseName();
-    return controls;
-}
-
 static void addTestRows(const QString &path)
 {
-    QStringList controls = listControls(path);
-    foreach (const QString &control, controls)
-        QTest::newRow(qPrintable(control)) << control.toUtf8();
+    QFileInfoList entries = QDir(path).entryInfoList(QStringList("*.qml"), QDir::Files);
+    foreach (const QFileInfo &entry, entries)
+        QTest::newRow(qPrintable(entry.baseName())) << QUrl::fromLocalFile(entry.absoluteFilePath());
 }
 
 static void doBenchmark(QQmlComponent *component)
@@ -89,29 +81,29 @@ static void doBenchmark(QQmlComponent *component)
 
 void tst_CreationTime::controls()
 {
-    QFETCH(QByteArray, control);
+    QFETCH(QUrl, url);
     QQmlComponent component(&engine);
-    component.setData("import Qt.labs.controls 1.0;" + control + "{}", QUrl());
+    component.loadUrl(url);
     doBenchmark(&component);
 }
 
 void tst_CreationTime::controls_data()
 {
-    QTest::addColumn<QByteArray>("control");
+    QTest::addColumn<QUrl>("url");
     addTestRows(QQC2_IMPORT_PATH "/controls");
 }
 
 void tst_CreationTime::calendar()
 {
-    QFETCH(QByteArray, control);
+    QFETCH(QUrl, url);
     QQmlComponent component(&engine);
-    component.setData("import Qt.labs.calendar 1.0;" + control + "{}", QUrl());
+    component.loadUrl(url);
     doBenchmark(&component);
 }
 
 void tst_CreationTime::calendar_data()
 {
-    QTest::addColumn<QByteArray>("control");
+    QTest::addColumn<QUrl>("url");
     addTestRows(QQC2_IMPORT_PATH "/calendar");
 }
 
