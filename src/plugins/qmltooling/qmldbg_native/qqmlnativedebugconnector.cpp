@@ -31,7 +31,7 @@
 **
 ****************************************************************************/
 
-#include <private/qqmldebugconnector_p.h>
+#include "qqmlnativedebugconnector.h"
 #include <private/qhooks_p.h>
 #include <private/qpacket_p.h>
 
@@ -43,7 +43,6 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qpointer.h>
-#include <QtCore/qvector.h>
 
 //#define TRACE_PROTOCOL(s) qDebug() << s
 #define TRACE_PROTOCOL(s)
@@ -172,33 +171,6 @@ Q_DECL_EXPORT void qt_qmlDebugConnectorOpen()
 } // extern "C"
 
 QT_BEGIN_NAMESPACE
-
-class QQmlNativeDebugConnector : public QQmlDebugConnector
-{
-    Q_OBJECT
-
-public:
-    QQmlNativeDebugConnector();
-    ~QQmlNativeDebugConnector();
-
-    bool blockingMode() const;
-    QQmlDebugService *service(const QString &name) const;
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
-    bool addService(const QString &name, QQmlDebugService *service);
-    bool removeService(const QString &name);
-    bool open(const QVariantHash &configuration);
-
-private slots:
-    void sendMessage(const QString &name, const QByteArray &message);
-    void sendMessages(const QString &name, const QList<QByteArray> &messages);
-
-private:
-    void announceObjectAvailability(const QString &objectType, QObject *object, bool available);
-
-    QVector<QQmlDebugService *> m_services;
-    bool m_blockingMode;
-};
 
 QQmlNativeDebugConnector::QQmlNativeDebugConnector()
     : m_blockingMode(false)
@@ -364,21 +336,9 @@ void QQmlNativeDebugConnector::sendMessages(const QString &name, const QList<QBy
         sendMessage(name, messages.at(i));
 }
 
-class QQmlNativeDebugConnectorFactory : public QQmlDebugConnectorFactory
+QQmlDebugConnector *QQmlNativeDebugConnectorFactory::create(const QString &key)
 {
-    Q_OBJECT
-
-    Q_PLUGIN_METADATA(IID QQmlDebugConnectorFactory_iid FILE "qqmlnativedebugconnector.json")
-
-public:
-    QQmlNativeDebugConnectorFactory() {}
-
-    QQmlDebugConnector *create(const QString &key)
-    {
-        return key == QLatin1String("QQmlNativeDebugConnector") ? new QQmlNativeDebugConnector : 0;
-    }
-};
+    return key == QLatin1String("QQmlNativeDebugConnector") ? new QQmlNativeDebugConnector : 0;
+}
 
 QT_END_NAMESPACE
-
-#include "qqmlnativedebugconnector.moc"
