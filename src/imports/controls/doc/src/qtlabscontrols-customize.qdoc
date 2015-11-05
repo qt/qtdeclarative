@@ -113,6 +113,21 @@
             \snippet Dial.qml handle
 
 
+    \section1 Customizing Drawer
+
+        Drawer can have a visual \l {Control::background}{background}
+        item. The navigation is implemented by the \l {Control::contentItem}
+        {content item}.
+
+        \section3 Background
+
+            \snippet Drawer.qml background
+
+        \section3 Content item
+
+            Drawer has no content item by default.
+
+
     \section1 Customizing Frame
 
         Frame consists of two visual items: \l {Control::background}{background}
