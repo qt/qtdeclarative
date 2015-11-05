@@ -101,6 +101,8 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
         return;
     contentData.append(item);
 
+    updatingCurrent = true;
+
     item->setParentItem(effectiveContentItem(contentItem));
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
@@ -111,19 +113,25 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
         Q_Q(QQuickContainer);
         q->setCurrentIndex(index);
     }
+
+    updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::moveItem(int from, int to)
 {
     Q_Q(QQuickContainer);
+    int oldCurrent = currentIndex;
     contentModel->move(from, to);
+
     updatingCurrent = true;
-    if (from == currentIndex)
+
+    if (from == oldCurrent)
         q->setCurrentIndex(to);
-    else if (from < currentIndex && to >= currentIndex)
-        q->setCurrentIndex(currentIndex - 1);
-    else if (from > currentIndex && to <= currentIndex)
-        q->setCurrentIndex(currentIndex + 1);
+    else if (from < oldCurrent && to >= oldCurrent)
+        q->setCurrentIndex(oldCurrent - 1);
+    else if (from > oldCurrent && to <= oldCurrent)
+        q->setCurrentIndex(oldCurrent + 1);
+
     updatingCurrent = false;
 }
 
@@ -133,6 +141,8 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
     if (!q->isContent(item))
         return;
     contentData.removeOne(item);
+
+    updatingCurrent = true;
 
     bool currentChanged = false;
     if (index == currentIndex) {
@@ -150,6 +160,8 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
     if (currentChanged)
         emit q->currentIndexChanged();
+
+    updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::_q_currentIndexChanged()
