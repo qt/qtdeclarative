@@ -5,6 +5,7 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    pressandhold \
     sanity \
     snippets \
     theme
