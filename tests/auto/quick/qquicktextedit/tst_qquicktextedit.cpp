@@ -2368,8 +2368,8 @@ void tst_qquicktextedit::positionAt()
     secondLine.setLineWidth(texteditObject->width());
     layout.endLayout();
 
-    qreal y0;
-    qreal y1;
+    qreal y0 = 0;
+    qreal y1 = 0;
 
     switch (verticalAlignment) {
     case QQuickTextEdit::AlignTop:
