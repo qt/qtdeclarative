@@ -43,10 +43,10 @@ T.TextArea {
 
     implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
                             background ? background.implicitWidth : 0,
-                            placeholder ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+                            placeholder.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
                              background ? background.implicitHeight : 0,
-                             placeholder ? placeholder.implicitHeight + topPadding + bottomPadding : 0)
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
 
@@ -54,19 +54,19 @@ T.TextArea {
     selectionColor: Theme.selectionColor
     selectedTextColor: Theme.selectedTextColor
 
-    //! [placeholder]
-    placeholder: Text {
+    Text {
+        id: placeholder
         x: control.leftPadding
         y: control.topPadding
         width: control.width - (control.leftPadding + control.rightPadding)
         height: control.height - (control.topPadding + control.bottomPadding)
 
+        text: control.placeholderText
         font: control.font
         color: control.Theme.disabledColor
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        visible: !control.length
+        visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
-    //! [placeholder]
 }

@@ -37,6 +37,8 @@
 #include "qquickpageindicator_p.h"
 #include "qquickcontrol_p_p.h"
 
+#include <QtCore/qmath.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -68,7 +70,6 @@ public:
     QQuickPageIndicatorPrivate() : count(0), currentIndex(0),
         interactive(false), delegate(Q_NULLPTR), pressedItem(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000027; //QAccessible::Indicator
     }
 
     QQuickItem *itemAt(const QPoint &pos) const;
@@ -82,17 +83,38 @@ public:
     bool interactive;
     QQmlComponent *delegate;
     QQuickItem *pressedItem;
-    QColor color;
 };
 
 QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
 {
     Q_Q(const QQuickPageIndicator);
-    if (contentItem) {
-        QPointF mapped = q->mapToItem(contentItem, pos);
-        return contentItem->childAt(mapped.x(), mapped.y());
+    if (!contentItem || !q->contains(pos))
+        return Q_NULLPTR;
+
+    QPointF contentPos = q->mapToItem(contentItem, pos);
+    QQuickItem *item = contentItem->childAt(contentPos.x(), contentPos.y());
+    while (item && item->parentItem() != contentItem)
+        item = item->parentItem();
+    if (item && !QQuickItemPrivate::get(item)->isTransparentForPositioner())
+        return item;
+
+    // find the nearest
+    qreal distance = qInf();
+    QQuickItem *nearest = Q_NULLPTR;
+    foreach (QQuickItem *child, contentItem->childItems()) {
+        if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
+            continue;
+
+        QPointF center = child->boundingRect().center();
+        QPointF pt = contentItem->mapToItem(child, contentPos);
+
+        qreal len = QLineF(center, pt).length();
+        if (len < distance) {
+            distance = len;
+            nearest = child;
+        }
     }
-    return Q_NULLPTR;
+    return nearest;
 }
 
 void QQuickPageIndicatorPrivate::updatePressed(bool pressed, const QPoint &pos)
@@ -201,8 +223,6 @@ void QQuickPageIndicator::setInteractive(bool interactive)
         \row \li \b index : int \li The index of the item
         \row \li \b pressed : bool \li Whether the item is pressed
     \endtable
-
-    \sa color
 */
 QQmlComponent *QQuickPageIndicator::delegate() const
 {
@@ -216,28 +236,6 @@ void QQuickPageIndicator::setDelegate(QQmlComponent *delegate)
     if (d->delegate != delegate) {
         d->delegate = delegate;
         emit delegateChanged();
-    }
-}
-
-/*!
-    \qmlproperty color Qt.labs.controls::PageIndicator::color
-
-    This property holds the color of the indicator.
-
-    \sa delegate
-*/
-QColor QQuickPageIndicator::color() const
-{
-    Q_D(const QQuickPageIndicator);
-    return d->color;
-}
-
-void QQuickPageIndicator::setColor(const QColor &color)
-{
-    Q_D(QQuickPageIndicator);
-    if (d->color != color) {
-        d->color = color;
-        emit colorChanged();
     }
 }
 
@@ -286,5 +284,12 @@ void QQuickPageIndicator::mouseUngrabEvent()
     if (d->interactive)
         d->updatePressed(false);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickPageIndicator::accessibleRole() const
+{
+    return QAccessible::Indicator;
+}
+#endif
 
 QT_END_NAMESPACE

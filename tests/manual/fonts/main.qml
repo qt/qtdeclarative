@@ -80,8 +80,8 @@ ApplicationWindow {
                     text: "TabButton"
                     font.pointSize: control.font.pointSize
                 }
-                TextField { placeholder.text: "TextField" }
-                TextArea { placeholder.text: "TextArea" }
+                TextField { placeholderText: "TextField" }
+                TextArea { placeholderText: "TextArea" }
                 ToolButton { text: "ToolButton" }
                 Tumbler { model: 3 }
             }

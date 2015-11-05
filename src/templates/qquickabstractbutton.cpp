@@ -36,10 +36,17 @@
 
 #include "qquickabstractbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
+#include "qquickexclusivegroup_p.h"
 
+#include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
+
+// copied from qabstractbutton.cpp
+static const int AUTO_REPEAT_DELAY = 300;
+static const int AUTO_REPEAT_INTERVAL = 100;
 
 /*!
     \qmltype AbstractButton
@@ -47,7 +54,15 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickAbstractButton
     \inqmlmodule Qt.labs.controls
     \qmlabstract
-    \internal
+    \ingroup qtlabscontrols-buttons
+    \brief The base of all button controls.
+
+    AbstractButton provides the interface for controls with button-like
+    behavior; for example, push buttons and checkable controls like
+    radio buttons and check boxes. As an abstract control, it has no delegate
+    implementations, leaving them to the types that derive from it.
+
+    TODO: ButtonGroup usage
 */
 
 /*!
@@ -95,10 +110,91 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), exclusive(false),
-    label(Q_NULLPTR), indicator(Q_NULLPTR)
+    pressed(false), checked(false), checkable(false), autoExclusive(false), autoRepeat(false),
+    delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR)
 {
-    m_accessibleRole = 0x0000002B; // QAccessible::Button
+}
+
+void QQuickAbstractButtonPrivate::startRepeatDelay()
+{
+    Q_Q(QQuickAbstractButton);
+    stopPressRepeat();
+    delayTimer = q->startTimer(AUTO_REPEAT_DELAY);
+}
+
+void QQuickAbstractButtonPrivate::startPressRepeat()
+{
+    Q_Q(QQuickAbstractButton);
+    stopPressRepeat();
+    repeatTimer = q->startTimer(AUTO_REPEAT_INTERVAL);
+}
+
+void QQuickAbstractButtonPrivate::stopPressRepeat()
+{
+    Q_Q(QQuickAbstractButton);
+    if (delayTimer > 0) {
+        q->killTimer(delayTimer);
+        delayTimer = 0;
+    }
+    if (repeatTimer > 0) {
+        q->killTimer(repeatTimer);
+        repeatTimer = 0;
+    }
+}
+
+QQuickExclusiveGroup *QQuickAbstractButtonPrivate::exclusiveGroup() const
+{
+    Q_Q(const QQuickAbstractButton);
+    QQuickExclusiveGroupAttached *attached = qobject_cast<QQuickExclusiveGroupAttached *>(qmlAttachedPropertiesObject<QQuickExclusiveGroup>(q, false));
+    if (attached)
+        return attached->group();
+    return Q_NULLPTR;
+}
+
+QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
+{
+    Q_Q(const QQuickAbstractButton);
+    QQuickExclusiveGroup *group = exclusiveGroup();
+    if (group)
+        return qobject_cast<QQuickAbstractButton *>(group->current());
+
+    QList<QQuickAbstractButton *> buttons = findExclusiveButtons();
+    // TODO: A singular QRadioButton can be unchecked, which seems logical,
+    // because there's nothing to be exclusive with. However, a RadioButton
+    // from QtQuick.Controls 1.x can never be unchecked, which is the behavior
+    // that QQuickRadioButton adopted. Uncommenting the following count check
+    // gives the QRadioButton behavior. Notice that tst_radiobutton.qml needs
+    // to be updated.
+    if (!autoExclusive /*|| buttons.count() == 1*/)
+        return Q_NULLPTR;
+
+    foreach (QQuickAbstractButton *button, buttons) {
+        if (button->isChecked() && button != q)
+            return button;
+    }
+    return checked ? const_cast<QQuickAbstractButton *>(q) : Q_NULLPTR;
+}
+
+QList<QQuickAbstractButton *> QQuickAbstractButtonPrivate::findExclusiveButtons() const
+{
+    QList<QQuickAbstractButton *> buttons;
+    QQuickExclusiveGroup *group = exclusiveGroup();
+    if (group) {
+        QQmlListProperty<QObject> checkables = group->checkables();
+        int count = checkables.count(&checkables);
+        for (int i = 0; i < count; ++i) {
+            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(checkables.at(&checkables, i));
+            if (button)
+                buttons += button;
+        }
+    } else if (parentItem) {
+        foreach (QQuickItem *child, parentItem->childItems()) {
+            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(child);
+            if (button && button->autoExclusive() && !button->d_func()->exclusiveGroup())
+                buttons += button;
+        }
+    }
+    return buttons;
 }
 
 QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent) :
@@ -205,16 +301,57 @@ void QQuickAbstractButton::setCheckable(bool checkable)
     }
 }
 
-bool QQuickAbstractButton::isExclusive() const
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::autoExclusive
+
+    This property holds whether auto-exclusivity is enabled.
+
+    If auto-exclusivity is enabled, checkable buttons that belong to the same
+    parent item behave as if they were part of the same ExclusiveGroup. Only
+    one button can be checked at any time; checking another button automatically
+    unchecks the previously checked one.
+
+    \note The property has no effect on buttons that belong to an ExclusiveGroup.
+
+    RadioButton and TabButton are auto-exclusive by default.
+*/
+bool QQuickAbstractButton::autoExclusive() const
 {
     Q_D(const QQuickAbstractButton);
-    return d->exclusive;
+    return d->autoExclusive;
 }
 
-void QQuickAbstractButton::setExclusive(bool exclusive)
+void QQuickAbstractButton::setAutoExclusive(bool exclusive)
 {
     Q_D(QQuickAbstractButton);
-    d->exclusive = exclusive;
+    if (d->autoExclusive != exclusive) {
+        d->autoExclusive = exclusive;
+        emit autoExclusiveChanged();
+    }
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::autoRepeat
+
+    This property holds whether the button repeats pressed(), released()
+    and clicked() signals while the button is pressed and held down.
+
+    The default value is \c false.
+*/
+bool QQuickAbstractButton::autoRepeat() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->autoRepeat;
+}
+
+void QQuickAbstractButton::setAutoRepeat(bool repeat)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->autoRepeat != repeat) {
+        d->stopPressRepeat();
+        d->autoRepeat = repeat;
+        emit autoRepeatChanged();
+    }
 }
 
 /*!
@@ -291,11 +428,18 @@ void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
 
 void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(true);
+        d->pressPoint = QPoint(qRound(width() / 2), qRound(height() / 2));
 
-        QQuickMouseEvent me(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        if (d->autoRepeat) {
+            d->startRepeatDelay();
+            d->repeatButton = Qt::NoButton;
+        }
+
+        QQuickMouseEvent me(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
         emit pressed(&me);
         event->setAccepted(me.isAccepted());
     }
@@ -303,33 +447,48 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 
 void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::keyReleaseEvent(event);
     if (event->key() == Qt::Key_Space) {
         setPressed(false);
 
-        QQuickMouseEvent mre(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers());
+        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers());
         emit released(&mre);
-        QQuickMouseEvent mce(width() / 2, height() / 2, Qt::NoButton, Qt::NoButton, event->modifiers(), true /* isClick */);
+        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), Qt::NoButton, QGuiApplication::mouseButtons(), event->modifiers(), true /* isClick */);
         emit clicked(&mce);
         nextCheckState();
         event->setAccepted(mre.isAccepted() || mce.isAccepted());
+
+        if (d->autoRepeat)
+            d->stopPressRepeat();
     }
 }
 
 void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::mousePressEvent(event);
     setPressed(true);
+    d->pressPoint = event->pos();
 
     QQuickMouseEvent me(event->x(), event->y(), event->button(), event->buttons(), event->modifiers());
     emit pressed(&me);
     event->setAccepted(me.isAccepted());
+
+    if (d->autoRepeat) {
+        d->startRepeatDelay();
+        d->repeatButton = event->button();
+    }
 }
 
 void QQuickAbstractButton::mouseMoveEvent(QMouseEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::mouseMoveEvent(event);
     setPressed(contains(event->pos()));
+
+    if (d->autoRepeat)
+        d->stopPressRepeat();
 }
 
 void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
@@ -348,8 +507,12 @@ void QQuickAbstractButton::mouseReleaseEvent(QMouseEvent *event)
     } else {
         emit canceled();
     }
+
     if (contains(event->pos()))
         nextCheckState();
+
+    if (d->autoRepeat)
+        d->stopPressRepeat();
 }
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
@@ -367,19 +530,42 @@ void QQuickAbstractButton::mouseUngrabEvent()
     QQuickControl::mouseUngrabEvent();
     if (d->pressed) {
         setPressed(false);
+        d->stopPressRepeat();
         emit canceled();
+    }
+}
+
+void QQuickAbstractButton::timerEvent(QTimerEvent *event)
+{
+    Q_D(QQuickAbstractButton);
+    QQuickControl::timerEvent(event);
+    if (event->timerId() == d->delayTimer) {
+        d->startPressRepeat();
+    } else if (event->timerId() == d->repeatTimer) {
+        QQuickMouseEvent mre(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
+        emit released(&mre);
+        QQuickMouseEvent mce(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers(), true /* isClick */);
+        emit clicked(&mce);
+        QQuickMouseEvent mpe(d->pressPoint.x(), d->pressPoint.y(), d->repeatButton, QGuiApplication::mouseButtons(), QGuiApplication::keyboardModifiers());
+        emit pressed(&mpe);
     }
 }
 
 void QQuickAbstractButton::checkStateSet()
 {
+    Q_D(QQuickAbstractButton);
+    if (d->checked) {
+        QQuickAbstractButton *button = d->findCheckedButton();
+        if (button && button != this)
+            button->setChecked(false);
+    }
 }
 
 void QQuickAbstractButton::nextCheckState()
 {
     Q_D(QQuickAbstractButton);
-    if (d->checkable)
-        setChecked(d->exclusive || !d->checked);
+    if (d->checkable && (!d->checked || d->findCheckedButton() != this))
+        setChecked(!d->checked);
 }
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -394,6 +580,11 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
         setAccessibleProperty("checked", d->checked);
         setAccessibleProperty("checkable", d->checkable);
     }
+}
+
+QAccessible::Role QQuickAbstractButton::accessibleRole() const
+{
+    return QAccessible::Button;
 }
 #endif
 

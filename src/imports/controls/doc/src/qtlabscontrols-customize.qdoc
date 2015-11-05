@@ -39,7 +39,7 @@
     \section1 Customizing BusyIndicator
 
         BusyIndicator consists of two visual items: \l {Control::background}{background}
-        and \l {BusyIndicator::indicator}{indicator}.
+        and \l {Control::contentItem}{contentItem}.
 
         \section3 Background
 
@@ -47,11 +47,11 @@
 
             BusyIndicator has no background item by default.
 
-        \section3 Indicator
+        \section3 Content item
 
-            \image qtlabscontrols-busyindicator-indicator.png
+            \image qtlabscontrols-busyindicator-contentItem.png
 
-            \snippet BusyIndicator.qml indicator
+            \snippet BusyIndicator.qml contentItem
 
 
     \section1 Customizing Button
@@ -327,13 +327,13 @@
 
             \image qtlabscontrols-spinbox-down.png
 
-            \snippet Spinbox.qml down.indicator
+            \snippet SpinBox.qml down.indicator
 
         \section3 Up indicator
 
             \image qtlabscontrols-spinbox-up.png
 
-            \snippet Spinbox.qml up.indicator
+            \snippet SpinBox.qml up.indicator
 
 
     \section1 Customizing StackView
@@ -422,20 +422,13 @@
 
     \section1 Customizing TextField
 
-        TextField consists of two visual items: \l {TextField::background}{background}
-        and \l {TextField::placeholder}{placeholder}.
+        TextField offers a customizable \l {TextField::background}{background} item.
 
         \section3 Background
 
             \image qtlabscontrols-textfield-background.png
 
             \snippet TextField.qml background
-
-        \section3 Placeholder
-
-            \image qtlabscontrols-textfield-placeholder.png
-
-            \snippet TextField.qml placeholder
 
 
     \section1 Customizing ToolBar

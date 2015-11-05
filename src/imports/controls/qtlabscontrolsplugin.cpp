@@ -36,6 +36,8 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtCore/qurl.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qcommandlineparser.h>
 
 #include <QtLabsTemplates/private/qquickexclusivegroup_p.h>
 
@@ -66,9 +68,21 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickExclusiveGroup>(uri, 1, 0, "ExclusiveGroup");
     qmlRegisterType<QQuickExclusiveGroupAttached>();
 
+    QCommandLineParser parser;
+    QCommandLineOption styleOption(QStringList() << "s" << "style", tr("the style to use for the application"), tr("style"));
+    parser.addOption(styleOption);
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    parser.parse(QCoreApplication::arguments());
+
     // TODO: read the style from application manifest file
     QQuickFileSelector selector;
     selector.setBaseUrl(baseUrl());
+
+    if (parser.isSet(styleOption)) {
+        QString style = parser.value(styleOption);
+        selector.setStyle(style);
+    }
+
     qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
     qmlRegisterType(selector.select(QStringLiteral("/Button.qml")), uri, 1, 0, "Button");

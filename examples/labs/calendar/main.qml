@@ -193,7 +193,7 @@ ApplicationWindow {
 
                 TextArea {
                     id: descriptionField
-                    placeholder.text: "Description"
+                    placeholderText: "Description"
                     anchors.fill: parent
                 }
             }

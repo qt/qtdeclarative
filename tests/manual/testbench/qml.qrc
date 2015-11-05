@@ -1,9 +1,5 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>styles/+material/Style.qml</file>
-        <file>styles/+universal/Style.qml</file>
-        <file>styles/Style.qml</file>
-        <file>Controls.qml</file>
     </qresource>
 </RCC>

@@ -54,9 +54,17 @@ T.SpinBox {
     leftPadding: 6 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: 6 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
+    //! [validator]
+    validator: IntValidator {
+        locale: control.locale.name
+        bottom: Math.min(control.from, control.to)
+        top: Math.max(control.from, control.to)
+    }
+    //! [validator]
+
     //! [contentItem]
     contentItem: TextInput {
-        text: Number(control.value).toLocaleString(control.locale, 'f', 0)
+        text: control.textFromValue(control.value, control.locale)
 
         font: control.font
         color: control.Theme.textColor
@@ -65,10 +73,7 @@ T.SpinBox {
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 
-        validator: IntValidator {
-            bottom: Math.min(control.from, control.to)
-            top: Math.max(control.from, control.to)
-        }
+        validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
     //! [contentItem]

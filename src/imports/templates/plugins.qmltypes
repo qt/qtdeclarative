@@ -16,6 +16,8 @@ Module {
         Property { name: "pressed"; type: "bool" }
         Property { name: "checked"; type: "bool" }
         Property { name: "checkable"; type: "bool" }
+        Property { name: "autoExclusive"; type: "bool" }
+        Property { name: "autoRepeat"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "label"; type: "QQuickItem"; isPointer: true }
         Signal {
@@ -85,6 +87,7 @@ Module {
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }
         Property { name: "currentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "exclusive"; type: "bool" }
         Method {
             name: "setCurrentIndex"
             Parameter { name: "index"; type: "int" }
@@ -377,7 +380,6 @@ Module {
         Property { name: "currentIndex"; type: "int" }
         Property { name: "interactive"; type: "bool" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
-        Property { name: "color"; type: "QColor" }
     }
     Component {
         name: "QQuickProgressBar"
@@ -523,6 +525,31 @@ Module {
         Method { name: "decrease" }
     }
     Component {
+        name: "QQuickSpinBox"
+        defaultProperty: "data"
+        prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/SpinBox 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "from"; type: "int" }
+        Property { name: "to"; type: "int" }
+        Property { name: "value"; type: "int" }
+        Property { name: "stepSize"; type: "int" }
+        Property { name: "locale"; type: "QLocale" }
+        Property { name: "validator"; type: "QValidator"; isPointer: true }
+        Property { name: "textFromValue"; type: "QJSValue" }
+        Property { name: "valueFromText"; type: "QJSValue" }
+        Property { name: "up"; type: "QQuickSpinButton"; isReadonly: true; isPointer: true }
+        Property { name: "down"; type: "QQuickSpinButton"; isReadonly: true; isPointer: true }
+        Method { name: "increase" }
+        Method { name: "decrease" }
+    }
+    Component {
+        name: "QQuickSpinButton"
+        prototype: "QObject"
+        Property { name: "pressed"; type: "bool" }
+        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
+    }
+    Component {
         name: "QQuickStackAttached"
         prototype: "QObject"
         Property { name: "index"; type: "int"; isReadonly: true }
@@ -567,6 +594,8 @@ Module {
         Property { name: "popExit"; type: "QQuickTransition"; isPointer: true }
         Property { name: "pushEnter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "pushExit"; type: "QQuickTransition"; isPointer: true }
+        Property { name: "replaceEnter"; type: "QQuickTransition"; isPointer: true }
+        Property { name: "replaceExit"; type: "QQuickTransition"; isPointer: true }
         Method { name: "clear" }
         Method {
             name: "get"
@@ -828,7 +857,7 @@ Module {
         Property { name: "implicitWidth"; type: "double" }
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
-        Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
+        Property { name: "placeholderText"; type: "string" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1105,7 +1134,7 @@ Module {
         Property { name: "implicitWidth"; type: "double" }
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
-        Property { name: "placeholder"; type: "QQuickText"; isPointer: true }
+        Property { name: "placeholderText"; type: "string" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }

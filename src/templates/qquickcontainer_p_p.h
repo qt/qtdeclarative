@@ -54,8 +54,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickExclusiveGroup;
-
 class Q_LABSTEMPLATES_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickContainer)
@@ -71,7 +69,6 @@ public:
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
 
-    void _q_currentItemChanged();
     void _q_currentIndexChanged();
 
     void itemChildAdded(QQuickItem *item, QQuickItem *child) Q_DECL_OVERRIDE;
@@ -93,7 +90,6 @@ public:
     QQmlObjectModel *contentModel;
     int currentIndex;
     bool updatingCurrent;
-    QQuickExclusiveGroup *exclusiveGroup;
 };
 
 Q_DECLARE_TYPEINFO(QQuickContainerPrivate, Q_COMPLEX_TYPE);

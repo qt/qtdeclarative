@@ -58,12 +58,12 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-input
     \brief A multi line text input control.
 
-    TextArea is a multi-line text editor. TextArea extends TextEdit
-    with a \l placeholder text functionality, and adds decoration.
+    TextArea is a multi-line text editor. TextArea extends TextEdit with
+    a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
     \code
     TextArea {
-        placeholder.text: qsTr("Enter description")
+        placeholderText: qsTr("Enter description")
     }
     \endcode
 
@@ -71,9 +71,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : background(Q_NULLPTR), placeholder(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
-    , m_accessibleRole(0x0000002A) // Accessible.EditableText
-
+    : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -173,16 +171,6 @@ void QQuickTextAreaPrivate::_q_readOnlyChanged(bool isReadOnly)
 #endif
 }
 
-void QQuickTextAreaPrivate::_q_placeholderTextChanged(const QString &text)
-{
-#ifndef QT_NO_ACCESSIBILITY
-    if (accessibleAttached)
-        accessibleAttached->setDescription(text);
-#else
-    Q_UNUSED(text)
-#endif
-}
-
 #ifndef QT_NO_ACCESSIBILITY
 void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 {
@@ -192,10 +180,9 @@ void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextArea);
     accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     if (accessibleAttached) {
-        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setRole(accessibleRole());
         accessibleAttached->set_readOnly(q->isReadOnly());
-        if (placeholder)
-            accessibleAttached->setDescription(placeholder->text());
+        accessibleAttached->setDescription(placeholder);
     } else {
         qWarning() << "QQuickTextArea: " << q << " QQuickAccessibleAttached object creation failed!";
     }
@@ -203,7 +190,7 @@ void QQuickTextAreaPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickTextAreaPrivate::accessibleRole() const
 {
-    return QAccessible::Role(m_accessibleRole);
+    return QAccessible::EditableText;
 }
 #endif
 
@@ -267,39 +254,26 @@ void QQuickTextArea::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text Qt.labs.controls::TextArea::placeholder
+    \qmlproperty string Qt.labs.controls::TextArea::placeholderText
 
-    This property holds the placeholder text item.
-
-    \sa {Customizing TextArea}
+    This property holds the placeholder text.
 */
-QQuickText *QQuickTextArea::placeholder() const
+QString QQuickTextArea::placeholderText() const
 {
     Q_D(const QQuickTextArea);
     return d->placeholder;
 }
 
-void QQuickTextArea::setPlaceholder(QQuickText *placeholder)
+void QQuickTextArea::setPlaceholderText(const QString &text)
 {
     Q_D(QQuickTextArea);
-    if (d->placeholder != placeholder) {
-        if (d->placeholder) {
-            QObjectPrivate::disconnect(d->placeholder, &QQuickText::textChanged,
-                                       d, &QQuickTextAreaPrivate::_q_placeholderTextChanged);
-            delete d->placeholder;
-        }
-        d->placeholder = placeholder;
-        if (placeholder && !placeholder->parentItem()) {
-            placeholder->setParentItem(this);
-            QObjectPrivate::connect(d->placeholder, &QQuickText::textChanged,
-                                    d, &QQuickTextAreaPrivate::_q_placeholderTextChanged);
-        } else {
+    if (d->placeholder != text) {
+        d->placeholder = text;
 #ifndef QT_NO_ACCESSIBILITY
-            if (d->accessibleAttached)
-                d->accessibleAttached->setDescription(QLatin1Literal(""));
+        if (d->accessibleAttached)
+            d->accessibleAttached->setDescription(text);
 #endif
-        }
-        emit placeholderChanged();
+        emit placeholderTextChanged();
     }
 }
 

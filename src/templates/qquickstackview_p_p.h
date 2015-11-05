@@ -132,6 +132,7 @@ public:
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) Q_DECL_OVERRIDE;
     void setBusy(bool busy);
 
+    bool busy;
     QVariant initialItem;
     QQuickItem *currentItem;
     QList<QQuickStackElement*> removals;

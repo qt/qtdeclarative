@@ -49,11 +49,13 @@
 //
 
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSpinner;
-class QQuickSpinnerPrivate;
+class QValidator;
+class QQuickSpinButton;
+class QQuickSpinButtonPrivate;
 class QQuickSpinBoxPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
@@ -64,8 +66,11 @@ class Q_LABSTEMPLATES_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(int stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(QQuickSpinner *up READ up CONSTANT FINAL)
-    Q_PROPERTY(QQuickSpinner *down READ down CONSTANT FINAL)
+    Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
+    Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
+    Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
+    Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
+    Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = Q_NULLPTR);
@@ -85,8 +90,17 @@ public:
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
-    QQuickSpinner *up() const;
-    QQuickSpinner *down() const;
+    QValidator *validator() const;
+    void setValidator(QValidator *validator);
+
+    QJSValue textFromValue() const;
+    void setTextFromValue(const QJSValue &callback);
+
+    QJSValue valueFromText() const;
+    void setValueFromText(const QJSValue &callback);
+
+    QQuickSpinButton *up() const;
+    QQuickSpinButton *down() const;
 
 public Q_SLOTS:
     void increase();
@@ -98,6 +112,9 @@ Q_SIGNALS:
     void valueChanged();
     void stepSizeChanged();
     void localeChanged();
+    void validatorChanged();
+    void textFromValueChanged();
+    void valueFromTextChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) Q_DECL_OVERRIDE;
@@ -105,22 +122,27 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 
+    void componentComplete() Q_DECL_OVERRIDE;
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
 
 private:
     Q_DISABLE_COPY(QQuickSpinBox)
     Q_DECLARE_PRIVATE(QQuickSpinBox)
 };
 
-class Q_LABSTEMPLATES_EXPORT QQuickSpinner : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
 
 public:
-    explicit QQuickSpinner(QQuickSpinBox *parent);
+    explicit QQuickSpinButton(QQuickSpinBox *parent);
 
     bool isPressed() const;
     void setPressed(bool pressed);
@@ -133,12 +155,12 @@ Q_SIGNALS:
     void indicatorChanged();
 
 private:
-    Q_DISABLE_COPY(QQuickSpinner)
-    Q_DECLARE_PRIVATE(QQuickSpinner)
+    Q_DISABLE_COPY(QQuickSpinButton)
+    Q_DECLARE_PRIVATE(QQuickSpinButton)
 };
 
 Q_DECLARE_TYPEINFO(QQuickSpinBox, Q_COMPLEX_TYPE);
-Q_DECLARE_TYPEINFO(QQuickSpinner, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickSpinButton, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
 

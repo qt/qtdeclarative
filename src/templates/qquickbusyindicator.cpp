@@ -66,14 +66,9 @@ QT_BEGIN_NAMESPACE
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickBusyIndicatorPrivate()
-        : running(true), indicator(Q_NULLPTR)
-    {
-        m_accessibleRole = 0x00000027; //QAccessible::Indicator
-    }
+    QQuickBusyIndicatorPrivate() : running(true) { }
 
     bool running;
-    QQuickItem *indicator;
 };
 
 QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent) :
@@ -107,27 +102,11 @@ void QQuickBusyIndicator::setRunning(bool running)
     }
 }
 
-/*!
-    \qmlproperty Item Qt.labs.controls::BusyIndicator::indicator
-
-    This property holds the \l[QML]{Item}, which graphically implements the busy indicator.
-*/
-QQuickItem *QQuickBusyIndicator::indicator() const
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickBusyIndicator::accessibleRole() const
 {
-    Q_D(const QQuickBusyIndicator);
-    return d->indicator;
+    return QAccessible::Indicator;
 }
-
-void QQuickBusyIndicator::setIndicator(QQuickItem *indicator)
-{
-    Q_D(QQuickBusyIndicator);
-    if (d->indicator != indicator) {
-        delete d->indicator;
-        d->indicator = indicator;
-        if (indicator && !indicator->parentItem())
-            indicator->setParentItem(this);
-        emit indicatorChanged();
-    }
-}
+#endif
 
 QT_END_NAMESPACE

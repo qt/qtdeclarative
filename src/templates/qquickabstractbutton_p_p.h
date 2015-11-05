@@ -52,6 +52,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAbstractButton;
+class QQuickExclusiveGroup;
+
 class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickAbstractButton)
@@ -59,11 +62,24 @@ class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 public:
     QQuickAbstractButtonPrivate();
 
+    void startRepeatDelay();
+    void startPressRepeat();
+    void stopPressRepeat();
+
+    QQuickExclusiveGroup *exclusiveGroup() const;
+    QQuickAbstractButton *findCheckedButton() const;
+    QList<QQuickAbstractButton *> findExclusiveButtons() const;
+
     QString text;
     bool pressed;
     bool checked;
     bool checkable;
-    bool exclusive;
+    bool autoExclusive;
+    bool autoRepeat;
+    int delayTimer;
+    int repeatTimer;
+    QPointF pressPoint;
+    Qt::MouseButton repeatButton;
     QQuickItem *label;
     QQuickItem *indicator;
 };

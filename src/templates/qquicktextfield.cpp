@@ -59,8 +59,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtlabscontrols-input
     \brief A single line text input control.
 
-    TextField is a single line text editor. TextField extends TextInput
-    with a \l placeholder text functionality, and adds decoration.
+    TextField is a single line text editor. TextField extends TextInput with
+    a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
     \table
     \row \li \image qtlabscontrols-textfield-normal.png
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 
     \code
     TextField {
-        placeholder.text: qsTr("Enter name")
+        placeholderText: qsTr("Enter name")
     }
     \endcode
 
@@ -90,9 +90,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
     : background(Q_NULLPTR)
-    , placeholder(Q_NULLPTR)
     , accessibleAttached(Q_NULLPTR)
-    , m_accessibleRole(0x0000002A) // Accessible.EditableText
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -194,16 +192,6 @@ void QQuickTextFieldPrivate::_q_readOnlyChanged(bool isReadOnly)
 #endif
 }
 
-void QQuickTextFieldPrivate::_q_placeholderTextChanged(const QString &text)
-{
-#ifndef QT_NO_ACCESSIBILITY
-    if (accessibleAttached)
-        accessibleAttached->setDescription(text);
-#else
-    Q_UNUSED(text)
-#endif
-}
-
 void QQuickTextFieldPrivate::_q_echoModeChanged(QQuickTextField::EchoMode echoMode)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -223,11 +211,10 @@ void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
     Q_Q(QQuickTextField);
     accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     if (accessibleAttached) {
-        accessibleAttached->setRole((QAccessible::Role)m_accessibleRole);
+        accessibleAttached->setRole(accessibleRole());
         accessibleAttached->set_readOnly(m_readOnly);
         accessibleAttached->set_passwordEdit((m_echoMode == QQuickTextField::Password || m_echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
-        if (placeholder)
-            accessibleAttached->setDescription(placeholder->text());
+        accessibleAttached->setDescription(placeholder);
     } else {
         qWarning() << "QQuickTextField: " << q << " QQuickAccessibleAttached object creation failed!";
     }
@@ -235,7 +222,7 @@ void QQuickTextFieldPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 {
-    return QAccessible::Role(m_accessibleRole);
+    return QAccessible::EditableText;
 }
 #endif
 
@@ -299,39 +286,26 @@ void QQuickTextField::setBackground(QQuickItem *background)
 }
 
 /*!
-    \qmlproperty Text Qt.labs.controls::TextField::placeholder
+    \qmlproperty string Qt.labs.controls::TextField::placeholderText
 
-    This property holds the placeholder text item.
-
-    \sa {Customizing TextField}
+    This property holds the placeholder text.
 */
-QQuickText *QQuickTextField::placeholder() const
+QString QQuickTextField::placeholderText() const
 {
     Q_D(const QQuickTextField);
     return d->placeholder;
 }
 
-void QQuickTextField::setPlaceholder(QQuickText *placeholder)
+void QQuickTextField::setPlaceholderText(const QString &text)
 {
     Q_D(QQuickTextField);
-    if (d->placeholder != placeholder) {
-        if (d->placeholder) {
-            QObjectPrivate::disconnect(d->placeholder, &QQuickText::textChanged,
-                                       d, &QQuickTextFieldPrivate::_q_placeholderTextChanged);
-            delete d->placeholder;
-        }
-        d->placeholder = placeholder;
-        if (placeholder && !placeholder->parentItem()) {
-            placeholder->setParentItem(this);
-            QObjectPrivate::connect(d->placeholder, &QQuickText::textChanged,
-                                    d, &QQuickTextFieldPrivate::_q_placeholderTextChanged);
-        } else {
+    if (d->placeholder != text) {
+        d->placeholder = text;
 #ifndef QT_NO_ACCESSIBILITY
-            if (d->accessibleAttached)
-                d->accessibleAttached->setDescription(QLatin1Literal(""));
+        if (d->accessibleAttached)
+            d->accessibleAttached->setDescription(text);
 #endif
-        }
-        emit placeholderChanged();
+        emit placeholderTextChanged();
     }
 }
 

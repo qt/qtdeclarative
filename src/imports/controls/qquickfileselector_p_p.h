@@ -69,7 +69,7 @@ public:
     QQuickFileSelectorPrivate();
     QString select(const QString &filePath) const;
 
-    QStringList extras;
+    QString style;
     QUrl baseUrl;
 };
 

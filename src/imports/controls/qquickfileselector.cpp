@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 //Environment variable to allow tooling full control of file selectors
-static const char env_override[] = "QT_QUICK_NO_BUILTIN_SELECTORS";
+static const char env_override[] = "QT_LABS_CONTROLS_NO_STYLE";
 
 Q_GLOBAL_STATIC(QQuickFileSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
@@ -138,16 +138,16 @@ QString QQuickFileSelectorPrivate::select(const QString &filePath) const
     return filePath;
 }
 
-QStringList QQuickFileSelector::extraSelectors() const
+QString QQuickFileSelector::style() const
 {
     Q_D(const QQuickFileSelector);
-    return d->extras;
+    return d->style;
 }
 
-void QQuickFileSelector::setExtraSelectors(const QStringList &list)
+void QQuickFileSelector::setStyle(const QString &s)
 {
     Q_D(QQuickFileSelector);
-    d->extras = list;
+    d->style = s;
 }
 
 QStringList QQuickFileSelector::allSelectors() const
@@ -155,7 +155,7 @@ QStringList QQuickFileSelector::allSelectors() const
     Q_D(const QQuickFileSelector);
     QMutexLocker locker(&sharedDataMutex);
     QQuickFileSelectorPrivate::updateSelectors();
-    return d->extras + sharedData->staticSelectors;
+    return QStringList(d->style) + sharedData->staticSelectors;
 }
 
 void QQuickFileSelector::setBaseUrl(const QUrl &base)
@@ -177,7 +177,7 @@ void QQuickFileSelectorPrivate::updateSelectors()
         return; //Already loaded
 
     QLatin1Char pathSep(',');
-    QStringList envSelectors = QString::fromLatin1(qgetenv("QT_QUICK_FILE_SELECTORS"))
+    QStringList envSelectors = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"))
                                 .split(pathSep, QString::SkipEmptyParts);
     if (envSelectors.count())
         sharedData->staticSelectors << envSelectors;

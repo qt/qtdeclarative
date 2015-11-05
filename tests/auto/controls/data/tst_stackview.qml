@@ -87,18 +87,63 @@ TestCase {
         control.destroy()
     }
 
+    SignalSpy {
+        id: busySpy
+        signalName: "busyChanged"
+    }
+
     function test_busy() {
         var control = stackView.createObject(testCase)
         verify(control)
         compare(control.busy, false)
+
+        var busyCount = 0
+        busySpy.target = control
+        verify(busySpy.valid)
+
         control.push(component)
         compare(control.busy, false)
+        compare(busySpy.count, busyCount)
+
         control.push(component)
         compare(control.busy, true)
+        compare(busySpy.count, ++busyCount)
         tryCompare(control, "busy", false)
+        compare(busySpy.count, ++busyCount)
+
+        control.replace(component)
+        compare(control.busy, true)
+        compare(busySpy.count, ++busyCount)
+        tryCompare(control, "busy", false)
+        compare(busySpy.count, ++busyCount)
+
         control.pop()
         compare(control.busy, true)
+        compare(busySpy.count, ++busyCount)
         tryCompare(control, "busy", false)
+        compare(busySpy.count, ++busyCount)
+
+        control.pushEnter = null
+        control.pushExit = null
+
+        control.push(component)
+        compare(control.busy, false)
+        compare(busySpy.count, busyCount)
+
+        control.replaceEnter = null
+        control.replaceExit = null
+
+        control.replace(component)
+        compare(control.busy, false)
+        compare(busySpy.count, busyCount)
+
+        control.popEnter = null
+        control.popExit = null
+
+        control.pop()
+        compare(control.busy, false)
+        compare(busySpy.count, busyCount)
+
         control.destroy()
     }
 
@@ -587,6 +632,115 @@ TestCase {
         compare(control.get(0).index, 0)
         compare(control.get(0).view, control)
         compare(control.get(0).status, StackView.Active)
+
+        control.destroy()
+    }
+
+    Component {
+        id: testButton
+        Button {
+            property int clicks: 0
+            onClicked: ++clicks
+        }
+    }
+
+    function test_interaction() {
+        var control = stackView.createObject(testCase, {initialItem: testButton, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        var firstButton = control.currentItem
+        verify(firstButton)
+
+        var firstClicks = 0
+        var secondClicks = 0
+        var thirdClicks = 0
+
+        // push - default transition
+        var secondButton = control.push(testButton)
+        compare(control.busy, true)
+        mouseClick(firstButton) // filtered while busy
+        mouseClick(secondButton) // filtered while busy
+        compare(firstButton.clicks, firstClicks)
+        compare(secondButton.clicks, secondClicks)
+        tryCompare(control, "busy", false)
+        mouseClick(secondButton)
+        compare(secondButton.clicks, ++secondClicks)
+
+        // replace - default transition
+        var thirdButton = control.replace(testButton)
+        compare(control.busy, true)
+        mouseClick(secondButton) // filtered while busy
+        mouseClick(thirdButton) // filtered while busy
+        compare(secondButton.clicks, secondClicks)
+        compare(thirdButton.clicks, thirdClicks)
+        tryCompare(control, "busy", false)
+        secondButton = null
+        secondClicks = 0
+        mouseClick(thirdButton)
+        compare(thirdButton.clicks, ++thirdClicks)
+
+        // pop - default transition
+        control.pop()
+        compare(control.busy, true)
+        mouseClick(firstButton) // filtered while busy
+        mouseClick(thirdButton) // filtered while busy
+        compare(firstButton.clicks, firstClicks)
+        compare(thirdButton.clicks, thirdClicks)
+        tryCompare(control, "busy", false)
+        thirdButton = null
+        thirdClicks = 0
+        mouseClick(firstButton)
+        compare(firstButton.clicks, ++firstClicks)
+
+        // push - immediate operation
+        secondButton = control.push(testButton, StackView.Immediate)
+        compare(control.busy, false)
+        mouseClick(secondButton)
+        compare(secondButton.clicks, ++secondClicks)
+
+        // replace - immediate operation
+        thirdButton = control.replace(testButton, StackView.Immediate)
+        compare(control.busy, false)
+        secondButton = null
+        secondClicks = 0
+        mouseClick(thirdButton)
+        compare(thirdButton.clicks, ++thirdClicks)
+
+        // pop - immediate operation
+        control.pop(StackView.Immediate)
+        compare(control.busy, false)
+        thirdButton = null
+        thirdClicks = 0
+        mouseClick(firstButton)
+        compare(firstButton.clicks, ++firstClicks)
+
+        // push - null transition
+        control.pushEnter = null
+        control.pushExit = null
+        secondButton = control.push(testButton)
+        compare(control.busy, false)
+        mouseClick(secondButton)
+        compare(secondButton.clicks, ++secondClicks)
+
+        // replace - null transition
+        control.replaceEnter = null
+        control.replaceExit = null
+        thirdButton = control.replace(testButton)
+        compare(control.busy, false)
+        secondButton = null
+        secondClicks = 0
+        mouseClick(thirdButton)
+        compare(thirdButton.clicks, ++thirdClicks)
+
+        // pop - null transition
+        control.popEnter = null
+        control.popExit = null
+        control.pop()
+        compare(control.busy, false)
+        thirdButton = null
+        thirdClicks = 0
+        mouseClick(firstButton)
+        compare(firstButton.clicks, ++firstClicks)
 
         control.destroy()
     }

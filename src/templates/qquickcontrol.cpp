@@ -65,7 +65,7 @@ QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
     layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR),
-    accessibleAttached(Q_NULLPTR), m_accessibleRole(0) // QAccessible::NoRole
+    accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -175,7 +175,13 @@ void QQuickControlPrivate::accessibilityActiveChanged(bool active)
 
 QAccessible::Role QQuickControlPrivate::accessibleRole() const
 {
-    return (QAccessible::Role)m_accessibleRole;
+    Q_Q(const QQuickControl);
+    return q->accessibleRole();
+}
+
+QAccessible::Role QQuickControl::accessibleRole() const
+{
+    return QAccessible::NoRole;
 }
 
 void QQuickControl::accessibilityActiveChanged(bool active)
@@ -186,7 +192,7 @@ void QQuickControl::accessibilityActiveChanged(bool active)
 
     d->accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(this, true));
     if (d->accessibleAttached)
-        d->accessibleAttached->setRole((QAccessible::Role)(d->m_accessibleRole));
+        d->accessibleAttached->setRole(accessibleRole());
     else
         qWarning() << "QQuickControl: " << this << " QQuickAccessibleAttached object creation failed!";
 }
@@ -260,22 +266,6 @@ void QQuickControlPrivate::updateFontRecur(QQuickItem *item, const QFont &f)
         else
             QQuickControlPrivate::updateFontRecur(child, f);
     }
-}
-
-int QQuickControl::accessibleRole() const
-{
-    Q_D(const QQuickControl);
-    return d->m_accessibleRole;
-}
-
-void QQuickControl::setAccessibleRole(int role)
-{
-    Q_D(QQuickControl);
-    d->m_accessibleRole = role;
-#ifndef QT_NO_ACCESSIBILITY
-    if (d->accessibleAttached)
-        d->accessibleAttached->setRole((QAccessible::Role)role);
-#endif
 }
 
 QString QQuickControl::accessibleName() const

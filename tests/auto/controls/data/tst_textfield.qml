@@ -93,11 +93,17 @@ TestCase {
 
         control.horizontalAlignment = TextField.AlignRight
         compare(control.horizontalAlignment, TextField.AlignRight)
-        compare(control.placeholder.horizontalAlignment, Text.AlignRight)
+        for (var i = 0; i < control.children.length; ++i) {
+            if (control.children[i].hasOwnProperty("horizontalAlignment"))
+                compare(control.children[i].horizontalAlignment, Text.AlignRight) // placeholder
+        }
 
         control.verticalAlignment = TextField.AlignBottom
         compare(control.verticalAlignment, TextField.AlignBottom)
-        compare(control.placeholder.verticalAlignment, Text.AlignBottom)
+        for (var j = 0; j < control.children.length; ++j) {
+            if (control.children[j].hasOwnProperty("verticalAlignment"))
+                compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
+        }
 
         control.destroy()
     }

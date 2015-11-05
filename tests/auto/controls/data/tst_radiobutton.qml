@@ -225,4 +225,72 @@ TestCase {
 
         container.destroy()
     }
+
+    Component {
+        id: radioButtonGroup
+        Column {
+            // auto-exclusive buttons behave as if they were in their own exclusive group
+            RadioButton { }
+            RadioButton { }
+
+            // explicitly grouped buttons are only exclusive with each other, not with
+            // auto-exclusive buttons, and the autoExclusive property is ignored
+            ExclusiveGroup { id: eg }
+            RadioButton { ExclusiveGroup.group: eg }
+            RadioButton { ExclusiveGroup.group: eg; autoExclusive: false }
+
+            // non-exclusive buttons don't affect the others
+            RadioButton { autoExclusive: false }
+            RadioButton { autoExclusive: false }
+        }
+    }
+
+    function test_autoExclusive() {
+        var container = radioButtonGroup.createObject(testCase)
+        compare(container.children.length, 6)
+
+        var checkStates = [false, false, false, false, false, false]
+        for (var i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[0].checked = true
+        checkStates[0] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[1].checked = true
+        checkStates[0] = false
+        checkStates[1] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[2].checked = true
+        checkStates[2] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[3].checked = true
+        checkStates[2] = false
+        checkStates[3] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[4].checked = true
+        checkStates[4] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[5].checked = true
+        checkStates[5] = true
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.children[0].checked = true
+        checkStates[0] = true
+        checkStates[1] = false
+        for (i = 0; i < 6; ++i)
+            compare(container.children[i].checked, checkStates[i])
+
+        container.destroy()
+    }
 }

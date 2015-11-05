@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquicktabbar_p.h"
+#include "qquicktabbutton_p.h"
 #include "qquickcontainer_p_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -66,13 +67,25 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
-    QQuickTabBarPrivate()
-    {
-        m_accessibleRole = 0x0000003C; //QAccessible::PageTabList
-    }
-
+    void updateCurrentItem();
+    void updateCurrentIndex();
     void updateLayout();
 };
+
+void QQuickTabBarPrivate::updateCurrentItem()
+{
+    QQuickTabButton *button = qobject_cast<QQuickTabButton *>(contentModel->get(currentIndex));
+    if (button)
+        button->setChecked(true);
+}
+
+void QQuickTabBarPrivate::updateCurrentIndex()
+{
+    Q_Q(QQuickTabBar);
+    QQuickTabButton *button = qobject_cast<QQuickTabButton *>(q->sender());
+    if (button && button->isChecked())
+        q->setCurrentIndex(contentModel->indexOf(button, Q_NULLPTR));
+}
 
 void QQuickTabBarPrivate::updateLayout()
 {
@@ -97,8 +110,9 @@ void QQuickTabBarPrivate::updateLayout()
 QQuickTabBar::QQuickTabBar(QQuickItem *parent) :
     QQuickContainer(*(new QQuickTabBarPrivate), parent)
 {
-    setExclusive(true);
+    Q_D(QQuickTabBar);
     setFlag(ItemIsFocusScope);
+    QObjectPrivate::connect(this, &QQuickTabBar::currentIndexChanged, d, &QQuickTabBarPrivate::updateCurrentItem);
 }
 
 void QQuickTabBar::updatePolish()
@@ -112,6 +126,7 @@ void QQuickTabBar::componentComplete()
 {
     Q_D(QQuickTabBar);
     QQuickContainer::componentComplete();
+    d->updateCurrentItem();
     d->updateLayout();
 }
 
@@ -122,20 +137,36 @@ void QQuickTabBar::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
     d->updateLayout();
 }
 
+bool QQuickTabBar::isContent(QQuickItem *item) const
+{
+    return qobject_cast<QQuickTabButton *>(item);
+}
+
 void QQuickTabBar::itemAdded(int index, QQuickItem *item)
 {
+    Q_D(QQuickTabBar);
     Q_UNUSED(index);
-    Q_UNUSED(item);
+    if (QQuickTabButton *button = qobject_cast<QQuickTabButton *>(item))
+        QObjectPrivate::connect(button, &QQuickTabButton::checkedChanged, d, &QQuickTabBarPrivate::updateCurrentIndex);
     if (isComponentComplete())
         polish();
 }
 
 void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
 {
+    Q_D(QQuickTabBar);
     Q_UNUSED(index);
-    Q_UNUSED(item);
+    if (QQuickTabButton *button = qobject_cast<QQuickTabButton *>(item))
+        QObjectPrivate::disconnect(button, &QQuickTabButton::checkedChanged, d, &QQuickTabBarPrivate::updateCurrentIndex);
     if (isComponentComplete())
         polish();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickTabBar::accessibleRole() const
+{
+    return QAccessible::PageTabList;
+}
+#endif
 
 QT_END_NAMESPACE

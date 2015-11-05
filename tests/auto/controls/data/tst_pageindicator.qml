@@ -93,6 +93,24 @@ TestCase {
         mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.currentIndex, 2)
 
+        // test also clicking outside delegates => the nearest should be selected
+        control.padding = 10
+        control.spacing = 10
+
+        for (var i = 0; i < control.count; ++i) {
+            var child = control.contentItem.children[i]
+            for (var x = -2; x <= child.width + 2; ++x) {
+                for (var y = -2; y <= child.height + 2; ++y) {
+                    control.currentIndex = -1
+                    compare(control.currentIndex, -1)
+
+                    var pos = control.mapFromItem(child, x, y)
+                    mouseClick(control, pos.x, pos.y, Qt.LeftButton)
+                    compare(control.currentIndex, i)
+                }
+            }
+        }
+
         control.destroy()
     }
 }

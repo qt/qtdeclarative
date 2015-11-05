@@ -65,8 +65,13 @@ protected:
     void updatePolish() Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    bool isContent(QQuickItem *item) const Q_DECL_OVERRIDE;
     void itemAdded(int index, QQuickItem *item) Q_DECL_OVERRIDE;
     void itemRemoved(int index, QQuickItem *item) Q_DECL_OVERRIDE;
+
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
 
 private:
     Q_DISABLE_COPY(QQuickTabBar)

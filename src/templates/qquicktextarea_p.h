@@ -64,7 +64,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QQuickText *placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged FINAL)
+    Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
@@ -76,15 +76,15 @@ public:
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
-    QQuickText *placeholder() const;
-    void setPlaceholder(QQuickText *placeholder);
+    QString placeholderText() const;
+    void setPlaceholderText(const QString &text);
 
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged();
     void implicitHeightChanged();
     void backgroundChanged();
-    void placeholderChanged();
+    void placeholderTextChanged();
     void pressAndHold(QQuickMouseEvent *event);
 
 protected:

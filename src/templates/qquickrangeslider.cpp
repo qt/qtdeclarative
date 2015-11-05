@@ -301,7 +301,6 @@ public:
         snapMode(QQuickRangeSlider::NoSnap),
         track(Q_NULLPTR)
     {
-        m_accessibleRole = 0x00000033; //QAccessible::Slider
     }
 
     qreal from;
@@ -885,4 +884,12 @@ void QQuickRangeSlider::componentComplete()
 
     \sa second
 */
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickRangeSlider::accessibleRole() const
+{
+    return QAccessible::Slider;
+}
+#endif
+
 QT_END_NAMESPACE

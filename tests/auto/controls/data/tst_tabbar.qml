@@ -120,24 +120,29 @@ TestCase {
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(control.currentItem.checked, true)
 
         control.addItem(tabButton.createObject(control, {text: "1"}))
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(control.currentItem.checked, true)
 
         control.addItem(tabButton.createObject(control, {text: "2"}))
         compare(control.count, 3)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(control.currentItem.checked, true)
 
         control.currentIndex = 1
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "1")
+        compare(control.currentItem.checked, true)
 
         control.currentIndex = 2
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
+        compare(control.currentItem.checked, true)
 
         control.destroy()
     }
@@ -148,6 +153,7 @@ TestCase {
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
+        compare(control.currentItem.checked, true)
 
         control.destroy()
 
@@ -156,6 +162,7 @@ TestCase {
         compare(control.count, 2)
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "1")
+        compare(control.currentItem.checked, true)
 
         control.destroy()
     }

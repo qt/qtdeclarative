@@ -42,9 +42,9 @@ T.TextField {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            placeholder ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+                            placeholder.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             placeholder ? placeholder.implicitHeight + topPadding + bottomPadding : 0)
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
 
@@ -53,21 +53,21 @@ T.TextField {
     selectedTextColor: Theme.selectedTextColor
     verticalAlignment: TextInput.AlignVCenter
 
-    //! [placeholder]
-    placeholder: Text {
+    Text {
+        id: placeholder
         x: control.leftPadding
         y: control.topPadding
         width: control.width - (control.leftPadding + control.rightPadding)
         height: control.height - (control.topPadding + control.bottomPadding)
 
+        text: control.placeholderText
         font: control.font
         color: control.Theme.disabledColor
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
-        visible: !control.displayText
+        visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
     }
-    //! [placeholder]
 
     //! [background]
     background: Rectangle {

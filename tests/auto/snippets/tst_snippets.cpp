@@ -59,12 +59,12 @@ void tst_Snippets::initTestCase()
     QDir outdir(QDir::current().filePath("screenshots"));
     QVERIFY(outdir.exists() || QDir::current().mkpath("screenshots"));
 
-    QString datadir = QFINDTESTDATA("data");
+    QString datadir(QQC2_SNIPPETS_PATH);
     QVERIFY(!datadir.isEmpty());
 
     qInfo() << datadir;
 
-    QDirIterator it(datadir, QStringList() << "*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
+    QDirIterator it(datadir, QStringList() << "qtlabs*.qml", QDir::Files | QDir::Readable, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QFileInfo fi(it.next());
         filePaths.insert(fi.baseName(), qMakePair(fi.filePath(), outdir.filePath(fi.baseName() + ".png")));

@@ -64,7 +64,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickContainer : public QQuickControl
     Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
-    Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -85,9 +84,6 @@ public:
     int currentIndex() const;
     QQuickItem *currentItem() const;
 
-    bool isExclusive() const;
-    void setExclusive(bool exclusive);
-
 public Q_SLOTS:
     void setCurrentIndex(int index);
 
@@ -96,7 +92,6 @@ Q_SIGNALS:
     void contentChildrenChanged();
     void currentIndexChanged();
     void currentItemChanged();
-    void exclusiveChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
@@ -104,13 +99,13 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
 
+    virtual bool isContent(QQuickItem *item) const;
     virtual void itemAdded(int index, QQuickItem *item);
     virtual void itemRemoved(int index, QQuickItem *item);
 
 private:
     Q_DISABLE_COPY(QQuickContainer)
     Q_DECLARE_PRIVATE(QQuickContainer)
-    Q_PRIVATE_SLOT(d_func(), void _q_currentItemChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_currentIndexChanged())
 };
 

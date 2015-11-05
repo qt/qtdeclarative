@@ -241,7 +241,7 @@ void QQuickStackElement::itemDestroyed(QQuickItem *)
     item = Q_NULLPTR;
 }
 
-QQuickStackViewPrivate::QQuickStackViewPrivate() : currentItem(Q_NULLPTR), transitioner(Q_NULLPTR)
+QQuickStackViewPrivate::QQuickStackViewPrivate() : busy(false), currentItem(Q_NULLPTR), transitioner(Q_NULLPTR)
 {
 }
 
@@ -417,11 +417,10 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
             enter->startTransition(transitioner);
     }
 
-    if (!immediate)
-        setBusy(true);
-
-    if (transitioner)
+    if (transitioner) {
+        setBusy(!transitioner->runningJobs.isEmpty());
         transitioner->resetTargetLists();
+    }
 }
 
 void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
@@ -450,11 +449,10 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
             exit->startTransition(transitioner);
     }
 
-    if (!immediate)
-        setBusy(true);
-
-    if (transitioner)
+    if (transitioner) {
+        setBusy(!transitioner->runningJobs.isEmpty());
         transitioner->resetTargetLists();
+    }
 }
 
 void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuickStackElement *exit, const QRectF &viewBounds, bool immediate)
@@ -484,11 +482,10 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
             enter->startTransition(transitioner);
     }
 
-    if (!immediate)
-       setBusy(true);
-
-    if (transitioner)
+    if (transitioner) {
+        setBusy(!transitioner->runningJobs.isEmpty());
         transitioner->resetTargetLists();
+    }
 }
 
 void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQuickTransition *transition)
@@ -525,11 +522,14 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
     }
 }
 
-void QQuickStackViewPrivate::setBusy(bool busy)
+void QQuickStackViewPrivate::setBusy(bool b)
 {
     Q_Q(QQuickStackView);
-    q->setFiltersChildMouseEvents(busy);
-    emit q->busyChanged();
+    if (busy != b) {
+        busy = b;
+        q->setFiltersChildMouseEvents(busy);
+        emit q->busyChanged();
+    }
 }
 
 QT_END_NAMESPACE

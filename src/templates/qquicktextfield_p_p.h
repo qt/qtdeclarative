@@ -85,7 +85,6 @@ public:
     void implicitHeightChanged() Q_DECL_OVERRIDE;
 
     void _q_readOnlyChanged(bool isReadOnly);
-    void _q_placeholderTextChanged(const QString &text);
     void _q_echoModeChanged(QQuickTextField::EchoMode echoMode);
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -94,10 +93,9 @@ public:
 #endif
 
     QQuickItem *background;
-    QQuickText *placeholder;
+    QString placeholder;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
-    int m_accessibleRole;
 };
 
 Q_DECLARE_TYPEINFO(QQuickTextFieldPrivate, Q_COMPLEX_TYPE);

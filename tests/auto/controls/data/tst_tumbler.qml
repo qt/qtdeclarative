@@ -124,27 +124,27 @@ TestCase {
     function test_keyboardNavigation() {
         tumbler.model = 5;
         tumbler.forceActiveFocus();
-        var keyClickDelay = 100;
+        tumbler.contentItem.highlightMoveDuration = 0;
 
         // Navigate upwards through entire wheel.
         for (var j = 0; j < tumbler.count - 1; ++j) {
-            keyClick(Qt.Key_Up, Qt.NoModifier, keyClickDelay);
+            keyClick(Qt.Key_Up, Qt.NoModifier);
             tryCompare(tumbler.contentItem, "offset", j + 1);
             compare(tumbler.currentIndex, tumbler.count - 1 - j);
         }
 
-        keyClick(Qt.Key_Up, Qt.NoModifier, keyClickDelay);
+        keyClick(Qt.Key_Up, Qt.NoModifier);
         tryCompare(tumbler.contentItem, "offset", 0);
         compare(tumbler.currentIndex, 0);
 
         // Navigate downwards through entire wheel.
         for (j = 0; j < tumbler.count - 1; ++j) {
-            keyClick(Qt.Key_Down, Qt.NoModifier, keyClickDelay);
+            keyClick(Qt.Key_Down, Qt.NoModifier);
             tryCompare(tumbler.contentItem, "offset", tumbler.count - 1 - j);
             compare(tumbler.currentIndex, j + 1);
         }
 
-        keyClick(Qt.Key_Down, Qt.NoModifier, keyClickDelay);
+        keyClick(Qt.Key_Down, Qt.NoModifier);
         tryCompare(tumbler.contentItem, "offset", 0);
         compare(tumbler.currentIndex, 0);
     }
@@ -183,25 +183,6 @@ TestCase {
         verify(thirdItem);
         verify(firstItem.y < thirdItem.y);
         verify(secondItem.y < thirdItem.y);
-    }
-
-    function test_resizeAfterFlicking() {
-        // Test QTBUG-40367 (which is actually invalid because it was my fault :)).
-        tumbler.model = 100;
-
-        // Flick in some direction.
-        var pos = Qt.point(tumblerXCenter(), tumbler.topPadding);
-        mouseDrag(tumbler, pos.x, pos.y, 0, tumbler.height - tumbler.bottomPadding,
-            Qt.LeftButton, Qt.NoModifier, 400);
-        tryCompare(tumbler.contentItem, "offset", 3.0);
-
-        tumbler.height += 100;
-        compare(tumbler.contentItem.delegateHeight,
-            (tumbler.height - tumbler.topPadding - tumbler.bottomPadding) / tumbler.visibleItemCount);
-        waitForRendering(tumbler);
-        pos = itemCenterPos(1);
-        var ninetyEighthItem = tumbler.contentItem.itemAt(pos.x, pos.y);
-        verify(ninetyEighthItem);
     }
 
     function test_focusPastTumbler() {
@@ -394,7 +375,7 @@ TestCase {
         // PathView for some reason.
         //
         // I tried lots of things to get this test to work with small changes
-        // in ListView's contentY ( to match the tests for a PathView-based Tumbler), but they didn't work:
+        // in ListView's contentY (to match the tests for a PathView-based Tumbler), but they didn't work:
         //
         // - Pressing once and then directly moving the mouse to the correct location
         // - Pressing once and interpolating the mouse position to the correct location
@@ -414,7 +395,7 @@ TestCase {
 
             var dragDirection = distanceToReachContentY > 0 ? -1 : 1;
             for (var i = 0; i < distance && Math.floor(listView.contentY) !== Math.floor(data.contentY); ++i) {
-                mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i * dragDirection, 10);
+                mouseMove(tumbler, tumblerXCenter(), tumblerYCenter() + i * dragDirection);
             }
         }
 

@@ -89,7 +89,6 @@ public:
     QQuickCheckBoxPrivate()
         : tristate(false), checkState(Qt::Unchecked)
     {
-        m_accessibleRole = 0x0000002C; // QAccessible::CheckBox
     }
 
     bool tristate;
@@ -170,5 +169,12 @@ void QQuickCheckBox::nextCheckState()
     else
         QQuickAbstractButton::nextCheckState();
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickCheckBox::accessibleRole() const
+{
+    return QAccessible::CheckBox;
+}
+#endif
 
 QT_END_NAMESPACE

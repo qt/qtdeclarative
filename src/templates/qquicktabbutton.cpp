@@ -59,8 +59,14 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
     QQuickAbstractButton(parent)
 {
     setCheckable(true);
-    setExclusive(true);
-    setAccessibleRole(0x00000025); //QAccessible::PageTab
+    setAutoExclusive(true);
 }
+
+#ifndef QT_NO_ACCESSIBILITY
+QAccessible::Role QQuickTabButton::accessibleRole() const
+{
+    return QAccessible::PageTab;
+}
+#endif
 
 QT_END_NAMESPACE

@@ -41,20 +41,16 @@ import Qt.labs.templates 1.0 as T
 T.BusyIndicator {
     id: control
 
-    implicitWidth: indicator.implicitWidth + leftPadding + rightPadding
-    implicitHeight: indicator.implicitHeight + topPadding + bottomPadding
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
 
     padding: 6
 
-    //! [indicator]
-    indicator: Item {
+    //! [contentItem]
+    contentItem: Item {
         id: delegate
         implicitWidth: 48
         implicitHeight: 48
-        x: control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
-        height: control.availableHeight
 
         opacity: control.running ? 1 : 0
         Behavior on opacity { OpacityAnimator { duration: 250 } }
@@ -77,5 +73,5 @@ T.BusyIndicator {
             }
         }
     }
-    //! [indicator]
+    //! [contentItem]
 }

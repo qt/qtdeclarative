@@ -29,6 +29,11 @@ Module {
             name: "removeCheckable"
             Parameter { name: "object"; type: "QObject"; isPointer: true }
         }
+        Method {
+            name: "isCheckable"
+            type: "bool"
+            Parameter { name: "object"; type: "QObject"; isPointer: true }
+        }
     }
     Component {
         name: "QQuickExclusiveGroupAttached"
@@ -177,6 +182,14 @@ Module {
         prototype: "QQuickSlider"
         name: "Qt.labs.controls/Slider"
         exports: ["Qt.labs.controls/Slider 1.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
+        prototype: "QQuickSpinBox"
+        name: "Qt.labs.controls/SpinBox"
+        exports: ["Qt.labs.controls/SpinBox 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "data"
