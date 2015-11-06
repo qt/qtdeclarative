@@ -19,6 +19,7 @@
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
+/tests/auto/styles/tst_styles
 /tests/auto/theme/tst_theme
 /tests/auto/universal/tst_universal
 /tests/benchmarks/creationtime/tst_creationtime

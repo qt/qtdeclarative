@@ -8,5 +8,6 @@ SUBDIRS += \
     pressandhold \
     sanity \
     snippets \
+    styles \
     theme \
     universal
