@@ -729,7 +729,8 @@ ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
 void BoundFunction::markObjects(Heap::Base *that, ExecutionEngine *e)
 {
     BoundFunction::Data *o = static_cast<BoundFunction::Data *>(that);
-    o->target->mark(e);
+    if (o->target)
+        o->target->mark(e);
     o->boundThis.mark(e);
     if (o->boundArgs)
         o->boundArgs->mark(e);
