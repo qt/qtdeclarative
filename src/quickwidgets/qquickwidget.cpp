@@ -1280,6 +1280,14 @@ void QQuickWidget::triggerUpdate()
     Q_D(QQuickWidget);
     d->updatePending = true;
      if (!d->eventPending) {
+        // There's no sense in immediately kicking a render off now, as
+        // there may be a number of triggerUpdate calls to come from a multitude
+        // of different sources (network, touch/mouse/keyboard, timers,
+        // animations, ...), and we want to batch them all into single frames as
+        // much as possible for the sake of interactivity and responsiveness.
+        //
+        // To achieve this, we set a timer and only perform the rendering when
+        // this is complete.
         const int exhaustDelay = 5;
         d->updateTimer.start(exhaustDelay, Qt::PreciseTimer, this);
         d->eventPending = true;

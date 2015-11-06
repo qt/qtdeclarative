@@ -136,6 +136,7 @@ public:
 
     void maybeUpdate(QQuickWindow *window);
     void update(QQuickWindow *window) { maybeUpdate(window); } // identical for this implementation.
+    void handleUpdateRequest(QQuickWindow *);
 
     void releaseResources(QQuickWindow *) { }
 
@@ -143,8 +144,6 @@ public:
 
     QSGContext *sceneGraphContext() const;
     QSGRenderContext *createRenderContext(QSGContext *) const { return rc; }
-
-    bool event(QEvent *);
 
     struct WindowData {
         bool updatePending : 1;
@@ -158,9 +157,6 @@ public:
     QSGRenderContext *rc;
 
     QImage grabContent;
-    int m_update_timer;
-
-    bool eventPending;
 };
 
 QSGRenderLoop *QSGRenderLoop::instance()
@@ -264,7 +260,6 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window,
 
 QSGGuiThreadRenderLoop::QSGGuiThreadRenderLoop()
     : gl(0)
-    , eventPending(false)
 {
     sg = QSGContext::createDefaultContext();
     rc = sg->createRenderContext();
@@ -456,45 +451,23 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     return grabbed;
 }
 
-
-
 void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 {
     if (!m_windows.contains(window))
         return;
 
     m_windows[window].updatePending = true;
-
-    if (!eventPending) {
-        const int exhaust_delay = 5;
-        m_update_timer = startTimer(exhaust_delay, Qt::PreciseTimer);
-        eventPending = true;
-    }
+    window->requestUpdate();
 }
-
-
 
 QSGContext *QSGGuiThreadRenderLoop::sceneGraphContext() const
 {
     return sg;
 }
 
-
-bool QSGGuiThreadRenderLoop::event(QEvent *e)
+void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
-    if (e->type() == QEvent::Timer) {
-        eventPending = false;
-        killTimer(m_update_timer);
-        m_update_timer = 0;
-        for (QHash<QQuickWindow *, WindowData>::const_iterator it = m_windows.constBegin();
-             it != m_windows.constEnd(); ++it) {
-            const WindowData &data = it.value();
-            if (data.updatePending)
-                renderWindow(it.key());
-        }
-        return true;
-    }
-    return QObject::event(e);
+    renderWindow(window);
 }
 
 #include "qsgrenderloop.moc"
