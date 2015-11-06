@@ -104,12 +104,15 @@ ApplicationWindow {
 
     Flickable {
         anchors.fill: parent
-        flickableDirection: Flickable.VerticalFlick
+        topMargin: 30
+        leftMargin: 30
+        rightMargin: 30
+        bottomMargin: 30
+        contentHeight: flow.height
 
         Flow {
             id: flow
-            anchors.fill: parent
-            anchors.margins: 30
+            width: parent.width
             spacing: 30
 
             RowLayout {
