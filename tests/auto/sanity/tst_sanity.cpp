@@ -142,7 +142,7 @@ void tst_Sanity::initTestCase()
         it.next();
         QFileInfo info = it.fileInfo();
         if (info.dir().dirName() != QStringLiteral("snippets") && info.dir().dirName() != QStringLiteral("designer"))
-            files.insert(info.baseName(), info.filePath());
+            files.insert(info.dir().dirName() + "/" + info.fileName(), info.filePath());
     }
 }
 
@@ -259,8 +259,8 @@ void tst_Sanity::attachedObjects()
     QVERIFY(object.data());
     foreach (QObject *object, *qt_qobjects) {
         QString className = object->metaObject()->className();
-        if (className.endsWith("Attached"))
-            QVERIFY2(!classNames.contains(className), qPrintable(QString("Multiple instances of attached type %1").arg(className)));
+        if (className.endsWith("Attached") || className.endsWith("Style"))
+            QVERIFY2(!classNames.contains(className), qPrintable(QString("Multiple %1 instances").arg(className)));
         classNames.insert(className);
     }
 }
