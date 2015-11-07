@@ -35,23 +35,4 @@
 ****************************************************************************/
 
 #include <QtQuickTest/quicktest.h>
-#include <QtGui/qguiapplication.h>
-#include <QtQml/qqmlapplicationengine.h>
-
-// based on QUICK_TEST_MAIN() defined in quicktest.h
-int main(int argc, char **argv)
-{
-    QTEST_ADD_GPU_BLACKLIST_SUPPORT
-    QTEST_SET_MAIN_SOURCE_PATH
-
-    {
-        // QTBUG-48651
-        QGuiApplication app(argc, argv);
-        QQmlApplicationEngine engine;
-        engine.loadData("import Qt.labs.controls 1.0; Slider { } ");
-        if (engine.rootObjects().isEmpty())
-            return -1;
-    }
-
-    return quick_test_main(argc, argv, "tst_theme", QUICK_TEST_SOURCE_DIR);
-}
+QUICK_TEST_MAIN(tst_theme)
