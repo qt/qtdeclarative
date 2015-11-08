@@ -49,3 +49,14 @@ navigation.landingpage  = "Qt Labs Controls"
 navigation.qmltypespage = "Qt Labs Controls QML Types"
 
 tagfile                 = qtlabscontrols.tags
+
+# \styleimport {Qt.labs.controls.universal 1.0}
+macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr></tbody></table>"
+
+# \styleproperty {Universal.accent} {enumeration} {html-target-id}
+# \target html-target-id
+# This property holds ...
+# (empty line)
+# \endstyleproperty
+macro.styleproperty.HTML = "<div class=\"qmlproto\"><table class=\"qmlname\"><tbody><tr valign=\"top\" class=\"odd\" id=\"\3\"><td class=\"tblQmlPropNode\"><p><span class=\"name\">\1</span> : <span class=\"type\">\2</span></p></td></tr></tbody></table></div>"
+macro.endstyleproperty = "\\br"
