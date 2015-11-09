@@ -88,6 +88,20 @@ ApplicationWindow {
         }
     }
 
+    footer: TabBar {
+        TabButton {
+            text: "Normal"
+        }
+        TabButton {
+            text: "Pressed"
+            pressed: true
+        }
+        TabButton {
+            text: "Disabled"
+            enabled: false
+        }
+    }
+
     Flickable {
         anchors.fill: parent
         flickableDirection: Flickable.VerticalFlick
@@ -111,22 +125,6 @@ ApplicationWindow {
                 Button {
                     text: "Disabled"
                     enabled: false
-                }
-            }
-
-            RowLayout {
-                TabBar {
-                    TabButton {
-                        text: "Normal"
-                    }
-                    TabButton {
-                        text: "Pressed"
-                        pressed: true
-                    }
-                    TabButton {
-                        text: "Disabled"
-                        enabled: false
-                    }
                 }
             }
 
