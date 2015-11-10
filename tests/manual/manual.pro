@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     gifs \
-    fonts
+    fonts \
+    testbench
