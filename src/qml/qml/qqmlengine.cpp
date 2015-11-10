@@ -2435,6 +2435,9 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 #if defined(Q_OS_MAC) || defined(Q_OS_WINCE) || defined(Q_OS_WINRT)
     const QString canonical = info.canonicalFilePath();
 #elif defined(Q_OS_WIN)
+    // No difference if the path is qrc based
+    if (absolute[0] == QLatin1Char(':'))
+        return true;
     const QString canonical = shellNormalizeFileName(absolute);
 #endif
 
