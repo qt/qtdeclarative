@@ -627,7 +627,7 @@ QV4DebugServiceImpl::~QV4DebugServiceImpl()
     qDeleteAll(handlers);
 }
 
-void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
+void QV4DebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine) {
@@ -646,7 +646,7 @@ void QV4DebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
     QQmlConfigurableDebugService<QV4DebugService>::engineAboutToBeAdded(engine);
 }
 
-void QV4DebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
+void QV4DebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine){

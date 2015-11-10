@@ -33,7 +33,7 @@
 
 #include "qqmlenginecontrolservice.h"
 #include "qqmldebugpacket.h"
-#include <QQmlEngine>
+#include <QJSEngine>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +49,7 @@ void QQmlEngineControlServiceImpl::messageReceived(const QByteArray &message)
     int command;
     int engineId;
     d >> command >> engineId;
-    QQmlEngine *engine = qobject_cast<QQmlEngine *>(objectForId(engineId));
+    QJSEngine *engine = qobject_cast<QJSEngine *>(objectForId(engineId));
     if (command == StartWaitingEngine && startingEngines.contains(engine)) {
         startingEngines.removeOne(engine);
         emit attachedToEngine(engine);
@@ -59,7 +59,7 @@ void QQmlEngineControlServiceImpl::messageReceived(const QByteArray &message)
     }
 }
 
-void QQmlEngineControlServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     QMutexLocker lock(&dataMutex);
     if (state() == Enabled) {
@@ -72,7 +72,7 @@ void QQmlEngineControlServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     QMutexLocker lock(&dataMutex);
     if (state() == Enabled) {
@@ -85,7 +85,7 @@ void QQmlEngineControlServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlServiceImpl::engineAdded(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineAdded(QJSEngine *engine)
 {
     if (state() == Enabled) {
         QMutexLocker lock(&dataMutex);
@@ -95,7 +95,7 @@ void QQmlEngineControlServiceImpl::engineAdded(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlServiceImpl::engineRemoved(QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::engineRemoved(QJSEngine *engine)
 {
     if (state() == Enabled) {
         QMutexLocker lock(&dataMutex);
@@ -105,7 +105,7 @@ void QQmlEngineControlServiceImpl::engineRemoved(QQmlEngine *engine)
     }
 }
 
-void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QQmlEngine *engine)
+void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QJSEngine *engine)
 {
     QQmlDebugPacket d;
     d << type << idForObject(engine);
@@ -116,10 +116,10 @@ void QQmlEngineControlServiceImpl::stateChanged(State)
 {
     // We flush everything for any kind of state change, to avoid complicated timing issues.
     QMutexLocker lock(&dataMutex);
-    foreach (QQmlEngine *engine, startingEngines)
+    foreach (QJSEngine *engine, startingEngines)
         emit attachedToEngine(engine);
     startingEngines.clear();
-    foreach (QQmlEngine *engine, stoppingEngines)
+    foreach (QJSEngine *engine, stoppingEngines)
         emit detachedFromEngine(engine);
     stoppingEngines.clear();
 }

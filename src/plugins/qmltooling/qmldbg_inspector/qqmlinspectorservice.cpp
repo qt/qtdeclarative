@@ -50,12 +50,12 @@ class QQmlInspectorServiceImpl : public QQmlInspectorService
 public:
     QQmlInspectorServiceImpl(QObject *parent = 0);
 
-    void addView(QObject *);
-    void removeView(QObject *);
+    void addView(QObject *) Q_DECL_OVERRIDE;
+    void removeView(QObject *) Q_DECL_OVERRIDE;
 
 protected:
-    virtual void stateChanged(State state);
-    virtual void messageReceived(const QByteArray &);
+    virtual void stateChanged(State state) Q_DECL_OVERRIDE;
+    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
 
 private Q_SLOTS:
     void processMessage(const QByteArray &message);

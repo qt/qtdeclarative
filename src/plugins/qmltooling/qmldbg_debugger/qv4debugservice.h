@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 { struct ExecutionEngine; }
 
-class QQmlEngine;
 class VariableCollector;
 class V8CommandHandler;
 class UnknownV8CommandHandler;
@@ -68,14 +67,14 @@ class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
     Q_OBJECT
 public:
     explicit QV4DebugServiceImpl(QObject *parent = 0);
-    ~QV4DebugServiceImpl();
+    ~QV4DebugServiceImpl() Q_DECL_OVERRIDE;
 
-    void engineAboutToBeAdded(QQmlEngine *engine);
-    void engineAboutToBeRemoved(QQmlEngine *engine);
+    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
 
-    void stateAboutToBeChanged(State state);
+    void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
 
-    void signalEmitted(const QString &signal);
+    void signalEmitted(const QString &signal) Q_DECL_OVERRIDE;
     void send(QJsonObject v8Payload);
 
     QJsonObject buildScope(int frameNr, int scopeNr, QV4Debugger *debugger);
@@ -94,7 +93,7 @@ public:
     QV4DataCollector::Refs *refs();
 
 protected:
-    void messageReceived(const QByteArray &);
+    void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
     void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
 private:

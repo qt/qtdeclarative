@@ -35,8 +35,8 @@
 #include "qqmldebugpacket.h"
 
 #include <private/qhooks_p.h>
-#include <qqmlengine.h>
 
+#include <QtQml/qjsengine.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
@@ -223,7 +223,7 @@ QQmlDebugService *QQmlNativeDebugConnector::service(const QString &name) const
     return 0;
 }
 
-void QQmlNativeDebugConnector::addEngine(QQmlEngine *engine)
+void QQmlNativeDebugConnector::addEngine(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Add engine to connector:" << engine);
     foreach (QQmlDebugService *service, m_services)
@@ -235,7 +235,7 @@ void QQmlNativeDebugConnector::addEngine(QQmlEngine *engine)
         service->engineAdded(engine);
 }
 
-void QQmlNativeDebugConnector::removeEngine(QQmlEngine *engine)
+void QQmlNativeDebugConnector::removeEngine(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Remove engine from connector:" << engine);
     foreach (QQmlDebugService *service, m_services)

@@ -80,9 +80,9 @@ public:
     virtual void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) = 0;
     virtual void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) = 0;
 
-    virtual void startProfiling(QQmlEngine *engine,
+    virtual void startProfiling(QJSEngine *engine,
                                 quint64 features = std::numeric_limits<quint64>::max()) = 0;
-    virtual void stopProfiling(QQmlEngine *engine) = 0;
+    virtual void stopProfiling(QJSEngine *engine) = 0;
 
     virtual void dataReady(QQmlAbstractProfilerAdapter *profiler) = 0;
 
@@ -99,7 +99,7 @@ class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : protected QQmlDebugService
 public:
     static const QString s_key;
 
-    virtual void objectCreated(QQmlEngine *engine, QObject *object) = 0;
+    virtual void objectCreated(QJSEngine *engine, QObject *object) = 0;
     virtual void setStatesDelegate(QQmlDebugStatesDelegate *) = 0;
 
 protected:

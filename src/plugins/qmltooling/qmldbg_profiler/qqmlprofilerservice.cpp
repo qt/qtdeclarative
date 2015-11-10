@@ -37,7 +37,7 @@
 #include "qqmlprofilerservicefactory.h"
 #include "qqmldebugpacket.h"
 
-#include <private/qqmlengine_p.h>
+#include <private/qjsengine_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 
 #include <QtCore/qurl.h>
@@ -86,8 +86,8 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
     }
     m_startTimes.insert(0, profiler);
     if (dataComplete) {
-        QList<QQmlEngine *> enginesToRelease;
-        foreach (QQmlEngine *engine, m_stoppingEngines) {
+        QList<QJSEngine *> enginesToRelease;
+        foreach (QJSEngine *engine, m_stoppingEngines) {
             foreach (QQmlAbstractProfilerAdapter *engineProfiler, m_engineProfilers.values(engine)) {
                 if (m_startTimes.values().contains(engineProfiler)) {
                     enginesToRelease.append(engine);
@@ -96,27 +96,30 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
             }
         }
         sendMessages();
-        foreach (QQmlEngine *engine, enginesToRelease) {
+        foreach (QJSEngine *engine, enginesToRelease) {
             m_stoppingEngines.removeOne(engine);
             emit detachedFromEngine(engine);
         }
     }
 }
 
-void QQmlProfilerServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlProfilerServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be added from the engine thread");
 
     QMutexLocker lock(&m_configMutex);
-    QQmlProfilerAdapter *qmlAdapter = new QQmlProfilerAdapter(this, QQmlEnginePrivate::get(engine));
+    if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine)) {
+        QQmlProfilerAdapter *qmlAdapter =
+                new QQmlProfilerAdapter(this, QQmlEnginePrivate::get(qmlEngine));
+        addEngineProfiler(qmlAdapter, engine);
+    }
     QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
-    addEngineProfiler(qmlAdapter, engine);
     addEngineProfiler(v4Adapter, engine);
     QQmlConfigurableDebugService<QQmlProfilerService>::engineAboutToBeAdded(engine);
 }
 
-void QQmlProfilerServiceImpl::engineAdded(QQmlEngine *engine)
+void QQmlProfilerServiceImpl::engineAdded(QJSEngine *engine)
 {
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be added from the engine thread");
@@ -126,7 +129,7 @@ void QQmlProfilerServiceImpl::engineAdded(QQmlEngine *engine)
         profiler->stopWaiting();
 }
 
-void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be removed from the engine thread");
@@ -146,7 +149,7 @@ void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
     }
 }
 
-void QQmlProfilerServiceImpl::engineRemoved(QQmlEngine *engine)
+void QQmlProfilerServiceImpl::engineRemoved(QJSEngine *engine)
 {
     Q_ASSERT_X(QThread::currentThread() == engine->thread(), Q_FUNC_INFO,
                "QML profilers have to be removed from the engine thread");
@@ -159,7 +162,7 @@ void QQmlProfilerServiceImpl::engineRemoved(QQmlEngine *engine)
     m_engineProfilers.remove(engine);
 }
 
-void QQmlProfilerServiceImpl::addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine)
+void QQmlProfilerServiceImpl::addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QJSEngine *engine)
 {
     profiler->moveToThread(thread());
     profiler->synchronize(m_timer);
@@ -208,7 +211,7 @@ void QQmlProfilerServiceImpl::removeProfilerFromStartTimes(const QQmlAbstractPro
  *
  * If any engine profiler is started like that also start all global profilers.
  */
-void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 features)
+void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features)
 {
     QMutexLocker lock(&m_configMutex);
 
@@ -226,8 +229,8 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
         if (startedAny)
             d << idForObject(engine);
     } else {
-        QSet<QQmlEngine *> engines;
-        for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
+        QSet<QJSEngine *> engines;
+        for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
                 i != m_engineProfilers.end(); ++i) {
             if (!i.value()->isRunning()) {
                 engines << i.key();
@@ -235,7 +238,7 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
                 startedAny = true;
             }
         }
-        foreach (QQmlEngine *profiledEngine, engines)
+        foreach (QJSEngine *profiledEngine, engines)
             d << idForObject(profiledEngine);
     }
 
@@ -258,14 +261,14 @@ void QQmlProfilerServiceImpl::startProfiling(QQmlEngine *engine, quint64 feature
  * If afterwards no more engine profilers are running, also stop all global profilers. Otherwise
  * only make them report their data.
  */
-void QQmlProfilerServiceImpl::stopProfiling(QQmlEngine *engine)
+void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     QList<QQmlAbstractProfilerAdapter *> stopping;
     QList<QQmlAbstractProfilerAdapter *> reporting;
 
     bool stillRunning = false;
-    for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
+    for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {
             if (engine == 0 || i.key() == engine) {
@@ -312,9 +315,9 @@ void QQmlProfilerServiceImpl::sendMessages()
     if (m_waitingForStop) {
         traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
 
-        QSet<QQmlEngine *> seen;
+        QSet<QJSEngine *> seen;
         foreach (QQmlAbstractProfilerAdapter *profiler, m_startTimes) {
-            for (QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
+            for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
                     i != m_engineProfilers.end(); ++i) {
                 if (i.value() == profiler && !seen.contains(i.key())) {
                     seen << i.key();
@@ -366,7 +369,7 @@ void QQmlProfilerServiceImpl::stateAboutToBeChanged(QQmlDebugService::State newS
 
     // Stop all profiling and send the data before we get disabled.
     if (newState != Enabled) {
-        foreach (QQmlEngine *engine, m_engineProfilers.keys())
+        foreach (QJSEngine *engine, m_engineProfilers.keys())
             stopProfiling(engine);
     }
 }
@@ -402,9 +405,9 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
 
     // If engineId == -1 objectForId() and then the cast will return 0.
     if (enabled)
-        startProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)), features);
+        startProfiling(qobject_cast<QJSEngine *>(objectForId(engineId)), features);
     else
-        stopProfiling(qobject_cast<QQmlEngine *>(objectForId(engineId)));
+        stopProfiling(qobject_cast<QJSEngine *>(objectForId(engineId)));
 
     stopWaiting();
 }

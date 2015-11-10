@@ -45,15 +45,15 @@ class QQmlNativeDebugConnector : public QQmlDebugConnector
 
 public:
     QQmlNativeDebugConnector();
-    ~QQmlNativeDebugConnector();
+    ~QQmlNativeDebugConnector() Q_DECL_OVERRIDE;
 
-    bool blockingMode() const;
-    QQmlDebugService *service(const QString &name) const;
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
-    bool addService(const QString &name, QQmlDebugService *service);
-    bool removeService(const QString &name);
-    bool open(const QVariantHash &configuration);
+    bool blockingMode() const Q_DECL_OVERRIDE;
+    QQmlDebugService *service(const QString &name) const Q_DECL_OVERRIDE;
+    void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
+    bool removeService(const QString &name) Q_DECL_OVERRIDE;
+    bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
     static void setDataStreamVersion(int version);
 
 private slots:

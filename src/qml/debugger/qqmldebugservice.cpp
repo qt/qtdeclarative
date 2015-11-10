@@ -182,21 +182,21 @@ void QQmlDebugService::messageReceived(const QByteArray &)
 {
 }
 
-void QQmlDebugService::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlDebugService::engineAboutToBeAdded(QJSEngine *engine)
 {
     emit attachedToEngine(engine);
 }
 
-void QQmlDebugService::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlDebugService::engineAboutToBeRemoved(QJSEngine *engine)
 {
     emit detachedFromEngine(engine);
 }
 
-void QQmlDebugService::engineAdded(QQmlEngine *)
+void QQmlDebugService::engineAdded(QJSEngine *)
 {
 }
 
-void QQmlDebugService::engineRemoved(QQmlEngine *)
+void QQmlDebugService::engineRemoved(QJSEngine *)
 {
 }
 

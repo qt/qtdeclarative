@@ -37,7 +37,7 @@
 #include "qqmldebugpacket.h"
 
 #include <private/qqmldebugservice_p.h>
-#include <private/qqmlengine_p.h>
+#include <private/qjsengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
@@ -126,25 +126,25 @@ class QQmlDebugServerImpl : public QQmlDebugServer
 public:
     QQmlDebugServerImpl();
 
-    bool blockingMode() const;
+    bool blockingMode() const Q_DECL_OVERRIDE;
 
-    QQmlDebugService *service(const QString &name) const;
+    QQmlDebugService *service(const QString &name) const Q_DECL_OVERRIDE;
 
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
+    void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
 
-    bool addService(const QString &name, QQmlDebugService *service);
-    bool removeService(const QString &name);
+    bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
+    bool removeService(const QString &name) Q_DECL_OVERRIDE;
 
-    bool open(const QVariantHash &configuration);
-    void setDevice(QIODevice *socket);
+    bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
+    void setDevice(QIODevice *socket) Q_DECL_OVERRIDE;
 
     void parseArguments();
 
     static void cleanup();
 
 private slots:
-    void wakeEngine(QQmlEngine *engine);
+    void wakeEngine(QJSEngine *engine);
     void sendMessage(const QString &name, const QByteArray &message);
     void sendMessages(const QString &name, const QList<QByteArray> &messages);
     void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
@@ -179,7 +179,7 @@ private:
     bool m_gotHello;
     bool m_blockingMode;
 
-    QHash<QQmlEngine *, EngineCondition> m_engineConditions;
+    QHash<QJSEngine *, EngineCondition> m_engineConditions;
 
     QMutex m_helloMutex;
     QWaitCondition m_helloCondition;
@@ -559,7 +559,7 @@ QQmlDebugService *QQmlDebugServerImpl::service(const QString &name) const
     return m_plugins.value(name);
 }
 
-void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
+void QQmlDebugServerImpl::addEngine(QJSEngine *engine)
 {
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != &m_thread);
@@ -574,7 +574,7 @@ void QQmlDebugServerImpl::addEngine(QQmlEngine *engine)
         service->engineAdded(engine);
 }
 
-void QQmlDebugServerImpl::removeEngine(QQmlEngine *engine)
+void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
 {
     // to be executed outside of debugger thread
     Q_ASSERT(QThread::currentThread() != &m_thread);
@@ -602,10 +602,10 @@ bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *serv
     connect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
             this, SLOT(sendMessages(QString,QList<QByteArray>)));
 
-    connect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
-            this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
-    connect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
-            this, SLOT(wakeEngine(QQmlEngine*)), Qt::QueuedConnection);
+    connect(service, SIGNAL(attachedToEngine(QJSEngine*)),
+            this, SLOT(wakeEngine(QJSEngine*)), Qt::QueuedConnection);
+    connect(service, SIGNAL(detachedFromEngine(QJSEngine*)),
+            this, SLOT(wakeEngine(QJSEngine*)), Qt::QueuedConnection);
 
     service->setState(QQmlDebugService::Unavailable);
     m_plugins.insert(name, service);
@@ -625,10 +625,10 @@ bool QQmlDebugServerImpl::removeService(const QString &name)
     m_plugins.remove(name);
     service->setState(QQmlDebugService::NotConnected);
 
-    disconnect(service, SIGNAL(detachedFromEngine(QQmlEngine*)),
-               this, SLOT(wakeEngine(QQmlEngine*)));
-    disconnect(service, SIGNAL(attachedToEngine(QQmlEngine*)),
-               this, SLOT(wakeEngine(QQmlEngine*)));
+    disconnect(service, SIGNAL(detachedFromEngine(QJSEngine*)),
+               this, SLOT(wakeEngine(QJSEngine*)));
+    disconnect(service, SIGNAL(attachedToEngine(QJSEngine*)),
+               this, SLOT(wakeEngine(QJSEngine*)));
 
     disconnect(service, SIGNAL(messagesToClient(QString,QList<QByteArray>)),
                this, SLOT(sendMessages(QString,QList<QByteArray>)));
@@ -670,7 +670,7 @@ void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArr
     }
 }
 
-void QQmlDebugServerImpl::wakeEngine(QQmlEngine *engine)
+void QQmlDebugServerImpl::wakeEngine(QJSEngine *engine)
 {
     // to be executed in debugger thread
     Q_ASSERT(QThread::currentThread() == thread());

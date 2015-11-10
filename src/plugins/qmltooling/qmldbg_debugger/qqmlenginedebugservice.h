@@ -89,9 +89,9 @@ public:
         bool hasNotifySignal;
     };
 
-    void engineAboutToBeAdded(QQmlEngine *);
-    void engineAboutToBeRemoved(QQmlEngine *);
-    void objectCreated(QQmlEngine *, QObject *);
+    void engineAboutToBeAdded(QJSEngine *) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QJSEngine *) Q_DECL_OVERRIDE;
+    void objectCreated(QJSEngine *, QObject *) Q_DECL_OVERRIDE;
 
     void setStatesDelegate(QQmlDebugStatesDelegate *);
 
@@ -120,7 +120,7 @@ private:
     QList<QObject *> objectForLocationInfo(const QString &filename, int lineNumber,
                                            int columnNumber);
 
-    QList<QQmlEngine *> m_engines;
+    QList<QJSEngine *> m_engines;
     QQmlWatcher *m_watch;
     QQmlDebugStatesDelegate *m_statesDelegate;
 };

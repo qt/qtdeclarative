@@ -68,14 +68,14 @@ class QQmlNativeDebugServiceImpl : public QQmlNativeDebugService
 public:
     QQmlNativeDebugServiceImpl(QObject *parent);
 
-    ~QQmlNativeDebugServiceImpl();
+    ~QQmlNativeDebugServiceImpl() Q_DECL_OVERRIDE;
 
-    void engineAboutToBeAdded(QQmlEngine *engine);
-    void engineAboutToBeRemoved(QQmlEngine *engine);
+    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
 
-    void stateAboutToBeChanged(State state);
+    void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
 
-    void messageReceived(const QByteArray &message);
+    void messageReceived(const QByteArray &message) Q_DECL_OVERRIDE;
 
     void emitAsynchronousMessageToClient(const QJsonObject &message);
 

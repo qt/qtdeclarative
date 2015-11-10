@@ -66,7 +66,7 @@ protected:
     {
         QMutexLocker lock(&m_configMutex);
         m_waitingForConfiguration = false;
-        foreach (QQmlEngine *engine, m_waitingEngines)
+        foreach (QJSEngine *engine, m_waitingEngines)
             emit Base::attachedToEngine(engine);
         m_waitingEngines.clear();
     }
@@ -79,7 +79,7 @@ protected:
                                      QQmlDebugConnector::instance()->blockingMode());
     }
 
-    void stateChanged(QQmlDebugService::State newState)
+    void stateChanged(QQmlDebugService::State newState) Q_DECL_OVERRIDE
     {
         if (newState != QQmlDebugService::Enabled)
             stopWaiting();
@@ -87,7 +87,7 @@ protected:
             init();
     }
 
-    void engineAboutToBeAdded(QQmlEngine *engine)
+    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE
     {
         QMutexLocker lock(&m_configMutex);
         if (m_waitingForConfiguration)
@@ -97,7 +97,7 @@ protected:
     }
 
     QMutex m_configMutex;
-    QList<QQmlEngine *> m_waitingEngines;
+    QList<QJSEngine *> m_waitingEngines;
     bool m_waitingForConfiguration;
 };
 

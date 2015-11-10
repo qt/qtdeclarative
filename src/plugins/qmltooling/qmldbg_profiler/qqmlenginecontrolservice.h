@@ -71,18 +71,18 @@ protected:
     friend class QQmlProfilerServiceFactory;
 
     QMutex dataMutex;
-    QList<QQmlEngine *> startingEngines;
-    QList<QQmlEngine *> stoppingEngines;
+    QList<QJSEngine *> startingEngines;
+    QList<QJSEngine *> stoppingEngines;
 
-    void messageReceived(const QByteArray &);
-    void engineAboutToBeAdded(QQmlEngine *);
-    void engineAboutToBeRemoved(QQmlEngine *);
-    void engineAdded(QQmlEngine *);
-    void engineRemoved(QQmlEngine *);
+    void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void engineAboutToBeAdded(QJSEngine *) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QJSEngine *) Q_DECL_OVERRIDE;
+    void engineAdded(QJSEngine *) Q_DECL_OVERRIDE;
+    void engineRemoved(QJSEngine *) Q_DECL_OVERRIDE;
 
-    void sendMessage(MessageType type, QQmlEngine *engine);
+    void sendMessage(MessageType type, QJSEngine *engine);
 
-    void stateChanged(State);
+    void stateChanged(State) Q_DECL_OVERRIDE;
 };
 
 QT_END_NAMESPACE

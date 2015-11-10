@@ -47,8 +47,7 @@
 #include <private/qv4isel_moth_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
-#include <qqmlengine.h>
-
+#include <QtQml/qjsengine.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
@@ -724,7 +723,7 @@ QQmlNativeDebugServiceImpl::~QQmlNativeDebugServiceImpl()
     delete m_breakHandler;
 }
 
-void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Adding engine" << engine);
     if (engine) {
@@ -741,7 +740,7 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
     QQmlDebugService::engineAboutToBeAdded(engine);
 }
 
-void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Removing engine" << engine);
     if (engine) {

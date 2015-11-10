@@ -64,8 +64,6 @@
 QT_BEGIN_NAMESPACE
 
 class QUrl;
-class QQmlEngine;
-
 
 class QQmlProfilerServiceImpl :
         public QQmlConfigurableDebugService<QQmlProfilerService>,
@@ -74,21 +72,22 @@ class QQmlProfilerServiceImpl :
     Q_OBJECT
 public:
 
-    void engineAboutToBeAdded(QQmlEngine *engine);
-    void engineAboutToBeRemoved(QQmlEngine *engine);
-    void engineAdded(QQmlEngine *engine);
-    void engineRemoved(QQmlEngine *engine);
+    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
 
-    void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
-    void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler);
+    void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
+    void removeGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
 
-    void startProfiling(QQmlEngine *engine, quint64 features = std::numeric_limits<quint64>::max());
-    void stopProfiling(QQmlEngine *engine);
+    void startProfiling(QJSEngine *engine,
+                        quint64 features = std::numeric_limits<quint64>::max()) Q_DECL_OVERRIDE;
+    void stopProfiling(QJSEngine *engine) Q_DECL_OVERRIDE;
 
     QQmlProfilerServiceImpl(QObject *parent = 0);
-    ~QQmlProfilerServiceImpl();
+    ~QQmlProfilerServiceImpl() Q_DECL_OVERRIDE;
 
-    void dataReady(QQmlAbstractProfilerAdapter *profiler);
+    void dataReady(QQmlAbstractProfilerAdapter *profiler) Q_DECL_OVERRIDE;
 
 signals:
     void startFlushTimer();
@@ -98,14 +97,14 @@ private slots:
     void flush();
 
 protected:
-    virtual void stateAboutToBeChanged(State state);
-    virtual void messageReceived(const QByteArray &);
+    virtual void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
+    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
 
 private:
     friend class QQmlProfilerServiceFactory;
 
     void sendMessages();
-    void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QQmlEngine *engine);
+    void addEngineProfiler(QQmlAbstractProfilerAdapter *profiler, QJSEngine *engine);
     void removeProfilerFromStartTimes(const QQmlAbstractProfilerAdapter *profiler);
 
     QElapsedTimer m_timer;
@@ -113,8 +112,8 @@ private:
     bool m_waitingForStop;
 
     QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
-    QMultiHash<QQmlEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;
-    QList<QQmlEngine *> m_stoppingEngines;
+    QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;
+    QList<QJSEngine *> m_stoppingEngines;
     QMultiMap<qint64, QQmlAbstractProfilerAdapter *> m_startTimes;
 };
 

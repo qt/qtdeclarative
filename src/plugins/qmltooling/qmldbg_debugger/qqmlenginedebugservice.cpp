@@ -453,7 +453,7 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
         rs << queryId << m_engines.count();
 
         for (int ii = 0; ii < m_engines.count(); ++ii) {
-            QQmlEngine *engine = m_engines.at(ii);
+            QJSEngine *engine = m_engines.at(ii);
 
             QString engineName = engine->objectName();
             int engineId = QQmlDebugService::idForObject(engine);
@@ -773,7 +773,7 @@ void QQmlEngineDebugServiceImpl::propertyChanged(int id, int objectId, const QMe
     emit messageToClient(name(), rs.data());
 }
 
-void QQmlEngineDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
+void QQmlEngineDebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(!m_engines.contains(engine));
@@ -782,7 +782,7 @@ void QQmlEngineDebugServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
     emit attachedToEngine(engine);
 }
 
-void QQmlEngineDebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
+void QQmlEngineDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     Q_ASSERT(engine);
     Q_ASSERT(m_engines.contains(engine));
@@ -791,7 +791,7 @@ void QQmlEngineDebugServiceImpl::engineAboutToBeRemoved(QQmlEngine *engine)
     emit detachedFromEngine(engine);
 }
 
-void QQmlEngineDebugServiceImpl::objectCreated(QQmlEngine *engine, QObject *object)
+void QQmlEngineDebugServiceImpl::objectCreated(QJSEngine *engine, QObject *object)
 {
     Q_ASSERT(engine);
     Q_ASSERT(m_engines.contains(engine));
