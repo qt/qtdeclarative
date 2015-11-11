@@ -33,6 +33,7 @@
 
 #include "qqmlprofilerclient_p_p.h"
 #include "qqmldebugconnection_p.h"
+#include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -47,7 +48,7 @@ QQmlProfilerClient::QQmlProfilerClient(QQmlProfilerClientPrivate &dd) :
 }
 
 QQmlProfilerClientPrivate::QQmlProfilerClientPrivate(QQmlDebugConnection *connection) :
-    QQmlDebugClientPrivate(QStringLiteral("CanvasFrameRate"), connection),
+    QQmlDebugClientPrivate(QQmlProfilerService::s_key, connection),
     features(std::numeric_limits<quint64>::max())
 {
 }
