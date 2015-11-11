@@ -434,10 +434,15 @@ Returns a Matrix4x4 with the specified values.
 Alternatively, the function may be called with a single argument
 where that argument is a JavaScript array which contains the sixteen
 matrix values.
+Finally, the function may be called with no arguments and the resulting
+matrix will be the identity matrix.
 */
 ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
+
+    if (ctx->argc() == 0)
+        return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, Q_NULLPTR));
 
     if (ctx->argc() == 1 && ctx->args()[0].isObject()) {
         bool ok = false;
