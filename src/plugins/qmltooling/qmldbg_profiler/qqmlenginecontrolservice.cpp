@@ -108,7 +108,7 @@ void QQmlEngineControlServiceImpl::engineRemoved(QJSEngine *engine)
 void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QJSEngine *engine)
 {
     QQmlDebugPacket d;
-    d << type << idForObject(engine);
+    d << int(type) << idForObject(engine);
     emit messageToClient(name(), d.data());
 }
 
