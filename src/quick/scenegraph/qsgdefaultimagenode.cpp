@@ -284,7 +284,7 @@ void QSGDefaultImageNode::update()
 void QSGDefaultImageNode::preprocess()
 {
     bool doDirty = false;
-    QSGLayer *t = qobject_cast<QSGLayer *>(m_material.texture());
+    QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
     if (t) {
         doDirty = t->updateTexture();
         updateGeometry();
