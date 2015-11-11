@@ -37,6 +37,7 @@
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 #include <private/qpacket_p.h>
+#include <private/qqmlenginecontrolclient_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtCore/qlibraryinfo.h>
@@ -44,49 +45,29 @@
 #define STR_PORT_FROM "13773"
 #define STR_PORT_TO "13783"
 
-class QQmlEngineControlClient : public QQmlDebugClient
+class QQmlEngineBlocker : public QObject
 {
     Q_OBJECT
 public:
-    enum MessageType {
-        EngineAboutToBeAdded,
-        EngineAdded,
-        EngineAboutToBeRemoved,
-        EngineRemoved,
+    QQmlEngineBlocker(QQmlEngineControlClient *parent);
 
-        MaximumMessageType
-    };
-
-    enum CommandType {
-        StartWaitingEngine,
-        StopWaitingEngine,
-
-        MaximumCommandType
-    };
-
-    QQmlEngineControlClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("EngineControl"), connection)
-    {}
-
-
-    void command(CommandType command, int engine) {
-        QPacket stream(connection()->currentDataStreamVersion());
-        stream << (int)command << engine;
-        sendMessage(stream.data());
-    }
-
-    QList<int> startingEngines;
-    QList<int> stoppingEngines;
-
-signals:
-    void engineAboutToBeAdded();
-    void engineAdded();
-    void engineAboutToBeRemoved();
-    void engineRemoved();
-
-protected:
-    void messageReceived(const QByteArray &message);
+public slots:
+    void blockEngine(int engineId, const QString &name);
 };
+
+QQmlEngineBlocker::QQmlEngineBlocker(QQmlEngineControlClient *parent): QObject(parent)
+{
+    connect(parent, &QQmlEngineControlClient::engineAboutToBeAdded,
+            this, &QQmlEngineBlocker::blockEngine);
+    connect(parent, &QQmlEngineControlClient::engineAboutToBeRemoved,
+            this, &QQmlEngineBlocker::blockEngine);
+}
+
+void QQmlEngineBlocker::blockEngine(int engineId, const QString &name)
+{
+    Q_UNUSED(name);
+    static_cast<QQmlEngineControlClient *>(parent())->blockEngine(engineId);
+}
 
 class tst_QQmlEngineControl : public QQmlDataTest
 {
@@ -98,7 +79,6 @@ public:
         , m_connection(0)
         , m_client(0)
     {}
-
 
 private:
     QQmlDebugProcess *m_process;
@@ -117,41 +97,6 @@ private slots:
     void stopEngine();
 };
 
-void QQmlEngineControlClient::messageReceived(const QByteArray &message)
-{
-    QPacket stream(connection()->currentDataStreamVersion(), message);
-
-    int messageType;
-    int engineId;
-    stream >> messageType >> engineId;
-
-    switch (messageType) {
-    case EngineAboutToBeAdded:
-        startingEngines.append(engineId);
-        emit engineAboutToBeAdded();
-        break;
-    case EngineAdded:
-        QVERIFY(startingEngines.contains(engineId));
-        startingEngines.removeOne(engineId);
-        emit engineAdded();
-        break;
-    case EngineAboutToBeRemoved:
-        stoppingEngines.append(engineId);
-        emit engineAboutToBeRemoved();
-        break;
-    case EngineRemoved:
-        QVERIFY(stoppingEngines.contains(engineId));
-        stoppingEngines.removeOne(engineId);
-        emit engineRemoved();
-        break;
-    default:
-        QString failMsg = QString("Unknown message type:") + messageType;
-        QFAIL(qPrintable(failMsg));
-        break;
-    }
-    QVERIFY(stream.atEnd());
-}
-
 void tst_QQmlEngineControl::connect(const QString &testFile, bool restrictServices)
 {
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
@@ -168,6 +113,7 @@ void tst_QQmlEngineControl::connect(const QString &testFile, bool restrictServic
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlEngineControlClient(m_connection);
+    new QQmlEngineBlocker(m_client);
     QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
 
     const int port = m_process->debugPort();
@@ -214,10 +160,10 @@ void tst_QQmlEngineControl::startEngine()
 
     connect("test.qml", restrictMode);
 
-    QTRY_VERIFY(!m_client->startingEngines.empty());
-    m_client->command(QQmlEngineControlClient::StartWaitingEngine, m_client->startingEngines.last());
+    QTRY_VERIFY(!m_client->blockedEngines().empty());
+    m_client->releaseEngine(m_client->blockedEngines().last());
 
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded())),
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
 }
 
@@ -232,16 +178,16 @@ void tst_QQmlEngineControl::stopEngine()
 
     connect("exit.qml", restrictMode);
 
-    QTRY_VERIFY(!m_client->startingEngines.empty());
-    m_client->command(QQmlEngineControlClient::StartWaitingEngine, m_client->startingEngines.last());
+    QTRY_VERIFY(!m_client->blockedEngines().empty());
+    m_client->releaseEngine(m_client->blockedEngines().last());
 
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded())),
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
 
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAboutToBeRemoved())),
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAboutToBeRemoved(int,QString))),
              "No engine about to stop message received in time.");
-    m_client->command(QQmlEngineControlClient::StopWaitingEngine, m_client->stoppingEngines.last());
-    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineRemoved())),
+    m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineRemoved(int,QString))),
              "No engine stop message received in time.");
 }
 
