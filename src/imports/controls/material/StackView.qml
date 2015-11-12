@@ -42,25 +42,37 @@ T.StackView {
 
     //! [popEnter]
     popEnter: Transition {
-        NumberAnimation { property: "x"; from: -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: -root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popEnter]
 
     //! [popExit]
     popExit: Transition {
-        NumberAnimation { property: "x"; from: 0; to: root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [popExit]
 
     //! [pushEnter]
     pushEnter: Transition {
-        NumberAnimation { property: "x"; from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushEnter]
 
     //! [pushExit]
     pushExit: Transition {
-        NumberAnimation { property: "x"; from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+        XAnimator { from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
     }
     //! [pushExit]
+
+    //! [replaceEnter]
+    replaceEnter: Transition {
+        XAnimator { from: root.width; to: 0; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceEnter]
+
+    //! [replaceExit]
+    replaceExit: Transition {
+        XAnimator { from: 0; to: -root.width; duration: 400; easing.type: Easing.OutCubic }
+    }
+    //! [replaceExit]
 }
