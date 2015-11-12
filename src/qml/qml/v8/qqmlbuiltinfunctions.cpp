@@ -1450,9 +1450,6 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
-    if (!v4->qmlEngine())
-        return QV4::Encode::undefined(); // Not yet implemented for JavaScript.
-
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
@@ -1461,7 +1458,7 @@ QV4::ReturnedValue ConsoleObject::method_profile(CallContext *ctx)
     if (!service) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
     } else {
-        service->startProfiling(v4->qmlEngine());
+        service->startProfiling(v4->jsEngine());
         logger.debug("Profiling started.");
     }
 
@@ -1472,9 +1469,6 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
 
-    if (!v4->qmlEngine())
-        return QV4::Encode::undefined(); // Not yet implemented for JavaScript.
-
     QV4::StackFrame frame = v4->currentStackFrame();
     const QByteArray baSource = frame.source.toUtf8();
     const QByteArray baFunction = frame.function.toUtf8();
@@ -1484,7 +1478,7 @@ QV4::ReturnedValue ConsoleObject::method_profileEnd(CallContext *ctx)
     if (!service) {
         logger.warning("Ignoring console.profileEnd(): the debug service is disabled.");
     } else {
-        service->stopProfiling(v4->qmlEngine());
+        service->stopProfiling(v4->jsEngine());
         logger.debug("Profiling ended.");
     }
 
