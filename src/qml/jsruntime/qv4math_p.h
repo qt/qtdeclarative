@@ -47,6 +47,7 @@
 #include <qglobal.h>
 
 #include <QtCore/qnumeric.h>
+#include <QtCore/private/qnumeric_p.h>
 #include <cmath>
 
 #if defined(Q_CC_GNU)
@@ -59,83 +60,29 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-#if defined(Q_CC_GNU) && defined(Q_PROCESSOR_X86)
-
 static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 {
-    quint8 overflow = 0;
-    int aa = a;
-
-    asm ("addl %2, %1\n"
-         "seto %0"
-    : "=q" (overflow), "=r" (aa)
-         : "r" (b), "1" (aa)
-         : "cc"
-    );
-    if (Q_UNLIKELY(overflow))
+    int result;
+    if (Q_UNLIKELY(add_overflow(a, b, &result)))
         return Primitive::fromDouble(static_cast<double>(a) + b).asReturnedValue();
-    return Primitive::fromInt32(aa).asReturnedValue();
+    return Primitive::fromInt32(result).asReturnedValue();
 }
 
 static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 {
-    quint8 overflow = 0;
-    int aa = a;
-
-    asm ("subl %2, %1\n"
-         "seto %0"
-    : "=q" (overflow), "=r" (aa)
-         : "r" (b), "1" (aa)
-         : "cc"
-    );
-    if (Q_UNLIKELY(overflow))
+    int result;
+    if (Q_UNLIKELY(sub_overflow(a, b, &result)))
         return Primitive::fromDouble(static_cast<double>(a) - b).asReturnedValue();
-    return Primitive::fromInt32(aa).asReturnedValue();
+    return Primitive::fromInt32(result).asReturnedValue();
 }
 
 static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
 {
-    quint8 overflow = 0;
-    int aa = a;
-
-    asm ("imul %2, %1\n"
-         "setc %0"
-         : "=q" (overflow), "=r" (aa)
-         : "r" (b), "1" (aa)
-         : "cc"
-    );
-    if (Q_UNLIKELY(overflow))
+    int result;
+    if (Q_UNLIKELY(mul_overflow(a, b, &result)))
         return Primitive::fromDouble(static_cast<double>(a) * b).asReturnedValue();
-    return Primitive::fromInt32(aa).asReturnedValue();
+    return Primitive::fromInt32(result).asReturnedValue();
 }
-
-#else
-
-static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
-{
-    qint64 result = static_cast<qint64>(a) + b;
-    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
-        return Primitive::fromDouble(static_cast<double>(a) + b).asReturnedValue();
-    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
-}
-
-static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
-{
-    qint64 result = static_cast<qint64>(a) - b;
-    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
-        return Primitive::fromDouble(static_cast<double>(a) - b).asReturnedValue();
-    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
-}
-
-static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
-{
-    qint64 result = static_cast<qint64>(a) * b;
-    if (Q_UNLIKELY(result > INT_MAX || result < INT_MIN))
-        return Primitive::fromDouble(static_cast<double>(a) * b).asReturnedValue();
-    return Primitive::fromInt32(static_cast<int>(result)).asReturnedValue();
-}
-
-#endif
 
 }
 
