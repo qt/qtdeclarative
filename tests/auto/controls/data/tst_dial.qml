@@ -78,8 +78,6 @@ TestCase {
 
     function test_value() {
         compare(dial.value, 0.0);
-        compare(Math.floor(dial.handle.mapToItem(parent, 0, 0).x), 28);
-        compare(Math.floor(dial.handle.mapToItem(parent, 0, 0).y), 90);
 
         dial.value = 0.5;
         compare(dial.value, 0.5);
