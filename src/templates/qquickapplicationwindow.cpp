@@ -94,7 +94,6 @@ void QQuickApplicationWindowPrivate::relayout()
     qreal hh = header ? header->height() : 0;
     qreal fh = footer ? footer->height() : 0;
 
-    content->setX(0);
     content->setY(hh);
     content->setWidth(q->width());
     content->setHeight(q->height() - hh - fh);
@@ -217,7 +216,6 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
     }
 }
 
-
 QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
 {
     return QQuickItemPrivate::get(contentItem())->data();
@@ -225,11 +223,10 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
 
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
-    Q_D(const QQuickApplicationWindow);
+    QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->contentItem) {
-        QQuickApplicationWindowPrivate *ncd = const_cast<QQuickApplicationWindowPrivate *>(d);
-        ncd->contentItem = new QQuickItem(QQuickWindow::contentItem());
-        ncd->relayout();
+        d->contentItem = new QQuickItem(QQuickWindow::contentItem());
+        d->relayout();
     }
     return d->contentItem;
 }
