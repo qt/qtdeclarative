@@ -215,6 +215,12 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
 {
     QMutexLocker lock(&m_configMutex);
 
+    if (features & static_cast<quint64>(1) << ProfileDebugMessages) {
+        if (QDebugMessageService *messageService =
+                QQmlDebugConnector::instance()->service<QDebugMessageService>())
+            messageService->synchronizeTime(m_timer);
+    }
+
     QQmlDebugPacket d;
 
     d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;

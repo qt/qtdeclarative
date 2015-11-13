@@ -133,6 +133,8 @@ class Q_QML_PRIVATE_EXPORT QDebugMessageService : protected QQmlDebugService
 public:
     static const QString s_key;
 
+    virtual void synchronizeTime(const QElapsedTimer &otherTimer) = 0;
+
 protected:
     friend class QQmlDebugConnector;
 

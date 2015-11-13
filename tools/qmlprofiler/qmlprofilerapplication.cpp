@@ -71,8 +71,12 @@ static const char *features[] = {
     "creating",
     "binding",
     "handlingsignal",
-    "inputevents"
+    "inputevents",
+    "debugmessages"
 };
+
+Q_STATIC_ASSERT(sizeof(features) ==
+                QQmlProfilerDefinitions::MaximumProfileFeature * sizeof(char *));
 
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),

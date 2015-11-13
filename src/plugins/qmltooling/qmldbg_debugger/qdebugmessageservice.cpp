@@ -49,6 +49,7 @@ QDebugMessageServiceImpl::QDebugMessageServiceImpl(QObject *parent) :
 {
     // don't execute stateChanged() in parallel
     QMutexLocker lock(&initMutex);
+    timer.start();
     if (state() == Enabled) {
         oldMsgHandler = qInstallMessageHandler(DebugMessageHandler);
         prevState = Enabled;
@@ -64,8 +65,8 @@ void QDebugMessageServiceImpl::sendDebugMessage(QtMsgType type,
     //only if a client is connected to it.
     QQmlDebugPacket ws;
     ws << QByteArray("MESSAGE") << type << buf.toUtf8();
-    ws << QString::fromLatin1(ctxt.file).toUtf8();
-    ws << ctxt.line << QString::fromLatin1(ctxt.function).toUtf8();
+    ws << QByteArray(ctxt.file) << ctxt.line << QByteArray(ctxt.function);
+    ws << QByteArray(ctxt.category) << timer.nsecsElapsed();
 
     emit messageToClient(name(), ws.data());
     if (oldMsgHandler)
@@ -87,6 +88,12 @@ void QDebugMessageServiceImpl::stateChanged(State state)
     }
 
     prevState = state;
+}
+
+void QDebugMessageServiceImpl::synchronizeTime(const QElapsedTimer &otherTimer)
+{
+    QMutexLocker lock(&initMutex);
+    timer = otherTimer;
 }
 
 QT_END_NAMESPACE

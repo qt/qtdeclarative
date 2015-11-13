@@ -134,6 +134,7 @@ struct QQmlProfilerDefinitions {
         ProfileBinding,
         ProfileHandlingSignal,
         ProfileInputEvents,
+        ProfileDebugMessages,
 
         MaximumProfileFeature
     };

@@ -79,15 +79,19 @@ struct LogEntry {
     int line;
     QString file;
     QString function;
+    QString category;
 
-    QString toString() const { return QString::number(type) + ": " + message; }
+    QString toString() const
+    {
+        return QString::number(type) + ": " + message + " (" + category + ")";
+    }
 };
 
 bool operator==(const LogEntry &t1, const LogEntry &t2)
 {
     return t1.type == t2.type && t1.message == t2.message
             && t1.line == t2.line && t1.file == t2.file
-            && t1.function == t2.function;
+            && t1.function == t2.function && t1.category == t2.category;
 }
 
 class QQmlDebugMsgClient : public QQmlDebugClient
@@ -129,17 +133,21 @@ void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
         QByteArray message;
         QByteArray file;
         QByteArray function;
+        QByteArray category;
+        qint64 timestamp;
         int line;
-        ds >> type >> message >> file >> line >> function;
+        ds >> type >> message >> file >> line >> function >> category >> timestamp;
         QVERIFY(ds.atEnd());
 
         QVERIFY(type >= QtDebugMsg);
         QVERIFY(type <= QtFatalMsg);
+        QVERIFY(timestamp > 0);
 
         LogEntry entry((QtMsgType)type, QString::fromUtf8(message));
         entry.line = line;
         entry.file = QString::fromUtf8(file);
         entry.function = QString::fromUtf8(function);
+        entry.category = QString::fromUtf8(category);
         logBuffer << entry;
         emit debugOutput();
     } else {
@@ -223,10 +231,12 @@ void tst_QDebugMessageService::retrieveDebugOutput()
     entry1.line = 40;
     entry1.file = path;
     entry1.function = QLatin1String("onCompleted");
+    entry1.category = QLatin1String("qml");
     LogEntry entry2(QtDebugMsg, QLatin1String("console.count: 1"));
     entry2.line = 41;
     entry2.file = path;
     entry2.function = QLatin1String("onCompleted");
+    entry2.category = QLatin1String("default");
 
     QVERIFY(m_client->logBuffer.contains(entry1));
     QVERIFY(m_client->logBuffer.contains(entry2));

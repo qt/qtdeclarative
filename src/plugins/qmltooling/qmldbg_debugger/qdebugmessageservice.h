@@ -49,6 +49,7 @@
 
 #include <QtCore/qlogging.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qelapsedtimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,8 +61,8 @@ class QDebugMessageServiceImpl : public QDebugMessageService
 public:
     QDebugMessageServiceImpl(QObject *parent = 0);
 
-    void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt,
-                          const QString &buf);
+    void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt, const QString &buf);
+    void synchronizeTime(const QElapsedTimer &otherTimer);
 
 protected:
     void stateChanged(State);
@@ -72,6 +73,7 @@ private:
     QtMessageHandler oldMsgHandler;
     QQmlDebugService::State prevState;
     QMutex initMutex;
+    QElapsedTimer timer;
 };
 
 QT_END_NAMESPACE
