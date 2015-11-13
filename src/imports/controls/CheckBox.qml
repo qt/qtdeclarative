@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.CheckBox {
@@ -54,28 +53,20 @@ T.CheckBox {
 
     //! [indicator]
     indicator: Rectangle {
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 28
+        implicitHeight: 28
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        radius: 3
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        color: control.pressed ? "#bdbebf" : "#ffffff"
+        border.color: control.pressed ? "#26282a" : (control.checked ? "#353637" : "#bdbebf")
 
-        Rectangle {
+        Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            width: 12
-            height: 12
-            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
-            color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
-                           control.checked && control.activeFocus ? control.Theme.focusColor :
-                           control.checked ? control.Theme.accentColor : control.Theme.baseColor,
-                           control.pressed ? control.Theme.pressColor : "transparent")
-            border.width: control.checked || control.pressed ? 0 : 1
-            border.color: control.Theme.frameColor
+            source: "qrc:/images/check.png"
+            visible: control.checked
+//            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
         }
     }
     //! [indicator]
@@ -89,7 +80,7 @@ T.CheckBox {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
+        color: control.enabled ? "#26282a" : "#bdbebf"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Button {
@@ -56,10 +55,9 @@ T.Button {
         y: control.topPadding
         width: control.availableWidth
         height: control.availableHeight
-
         text: control.text
         font: control.font
-        color: control.Theme.selectedTextColor
+        color: control.highlighted ? "#ffffff" : (control.pressed ? "#26282a" : "#353637")
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -68,14 +66,10 @@ T.Button {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 36
-        implicitHeight: 36
-
-        radius: 3
-        color: Qt.darker(Qt.tint(!control.enabled ? control.Theme.disabledColor :
-                                  control.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
-                                  control.pressed ? control.Theme.pressColor : "transparent"),
-                         control.checkable && control.checked ? 1.5 : 1.0)
+        implicitWidth: 100
+        implicitHeight: 40
+        color: control.pressed ? (control.highlighted ? "#585a5c" : "#bdbebf") : (control.highlighted ? "#353637" : "#ffffff")
+        border.color: control.pressed ? "#26282a" : "#353637"
     }
     //! [background]
 }

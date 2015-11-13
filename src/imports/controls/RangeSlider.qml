@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.RangeSlider {
@@ -56,26 +55,14 @@ T.RangeSlider {
     first.handle: Rectangle {
         x: control.leftPadding + (horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 28
+        implicitHeight: 28
         radius: width / 2
         border.width: activeFocus ? 2 : 1
-        border.color: activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        border.color: "#353637"
+        color: first.pressed ? "#bdbebf" : "#ffffff"
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 12
-            height: 12
-            radius: width / 2
-
-            color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
-                            parent.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
-                            control.first.pressed ? control.Theme.pressColor : "transparent")
-        }
     }
     //! [firstHandle]
 
@@ -83,26 +70,14 @@ T.RangeSlider {
     second.handle: Rectangle {
         x: control.leftPadding + (horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 28
+        implicitHeight: 28
         radius: width / 2
         border.width: activeFocus ? 2 : 1
-        border.color: activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        border.color: "#353637"
+        color: second.pressed ? "#bdbebf" : "#ffffff"
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 12
-            height: 12
-            radius: width / 2
-
-            color: Qt.tint(!control.enabled ? control.Theme.disabledColor :
-                            parent.activeFocus ? control.Theme.focusColor : control.Theme.accentColor,
-                            control.second.pressed ? control.Theme.pressColor : "transparent")
-        }
     }
     //! [secondHandle]
 
@@ -114,23 +89,12 @@ T.RangeSlider {
         implicitHeight: horizontal ? 6 : 200
         width: horizontal ? control.availableWidth : implicitWidth
         height: horizontal ? implicitHeight : control.availableHeight
-
-        readonly property bool horizontal: control.orientation === Qt.Horizontal
-
         radius: 3
-        border.color: control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        border.color: "#353637"
+        color: "#ffffff"
         scale: horizontal && control.mirrored ? -1 : 1
 
-        Rectangle {
-            x: parent.horizontal ? control.first.position * parent.width : 2
-            y: parent.horizontal ? 2 : control.second.visualPosition * parent.height + 2
-            width: parent.horizontal ? control.second.position * parent.width - control.first.position * parent.width - 4 : 2
-            height: parent.horizontal ? 2 : control.second.position * parent.height - control.first.position * parent.height - 4
-
-            radius: 3
-            color: control.enabled ? control.Theme.accentColor : control.Theme.disabledColor
-        }
+        readonly property bool horizontal: control.orientation === Qt.Horizontal
     }
     //! [track]
 }

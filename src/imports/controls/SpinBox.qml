@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.SpinBox {
@@ -67,9 +66,9 @@ T.SpinBox {
         text: control.textFromValue(control.value, control.locale)
 
         font: control.font
-        color: control.Theme.textColor
-        selectionColor: control.Theme.selectionColor
-        selectedTextColor: control.Theme.selectedTextColor
+        color: control.enabled ? "#353637" : "#bdbebf"
+//        selectionColor: control.Theme.selectionColor
+//        selectedTextColor: control.Theme.selectedTextColor
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 
@@ -79,69 +78,52 @@ T.SpinBox {
     //! [contentItem]
 
     //! [up.indicator]
-    up.indicator: Item {
-        implicitWidth: 26
-        height: parent.height
+    up.indicator: Rectangle {
         x: control.mirrored ? 0 : parent.width - width
+        implicitWidth: 40
+        implicitHeight: 40
+        color: up.pressed ? "#bdbebf" : "#ffffff"
+        border.color: control.enabled ? "#353637" : "#bdbebf"
 
-        clip: true
-        Rectangle {
-            x: -radius
-            width: parent.width + radius
-            height: parent.height
-            radius: 3
-            color: Qt.tint(Qt.tint(control.Theme.accentColor,
-                                   control.activeFocus ? control.Theme.focusColor : "transparent"),
-                                   control.up.pressed ? control.Theme.pressColor : "transparent")
-        }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.Theme.selectedTextColor
+            color: control.enabled ? "#353637" : "#bdbebf"
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: parent.height / 3
-            color: control.Theme.selectedTextColor
+            color: control.enabled ? "#353637" : "#bdbebf"
         }
     }
     //! [up.indicator]
 
     //! [down.indicator]
-    down.indicator: Item {
-        implicitWidth: 26
-        height: parent.height
+    down.indicator: Rectangle {
         x: control.mirrored ? parent.width - width : 0
+        implicitWidth: 40
+        implicitHeight: 40
+        color: down.pressed ? "#bdbebf" : "#ffffff"
+        border.color: control.enabled ? "#353637" : "#bdbebf"
 
-        clip: true
-        Rectangle {
-            width: parent.width + radius
-            height: parent.height
-            radius: 3
-            color: Qt.tint(Qt.tint(control.Theme.accentColor,
-                                   control.activeFocus ? control.Theme.focusColor : "transparent"),
-                                   control.down.pressed ? control.Theme.pressColor : "transparent")
-        }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: control.Theme.selectedTextColor
+            color: control.enabled ? "#353637" : "#bdbebf"
         }
     }
     //! [down.indicator]
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 80
-        radius: 3
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        implicitWidth: 140
+        border.color: "#bdbebf"
     }
     //! [background]
 }

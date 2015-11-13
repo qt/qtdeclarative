@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.TabBar {
@@ -70,7 +69,7 @@ T.TabBar {
                 height: 4
                 width: parent.width
                 y: parent.height - height
-                color: control.Theme.accentColor
+                color: "#353637"
             }
         }
     }
@@ -81,15 +80,15 @@ T.TabBar {
         implicitWidth: 26
         implicitHeight: 26
 
-        border.color: control.Theme.backgroundColor
+        border.color: "#ffffff"
         border.width: 8
-        color: control.count > 1 ? control.Theme.frameColor : control.Theme.backgroundColor
+        color: control.count > 1 ? "#bdbebf" : "#ffffff"
 
         Rectangle {
             y: parent.height - height
             width: parent.width
             height: 1
-            color: control.Theme.frameColor
+            color: "#bdbebf"
         }
     }
     //! [background]

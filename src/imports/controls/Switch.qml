@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Switch {
@@ -53,32 +52,31 @@ T.Switch {
     spacing: 6
 
     //! [indicator]
-    indicator: Rectangle {
-        implicitWidth: 36
-        implicitHeight: 20
+    indicator: Item {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-
-        radius: 10
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        implicitWidth: 56
+        implicitHeight: 28
 
         Rectangle {
-            width: 20
-            height: 20
-            radius: 10
+            y: parent.height / 2 - height / 2
+            width: 56
+            height: 16
+            radius: 8
+            border.width: 1
+            color: control.checked ? "#353637" : "transparent"
+            border.color: control.checked ? "transparent" : "#353637"
+        }
 
-            color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
-                           control.checked && control.activeFocus ? control.Theme.focusColor :
-                           control.checked ? control.Theme.accentColor : control.Theme.baseColor,
-                           control.pressed ? control.Theme.pressColor : "transparent")
-            border.width: control.checked || control.pressed ? 0 : 1
-            border.color: control.Theme.frameColor
-
-            x: Math.max(0, Math.min(parent.width - width,
-                                    control.visualPosition * parent.width - (width / 2)))
+        Rectangle {
+            x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
+            width: 28
+            height: 28
+            radius: 16
+            color: control.pressed ? "#bdbebf" : "#ffffff"
+            border.width: 1
+            border.color: control.pressed ? "#26282a" : "#353637"
 
             Behavior on x {
                 enabled: !control.pressed
@@ -97,7 +95,7 @@ T.Switch {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
+        color: control.enabled ? "#26282a" : "#bdbebf"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

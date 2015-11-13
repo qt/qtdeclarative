@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.TextField {
@@ -48,9 +47,9 @@ T.TextField {
 
     padding: 6
 
-    color: enabled ? Theme.textColor : Theme.disabledColor
-    selectionColor: Theme.selectionColor
-    selectedTextColor: Theme.selectedTextColor
+//    color: enabled ? "" : "#bdbebf"
+//    selectionColor: Theme.selectionColor
+//    selectedTextColor: Theme.selectedTextColor
     verticalAlignment: TextInput.AlignVCenter
 
     Text {
@@ -62,7 +61,7 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: control.Theme.disabledColor
+        color: "#a0a1a2"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.displayText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
@@ -71,10 +70,10 @@ T.TextField {
 
     //! [background]
     background: Rectangle {
-        implicitWidth: 120 // TODO
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        radius: 3
+        implicitWidth: 200
+        implicitHeight: 40
+//        border.width: control.activeFocus ? 2 : 1
+        border.color: "#bdbebf"
     }
     //! [background]
 }

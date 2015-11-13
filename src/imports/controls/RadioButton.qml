@@ -54,28 +54,24 @@ T.RadioButton {
 
     //! [indicator]
     indicator: Rectangle {
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 28
+        implicitHeight: 28
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
         radius: width / 2
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        border.width: 1
+        border.color: control.pressed ? "#26282a" : control.enabled && control.checked ? "#353637" : "#bdbebf"
+        color: control.pressed ? "#bdbebf" : "#ffffff"
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            width: 12
-            height: 12
+            width: 20
+            height: 20
             radius: width / 2
-            color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
-                           control.checked && control.activeFocus ? control.Theme.focusColor :
-                           control.checked ? control.Theme.accentColor : control.Theme.baseColor,
-                           control.pressed ? control.Theme.pressColor : "transparent")
-            border.width: control.checked || control.pressed ? 0 : 1
-            border.color: control.Theme.frameColor
+            color: control.enabled ? "#353637" : "#bdbebf"
+            visible: control.checked
         }
     }
     //! [indicator]
