@@ -83,6 +83,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
+    qmlRegisterType<QQuickApplicationWindowAttached>();
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
@@ -117,6 +118,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 1, 0, "Tumbler");
 
+    qmlRegisterRevision<QQuickWindow, 2>(uri, 1, 0);
     qmlRegisterRevision<QQuickText, 6>(uri, 1, 0);
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 1, 0);
     qmlRegisterRevision<QQuickTextEdit, 6>(uri, 1, 0);

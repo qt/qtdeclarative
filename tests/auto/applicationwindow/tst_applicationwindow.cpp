@@ -41,6 +41,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -57,6 +58,7 @@ private slots:
     void activeFocusOnTab2();
     void defaultFocus();
     void implicitFill();
+    void attachedProperties();
 };
 
 void tst_applicationwindow::qmlCreation()
@@ -245,6 +247,139 @@ void tst_applicationwindow::implicitFill()
     QVERIFY(QMetaObject::invokeMethod(window, "pushNextItem"));
     QCOMPARE(nextItem->width(), 400.0);
     QCOMPARE(nextItem->height(), 400.0);
+}
+
+void tst_applicationwindow::attachedProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("attachedProperties.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(object.data());
+    QVERIFY(window);
+
+    QQuickItem *childItem = object->property("childItem").value<QQuickItem *>();
+    QVERIFY(childItem);
+    QCOMPARE(childItem->property("attached_window").value<QQuickApplicationWindow *>(), window);
+    QCOMPARE(childItem->property("attached_contentItem").value<QQuickItem *>(), window->contentItem());
+    QCOMPARE(childItem->property("attached_activeFocusItem").value<QQuickItem *>(), window->activeFocusItem());
+    QCOMPARE(childItem->property("attached_header").value<QQuickItem *>(), window->header());
+    QCOMPARE(childItem->property("attached_footer").value<QQuickItem *>(), window->footer());
+    QCOMPARE(childItem->property("attached_overlay").value<QQuickItem *>(), window->overlay());
+
+    QObject *childObject = object->property("childObject").value<QObject *>();
+    QVERIFY(childObject);
+    QVERIFY(!childObject->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childObject->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childObject->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childObject->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childObject->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childObject->property("attached_overlay").value<QQuickItem *>());
+
+    QQuickWindow *childWindow = object->property("childWindow").value<QQuickWindow *>();
+    QVERIFY(childWindow);
+    QVERIFY(!childWindow->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childWindow->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childWindow->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childWindow->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childWindow->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childWindow->property("attached_overlay").value<QQuickItem *>());
+
+    QQuickItem *childWindowItem = object->property("childWindowItem").value<QQuickItem *>();
+    QVERIFY(childWindowItem);
+    QVERIFY(!childWindowItem->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childWindowItem->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childWindowItem->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childWindowItem->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childWindowItem->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childWindowItem->property("attached_overlay").value<QQuickItem *>());
+
+    QObject *childWindowObject = object->property("childWindowObject").value<QObject *>();
+    QVERIFY(childWindowObject);
+    QVERIFY(!childWindowObject->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childWindowObject->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childWindowObject->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childWindowObject->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childWindowObject->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childWindowObject->property("attached_overlay").value<QQuickItem *>());
+
+    QQuickApplicationWindow *childAppWindow = object->property("childAppWindow").value<QQuickApplicationWindow *>();
+    QVERIFY(childAppWindow);
+    QVERIFY(!childAppWindow->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childAppWindow->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childAppWindow->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childAppWindow->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childAppWindow->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childAppWindow->property("attached_overlay").value<QQuickItem *>());
+
+    QQuickItem *childAppWindowItem = object->property("childAppWindowItem").value<QQuickItem *>();
+    QVERIFY(childAppWindowItem);
+    QCOMPARE(childAppWindowItem->property("attached_window").value<QQuickApplicationWindow *>(), childAppWindow);
+    QCOMPARE(childAppWindowItem->property("attached_contentItem").value<QQuickItem *>(), childAppWindow->contentItem());
+    QCOMPARE(childAppWindowItem->property("attached_activeFocusItem").value<QQuickItem *>(), childAppWindow->activeFocusItem());
+    QCOMPARE(childAppWindowItem->property("attached_header").value<QQuickItem *>(), childAppWindow->header());
+    QCOMPARE(childAppWindowItem->property("attached_footer").value<QQuickItem *>(), childAppWindow->footer());
+    QCOMPARE(childAppWindowItem->property("attached_overlay").value<QQuickItem *>(), childAppWindow->overlay());
+
+    QObject *childAppWindowObject = object->property("childAppWindowObject").value<QObject *>();
+    QVERIFY(childAppWindowObject);
+    QVERIFY(!childAppWindowObject->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childAppWindowObject->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childAppWindowObject->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childAppWindowObject->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childAppWindowObject->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childAppWindowObject->property("attached_overlay").value<QQuickItem *>());
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QVERIFY(!childItem->hasActiveFocus());
+    childItem->forceActiveFocus();
+    QTRY_VERIFY(childItem->hasActiveFocus());
+    QCOMPARE(window->activeFocusItem(), childItem);
+    QCOMPARE(childItem->property("attached_activeFocusItem").value<QQuickItem *>(), childItem);
+
+    QQuickItem *header = new QQuickItem;
+    window->setHeader(header);
+    QCOMPARE(window->header(), header);
+    QCOMPARE(childItem->property("attached_header").value<QQuickItem *>(), header);
+
+    QQuickItem *footer = new QQuickItem;
+    window->setFooter(footer);
+    QCOMPARE(window->footer(), footer);
+    QCOMPARE(childItem->property("attached_footer").value<QQuickItem *>(), footer);
+
+    childAppWindow->show();
+    childAppWindow->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(childAppWindow));
+
+    QVERIFY(!childAppWindowItem->hasActiveFocus());
+    childAppWindowItem->forceActiveFocus();
+    QTRY_VERIFY(childAppWindowItem->hasActiveFocus());
+    QCOMPARE(childAppWindow->activeFocusItem(), childAppWindowItem);
+    QCOMPARE(childAppWindowItem->property("attached_activeFocusItem").value<QQuickItem *>(), childAppWindowItem);
+
+    childItem->setParentItem(childAppWindow->contentItem());
+    QCOMPARE(childItem->window(), childAppWindow);
+    QCOMPARE(childItem->property("attached_window").value<QQuickApplicationWindow *>(), childAppWindow);
+    QCOMPARE(childItem->property("attached_contentItem").value<QQuickItem *>(), childAppWindow->contentItem());
+    QCOMPARE(childItem->property("attached_activeFocusItem").value<QQuickItem *>(), childAppWindow->activeFocusItem());
+    QCOMPARE(childItem->property("attached_header").value<QQuickItem *>(), childAppWindow->header());
+    QCOMPARE(childItem->property("attached_footer").value<QQuickItem *>(), childAppWindow->footer());
+    QCOMPARE(childItem->property("attached_overlay").value<QQuickItem *>(), childAppWindow->overlay());
+
+    childItem->setParentItem(Q_NULLPTR);
+    QVERIFY(!childItem->window());
+    QVERIFY(!childItem->property("attached_window").value<QQuickApplicationWindow *>());
+    QVERIFY(!childItem->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_activeFocusItem").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
 }
 
 QTEST_MAIN(tst_applicationwindow)

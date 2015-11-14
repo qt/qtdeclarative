@@ -37,6 +37,7 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
 
+#include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
@@ -243,6 +244,11 @@ QQuickItem *QQuickApplicationWindow::overlay() const
     return d->overlay;
 }
 
+QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickApplicationWindowAttached(object);
+}
+
 bool QQuickApplicationWindow::isComponentComplete() const
 {
     Q_D(const QQuickApplicationWindow);
@@ -261,6 +267,143 @@ void QQuickApplicationWindow::resizeEvent(QResizeEvent *event)
     Q_D(QQuickApplicationWindow);
     QQuickWindowQmlImpl::resizeEvent(event);
     d->relayout();
+}
+
+class QQuickApplicationWindowAttachedPrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickApplicationWindowAttached)
+
+public:
+    QQuickApplicationWindowAttachedPrivate() : window(Q_NULLPTR) { }
+
+    void windowChange(QQuickWindow *wnd);
+
+    QQuickApplicationWindow *window;
+};
+
+void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
+{
+    Q_Q(QQuickApplicationWindowAttached);
+    QQuickApplicationWindow *newWindow = qobject_cast<QQuickApplicationWindow *>(wnd);
+    if (window != newWindow) {
+        QQuickApplicationWindow *oldWindow = window;
+        if (oldWindow) {
+            QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusItemChanged,
+                                q, &QQuickApplicationWindowAttached::activeFocusItemChanged);
+            QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
+                                q, &QQuickApplicationWindowAttached::headerChanged);
+            QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
+                                q, &QQuickApplicationWindowAttached::footerChanged);
+        }
+        if (newWindow) {
+            QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusItemChanged,
+                             q, &QQuickApplicationWindowAttached::activeFocusItemChanged);
+            QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
+                             q, &QQuickApplicationWindowAttached::headerChanged);
+            QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
+                             q, &QQuickApplicationWindowAttached::footerChanged);
+        }
+
+        window = newWindow;
+        emit q->windowChanged();
+        emit q->contentItemChanged();
+        emit q->overlayChanged();
+
+        if ((oldWindow && oldWindow->activeFocusItem()) || (newWindow && newWindow->activeFocusItem()))
+            emit q->activeFocusItemChanged();
+        if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
+            emit q->headerChanged();
+        if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
+            emit q->footerChanged();
+    }
+}
+
+QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent)
+    : QObject(*(new QQuickApplicationWindowAttachedPrivate), parent)
+{
+    Q_D(QQuickApplicationWindowAttached);
+    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
+    if (item) {
+        d->windowChange(item->window());
+        QObjectPrivate::connect(item, &QQuickItem::windowChanged, d, &QQuickApplicationWindowAttachedPrivate::windowChange);
+    }
+}
+
+/*!
+    \qmlattachedproperty ApplicationWindow Qt.labs.controls::ApplicationWindow::window
+
+    This attached property holds the application window. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow.
+*/
+QQuickApplicationWindow *QQuickApplicationWindowAttached::window() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window;
+}
+
+/*!
+    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::contentItem
+
+    This attached property holds the window content item. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow.
+*/
+QQuickItem *QQuickApplicationWindowAttached::contentItem() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window ? d->window->contentItem() : Q_NULLPTR;
+}
+
+/*!
+    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::activeFocusItem
+
+    This attached property holds the active focus item. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow, or
+    the window has no active focus.
+
+    \sa Window::activeFocusItem
+*/
+QQuickItem *QQuickApplicationWindowAttached::activeFocusItem() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window ? d->window->activeFocusItem() : Q_NULLPTR;
+}
+
+/*!
+    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::header
+
+    This attached property holds the window header item. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow, or
+    the window has no header item.
+*/
+QQuickItem *QQuickApplicationWindowAttached::header() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window ? d->window->header() : Q_NULLPTR;
+}
+
+/*!
+    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::footer
+
+    This attached property holds the window footer item. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow, or
+    the window has no footer item.
+*/
+QQuickItem *QQuickApplicationWindowAttached::footer() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window ? d->window->footer() : Q_NULLPTR;
+}
+
+/*!
+    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::overlay
+
+    This attached property holds the window overlay item. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow.
+*/
+QQuickItem *QQuickApplicationWindowAttached::overlay() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    return d->window ? d->window->overlay() : Q_NULLPTR;
 }
 
 QT_END_NAMESPACE
