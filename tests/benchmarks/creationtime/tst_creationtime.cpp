@@ -47,6 +47,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void material();
+    void material_data();
+
     void universal();
     void universal_data();
 
@@ -62,21 +65,44 @@ void tst_CreationTime::init()
     engine.clearComponentCache();
 }
 
-static void addTestRows(const QString &path)
+static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QStringList &skiplist = QStringList())
 {
-    QFileInfoList entries = QDir(path).entryInfoList(QStringList("*.qml"), QDir::Files);
-    foreach (const QFileInfo &entry, entries)
-        QTest::newRow(qPrintable(entry.baseName())) << QUrl::fromLocalFile(entry.absoluteFilePath());
+    // We cannot use QQmlComponent to load QML files directly from the source tree.
+    // For styles that use internal QML types (eg. material/Ripple.qml), the source
+    // dir would be added as an "implicit" import path overriding the actual import
+    // path (qtbase/qml/Qt/labs/controls/material). => The QML engine fails to load
+    // the style C++ plugin from the implicit import path (the source dir).
+    //
+    // Therefore we only use the source tree for finding out the set of QML files that
+    // a particular style implements, and then we locate the respective QML files in
+    // the engine's import path. This way we can use QQmlComponent to load each QML file
+    // for benchmarking.
+
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    foreach (const QFileInfo &entry, entries) {
+        QString name = entry.baseName();
+        if (!skiplist.contains(name)) {
+            foreach (const QString &importPath, engine->importPathList()) {
+                QString filePath = QDir(importPath + "/Qt/labs/" + targetPath).absoluteFilePath(entry.fileName());
+                if (QFile::exists(filePath)) {
+                    QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
+                    break;
+                }
+            }
+        }
+    }
 }
 
-static void doBenchmark(QQmlComponent *component)
+static void doBenchmark(QQmlEngine *engine, const QUrl &url)
 {
+    QQmlComponent component(engine);
+    component.loadUrl(url);
+
     QObjectList objects;
     objects.reserve(4096);
     QBENCHMARK {
-        QObject *object = component->create();
-        if (!object)
-            qFatal("%s", qPrintable(component->errorString()));
+        QObject *object = component.create();
+        QVERIFY2(object, qPrintable(component.errorString()));
         objects += object;
     }
     qDeleteAll(objects);
@@ -85,43 +111,49 @@ static void doBenchmark(QQmlComponent *component)
 void tst_CreationTime::controls()
 {
     QFETCH(QUrl, url);
-    QQmlComponent component(&engine);
-    component.loadUrl(url);
-    doBenchmark(&component);
+    doBenchmark(&engine, url);
 }
 
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(QQC2_IMPORT_PATH "/controls");
+    addTestRows(&engine, "/controls");
+}
+
+void tst_CreationTime::material()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_CreationTime::material_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(&engine, "/controls/material", QStringList() << "Ripple" << "SliderHandle");
 }
 
 void tst_CreationTime::universal()
 {
     QFETCH(QUrl, url);
-    QQmlComponent component(&engine);
-    component.loadUrl(url);
-    doBenchmark(&component);
+    doBenchmark(&engine, url);
 }
 
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(QQC2_IMPORT_PATH "/controls/universal");
+    addTestRows(&engine, "/controls/universal");
 }
 
 void tst_CreationTime::calendar()
 {
     QFETCH(QUrl, url);
-    QQmlComponent component(&engine);
-    component.loadUrl(url);
-    doBenchmark(&component);
+    doBenchmark(&engine, url);
 }
 
 void tst_CreationTime::calendar_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(QQC2_IMPORT_PATH "/calendar");
+    addTestRows(&engine, "/calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)
