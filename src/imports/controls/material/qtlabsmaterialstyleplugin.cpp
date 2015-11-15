@@ -35,30 +35,41 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtCore/qfileselector.h>
-#include <QtCore/qurl.h>
 
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialprogressring_p.h"
 
+void initResources()
+{
+    Q_INIT_RESOURCE(qtlabsmaterialstyleplugin);
+}
+
 QT_BEGIN_NAMESPACE
 
-class QtQuickMaterialStylePlugin : public QQmlExtensionPlugin
+class QtLabsMaterialStylePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
-    void registerTypes(const char *uri);
+    void registerTypes(const char *uri) Q_DECL_OVERRIDE;
+    void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
 };
 
-void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
+void QtLabsMaterialStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", tr("Material is an attached property"));
     qmlRegisterType<QQuickMaterialProgressRing>(uri, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialRingAnimator>(uri, 1, 0, "RingAnimator");
 }
 
+void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(uri);
+    initResources();
+}
+
 QT_END_NAMESPACE
 
-#include "qtquickmaterialstyleplugin.moc"
+#include "qtlabsmaterialstyleplugin.moc"

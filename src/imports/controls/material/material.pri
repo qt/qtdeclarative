@@ -3,7 +3,6 @@ HEADERS += \
     $$PWD/qquickmaterialprogressring_p.h
 
 SOURCES += \
-    $$PWD/qtquickmaterialstyleplugin.cpp \
     $$PWD/qquickmaterialstyle.cpp \
     $$PWD/qquickmaterialprogressring.cpp
 

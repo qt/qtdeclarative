@@ -1,4 +1,4 @@
-TARGET  = qtquickmaterialstyleplugin
+TARGET  = qtlabsmaterialstyleplugin
 TARGETPATH = Qt/labs/controls/material
 IMPORT_VERSION = 1.0
 
@@ -10,11 +10,14 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 OTHER_FILES += \
     qmldir
 
-include(material.pri)
-include(../shared/shared.pri)
+SOURCES += \
+    $$PWD/qtlabsmaterialstyleplugin.cpp
 
 RESOURCES += \
-    resources.qrc
+    $$PWD/qtlabsmaterialstyleplugin.qrc
+
+include(material.pri)
+include(../shared/shared.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)
