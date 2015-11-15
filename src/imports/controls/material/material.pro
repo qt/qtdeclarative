@@ -1,4 +1,4 @@
-TARGET  = qtlabsmaterialstyleplugin
+TARGET = qtlabsmaterialstyleplugin
 TARGETPATH = Qt/labs/controls/material
 IMPORT_VERSION = 1.0
 
