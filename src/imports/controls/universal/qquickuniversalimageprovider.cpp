@@ -52,11 +52,11 @@ QImage QQuickUniversalImageProvider::requestImage(const QString &id, QSize *size
 {
     Q_UNUSED(requestedSize);
 
-    int sep = id.indexOf('/');
+    int sep = id.indexOf(QLatin1Char('/'));
     QString name = id.left(sep);
     QString color = id.mid(sep + 1);
     qreal dpr = qApp->primaryScreen()->devicePixelRatio();
-    QString file = qt_findAtNxFile(":/org.qt-project/imports/Qt/labs/controls/universal/images/" + name + ".png", dpr);
+    QString file = qt_findAtNxFile(QStringLiteral(":/org.qt-project/imports/Qt/labs/controls/universal/images/") + name + QStringLiteral(".png"), dpr);
 
     QImage image(file);
     if (image.isNull()) {

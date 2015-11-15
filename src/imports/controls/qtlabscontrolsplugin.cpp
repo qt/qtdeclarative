@@ -63,13 +63,13 @@ public:
 
 void QtLabsControlsPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 1, 0, "Theme", "Theme is an attached property");
+    qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 1, 0, "Theme", tr("Theme is an attached property"));
 
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
 
     QCommandLineParser parser;
-    QCommandLineOption styleOption(QStringList() << "s" << "style", tr("the style to use for the application"), tr("style"));
+    QCommandLineOption styleOption(QStringList() << QStringLiteral("s") << QStringLiteral("style"), tr("the style to use for the application"), tr("style"));
     parser.addOption(styleOption);
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
     parser.parse(QCoreApplication::arguments());

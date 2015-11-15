@@ -59,13 +59,13 @@ public:
 
 void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 1, 0, "Universal", "Universal is an attached property");
+    qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 1, 0, "Universal", tr("Universal is an attached property"));
 }
 
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     initResources();
-    engine->addImageProvider("universal", new QQuickUniversalImageProvider);
+    engine->addImageProvider(QStringLiteral("universal"), new QQuickUniversalImageProvider);
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterType<QQuickUniversalProgressRing>(import, 1, 0, "ProgressRing");

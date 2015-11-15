@@ -54,7 +54,7 @@ public:
 
 void QtQuickMaterialStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", "Material is an attached property");
+    qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 1, 0, "Material", tr("Material is an attached property"));
     qmlRegisterType<QQuickMaterialProgressRing>(uri, 1, 0, "ProgressRing");
     qmlRegisterType<QQuickMaterialRingAnimator>(uri, 1, 0, "RingAnimator");
 }
