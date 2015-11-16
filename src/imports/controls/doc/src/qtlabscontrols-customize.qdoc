@@ -206,6 +206,23 @@
             Label has no background item by default.
 
 
+    \section1 Customizing Menu
+
+        Menu consists of a \l {Panel::}{contentItem}.
+
+        \section3 Content item
+
+            \image qtlabscontrols-menu-contentItem.png
+
+            \snippet Menu.qml contentItem
+
+
+    \section1 Customizing MenuItem
+
+        MenuItem can be customized in the same manner as
+        \l {Customizing Button}{Button}.
+
+
     \section1 Customizing PageIndicator
 
         TODO

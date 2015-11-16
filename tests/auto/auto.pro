@@ -6,6 +6,7 @@ SUBDIRS += \
     calendar \
     controls \
     material \
+    menu \
     pressandhold \
     sanity \
     snippets \

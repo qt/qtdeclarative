@@ -9,6 +9,8 @@ QML_FILES = \
     GroupBox.qml \
     ItemDelegate.qml \
     Label.qml \
+    Menu.qml \
+    MenuItem.qml \
     PageIndicator.qml \
     ProgressBar.qml \
     RadioButton.qml \

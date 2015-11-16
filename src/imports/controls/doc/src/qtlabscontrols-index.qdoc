@@ -231,6 +231,9 @@
         \li \l [QtQuickControls] {Label}
         \li \l [QtLabsControls] {Label}
     \row
+        \li \l [QtQuickControls] {Menu}
+        \li \l [QtLabsControls] {Menu}
+    \row
         \li \l [QtQuickControls] {ProgressBar}
         \li \l [QtLabsControls] {ProgressBar}
     \row

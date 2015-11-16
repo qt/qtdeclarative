@@ -20,6 +20,9 @@ HEADERS += \
     $$PWD/qquickitemdelegate_p.h \
     $$PWD/qquicklabel_p.h \
     $$PWD/qquicklabel_p_p.h \
+    $$PWD/qquickmenu_p.h \
+    $$PWD/qquickmenu_p_p.h \
+    $$PWD/qquickmenuitem_p.h \
     $$PWD/qquickoverlay_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpanel_p.h \
@@ -61,6 +64,8 @@ SOURCES += \
     $$PWD/qquickgroupbox.cpp \
     $$PWD/qquickitemdelegate.cpp \
     $$PWD/qquicklabel.cpp \
+    $$PWD/qquickmenu.cpp \
+    $$PWD/qquickmenuitem.cpp \
     $$PWD/qquickoverlay.cpp \
     $$PWD/qquickpageindicator.cpp \
     $$PWD/qquickpanel.cpp \

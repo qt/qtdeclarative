@@ -49,6 +49,8 @@
 #include <QtLabsTemplates/private/qquickgroupbox_p.h>
 #include <QtLabsTemplates/private/qquickitemdelegate_p.h>
 #include <QtLabsTemplates/private/qquicklabel_p.h>
+#include <QtLabsTemplates/private/qquickmenu_p.h>
+#include <QtLabsTemplates/private/qquickmenuitem_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
 #include <QtLabsTemplates/private/qquickpanel_p.h>
 #include <QtLabsTemplates/private/qquickprogressbar_p.h>
@@ -96,6 +98,8 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickGroupBox>(uri, 1, 0, "GroupBox");
     qmlRegisterType<QQuickItemDelegate>(uri, 1, 0, "ItemDelegate");
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
+    qmlRegisterType<QQuickMenu>(uri, 1, 0, "Menu");
+    qmlRegisterType<QQuickMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
     qmlRegisterType<QQuickPanel>(uri, 1, 0, "Panel");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");

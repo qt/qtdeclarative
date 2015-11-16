@@ -56,6 +56,7 @@ private slots:
     void switchGif();
     void button();
     void tabBar();
+    void menu();
 
 private:
     void moveSmoothly(QQuickWindow *window, const QPoint &from, const QPoint &to, int movements,
@@ -334,6 +335,39 @@ void tst_Gifs::tabBar()
 
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() * 0.3, window->height() / 2), 400);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(window->width() * 0.3, window->height() / 2), 50);
+
+    gifRecorder.waitForFinish();
+}
+
+void tst_Gifs::menu()
+{
+    const QString qmlFileName = QStringLiteral("qtlabscontrols-menu.qml");
+
+    GifRecorder gifRecorder;
+    gifRecorder.setDataDirPath(dataDirPath);
+    gifRecorder.setOutputDir(outputDir);
+    gifRecorder.setRecordingDuration(3);
+    gifRecorder.setQmlFileName(qmlFileName);
+    gifRecorder.setHighQuality(true);
+
+    gifRecorder.start();
+
+    QQuickWindow *window = gifRecorder.window();
+    const QQuickItem *fileButton = window->property("fileButton").value<QQuickItem*>();
+    QVERIFY(fileButton);
+
+    const QPoint fileButtonCenter = fileButton->mapToScene(QPointF(fileButton->width() / 2, fileButton->height() / 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, fileButtonCenter, 0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, fileButtonCenter, 200);
+
+    const QObject *menu = window->property("menu").value<QObject*>();
+    QVERIFY(menu);
+    const QQuickItem *menuContentItem = menu->property("contentItem").value<QQuickItem*>();
+    QVERIFY(menuContentItem);
+
+    const QPoint lastItemPos = menuContentItem->mapToScene(QPointF(menuContentItem->width() / 2, menuContentItem->height() - 10)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 1000);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, lastItemPos, 300);
 
     gifRecorder.waitForFinish();
 }

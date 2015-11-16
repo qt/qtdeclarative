@@ -62,6 +62,7 @@ ApplicationWindow {
 
             ToolButton {
                 text: "Normal"
+                onClicked: menu.visible ? menu.hide() : menu.show()
             }
             ToolButton {
                 text: "Pressed"
@@ -94,6 +95,22 @@ ApplicationWindow {
         TabButton {
             text: "Disabled"
             enabled: false
+        }
+    }
+
+    Menu {
+        id: menu
+        contentItem.x: 1
+        contentItem.y: header.height
+
+        MenuItem {
+            text: "Option 1"
+        }
+        MenuItem {
+            text: "Option 2"
+        }
+        MenuItem {
+            text: "Option 3"
         }
     }
 
