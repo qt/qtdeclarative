@@ -45,6 +45,17 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Panel
+    \inherits QtObject
+    \instantiates QQuickPanel
+    \inqmlmodule Qt.labs.controls
+    \ingroup qtlabscontrols-popups
+    \brief A popup panel.
+
+    Panel is the base type of popup-like user interface controls.
+*/
+
 QQuickPanelPrivate::QQuickPanelPrivate()
     : QObjectPrivate()
     , contentItem(Q_NULLPTR)
@@ -120,6 +131,11 @@ QQuickPanel::~QQuickPanel()
 {
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::Panel::show()
+
+    Shows the panel.
+*/
 void QQuickPanel::show()
 {
     Q_D(QQuickPanel);
@@ -165,6 +181,11 @@ void QQuickPanel::show()
     emit visibleChanged();
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::Panel::hide()
+
+    Hides the panel.
+*/
 void QQuickPanel::hide()
 {
     Q_D(QQuickPanel);
@@ -178,6 +199,22 @@ void QQuickPanel::hide()
     d->contentItem->setFocus(false);
     emit aboutToHide();
     d->transitionManager.transitionHide();
+}
+
+/*!
+    \qmlproperty Item Qt.labs.controls::Panel::contentItem
+
+    This property holds the content item of the panel.
+
+    The content item is the visual implementation of the panel. When the
+    panel is made visible, the content item is automatically reparented to
+    the \l {ApplicationWindow::overlay}{overlay item} of its application
+    window.
+*/
+QQuickItem *QQuickPanel::contentItem() const
+{
+    Q_D(const QQuickPanel);
+    return d->contentItem;
 }
 
 void QQuickPanel::setContentItem(QQuickItem *item)
@@ -197,12 +234,11 @@ void QQuickPanel::setContentItem(QQuickItem *item)
     }
 }
 
-QQuickItem *QQuickPanel::contentItem() const
-{
-    Q_D(const QQuickPanel);
-    return d->contentItem;
-}
+/*!
+    \qmlproperty bool Qt.labs.controls::Panel::focus
 
+    This property holds whether the panel has focus.
+*/
 bool QQuickPanel::hasFocus() const
 {
     Q_D(const QQuickPanel);
@@ -218,6 +254,11 @@ void QQuickPanel::setFocus(bool focus)
     emit focusChanged();
 }
 
+/*!
+    \qmlproperty bool Qt.labs.controls::Panel::modal
+
+    This property holds whether the panel is modal.
+*/
 bool QQuickPanel::isModal() const
 {
     Q_D(const QQuickPanel);
@@ -233,12 +274,23 @@ void QQuickPanel::setModal(bool modal)
     emit modalChanged();
 }
 
+/*!
+    \qmlproperty bool Qt.labs.controls::Panel::visible
+
+    This property holds whether the panel is visible.
+*/
 bool QQuickPanel::isVisible() const
 {
     Q_D(const QQuickPanel);
     return d->overlay != Q_NULLPTR /*&& !d->transitionManager.isRunning()*/;
 }
 
+/*!
+    \qmlproperty Transition Qt.labs.controls::Panel::showTransition
+
+    This property holds the transition that is applied to the content item
+    when the panel is shown.
+*/
 QQuickTransition *QQuickPanel::showTransition() const
 {
     return d_func()->showTransition;
@@ -253,6 +305,12 @@ void QQuickPanel::setShowTransition(QQuickTransition *t)
     emit showTransitionChanged();
 }
 
+/*!
+    \qmlproperty Transition Qt.labs.controls::Panel::hideTransition
+
+    This property holds the transition that is applied to the content item
+    when the panel is hidden.
+*/
 QQuickTransition *QQuickPanel::hideTransition() const
 {
     return d_func()->hideTransition;
