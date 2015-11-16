@@ -37,7 +37,7 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
-#include <QtCore/qcommandlineparser.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 
@@ -68,20 +68,14 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
 
-    QCommandLineParser parser;
-    QCommandLineOption styleOption(QStringList() << QStringLiteral("s") << QStringLiteral("style"), tr("the style to use for the application"), tr("style"));
-    parser.addOption(styleOption);
-    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-    parser.parse(QCoreApplication::arguments());
+    QString styleOverride = QGuiApplicationPrivate::styleOverride;
 
     // TODO: read the style from application manifest file
     QQuickFileSelector selector;
     selector.setBaseUrl(baseUrl());
 
-    if (parser.isSet(styleOption)) {
-        QString style = parser.value(styleOption);
-        selector.setStyle(style);
-    }
+    if (!styleOverride.isEmpty())
+        selector.setStyle(styleOverride);
 
     qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
