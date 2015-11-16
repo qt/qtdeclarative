@@ -105,7 +105,7 @@ void QQmlDebugClient::sendMessage(const QByteArray &message)
     d->connection->sendMessage(d->name, message);
 }
 
-const QQmlDebugConnection *QQmlDebugClient::connection() const
+QQmlDebugConnection *QQmlDebugClient::connection() const
 {
     Q_D(const QQmlDebugClient);
     return d->connection;

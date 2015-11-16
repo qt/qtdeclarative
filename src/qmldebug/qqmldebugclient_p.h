@@ -68,7 +68,7 @@ public:
     State state() const;
     void sendMessage(const QByteArray &message);
 
-    const QQmlDebugConnection *connection() const;
+    QQmlDebugConnection *connection() const;
 
 protected:
     QQmlDebugClient(QQmlDebugClientPrivate &dd);

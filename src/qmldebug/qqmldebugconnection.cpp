@@ -109,6 +109,7 @@ void QQmlDebugConnection::socketDisconnected()
 {
     Q_D(QQmlDebugConnection);
     d->gotHello = false;
+    emit disconnected();
 }
 
 void QQmlDebugConnection::protocolReadyRead()
@@ -273,6 +274,12 @@ bool QQmlDebugConnection::isConnected() const
     return d->gotHello;
 }
 
+bool QQmlDebugConnection::isConnecting() const
+{
+    Q_D(const QQmlDebugConnection);
+    return !d->gotHello && d->device;
+}
+
 void QQmlDebugConnection::close()
 {
     Q_D(QQmlDebugConnection);
@@ -372,7 +379,10 @@ void QQmlDebugConnection::connectToHost(const QString &hostName, quint16 port)
     d->device = socket;
     d->connectDeviceSignals();
     connect(socket, SIGNAL(connected()), this, SLOT(socketConnected()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SIGNAL(socketError(QAbstractSocket::SocketError)));
+    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+            this, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)));
     socket->connectToHost(hostName, port);
 }
 
@@ -389,6 +399,34 @@ void QQmlDebugConnection::startLocalServer(const QString &fileName)
     d->server->listen(fileName);
 }
 
+class LocalSocketSignalTranslator : public QObject
+{
+    Q_OBJECT
+public:
+    LocalSocketSignalTranslator(QLocalSocket *parent) : QObject(parent)
+    {
+        connect(parent, SIGNAL(stateChanged(QLocalSocket::LocalSocketState)),
+                this, SLOT(onStateChanged(QLocalSocket::LocalSocketState)));
+        connect(parent, SIGNAL(error(QLocalSocket::LocalSocketError)),
+                this, SLOT(onError(QLocalSocket::LocalSocketError)));
+    }
+
+signals:
+    void socketError(QAbstractSocket::SocketError error);
+    void socketStateChanged(QAbstractSocket::SocketState state);
+
+public slots:
+    void onError(QLocalSocket::LocalSocketError error)
+    {
+        emit socketError(static_cast<QAbstractSocket::SocketError>(error));
+    }
+
+    void onStateChanged(QLocalSocket::LocalSocketState state)
+    {
+        emit socketStateChanged(static_cast<QAbstractSocket::SocketState>(state));
+    }
+};
+
 void QQmlDebugConnection::newConnection()
 {
     Q_D(QQmlDebugConnection);
@@ -397,6 +435,12 @@ void QQmlDebugConnection::newConnection()
     d->server->close();
     d->device = socket;
     d->connectDeviceSignals();
+    LocalSocketSignalTranslator *translator = new LocalSocketSignalTranslator(socket);
+
+    QObject::connect(translator, SIGNAL(socketError(QAbstractSocket::SocketError)),
+                     this, SIGNAL(socketError(QAbstractSocket::SocketError)));
+    QObject::connect(translator, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)),
+                     this, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)));
     socketConnected();
 }
 
@@ -410,3 +454,5 @@ void QQmlDebugConnectionPrivate::connectDeviceSignals()
 }
 
 QT_END_NAMESPACE
+
+#include <qqmldebugconnection.moc>

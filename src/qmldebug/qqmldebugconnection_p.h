@@ -35,6 +35,7 @@
 #define QQMLDEBUGCONNECTION_P_H
 
 #include <QtCore/qobject.h>
+#include <QtNetwork/qabstractsocket.h>
 
 //
 //  W A R N I N G
@@ -67,6 +68,8 @@ public:
     void setMaximumDataStreamVersion(int maximumVersion);
 
     bool isConnected() const;
+    bool isConnecting() const;
+
     void close();
     bool waitForConnected(int msecs = 30000);
 
@@ -79,6 +82,9 @@ public:
 
 signals:
     void connected();
+    void disconnected();
+    void socketError(QAbstractSocket::SocketError socketError);
+    void socketStateChanged(QAbstractSocket::SocketState socketState);
 
 private Q_SLOTS:
     void newConnection();
