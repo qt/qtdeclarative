@@ -1095,6 +1095,12 @@ void QQuickWidget::showEvent(QShowEvent *)
         d->render(true);
     else
         triggerUpdate();
+    QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
+    if (!offscreenPrivate->visible) {
+        offscreenPrivate->visible = true;
+        emit d->offscreenWindow->visibleChanged(true);
+        offscreenPrivate->updateVisibility();
+    }
 }
 
 /*! \reimp */
@@ -1102,6 +1108,12 @@ void QQuickWidget::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWidget);
     d->invalidateRenderControl();
+    QWindowPrivate *offscreenPrivate = QWindowPrivate::get(d->offscreenWindow);
+    if (offscreenPrivate->visible) {
+        offscreenPrivate->visible = false;
+        emit d->offscreenWindow->visibleChanged(false);
+        offscreenPrivate->updateVisibility();
+    }
 }
 
 /*! \reimp */
@@ -1151,6 +1163,20 @@ void QQuickWidget::focusOutEvent(QFocusEvent * event)
     d->offscreenWindow->focusOutEvent(event);
 }
 
+static Qt::WindowState resolveWindowState(Qt::WindowStates states)
+{
+    // No more than one of these 3 can be set
+    if (states & Qt::WindowMinimized)
+        return Qt::WindowMinimized;
+    if (states & Qt::WindowMaximized)
+        return Qt::WindowMaximized;
+    if (states & Qt::WindowFullScreen)
+        return Qt::WindowFullScreen;
+
+    // No state means "windowed" - we ignore Qt::WindowActive
+    return Qt::WindowNoState;
+}
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
@@ -1182,6 +1208,10 @@ bool QQuickWidget::event(QEvent *e)
 
     case QEvent::Move:
         d->updatePosition();
+        break;
+
+    case QEvent::WindowStateChange:
+        d->offscreenWindow->setWindowState(resolveWindowState(windowState()));
         break;
 
     default:
