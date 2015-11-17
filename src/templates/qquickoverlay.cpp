@@ -55,8 +55,10 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
     QQuickItem *panelItem = const_cast<QQuickItem *>(data.item);
     QQuickPanel *panel = Q_NULLPTR;
-    if (change == ItemChildAddedChange || change == ItemChildRemovedChange)
+    if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
         panel = qobject_cast<QQuickPanel *>(panelItem->parent());
+        setVisible(!childItems().isEmpty());
+    }
     if (!panel)
         return;
 
@@ -73,9 +75,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 
         connect(this, &QQuickOverlay::pressed, panel, &QQuickPanel::pressedOutside);
         connect(this, &QQuickOverlay::released, panel, &QQuickPanel::releasedOutside);
-
-        if (!isVisible())
-            setVisible(true);
     } else if (change == ItemChildRemovedChange) {
         Q_ASSERT(panel == m_panels.value(panelItem));
 
@@ -85,8 +84,6 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         if (panel->isModal())
             --m_modalPanels;
         m_panels.remove(panelItem);
-        if (m_panels.isEmpty())
-            setVisible(false);
     }
 }
 
