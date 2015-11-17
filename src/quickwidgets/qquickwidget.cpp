@@ -705,6 +705,7 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &for
 
 void QQuickWidgetPrivate::createContext()
 {
+    Q_Q(QQuickWidget);
     // On hide-show we invalidate() but our context is kept.
     // We nonetheless need to initialize() again.
     const bool reinit = context && !offscreenWindow->openglContext();
@@ -716,10 +717,11 @@ void QQuickWidgetPrivate::createContext()
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
 
-        if (qt_gl_global_share_context()) {
+        if (qt_gl_global_share_context())
             context->setShareContext(qt_gl_global_share_context());
-            context->setScreen(context->shareContext()->screen());
-        }
+        else
+            context->setShareContext(QWidgetPrivate::get(q->window())->shareContext());
+        context->setScreen(context->shareContext()->screen());
 
         if (!context->create()) {
             const bool isEs = context->isOpenGLES();
