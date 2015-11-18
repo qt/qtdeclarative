@@ -1406,6 +1406,10 @@ bool QQuickWindow::event(QEvent *e)
         d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
 #endif
+    case QEvent::ShortcutOverride:
+        if (d->activeFocusItem)
+            sendEvent(d->activeFocusItem, static_cast<QKeyEvent *>(e));
+        return true;
     default:
         break;
     }
@@ -2583,6 +2587,9 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
             e->accept();
             QCoreApplication::sendEvent(item, e);
         }
+        break;
+    case QEvent::ShortcutOverride:
+        QCoreApplication::sendEvent(item, e);
         break;
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
