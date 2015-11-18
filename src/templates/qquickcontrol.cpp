@@ -342,11 +342,18 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent) :
 {
 }
 
+void QQuickControl::classBegin()
+{
+    Q_D(QQuickControl);
+    QQuickItem::classBegin();
+    d->resolveFont();
+}
+
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged)
+    if (change == ItemParentHasChanged && isComponentComplete())
         d->resolveFont();
 }
 

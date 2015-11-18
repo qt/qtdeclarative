@@ -309,6 +309,21 @@ void QQuickTextField::setPlaceholderText(const QString &text)
     }
 }
 
+void QQuickTextField::classBegin()
+{
+    Q_D(QQuickTextField);
+    QQuickTextInput::classBegin();
+    d->resolveFont();
+}
+
+void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickTextField);
+    QQuickTextInput::itemChange(change, value);
+    if (change == ItemParentHasChanged && isComponentComplete())
+        d->resolveFont();
+}
+
 void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTextField);
