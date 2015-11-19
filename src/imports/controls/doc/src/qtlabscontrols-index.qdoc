@@ -78,11 +78,6 @@
     are Qt Quick items that are instantiated on the spot, as properties of the
     control, and are simply parented to the control.
 
-    Control-specific style objects have been replaced by a Theme object that
-    offers a simple set of themable attributes. Basic color adjustments can be
-    made by setting a few properties that are automatically inherited by the
-    hierarchy of children.
-
     \section2 Modularity and Simplicity
 
     When it comes to more complex controls, it is sometimes better to split
