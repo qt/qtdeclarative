@@ -55,6 +55,7 @@
 #include <QAbstractAnimation>
 #include <QtQml/qqml.h>
 #include <private/qv8engine_p.h> //For QQmlV4Handle
+#include "qtquickparticlesglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -75,7 +76,7 @@ struct QQuickParticleDataHeapNode{
     QSet<QQuickParticleData*> data;//Set ptrs instead?
 };
 
-class QQuickParticleDataHeap {
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleDataHeap {
     //Idea is to do a binary heap, but which also stores a set of int,Node* so that if the int already exists, you can
     //add it to the data* list. Pops return the whole list at once.
 public:
@@ -102,7 +103,7 @@ private:
     QHash<int,int> m_lookups;
 };
 
-class Q_AUTOTEST_EXPORT QQuickParticleGroupData {
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
 public:
     QQuickParticleGroupData(int id, QQuickParticleSystem* sys);
     ~QQuickParticleGroupData();
@@ -142,7 +143,7 @@ struct Color4ub {
     uchar a;
 };
 
-class Q_AUTOTEST_EXPORT QQuickParticleData {
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
     QQuickParticleData(QQuickParticleSystem* sys);
@@ -245,7 +246,7 @@ private:
     QQuickV4ParticleData* v8Datum;
 };
 
-class Q_AUTOTEST_EXPORT QQuickParticleSystem : public QQuickItem
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)

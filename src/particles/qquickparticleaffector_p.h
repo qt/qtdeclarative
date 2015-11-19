@@ -48,10 +48,11 @@
 #include <QObject>
 #include "qquickparticlesystem_p.h"
 #include "qquickparticleextruder_p.h"
+#include "qtquickparticlesglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParticleAffector : public QQuickItem
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
