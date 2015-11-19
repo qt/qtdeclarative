@@ -6825,6 +6825,26 @@ QQuickItem *QQuickItem::scopedFocusItem() const
 }
 
 /*!
+    Returns \c true if this item is an ancestor of \a child (i.e., if this item
+    is \a child's parent, or one of \a child's parent's ancestors).
+
+    \since 5.7
+
+    \sa parentItem()
+  */
+bool QQuickItem::isAncestorOf(const QQuickItem *child) const
+{
+    if (!child || child == this)
+        return false;
+    const QQuickItem *ancestor = child;
+    while ((ancestor = ancestor->parentItem())) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
+}
+
+/*!
     Returns the mouse buttons accepted by this item.
 
     The default value is Qt::NoButton; that is, no mouse buttons are accepted.

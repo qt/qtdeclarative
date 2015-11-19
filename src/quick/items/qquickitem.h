@@ -278,6 +278,8 @@ public:
     bool isFocusScope() const;
     QQuickItem *scopedFocusItem() const;
 
+    bool isAncestorOf(const QQuickItem *child) const;
+
     Qt::MouseButtons acceptedMouseButtons() const;
     void setAcceptedMouseButtons(Qt::MouseButtons buttons);
     bool acceptHoverEvents() const;

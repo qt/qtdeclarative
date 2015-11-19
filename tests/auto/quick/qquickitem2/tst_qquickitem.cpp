@@ -117,6 +117,7 @@ private slots:
     void contains_data();
     void contains();
     void childAt();
+    void isAncestorOf();
 
     void grab();
 
@@ -2959,6 +2960,43 @@ void tst_QQuickItem::grab()
 
 }
 
+void tst_QQuickItem::isAncestorOf()
+{
+    QQuickItem parent;
+
+    QQuickItem sub1;
+    sub1.setParentItem(&parent);
+
+    QQuickItem child1;
+    child1.setParentItem(&sub1);
+    QQuickItem child2;
+    child2.setParentItem(&sub1);
+
+    QQuickItem sub2;
+    sub2.setParentItem(&parent);
+
+    QQuickItem child3;
+    child3.setParentItem(&sub2);
+    QQuickItem child4;
+    child4.setParentItem(&sub2);
+
+    QVERIFY(parent.isAncestorOf(&sub1));
+    QVERIFY(parent.isAncestorOf(&sub2));
+    QVERIFY(parent.isAncestorOf(&child1));
+    QVERIFY(parent.isAncestorOf(&child2));
+    QVERIFY(parent.isAncestorOf(&child3));
+    QVERIFY(parent.isAncestorOf(&child4));
+    QVERIFY(sub1.isAncestorOf(&child1));
+    QVERIFY(sub1.isAncestorOf(&child2));
+    QVERIFY(!sub1.isAncestorOf(&child3));
+    QVERIFY(!sub1.isAncestorOf(&child4));
+    QVERIFY(sub2.isAncestorOf(&child3));
+    QVERIFY(sub2.isAncestorOf(&child4));
+    QVERIFY(!sub2.isAncestorOf(&child1));
+    QVERIFY(!sub2.isAncestorOf(&child2));
+    QVERIFY(!sub1.isAncestorOf(&sub1));
+    QVERIFY(!sub2.isAncestorOf(&sub2));
+}
 
 QTEST_MAIN(tst_QQuickItem)
 
