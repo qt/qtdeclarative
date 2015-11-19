@@ -66,6 +66,8 @@
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
 #include <private/qqmlmemoryprofiler_p.h>
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugconnector_p.h>
 
 #include <private/qopenglvertexarrayobject_p.h>
 
@@ -427,6 +429,8 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 QQuickWindowPrivate::~QQuickWindowPrivate()
 {
     delete customRenderStage;
+    if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
+        service->removeWindow(q_func());
 }
 
 void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
@@ -477,6 +481,9 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(forcePolish()));
 
     QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
+
+    if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
+        service->addWindow(q);
 }
 
 /*!

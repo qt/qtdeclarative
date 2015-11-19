@@ -111,14 +111,17 @@ protected:
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
 };
 
+class QWindow;
+class QQuickWindow;
 class Q_QML_PRIVATE_EXPORT QQmlInspectorService : protected QQmlDebugService
 {
     Q_OBJECT
 public:
     static const QString s_key;
 
-    virtual void addView(QObject *) = 0;
-    virtual void removeView(QObject *) = 0;
+    virtual void addWindow(QQuickWindow *) = 0;
+    virtual void setParentWindow(QQuickWindow *, QWindow *) = 0;
+    virtual void removeWindow(QQuickWindow *) = 0;
 
 protected:
     friend class QQmlDebugConnector;

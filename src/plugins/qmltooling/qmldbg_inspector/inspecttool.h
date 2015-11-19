@@ -34,85 +34,52 @@
 #ifndef INSPECTTOOL_H
 #define INSPECTTOOL_H
 
-#include "abstracttool.h"
-
 #include <QtCore/QPointF>
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickView;
+class QQuickWindow;
 class QQuickItem;
+class QMouseEvent;
+class QKeyEvent;
+class QTouchEvent;
 
 namespace QmlJSDebugger {
 
-class QQuickViewInspector;
+class GlobalInspector;
+class QQuickWindowInspector;
 class HoverHighlight;
 
-class InspectTool : public AbstractTool
+class InspectTool : public QObject
 {
     Q_OBJECT
 public:
-    enum ZoomDirection {
-        ZoomIn,
-        ZoomOut
-    };
+    InspectTool(QQuickWindowInspector *inspector, QQuickWindow *view);
 
-    InspectTool(QQuickViewInspector *inspector, QQuickView *view);
-    ~InspectTool();
-
-    void enable(bool enable);
-
+    void enterEvent(QEvent *);
     void leaveEvent(QEvent *);
-
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
     void mouseDoubleClickEvent(QMouseEvent *);
-
     void hoverMoveEvent(QMouseEvent *);
-#ifndef QT_NO_WHEELEVENT
-    void wheelEvent(QWheelEvent *);
-#endif
-
     void keyPressEvent(QKeyEvent *) {}
     void keyReleaseEvent(QKeyEvent *);
-
     void touchEvent(QTouchEvent *event);
 
 private:
-    QQuickViewInspector *inspector() const;
-    qreal nextZoomScale(ZoomDirection direction);
-    void scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter);
-    void zoomIn();
-    void zoomOut();
-    void initializeDrag(const QPointF &pos);
-    void dragItemToPosition();
-    void moveItem(bool valid);
     void selectNextItem();
     void selectItem();
+    void showItemName();
 
-private slots:
-    void zoomTo100();
-    void showSelectedItemName();
+    QQuickWindowInspector *inspector() const;
+    GlobalInspector *globalInspector() const;
 
-private:
-    bool m_originalSmooth;
-    bool m_dragStarted;
-    bool m_pinchStarted;
-    bool m_didPressAndHold;
     bool m_tapEvent;
     QPointer<QQuickItem> m_contentItem;
-    QPointF m_dragStartPosition;
     QPointF m_mousePosition;
-    QPointF m_originalPosition;
-    qreal m_smoothScaleFactor;
-    qreal m_minScale;
-    qreal m_maxScale;
-    qreal m_originalScale;
     ulong m_touchTimestamp;
-    QTimer m_pressAndHoldTimer;
     QTimer m_nameDisplayTimer;
 
     HoverHighlight *m_hoverHighlight;

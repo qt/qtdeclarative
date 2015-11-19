@@ -37,24 +37,78 @@
 #include <private/qqmldebugconnection_p.h>
 #include <QtCore/qdebug.h>
 
-void QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
+QQmlInspectorClient::QQmlInspectorClient(QQmlDebugConnection *connection) :
+    QQmlDebugClient(QLatin1String("QmlInspector"), connection),
+    m_lastRequestId(-1)
+{
+}
+
+int QQmlInspectorClient::setInspectToolEnabled(bool enabled)
 {
     QPacket ds(connection()->currentDataStreamVersion());
-    ds << QByteArray("request") << m_requestId++
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray(enabled ? "enable" : "disable");
+
+    sendMessage(ds.data());
+    return m_lastRequestId;
+}
+
+int QQmlInspectorClient::setShowAppOnTop(bool showOnTop)
+{
+    QPacket ds(connection()->currentDataStreamVersion());
+    ds << QByteArray("request") << ++m_lastRequestId
        << QByteArray("showAppOnTop") << showOnTop;
 
     sendMessage(ds.data());
+    return m_lastRequestId;
 }
 
-void QQmlInspectorClient::reloadQml(const QHash<QString, QByteArray> &changesHash)
+int QQmlInspectorClient::setAnimationSpeed(qreal speed)
 {
     QPacket ds(connection()->currentDataStreamVersion());
-    m_reloadRequestId = m_requestId;
-
-    ds << QByteArray("request") << m_requestId++
-       << QByteArray("reload") << changesHash;
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray("setAnimationSpeed") << speed;
 
     sendMessage(ds.data());
+    return m_lastRequestId;
+}
+
+int QQmlInspectorClient::select(const QList<int> &objectIds)
+{
+    QPacket ds(connection()->currentDataStreamVersion());
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray("select") << objectIds;
+
+    sendMessage(ds.data());
+    return m_lastRequestId;
+}
+
+int QQmlInspectorClient::createObject(const QString &qml, int parentId, const QStringList &imports,
+                                      const QString &filename)
+{
+    QPacket ds(connection()->currentDataStreamVersion());
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray("createObject") << qml << parentId << imports << filename;
+    sendMessage(ds.data());
+    return m_lastRequestId;
+}
+
+int QQmlInspectorClient::moveObject(int childId, int newParentId)
+{
+    QPacket ds(connection()->currentDataStreamVersion());
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray("moveObject") << childId << newParentId;
+    sendMessage(ds.data());
+    return m_lastRequestId;
+}
+
+int QQmlInspectorClient::destroyObject(int objectId)
+{
+    QPacket ds(connection()->currentDataStreamVersion());
+    ds << QByteArray("request") << ++m_lastRequestId
+       << QByteArray("destroyObject") << objectId;
+    sendMessage(ds.data());
+    return m_lastRequestId;
 }
 
 void QQmlInspectorClient::messageReceived(const QByteArray &message)
@@ -68,7 +122,8 @@ void QQmlInspectorClient::messageReceived(const QByteArray &message)
         return;
     }
 
-    m_requestResult = false;
-    ds >> m_responseId >> m_requestResult;
-    emit responseReceived();
+    int responseId;
+    bool result;
+    ds >> responseId >> result;
+    emit responseReceived(responseId, result);
 }

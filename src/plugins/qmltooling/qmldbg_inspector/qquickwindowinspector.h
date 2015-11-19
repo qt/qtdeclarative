@@ -31,20 +31,58 @@
 **
 ****************************************************************************/
 
-#include "abstracttool.h"
+#ifndef QQUICKWINDOWINSPECTOR_H
+#define QQUICKWINDOWINSPECTOR_H
 
-#include "abstractviewinspector.h"
+#include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
 
+class QQmlDebugService;
+class QQuickWindow;
+class QQmlEngine;
+class QWindow;
+class QQuickItem;
+
 namespace QmlJSDebugger {
 
-AbstractTool::AbstractTool(AbstractViewInspector *inspector) :
-    QObject(inspector),
-    m_inspector(inspector)
+class InspectTool;
+class GlobalInspector;
+
+/*
+ * The common code between QQuickView and QQuickView inspectors lives here,
+ */
+class QQuickWindowInspector : public QObject
 {
-}
+    Q_OBJECT
+
+public:
+    explicit QQuickWindowInspector(QQuickWindow *quickWindow, QObject *parent = 0);
+
+    QQuickItem *overlay() const { return m_overlay; }
+    QQuickItem *topVisibleItemAt(const QPointF &pos) const;
+    QList<QQuickItem *> itemsAt(const QPointF &pos) const;
+
+    QQuickWindow *quickWindow() const;
+
+    void setParentWindow(QWindow *parentWindow);
+    void setShowAppOnTop(bool appOnTop);
+
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
+
+protected:
+    bool eventFilter(QObject *, QEvent *);
+
+private:
+    QQuickItem *m_overlay;
+    QQuickWindow *m_window;
+    QWindow *m_parentWindow;
+    InspectTool *m_tool;
+};
 
 } // namespace QmlJSDebugger
 
 QT_END_NAMESPACE
+
+#endif // QQUICKWINDOWINSPECTOR_H

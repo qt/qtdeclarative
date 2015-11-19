@@ -40,32 +40,25 @@ class QQmlInspectorClient : public QQmlDebugClient
     Q_OBJECT
 
 public:
-    QQmlInspectorClient(QQmlDebugConnection *connection)
-        : QQmlDebugClient(QLatin1String("QmlInspector"), connection)
-        , m_showAppOnTop(false)
-        , m_requestId(0)
-        , m_requestResult(false)
-        , m_responseId(-1)
-    {
-    }
+    QQmlInspectorClient(QQmlDebugConnection *connection);
 
-    void setShowAppOnTop(bool showOnTop);
-    void reloadQml(const QHash<QString, QByteArray> &changesHash);
+    int setInspectToolEnabled(bool enabled);
+    int setShowAppOnTop(bool showOnTop);
+    int setAnimationSpeed(qreal speed);
+    int select(const  QList<int> &objectIds);
+    int createObject(const QString &qml, int parentId, const QStringList &imports,
+                     const QString &filename);
+    int moveObject(int childId, int newParentId);
+    int destroyObject(int objectId);
 
 signals:
-    void responseReceived();
+    void responseReceived(int requestId, bool result);
 
 protected:
     void messageReceived(const QByteArray &message);
 
 private:
-    bool m_showAppOnTop;
-    int m_requestId;
-
-public:
-    bool m_requestResult;
-    int m_responseId;
-    int m_reloadRequestId;
+    int m_lastRequestId;
 };
 
 #endif // QQMLINSPECTORCLIENT_H

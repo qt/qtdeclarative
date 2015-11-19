@@ -49,55 +49,54 @@
 #define STR_PORT_TO "3782"
 
 
-
 class tst_QQmlInspector : public QQmlDataTest
 {
     Q_OBJECT
 
-public:
-    tst_QQmlInspector()
-        : m_process(0)
-        , m_connection(0)
-        , m_client(0)
-    {
-    }
+private:
+    void startQmlProcess(const QString &qmlFile, bool restrictMode = true);
+    void checkAnimationSpeed(int targetMillisPerDegree);
 
 private:
-    void startQmlsceneProcess(const char *qmlFile, bool restrictMode = true);
-
-private:
-    QQmlDebugProcess *m_process;
-    QQmlDebugConnection *m_connection;
-    QQmlInspectorClient *m_client;
+    QScopedPointer<QQmlDebugProcess> m_process;
+    QScopedPointer<QQmlDebugConnection> m_connection;
+    QScopedPointer<QQmlInspectorClient> m_client;
+    QScopedPointer<QQmlInspectorResultRecipient> m_recipient;
 
 private slots:
     void cleanup();
 
     void connect_data();
     void connect();
+    void setAnimationSpeed();
     void showAppOnTop();
-    void reloadQml();
-    void reloadQmlWindow();
 };
 
-void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */, bool restrictServices)
+void tst_QQmlInspector::startQmlProcess(const QString &qmlFile, bool restrictServices)
 {
     const QString argument = QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
             .arg(STR_PORT_FROM).arg(STR_PORT_TO)
             .arg(restrictServices ? QStringLiteral(",services:QmlInspector") : QString());
 
-    // ### This should be using qml instead of qmlscene, but can't because of QTBUG-33376 (same as the XFAIL testcase)
-    m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
-    m_process->start(QStringList() << argument << testFile("qtquick2.qml"));
+    m_process.reset(new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) +
+                                         "/qml"));
+    // Make sure the animation timing is exact
+    m_process->addEnvironment(QLatin1String("QSG_RENDER_LOOP=basic"));
+    m_process->start(QStringList() << argument << testFile(qmlFile));
     QVERIFY2(m_process->waitForSessionStart(),
              "Could not launch application, or did not get 'Waiting for connection'.");
 
-    m_connection = new QQmlDebugConnection();
-    m_client = new QQmlInspectorClient(m_connection);
-    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
+    m_client.reset();
+    m_connection.reset(new QQmlDebugConnection);
+    m_client.reset(new QQmlInspectorClient(m_connection.data()));
+
+    m_recipient.reset(new QQmlInspectorResultRecipient);
+    QObject::connect(m_client.data(), &QQmlInspectorClient::responseReceived,
+                     m_recipient.data(), &QQmlInspectorResultRecipient::recordResponse);
+
+    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection.data());
 
     m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
-    QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
     foreach (QQmlDebugClient *other, others)
@@ -106,99 +105,104 @@ void tst_QQmlInspector::startQmlsceneProcess(const char * /* qmlFile */, bool re
     qDeleteAll(others);
 }
 
+void tst_QQmlInspector::checkAnimationSpeed(int targetMillisPerDegree)
+{
+    QString degreesString = QStringLiteral("degrees");
+    QString millisecondsString = QStringLiteral("milliseconds");
+    for (int i = 0; i < 2; ++i) { // skip one period; the change might have happened inside it
+        int position = m_process->output().length();
+        while (!m_process->output().mid(position).contains(degreesString) ||
+               !m_process->output().mid(position).contains(millisecondsString)) {
+            QVERIFY(QQmlDebugTest::waitForSignal(m_process.data(),
+                                                 SIGNAL(readyReadStandardOutput())));
+        }
+    }
+
+    QStringList words = m_process->output().split(QLatin1Char(' '));
+    int degreesMarker = words.lastIndexOf(degreesString);
+    QVERIFY(degreesMarker > 1);
+    double degrees = words[degreesMarker - 1].toDouble();
+    int millisecondsMarker = words.lastIndexOf(millisecondsString);
+    QVERIFY(millisecondsMarker > 1);
+    int milliseconds = words[millisecondsMarker - 1].toInt();
+
+    double millisecondsPerDegree = milliseconds / degrees;
+    QVERIFY(millisecondsPerDegree > targetMillisPerDegree - 3);
+    QVERIFY(millisecondsPerDegree < targetMillisPerDegree + 3);
+
+}
+
 void tst_QQmlInspector::cleanup()
 {
     if (QTest::currentTestFailed()) {
         qDebug() << "Process State:" << m_process->state();
         qDebug() << "Application Output:" << m_process->output();
     }
-    delete m_client;
-    m_client = 0;
-    delete m_connection;
-    m_connection = 0;
-    delete m_process;
-    m_process = 0;
 }
 
 void tst_QQmlInspector::connect_data()
 {
+    QTest::addColumn<QString>("file");
     QTest::addColumn<bool>("restrictMode");
-    QTest::newRow("unrestricted") << false;
-    QTest::newRow("restricted") << true;
+    QTest::newRow("rectangle/unrestricted") << "qtquick2.qml" << false;
+    QTest::newRow("rectangle/restricted")   << "qtquick2.qml" << true;
+    QTest::newRow("window/unrestricted")    << "window.qml"   << false;
+    QTest::newRow("window/restricted")      << "window.qml"   << true;
 }
 
 void tst_QQmlInspector::connect()
 {
+    QFETCH(QString, file);
     QFETCH(bool, restrictMode);
-    startQmlsceneProcess("qtquick2.qml", restrictMode);
+    startQmlProcess(file, restrictMode);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    int requestId = m_client->setInspectToolEnabled(true);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+
+    requestId = m_client->setInspectToolEnabled(false);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
 }
 
 void tst_QQmlInspector::showAppOnTop()
 {
-    startQmlsceneProcess("qtquick2.qml");
+    startQmlProcess("qtquick2.qml");
     QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
 
-    m_client->setShowAppOnTop(true);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
-    QCOMPARE(m_client->m_requestResult, true);
+    int requestId = m_client->setShowAppOnTop(true);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
 
-    m_client->setShowAppOnTop(false);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
-    QCOMPARE(m_client->m_requestResult, true);
+    requestId = m_client->setShowAppOnTop(false);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
 }
 
-void tst_QQmlInspector::reloadQml()
+void tst_QQmlInspector::setAnimationSpeed()
 {
-    startQmlsceneProcess("qtquick2.qml");
+    startQmlProcess("qtquick2.qml");
     QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    checkAnimationSpeed(10);
 
-    QByteArray fileContents;
+    int requestId = m_client->setAnimationSpeed(0.5);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+    checkAnimationSpeed(5);
 
-    QFile file(testFile("changes.txt"));
-    if (file.open(QFile::ReadOnly))
-        fileContents = file.readAll();
-    file.close();
+    requestId = m_client->setAnimationSpeed(2.0);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+    checkAnimationSpeed(20);
 
-    QHash<QString, QByteArray> changesHash;
-    changesHash.insert("qtquick2.qml", fileContents);
-
-    m_client->reloadQml(changesHash);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
-
-    QTRY_COMPARE(m_process->output().contains(
-                 QString("version 2.0")), true);
-
-    QCOMPARE(m_client->m_requestResult, true);
-    QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
-}
-
-void tst_QQmlInspector::reloadQmlWindow()
-{
-    startQmlsceneProcess("window.qml");
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
-
-    QByteArray fileContents;
-
-    QFile file(testFile("changes.txt"));
-    if (file.open(QFile::ReadOnly))
-        fileContents = file.readAll();
-    file.close();
-
-    QHash<QString, QByteArray> changesHash;
-    changesHash.insert("window.qml", fileContents);
-
-    m_client->reloadQml(changesHash);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(responseReceived())));
-
-    QEXPECT_FAIL("", "cannot debug with a QML file containing a top-level Window", Abort); // QTBUG-33376
-    // TODO: remove the timeout once we don't expect it to fail anymore.
-    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains(QString("version 2.0")), 1);
-
-    QCOMPARE(m_client->m_requestResult, true);
-    QCOMPARE(m_client->m_reloadRequestId, m_client->m_responseId);
+    requestId = m_client->setAnimationSpeed(1.0);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+    checkAnimationSpeed(10);
 }
 
 QTEST_MAIN(tst_QQmlInspector)

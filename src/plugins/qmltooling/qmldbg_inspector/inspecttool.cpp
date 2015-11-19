@@ -32,14 +32,13 @@
 ****************************************************************************/
 
 #include "inspecttool.h"
-
 #include "highlight.h"
-#include "qquickviewinspector.h"
+#include "qquickwindowinspector.h"
+#include "globalinspector.h"
 
 #include <QtCore/QLineF>
 
 #include <QtGui/QMouseEvent>
-#include <QtGui/QWheelEvent>
 #include <QtGui/QTouchEvent>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QGuiApplication>
@@ -52,61 +51,23 @@ QT_BEGIN_NAMESPACE
 
 namespace QmlJSDebugger {
 
-static const double ZoomSnapDelta = 0.04;
-static const int PressAndHoldTimeout = 800;
-
-InspectTool::InspectTool(QQuickViewInspector *inspector, QQuickView *view) :
-    AbstractTool(inspector),
-    m_originalSmooth(view->contentItem()->smooth()),
-    m_dragStarted(false),
-    m_pinchStarted(false),
-    m_didPressAndHold(false),
-    m_tapEvent(false),
+InspectTool::InspectTool(QQuickWindowInspector *inspector, QQuickWindow *view) :
+    QObject(inspector),
     m_contentItem(view->contentItem()),
-    m_originalPosition(view->contentItem()->position()),
-    m_smoothScaleFactor(ZoomSnapDelta),
-    m_minScale(0.125f),
-    m_maxScale(48.0f),
-    m_originalScale(view->contentItem()->scale()),
     m_touchTimestamp(0),
     m_hoverHighlight(new HoverHighlight(inspector->overlay())),
     m_lastItem(0),
     m_lastClickedItem(0)
 {
-    //Press and Hold Timer
-    m_pressAndHoldTimer.setSingleShot(true);
-    m_pressAndHoldTimer.setInterval(PressAndHoldTimeout);
-    connect(&m_pressAndHoldTimer, SIGNAL(timeout()), SLOT(zoomTo100()));
     //Timer to display selected item's name
     m_nameDisplayTimer.setSingleShot(true);
     m_nameDisplayTimer.setInterval(QGuiApplication::styleHints()->mouseDoubleClickInterval());
-    connect(&m_nameDisplayTimer, SIGNAL(timeout()), SLOT(showSelectedItemName()));
-    enable(true);
+    connect(&m_nameDisplayTimer, &QTimer::timeout, this, &InspectTool::showItemName);
 }
 
-InspectTool::~InspectTool()
+void InspectTool::enterEvent(QEvent *)
 {
-    enable(false);
-}
-
-void InspectTool::enable(bool enable)
-{
-    if (!enable) {
-        inspector()->setSelectedItems(QList<QQuickItem*>());
-        // restoring the original states.
-        if (m_contentItem) {
-            m_contentItem->setScale(m_originalScale);
-            m_contentItem->setPosition(m_originalPosition);
-            m_contentItem->setSmooth(m_originalSmooth);
-        }
-    } else {
-        if (m_contentItem) {
-            m_originalSmooth = m_contentItem->smooth();
-            m_originalScale = m_contentItem->scale();
-            m_originalPosition = m_contentItem->position();
-            m_contentItem->setSmooth(true);
-        }
-    }
+    m_hoverHighlight->setVisible(true);
 }
 
 void InspectTool::leaveEvent(QEvent *)
@@ -118,16 +79,6 @@ void InspectTool::mousePressEvent(QMouseEvent *event)
 {
     m_mousePosition = event->localPos();
     if (event->button() == Qt::LeftButton) {
-        m_pressAndHoldTimer.start();
-        initializeDrag(event->localPos());
-    }
-}
-
-void InspectTool::mouseReleaseEvent(QMouseEvent *event)
-{
-    m_mousePosition = event->localPos();
-    m_pressAndHoldTimer.stop();
-    if (event->button() == Qt::LeftButton && !m_dragStarted) {
         selectItem();
         m_hoverHighlight->setVisible(false);
     }
@@ -136,7 +87,6 @@ void InspectTool::mouseReleaseEvent(QMouseEvent *event)
 void InspectTool::mouseDoubleClickEvent(QMouseEvent *event)
 {
     m_mousePosition = event->localPos();
-    m_pressAndHoldTimer.stop();
     if (event->button() == Qt::LeftButton) {
         selectNextItem();
         m_hoverHighlight->setVisible(false);
@@ -145,68 +95,18 @@ void InspectTool::mouseDoubleClickEvent(QMouseEvent *event)
 
 void InspectTool::mouseMoveEvent(QMouseEvent *event)
 {
-    m_mousePosition = event->localPos();
-    moveItem(event->buttons() & Qt::LeftButton);
+    hoverMoveEvent(event);
 }
 
 void InspectTool::hoverMoveEvent(QMouseEvent *event)
 {
     m_mousePosition = event->localPos();
-    m_pressAndHoldTimer.stop();
     QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
     if (!item || item == m_lastClickedItem) {
         m_hoverHighlight->setVisible(false);
     } else {
         m_hoverHighlight->setItem(item);
         m_hoverHighlight->setVisible(true);
-    }
-}
-
-#ifndef QT_NO_WHEELEVENT
-void InspectTool::wheelEvent(QWheelEvent *event)
-{
-    if (event->orientation() != Qt::Vertical)
-        return;
-
-    Qt::KeyboardModifier smoothZoomModifier = Qt::ControlModifier;
-    if (event->modifiers() & smoothZoomModifier) {
-        int numDegrees = event->delta() / 8;
-        qreal newScale = m_contentItem->scale() + m_smoothScaleFactor * (numDegrees / 15.0f);
-        scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
-    } else if (!event->modifiers()) {
-        if (event->delta() > 0) {
-            zoomIn();
-        } else if (event->delta() < 0) {
-            zoomOut();
-        }
-    }
-}
-#endif
-
-void InspectTool::keyReleaseEvent(QKeyEvent *event)
-{
-    switch (event->key()) {
-    case Qt::Key_Plus:
-        zoomIn();
-        break;
-    case Qt::Key_Minus:
-        zoomOut();
-        break;
-    case Qt::Key_1:
-    case Qt::Key_2:
-    case Qt::Key_3:
-    case Qt::Key_4:
-    case Qt::Key_5:
-    case Qt::Key_6:
-    case Qt::Key_7:
-    case Qt::Key_8:
-    case Qt::Key_9: {
-        qreal newScale = ((event->key() - Qt::Key_0) * 1.0f);
-        scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
-        break;
-    }
-    default:
-        break;
     }
 }
 
@@ -217,10 +117,7 @@ void InspectTool::touchEvent(QTouchEvent *event)
     switch (event->type()) {
     case QEvent::TouchBegin:
         if (touchPoints.count() == 1 && (event->touchPointStates() & Qt::TouchPointPressed)) {
-            if (!m_pressAndHoldTimer.isActive())
-                m_pressAndHoldTimer.start();
             m_mousePosition = touchPoints.first().pos();
-            initializeDrag(touchPoints.first().pos());
             m_tapEvent = true;
         } else {
             m_tapEvent = false;
@@ -229,153 +126,28 @@ void InspectTool::touchEvent(QTouchEvent *event)
     case QEvent::TouchUpdate: {
         if (touchPoints.count() > 1)
             m_tapEvent = false;
-        if ((touchPoints.count() == 1)
-                && (event->touchPointStates() & Qt::TouchPointMoved)) {
+        else if ((touchPoints.count() == 1) && (event->touchPointStates() & Qt::TouchPointMoved))
             m_mousePosition = touchPoints.first().pos();
-            moveItem(true);
-        } else if ((touchPoints.count() == 2)
-                   && (!(event->touchPointStates() & Qt::TouchPointReleased))) {
-            // determine scale factor
-            const QTouchEvent::TouchPoint &touchPoint0 = touchPoints.first();
-            const QTouchEvent::TouchPoint &touchPoint1 = touchPoints.last();
-
-            qreal touchScaleFactor =
-                    QLineF(touchPoint0.pos(), touchPoint1.pos()).length()
-                    / QLineF(touchPoint0.lastPos(), touchPoint1.lastPos()).length();
-
-            QPointF oldcenter = (touchPoint0.lastPos() + touchPoint1.lastPos()) / 2;
-            QPointF newcenter = (touchPoint0.pos() + touchPoint1.pos()) / 2;
-
-            m_pinchStarted = true;
-            scaleView(touchScaleFactor, newcenter, oldcenter);
-        }
         break;
     }
     case QEvent::TouchEnd: {
-        m_pressAndHoldTimer.stop();
-        if (m_pinchStarted) {
-            m_pinchStarted = false;
-        }
-        if (touchPoints.count() == 1 && !m_dragStarted &&
-                !m_didPressAndHold && m_tapEvent) {
+        if (touchPoints.count() == 1 && m_tapEvent) {
             m_tapEvent = false;
             bool doubleTap = event->timestamp() - m_touchTimestamp
                     < static_cast<ulong>(QGuiApplication::styleHints()->mouseDoubleClickInterval());
             if (doubleTap) {
                 m_nameDisplayTimer.stop();
                 selectNextItem();
-            }
-            else {
+            } else {
                 selectItem();
             }
             m_touchTimestamp = event->timestamp();
         }
-        m_didPressAndHold = false;
         break;
     }
     default:
         break;
     }
-}
-
-void InspectTool::scaleView(const qreal &factor, const QPointF &newcenter, const QPointF &oldcenter)
-{
-    m_pressAndHoldTimer.stop();
-    if (((m_contentItem->scale() * factor) > m_maxScale)
-            || ((m_contentItem->scale() * factor) < m_minScale)) {
-        return;
-    }
-    //New position = new center + scalefactor * (oldposition - oldcenter)
-    QPointF newPosition = newcenter + (factor * (m_contentItem->position() - oldcenter));
-    m_contentItem->setScale(m_contentItem->scale() * factor);
-    m_contentItem->setPosition(newPosition);
-}
-
-void InspectTool::zoomIn()
-{
-    qreal newScale = nextZoomScale(ZoomIn);
-    scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
-}
-
-void InspectTool::zoomOut()
-{
-    qreal newScale = nextZoomScale(ZoomOut);
-    scaleView(newScale / m_contentItem->scale(), m_mousePosition, m_mousePosition);
-}
-
-void InspectTool::zoomTo100()
-{
-    m_didPressAndHold = true;
-
-    m_contentItem->setPosition(QPointF(0, 0));
-    m_contentItem->setScale(1.0);
-}
-
-qreal InspectTool::nextZoomScale(ZoomDirection direction)
-{
-    static QList<qreal> zoomScales =
-            QList<qreal>()
-            << 0.125f
-            << 1.0f / 6.0f
-            << 0.25f
-            << 1.0f / 3.0f
-            << 0.5f
-            << 2.0f / 3.0f
-            << 1.0f
-            << 2.0f
-            << 3.0f
-            << 4.0f
-            << 5.0f
-            << 6.0f
-            << 7.0f
-            << 8.0f
-            << 12.0f
-            << 16.0f
-            << 32.0f
-            << 48.0f;
-
-    if (direction == ZoomIn) {
-        for (int i = 0; i < zoomScales.length(); ++i) {
-            if (zoomScales[i] > m_contentItem->scale())
-                return zoomScales[i];
-        }
-        return zoomScales.last();
-    } else {
-        for (int i = zoomScales.length() - 1; i >= 0; --i) {
-            if (zoomScales[i] < m_contentItem->scale())
-                return zoomScales[i];
-        }
-        return zoomScales.first();
-    }
-}
-
-void InspectTool::initializeDrag(const QPointF &pos)
-{
-    m_dragStartPosition = pos;
-    m_dragStarted = false;
-}
-
-void InspectTool::dragItemToPosition()
-{
-    QPointF newPosition = m_contentItem->position() + m_mousePosition - m_dragStartPosition;
-    m_dragStartPosition = m_mousePosition;
-    m_contentItem->setPosition(newPosition);
-}
-
-void InspectTool::moveItem(bool valid)
-{
-    if (m_pinchStarted)
-        return;
-
-    if (!m_dragStarted
-            && valid
-            && ((m_dragStartPosition - m_mousePosition).manhattanLength()
-                > QGuiApplication::styleHints()->startDragDistance())) {
-        m_pressAndHoldTimer.stop();
-        m_dragStarted = true;
-    }
-    if (m_dragStarted)
-        dragItemToPosition();
 }
 
 void InspectTool::selectNextItem()
@@ -389,8 +161,8 @@ void InspectTool::selectNextItem()
                 m_lastItem = items[i+1];
             else
                 m_lastItem = items[0];
-            inspector()->setSelectedItems(QList<QQuickItem*>() << m_lastItem);
-            showSelectedItemName();
+            globalInspector()->setSelectedItems(QList<QQuickItem*>() << m_lastItem);
+            showItemName();
             break;
         }
     }
@@ -400,24 +172,29 @@ void InspectTool::selectItem()
 {
     if (!inspector()->topVisibleItemAt(m_mousePosition))
         return;
-    if (m_lastClickedItem == inspector()->topVisibleItemAt(m_mousePosition)) {
-        m_nameDisplayTimer.start();
-        return;
-    }
     m_lastClickedItem = inspector()->topVisibleItemAt(m_mousePosition);
     m_lastItem = m_lastClickedItem;
-    inspector()->setSelectedItems(QList<QQuickItem*>() << m_lastClickedItem);
-    showSelectedItemName();
+    globalInspector()->setSelectedItems(QList<QQuickItem*>() << m_lastClickedItem);
+    if (m_lastClickedItem == inspector()->topVisibleItemAt(m_mousePosition)) {
+        m_nameDisplayTimer.start();
+    } else {
+        showItemName();
+    }
 }
 
-QQuickViewInspector *InspectTool::inspector() const
+void InspectTool::showItemName()
 {
-    return static_cast<QQuickViewInspector*>(AbstractTool::inspector());
+    globalInspector()->showSelectedItemName(m_lastItem, m_mousePosition);
 }
 
-void InspectTool::showSelectedItemName()
+QQuickWindowInspector *InspectTool::inspector() const
 {
-    inspector()->showSelectedItemName(m_lastItem, m_mousePosition);
+    return static_cast<QQuickWindowInspector *>(parent());
+}
+
+GlobalInspector *InspectTool::globalInspector() const
+{
+    return static_cast<GlobalInspector *>(parent()->parent());
 }
 
 } // namespace QmlJSDebugger

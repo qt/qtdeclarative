@@ -96,10 +96,6 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     if (!engine.data()->incubationController())
         engine.data()->setIncubationController(offscreenWindow->incubationController());
 
-    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
-    if (service)
-        service->addView(q);
-
 #ifndef QT_NO_DRAGANDDROP
     q->setAcceptDrops(true);
 #endif
@@ -150,10 +146,6 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
 
 QQuickWidgetPrivate::~QQuickWidgetPrivate()
 {
-    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
-    if (service)
-        service->removeView(q_func());
-
     invalidateRenderControl();
 
     // context and offscreenSurface are current at this stage, if the context was created.
@@ -1115,6 +1107,8 @@ void QQuickWidget::showEvent(QShowEvent *)
         emit d->offscreenWindow->visibleChanged(true);
         offscreenPrivate->updateVisibility();
     }
+    if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
+        service->setParentWindow(d->offscreenWindow, window()->windowHandle());
 }
 
 /*! \reimp */
@@ -1128,6 +1122,8 @@ void QQuickWidget::hideEvent(QHideEvent *)
         emit d->offscreenWindow->visibleChanged(false);
         offscreenPrivate->updateVisibility();
     }
+    if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
+        service->setParentWindow(d->offscreenWindow, d->offscreenWindow);
 }
 
 /*! \reimp */

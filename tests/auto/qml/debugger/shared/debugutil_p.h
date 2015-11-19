@@ -130,4 +130,23 @@ private:
     int m_receivedBindErrors;
 };
 
+class QQmlInspectorResultRecipient : public QObject
+{
+    Q_OBJECT
+public:
+    QQmlInspectorResultRecipient(QObject *parent = 0) :
+        QObject(parent), lastResponseId(-1), lastResult(false) {}
+
+    int lastResponseId;
+    bool lastResult;
+
+public slots:
+
+    void recordResponse(int requestId, bool result)
+    {
+        lastResponseId = requestId;
+        lastResult = result;
+    }
+};
+
 #endif // DEBUGUTIL_P_H

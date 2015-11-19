@@ -32,89 +32,98 @@
 ****************************************************************************/
 
 #include "qqmlinspectorservicefactory.h"
-#include "qquickviewinspector.h"
+#include "globalinspector.h"
+#include "qquickwindowinspector.h"
 
-#include <private/qqmlglobal_p.h>
-
-#include <QtCore/QCoreApplication>
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QPluginLoader>
+#include <QtGui/QWindow>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlInspectorServiceImpl : public QQmlInspectorService
 {
     Q_OBJECT
-
 public:
     QQmlInspectorServiceImpl(QObject *parent = 0);
 
-    void addView(QObject *) Q_DECL_OVERRIDE;
-    void removeView(QObject *) Q_DECL_OVERRIDE;
+    void addWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
+    void setParentWindow(QQuickWindow *window, QWindow *parent) Q_DECL_OVERRIDE;
+    void removeWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
 
 protected:
-    virtual void stateChanged(State state) Q_DECL_OVERRIDE;
     virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
 
-private Q_SLOTS:
-    void processMessage(const QByteArray &message);
-    void updateState();
+private slots:
+    void messageFromClient(const QByteArray &message);
 
 private:
     friend class QQmlInspectorServiceFactory;
 
-    QList<QObject*> m_views;
-    QmlJSDebugger::AbstractViewInspector *m_currentInspector;
+    QmlJSDebugger::GlobalInspector *checkInspector();
+    QmlJSDebugger::GlobalInspector *m_globalInspector;
+    QHash<QQuickWindow *, QWindow *> m_waitingWindows;
 };
 
 QQmlInspectorServiceImpl::QQmlInspectorServiceImpl(QObject *parent):
-    QQmlInspectorService(1, parent), m_currentInspector(0)
+    QQmlInspectorService(1, parent), m_globalInspector(0)
 {
 }
 
-void QQmlInspectorServiceImpl::addView(QObject *view)
+QmlJSDebugger::GlobalInspector *QQmlInspectorServiceImpl::checkInspector()
 {
-    m_views.append(view);
-    updateState();
+    if (state() == Enabled) {
+        if (!m_globalInspector) {
+            m_globalInspector = new QmlJSDebugger::GlobalInspector(this);
+            connect(m_globalInspector, &QmlJSDebugger::GlobalInspector::messageToClient,
+                    this, &QQmlDebugService::messageToClient);
+            for (QHash<QQuickWindow *, QWindow *>::ConstIterator i = m_waitingWindows.constBegin();
+                 i != m_waitingWindows.constEnd(); ++i) {
+                m_globalInspector->addWindow(i.key());
+                if (i.value() != 0)
+                    m_globalInspector->setParentWindow(i.key(), i.value());
+            }
+            m_waitingWindows.clear();
+        }
+    } else if (m_globalInspector) {
+        delete m_globalInspector;
+        m_globalInspector = 0;
+    }
+    return m_globalInspector;
 }
 
-void QQmlInspectorServiceImpl::removeView(QObject *view)
+void QQmlInspectorServiceImpl::addWindow(QQuickWindow *window)
 {
-    m_views.removeAll(view);
-    updateState();
-}
-
-void QQmlInspectorServiceImpl::stateChanged(State /*state*/)
-{
-    QMetaObject::invokeMethod(this, "updateState", Qt::QueuedConnection);
-}
-
-void QQmlInspectorServiceImpl::updateState()
-{
-    delete m_currentInspector;
-    m_currentInspector = 0;
-
-    if (m_views.isEmpty() || state() != Enabled)
-        return;
-
-    QQuickView *qtQuickView = qobject_cast<QQuickView*>(m_views.first());
-    if (qtQuickView)
-        m_currentInspector = new QmlJSDebugger::QQuickViewInspector(this, qtQuickView, this);
+    if (QmlJSDebugger::GlobalInspector *inspector = checkInspector())
+        inspector->addWindow(window);
     else
-        qWarning() << "QQmlInspector: No inspector available for view '"
-                   << m_views.first()->metaObject()->className() << "'.";
+        m_waitingWindows.insert(window, 0);
+}
+
+void QQmlInspectorServiceImpl::removeWindow(QQuickWindow *window)
+{
+    if (QmlJSDebugger::GlobalInspector *inspector = checkInspector())
+        inspector->removeWindow(window);
+    else
+        m_waitingWindows.remove(window);
+}
+
+void QQmlInspectorServiceImpl::setParentWindow(QQuickWindow *window, QWindow *parent)
+{
+    if (QmlJSDebugger::GlobalInspector *inspector = checkInspector())
+        inspector->setParentWindow(window, parent);
+    else
+        m_waitingWindows[window] = parent;
 }
 
 void QQmlInspectorServiceImpl::messageReceived(const QByteArray &message)
 {
-    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+    QMetaObject::invokeMethod(this, "messageFromClient", Qt::QueuedConnection,
+                              Q_ARG(QByteArray, message));
 }
 
-void QQmlInspectorServiceImpl::processMessage(const QByteArray &message)
+void QQmlInspectorServiceImpl::messageFromClient(const QByteArray &message)
 {
-    if (m_currentInspector)
-        m_currentInspector->handleMessage(message);
+    if (QmlJSDebugger::GlobalInspector *inspector = checkInspector())
+        inspector->processMessage(message);
 }
 
 QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)

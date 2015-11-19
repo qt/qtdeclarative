@@ -86,10 +86,6 @@ void QQuickViewPrivate::init(QQmlEngine* e)
         QV4::Scoped<QV4::QQuickRootItemMarker> v(scope, QV4::QQuickRootItemMarker::create(engine.data(), q));
         rootItemMarker.set(v4, v);
     }
-
-    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
-    if (service)
-        service->addView(q);
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
@@ -99,9 +95,6 @@ QQuickViewPrivate::QQuickViewPrivate()
 
 QQuickViewPrivate::~QQuickViewPrivate()
 {
-    QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>();
-    if (service)
-        service->removeView(q_func());
 }
 
 void QQuickViewPrivate::execute()

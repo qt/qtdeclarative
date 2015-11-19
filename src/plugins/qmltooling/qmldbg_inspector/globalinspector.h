@@ -31,55 +31,63 @@
 **
 ****************************************************************************/
 
-#ifndef ABSTRACTTOOL_H
-#define ABSTRACTTOOL_H
+#ifndef GLOBALINSPECTOR_H
+#define GLOBALINSPECTOR_H
+
+#include "qquickwindowinspector.h"
 
 #include <QtCore/QObject>
+#include <QtCore/QPointer>
+#include <QtCore/QHash>
+#include <QtQuick/QQuickItem>
 
 QT_BEGIN_NAMESPACE
-class QMouseEvent;
-class QKeyEvent;
-class QWheelEvent;
-class QTouchEvent;
 
 namespace QmlJSDebugger {
 
-class AbstractViewInspector;
+class SelectionHighlight;
 
-class AbstractTool : public QObject
+class GlobalInspector : public QObject
 {
     Q_OBJECT
-
 public:
-    explicit AbstractTool(AbstractViewInspector *inspector);
+    GlobalInspector(QObject *parent = 0) : QObject(parent), m_eventId(0) {}
+    ~GlobalInspector();
 
-    AbstractViewInspector *inspector() const { return m_inspector; }
+    void setSelectedItems(const QList<QQuickItem *> &items);
+    void showSelectedItemName(QQuickItem *item, const QPointF &point);
 
-    virtual void enable(bool enable) = 0;
+    void addWindow(QQuickWindow *window);
+    void setParentWindow(QQuickWindow *window, QWindow *parentWindow);
+    void setQmlEngine(QQuickWindow *window, QQmlEngine *engine);
+    void removeWindow(QQuickWindow *window);
+    void processMessage(const QByteArray &message);
 
-    virtual void leaveEvent(QEvent *event) = 0;
+signals:
+    void messageToClient(const QString &name, const QByteArray &data);
 
-    virtual void mousePressEvent(QMouseEvent *event) = 0;
-    virtual void mouseMoveEvent(QMouseEvent *event) = 0;
-    virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
-
-    virtual void hoverMoveEvent(QMouseEvent *event) = 0;
-#ifndef QT_NO_WHEELEVENT
-    virtual void wheelEvent(QWheelEvent *event) = 0;
-#endif
-
-    virtual void keyPressEvent(QKeyEvent *event) = 0;
-    virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
-
-    virtual void touchEvent(QTouchEvent *) {}
+private slots:
+    void sendResult(int requestId, bool success);
 
 private:
-    AbstractViewInspector *m_inspector;
+    void sendCurrentObjects(const QList<QObject *> &objects);
+    void removeFromSelectedItems(QObject *object);
+    QString titleForItem(QQuickItem *item) const;
+    QString idStringForObject(QObject *obj) const;
+    bool createQmlObject(int requestId, const QString &qml, QObject *parent,
+                         const QStringList &importList, const QString &filename);
+    bool destroyQmlObject(QObject *object, int requestId, int debugId);
+    bool syncSelectedItems(const QList<QQuickItem *> &items);
+
+    // Hash< object to be destroyed, QPair<destroy eventId, object debugId> >
+    QList<QPointer<QQuickItem> > m_selectedItems;
+    QHash<QQuickItem *, SelectionHighlight *> m_highlightItems;
+    QList<QQuickWindowInspector *> m_windowInspectors;
+    int m_eventId;
 };
 
-} // namespace QmlJSDebugger
+} // QmlJSDebugger
 
 QT_END_NAMESPACE
 
-#endif // ABSTRACTTOOL_H
+#endif // GLOBALINSPECTOR_H
