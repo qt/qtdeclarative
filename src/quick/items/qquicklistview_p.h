@@ -196,7 +196,7 @@ public:
     ~QQuickListViewAttached() {}
 
 public:
-    QQuickItem *m_sectionItem;
+    QPointer<QQuickItem> m_sectionItem;
 };
 
 

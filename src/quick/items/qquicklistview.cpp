@@ -249,7 +249,7 @@ public:
     }
 
     inline QQuickItem *section() const {
-        return attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
+        return item && attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
     }
     void setSection(QQuickItem *s) {
         static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
@@ -1302,7 +1302,7 @@ bool QQuickListViewPrivate::showHeaderForIndex(int index) const
 
 bool QQuickListViewPrivate::showFooterForIndex(int index) const
 {
-    return index == model->count()-1;
+    return model && index == model->count()-1;
 }
 
 void QQuickListViewPrivate::updateFooter()
