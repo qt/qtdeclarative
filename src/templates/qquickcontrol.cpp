@@ -700,6 +700,16 @@ void QQuickControl::setContentItem(QQuickItem *item)
     }
 }
 
+void QQuickControl::componentComplete()
+{
+    Q_D(QQuickControl);
+    QQuickItem::componentComplete();
+#ifndef QT_NO_ACCESSIBILITY
+    if (!d->accessibleAttached && QAccessible::isActive())
+        accessibilityActiveChanged(true);
+#endif
+}
+
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     event->accept();

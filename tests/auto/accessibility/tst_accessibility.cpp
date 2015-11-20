@@ -135,9 +135,13 @@ void tst_accessibility::a11y()
     if (name != QLatin1Literal("dayofweekrow")
             && name != QLatin1Literal("monthgrid")
             && name != QLatin1Literal("weeknumbercolumn")) {
-        QVERIFY(!acc);
-        QAccessible::setActive(true);
-        acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+        if (QAccessible::isActive()) {
+            QVERIFY(acc);
+        } else {
+            QVERIFY(!acc);
+            QAccessible::setActive(true);
+            acc = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false));
+        }
     }
     QVERIFY(acc);
     QCOMPARE(acc->role(), (QAccessible::Role)role);
