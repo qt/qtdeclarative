@@ -68,6 +68,10 @@ public:
     QPointer<QTextDocument> document;
 };
 
+/*!
+   Constructs a QQuickTextDocument object with
+   \a parent as the parent object.
+*/
 QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
     : QObject(*(new QQuickTextDocumentPrivate), parent)
 {
@@ -77,6 +81,9 @@ QQuickTextDocument::QQuickTextDocument(QQuickItem *parent)
     d->document = QPointer<QTextDocument>(qobject_cast<QQuickTextEdit*>(parent)->d_func()->document);
 }
 
+/*!
+   Returns a pointer to the QTextDocument object.
+*/
 QTextDocument* QQuickTextDocument::textDocument() const
 {
     Q_D(const QQuickTextDocument);
