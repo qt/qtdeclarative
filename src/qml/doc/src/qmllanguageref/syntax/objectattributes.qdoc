@@ -564,8 +564,7 @@ list of \l {Item::children}{children}.
 Default properties can be useful for reassigning the children of an item. See
 the \l{TabWidget Example}, which uses a default property to
 automatically reassign children of the TabWidget as children of an inner
-ListView.
-
+ListView.  See also \l {Extending QML}.
 
 \section3 Read-Only Properties
 

@@ -255,6 +255,13 @@ public:
     void setM43(qreal value) { v(3, 2) = value; }
     void setM44(qreal value) { v(3, 3) = value; }
 
+    Q_INVOKABLE void translate(const QVector3D &t) { v.translate(t); }
+    Q_INVOKABLE void rotate(float angle, const QVector3D &axis) { v.rotate(angle, axis); }
+    Q_INVOKABLE void scale(float s) { v.scale(s); }
+    Q_INVOKABLE void scale(float sx, float sy, float sz) { v.scale(sx, sy, sz); }
+    Q_INVOKABLE void scale(const QVector3D &s) { v.scale(s); }
+    Q_INVOKABLE void lookAt(const QVector3D &eye, const QVector3D &center, const QVector3D &up) { v.lookAt(eye, center, up); }
+
     Q_INVOKABLE QMatrix4x4 times(const QMatrix4x4 &m) const;
     Q_INVOKABLE QVector4D times(const QVector4D &vec) const;
     Q_INVOKABLE QVector3D times(const QVector3D &vec) const;

@@ -60,13 +60,20 @@ QT_USE_NAMESPACE
 
 QStringList g_qmlImportPaths;
 
-void printUsage(const QString &appName)
+static void printUsage(const QString &appNameIn)
 {
-    std::cerr << qPrintable(QString::fromLatin1(
-                                 "Usage: %1 -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory \n"
-                                 "       %1 -qmlFiles file1 file2 -importPath path/to/qt/qml/directory \n"
-                                 "Example: %1 -rootPath . -importPath /home/user/dev/qt-install/qml \n").arg(
-                                 appName));
+    const std::wstring appName = appNameIn.toStdWString();
+#ifndef QT_BOOTSTRAPPED
+    const QString qmlPath = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#else
+    const QString qmlPath = QStringLiteral("/home/user/dev/qt-install/qml");
+#endif
+    std::wcerr
+        << "Usage: " << appName << " -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory\n"
+           "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n\n"
+           "Example: " << appName << " -rootPath . -importPath "
+        << QDir::toNativeSeparators(qmlPath).toStdWString()
+        << '\n';
 }
 
 QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &code, const QString &path)

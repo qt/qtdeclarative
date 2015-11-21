@@ -181,7 +181,11 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
     if (hasValidResetBinding(propertyName)) {
         QQmlAbstractBinding *binding = getResetBinding(propertyName);
 
+#if defined(QT_NO_DYNAMIC_CAST)
+        QQmlBinding *qmlBinding = static_cast<QQmlBinding*>(binding);
+#else
         QQmlBinding *qmlBinding = dynamic_cast<QQmlBinding*>(binding);
+#endif
         if (qmlBinding)
             qmlBinding->setTarget(property);
         QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyPrivate::DontRemoveBinding);

@@ -57,7 +57,7 @@ class QQmlChangeSet;
 
 class QQuickItemViewPrivate;
 
-class Q_AUTOTEST_EXPORT QQuickItemView : public QQuickFlickable
+class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
 {
     Q_OBJECT
 
@@ -284,7 +284,7 @@ private:
 };
 
 
-class Q_AUTOTEST_EXPORT QQuickItemViewAttached : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickItemViewAttached : public QObject
 {
     Q_OBJECT
 

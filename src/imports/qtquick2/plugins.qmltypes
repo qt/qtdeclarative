@@ -3478,7 +3478,8 @@ Module {
         exports: ["QtQuick/Shortcut 2.5", "QtQuick/Shortcut 2.6"]
         exportMetaObjectRevisions: [0, 1]
         Property { name: "sequence"; type: "QVariant" }
-        Property { name: "sequenceString"; revision: 1; type: "string"; isReadonly: true }
+        Property { name: "nativeText"; revision: 1; type: "string"; isReadonly: true }
+        Property { name: "portableText"; revision: 1; type: "string"; isReadonly: true }
         Property { name: "enabled"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "context"; type: "Qt::ShortcutContext" }

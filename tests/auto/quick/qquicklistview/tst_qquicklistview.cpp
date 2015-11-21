@@ -182,6 +182,7 @@ private slots:
     void snapOneItemResize_QTBUG_43555();
     void snapOneItem_data();
     void snapOneItem();
+    void snapOneItemCurrentIndexRemoveAnimation();
 
     void QTBUG_9791();
     void QTBUG_11105();
@@ -5585,6 +5586,32 @@ void tst_QQuickListView::snapOneItem()
     }
 
     releaseView(window);
+}
+
+void tst_QQuickListView::snapOneItemCurrentIndexRemoveAnimation()
+{
+    QQuickView *window = createView();
+
+    window->setSource(testFileUrl("snapOneItemCurrentIndexRemoveAnimation.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listview != 0);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+    QSignalSpy currentIndexSpy(listview, SIGNAL(currentIndexChanged()));
+
+    QMetaObject::invokeMethod(window->rootObject(), "removeItemZero");
+    QTRY_COMPARE(listview->property("transitionsRun").toInt(), 1);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QCOMPARE(listview->currentIndex(), 0);
+    QCOMPARE(currentIndexSpy.count(), 0);
+
+    delete window;
 }
 
 void tst_QQuickListView::attachedProperties_QTBUG_32836()

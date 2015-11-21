@@ -152,8 +152,9 @@ public:
 */
 static QHash<QByteArray, QSet<const QQmlType *> > qmlTypesByCppName;
 
-// No different versioning possible for a composite type.
-static QMap<QString, const QQmlType * > qmlTypesByCompositeName;
+/* A composite type is completely specified by name, major version and minor version.
+*/
+static QMap<QString, QSet<const QQmlType *> > qmlTypesByCompositeName;
 
 static QHash<QByteArray, QByteArray> cppToId;
 
@@ -202,7 +203,7 @@ void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<c
             if (!ty->isComposite()) {
                 collectReachableMetaObjects(engine, ty, &metas);
             } else {
-                qmlTypesByCompositeName[ty->elementName()] = ty;
+                qmlTypesByCompositeName[ty->elementName()].insert(ty);
             }
        }
     }
@@ -228,7 +229,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                 extensions[ty->typeName()].insert(ty->metaObject()->className());
             collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas);
         } else {
-            qmlTypesByCompositeName[ty->elementName()] = ty;
+            qmlTypesByCompositeName[ty->elementName()].insert(ty);
         }
     }
 
@@ -459,7 +460,13 @@ public:
         return prototypeName;
     }
 
-    void dumpComposite(QQmlEngine *engine, const QQmlType *compositeType, QSet<QByteArray> &defaultReachableNames)
+    void dumpComposite(QQmlEngine *engine, const QSet<const QQmlType *> &compositeType, QSet<QByteArray> &defaultReachableNames)
+    {
+        foreach (const QQmlType *type, compositeType)
+            dumpCompositeItem(engine, type, defaultReachableNames);
+    }
+
+    void dumpCompositeItem(QQmlEngine *engine, const QQmlType *compositeType, QSet<QByteArray> &defaultReachableNames)
     {
         QQmlComponent e(engine, compositeType->sourceUrl());
         if (!e.isReady()) {
@@ -485,9 +492,8 @@ public:
         qml->writeScriptBinding(QLatin1String("prototype"), enquote(prototypeName));
 
         QString qmlTyName = compositeType->qmlTypeName();
-        // name should be unique
-        qml->writeScriptBinding(QLatin1String("name"), enquote(qmlTyName));
         const QString exportString = getExportString(qmlTyName, compositeType->majorVersion(), compositeType->minorVersion());
+        qml->writeScriptBinding(QLatin1String("name"), exportString);
         qml->writeArrayBinding(QLatin1String("exports"), QStringList() << exportString);
         qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), QStringList() << QString::number(compositeType->minorVersion()));
         qml->writeBooleanBinding(QLatin1String("isComposite"), true);
@@ -1176,8 +1182,10 @@ int main(int argc, char *argv[])
     foreach (const QMetaObject *meta, nameToMeta) {
         dumper.dump(QQmlEnginePrivate::get(&engine), meta, uncreatableMetas.contains(meta), singletonMetas.contains(meta));
     }
-    foreach (const QQmlType *compositeType, qmlTypesByCompositeName)
-        dumper.dumpComposite(&engine, compositeType, defaultReachableNames);
+
+    QMap<QString, QSet<const QQmlType *> >::const_iterator iter = qmlTypesByCompositeName.constBegin();
+    for (; iter != qmlTypesByCompositeName.constEnd(); ++iter)
+        dumper.dumpComposite(&engine, iter.value(), defaultReachableNames);
 
     // define QEasingCurve as an extension of QQmlEasingValueType, this way
     // properties using the QEasingCurve type get useful type information.
