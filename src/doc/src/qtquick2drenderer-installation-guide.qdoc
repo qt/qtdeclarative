@@ -87,7 +87,7 @@
     Copy the include folder to the /usr/include folder in your sysroot.  This
     installs the OpenGL/EGL headers:
     \badcode
-    cp -r include/* ${SYSROOT}/usr/include/
+    cp -r 3rdparty/include/* ${SYSROOT}/usr/include/
     \endcode
     Copy \c libEGL.so and \c libGLESv2.so to the /usr/lib folder in your sysroot:
     \badcode
