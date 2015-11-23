@@ -7,6 +7,7 @@ QML_FILES = \
     Drawer.qml \
     Frame.qml \
     GroupBox.qml \
+    ItemDelegate.qml \
     Label.qml \
     PageIndicator.qml \
     ProgressBar.qml \

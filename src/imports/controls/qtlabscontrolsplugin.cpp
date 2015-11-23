@@ -85,6 +85,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("/Drawer.qml")), uri, 1, 0, "Drawer");
     qmlRegisterType(selector.select(QStringLiteral("/Frame.qml")), uri, 1, 0, "Frame");
     qmlRegisterType(selector.select(QStringLiteral("/GroupBox.qml")), uri, 1, 0, "GroupBox");
+    qmlRegisterType(selector.select(QStringLiteral("/ItemDelegate.qml")), uri, 1, 0, "ItemDelegate");
     qmlRegisterType(selector.select(QStringLiteral("/Label.qml")), uri, 1, 0, "Label");
     qmlRegisterType(selector.select(QStringLiteral("/PageIndicator.qml")), uri, 1, 0, "PageIndicator");
     qmlRegisterType(selector.select(QStringLiteral("/ProgressBar.qml")), uri, 1, 0, "ProgressBar");

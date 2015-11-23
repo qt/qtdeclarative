@@ -15,6 +15,7 @@ QML_FILES += \
     $$PWD/Drawer.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
+    $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/ProgressBar.qml \

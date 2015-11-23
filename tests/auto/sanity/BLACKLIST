@@ -1,5 +1,7 @@
 [signalHandlers:material/CheckBox.qml]
 *
+[signalHandlers:material/ItemDelegate.qml]
+*
 [signalHandlers:material/TextArea.qml]
 *
 [signalHandlers:material/TextField.qml]
@@ -7,6 +9,8 @@
 [anchors:material/Button.qml]
 *
 [anchors:material/CheckBox.qml]
+*
+[anchors:material/ItemDelegate.qml]
 *
 [anchors:material/RadioButton.qml]
 *
@@ -17,6 +21,8 @@
 [anchors:material/Switch.qml]
 *
 [attachedObjects:material/CheckBox.qml]
+*
+[attachedObjects:material/ItemDelegate.qml]
 *
 [attachedObjects:material/RadioButton.qml]
 *

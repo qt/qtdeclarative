@@ -170,6 +170,31 @@
             \snippet GroupBox.qml label
 
 
+    \section1 Customizing ItemDelegate
+
+        ItemDelegate consists of three visual items: \l {Control::background}{background},
+        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+        The indicator is only visible for \l {AbstractButton::checkable}{checkable} items.
+
+        \section3 Background
+
+            \image qtlabscontrols-itemdelegate-background.png
+
+            \snippet ItemDelegate.qml background
+
+        \section3 Label
+
+            \image qtlabscontrols-itemdelegate-label.png
+
+            \snippet ItemDelegate.qml label
+
+        \section3 Indicator
+
+            \image qtlabscontrols-itemdelegate-indicator.png
+
+            \snippet ItemDelegate.qml indicator
+
+
     \section1 Customizing Label
 
         Label can have a visual \l {Label::background}{background} item.

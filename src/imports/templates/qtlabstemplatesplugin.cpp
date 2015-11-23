@@ -47,6 +47,7 @@
 #include <QtLabsTemplates/private/qquickdrawer_p.h>
 #include <QtLabsTemplates/private/qquickframe_p.h>
 #include <QtLabsTemplates/private/qquickgroupbox_p.h>
+#include <QtLabsTemplates/private/qquickitemdelegate_p.h>
 #include <QtLabsTemplates/private/qquicklabel_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
 #include <QtLabsTemplates/private/qquickpanel_p.h>
@@ -93,6 +94,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDrawer>(uri, 1, 0, "Drawer");
     qmlRegisterType<QQuickFrame>(uri, 1, 0, "Frame");
     qmlRegisterType<QQuickGroupBox>(uri, 1, 0, "GroupBox");
+    qmlRegisterType<QQuickItemDelegate>(uri, 1, 0, "ItemDelegate");
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
     qmlRegisterType<QQuickPanel>(uri, 1, 0, "Panel");
