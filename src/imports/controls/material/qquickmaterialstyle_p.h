@@ -66,6 +66,7 @@ class QQuickMaterialStyle : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor primaryHighlightedTextColor READ primaryHighlightedTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor secondaryTextColor READ secondaryTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor hintTextColor READ hintTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY paletteChanged FINAL)
@@ -75,6 +76,10 @@ class QQuickMaterialStyle : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QColor raisedButtonHoverColor READ raisedButtonHoverColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor raisedButtonPressColor READ raisedButtonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor raisedButtonDisabledColor READ raisedButtonDisabledColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor raisedHighlightedButtonColor READ raisedHighlightedButtonColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor raisedHighlightedButtonHoverColor READ raisedHighlightedButtonHoverColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor raisedHighlightedButtonPressColor READ raisedHighlightedButtonPressColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor raisedHighlightedButtonDisabledColor READ raisedHighlightedButtonDisabledColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor flatButtonPressColor READ flatButtonPressColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor flatButtonFocusColor READ flatButtonFocusColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY paletteChanged FINAL)
@@ -166,6 +171,7 @@ public:
     QColor accentColor() const;
     QColor backgroundColor() const;
     QColor primaryTextColor() const;
+    QColor primaryHighlightedTextColor() const;
     QColor secondaryTextColor() const;
     QColor hintTextColor() const;
     QColor textSelectionColor() const;
@@ -175,6 +181,10 @@ public:
     QColor raisedButtonHoverColor() const;
     QColor raisedButtonPressColor() const;
     QColor raisedButtonDisabledColor() const;
+    QColor raisedHighlightedButtonColor() const;
+    QColor raisedHighlightedButtonHoverColor() const;
+    QColor raisedHighlightedButtonPressColor() const;
+    QColor raisedHighlightedButtonDisabledColor() const;
     QColor flatButtonPressColor() const;
     QColor flatButtonFocusColor() const;
     QColor frameColor() const;

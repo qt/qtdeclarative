@@ -59,7 +59,7 @@ T.Button {
         height: control.availableHeight
 
         text: control.text
-        color: control.Material.primaryTextColor
+        color: control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -72,9 +72,10 @@ T.Button {
         implicitHeight: 36
 
         radius: 2
-        color: !control.enabled ? control.Material.raisedButtonDisabledColor :
-            (control.pressed ? control.Material.raisedButtonPressColor :
-            (control.activeFocus ? control.Material.raisedButtonHoverColor : control.Material.raisedButtonColor))
+        color: !control.enabled ? (control.highlighted ? control.Material.raisedHighlightedButtonDisabledColor : control.Material.raisedButtonDisabledColor) :
+            (control.pressed ? (control.highlighted ? control.Material.raisedHighlightedButtonPressColor : control.Material.raisedButtonPressColor) :
+            (control.activeFocus ? (control.highlighted ? control.Material.raisedHighlightedButtonHoverColor : control.Material.raisedButtonHoverColor) :
+            (control.highlighted ? control.Material.raisedHighlightedButtonColor : control.Material.raisedButtonColor)))
 
         Behavior on color {
             ColorAnimation {

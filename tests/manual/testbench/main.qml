@@ -126,17 +126,22 @@ ApplicationWindow {
                     pressed: true
                 }
                 Button {
+                    text: "Disabled"
+                    enabled: false
+                }
+                Button {
                     text: "Highlighted"
                     highlighted: true
                 }
                 Button {
-                    text: "Pressed + Highlighted"
+                    text: "Pressed + HL"
                     pressed: true
                     highlighted: true
                 }
                 Button {
-                    text: "Disabled"
+                    text: "HL + Disabled"
                     enabled: false
+                    highlighted: true
                 }
             }
 

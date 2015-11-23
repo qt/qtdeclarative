@@ -587,6 +587,11 @@ QColor QQuickMaterialStyle::primaryTextColor() const
     return d->theme == Light ? primaryTextColorLight : primaryTextColorDark;
 }
 
+QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
+{
+    return primaryTextColorDark;
+}
+
 QColor QQuickMaterialStyle::secondaryTextColor() const
 {
     Q_D(const QQuickMaterialStyle);
@@ -620,23 +625,46 @@ QColor QQuickMaterialStyle::dividerColor() const
 QColor QQuickMaterialStyle::raisedButtonColor() const
 {
     Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonColorLight : accentColor();
+    return d->theme == Light ? raisedButtonColorLight : flatButtonFocusColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonHoverColor() const
 {
     Q_D(const QQuickMaterialStyle);
     // The specs don't specify different colors here for the light theme.
-    return d->theme == Light ? raisedButtonColorLight : color(d->accent, Shade600);
+    return d->theme == Light ? raisedButtonColorLight : flatButtonPressColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonPressColor() const
 {
     Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonPressColorLight : color(d->accent, Shade700);
+    return d->theme == Light ? raisedButtonPressColorLight : flatButtonPressColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonDisabledColor() const
+{
+    Q_D(const QQuickMaterialStyle);
+    return d->theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
+}
+
+QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
+{
+    return accentColor();
+}
+
+QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
+{
+    Q_D(const QQuickMaterialStyle);
+    return color(d->accent, Shade600);
+}
+
+QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
+{
+    Q_D(const QQuickMaterialStyle);
+    return color(d->accent, Shade700);
+}
+
+QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
 {
     Q_D(const QQuickMaterialStyle);
     return d->theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
