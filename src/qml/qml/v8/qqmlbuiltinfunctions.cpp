@@ -434,10 +434,15 @@ Returns a Matrix4x4 with the specified values.
 Alternatively, the function may be called with a single argument
 where that argument is a JavaScript array which contains the sixteen
 matrix values.
+Finally, the function may be called with no arguments and the resulting
+matrix will be the identity matrix.
 */
 ReturnedValue QtObject::method_matrix4x4(QV4::CallContext *ctx)
 {
     QV4::ExecutionEngine *v4 = ctx->d()->engine;
+
+    if (ctx->argc() == 0)
+        return ctx->engine()->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, Q_NULLPTR));
 
     if (ctx->argc() == 1 && ctx->args()[0].isObject()) {
         bool ok = false;
@@ -1069,10 +1074,23 @@ If the optional \a mode parameter is set to \c Component.Asynchronous, the
 component will be loaded in a background thread.  The Component::status property
 will be \c Component.Loading while it is loading.  The status will change to
 \c Component.Ready if the component loads successfully, or \c Component.Error
-if loading fails.
+if loading fails. This parameter defaults to \c Component.PreferSynchronous
+if omitted.
+
+If \a mode is set to \c Component.PreferSynchronous, Qt will attempt to load
+the component synchronously, but may end up loading it asynchronously if
+necessary. Scenarios that may cause asynchronous loading include, but are not
+limited to, the following:
+
+\list
+\li The URL refers to a network resource
+\li The component is being created as a result of another component that is
+being loaded asynchronously
+\endlist
 
 If the optional \a parent parameter is given, it should refer to the object
-that will become the parent for the created \l Component object.
+that will become the parent for the created \l Component object. If no mode
+was passed, this can be the second argument.
 
 Call \l {Component::createObject()}{Component.createObject()} on the returned
 component to create an object instance of the component.

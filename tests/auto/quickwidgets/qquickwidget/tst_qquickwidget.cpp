@@ -75,8 +75,12 @@ void tst_qquickwidget::showHide()
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window, 5000));
+    QVERIFY(childView->quickWindow()->isVisible());
+    QVERIFY(childView->quickWindow()->visibility() != QWindow::Hidden);
 
-    childView->hide();
+    window.hide();
+    QVERIFY(!childView->quickWindow()->isVisible());
+    QCOMPARE(childView->quickWindow()->visibility(), QWindow::Hidden);
 }
 
 void tst_qquickwidget::reparentAfterShow()

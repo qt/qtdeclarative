@@ -460,7 +460,7 @@ void QQuickShaderEffectMaterial::updateTextures() const
 {
     for (int i = 0; i < textureProviders.size(); ++i) {
         if (QSGTextureProvider *provider = textureProviders.at(i)) {
-            if (QSGLayer *texture = qobject_cast<QSGLayer *>(provider->texture()))
+            if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(provider->texture()))
                 texture->updateTexture();
         }
     }

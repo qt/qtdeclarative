@@ -466,7 +466,11 @@ public:
             }
             break;
         case QMetaType::QMatrix4x4:
-            if (argc == 1) {
+            if (argc == 0) {
+                QMatrix4x4 m;
+                *v = QVariant(m);
+                return true;
+            } else if (argc == 1) {
                 const qreal *vals = reinterpret_cast<const qreal*>(argv[0]);
                 QMatrix4x4 m(vals[0], vals[1], vals[2], vals[3],
                              vals[4], vals[5], vals[6], vals[7],

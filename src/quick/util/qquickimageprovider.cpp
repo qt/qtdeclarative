@@ -494,5 +494,26 @@ QQuickAsyncImageProvider::~QQuickAsyncImageProvider()
     implementation of this method is reentrant.
 */
 
+/*!
+   \fn QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
+/*!
+   \fn QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const QSize& requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
+/*!
+   \fn QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize, bool requestedAutoTransform);
+
+   \internal
+   For future reference.
+*/
+
 QT_END_NAMESPACE
 
