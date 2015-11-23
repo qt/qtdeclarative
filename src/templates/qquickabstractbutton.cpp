@@ -53,7 +53,6 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inherits Control
     \instantiates QQuickAbstractButton
     \inqmlmodule Qt.labs.controls
-    \qmlabstract
     \ingroup qtlabscontrols-buttons
     \brief The base of all button controls.
 
