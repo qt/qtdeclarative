@@ -51,6 +51,7 @@ T.CheckBox {
 
     padding: 6
     spacing: 6
+    opacity: enabled ? 1 : 0.2
 
     //! [indicator]
     indicator: Rectangle {
@@ -59,15 +60,14 @@ T.CheckBox {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        color: control.pressed ? "#bdbebf" : "#ffffff"
-        border.color: control.pressed ? "#26282a" : (control.checked ? "#353637" : "#bdbebf")
+        color: control.enabled ? (control.pressed ? "#bdbebf" : "#ffffff") : "#353637"
+        border.color: control.enabled ? (control.pressed ? "#26282a" : "#353637") : "transparent"
 
         Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             source: "qrc:/images/check.png"
             visible: control.checked
-//            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
         }
     }
     //! [indicator]
@@ -81,7 +81,7 @@ T.CheckBox {
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.pressed ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

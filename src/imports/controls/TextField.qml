@@ -46,10 +46,12 @@ T.TextField {
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 6
+    leftPadding: 10
 
-//    color: enabled ? "" : "#bdbebf"
-//    selectionColor: Theme.selectionColor
-//    selectedTextColor: Theme.selectedTextColor
+    opacity: enabled ? 1 : 0.2
+    color: "#353637"
+    selectionColor: "#fddd5c"
+    selectedTextColor: color
     verticalAlignment: TextInput.AlignVCenter
 
     Text {
@@ -73,7 +75,8 @@ T.TextField {
         implicitWidth: 200
         implicitHeight: 40
 //        border.width: control.activeFocus ? 2 : 1
-        border.color: "#bdbebf"
+        color: control.enabled ? "transparent" : "#353637"
+        border.color: control.enabled ? "#bdbebf" : "transparent"
     }
     //! [background]
 }

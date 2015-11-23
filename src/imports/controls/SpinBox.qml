@@ -52,6 +52,7 @@ T.SpinBox {
     padding: 6
     leftPadding: 6 + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: 6 + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    opacity: control.enabled ? 1 : 0.3
 
     //! [validator]
     validator: IntValidator {

@@ -52,6 +52,7 @@ T.RadioButton {
 
     padding: 6
     spacing: 6
+    opacity: enabled ? 1 : 0.2
 
     //! [indicator]
     indicator: Rectangle {
@@ -62,7 +63,7 @@ T.RadioButton {
 
         radius: width / 2
         border.width: 1
-        border.color: control.pressed ? "#26282a" : control.enabled && control.checked ? "#353637" : "#bdbebf"
+        border.color: (control.pressed ? "#26282a" : "#353637")
         color: control.pressed ? "#bdbebf" : "#ffffff"
 
         Rectangle {
@@ -71,7 +72,7 @@ T.RadioButton {
             width: 20
             height: 20
             radius: width / 2
-            color: control.enabled ? "#353637" : "#bdbebf"
+            color: control.pressed ? "#26282a" : "#353637"
             visible: control.checked
         }
     }
@@ -86,7 +87,7 @@ T.RadioButton {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
+        color: control.pressed ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

@@ -51,12 +51,6 @@ ApplicationWindow {
     width: 750
     height: 1000
 
-    Theme.backgroundColor: themeSwitch.checked ? "#444" : "#fff"
-    Theme.frameColor: themeSwitch.checked ? "#666" : "#ccc"
-    Theme.textColor: themeSwitch.checked ? "#eee" : "#111"
-    Theme.pressColor: themeSwitch.checked ? "#33ffffff" : "#33333333"
-    Theme.baseColor: themeSwitch.checked ? "#444" : "#eee"
-
     Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
     Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
 
@@ -126,22 +120,58 @@ ApplicationWindow {
                     pressed: true
                 }
                 Button {
+                    text: "Checked"
+                    checked: true
+                }
+                Button {
+                    text: "CH + PR"
+                    checked: true
+                    pressed: true
+                }
+                Button {
                     text: "Disabled"
                     enabled: false
                 }
                 Button {
-                    text: "Highlighted"
-                    highlighted: true
-                }
-                Button {
-                    text: "Pressed + HL"
-                    pressed: true
-                    highlighted: true
-                }
-                Button {
-                    text: "HL + Disabled"
+                    text: "CH + DIS"
                     enabled: false
+                    checked: true
+                }
+            }
+
+            RowLayout {
+                spacing: window.controlSpacing
+
+                Button {
+                    text: "HI"
                     highlighted: true
+                }
+                Button {
+                    text: "HI + PR"
+                    highlighted: true
+                    pressed: true
+                }
+                Button {
+                    text: "HI + CH"
+                    highlighted: true
+                    checked: true
+                }
+                Button {
+                    text: "HI+CH+PR"
+                    highlighted: true
+                    pressed: true
+                    checked: true
+                }
+                Button {
+                    text: "HI + DIS"
+                    highlighted: true
+                    enabled: false
+                }
+                Button {
+                    text: "HI+CH+DIS"
+                    highlighted: true
+                    enabled: false
+                    checked: true
                 }
             }
 
@@ -158,7 +188,7 @@ ApplicationWindow {
                     checked: true
                 }
                 CheckBox {
-                    text: "Checked + Pressed"
+                    text: "CH + PR"
                     checked: true
                     pressed: true
                 }
@@ -166,6 +196,11 @@ ApplicationWindow {
                     text: "Disabled"
                     enabled: false
                 }
+                CheckBox {
+                    text: "CH + DIS"
+                    checked: true
+                    enabled: false
+                }
             }
 
             RowLayout {
@@ -181,12 +216,17 @@ ApplicationWindow {
                     checked: true
                 }
                 RadioButton {
-                    text: "Checked + Pressed"
+                    text: "CH + PR"
                     checked: true
                     pressed: true
                 }
                 RadioButton {
                     text: "Disabled"
+                    enabled: false
+                }
+                RadioButton {
+                    text: "CH + DIS"
+                    checked: true
                     enabled: false
                 }
             }
@@ -204,7 +244,7 @@ ApplicationWindow {
                     checked: true
                 }
                 Switch {
-                    text: "Checked + Pressed"
+                    text: "CH + PR"
                     checked: true
                     pressed: true
                 }
@@ -260,42 +300,97 @@ ApplicationWindow {
             }
 
             RowLayout {
-                TextArea {
-                    text: "Normal"
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        id: normalTextArea
+                        text: "Normal"
+                    }
                 }
-                TextArea {
-                    text: "Disabled"
-                    enabled: false
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        text: "Placeholder"
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        text: "Disabled"
+                        enabled: false
+                    }
                 }
             }
 
             RowLayout {
-                TextField {
-                    text: "Normal"
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        id: normalTextField
+                        text: "Normal"
+                    }
                 }
-                TextField {
-                    text: "Disabled"
-                    enabled: false
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        placeholderText: "Placeholder"
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        text: "Disabled"
+                        enabled: false
+                    }
                 }
             }
 
             RowLayout {
-                SpinBox {
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        id: normalSpinBox
+                    }
                 }
-                SpinBox {
-                    up.pressed: true
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        up.pressed: true
+                    }
                 }
-                SpinBox {
-                    enabled: false
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        enabled: false
+                    }
                 }
             }
 
             RowLayout {
                 GroupBox {
+                    id: normalGroupBox
                     title: "Normal"
 
                     Item {
-                        implicitWidth: 100
+                        implicitWidth: 200
                         implicitHeight: 100
 
                         BusyIndicator {
@@ -308,7 +403,7 @@ ApplicationWindow {
                     title: "Disabled"
 
                     Item {
-                        implicitWidth: 100
+                        implicitWidth: 200
                         implicitHeight: 100
 
                         BusyIndicator {
@@ -316,68 +411,90 @@ ApplicationWindow {
                         }
                     }
                 }
+                GroupBox {
+                    enabled: false
+                    title: "."
+                    label.visible: false
+
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        PageIndicator {
+                            count: 5
+                            enabled: false
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
             }
 
             RowLayout {
                 Frame {
-                    Tumbler {
-                        model: 5
-                        implicitWidth: 100
+                    id: scrollBarFrame
+
+                    Item {
+                        implicitWidth: 200
                         implicitHeight: 100
+
+                        Label {
+                            text: "Normal"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
                     }
                 }
+
                 Frame {
-                    Tumbler {
-                        model: 5
-                        implicitWidth: 100
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        Label {
+                            text: "Pressed"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                            pressed: true
+                        }
+                    }
+                }
+
+                Frame {
+                    Item {
+                        implicitWidth: 200
                         implicitHeight: 100
                         enabled: false
-                    }
-                }
-            }
 
-            RowLayout {
-                Frame {
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 100
+                        Label {
+                            text: "Disabled"
+                            anchors.centerIn: parent
+                        }
 
-                    ScrollBar {
-                        size: 0.3
-                        position: 0.2
-                        active: true
-                        orientation: Qt.Vertical
-                        height: parent.height
-                        anchors.right: parent.right
-                    }
-                }
-
-                Frame {
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 100
-
-                    ScrollBar {
-                        size: 0.3
-                        position: 0.2
-                        active: true
-                        orientation: Qt.Vertical
-                        height: parent.height
-                        anchors.right: parent.right
-                        pressed: true
-                    }
-                }
-
-                Frame {
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 100
-
-                    ScrollBar {
-                        size: 0.3
-                        position: 0.2
-                        active: true
-                        orientation: Qt.Vertical
-                        height: parent.height
-                        anchors.right: parent.right
-                        enabled: false
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
                     }
                 }
             }
@@ -413,9 +530,22 @@ ApplicationWindow {
                 }
             }
 
-            PageIndicator {
-                count: 5
-                enabled: false
+            RowLayout {
+                Frame {
+                    Tumbler {
+                        model: 5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                    }
+                }
+                Frame {
+                    Tumbler {
+                        model: 5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                        enabled: false
+                    }
+                }
             }
 
             RowLayout {
@@ -423,23 +553,6 @@ ApplicationWindow {
                 }
                 Dial {
                     enabled: false
-                }
-            }
-
-            RowLayout {
-                Frame {
-                    Label {
-                        text: "Normal\nLabel"
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                }
-                Frame {
-                    enabled: false
-
-                    Label {
-                        text: "Disabled\nLabel"
-                        horizontalAlignment: Text.AlignHCenter
-                    }
                 }
             }
         }

@@ -10,5 +10,6 @@
         <file>images/check@2x.png</file>
         <file>images/check@3x.png</file>
         <file>images/check@4x.png</file>
+        <file>images/dial-indicator.png</file>
     </qresource>
 </RCC>

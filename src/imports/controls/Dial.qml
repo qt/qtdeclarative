@@ -35,33 +35,40 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Dial {
     id: control
 
-    implicitWidth: 100
-    implicitHeight: 100
+    implicitWidth: 184
+    implicitHeight: 184
 
     //! [background]
     background: Rectangle {
-        color: control.Theme.backgroundColor
         radius: width / 2
+        border.color: "#353637"
 
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
+        Text {
+            text: control.position.toFixed(1)
+            color: "#353637"
+            font.pixelSize: 60
+            x: parent.width / 2 - width / 2
+            y: parent.height / 2 - height / 2
+        }
     }
     //! [background]
 
     //! [handle]
-    handle: Rectangle {
+    handle: Image {
         id: handleItem
-
         x: background.width / 2 - handle.width / 2
         y: background.height / 2 - handle.height / 2
+        width: 14
+        height: 10
+        source: "qrc:/images/dial-indicator.png"
         transform: [
             Translate {
-                y: -background.height * 0.35
+                y: -background.height * 0.4
             },
             Rotation {
                 angle: control.angle
@@ -69,12 +76,6 @@ T.Dial {
                 origin.y: handle.height / 2
             }
         ]
-        implicitWidth: 20
-        implicitHeight: 20
-        radius: width / 2
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.baseColor
     }
     //! [handle]
 }
