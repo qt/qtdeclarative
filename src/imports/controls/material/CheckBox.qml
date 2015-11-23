@@ -80,7 +80,7 @@ T.CheckBox {
             id: checkImage
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            source: "qrc:/images/check.png"
+            source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
             fillMode: Image.PreserveAspectFit
 
             Component.onCompleted: {

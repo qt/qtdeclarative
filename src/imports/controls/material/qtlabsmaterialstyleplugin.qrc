@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/qt-project.org/imports/Qt/labs/controls/material">
         <file>images/check.png</file>
     </qresource>
 </RCC>
