@@ -40,6 +40,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
@@ -249,6 +250,7 @@ private slots:
     void contentHeightWithDelayRemove_data();
 
     void QTBUG_48044_currentItemNotVisibleAfterTransition();
+    void QTBUG_48870_fastModelUpdates();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8293,6 +8295,136 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
     // This is the actual test
     QQuickItemPrivate *currentPriv = QQuickItemPrivate::get(currentItem);
     QVERIFY(!currentPriv->culled);
+}
+
+static bool testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx)
+{
+    QHash<QQuickItem*, int> uniqueItems;
+
+    int skip = 0;
+    for (int i = 0; i < priv->visibleItems.count(); ++i) {
+        FxViewItem *item = priv->visibleItems.at(i);
+        if (!item) {
+            *failItem = Q_NULLPTR;
+            return false;
+        }
+#if 0
+        qDebug() << "\t" << item->index
+                 << item->item
+                 << item->position()
+                 << (!item->item || QQuickItemPrivate::get(item->item)->culled ? "hidden" : "visible");
+#endif
+        if (item->index == -1) {
+            ++skip;
+        } else if (item->index != priv->visibleIndex + i - skip) {
+            *nonUnique = false;
+            *failItem = item;
+            *expectedIdx = priv->visibleIndex + i - skip;
+            return false;
+        } else if (uniqueItems.contains(item->item)) {
+            *nonUnique = true;
+            *failItem = item;
+            *expectedIdx = uniqueItems.find(item->item).value();
+            return false;
+        }
+
+        uniqueItems.insert(item->item, item->index);
+    }
+
+    return true;
+}
+
+class QTBUG_48870_Model : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+
+    QTBUG_48870_Model()
+        : QAbstractListModel()
+        , m_rowCount(20)
+    {
+        QTimer *t = new QTimer(this);
+        t->setInterval(500);
+        t->start();
+
+        qsrand(qHash(QDateTime::currentDateTime()));
+        connect(t, &QTimer::timeout, this, &QTBUG_48870_Model::updateModel);
+    }
+
+    int rowCount(const QModelIndex &) const
+    {
+        return m_rowCount;
+    }
+
+    QVariant data(const QModelIndex &, int) const
+    {
+        return QVariant();
+    }
+
+public Q_SLOTS:
+    void updateModel()
+    {
+        if (m_rowCount > 10) {
+            for (int i = 0; i < 10; ++i) {
+                int rnum = qrand() % m_rowCount;
+                beginRemoveRows(QModelIndex(), rnum, rnum);
+                m_rowCount--;
+                endRemoveRows();
+            }
+        }
+        if (m_rowCount < 20) {
+            for (int i = 0; i < 10; ++i) {
+                int rnum = qrand() % m_rowCount;
+                beginInsertRows(QModelIndex(), rnum, rnum);
+                m_rowCount++;
+                endInsertRows();
+            }
+        }
+    }
+
+private:
+    int m_rowCount;
+};
+
+void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
+{
+    QTBUG_48870_Model model;
+
+    QQuickView *window = createView();
+    QVERIFY(window);
+    QQmlContext *ctxt = window->rootContext();
+    QVERIFY(ctxt);
+    ctxt->setContextProperty("testModel", &model);
+
+    window->setSource(testFileUrl("qtbug48870.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItemViewPrivate *priv = QQuickItemViewPrivate::get(listview);
+    bool nonUnique;
+    FxViewItem *item = Q_NULLPTR;
+    int expectedIdx;
+    QVERIFY(testVisibleItems(priv, &nonUnique, &item, &expectedIdx));
+
+    for (int i = 0; i < 10; i++) {
+        QTest::qWait(100);
+        QVERIFY2(testVisibleItems(priv, &nonUnique, &item, &expectedIdx),
+                 qPrintable(!item ? QString("Unexpected null item")
+                            : nonUnique ? QString("Non-unique item at %1 and %2").arg(item->index).arg(expectedIdx)
+                                        : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
+        if (i % 3 != 0) {
+            if (i & 1)
+                flick(window, QPoint(100, 200), QPoint(100, 0), 100);
+            else
+                flick(window, QPoint(100, 200), QPoint(100, 400), 100);
+        }
+    }
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickListView)

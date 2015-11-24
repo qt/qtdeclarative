@@ -2,3 +2,5 @@
 *
 [enforceRange_withoutHighlight]
 osx
+[QTBUG_48870_fastModelUpdates]
+*
