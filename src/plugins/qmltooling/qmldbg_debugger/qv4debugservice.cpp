@@ -271,7 +271,11 @@ public:
         int toFrame = arguments.value(QStringLiteral("toFrame")).toInt(fromFrame + 10);
         // no idea what the bottom property is for, so we'll ignore it.
 
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            createErrorResponse(QStringLiteral("Debugger has to be paused to retrieve backtraces."));
+            return;
+        }
 
         QJsonArray frameArray;
         QVector<QV4::StackFrame> frames = debugger->stackTrace(toFrame);
@@ -308,7 +312,12 @@ public:
         const int frameNr = arguments.value(QStringLiteral("number")).toInt(
                     debugService->selectedFrame());
 
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            createErrorResponse(QStringLiteral("Debugger has to be paused to retrieve frames."));
+            return;
+        }
+
         QVector<QV4::StackFrame> frames = debugger->stackTrace(frameNr + 1);
         if (frameNr < 0 || frameNr >= frames.size()) {
             createErrorResponse(QStringLiteral("frame command has invalid frame number"));
@@ -341,7 +350,12 @@ public:
                     debugService->selectedFrame());
         const int scopeNr = arguments.value(QStringLiteral("number")).toInt(0);
 
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            createErrorResponse(QStringLiteral("Debugger has to be paused to retrieve scope."));
+            return;
+        }
+
         QVector<QV4::StackFrame> frames = debugger->stackTrace(frameNr + 1);
         if (frameNr < 0 || frameNr >= frames.size()) {
             createErrorResponse(QStringLiteral("scope command has invalid frame number"));
@@ -399,7 +413,12 @@ public:
         // decypher the payload:
         QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
 
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            createErrorResponse(QStringLiteral("Debugger has to be paused in order to continue."));
+            return;
+        }
+        debugService->debuggerAgent.clearAllPauseRequests();
 
         if (arguments.empty()) {
             debugger->resume(QV4Debugger::FullThrottle);
@@ -507,7 +526,12 @@ public:
         }
 
         // do it:
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            createErrorResponse(QStringLiteral("Debugger has to be paused to retrieve scripts."));
+            return;
+        }
+
         GatherSourcesJob job(debugger->engine());
         debugger->runInEngine(&job);
 
@@ -562,8 +586,8 @@ public:
 
     virtual void handleRequest()
     {
-        QV4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-        if (debugger->state() == QV4Debugger::Paused) {
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (debugger) {
             QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
             QString expression = arguments.value(QStringLiteral("expression")).toString();
             const int frame = arguments.value(QStringLiteral("frame")).toInt(0);

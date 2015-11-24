@@ -44,22 +44,19 @@ QV4DebuggerAgent::QV4DebuggerAgent(QV4DebugServiceImpl *debugService)
     : m_breakOnThrow(false), m_debugService(debugService)
 {}
 
-QV4Debugger *QV4DebuggerAgent::firstDebugger() const
+QV4Debugger *QV4DebuggerAgent::pausedDebugger() const
 {
-    // Currently only 1 single engine is supported, so:
-    if (m_debuggers.isEmpty())
-        return 0;
-    else
-        return m_debuggers.first();
+    foreach (QV4Debugger *debugger, m_debuggers) {
+        if (debugger->state() == QV4Debugger::Paused)
+            return debugger;
+    }
+    return 0;
 }
 
 bool QV4DebuggerAgent::isRunning() const
 {
-    // Currently only 1 single engine is supported, so:
-    if (QV4Debugger *debugger = firstDebugger())
-        return debugger->state() == QV4Debugger::Running;
-    else
-        return false;
+    // "running" means none of the engines are paused.
+    return pausedDebugger() == 0;
 }
 
 void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason)
@@ -219,6 +216,12 @@ void QV4DebuggerAgent::setBreakOnThrow(bool onoff)
         foreach (QV4Debugger *debugger, m_debuggers)
             debugger->setBreakOnThrow(onoff);
     }
+}
+
+void QV4DebuggerAgent::clearAllPauseRequests()
+{
+    foreach (QV4Debugger *debugger, m_debuggers)
+        debugger->clearPauseRequest();
 }
 
 QT_END_NAMESPACE

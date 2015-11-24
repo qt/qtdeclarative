@@ -124,6 +124,8 @@ public:
 
     void setBreakOnThrow(bool onoff);
 
+    void clearPauseRequest();
+
     // used for testing
     struct ExecutionState
     {

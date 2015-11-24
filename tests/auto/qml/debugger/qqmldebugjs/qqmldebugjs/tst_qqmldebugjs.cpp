@@ -33,7 +33,7 @@
 
 //QQmlDebugTest
 #include "debugutil_p.h"
-#include "../../../shared/util.h"
+#include "../../../../shared/util.h"
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -162,7 +162,7 @@ class tst_QQmlDebugJS : public QQmlDataTest
 {
     Q_OBJECT
 
-    void init(const QString &qmlFile = QString(TEST_QMLFILE), bool blockMode = true,
+    void init(bool qmlscene, const QString &qmlFile = QString(TEST_QMLFILE), bool blockMode = true,
               bool restrictServices = false);
 
 private slots:
@@ -173,43 +173,65 @@ private slots:
 
     void connect_data();
     void connect();
+    void interrupt_data() { targetData(); }
     void interrupt();
+    void getVersion_data() { targetData(); }
     void getVersion();
 //    void getVersionWhenAttaching();
 
+    void disconnect_data() { targetData(); }
     void disconnect();
 
+    void setBreakpointInScriptOnCompleted_data() { targetData(); }
     void setBreakpointInScriptOnCompleted();
+    void setBreakpointInScriptOnComponentCreated_data() { targetData(); }
     void setBreakpointInScriptOnComponentCreated();
+    void setBreakpointInScriptOnTimerCallback_data() { targetData(); }
     void setBreakpointInScriptOnTimerCallback();
+    void setBreakpointInScriptInDifferentFile_data() { targetData(); }
     void setBreakpointInScriptInDifferentFile();
+    void setBreakpointInScriptOnComment_data() { targetData(); }
     void setBreakpointInScriptOnComment();
+    void setBreakpointInScriptOnEmptyLine_data() { targetData(); }
     void setBreakpointInScriptOnEmptyLine();
+    void setBreakpointInScriptOnOptimizedBinding_data() { targetData(); }
     void setBreakpointInScriptOnOptimizedBinding();
+    void setBreakpointInScriptWithCondition_data() { targetData(); }
     void setBreakpointInScriptWithCondition();
+    void setBreakpointInScriptThatQuits_data() { targetData(); }
     void setBreakpointInScriptThatQuits();
     //void setBreakpointInFunction(); //NOT SUPPORTED
 //    void setBreakpointOnEvent();
 //    void setBreakpointWhenAttaching();
 
+    void clearBreakpoint_data() { targetData(); }
     void clearBreakpoint();
 
+    void setExceptionBreak_data() { targetData(); }
     void setExceptionBreak();
 
+    void stepNext_data() { targetData(); }
     void stepNext();
+    void stepIn_data() { targetData(); }
     void stepIn();
+    void stepOut_data() { targetData(); }
     void stepOut();
+    void continueDebugging_data() { targetData(); }
     void continueDebugging();
 
+    void backtrace_data() { targetData(); }
     void backtrace();
 
+    void getFrameDetails_data() { targetData(); }
     void getFrameDetails();
 
+    void getScopeDetails_data() { targetData(); }
     void getScopeDetails();
 
 //    void evaluateInGlobalScope(); // Not supported yet.
 //    void evaluateInLocalScope(); // Not supported yet.
 
+    void getScripts_data() { targetData(); }
     void getScripts();
 
     //    void profile(); //NOT SUPPORTED
@@ -217,6 +239,8 @@ private slots:
     //    void verifyQMLOptimizerDisabled();
 
 private:
+    void targetData();
+
     QQmlDebugProcess *process;
     QJSDebugClient *client;
     QQmlDebugConnection *connection;
@@ -826,10 +850,16 @@ void tst_QQmlDebugJS::cleanupTestCase()
 //    qDebug() << "Time Elapsed:" << t.elapsed();
 }
 
-void tst_QQmlDebugJS::init(const QString &qmlFile, bool blockMode, bool restrictServices)
+void tst_QQmlDebugJS::init(bool qmlscene, const QString &qmlFile, bool blockMode,
+                           bool restrictServices)
 {
     connection = new QQmlDebugConnection();
-    process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    if (qmlscene)
+        process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) +
+                                       "/qmlscene", this);
+    else
+        process = new QQmlDebugProcess(QCoreApplication::applicationDirPath() +
+                                       QLatin1String("/qqmldebugjsserver"), this);
     client = new QJSDebugClient(connection);
     QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(connection);
 
@@ -884,17 +914,23 @@ void tst_QQmlDebugJS::connect_data()
 {
     QTest::addColumn<bool>("blockMode");
     QTest::addColumn<bool>("restrictMode");
-    QTest::newRow("normal/unrestricted") << false << false;
-    QTest::newRow("block/unrestricted") << true << false;
-    QTest::newRow("normal/restricted") << false << true;
-    QTest::newRow("block/restricted") << true << true;
+    QTest::addColumn<bool>("qmlscene");
+    QTest::newRow("normal / unrestricted / custom")   << false << false << false;
+    QTest::newRow("block  / unrestricted / custom")   << true  << false << false;
+    QTest::newRow("normal / restricted   / custom")   << false << true  << false;
+    QTest::newRow("block  / restricted   / custom")   << true  << true  << false;
+    QTest::newRow("normal / unrestricted / qmlscene") << false << false << true;
+    QTest::newRow("block  / unrestricted / qmlscene") << true  << false << true;
+    QTest::newRow("normal / restricted   / qmlscene") << false << true  << true;
+    QTest::newRow("block  / restricted   / qmlscene") << true  << true  << true;
 }
 
 void tst_QQmlDebugJS::connect()
 {
     QFETCH(bool, blockMode);
     QFETCH(bool, restrictMode);
-    init(QString(TEST_QMLFILE), blockMode, restrictMode);
+    QFETCH(bool, qmlscene);
+    init(qmlscene, QString(TEST_QMLFILE), blockMode, restrictMode);
     client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(connected())));
 }
@@ -903,7 +939,8 @@ void tst_QQmlDebugJS::interrupt()
 {
     //void connect()
 
-    init();
+    QFETCH(bool, qmlscene);
+    init(qmlscene);
     client->connect();
 
     client->interrupt();
@@ -914,7 +951,8 @@ void tst_QQmlDebugJS::getVersion()
 {
     //void version()
 
-    init();
+    QFETCH(bool, qmlscene);
+    init(qmlscene);
     client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(connected())));
 
@@ -939,7 +977,8 @@ void tst_QQmlDebugJS::disconnect()
 {
     //void disconnect()
 
-    init();
+    QFETCH(bool, qmlscene);
+    init(qmlscene);
     client->connect();
 
     client->disconnect();
@@ -949,9 +988,10 @@ void tst_QQmlDebugJS::disconnect()
 void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
-    init(ONCOMPLETED_QMLFILE);
+    init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -969,9 +1009,10 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
-    init(CREATECOMPONENT_QMLFILE);
+    init(qmlscene, CREATECOMPONENT_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -988,8 +1029,9 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 {
+    QFETCH(bool, qmlscene);
     int sourceLine = 40;
-    init(TIMER_QMLFILE);
+    init(qmlscene, TIMER_QMLFILE);
 
     client->connect();
     //We can set the breakpoint after connect() here because the timer is repeating and if we miss
@@ -1009,9 +1051,10 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 35;
-    init(LOADJSFILE_QMLFILE);
+    init(qmlscene, LOADJSFILE_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->connect();
@@ -1029,10 +1072,11 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
     int actualLine = 41;
-    init(BREAKPOINTRELOCATION_QMLFILE);
+    init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1051,10 +1095,11 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
 void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 40;
     int actualLine = 41;
-    init(BREAKPOINTRELOCATION_QMLFILE);
+    init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1073,9 +1118,10 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 44;
-    init(BREAKPOINTRELOCATION_QMLFILE);
+    init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1092,9 +1138,10 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 
 void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 {
+    QFETCH(bool, qmlscene);
     int out = 10;
     int sourceLine = 42;
-    init(CONDITION_QMLFILE);
+    init(qmlscene, CONDITION_QMLFILE);
 
     client->connect();
     //The breakpoint is in a timer loop so we can set it after connect().
@@ -1128,7 +1175,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 
 void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 {
-    init(QUIT_QMLFILE);
+    QFETCH(bool, qmlscene);
+    init(qmlscene, QUIT_QMLFILE);
 
     int sourceLine = 41;
 
@@ -1187,10 +1235,11 @@ void tst_QQmlDebugJS::setBreakpointOnEvent()
 void tst_QQmlDebugJS::clearBreakpoint()
 {
     //void clearBreakpoint(int breakpoint);
+    QFETCH(bool, qmlscene);
 
     int sourceLine1 = 42;
     int sourceLine2 = 43;
-    init(CHANGEBREAKPOINT_QMLFILE);
+    init(qmlscene, CHANGEBREAKPOINT_QMLFILE);
 
     client->connect();
     //The breakpoints are in a timer loop so we can set them after connect().
@@ -1234,8 +1283,9 @@ void tst_QQmlDebugJS::clearBreakpoint()
 void tst_QQmlDebugJS::setExceptionBreak()
 {
     //void setExceptionBreak(QString type, bool enabled = false);
+    QFETCH(bool, qmlscene);
 
-    init(EXCEPTION_QMLFILE);
+    init(qmlscene, EXCEPTION_QMLFILE);
     client->setExceptionBreak(QJSDebugClient::All,true);
     client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1244,9 +1294,10 @@ void tst_QQmlDebugJS::setExceptionBreak()
 void tst_QQmlDebugJS::stepNext()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 42;
-    init(STEPACTION_QMLFILE);
+    init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1267,10 +1318,11 @@ void tst_QQmlDebugJS::stepNext()
 void tst_QQmlDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 46;
     int actualLine = 42;
-    init(STEPACTION_QMLFILE);
+    init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
     client->connect();
@@ -1291,10 +1343,11 @@ void tst_QQmlDebugJS::stepIn()
 void tst_QQmlDebugJS::stepOut()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 42;
     int actualLine = 46;
-    init(STEPACTION_QMLFILE);
+    init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1315,10 +1368,11 @@ void tst_QQmlDebugJS::stepOut()
 void tst_QQmlDebugJS::continueDebugging()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine1 = 46;
     int sourceLine2 = 43;
-    init(STEPACTION_QMLFILE);
+    init(qmlscene, STEPACTION_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(STEPACTION_QMLFILE), sourceLine2, -1, true);
@@ -1340,9 +1394,10 @@ void tst_QQmlDebugJS::continueDebugging()
 void tst_QQmlDebugJS::backtrace()
 {
     //void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
-    init(ONCOMPLETED_QMLFILE);
+    init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1355,9 +1410,10 @@ void tst_QQmlDebugJS::backtrace()
 void tst_QQmlDebugJS::getFrameDetails()
 {
     //void frame(int number = -1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
-    init(ONCOMPLETED_QMLFILE);
+    init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1370,9 +1426,10 @@ void tst_QQmlDebugJS::getFrameDetails()
 void tst_QQmlDebugJS::getScopeDetails()
 {
     //void scope(int number = -1, int frameNumber = -1);
+    QFETCH(bool, qmlscene);
 
     int sourceLine = 39;
-    init(ONCOMPLETED_QMLFILE);
+    init(qmlscene, ONCOMPLETED_QMLFILE);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect();
@@ -1443,7 +1500,8 @@ void tst_QQmlDebugJS::getScripts()
 {
     //void scripts(int types = -1, QList<int> ids = QList<int>(), bool includeSource = false, QVariant filter = QVariant());
 
-    init();
+    QFETCH(bool, qmlscene);
+    init(qmlscene);
 
     client->setBreakpoint(QLatin1String(SCRIPTREGEXP), QString(TEST_QMLFILE), 40, -1, true);
     client->connect();
@@ -1459,6 +1517,13 @@ void tst_QQmlDebugJS::getScripts()
 
     QCOMPARE(scripts.count(), 1);
     QVERIFY(scripts.first().toMap()[QStringLiteral("name")].toString().endsWith(QStringLiteral("data/test.qml")));
+}
+
+void tst_QQmlDebugJS::targetData()
+{
+    QTest::addColumn<bool>("qmlscene");
+    QTest::newRow("custom") << false;
+    QTest::newRow("qmlscene") << true;
 }
 
 QTEST_MAIN(tst_QQmlDebugJS)

@@ -46,7 +46,7 @@ class QV4DebuggerAgent : public QObject
 public:
     QV4DebuggerAgent(QV4DebugServiceImpl *m_debugService);
 
-    QV4Debugger *firstDebugger() const;
+    QV4Debugger *pausedDebugger() const;
     bool isRunning() const;
 
     void addDebugger(QV4Debugger *debugger);
@@ -64,6 +64,7 @@ public:
 
     bool breakOnThrow() const { return m_breakOnThrow; }
     void setBreakOnThrow(bool onoff);
+    void clearAllPauseRequests();
 
 public slots:
     void debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason);

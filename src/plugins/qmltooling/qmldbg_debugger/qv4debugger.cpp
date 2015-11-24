@@ -189,6 +189,12 @@ void QV4Debugger::setBreakOnThrow(bool onoff)
     m_breakOnThrow = onoff;
 }
 
+void QV4Debugger::clearPauseRequest()
+{
+    QMutexLocker locker(&m_lock);
+    m_pauseRequested = false;
+}
+
 QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 {
     ExecutionState state;
