@@ -65,12 +65,20 @@ Item {
     }
 
     function checkMapAToInvalid(x, y) {
-        var pos = itemA.mapToItem(1122, x, y)
-        return pos == undefined;
+        try {
+            itemA.mapToItem(1122, x, y)
+        } catch (e) {
+            return e instanceof TypeError
+        }
+        return false
     }
 
     function checkMapAFromInvalid(x, y) {
-        var pos = itemA.mapFromItem(1122, x, y)
-        return pos == undefined;
+        try {
+            itemA.mapFromItem(1122, x, y)
+        } catch (e) {
+            return e instanceof TypeError
+        }
+        return false
     }
 }
