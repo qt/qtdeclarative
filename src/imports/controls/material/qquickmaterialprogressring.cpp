@@ -118,9 +118,6 @@ QSGNode *QQuickMaterialProgressRing::updatePaintNode(QSGNode *oldNode, QQuickIte
     // so just use a blank image.
     QImage blankImage(width(), height(), QImage::Format_ARGB32_Premultiplied);
     blankImage.fill(Qt::transparent);
-    QPainter painter(&blankImage);
-    painter.fillRect(0, 0, width(), height(), Qt::transparent);
-    painter.end();
     textureNode->setColor(m_color);
     textureNode->setRect(boundingRect());
     textureNode->setTexture(window()->createTextureFromImage(blankImage));
