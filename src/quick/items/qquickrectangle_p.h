@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickPen : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
 {
     Q_OBJECT
 
