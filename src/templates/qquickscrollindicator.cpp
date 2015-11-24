@@ -228,6 +228,9 @@ public:
     void activateHorizontal();
     void activateVertical();
 
+    void layoutHorizontal(bool move = true);
+    void layoutVertical(bool move = true);
+
     void itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
     QQuickFlickable *flickable;
@@ -245,27 +248,34 @@ void QQuickScrollIndicatorAttachedPrivate::activateVertical()
     vertical->setActive(flickable->isMovingVertically());
 }
 
+void QQuickScrollIndicatorAttachedPrivate::layoutHorizontal(bool move)
+{
+    Q_ASSERT(horizontal && flickable);
+    horizontal->setWidth(flickable->width());
+    if (move)
+        horizontal->setY(flickable->height() - horizontal->height());
+}
+
+void QQuickScrollIndicatorAttachedPrivate::layoutVertical(bool move)
+{
+    Q_ASSERT(vertical && flickable);
+    vertical->setHeight(flickable->height());
+    if (move && !QQuickItemPrivate::get(vertical)->isMirrored())
+        vertical->setX(flickable->width() - vertical->width());
+}
+
 void QQuickScrollIndicatorAttachedPrivate::itemGeometryChanged(QQuickItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_UNUSED(item);
+    Q_UNUSED(newGeometry);
     Q_ASSERT(item == flickable);
     if (horizontal) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(horizontal);
-        if (!p->widthValid) {
-            horizontal->setWidth(newGeometry.width());
-            p->widthValid = false;
-        }
-        if (qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), oldGeometry.height() - horizontal->height()))
-            horizontal->setY(newGeometry.height() - horizontal->height());
+        bool move = qFuzzyIsNull(horizontal->y()) || qFuzzyCompare(horizontal->y(), oldGeometry.height() - horizontal->height());
+        layoutHorizontal(move);
     }
     if (vertical) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(vertical);
-        if (!p->heightValid) {
-            vertical->setHeight(newGeometry.height());
-            p->heightValid = false;
-        }
-        if (!p->isMirrored() && (qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), oldGeometry.width() - vertical->width())))
-            vertical->setX(newGeometry.width() - vertical->width());
+        bool move = qFuzzyIsNull(vertical->x()) || qFuzzyCompare(vertical->x(), oldGeometry.width() - vertical->width());
+        layoutVertical(move);
     }
 }
 
@@ -322,6 +332,7 @@ void QQuickScrollIndicatorAttached::setHorizontal(QQuickScrollIndicator *horizon
             connect(area, SIGNAL(widthRatioChanged(qreal)), horizontal, SLOT(setSize(qreal)));
             connect(area, SIGNAL(xPositionChanged(qreal)), horizontal, SLOT(setPosition(qreal)));
 
+            d->layoutHorizontal();
             horizontal->setSize(area->property("widthRatio").toReal());
             horizontal->setPosition(area->property("xPosition").toReal());
         }
@@ -374,6 +385,7 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
             connect(area, SIGNAL(heightRatioChanged(qreal)), vertical, SLOT(setSize(qreal)));
             connect(area, SIGNAL(yPositionChanged(qreal)), vertical, SLOT(setPosition(qreal)));
 
+            d->layoutVertical();
             vertical->setSize(area->property("heightRatio").toReal());
             vertical->setPosition(area->property("yPosition").toReal());
         }
