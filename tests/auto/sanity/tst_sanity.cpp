@@ -222,18 +222,26 @@ void tst_Sanity::signalHandlers_data()
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
+class AnchorValidator : public BaseValidator
+{
+protected:
+    virtual bool visit(QQmlJS::AST::UiScriptBinding *node)
+    {
+        QQmlJS::AST::UiQualifiedId* id = node->qualifiedId;
+        if (id && id->name ==  QStringLiteral("anchors"))
+            addError("anchors are not allowed", node);
+        return true;
+    }
+};
+
 void tst_Sanity::anchors()
 {
     QFETCH(QString, control);
     QFETCH(QString, filePath);
 
-    QQmlComponent component(&engine);
-    component.loadUrl(QUrl::fromLocalFile(filePath));
-
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(object.data());
-    foreach (QObject *object, *qt_qobjects)
-        QVERIFY2(!object->inherits("QQuickAnchors"), "Anchors are not allowed");
+    AnchorValidator validator;
+    if (!validator.validate(filePath))
+        QFAIL(qPrintable(validator.errors()));
 }
 
 void tst_Sanity::anchors_data()
