@@ -51,17 +51,31 @@ T.TextArea {
     padding: 6
 
     color: enabled ? Material.primaryTextColor : Material.hintTextColor
-//    selectionColor: Theme.selectionColor
-//    selectedTextColor: Theme.selectedTextColor
+    selectionColor: Material.accentColor
+    selectedTextColor: Material.primaryHighlightedTextColor
     cursorDelegate: Rectangle {
+        id: cursor
         color: control.Material.accentColor
         width: 2
+        visible: control.activeFocus && control.selectionStart === control.selectionEnd
+
+        Connections {
+            target: control
+            onCursorPositionChanged: {
+                // keep a moving cursor visible
+                cursor.opacity = 1
+                timer.restart()
+            }
+        }
 
         Timer {
-            running: true
+            id: timer
+            running: control.activeFocus
             repeat: true
-            interval: 500
-            onTriggered: parent.visible = !parent.visible
+            interval: Qt.styleHints.cursorFlashTime
+            onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
+            // force the cursor visible when gaining focus
+            onRunningChanged: cursor.opacity = 1
         }
     }
 
@@ -84,7 +98,7 @@ T.TextArea {
 
     //! [background]
     background: Rectangle {
-        y: control.y + control.height - height
+        y: control.height - height
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
