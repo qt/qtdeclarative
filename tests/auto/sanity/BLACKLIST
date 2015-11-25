@@ -1,5 +1,3 @@
-[signalHandlers:material/CheckBox.qml]
-*
 [signalHandlers:material/ItemDelegate.qml]
 *
 [signalHandlers:material/TextArea.qml]
