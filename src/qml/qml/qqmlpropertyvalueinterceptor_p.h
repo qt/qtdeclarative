@@ -60,7 +60,7 @@ public:
     virtual void write(const QVariant &value) = 0;
 
 private:
-    friend class QQmlVMEMetaObject;
+    friend class QQmlInterceptorMetaObject;
 
     int m_coreIndex;
     int m_valueTypeCoreIndex;

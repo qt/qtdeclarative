@@ -112,9 +112,10 @@ public:
      * v8 GC will check this flag, only deletes the objects when rootObjectInCreation is false.
      */
     quint32 rootObjectInCreation:1;
+    quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
     quint32 parentFrozen:1;
-    quint32 dummy:22;
+    quint32 dummy:21;
 
     // When bindingBitsSize < 32, we store the binding bit flags inside
     // bindingBitsValue. When we need more than 32 bits, we allocated

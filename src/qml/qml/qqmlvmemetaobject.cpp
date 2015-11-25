@@ -130,7 +130,131 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     }
 }
 
-QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
+
+QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache)
+    : object(obj),
+      cache(cache),
+      interceptors(0),
+      hasAssignedMetaObjectData(false)
+{
+    QObjectPrivate *op = QObjectPrivate::get(obj);
+
+    if (op->metaObject) {
+        parent = op->metaObject;
+        // Use the extra flag in QBiPointer to know if we can safely cast parent.asT1() to QQmlVMEMetaObject*
+        parent.setFlagValue(QQmlData::get(obj)->hasVMEMetaObject);
+    } else {
+        parent = obj->metaObject();
+    }
+
+    op->metaObject = this;
+    QQmlData::get(obj)->hasInterceptorMetaObject = true;
+}
+
+QQmlInterceptorMetaObject::~QQmlInterceptorMetaObject()
+{
+
+}
+
+void QQmlInterceptorMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
+{
+    interceptor->m_coreIndex = index;
+    interceptor->m_valueTypeCoreIndex = valueIndex;
+    interceptor->m_next = interceptors;
+    interceptors = interceptor;
+}
+
+int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
+{
+    Q_ASSERT(o == object);
+    Q_UNUSED(o);
+
+    if (intercept(c, id, a))
+        return -1;
+    return object->qt_metacall(c, id, a);
+}
+
+bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
+{
+    if (c == QMetaObject::WriteProperty && interceptors &&
+       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {
+
+        for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
+            if (vi->m_coreIndex != id)
+                continue;
+
+            int valueIndex = vi->m_valueTypeCoreIndex;
+            int type = QQmlData::get(object)->propertyCache->property(id)->propType;
+
+            if (type != QVariant::Invalid) {
+                if (valueIndex != -1) {
+                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
+                    Q_ASSERT(valueType);
+
+                    //
+                    // Consider the following case:
+                    //  color c = { 0.1, 0.2, 0.3 }
+                    //  interceptor exists on c.r
+                    //  write { 0.2, 0.4, 0.6 }
+                    //
+                    // The interceptor may choose not to update the r component at this
+                    // point (for example, a behavior that creates an animation). But we
+                    // need to ensure that the g and b components are updated correctly.
+                    //
+                    // So we need to perform a full write where the value type is:
+                    //    r = old value, g = new value, b = new value
+                    //
+                    // And then call the interceptor which may or may not write the
+                    // new value to the r component.
+                    //
+                    // This will ensure that the other components don't contain stale data
+                    // and any relevant signals are emitted.
+                    //
+                    // To achieve this:
+                    //   (1) Store the new value type as a whole (needed due to
+                    //       aliasing between a[0] and static storage in value type).
+                    //   (2) Read the entire existing value type from object -> valueType temp.
+                    //   (3) Read the previous value of the component being changed
+                    //       from the valueType temp.
+                    //   (4) Write the entire new value type into the temp.
+                    //   (5) Overwrite the component being changed with the old value.
+                    //   (6) Perform a full write to the value type (which may emit signals etc).
+                    //   (7) Issue the interceptor call with the new component value.
+                    //
+
+                    QMetaProperty valueProp = valueType->metaObject()->property(valueIndex);
+                    QVariant newValue(type, a[0]);
+
+                    valueType->read(object, id);
+                    QVariant prevComponentValue = valueProp.read(valueType);
+
+                    valueType->setValue(newValue);
+                    QVariant newComponentValue = valueProp.read(valueType);
+
+                    // Don't apply the interceptor if the intercepted value has not changed
+                    bool updated = false;
+                    if (newComponentValue != prevComponentValue) {
+                        valueProp.write(valueType, prevComponentValue);
+                        valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
+
+                        vi->write(newComponentValue);
+                        updated = true;
+                    }
+
+                    if (updated)
+                        return true;
+                } else {
+                    vi->write(QVariant(type, a[0]));
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 {
     if (!hasAssignedMetaObjectData) {
         *static_cast<QMetaObject *>(this) = *cache->createMetaObject();
@@ -149,23 +273,13 @@ QAbstractDynamicMetaObject *QQmlVMEMetaObject::toDynamicMetaObject(QObject *o)
 QQmlVMEMetaObject::QQmlVMEMetaObject(QObject *obj,
                                      QQmlPropertyCache *cache,
                                      const QQmlVMEMetaData *meta)
-    : object(obj),
-      ctxt(QQmlData::get(obj, true)->outerContext), cache(cache), metaData(meta),
-      hasAssignedMetaObjectData(false), aliasEndpoints(0),
-      interceptors(0), methods(0)
+    : QQmlInterceptorMetaObject(obj, cache),
+      ctxt(QQmlData::get(obj, true)->outerContext), metaData(meta),
+      aliasEndpoints(0),
+      methods(0)
 {
     cache->addref();
 
-    QObjectPrivate *op = QObjectPrivate::get(obj);
-
-    if (op->metaObject) {
-        parent = op->metaObject;
-        // Use the extra flag in QBiPointer to know if we can safely cast parent.asT1() to QQmlVMEMetaObject*
-        parent.setFlagValue(QQmlData::get(obj)->hasVMEMetaObject);
-    } else
-        parent = obj->metaObject();
-
-    op->metaObject = this;
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
     int qobject_type = qMetaTypeId<QObject*>();
@@ -471,80 +585,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     Q_UNUSED(o);
 
     int id = _id;
-    if (c == QMetaObject::WriteProperty && interceptors &&
-       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyPrivate::BypassInterceptor)) {
 
-        for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
-            if (vi->m_coreIndex != id)
-                continue;
+    if (intercept(c, _id, a))
+        return -1;
 
-            int valueIndex = vi->m_valueTypeCoreIndex;
-            int type = QQmlData::get(object)->propertyCache->property(id)->propType;
-
-            if (type != QVariant::Invalid) {
-                if (valueIndex != -1) {
-                    QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type);
-                    Q_ASSERT(valueType);
-
-                    //
-                    // Consider the following case:
-                    //  color c = { 0.1, 0.2, 0.3 }
-                    //  interceptor exists on c.r
-                    //  write { 0.2, 0.4, 0.6 }
-                    //
-                    // The interceptor may choose not to update the r component at this
-                    // point (for example, a behavior that creates an animation). But we
-                    // need to ensure that the g and b components are updated correctly.
-                    //
-                    // So we need to perform a full write where the value type is:
-                    //    r = old value, g = new value, b = new value
-                    //
-                    // And then call the interceptor which may or may not write the
-                    // new value to the r component.
-                    //
-                    // This will ensure that the other components don't contain stale data
-                    // and any relevant signals are emitted.
-                    //
-                    // To achieve this:
-                    //   (1) Store the new value type as a whole (needed due to
-                    //       aliasing between a[0] and static storage in value type).
-                    //   (2) Read the entire existing value type from object -> valueType temp.
-                    //   (3) Read the previous value of the component being changed
-                    //       from the valueType temp.
-                    //   (4) Write the entire new value type into the temp.
-                    //   (5) Overwrite the component being changed with the old value.
-                    //   (6) Perform a full write to the value type (which may emit signals etc).
-                    //   (7) Issue the interceptor call with the new component value.
-                    //
-
-                    QMetaProperty valueProp = valueType->metaObject()->property(valueIndex);
-                    QVariant newValue(type, a[0]);
-
-                    valueType->read(object, id);
-                    QVariant prevComponentValue = valueProp.read(valueType);
-
-                    valueType->setValue(newValue);
-                    QVariant newComponentValue = valueProp.read(valueType);
-
-                    // Don't apply the interceptor if the intercepted value has not changed
-                    bool updated = false;
-                    if (newComponentValue != prevComponentValue) {
-                        valueProp.write(valueType, prevComponentValue);
-                        valueType->write(object, id, QQmlPropertyPrivate::DontRemoveBinding | QQmlPropertyPrivate::BypassInterceptor);
-
-                        vi->write(newComponentValue);
-                        updated = true;
-                    }
-
-                    if (updated)
-                        return -1;
-                } else {
-                    vi->write(QVariant(type, a[0]));
-                    return -1;
-                }
-            }
-        }
-    }
     if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty) {
         if (id >= propOffset()) {
             id -= propOffset();
@@ -990,14 +1034,6 @@ void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
     QList<QObject *> *list = static_cast<QList<QObject *> *>(prop->data);
     list->clear();
     static_cast<QQmlVMEMetaObject *>(prop->dummy1)->activate(prop->object, reinterpret_cast<quintptr>(prop->dummy2), 0);
-}
-
-void QQmlVMEMetaObject::registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor)
-{
-    interceptor->m_coreIndex = index;
-    interceptor->m_valueTypeCoreIndex = valueIndex;
-    interceptor->m_next = interceptors;
-    interceptors = interceptor;
 }
 
 quint16 QQmlVMEMetaObject::vmeMethodLineNumber(int index)

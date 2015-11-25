@@ -148,17 +148,57 @@ public:
     int m_index;
 };
 
+
+class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QAbstractDynamicMetaObject
+{
+public:
+    QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
+    ~QQmlInterceptorMetaObject();
+
+    void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
+
+    static QQmlInterceptorMetaObject *get(QObject *obj);
+
+    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
+
+    // Used by auto-tests for inspection
+    QQmlPropertyCache *propertyCache() const { return cache; }
+
+protected:
+    virtual int metaCall(QObject *o, QMetaObject::Call c, int id, void **a);
+    bool intercept(QMetaObject::Call c, int id, void **a);
+
+public:
+    QObject *object;
+    QQmlPropertyCache *cache;
+    QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
+
+    QQmlPropertyValueInterceptor *interceptors;
+    bool hasAssignedMetaObjectData;
+};
+
+inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
+{
+    if (obj) {
+        if (QQmlData *data = QQmlData::get(obj)) {
+            if (data->hasInterceptorMetaObject)
+                return static_cast<QQmlInterceptorMetaObject *>(QObjectPrivate::get(obj)->metaObject);
+        }
+    }
+
+    return 0;
+}
+
 class QQmlVMEVariant;
 class QQmlRefCount;
 class QQmlVMEMetaObjectEndpoint;
-class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QAbstractDynamicMetaObject
+class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
     QQmlVMEMetaObject(QObject *obj, QQmlPropertyCache *cache, const QQmlVMEMetaData *data);
     ~QQmlVMEMetaObject();
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
-    void registerInterceptor(int index, int valueIndex, QQmlPropertyValueInterceptor *interceptor);
     QV4::ReturnedValue vmeMethod(int index);
     quint16 vmeMethodLineNumber(int index);
     void setVmeMethod(int index, const QV4::Value &function);
@@ -166,11 +206,6 @@ public:
     void setVMEProperty(int index, const QV4::Value &v);
 
     void connectAliasSignal(int index, bool indexInSignalRange);
-
-    virtual QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o);
-
-    // Used by auto-tests for inspection
-    QQmlPropertyCache *propertyCache() const { return cache; }
 
     static inline QQmlVMEMetaObject *get(QObject *o);
     static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
@@ -185,9 +220,7 @@ public:
     friend class QQmlVMEVariantQObjectPtr;
     friend class QQmlPropertyCache;
 
-    QObject *object;
     QQmlGuardedContextData ctxt;
-    QQmlPropertyCache *cache;
 
     const QQmlVMEMetaData *metaData;
     inline int propOffset() const;
@@ -195,7 +228,6 @@ public:
     inline int signalOffset() const;
     inline int signalCount() const;
 
-    bool hasAssignedMetaObjectData;
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
     QV4::WeakValue properties;
@@ -233,8 +265,6 @@ public:
 
     void connectAlias(int aliasId);
 
-    QQmlPropertyValueInterceptor *interceptors;
-
     QV4::PersistentValue *methods;
     QV4::ReturnedValue method(int);
 
@@ -242,8 +272,6 @@ public:
     void writeVarProperty(int, const QV4::Value &);
     QVariant readPropertyAsVariant(int);
     void writeProperty(int, const QVariant &);
-
-    QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
