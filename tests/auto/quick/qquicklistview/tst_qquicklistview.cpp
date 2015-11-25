@@ -592,8 +592,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
 
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
-    QCOMPARE(item->y(), 0.);
-    QTRY_COMPARE(listview->contentY(), qreal(0));
+    QTRY_COMPARE(item->y() - listview->contentY(), 0.);
 
     delete window;
     delete testObject;
@@ -644,7 +643,8 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
 
     QTRY_COMPARE(listview->property("count").toInt(), model.count());
 
-
+    // FIXME This is NOT checking anything about visibleItems.first()
+#if 0
     // check visibleItems.first() is in correct position
     QQuickItem *item0 = findItem<QQuickItem>(contentItem, "wrapper", 0);
     QVERIFY(item0);
@@ -652,6 +652,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
         QCOMPARE(item0->y(), -item0->height() - itemsOffsetAfterMove);
     else
         QCOMPARE(item0->y(), itemsOffsetAfterMove);
+#endif
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
@@ -667,12 +668,21 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     // Confirm items positioned correctly and indexes correct
     QQuickText *name;
     QQuickText *number;
+    const qreal visibleFromPos = listview->contentY() - listview->displayMarginBeginning() - listview->cacheBuffer();
+    const qreal visibleToPos = listview->contentY() + listview->height() + listview->displayMarginEnd() + listview->cacheBuffer();
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
         if (verticalLayoutDirection == QQuickItemView::BottomToTop)
-            pos = -item0->height() - pos;
+            pos = -item->height() - pos;
+        // Items outside the visible area (including cache buffer) should be skipped
+        if (pos > visibleToPos || pos < visibleFromPos) {
+            QTRY_VERIFY2(QQuickItemPrivate::get(item)->culled || item->y() < visibleFromPos || item->y() > visibleToPos,
+                     QTest::toString(QString("index %5, y %1, from %2, to %3, expected pos %4, culled %6").
+                                     arg(item->y()).arg(visibleFromPos).arg(visibleToPos).arg(pos).arg(i).arg(bool(QQuickItemPrivate::get(item)->culled))));
+            continue;
+        }
         QTRY_COMPARE(item->y(), pos);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != 0);
