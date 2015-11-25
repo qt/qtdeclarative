@@ -250,6 +250,8 @@ private slots:
 
     void QTBUG_48044_currentItemNotVisibleAfterTransition();
 
+    void keyNavigationEnabled();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8293,6 +8295,72 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
     // This is the actual test
     QQuickItemPrivate *currentPriv = QQuickItemPrivate::get(currentItem);
     QVERIFY(!currentPriv->culled);
+}
+
+void tst_QQuickListView::keyNavigationEnabled()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("simplelistview.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listView);
+    QCOMPARE(listView->isKeyNavigationEnabled(), true);
+
+    listView->setFocus(true);
+    QVERIFY(listView->hasActiveFocus());
+
+    listView->setHighlightMoveDuration(0);
+
+    // If keyNavigationEnabled is not explicitly set to true, respect the original behavior
+    // of disabling both mouse and keyboard interaction.
+    QSignalSpy enabledSpy(listView, SIGNAL(keyNavigationEnabledChanged()));
+    listView->setInteractive(false);
+    QCOMPARE(enabledSpy.count(), 1);
+    QCOMPARE(listView->isKeyNavigationEnabled(), false);
+
+    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QVERIFY(!listView->isMoving());
+    QCOMPARE(listView->contentY(), 0.0);
+    QCOMPARE(listView->currentIndex(), 0);
+
+    QTest::keyClick(window.data(), Qt::Key_Down);
+    QCOMPARE(listView->currentIndex(), 0);
+
+    // Check that isKeyNavigationEnabled implicitly follows the value of interactive.
+    listView->setInteractive(true);
+    QCOMPARE(enabledSpy.count(), 2);
+    QCOMPARE(listView->isKeyNavigationEnabled(), true);
+
+    // Change it back again for the next check.
+    listView->setInteractive(false);
+    QCOMPARE(enabledSpy.count(), 3);
+    QCOMPARE(listView->isKeyNavigationEnabled(), false);
+
+    // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
+    listView->setKeyNavigationEnabled(true);
+    QCOMPARE(enabledSpy.count(), 4);
+    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QVERIFY(!listView->isMoving());
+    QCOMPARE(listView->contentY(), 0.0);
+    QCOMPARE(listView->currentIndex(), 0);
+
+    // Should now work.
+    QTest::keyClick(window.data(), Qt::Key_Down);
+    QCOMPARE(listView->currentIndex(), 1);
+    // contentY won't change for one index change in a view this high.
+
+    // Changing interactive now shouldn't result in keyNavigationEnabled changing,
+    // since we broke the "binding".
+    listView->setInteractive(true);
+    QCOMPARE(enabledSpy.count(), 4);
+
+    // Keyboard interaction shouldn't work now.
+    listView->setKeyNavigationEnabled(false);
+    QTest::keyClick(window.data(), Qt::Key_Down);
+    QCOMPARE(listView->currentIndex(), 1);
 }
 
 QTEST_MAIN(tst_QQuickListView)

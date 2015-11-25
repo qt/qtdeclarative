@@ -2174,6 +2174,24 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     By default, key navigation is not wrapped.
 */
 
+/*!
+    \qmlproperty bool QtQuick::ListView::keyNavigationEnabled
+    \since 5.7
+
+    This property holds whether the key navigation of the list is enabled.
+
+    If this is \c true, the user can navigate the view with a keyboard.
+    It is useful for applications that need to selectively enable or
+    disable mouse and keyboard interaction.
+
+    By default, the value of this property is bound to
+    \l {Flickable::}{interactive} to ensure behavior compatibility for
+    existing applications. When explicitly set, it will cease to be bound to
+    the interactive property.
+
+    \sa \l {Flickable::}{interactive}
+*/
+
 
 /*!
     \qmlproperty int QtQuick::ListView::cacheBuffer
@@ -2952,7 +2970,8 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
 void QQuickListView::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickListView);
-    if (d->model && d->model->count() && d->interactive) {
+    if (d->model && d->model->count() && ((d->interactive && !d->explicitKeyNavigationEnabled)
+        || (d->explicitKeyNavigationEnabled && d->keyNavigationEnabled))) {
         if ((d->orient == QQuickListView::Horizontal && !d->isRightToLeft() && event->key() == Qt::Key_Left)
                     || (d->orient == QQuickListView::Horizontal && d->isRightToLeft() && event->key() == Qt::Key_Right)
                     || (d->orient == QQuickListView::Vertical && !d->isBottomToTop() && event->key() == Qt::Key_Up)
