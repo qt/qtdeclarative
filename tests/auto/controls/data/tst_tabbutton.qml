@@ -51,6 +51,11 @@ TestCase {
     name: "TabButton"
 
     Component {
+        id: tabButton
+        TabButton { }
+    }
+
+    Component {
         id: repeater
         Column {
             Repeater {
@@ -75,5 +80,12 @@ TestCase {
         }
 
         container.destroy()
+    }
+
+    function test_baseline() {
+        var control = tabButton.createObject(testCase)
+        verify(control)
+        compare(control.baselineOffset, control.label.y + control.label.baselineOffset)
+        control.destroy()
     }
 }

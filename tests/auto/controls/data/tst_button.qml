@@ -299,4 +299,11 @@ TestCase {
         control.highlighted = true
         compare(control.highlighted, true)
     }
+
+    function test_baseline() {
+        var control = button.createObject(testCase)
+        verify(control)
+        compare(control.baselineOffset, control.label.y + control.label.baselineOffset)
+        control.destroy()
+    }
 }

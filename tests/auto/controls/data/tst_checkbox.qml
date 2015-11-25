@@ -417,4 +417,11 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_baseline() {
+        var control = checkBox.createObject(testCase)
+        verify(control)
+        compare(control.baselineOffset, control.label.y + control.label.baselineOffset)
+        control.destroy()
+    }
 }

@@ -45,6 +45,7 @@ T.Button {
                             label ? label.implicitWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.implicitHeight + topPadding + bottomPadding : 0)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     topPadding: 4
     leftPadding: 8
