@@ -1502,6 +1502,25 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     By default, key navigation is not wrapped.
 */
+
+/*!
+    \qmlproperty bool QtQuick::GridView::keyNavigationEnabled
+    \since 5.7
+
+    This property holds whether the key navigation of the grid is enabled.
+
+    If this is \c true, the user can navigate the view with a keyboard.
+    It is useful for applications that need to selectively enable or
+    disable mouse and keyboard interaction.
+
+    By default, the value of this property is bound to
+    \l {Flickable::}{interactive} to ensure behavior compatibility for
+    existing applications. When explicitly set, it will cease to be bound to
+    the interactive property.
+
+    \sa \l {Flickable::}{interactive}
+*/
+
 /*!
     \qmlproperty int QtQuick::GridView::cacheBuffer
     This property determines whether delegates are retained outside the
@@ -2076,7 +2095,8 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
 void QQuickGridView::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickGridView);
-    if (d->model && d->model->count() && d->interactive) {
+    if (d->model && d->model->count() && ((d->interactive && !d->explicitKeyNavigationEnabled)
+        || (d->explicitKeyNavigationEnabled && d->keyNavigationEnabled))) {
         d->moveReason = QQuickGridViewPrivate::SetIndex;
         int oldCurrent = currentIndex();
         switch (event->key()) {

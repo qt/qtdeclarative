@@ -276,6 +276,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickShaderEffectSource, 1>(uri, 2, 6, "ShaderEffectSource");
 
     qmlRegisterType<QQuickListView, 7>(uri, 2, 7, "ListView");
+    qmlRegisterType<QQuickGridView, 7>(uri, 2, 7, "GridView");
 }
 
 static void initResources()

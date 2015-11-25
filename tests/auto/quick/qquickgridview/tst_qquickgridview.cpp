@@ -211,6 +211,8 @@ private slots:
 
     void QTBUG_45640();
 
+    void keyNavigationEnabled();
+
 private:
     QList<int> toIntList(const QVariantList &list);
     void matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes);
@@ -6564,6 +6566,71 @@ void tst_QQuickGridView::QTBUG_45640()
     QTRY_VERIFY(gridview->contentY() > qreal(-50.0) && gridview->contentY() < qreal(0.0));
 
     delete window;
+}
+
+void tst_QQuickGridView::keyNavigationEnabled()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("gridview4.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickGridView *gridView = qobject_cast<QQuickGridView *>(window->rootObject());
+    QVERIFY(gridView);
+    QCOMPARE(gridView->isKeyNavigationEnabled(), true);
+
+    gridView->setFocus(true);
+    QVERIFY(gridView->hasActiveFocus());
+
+    gridView->setHighlightMoveDuration(0);
+
+    // If keyNavigationEnabled is not explicitly set to true, respect the original behavior
+    // of disabling both mouse and keyboard interaction.
+    QSignalSpy enabledSpy(gridView, SIGNAL(keyNavigationEnabledChanged()));
+    gridView->setInteractive(false);
+    QCOMPARE(enabledSpy.count(), 1);
+    QCOMPARE(gridView->isKeyNavigationEnabled(), false);
+
+    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QVERIFY(!gridView->isMoving());
+    QCOMPARE(gridView->contentY(), 0.0);
+    QCOMPARE(gridView->currentIndex(), 0);
+
+    QTest::keyClick(window.data(), Qt::Key_Right);
+    QCOMPARE(gridView->currentIndex(), 0);
+
+    // Check that isKeyNavigationEnabled implicitly follows the value of interactive.
+    gridView->setInteractive(true);
+    QCOMPARE(enabledSpy.count(), 2);
+    QCOMPARE(gridView->isKeyNavigationEnabled(), true);
+
+    // Change it back again for the next check.
+    gridView->setInteractive(false);
+    QCOMPARE(enabledSpy.count(), 3);
+    QCOMPARE(gridView->isKeyNavigationEnabled(), false);
+
+    // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
+    gridView->setKeyNavigationEnabled(true);
+    QCOMPARE(enabledSpy.count(), 4);
+    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QVERIFY(!gridView->isMoving());
+    QCOMPARE(gridView->contentY(), 0.0);
+    QCOMPARE(gridView->currentIndex(), 0);
+
+    // Should now work.
+    QTest::keyClick(window.data(), Qt::Key_Right);
+    QCOMPARE(gridView->currentIndex(), 1);
+
+    // Changing interactive now shouldn't result in keyNavigationEnabled changing,
+    // since we broke the "binding".
+    gridView->setInteractive(true);
+    QCOMPARE(enabledSpy.count(), 4);
+
+    // Keyboard interaction shouldn't work now.
+    gridView->setKeyNavigationEnabled(false);
+    QTest::keyClick(window.data(), Qt::Key_Right);
+    QCOMPARE(gridView->currentIndex(), 1);
 }
 
 QTEST_MAIN(tst_QQuickGridView)
