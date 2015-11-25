@@ -37,6 +37,7 @@
 #include <QtTest>
 #include <QtQuick>
 #include <QtCore/private/qhooks_p.h>
+#include <iostream>
 
 static int qt_verbose = qgetenv("VERBOSE").toInt() != 0;
 
@@ -98,7 +99,9 @@ void tst_ObjectCount::cleanup()
 
 static void printItems(const QList<QQuickItem *> &items)
 {
-    qInfo() << "QQuickItems:" << items.count() << "(total of QObjects:" << qt_qobjects->count() << ")";
+    std::cout << "RESULT tst_ObjectCount::" << QTest::currentTestFunction() << "():\"" << QTest::currentDataTag() << "\":" << std::endl;
+    std::cout << "     QQuickItems: " << items.count() << " (total of QObjects: " << qt_qobjects->count() << ")" << std::endl;
+
     if (qt_verbose) {
         foreach (QObject *object, *qt_qobjects)
             qInfo() << "\t" << object;
