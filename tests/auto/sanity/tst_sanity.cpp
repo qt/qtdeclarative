@@ -246,18 +246,47 @@ void tst_Sanity::anchors_data()
         QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
 }
 
+static void addTestRows(QQmlEngine *engine, const QString &targetPath, const QStringList &skiplist = QStringList())
+{
+    // We cannot use QQmlComponent to load QML files directly from the source tree.
+    // For styles that use internal QML types (eg. material/Ripple.qml), the source
+    // dir would be added as an "implicit" import path overriding the actual import
+    // path (qtbase/qml/Qt/labs/controls/material). => The QML engine fails to load
+    // the style C++ plugin from the implicit import path (the source dir).
+    //
+    // Therefore we only use the source tree for finding out the set of QML files that
+    // a particular style implements, and then we locate the respective QML files in
+    // the engine's import path. This way we can use QQmlComponent to load each QML file
+    // for benchmarking.
+
+    QFileInfoList entries = QDir(QQC2_IMPORT_PATH + targetPath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    foreach (const QFileInfo &entry, entries) {
+        QString name = entry.baseName();
+        if (!skiplist.contains(name)) {
+            foreach (const QString &importPath, engine->importPathList()) {
+                QString filePath = QDir(importPath + "/Qt/labs/" + targetPath).absoluteFilePath(entry.fileName());
+                if (QFile::exists(filePath)) {
+                    QTest::newRow(qPrintable(entry.dir().dirName() + "/" + entry.fileName())) << QUrl::fromLocalFile(filePath);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void tst_Sanity::attachedObjects()
 {
-    QFETCH(QString, control);
-    QFETCH(QString, filePath);
+    QFETCH(QUrl, url);
 
     QQmlComponent component(&engine);
-    component.loadUrl(QUrl::fromLocalFile(filePath));
+    component.loadUrl(url);
 
     QSet<QString> classNames;
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object.data());
+    QVERIFY2(object.data(), qPrintable(component.errorString()));
     foreach (QObject *object, *qt_qobjects) {
+        if (object->parent() == &engine)
+            continue; // allow "global" instances
         QString className = object->metaObject()->className();
         if (className.endsWith("Attached") || className.endsWith("Style"))
             QVERIFY2(!classNames.contains(className), qPrintable(QString("Multiple %1 instances").arg(className)));
@@ -267,12 +296,11 @@ void tst_Sanity::attachedObjects()
 
 void tst_Sanity::attachedObjects_data()
 {
-    QTest::addColumn<QString>("control");
-    QTest::addColumn<QString>("filePath");
-
-    QMap<QString, QString>::const_iterator it;
-    for (it = files.constBegin(); it != files.constEnd(); ++it)
-        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
+    QTest::addColumn<QUrl>("url");
+    addTestRows(&engine, "/calendar");
+    addTestRows(&engine, "/controls");
+    addTestRows(&engine, "/controls/material", QStringList() << "Ripple" << "SliderHandle");
+    addTestRows(&engine, "/controls/universal");
 }
 
 QTEST_MAIN(tst_Sanity)

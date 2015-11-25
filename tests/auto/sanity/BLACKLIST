@@ -18,15 +18,5 @@
 *
 [anchors:material/Switch.qml]
 *
-[attachedObjects:material/CheckBox.qml]
-*
 [attachedObjects:material/ItemDelegate.qml]
-*
-[attachedObjects:material/RadioButton.qml]
-*
-[attachedObjects:material/RangeSlider.qml]
-*
-[attachedObjects:material/Switch.qml]
-*
-[attachedObjects:material/Slider.qml]
 *
