@@ -1,8 +1,4 @@
-[signalHandlers:material/ItemDelegate.qml]
-*
 [signalHandlers:material/TextArea.qml]
 *
 [signalHandlers:material/TextField.qml]
-*
-[attachedObjects:material/ItemDelegate.qml]
 *

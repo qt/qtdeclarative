@@ -59,14 +59,25 @@ T.ItemDelegate {
         y: control.topPadding + (control.availableHeight - height) / 2
         implicitWidth: 20
         implicitHeight: 20
-        border.color: control.Material.secondaryTextColor
+        color: "transparent"
+        border.color: control.checked ? control.Material.accentColor : control.Material.secondaryTextColor
+        border.width: control.checked ? width / 2 : 2
         radius: 2
 
         visible: control.checkable
 
-        Component.onCompleted: {
-            color = control.checked || control.pressed ? control.Material.accentColor : "transparent";
-            border.width = control.checked || control.pressed ? 0 : 2;
+        Behavior on border.width {
+            NumberAnimation {
+                duration: 100
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 100
+                easing.type: Easing.OutCubic
+            }
         }
 
         Ripple {
@@ -82,96 +93,35 @@ T.ItemDelegate {
             id: checkImage
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
+            width: 16
+            height: 16
             source: "qrc:/qt-project.org/imports/Qt/labs/controls/material/images/check.png"
             fillMode: Image.PreserveAspectFit
 
-            Component.onCompleted: {
-                width = control.checked || control.pressed ? 16 : 0;
-                height = control.checked || control.pressed ? 16 : 0;
-            }
+            scale: control.checked ? 1 : 0
+            Behavior on scale { NumberAnimation { duration: 100 } }
         }
 
-        Connections {
-            target: control
-            onCheckedChanged: {
-                pressScaleAnimation.start();
-                if (control.checked)
-                    checkedAnimation.start();
-                else
-                    uncheckedAnimation.start();
-            }
+        states: State {
+            name: "checked"
+            when: control.checked
         }
 
-        SequentialAnimation {
-            id: pressScaleAnimation
-
-            NumberAnimation {
-                target: indicatorItem
-                property: "scale"
-                // Go down 2 pixels in size.
-                to: 1 - 2 / indicatorItem.width
-                duration: 120
-            }
-            NumberAnimation {
-                target: indicatorItem
-                property: "scale"
-                to: 1
-                duration: 120
-            }
-        }
-
-        SequentialAnimation {
-            id: checkedAnimation
-
-            PropertyAction {
-                target: indicatorItem.border
-                property: "color"
-                value: control.Material.accentColor
-            }
-            NumberAnimation {
-                target: indicatorItem.border
-                property: "width"
-                from: 2
-                to: indicatorItem.width / 2
-                easing.type: Easing.OutCubic
-                duration: 100
-            }
-            NumberAnimation {
-                target: checkImage
-                properties: "width, height"
-                from: 0
-                to: 16
-                duration: 100
-            }
-        }
-
-        SequentialAnimation {
-            id: uncheckedAnimation
-
-            PropertyAction {
-                target: indicatorItem.border
-                property: "color"
-                value: control.Material.secondaryTextColor
-            }
-            NumberAnimation {
-                target: checkImage
-                properties: "width, height"
-                from: 16
-                to: 0
-                duration: 100
-            }
-            NumberAnimation {
-                target: indicatorItem.border
-                property: "width"
-                from: indicatorItem.width / 2
-                to: 2
-                easing.type: Easing.OutCubic
-                duration: 100
-            }
-            PropertyAction {
-                target: indicatorItem
-                property: "color"
-                value: "transparent"
+        transitions: Transition {
+            SequentialAnimation {
+                NumberAnimation {
+                    target: indicatorItem
+                    property: "scale"
+                    // Go down 2 pixels in size.
+                    to: 1 - 2 / indicatorItem.width
+                    duration: 120
+                }
+                NumberAnimation {
+                    target: indicatorItem
+                    property: "scale"
+                    to: 1
+                    duration: 120
+                }
             }
         }
     }
