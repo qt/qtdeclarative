@@ -40,12 +40,15 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QtCore/private/qabstractanimation_p.h>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
+
+    QUnifiedTimer::instance()->setSlowModeEnabled(app.arguments().contains("-slow"));
 
     // These must be set before running.
     // TODO: move style selection into app UI and use settings to save choices.
