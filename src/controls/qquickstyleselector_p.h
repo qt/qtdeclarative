@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt.io/licensing/
 **
@@ -31,8 +32,8 @@
 **
 ****************************************************************************/
 
-#ifndef QFILESELECTOR_P_H
-#define QFILESELECTOR_P_H
+#ifndef QQUICKSTYLESELECTOR_P_H
+#define QQUICKSTYLESELECTOR_P_H
 
 //
 //  W A R N I N G
@@ -45,35 +46,35 @@
 // We mean it.
 //
 
-#include <QtCore/QString>
-#include <QtCore/QUrl>
-#include <private/qobject_p.h>
-
-#include "qquickfileselector_p.h"
+#include <QtCore/QObject>
+#include <QtCore/QStringList>
 
 QT_BEGIN_NAMESPACE
 
-struct QQuickFileSelectorSharedData //Not QSharedData because currently is just a global store
+class QQuickStyleSelectorPrivate;
+class QQuickStyleSelector : public QObject
 {
-    QStringList staticSelectors;
-    QStringList preloadedStatics;
-};
-
-class QQuickFileSelectorPrivate : QObjectPrivate //Exported for use in other modules (like QtGui)
-{
-    Q_DECLARE_PUBLIC(QQuickFileSelector)
+    Q_OBJECT
 public:
-    static void updateSelectors();
-    static QStringList platformSelectors();
-    static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
-    QQuickFileSelectorPrivate();
+    explicit QQuickStyleSelector(QObject *parent = Q_NULLPTR);
+    ~QQuickStyleSelector();
+
     QString select(const QString &filePath) const;
 
-    QString style;
-    QUrl baseUrl;
+    QString style() const;
+    void setStyle(const QString &s);
+
+    QStringList allSelectors() const;
+
+    void setBaseUrl(const QUrl &base);
+    QUrl baseUrl() const;
+
+private:
+    QUrl select(const QUrl &filePath) const;
+
+    Q_DECLARE_PRIVATE(QQuickStyleSelector)
 };
 
 QT_END_NAMESPACE
 
-#endif
-
+#endif // QQUICKSTYLESELECTOR_P_H

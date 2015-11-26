@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt.io/licensing/
 **
@@ -31,8 +32,8 @@
 **
 ****************************************************************************/
 
-#include "qquickfileselector_p.h"
-#include "qquickfileselector_p_p.h"
+#include "qquickstyleselector_p.h"
+#include "qquickstyleselector_p_p.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QDir>
@@ -48,26 +49,26 @@ QT_BEGIN_NAMESPACE
 //Environment variable to allow tooling full control of file selectors
 static const char env_override[] = "QT_LABS_CONTROLS_NO_STYLE";
 
-Q_GLOBAL_STATIC(QQuickFileSelectorSharedData, sharedData);
+Q_GLOBAL_STATIC(QQuickStyleSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
 
-QQuickFileSelectorPrivate::QQuickFileSelectorPrivate()
+QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
     : QObjectPrivate()
 {
 }
 
-QQuickFileSelector::QQuickFileSelector(QObject *parent)
-    : QObject(*(new QQuickFileSelectorPrivate()), parent)
+QQuickStyleSelector::QQuickStyleSelector(QObject *parent)
+    : QObject(*(new QQuickStyleSelectorPrivate()), parent)
 {
 }
 
-QQuickFileSelector::~QQuickFileSelector()
+QQuickStyleSelector::~QQuickStyleSelector()
 {
 }
 
-QString QQuickFileSelector::select(const QString &filePath) const
+QString QQuickStyleSelector::select(const QString &filePath) const
 {
-    Q_D(const QQuickFileSelector);
+    Q_D(const QQuickStyleSelector);
     return select(QUrl(d->baseUrl.toString() + filePath)).toString();
 }
 
@@ -80,9 +81,9 @@ static bool isLocalScheme(const QString &file)
     return local;
 }
 
-QUrl QQuickFileSelector::select(const QUrl &filePath) const
+QUrl QQuickStyleSelector::select(const QUrl &filePath) const
 {
-    Q_D(const QQuickFileSelector);
+    Q_D(const QQuickStyleSelector);
     if (!isLocalScheme(filePath.scheme()) && !filePath.isLocalFile())
         return filePath;
     QUrl ret(filePath);
@@ -122,9 +123,9 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     return path + fileName;
 }
 
-QString QQuickFileSelectorPrivate::select(const QString &filePath) const
+QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
 {
-    Q_Q(const QQuickFileSelector);
+    Q_Q(const QQuickStyleSelector);
     QFileInfo fi(filePath);
     // If file doesn't exist, don't select
     if (!fi.exists())
@@ -138,40 +139,40 @@ QString QQuickFileSelectorPrivate::select(const QString &filePath) const
     return filePath;
 }
 
-QString QQuickFileSelector::style() const
+QString QQuickStyleSelector::style() const
 {
-    Q_D(const QQuickFileSelector);
+    Q_D(const QQuickStyleSelector);
     return d->style;
 }
 
-void QQuickFileSelector::setStyle(const QString &s)
+void QQuickStyleSelector::setStyle(const QString &s)
 {
-    Q_D(QQuickFileSelector);
+    Q_D(QQuickStyleSelector);
     d->style = s;
 }
 
-QStringList QQuickFileSelector::allSelectors() const
+QStringList QQuickStyleSelector::allSelectors() const
 {
-    Q_D(const QQuickFileSelector);
+    Q_D(const QQuickStyleSelector);
     QMutexLocker locker(&sharedDataMutex);
-    QQuickFileSelectorPrivate::updateSelectors();
+    QQuickStyleSelectorPrivate::updateSelectors();
     return QStringList(d->style) + sharedData->staticSelectors;
 }
 
-void QQuickFileSelector::setBaseUrl(const QUrl &base)
+void QQuickStyleSelector::setBaseUrl(const QUrl &base)
 {
-    Q_D(QQuickFileSelector);
+    Q_D(QQuickStyleSelector);
     if (d->baseUrl != base)
         d->baseUrl = base;
 }
 
-QUrl QQuickFileSelector::baseUrl() const
+QUrl QQuickStyleSelector::baseUrl() const
 {
-    Q_D(const QQuickFileSelector);
+    Q_D(const QQuickStyleSelector);
     return d->baseUrl;
 }
 
-void QQuickFileSelectorPrivate::updateSelectors()
+void QQuickStyleSelectorPrivate::updateSelectors()
 {
     if (!sharedData->staticSelectors.isEmpty())
         return; //Already loaded
@@ -193,7 +194,7 @@ void QQuickFileSelectorPrivate::updateSelectors()
     sharedData->staticSelectors << platformSelectors();
 }
 
-QStringList QQuickFileSelectorPrivate::platformSelectors()
+QStringList QQuickStyleSelectorPrivate::platformSelectors()
 {
     // similar, but not identical to QSysInfo::osType
     QStringList ret;
@@ -223,7 +224,7 @@ QStringList QQuickFileSelectorPrivate::platformSelectors()
     return ret;
 }
 
-void QQuickFileSelectorPrivate::addStatics(const QStringList &statics)
+void QQuickStyleSelectorPrivate::addStatics(const QStringList &statics)
 {
     QMutexLocker locker(&sharedDataMutex);
     sharedData->preloadedStatics << statics;
@@ -231,4 +232,4 @@ void QQuickFileSelectorPrivate::addStatics(const QStringList &statics)
 
 QT_END_NAMESPACE
 
-#include "moc_qquickfileselector_p.cpp"
+#include "moc_qquickstyleselector_p.cpp"

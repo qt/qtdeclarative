@@ -40,9 +40,9 @@
 #include <QtGui/private/qguiapplication_p.h>
 
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
+#include <QtLabsControls/private/qquickstyleselector_p.h>
 
 #include "qquicktheme_p.h"
-#include "qquickfileselector_p.h"
 
 void initResources()
 {
@@ -71,7 +71,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     QString styleOverride = QGuiApplicationPrivate::styleOverride;
 
     // TODO: read the style from application manifest file
-    QQuickFileSelector selector;
+    QQuickStyleSelector selector;
     selector.setBaseUrl(baseUrl());
 
     if (!styleOverride.isEmpty())

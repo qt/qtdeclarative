@@ -29,12 +29,9 @@ QML_FILES = \
     Tumbler.qml
 
 HEADERS += \
-    $$PWD/qquickfileselector_p.h \
-    $$PWD/qquickfileselector_p_p.h \
     $$PWD/qquickthemedata_p.h \
     $$PWD/qquicktheme_p.h
 
 SOURCES += \
-    $$PWD/qquickfileselector.cpp \
     $$PWD/qquicktheme.cpp \
     $$PWD/qquickthemedata.cpp
