@@ -42,7 +42,7 @@
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
-void initResources()
+static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabscontrolsplugin);
 }

@@ -39,7 +39,7 @@
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialprogressring_p.h"
 
-void initResources()
+static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabsmaterialstyleplugin);
 }

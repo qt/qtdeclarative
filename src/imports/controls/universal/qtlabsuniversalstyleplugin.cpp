@@ -40,7 +40,7 @@
 #include "qquickuniversalprogressstrip_p.h"
 #include "qquickuniversalstyle_p.h"
 
-void initResources()
+static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabsuniversalstyleplugin);
 }
