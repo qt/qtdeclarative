@@ -217,9 +217,6 @@ public:
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
 
-    inline void setDebugChangesCache(const QHash<QUrl, QByteArray> &changes);
-    inline QHash<QUrl, QByteArray> debugChangesCache();
-
     void sendQuit();
     void warning(const QQmlError &);
     void warning(const QList<QQmlError> &);
@@ -259,7 +256,6 @@ private:
     QHash<QPair<QQmlType *, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;
     QHash<int, QQmlCompiledData *> m_compositeTypes;
-    QHash<QUrl, QByteArray> debugChangesHash;
     static bool s_designerMode;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex
@@ -402,19 +398,6 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
     if (!qmlEngine)
         return 0;
     return get(qmlEngine);
-}
-
-void QQmlEnginePrivate::setDebugChangesCache(const QHash<QUrl, QByteArray> &changes)
-{
-    Locker locker(this);
-    foreach (const QUrl &key, changes.keys())
-        debugChangesHash.insert(key, changes.value(key));
-}
-
-QHash<QUrl, QByteArray> QQmlEnginePrivate::debugChangesCache()
-{
-    Locker locker(this);
-    return debugChangesHash;
 }
 
 QT_END_NAMESPACE
