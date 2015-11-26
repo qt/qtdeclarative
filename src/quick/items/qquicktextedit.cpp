@@ -508,7 +508,7 @@ void QQuickTextEdit::setFont(const QFont &font)
         updateSize();
         updateWholeDocument();
 #ifndef QT_NO_IM
-        updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
+        updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle | Qt::ImFont);
 #endif
     }
     emit fontChanged(d->sourceFont);
@@ -1670,6 +1670,7 @@ void QQuickTextEdit::select(int start, int end)
 
     // QTBUG-11100
     updateSelection();
+    updateInputMethod();
 }
 
 /*!
@@ -1842,7 +1843,11 @@ QVariant QQuickTextEdit::inputMethodQuery(Qt::InputMethodQuery property, QVarian
         v = (int)d->effectiveInputMethodHints();
         break;
     default:
+        if (property == Qt::ImCursorPosition && !argument.isNull())
+            argument = QVariant(argument.toPointF() - QPointF(d->xoff, d->yoff));
         v = d->control->inputMethodQuery(property, argument);
+        if (property == Qt::ImCursorRectangle || property == Qt::ImAnchorRectangle)
+            v = QVariant(v.toRectF().translated(d->xoff, d->yoff));
         break;
     }
     return v;

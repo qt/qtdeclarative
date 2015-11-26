@@ -340,6 +340,8 @@ public:
     int selectionStart() const { return hasSelectedText() ? m_selstart : -1; }
     int selectionEnd() const { return hasSelectedText() ? m_selend : -1; }
 
+    QRectF anchorRectangle() const;
+
     int positionAt(qreal x, qreal y, QTextLine::CursorPosition position) const;
     int positionAt(const QPointF &point, QTextLine::CursorPosition position = QTextLine::CursorBetweenCharacters) const {
         return positionAt(point.x(), point.y(), position);

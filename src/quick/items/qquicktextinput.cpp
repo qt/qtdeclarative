@@ -369,7 +369,7 @@ void QQuickTextInput::setFont(const QFont &font)
         d->updateLayout();
         updateCursorRectangle();
 #ifndef QT_NO_IM
-        updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont);
+        updateInputMethod(Qt::ImCursorRectangle | Qt::ImFont | Qt::ImAnchorRectangle);
 #endif
     }
     emit fontChanged(d->sourceFont);
@@ -1004,6 +1004,36 @@ void QQuickTextInput::q_validatorChanged()
     d->checkIsValid();
 }
 #endif // QT_NO_VALIDATOR
+
+QRectF QQuickTextInputPrivate::anchorRectangle() const
+{
+    QRectF rect;
+    int a;
+    // Unfortunately we cannot use selectionStart() and selectionEnd()
+    // since they always assume that the selectionStart is logically before selectionEnd.
+    // To rely on that would cause havoc if the user was interactively moving the end selection
+    // handle to become before the start selection
+    if (m_selstart == m_selend)
+        // This is to handle the case when there is "no selection" while moving the handle onto the
+        // same position as the other handle (in which case it would hide the selection handles)
+        a = m_cursor;
+    else
+        a = m_selstart == m_cursor ? m_selend : m_selstart;
+    if (a >= 0) {
+#ifndef QT_NO_IM
+        a += m_preeditCursor;
+#endif
+        if (m_echoMode == QQuickTextInput::NoEcho)
+            a = 0;
+        QTextLine l = m_textLayout.lineForTextPosition(a);
+        if (l.isValid()) {
+            qreal x = l.cursorToX(a) - hscroll;
+            qreal y = l.y() - vscroll;
+            rect.setRect(x, y, 1, l.height());
+        }
+    }
+    return rect;
+}
 
 void QQuickTextInputPrivate::checkIsValid()
 {
@@ -1813,10 +1843,16 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, QVaria
         return QVariant((int) d->effectiveInputMethodHints());
     case Qt::ImCursorRectangle:
         return cursorRectangle();
+    case Qt::ImAnchorRectangle:
+        return d->anchorRectangle();
     case Qt::ImFont:
         return font();
-    case Qt::ImCursorPosition:
+    case Qt::ImCursorPosition: {
+        const QPointF pt = argument.toPointF();
+        if (!pt.isNull())
+            return QVariant(d->positionAt(pt));
         return QVariant(d->m_cursor);
+    }
     case Qt::ImSurroundingText:
         if (d->m_echoMode == PasswordEchoOnEdit && !d->m_passwordEchoEditing) {
             return QVariant(displayText());
@@ -2613,7 +2649,7 @@ void QQuickTextInput::updateCursorRectangle(bool scroll)
         d->cursorItem->setHeight(r.height());
     }
 #ifndef QT_NO_IM
-    updateInputMethod(Qt::ImCursorRectangle);
+    updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle);
 #endif
 }
 
@@ -3147,8 +3183,8 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
     emit q->selectionChanged();
     emitCursorPositionChanged();
 #ifndef QT_NO_IM
-    q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorPosition
-                        | Qt::ImCursorPosition | Qt::ImCurrentSelection);
+    q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle | Qt::ImCursorPosition | Qt::ImAnchorPosition
+                       | Qt::ImCurrentSelection);
 #endif
 }
 
@@ -3346,8 +3382,8 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
 
     if (selectionChange) {
         emit q->selectionChanged();
-        q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorPosition
-                            | Qt::ImCursorPosition | Qt::ImCurrentSelection);
+        q->updateInputMethod(Qt::ImCursorRectangle | Qt::ImAnchorRectangle
+                            | Qt::ImCurrentSelection);
     }
 }
 #endif // QT_NO_IM
