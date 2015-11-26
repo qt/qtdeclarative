@@ -71,6 +71,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType(selector->select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
     qmlRegisterType(selector->select(QStringLiteral("/Button.qml")), uri, 1, 0, "Button");
     qmlRegisterType(selector->select(QStringLiteral("/CheckBox.qml")), uri, 1, 0, "CheckBox");
+    qmlRegisterType(selector->select(QStringLiteral("/ComboBox.qml")), uri, 1, 0, "ComboBox");
     qmlRegisterType(selector->select(QStringLiteral("/Dial.qml")), uri, 1, 0, "Dial");
     qmlRegisterType(selector->select(QStringLiteral("/Drawer.qml")), uri, 1, 0, "Drawer");
     qmlRegisterType(selector->select(QStringLiteral("/Frame.qml")), uri, 1, 0, "Frame");

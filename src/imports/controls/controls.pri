@@ -3,6 +3,7 @@ QML_FILES = \
     BusyIndicator.qml \
     Button.qml \
     CheckBox.qml \
+    ComboBox.qml \
     Dial.qml \
     Drawer.qml \
     Frame.qml \

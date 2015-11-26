@@ -406,6 +406,40 @@ ApplicationWindow {
             }
 
             RowLayout {
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalComboBox.implicitHeight
+
+                    ComboBox {
+                        id: normalComboBox
+                        model: 5
+                    }
+                }
+
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalComboBox.implicitHeight
+
+                    ComboBox {
+                        pressed: true
+                        model: ListModel {
+                            ListElement { text: "Pressed" }
+                        }
+                    }
+                }
+
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalComboBox.implicitHeight
+
+                    ComboBox {
+                        enabled: false
+                        model: ["Disabled"]
+                    }
+                }
+            }
+
+            RowLayout {
                 GroupBox {
                     id: normalGroupBox
                     title: "Normal"

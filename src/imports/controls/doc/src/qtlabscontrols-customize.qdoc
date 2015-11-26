@@ -95,6 +95,38 @@
 
             \snippet CheckBox.qml indicator
 
+
+    \section1 Customizing ComboBox
+
+        ComboBox consists of \l {Control::background}{background},
+        \l {Control::contentItem}{content item}, \l {ComboBox::panel}{panel},
+        and \l {ComboBox::delegate}{delegate}.
+
+        \section3 Background
+
+            \image qtlabscontrols-combobox-background.png
+
+            \snippet ComboBox.qml background
+
+        \section3 Content item
+
+            \image qtlabscontrols-combobox-contentItem.png
+
+            \snippet ComboBox.qml contentItem
+
+        \section3 Panel
+
+            \image qtlabscontrols-combobox-panel.png
+
+            \snippet ComboBox.qml panel
+
+        \section3 Delegate
+
+            \image qtlabscontrols-combobox-delegate.png
+
+            \snippet ComboBox.qml delegate
+
+
     \section1 Customizing Dial
 
         Dial consists of two visual items: \l {Control::background}{background}

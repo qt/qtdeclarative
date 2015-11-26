@@ -1,0 +1,553 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the test suite of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:BSD$
+** You may use this file under the terms of the BSD license as follows:
+**
+** "Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are
+** met:
+**   * Redistributions of source code must retain the above copyright
+**     notice, this list of conditions and the following disclaimer.
+**   * Redistributions in binary form must reproduce the above copyright
+**     notice, this list of conditions and the following disclaimer in
+**     the documentation and/or other materials provided with the
+**     distribution.
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
+**     from this software without specific prior written permission.
+**
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+import QtQuick 2.2
+import QtTest 1.0
+import Qt.labs.controls 1.0
+
+TestCase {
+    id: testCase
+    name: "ComboBox"
+
+    ApplicationWindow {
+        id: window
+        visible: true
+        width: 400
+        height: 400
+    }
+
+    SignalSpy {
+        id: activatedSpy
+        signalName: "activated"
+    }
+
+    SignalSpy {
+        id: highlightedSpy
+        signalName: "highlighted"
+    }
+
+    Component {
+        id: comboBox
+        ComboBox {
+            delegate: ItemDelegate {
+                width: parent.width
+            }
+        }
+    }
+
+    function initTestCase() {
+        window.requestActivate()
+        tryCompare(window, "active", true)
+    }
+
+    function init() {
+        verify(!activatedSpy.target)
+        compare(activatedSpy.count, 0)
+
+        verify(!highlightedSpy.target)
+        compare(highlightedSpy.count, 0)
+    }
+
+    function cleanup() {
+        activatedSpy.target = null
+        activatedSpy.clear()
+
+        highlightedSpy.target = null
+        highlightedSpy.clear()
+    }
+
+    function test_defaults() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        compare(control.count, 0)
+        compare(control.model, undefined)
+        compare(control.pressed, false)
+        compare(control.currentIndex, -1)
+        compare(control.highlightedIndex, -1)
+        compare(control.currentText, "")
+        verify(control.delegate)
+        verify(control.panel)
+
+        control.destroy()
+    }
+
+    function test_array() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        var items = [ "Banana", "Apple", "Coconut" ]
+
+        control.model = items
+        compare(control.model, items)
+
+        compare(control.count, 3)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "Banana")
+
+        control.currentIndex = 2
+        compare(control.currentIndex, 2)
+        compare(control.currentText, "Coconut")
+
+        control.model = null
+        compare(control.model, null)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+
+        control.destroy()
+    }
+
+    function test_number() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        control.model = 10
+        compare(control.model, 10)
+
+        compare(control.count, 10)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "0")
+
+        control.currentIndex = 9
+        compare(control.currentIndex, 9)
+        compare(control.currentText, "9")
+
+        control.model = 0
+        compare(control.model, 0)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+
+        control.destroy()
+    }
+
+    ListModel {
+        id: listmodel
+        ListElement { text: "First" }
+        ListElement { text: "Second" }
+        ListElement { text: "Third" }
+        ListElement { text: "Fourth" }
+        ListElement { text: "Fifth" }
+    }
+
+    function test_listModel() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        control.model = listmodel
+        compare(control.model, listmodel)
+
+        compare(control.count, 5)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "First")
+
+        control.currentIndex = 2
+        compare(control.currentIndex, 2)
+        compare(control.currentText, "Third")
+
+        control.model = undefined
+        compare(control.model, undefined)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+
+        control.destroy()
+    }
+
+    ListModel {
+        id: fruitmodel
+        ListElement { name: "Apple"; color: "red" }
+        ListElement { name: "Orange"; color: "orange" }
+        ListElement { name: "Banana"; color: "yellow" }
+    }
+
+    function test_textRole() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        control.model = fruitmodel
+        compare(control.count, 3)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "")
+
+        control.textRole = "name"
+        compare(control.currentText, "Apple")
+
+        control.textRole = "color"
+        compare(control.currentText, "red")
+
+        control.currentIndex = 1
+        compare(control.currentIndex, 1)
+        compare(control.currentText, "orange")
+
+        control.textRole = "name"
+        compare(control.currentText, "Orange")
+
+        control.textRole = ""
+        compare(control.currentText, "")
+
+        control.destroy()
+    }
+
+    function test_textAt() {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        control.model = ["Apple", "Orange", "Banana"]
+        compare(control.textAt(0), "Apple")
+        compare(control.textAt(1), "Orange")
+        compare(control.textAt(2), "Banana")
+        compare(control.textAt(-1), "") // TODO: null?
+        compare(control.textAt(5), "") // TODO: null?
+
+        control.destroy()
+    }
+
+    function test_find_data() {
+        return [
+            { tag: "Banana (MatchExactly)", term: "Banana", flags: Qt.MatchExactly, index: 0 },
+            { tag: "banana (MatchExactly)", term: "banana", flags: Qt.MatchExactly, index: 1 },
+            { tag: "bananas (MatchExactly)", term: "bananas", flags: Qt.MatchExactly, index: -1 },
+            { tag: "Cocomuffin (MatchExactly)", term: "Cocomuffin", flags: Qt.MatchExactly, index: 4 },
+
+            { tag: "b(an)+a (MatchRegExp)", term: "B(an)+a", flags: Qt.MatchRegExp, index: 0 },
+            { tag: "b(an)+a (MatchRegExp|MatchCaseSensitive)", term: "b(an)+a", flags: Qt.MatchRegExp | Qt.MatchCaseSensitive, index: 1 },
+            { tag: "[coc]+\\w+ (MatchRegExp)", term: "[coc]+\\w+", flags: Qt.MatchRegExp, index: 2 },
+
+            { tag: "?pp* (MatchWildcard)", term: "?pp*", flags: Qt.MatchWildcard, index: 3 },
+            { tag: "app* (MatchWildcard|MatchCaseSensitive)", term: "app*", flags: Qt.MatchWildcard | Qt.MatchCaseSensitive, index: -1 },
+
+            { tag: "Banana (MatchFixedString)", term: "Banana", flags: Qt.MatchFixedString, index: 0 },
+            { tag: "banana (MatchFixedString|MatchCaseSensitive)", term: "banana", flags: Qt.MatchFixedString | Qt.MatchCaseSensitive, index: 1 },
+
+            { tag: "coco (MatchStartsWith)", term: "coco", flags: Qt.MatchStartsWith, index: 2 },
+            { tag: "coco (MatchStartsWith|MatchCaseSensitive)", term: "coco", flags: Qt.StartsWith | Qt.MatchCaseSensitive, index: -1 },
+
+            { tag: "MUFFIN (MatchEndsWith)", term: "MUFFIN", flags: Qt.MatchEndsWith, index: 4 },
+            { tag: "MUFFIN (MatchEndsWith|MatchCaseSensitive)", term: "MUFFIN", flags: Qt.MatchEndsWith | Qt.MatchCaseSensitive, index: -1 },
+
+            { tag: "Con (MatchContains)", term: "Con", flags: Qt.MatchContains, index: 2 },
+            { tag: "Con (MatchContains|MatchCaseSensitive)", term: "Con", flags: Qt.MatchContains | Qt.MatchCaseSensitive, index: -1 },
+        ]
+    }
+
+    function test_find(data) {
+        var control = comboBox.createObject(window.contentItem)
+        verify(control)
+
+        control.model = ["Banana", "banana", "Coconut", "Apple", "Cocomuffin"]
+
+        compare(control.find(data.term, data.flags), data.index)
+
+        control.destroy()
+    }
+
+    function test_arrowKeys() {
+        var control = comboBox.createObject(window.contentItem, {model: 3})
+        verify(control)
+
+        activatedSpy.target = control
+        verify(activatedSpy.valid)
+
+        highlightedSpy.target = control
+        verify(highlightedSpy.valid)
+
+        waitForRendering(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, -1)
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 1)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 1)
+        compare(activatedSpy.signalArguments[0][0], 1)
+        activatedSpy.clear()
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 2)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 1)
+        compare(activatedSpy.signalArguments[0][0], 2)
+        activatedSpy.clear()
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 2)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 0)
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 1)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 1)
+        compare(activatedSpy.signalArguments[0][0], 1)
+        activatedSpy.clear()
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 1)
+        compare(activatedSpy.signalArguments[0][0], 0)
+        activatedSpy.clear()
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, -1)
+        compare(highlightedSpy.count, 0)
+        compare(activatedSpy.count, 0)
+
+        // show panel
+        keyClick(Qt.Key_Space)
+
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 0)
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 1)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 2)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 2)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 2)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 1)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 0)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 0)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 0)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 1)
+        highlightedSpy.clear()
+
+        // hide panel
+        keyClick(Qt.Key_Space)
+
+        compare(control.currentIndex, 1)
+        compare(control.highlightedIndex, -1)
+
+        control.destroy()
+    }
+
+    function test_keys_data() {
+        return [
+            { tag: "space-space", key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "space-enter", key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "space-return", key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
+            { tag: "space-escape", key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
+            { tag: "space-0", key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
+
+            { tag: "enter-enter", key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+            { tag: "return-return", key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+            { tag: "escape-escape", key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
+        ]
+    }
+
+    function test_keys(data) {
+        var control = comboBox.createObject(window.contentItem, {model: 3})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        compare(control.pressed, false)
+        compare(control.panel.visible, false)
+
+        // show panel
+        keyPress(data.key1)
+        compare(control.pressed, data.showPress)
+        compare(control.panel.visible, false)
+        keyRelease(data.key1)
+        compare(control.pressed, false)
+        compare(control.panel.visible, data.showPopup)
+
+        // hide panel
+        keyPress(data.key2)
+        compare(control.pressed, data.hidePress)
+        compare(control.panel.visible, data.showPopup)
+        keyRelease(data.key2)
+        compare(control.pressed, false)
+        compare(control.panel.visible, !data.hidePopup)
+
+        control.destroy()
+    }
+
+    function test_panel() {
+        var control = comboBox.createObject(window.contentItem, {model: 3})
+        verify(control)
+
+        // show below
+        mousePress(control)
+        compare(control.pressed, true)
+        compare(control.panel.visible, false)
+        mouseRelease(control)
+        compare(control.pressed, false)
+        compare(control.panel.visible, true)
+        verify(control.panel.contentItem.y >= control.y)
+
+        // hide
+        mouseClick(control)
+        compare(control.pressed, false)
+        compare(control.panel.visible, false)
+
+        // show above
+        control.y = window.height - control.height
+        mousePress(control)
+        compare(control.pressed, true)
+        compare(control.panel.visible, false)
+        mouseRelease(control)
+        compare(control.pressed, false)
+        compare(control.panel.visible, true)
+        verify(control.panel.contentItem.y < control.y)
+
+        control.destroy()
+    }
+
+    function test_mouse() {
+        var control = comboBox.createObject(window.contentItem, {model: 3})
+        verify(control)
+
+        activatedSpy.target = control
+        verify(activatedSpy.valid)
+
+        highlightedSpy.target = control
+        verify(highlightedSpy.valid)
+
+        mouseClick(control)
+        compare(control.panel.visible, true)
+
+        var content = control.panel.contentItem
+        waitForRendering(content)
+
+        // press - move - release outside - not activated - not closed
+        mousePress(content)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        mouseMove(content, content.width * 2)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        mouseRelease(content, content.width * 2)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        compare(control.panel.visible, true)
+
+        // press - move - release inside - activated - closed
+        mousePress(content)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        mouseMove(content, content.width / 2 + 1, content.height / 2 + 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 0)
+        mouseRelease(content)
+        compare(activatedSpy.count, 1)
+        compare(highlightedSpy.count, 1)
+        compare(control.panel.visible, false)
+
+        control.destroy()
+    }
+
+    function test_focus() {
+        var control = comboBox.createObject(window.contentItem, {model: 3})
+        verify(control)
+
+        // click - gain focus - show panel
+        mouseClick(control)
+        verify(control.activeFocus)
+        compare(control.panel.visible, true)
+
+        // lose focus - hide panel
+        window.contentItem.forceActiveFocus()
+        verify(window.contentItem.activeFocus)
+        verify(!control.activeFocus)
+        compare(control.panel.visible, false)
+
+        control.destroy()
+    }
+
+    function test_baseline() {
+        var control = comboBox.createObject(testCase)
+        verify(control)
+        compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
+        control.destroy()
+    }
+}

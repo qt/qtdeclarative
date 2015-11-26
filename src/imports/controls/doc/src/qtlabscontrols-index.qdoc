@@ -219,6 +219,9 @@
         \li \l [QtQuickControls] {CheckBox}
         \li \l [QtLabsControls] {CheckBox}
     \row
+        \li \l [QtQuickControls] {ComboBox}
+        \li \l [QtLabsControls] {ComboBox}
+    \row
         \li \l [QtQuickControls] {ExclusiveGroup}
         \li \l [QtLabsControls] {ButtonGroup}
     \row

@@ -41,6 +41,7 @@
 #include <QtLabsTemplates/private/qquickbusyindicator_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
 #include <QtLabsTemplates/private/qquickcheckbox_p.h>
+#include <QtLabsTemplates/private/qquickcombobox_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
 #include <QtLabsTemplates/private/qquickcontainer_p.h>
 #include <QtLabsTemplates/private/qquickdial_p.h>
@@ -90,6 +91,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
+    qmlRegisterType<QQuickComboBox>(uri, 1, 0, "ComboBox");
     qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
     qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
     qmlRegisterType<QQuickDial>(uri, 1, 0, "Dial");

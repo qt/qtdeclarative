@@ -3,6 +3,7 @@ QML_FILES += \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
+    $$PWD/ComboBox.qml \
     $$PWD/Dial.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
