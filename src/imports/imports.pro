@@ -1,9 +1,9 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     controls \
-    controls/material/material.pro \
     calendar \
     templates
 
 SUBDIRS += \
+    controls/material/material.pro \
     controls/universal/universal.pro
