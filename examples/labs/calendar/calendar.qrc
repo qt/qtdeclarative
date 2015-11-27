@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>main.qml</file>
-        <file>DateTimePicker.qml</file>
-        <file>TumblerDelegate.qml</file>
-        <file>EventView.qml</file>
-    </qresource>
-</RCC>
