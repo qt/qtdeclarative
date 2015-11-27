@@ -5,12 +5,6 @@
 /lib
 /mkspecs
 
-/examples/labs/calendar/calendar
-/examples/labs/controls/mirroring/mirroring
-/examples/labs/controls/theme/theme
-/examples/labs/controls/tabs/tabs
-/examples/labs/controls/drawer/drawer
-
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/activeFocusOnTab/tst_activeFocusOnTab
 /tests/auto/applicationwindow/tst_applicationwindow
@@ -20,7 +14,6 @@
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
 /tests/auto/styles/tst_styles
-/tests/auto/theme/tst_theme
 /tests/auto/universal/tst_universal
 /tests/benchmarks/creationtime/tst_creationtime
 /tests/benchmarks/objectcount/tst_objectcount
