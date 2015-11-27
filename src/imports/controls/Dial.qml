@@ -66,6 +66,7 @@ T.Dial {
         width: 14
         height: 10
         source: "qrc:/images/dial-indicator.png"
+        antialiasing: true
         transform: [
             Translate {
                 y: -background.height * 0.4
