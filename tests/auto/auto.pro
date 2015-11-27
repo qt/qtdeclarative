@@ -5,6 +5,7 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    material \
     pressandhold \
     sanity \
     snippets \
