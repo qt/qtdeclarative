@@ -26,7 +26,6 @@
 /tests/benchmarks/objectcount/tst_objectcount
 /tests/manual/fonts/fonts
 /tests/manual/gifs/tst_gifs
-/tests/manual/pop-o-rama/pop-o-rama
 /tests/manual/testbench/testbench
 
 /tests/auto/snippets/screenshots/*.png
