@@ -46,9 +46,6 @@
 
 QT_BEGIN_NAMESPACE
 
-//Environment variable to allow tooling full control of file selectors
-static const char env_override[] = "QT_LABS_CONTROLS_NO_STYLE";
-
 Q_GLOBAL_STATIC(QQuickStyleSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
 
@@ -182,9 +179,6 @@ void QQuickStyleSelectorPrivate::updateSelectors()
                                 .split(pathSep, QString::SkipEmptyParts);
     if (envSelectors.count())
         sharedData->staticSelectors << envSelectors;
-
-    if (!qEnvironmentVariableIsEmpty(env_override))
-        return;
 
     sharedData->staticSelectors << sharedData->preloadedStatics; //Potential for static selectors from other modules
 
