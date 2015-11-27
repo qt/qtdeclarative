@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.ScrollIndicator {
@@ -55,7 +54,7 @@ T.ScrollIndicator {
         implicitWidth: 2
         implicitHeight: 2
 
-        color: control.Theme.frameColor
+        color: "#bdbebf"
         visible: control.size < 1.0
         opacity: 0.0
 

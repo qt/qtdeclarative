@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.TextArea {
@@ -50,9 +49,9 @@ T.TextArea {
 
     padding: 6
 
-    color: enabled ? Theme.textColor : Theme.disabledColor
-    selectionColor: Theme.selectionColor
-    selectedTextColor: Theme.selectedTextColor
+    color: enabled ? "#26282a" : "#c2c2c2"
+//    selectionColor: TODO
+//    selectedTextColor: TODO
 
     Text {
         id: placeholder
@@ -63,7 +62,7 @@ T.TextArea {
 
         text: control.placeholderText
         font: control.font
-        color: control.Theme.disabledColor
+        color: "#c2c2c2"
         horizontalAlignment: control.horizontalAlignment
         verticalAlignment: control.verticalAlignment
         visible: !control.length && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)

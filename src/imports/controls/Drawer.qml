@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Drawer {
@@ -46,7 +45,7 @@ T.Drawer {
 
     //! [background]
     background: Rectangle {
-        color: control.Theme.shadowColor
+        color: "#28282a"
         opacity: position * 0.75
     }
     //! [background]

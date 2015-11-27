@@ -9,5 +9,4 @@ SUBDIRS += \
     sanity \
     snippets \
     styles \
-    theme \
     universal

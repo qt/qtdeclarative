@@ -42,8 +42,6 @@
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
-#include "qquicktheme_p.h"
-
 void initResources()
 {
     Q_INIT_RESOURCE(qtlabscontrolsplugin);
@@ -63,8 +61,6 @@ public:
 
 void QtLabsControlsPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickThemeAttached>(uri, 1, 0, "Theme", tr("Theme is an attached property"));
-
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
 

@@ -27,11 +27,3 @@ QML_FILES = \
     ToolBar.qml \
     ToolButton.qml \
     Tumbler.qml
-
-HEADERS += \
-    $$PWD/qquickthemedata_p.h \
-    $$PWD/qquicktheme_p.h
-
-SOURCES += \
-    $$PWD/qquicktheme.cpp \
-    $$PWD/qquickthemedata.cpp

@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.ToolButton {
@@ -58,7 +57,7 @@ T.ToolButton {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
+        color: control.enabled ? "#26282a" : "#c2c2c2"
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -70,7 +69,7 @@ T.ToolButton {
         implicitWidth: 26
         implicitHeight: 26
 
-        color: Qt.darker(control.Theme.pressColor, control.checkable && control.checked ? 1.5 : 1.0)
+        color: Qt.darker("#33333333", control.checkable && control.checked ? 1.5 : 1.0)
         opacity: control.pressed ? 1.0 : control.checkable && control.checked ? 0.5 : 0
         visible: control.pressed || (control.checkable && control.checked)
     }
