@@ -18,9 +18,6 @@ SOURCES += \
 RESOURCES += \
     $$PWD/qtlabscontrolsplugin.qrc
 
-OTHER_FILES += \
-    $$PWD/theme.json
-
 include(controls.pri)
 include(shared/shared.pri)
 include(designer/designer.pri)
