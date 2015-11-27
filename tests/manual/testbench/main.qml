@@ -74,10 +74,11 @@ ApplicationWindow {
             Item {
                 Layout.fillWidth: true
             }
+            Label {
+                text: "Light/Dark"
+            }
             Switch {
                 id: themeSwitch
-                text: "Light/Dark"
-                layoutDirection: Qt.RightToLeft
             }
         }
     }
