@@ -36,9 +36,13 @@
 
 #include "qquickstyle_p.h"
 
+#include <QtCore/qfile.h>
+#include <QtCore/qsettings.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
+
+static const char *SettingsFilePath = ":/qtlabscontrols.conf";
 
 static QQuickStyle *attachedStyle(const QMetaObject *type, QObject *object, bool create = false)
 {
@@ -146,6 +150,20 @@ QQuickStyle::~QQuickStyle()
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
 
     setParentStyle(Q_NULLPTR);
+}
+
+QSharedPointer<QSettings> QQuickStyle::settings(const QString &group)
+{
+#ifndef QT_NO_SETTINGS
+    const QString filePath = QLatin1String(SettingsFilePath);
+    if (QFile::exists(filePath)) {
+        QSettings *settings = new QSettings(filePath, QSettings::IniFormat);
+        if (!group.isEmpty())
+            settings->beginGroup(group);
+        return QSharedPointer<QSettings>(settings);
+    }
+#endif // QT_NO_SETTINGS
+    return QSharedPointer<QSettings>();
 }
 
 QList<QQuickStyle *> QQuickStyle::childStyles() const
