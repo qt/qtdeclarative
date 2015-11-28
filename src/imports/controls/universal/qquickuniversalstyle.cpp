@@ -48,89 +48,89 @@ static const QQuickUniversalStyle::Accent DefaultAccent = QQuickUniversalStyle::
 
 static QColor qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role)
 {
-    static const QColor colors[] = {
-        "#FFFFFFFF", // SystemAltHighColor
-        "#33FFFFFF", // SystemAltLowColor
-        "#99FFFFFF", // SystemAltMediumColor
-        "#CCFFFFFF", // SystemAltMediumHighColor
-        "#66FFFFFF", // SystemAltMediumLowColor
-        "#FF000000", // SystemBaseHighColor
-        "#33000000", // SystemBaseLowColor
-        "#99000000", // SystemBaseMediumColor
-        "#CC000000", // SystemBaseMediumHighColor
-        "#66000000", // SystemBaseMediumLowColor
-        "#FF171717", // SystemChromeAltLowColor
-        "#FF000000", // SystemChromeBlackHighColor
-        "#33000000", // SystemChromeBlackLowColor
-        "#66000000", // SystemChromeBlackMediumLowColor
-        "#CC000000", // SystemChromeBlackMediumColor
-        "#FFCCCCCC", // SystemChromeDisabledHighColor
-        "#FF7A7A7A", // SystemChromeDisabledLowColor
-        "#FFCCCCCC", // SystemChromeHighColor
-        "#FFF2F2F2", // SystemChromeLowColor
-        "#FFE6E6E6", // SystemChromeMediumColor
-        "#FFF2F2F2", // SystemChromeMediumLowColor
-        "#FFFFFFFF", // SystemChromeWhiteColor
-        "#19000000", // SystemListLowColor
-        "#33000000"  // SystemListMediumColor
+    static const QRgb colors[] = {
+        0xFFFFFFFF, // SystemAltHighColor
+        0x33FFFFFF, // SystemAltLowColor
+        0x99FFFFFF, // SystemAltMediumColor
+        0xCCFFFFFF, // SystemAltMediumHighColor
+        0x66FFFFFF, // SystemAltMediumLowColor
+        0xFF000000, // SystemBaseHighColor
+        0x33000000, // SystemBaseLowColor
+        0x99000000, // SystemBaseMediumColor
+        0xCC000000, // SystemBaseMediumHighColor
+        0x66000000, // SystemBaseMediumLowColor
+        0xFF171717, // SystemChromeAltLowColor
+        0xFF000000, // SystemChromeBlackHighColor
+        0x33000000, // SystemChromeBlackLowColor
+        0x66000000, // SystemChromeBlackMediumLowColor
+        0xCC000000, // SystemChromeBlackMediumColor
+        0xFFCCCCCC, // SystemChromeDisabledHighColor
+        0xFF7A7A7A, // SystemChromeDisabledLowColor
+        0xFFCCCCCC, // SystemChromeHighColor
+        0xFFF2F2F2, // SystemChromeLowColor
+        0xFFE6E6E6, // SystemChromeMediumColor
+        0xFFF2F2F2, // SystemChromeMediumLowColor
+        0xFFFFFFFF, // SystemChromeWhiteColor
+        0x19000000, // SystemListLowColor
+        0x33000000  // SystemListMediumColor
     };
-    return colors[role];
+    return QColor::fromRgba(colors[role]);
 }
 
 static QColor qquickuniversal_dark_color(QQuickUniversalStyle::SystemColor role)
 {
-    static const QColor colors[] = {
-        "#FF000000", // SystemAltHighColor
-        "#33000000", // SystemAltLowColor
-        "#99000000", // SystemAltMediumColor
-        "#CC000000", // SystemAltMediumHighColor
-        "#66000000", // SystemAltMediumLowColor
-        "#FFFFFFFF", // SystemBaseHighColor
-        "#33FFFFFF", // SystemBaseLowColor
-        "#99FFFFFF", // SystemBaseMediumColor
-        "#CCFFFFFF", // SystemBaseMediumHighColor
-        "#66FFFFFF", // SystemBaseMediumLowColor
-        "#FFF2F2F2", // SystemChromeAltLowColor
-        "#FF000000", // SystemChromeBlackHighColor
-        "#33000000", // SystemChromeBlackLowColor
-        "#66000000", // SystemChromeBlackMediumLowColor
-        "#CC000000", // SystemChromeBlackMediumColor
-        "#FF333333", // SystemChromeDisabledHighColor
-        "#FF858585", // SystemChromeDisabledLowColor
-        "#FF767676", // SystemChromeHighColor
-        "#FF171717", // SystemChromeLowColor
-        "#FF1F1F1F", // SystemChromeMediumColor
-        "#FF2B2B2B", // SystemChromeMediumLowColor
-        "#FFFFFFFF", // SystemChromeWhiteColor
-        "#19FFFFFF", // SystemListLowColor
-        "#33FFFFFF"  // SystemListMediumColor
+    static const QRgb colors[] = {
+        0xFF000000, // SystemAltHighColor
+        0x33000000, // SystemAltLowColor
+        0x99000000, // SystemAltMediumColor
+        0xCC000000, // SystemAltMediumHighColor
+        0x66000000, // SystemAltMediumLowColor
+        0xFFFFFFFF, // SystemBaseHighColor
+        0x33FFFFFF, // SystemBaseLowColor
+        0x99FFFFFF, // SystemBaseMediumColor
+        0xCCFFFFFF, // SystemBaseMediumHighColor
+        0x66FFFFFF, // SystemBaseMediumLowColor
+        0xFFF2F2F2, // SystemChromeAltLowColor
+        0xFF000000, // SystemChromeBlackHighColor
+        0x33000000, // SystemChromeBlackLowColor
+        0x66000000, // SystemChromeBlackMediumLowColor
+        0xCC000000, // SystemChromeBlackMediumColor
+        0xFF333333, // SystemChromeDisabledHighColor
+        0xFF858585, // SystemChromeDisabledLowColor
+        0xFF767676, // SystemChromeHighColor
+        0xFF171717, // SystemChromeLowColor
+        0xFF1F1F1F, // SystemChromeMediumColor
+        0xFF2B2B2B, // SystemChromeMediumLowColor
+        0xFFFFFFFF, // SystemChromeWhiteColor
+        0x19FFFFFF, // SystemListLowColor
+        0x33FFFFFF  // SystemListMediumColor
     };
-    return colors[role];
+    return QColor::fromRgba(colors[role]);
 }
 
 static QColor qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
 {
-    static const QColor colors[] = {
-        "#A4C400", // Lime
-        "#60A917", // Green
-        "#008A00", // Emerald
-        "#00ABA9", // Teal
-        "#1BA1E2", // Cyan
-        "#3E65FF", // Cobalt
-        "#6A00FF", // Indigo
-        "#AA00FF", // Violet
-        "#F472D0", // Pink
-        "#D80073", // Magenta
-        "#A20025", // Crimson
-        "#E51400", // Red
-        "#FA6800", // Orange
-        "#F0A30A", // Amber
-        "#E3C800", // Yellow
-        "#825A2C", // Brown
-        "#6D8764", // Olive
-        "#647687", // Steel
-        "#76608A", // Mauve
-        "#87794E"  // Taupe
+    static const QRgb colors[] = {
+        0xA4C400, // Lime
+        0x60A917, // Green
+        0x008A00, // Emerald
+        0x00ABA9, // Teal
+        0x1BA1E2, // Cyan
+        0x3E65FF, // Cobalt
+        0x6A00FF, // Indigo
+        0xAA00FF, // Violet
+        0xF472D0, // Pink
+        0xD80073, // Magenta
+        0xA20025, // Crimson
+        0xE51400, // Red
+        0xFA6800, // Orange
+        0xF0A30A, // Amber
+        0xE3C800, // Yellow
+        0x825A2C, // Brown
+        0x6D8764, // Olive
+        0x647687, // Steel
+        0x76608A, // Mauve
+        0x87794E  // Taupe
     };
     return colors[accent];
 }
