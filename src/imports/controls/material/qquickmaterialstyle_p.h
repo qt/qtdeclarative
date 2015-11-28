@@ -49,8 +49,10 @@
 //
 
 #include <QtQml/qqml.h>
+#include <QtCore/qset.h>
 #include <QtGui/qcolor.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -213,8 +215,15 @@ protected:
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
 
 private:
-    Q_DISABLE_COPY(QQuickMaterialStyle)
-    Q_DECLARE_PRIVATE(QQuickMaterialStyle)
+    QPointer<QQuickMaterialStyle> m_parentStyle;
+    QSet<QQuickMaterialStyle *> m_childStyles;
+
+    bool m_explicitTheme;
+    bool m_explicitPrimary;
+    bool m_explicitAccent;
+    Theme m_theme;
+    Color m_primary;
+    Color m_accent;
 };
 
 QT_END_NAMESPACE

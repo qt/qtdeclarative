@@ -37,8 +37,6 @@
 #include "qquickmaterialstyle_p.h"
 #include "qquickstyle_p.h"
 
-#include <QtCore/qset.h>
-#include <QtCore/qpointer.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
@@ -60,24 +58,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty color QtQuickControls2::Material::textColorPrimaray
 */
-
-class QQuickMaterialStylePrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickMaterialStyle)
-
-public:
-    QQuickMaterialStylePrivate();
-
-    QPointer<QQuickMaterialStyle> parentStyle;
-    QSet<QQuickMaterialStyle *> childStyles;
-
-    bool explicitTheme;
-    bool explicitPrimary;
-    bool explicitAccent;
-    QQuickMaterialStyle::Theme theme;
-    QQuickMaterialStyle::Color primary;
-    QQuickMaterialStyle::Color accent;
-};
 
 static const QColor colors[][14] = {
     // Red
@@ -439,18 +419,13 @@ static const QColor switchDisabledTrackColorDark = "#19FFFFFF";
 static const QColor checkBoxUncheckedRippleColorLight = "#10000000";
 static const QColor checkBoxUncheckedRippleColorDark = "#20FFFFFF";
 
-QQuickMaterialStylePrivate::QQuickMaterialStylePrivate() :
-    explicitTheme(false),
-    explicitPrimary(false),
-    explicitAccent(false),
-    theme(defaultTheme),
-    primary(defaultPrimary),
-    accent(defaultAccent)
-{
-}
-
-QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) :
-    QObject(*(new QQuickMaterialStylePrivate()), parent)
+QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QObject(parent),
+    m_explicitTheme(false),
+    m_explicitPrimary(false),
+    m_explicitAccent(false),
+    m_theme(defaultTheme),
+    m_primary(defaultPrimary),
+    m_accent(defaultAccent)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item)
@@ -481,17 +456,15 @@ QQuickMaterialStyle *QQuickMaterialStyle::qmlAttachedProperties(QObject *object)
 
 QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme;
+    return m_theme;
 }
 
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
-    Q_D(QQuickMaterialStyle);
-    d->explicitTheme = true;
-    if (d->theme != theme) {
-        d->theme = theme;
-        foreach (QQuickMaterialStyle *child, d->childStyles) {
+    m_explicitTheme = true;
+    if (m_theme != theme) {
+        m_theme = theme;
+        foreach (QQuickMaterialStyle *child, m_childStyles) {
             child->inheritTheme(theme);
         }
         emit themeChanged();
@@ -501,10 +474,9 @@ void QQuickMaterialStyle::setTheme(Theme theme)
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
 {
-    Q_D(QQuickMaterialStyle);
-    if (!d->explicitTheme && d->theme != theme) {
-        d->theme = theme;
-        foreach (QQuickMaterialStyle *child, d->childStyles) {
+    if (!m_explicitTheme && m_theme != theme) {
+        m_theme = theme;
+        foreach (QQuickMaterialStyle *child, m_childStyles) {
             child->inheritTheme(theme);
         }
         emit themeChanged();
@@ -514,9 +486,8 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 
 void QQuickMaterialStyle::resetTheme()
 {
-    Q_D(QQuickMaterialStyle);
-    if (d->explicitTheme) {
-        d->explicitTheme = false;
+    if (m_explicitTheme) {
+        m_explicitTheme = false;
         QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
         inheritTheme(attachedParent ? attachedParent->theme() : defaultTheme);
     }
@@ -524,30 +495,27 @@ void QQuickMaterialStyle::resetTheme()
 
 QQuickMaterialStyle::Color QQuickMaterialStyle::primary() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->primary;
+    return m_primary;
 }
 
 void QQuickMaterialStyle::setPrimary(QQuickMaterialStyle::Color color)
 {
-    Q_D(QQuickMaterialStyle);
-    d->explicitPrimary = true;
-    if (d->primary != color) {
-        d->primary = color;
+    m_explicitPrimary = true;
+    if (m_primary != color) {
+        m_primary = color;
         emit primaryChanged();
         emit paletteChanged();
 
-        foreach (QQuickMaterialStyle *child, d->childStyles)
+        foreach (QQuickMaterialStyle *child, m_childStyles)
             child->inheritPrimary(color);
     }
 }
 
 void QQuickMaterialStyle::inheritPrimary(QQuickMaterialStyle::Color color)
 {
-    Q_D(QQuickMaterialStyle);
-    if (!d->explicitPrimary && d->primary != color) {
-        d->primary = color;
-        foreach (QQuickMaterialStyle *child, d->childStyles)
+    if (!m_explicitPrimary && m_primary != color) {
+        m_primary = color;
+        foreach (QQuickMaterialStyle *child, m_childStyles)
             child->inheritPrimary(color);
         emit primaryChanged();
     }
@@ -555,9 +523,8 @@ void QQuickMaterialStyle::inheritPrimary(QQuickMaterialStyle::Color color)
 
 void QQuickMaterialStyle::resetPrimary()
 {
-    Q_D(QQuickMaterialStyle);
-    if (d->explicitPrimary) {
-        d->explicitPrimary = false;
+    if (m_explicitPrimary) {
+        m_explicitPrimary = false;
         QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
         inheritPrimary(attachedParent ? attachedParent->primary() : defaultPrimary);
     }
@@ -565,30 +532,27 @@ void QQuickMaterialStyle::resetPrimary()
 
 QQuickMaterialStyle::Color QQuickMaterialStyle::accent() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->accent;
+    return m_accent;
 }
 
 void QQuickMaterialStyle::setAccent(QQuickMaterialStyle::Color color)
 {
-    Q_D(QQuickMaterialStyle);
-    d->explicitAccent = true;
-    if (d->accent != color) {
-        d->accent = color;
+    m_explicitAccent = true;
+    if (m_accent != color) {
+        m_accent = color;
         emit accentChanged();
         emit paletteChanged();
 
-        foreach (QQuickMaterialStyle *child, d->childStyles)
+        foreach (QQuickMaterialStyle *child, m_childStyles)
             child->inheritAccent(color);
     }
 }
 
 void QQuickMaterialStyle::inheritAccent(QQuickMaterialStyle::Color color)
 {
-    Q_D(QQuickMaterialStyle);
-    if (!d->explicitAccent && d->accent != color) {
-        d->accent = color;
-        foreach (QQuickMaterialStyle *child, d->childStyles)
+    if (!m_explicitAccent && m_accent != color) {
+        m_accent = color;
+        foreach (QQuickMaterialStyle *child, m_childStyles)
             child->inheritAccent(color);
         emit accentChanged();
     }
@@ -596,9 +560,8 @@ void QQuickMaterialStyle::inheritAccent(QQuickMaterialStyle::Color color)
 
 void QQuickMaterialStyle::resetAccent()
 {
-    Q_D(QQuickMaterialStyle);
-    if (d->explicitAccent) {
-        d->explicitAccent = false;
+    if (m_explicitAccent) {
+        m_explicitAccent = false;
         QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
         inheritAccent(attachedParent ? attachedParent->accent() : defaultAccent);
     }
@@ -606,20 +569,17 @@ void QQuickMaterialStyle::resetAccent()
 
 QColor QQuickMaterialStyle::accentColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return color(d->accent, Shade500);
+    return color(m_accent, Shade500);
 }
 
 QColor QQuickMaterialStyle::backgroundColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? backgroundColorLight : backgroundColorDark;
+    return m_theme == Light ? backgroundColorLight : backgroundColorDark;
 }
 
 QColor QQuickMaterialStyle::primaryTextColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? primaryTextColorLight : primaryTextColorDark;
+    return m_theme == Light ? primaryTextColorLight : primaryTextColorDark;
 }
 
 QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
@@ -629,14 +589,12 @@ QColor QQuickMaterialStyle::primaryHighlightedTextColor() const
 
 QColor QQuickMaterialStyle::secondaryTextColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? secondaryTextColorLight : secondaryTextColorDark;
+    return m_theme == Light ? secondaryTextColorLight : secondaryTextColorDark;
 }
 
 QColor QQuickMaterialStyle::hintTextColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? hintTextColorLight : hintTextColorDark;
+    return m_theme == Light ? hintTextColorLight : hintTextColorDark;
 }
 
 QColor QQuickMaterialStyle::textSelectionColor() const
@@ -653,33 +611,28 @@ QColor QQuickMaterialStyle::dropShadowColor() const
 
 QColor QQuickMaterialStyle::dividerColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? dividerTextColorLight : dividerTextColorDark;
+    return m_theme == Light ? dividerTextColorLight : dividerTextColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonColorLight : flatButtonFocusColorDark;
+    return m_theme == Light ? raisedButtonColorLight : flatButtonFocusColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonHoverColor() const
 {
-    Q_D(const QQuickMaterialStyle);
     // The specs don't specify different colors here for the light theme.
-    return d->theme == Light ? raisedButtonColorLight : flatButtonPressColorDark;
+    return m_theme == Light ? raisedButtonColorLight : flatButtonPressColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonPressColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonPressColorLight : flatButtonPressColorDark;
+    return m_theme == Light ? raisedButtonPressColorLight : flatButtonPressColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedButtonDisabledColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
+    return m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
@@ -689,50 +642,42 @@ QColor QQuickMaterialStyle::raisedHighlightedButtonColor() const
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonHoverColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return color(d->accent, Shade600);
+    return color(m_accent, Shade600);
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonPressColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return color(d->accent, Shade700);
+    return color(m_accent, Shade700);
 }
 
 QColor QQuickMaterialStyle::raisedHighlightedButtonDisabledColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
+    return m_theme == Light ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark;
 }
 
 QColor QQuickMaterialStyle::flatButtonPressColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? flatButtonPressColorLight : flatButtonPressColorDark;
+    return m_theme == Light ? flatButtonPressColorLight : flatButtonPressColorDark;
 }
 
 QColor QQuickMaterialStyle::flatButtonFocusColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark;
+    return m_theme == Light ? flatButtonFocusColorLight : flatButtonFocusColorDark;
 }
 
 QColor QQuickMaterialStyle::frameColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? frameColorLight : frameColorDark;
+    return m_theme == Light ? frameColorLight : frameColorDark;
 }
 
 QColor QQuickMaterialStyle::checkBoxUncheckedRippleColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? checkBoxUncheckedRippleColorLight : checkBoxUncheckedRippleColorDark;
+    return m_theme == Light ? checkBoxUncheckedRippleColorLight : checkBoxUncheckedRippleColorDark;
 }
 
 QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    QColor pressColor = color(d->accent, Shade500);
+    QColor pressColor = color(m_accent, Shade500);
     // TODO: find out actual value
     pressColor.setAlpha(30);
     return pressColor;
@@ -740,52 +685,44 @@ QColor QQuickMaterialStyle::checkBoxCheckedRippleColor() const
 
 QColor QQuickMaterialStyle::switchUncheckedTrackColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? switchUncheckedTrackColorLight : switchUncheckedTrackColorDark;
+    return m_theme == Light ? switchUncheckedTrackColorLight : switchUncheckedTrackColorDark;
 }
 
 QColor QQuickMaterialStyle::switchCheckedTrackColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    QColor trackColor = d->theme == Light ? accentColor() : color(d->accent, Shade200);
+    QColor trackColor = m_theme == Light ? accentColor() : color(m_accent, Shade200);
     trackColor.setAlphaF(0.5);
     return trackColor;
 }
 
 QColor QQuickMaterialStyle::switchUncheckedHandleColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? color(Grey, Shade50) : color(Grey, Shade400);
+    return m_theme == Light ? color(Grey, Shade50) : color(Grey, Shade400);
 }
 
 QColor QQuickMaterialStyle::switchCheckedHandleColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? accentColor() : color(d->accent, Shade200);
+    return m_theme == Light ? accentColor() : color(m_accent, Shade200);
 }
 
 QColor QQuickMaterialStyle::switchDisabledTrackColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? switchDisabledTrackColorLight : switchDisabledTrackColorDark;
+    return m_theme == Light ? switchDisabledTrackColorLight : switchDisabledTrackColorDark;
 }
 
 QColor QQuickMaterialStyle::switchDisabledHandleColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? color(Grey, Shade400) : color(Grey, Shade800);
+    return m_theme == Light ? color(Grey, Shade400) : color(Grey, Shade800);
 }
 
 QColor QQuickMaterialStyle::scrollBarColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? "#40000000" : "#40FFFFFF";
+    return m_theme == Light ? "#40000000" : "#40FFFFFF";
 }
 
 QColor QQuickMaterialStyle::scrollBarPressedColor() const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->theme == Light ? "#80000000" : "#80FFFFFF";
+    return m_theme == Light ? "#80000000" : "#80FFFFFF";
 }
 
 QColor QQuickMaterialStyle::drawerBackgroundColor() const
@@ -808,13 +745,12 @@ QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMateri
 
 void QQuickMaterialStyle::reparent(QQuickMaterialStyle *style)
 {
-    Q_D(QQuickMaterialStyle);
-    if (d->parentStyle != style) {
-        if (d->parentStyle)
-            d->parentStyle->d_func()->childStyles.remove(this);
-        d->parentStyle = style;
+    if (m_parentStyle != style) {
+        if (m_parentStyle)
+            m_parentStyle->m_childStyles.remove(this);
+        m_parentStyle = style;
         if (style) {
-            style->d_func()->childStyles.insert(this);
+            style->m_childStyles.insert(this);
             inheritPrimary(style->primary());
             inheritAccent(style->accent());
             inheritTheme(style->theme());
