@@ -96,8 +96,6 @@ class QQuickMaterialStylePrivate : public QObjectPrivate
 public:
     QQuickMaterialStylePrivate();
 
-    enum Method { Implicit, Explicit, Inherit };
-
     QPointer<QQuickMaterialStyle> parentStyle;
     QSet<QQuickMaterialStyle *> childStyles;
     QHash<MaterialColor, QColor> colors;
