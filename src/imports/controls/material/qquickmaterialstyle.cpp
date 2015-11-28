@@ -35,12 +35,8 @@
 ****************************************************************************/
 
 #include "qquickmaterialstyle_p.h"
-#include "qquickstyle_p.h"
 
-#include <QtQml/qqmlengine.h>
-#include <QtQuick/qquickitem.h>
-#include <QtQuick/qquickwindow.h>
-#include <QtQuick/private/qquickitem_p.h>
+#include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -419,7 +415,7 @@ static const QColor switchDisabledTrackColorDark = "#19FFFFFF";
 static const QColor checkBoxUncheckedRippleColorLight = "#10000000";
 static const QColor checkBoxUncheckedRippleColorDark = "#20FFFFFF";
 
-QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QObject(parent),
+QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
     m_explicitTheme(false),
     m_explicitPrimary(false),
     m_explicitAccent(false),
@@ -427,31 +423,12 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QObject(parent),
     m_primary(defaultPrimary),
     m_accent(defaultAccent)
 {
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent);
-    if (item)
-        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
-}
-
-QQuickMaterialStyle::~QQuickMaterialStyle()
-{
-    QQuickItem *item = qobject_cast<QQuickItem *>(parent());
-    if (item)
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
-
-    reparent(Q_NULLPTR);
+    init(); // TODO: lazy init?
 }
 
 QQuickMaterialStyle *QQuickMaterialStyle::qmlAttachedProperties(QObject *object)
 {
-    QQuickMaterialStyle *style = new QQuickMaterialStyle(object);
-    QQuickMaterialStyle *parent = QQuickStyle::findParent<QQuickMaterialStyle>(object);
-    if (parent)
-        style->reparent(parent);
-
-    QList<QQuickMaterialStyle *> childStyles = QQuickStyle::findChildren<QQuickMaterialStyle>(object);
-    foreach (QQuickMaterialStyle *child, childStyles)
-        child->reparent(style);
-    return style;
+    return new QQuickMaterialStyle(object);
 }
 
 QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
@@ -464,9 +441,7 @@ void QQuickMaterialStyle::setTheme(Theme theme)
     m_explicitTheme = true;
     if (m_theme != theme) {
         m_theme = theme;
-        foreach (QQuickMaterialStyle *child, m_childStyles) {
-            child->inheritTheme(theme);
-        }
+        propagateTheme();
         emit themeChanged();
         emit paletteChanged();
     }
@@ -476,11 +451,18 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 {
     if (!m_explicitTheme && m_theme != theme) {
         m_theme = theme;
-        foreach (QQuickMaterialStyle *child, m_childStyles) {
-            child->inheritTheme(theme);
-        }
+        propagateTheme();
         emit themeChanged();
         emit paletteChanged();
+    }
+}
+
+void QQuickMaterialStyle::propagateTheme()
+{
+    foreach (QQuickStyle *child, childStyles()) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritTheme(m_theme);
     }
 }
 
@@ -488,8 +470,8 @@ void QQuickMaterialStyle::resetTheme()
 {
     if (m_explicitTheme) {
         m_explicitTheme = false;
-        QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
-        inheritTheme(attachedParent ? attachedParent->theme() : defaultTheme);
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+        inheritTheme(material ? material->theme() : defaultTheme);
     }
 }
 
@@ -503,11 +485,9 @@ void QQuickMaterialStyle::setPrimary(QQuickMaterialStyle::Color color)
     m_explicitPrimary = true;
     if (m_primary != color) {
         m_primary = color;
+        propagatePrimary();
         emit primaryChanged();
         emit paletteChanged();
-
-        foreach (QQuickMaterialStyle *child, m_childStyles)
-            child->inheritPrimary(color);
     }
 }
 
@@ -515,9 +495,17 @@ void QQuickMaterialStyle::inheritPrimary(QQuickMaterialStyle::Color color)
 {
     if (!m_explicitPrimary && m_primary != color) {
         m_primary = color;
-        foreach (QQuickMaterialStyle *child, m_childStyles)
-            child->inheritPrimary(color);
+        propagatePrimary();
         emit primaryChanged();
+    }
+}
+
+void QQuickMaterialStyle::propagatePrimary()
+{
+    foreach (QQuickStyle *child, childStyles()) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritPrimary(m_primary);
     }
 }
 
@@ -525,8 +513,8 @@ void QQuickMaterialStyle::resetPrimary()
 {
     if (m_explicitPrimary) {
         m_explicitPrimary = false;
-        QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
-        inheritPrimary(attachedParent ? attachedParent->primary() : defaultPrimary);
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+        inheritPrimary(material ? material->primary() : defaultPrimary);
     }
 }
 
@@ -540,11 +528,9 @@ void QQuickMaterialStyle::setAccent(QQuickMaterialStyle::Color color)
     m_explicitAccent = true;
     if (m_accent != color) {
         m_accent = color;
+        propagateAccent();
         emit accentChanged();
         emit paletteChanged();
-
-        foreach (QQuickMaterialStyle *child, m_childStyles)
-            child->inheritAccent(color);
     }
 }
 
@@ -552,9 +538,17 @@ void QQuickMaterialStyle::inheritAccent(QQuickMaterialStyle::Color color)
 {
     if (!m_explicitAccent && m_accent != color) {
         m_accent = color;
-        foreach (QQuickMaterialStyle *child, m_childStyles)
-            child->inheritAccent(color);
+        propagateAccent();
         emit accentChanged();
+    }
+}
+
+void QQuickMaterialStyle::propagateAccent()
+{
+    foreach (QQuickStyle *child, childStyles()) {
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
+        if (material)
+            material->inheritAccent(m_accent);
     }
 }
 
@@ -562,8 +556,8 @@ void QQuickMaterialStyle::resetAccent()
 {
     if (m_explicitAccent) {
         m_explicitAccent = false;
-        QQuickMaterialStyle *attachedParent = QQuickStyle::findParent<QQuickMaterialStyle>(parent());
-        inheritAccent(attachedParent ? attachedParent->accent() : defaultAccent);
+        QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(parentStyle());
+        inheritAccent(material ? material->accent() : defaultAccent);
     }
 }
 
@@ -743,28 +737,14 @@ QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMateri
     return colors[color][shade];
 }
 
-void QQuickMaterialStyle::reparent(QQuickMaterialStyle *style)
+void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent)
 {
-    if (m_parentStyle != style) {
-        if (m_parentStyle)
-            m_parentStyle->m_childStyles.remove(this);
-        m_parentStyle = style;
-        if (style) {
-            style->m_childStyles.insert(this);
-            inheritPrimary(style->primary());
-            inheritAccent(style->accent());
-            inheritTheme(style->theme());
-        }
-    }
-}
-
-void QQuickMaterialStyle::itemParentChanged(QQuickItem *item, QQuickItem *parentItem)
-{
-    QQuickMaterialStyle *style = QQuickStyle::instance<QQuickMaterialStyle>(item);
-    if (style) {
-        QQuickMaterialStyle *parent = QQuickStyle::findParent<QQuickMaterialStyle>(parentItem);
-        if (parent)
-            style->reparent(parent);
+    Q_UNUSED(oldParent);
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
+    if (material) {
+        inheritPrimary(material->primary());
+        inheritAccent(material->accent());
+        inheritTheme(material->theme());
     }
 }
 

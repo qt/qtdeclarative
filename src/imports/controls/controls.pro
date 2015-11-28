@@ -19,7 +19,6 @@ RESOURCES += \
     $$PWD/qtlabscontrolsplugin.qrc
 
 include(controls.pri)
-include(shared/shared.pri)
 include(designer/designer.pri)
 
 CONFIG += no_cxx_module

@@ -17,7 +17,6 @@ RESOURCES += \
     $$PWD/qtlabsuniversalstyleplugin.qrc
 
 include(universal.pri)
-include(../shared/shared.pri)
 
 CONFIG += no_cxx_module
 load(qml_plugin)

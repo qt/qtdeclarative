@@ -48,18 +48,14 @@
 // We mean it.
 //
 
-#include <QtCore/qset.h>
-#include <QtCore/qpointer.h>
-#include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
-#include <QtQml/qqml.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickUniversalStylePrivate;
 
-class QQuickUniversalStyle : public QObject, public QQuickItemChangeListener
+class QQuickUniversalStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -93,7 +89,6 @@ class QQuickUniversalStyle : public QObject, public QQuickItemChangeListener
 
 public:
     explicit QQuickUniversalStyle(QObject *parent = Q_NULLPTR);
-    ~QQuickUniversalStyle();
 
     static QQuickUniversalStyle *qmlAttachedProperties(QObject *object);
 
@@ -103,6 +98,7 @@ public:
     Theme theme() const;
     void setTheme(Theme theme);
     void inheritTheme(Theme theme);
+    void propagateTheme();
     void resetTheme();
 
     enum Accent {
@@ -132,10 +128,10 @@ public:
     Accent accent() const;
     void setAccent(Accent accent);
     void inheritAccent(Accent accent);
+    void propagateAccent();
     void resetAccent();
 
     QColor accentColor() const;
-
     QColor altHighColor() const;
     QColor altLowColor() const;
     QColor altMediumColor() const;
@@ -196,16 +192,13 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void reparent(QQuickUniversalStyle *parent);
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
     bool m_hasTheme;
     bool m_hasAccent;
     QQuickUniversalStyle::Theme m_theme;
     QQuickUniversalStyle::Accent m_accent;
-    QPointer<QQuickUniversalStyle> m_parentStyle;
-    QSet<QQuickUniversalStyle *> m_childStyles;
 };
 
 QT_END_NAMESPACE

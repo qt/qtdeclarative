@@ -48,18 +48,14 @@
 // We mean it.
 //
 
-#include <QtQml/qqml.h>
-#include <QtCore/qset.h>
 #include <QtGui/qcolor.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qpointer.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickMaterialStylePrivate;
 
-class QQuickMaterialStyle : public QObject, public QQuickItemChangeListener
+class QQuickMaterialStyle : public QQuickStyle
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -147,13 +143,13 @@ public:
     Q_ENUM(Shade)
 
     explicit QQuickMaterialStyle(QObject *parent = Q_NULLPTR);
-    ~QQuickMaterialStyle();
 
     static QQuickMaterialStyle *qmlAttachedProperties(QObject *object);
 
     Theme theme() const;
     void setTheme(Theme theme);
     void inheritTheme(Theme theme);
+    void propagateTheme();
     void resetTheme();
 
     QColor primaryColorLight() const;
@@ -161,6 +157,7 @@ public:
     Color primary() const;
     void setPrimary(Color color);
     void inheritPrimary(Color color);
+    void propagatePrimary();
     void resetPrimary();
 
     QColor primaryColorDark() const;
@@ -168,6 +165,7 @@ public:
     Color accent() const;
     void setAccent(Color color);
     void inheritAccent(Color color);
+    void propagateAccent();
     void resetAccent();
 
     QColor accentColor() const;
@@ -211,13 +209,9 @@ Q_SIGNALS:
     void paletteChanged();
 
 protected:
-    void reparent(QQuickMaterialStyle *theme);
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
-    QPointer<QQuickMaterialStyle> m_parentStyle;
-    QSet<QQuickMaterialStyle *> m_childStyles;
-
     bool m_explicitTheme;
     bool m_explicitPrimary;
     bool m_explicitAccent;
