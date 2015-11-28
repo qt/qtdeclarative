@@ -43,7 +43,6 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,7 +89,7 @@ inline uint qHash(const MaterialColor &color, uint seed)
     return qHash(color.color, seed) ^ color.shade;
 }
 
-class QQuickMaterialStylePrivate : public QObjectPrivate, public QQuickItemChangeListener
+class QQuickMaterialStylePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMaterialStyle)
 
@@ -415,18 +414,16 @@ QQuickMaterialStylePrivate::QQuickMaterialStylePrivate() :
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) :
     QObject(*(new QQuickMaterialStylePrivate()), parent)
 {
-    Q_D(QQuickMaterialStyle);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
     if (item)
-        QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
 }
 
 QQuickMaterialStyle::~QQuickMaterialStyle()
 {
-    Q_D(QQuickMaterialStyle);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent());
     if (item)
-        QQuickItemPrivate::get(item)->removeItemChangeListener(d, QQuickItemPrivate::Parent);
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
 
     reparent(Q_NULLPTR);
 }
