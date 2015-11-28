@@ -61,34 +61,6 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty color QtQuickControls2::Material::textColorPrimaray
 */
 
-struct MaterialColor
-{
-    MaterialColor() :
-        color(QQuickMaterialStyle::Red),
-        shade(QQuickMaterialStyle::Shade500)
-    {
-    }
-
-    MaterialColor(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) :
-        color(color),
-        shade(shade)
-    {
-    }
-
-    QQuickMaterialStyle::Color color;
-    QQuickMaterialStyle::Shade shade;
-};
-
-inline bool operator==(const MaterialColor &lhs, const MaterialColor &rhs)
-{
-    return lhs.color == rhs.color && lhs.shade == rhs.shade;
-}
-
-inline uint qHash(const MaterialColor &color, uint seed)
-{
-    return qHash(color.color, seed) ^ color.shade;
-}
-
 class QQuickMaterialStylePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMaterialStyle)
@@ -98,7 +70,6 @@ public:
 
     QPointer<QQuickMaterialStyle> parentStyle;
     QSet<QQuickMaterialStyle *> childStyles;
-    QHash<MaterialColor, QColor> colors;
 
     bool explicitTheme;
     bool explicitPrimary;
@@ -106,6 +77,332 @@ public:
     QQuickMaterialStyle::Theme theme;
     QQuickMaterialStyle::Color primary;
     QQuickMaterialStyle::Color accent;
+};
+
+static const QColor colors[][14] = {
+    // Red
+    {
+        "#FFEBEE", // Shade50
+        "#FFCDD2", // Shade100
+        "#EF9A9A", // Shade200
+        "#E57373", // Shade300
+        "#EF5350", // Shade400
+        "#F44336", // Shade500
+        "#E53935", // Shade600
+        "#D32F2F", // Shade700
+        "#C62828", // Shade800
+        "#B71C1C", // Shade900
+        "#FF8A80", // ShadeA100
+        "#FF5252", // ShadeA200
+        "#FF1744", // ShadeA400
+        "#D50000"  // ShadeA700
+    },
+    // Pink
+    {
+        "#FCE4EC", // Shade50
+        "#F8BBD0", // Shade100
+        "#F48FB1", // Shade200
+        "#F06292", // Shade300
+        "#EC407A", // Shade400
+        "#E91E63", // Shade500
+        "#D81B60", // Shade600
+        "#C2185B", // Shade700
+        "#AD1457", // Shade800
+        "#880E4F", // Shade900
+        "#FF80AB", // ShadeA100
+        "#FF4081", // ShadeA200
+        "#F50057", // ShadeA400
+        "#C51162"  // ShadeA700
+    },
+    // Purple
+    {
+        "#F3E5F5", // Shade50
+        "#E1BEE7", // Shade100
+        "#CE93D8", // Shade200
+        "#BA68C8", // Shade300
+        "#AB47BC", // Shade400
+        "#9C27B0", // Shade500
+        "#8E24AA", // Shade600
+        "#7B1FA2", // Shade700
+        "#6A1B9A", // Shade800
+        "#4A148C", // Shade900
+        "#EA80FC", // ShadeA100
+        "#E040FB", // ShadeA200
+        "#D500F9", // ShadeA400
+        "#AA00FF"  // ShadeA700
+    },
+    // DeepPurple
+    {
+        "#EDE7F6", // Shade50
+        "#D1C4E9", // Shade100
+        "#B39DDB", // Shade200
+        "#9575CD", // Shade300
+        "#7E57C2", // Shade400
+        "#673AB7", // Shade500
+        "#5E35B1", // Shade600
+        "#512DA8", // Shade700
+        "#4527A0", // Shade800
+        "#311B92", // Shade900
+        "#B388FF", // ShadeA100
+        "#7C4DFF", // ShadeA200
+        "#651FFF", // ShadeA400
+        "#6200EA"  // ShadeA700
+    },
+    // Indigo
+    {
+        "#E8EAF6", // Shade50
+        "#C5CAE9", // Shade100
+        "#9FA8DA", // Shade200
+        "#7986CB", // Shade300
+        "#5C6BC0", // Shade400
+        "#3F51B5", // Shade500
+        "#3949AB", // Shade600
+        "#303F9F", // Shade700
+        "#283593", // Shade800
+        "#1A237E", // Shade900
+        "#8C9EFF", // ShadeA100
+        "#536DFE", // ShadeA200
+        "#3D5AFE", // ShadeA400
+        "#304FFE"  // ShadeA700
+    },
+    // Blue
+    {
+        "#E3F2FD", // Shade50
+        "#BBDEFB", // Shade100
+        "#90CAF9", // Shade200
+        "#64B5F6", // Shade300
+        "#42A5F5", // Shade400
+        "#2196F3", // Shade500
+        "#1E88E5", // Shade600
+        "#1976D2", // Shade700
+        "#1565C0", // Shade800
+        "#0D47A1", // Shade900
+        "#82B1FF", // ShadeA100
+        "#448AFF", // ShadeA200
+        "#2979FF", // ShadeA400
+        "#2962FF"  // ShadeA700
+    },
+    // LightBlue
+    {
+        "#E1F5FE", // Shade50
+        "#B3E5FC", // Shade100
+        "#81D4FA", // Shade200
+        "#4FC3F7", // Shade300
+        "#29B6F6", // Shade400
+        "#03A9F4", // Shade500
+        "#039BE5", // Shade600
+        "#0288D1", // Shade700
+        "#0277BD", // Shade800
+        "#01579B", // Shade900
+        "#80D8FF", // ShadeA100
+        "#40C4FF", // ShadeA200
+        "#00B0FF", // ShadeA400
+        "#0091EA"  // ShadeA700
+    },
+    // Cyan
+    {
+        "#E0F7FA", // Shade50
+        "#B2EBF2", // Shade100
+        "#80DEEA", // Shade200
+        "#4DD0E1", // Shade300
+        "#26C6DA", // Shade400
+        "#00BCD4", // Shade500
+        "#00ACC1", // Shade600
+        "#0097A7", // Shade700
+        "#00838F", // Shade800
+        "#006064", // Shade900
+        "#84FFFF", // ShadeA100
+        "#18FFFF", // ShadeA200
+        "#00E5FF", // ShadeA400
+        "#00B8D4"  // ShadeA700
+    },
+    // Teal
+    {
+        "#E0F2F1", // Shade50
+        "#B2DFDB", // Shade100
+        "#80CBC4", // Shade200
+        "#4DB6AC", // Shade300
+        "#26A69A", // Shade400
+        "#009688", // Shade500
+        "#00897B", // Shade600
+        "#00796B", // Shade700
+        "#00695C", // Shade800
+        "#004D40", // Shade900
+        "#A7FFEB", // ShadeA100
+        "#64FFDA", // ShadeA200
+        "#1DE9B6", // ShadeA400
+        "#00BFA5"  // ShadeA700
+    },
+    // Green
+    {
+        "#E8F5E9", // Shade50
+        "#C8E6C9", // Shade100
+        "#A5D6A7", // Shade200
+        "#81C784", // Shade300
+        "#66BB6A", // Shade400
+        "#4CAF50", // Shade500
+        "#43A047", // Shade600
+        "#388E3C", // Shade700
+        "#2E7D32", // Shade800
+        "#1B5E20", // Shade900
+        "#B9F6CA", // ShadeA100
+        "#69F0AE", // ShadeA200
+        "#00E676", // ShadeA400
+        "#00C853"  // ShadeA700
+    },
+    // LightGreen
+    {
+        "#F1F8E9", // Shade50
+        "#DCEDC8", // Shade100
+        "#C5E1A5", // Shade200
+        "#AED581", // Shade300
+        "#9CCC65", // Shade400
+        "#8BC34A", // Shade500
+        "#7CB342", // Shade600
+        "#689F38", // Shade700
+        "#558B2F", // Shade800
+        "#33691E", // Shade900
+        "#CCFF90", // ShadeA100
+        "#B2FF59", // ShadeA200
+        "#76FF03", // ShadeA400
+        "#64DD17"  // ShadeA700
+    },
+    // Lime
+    {
+        "#F9FBE7", // Shade50
+        "#F0F4C3", // Shade100
+        "#E6EE9C", // Shade200
+        "#DCE775", // Shade300
+        "#D4E157", // Shade400
+        "#CDDC39", // Shade500
+        "#C0CA33", // Shade600
+        "#AFB42B", // Shade700
+        "#9E9D24", // Shade800
+        "#827717", // Shade900
+        "#F4FF81", // ShadeA100
+        "#EEFF41", // ShadeA200
+        "#C6FF00", // ShadeA400
+        "#AEEA00"  // ShadeA700
+    },
+    // Yellow
+    {
+        "#FFFDE7", // Shade50
+        "#FFF9C4", // Shade100
+        "#FFF59D", // Shade200
+        "#FFF176", // Shade300
+        "#FFEE58", // Shade400
+        "#FFEB3B", // Shade500
+        "#FDD835", // Shade600
+        "#FBC02D", // Shade700
+        "#F9A825", // Shade800
+        "#F57F17", // Shade900
+        "#FFFF8D", // ShadeA100
+        "#FFFF00", // ShadeA200
+        "#FFEA00", // ShadeA400
+        "#FFD600"  // ShadeA700
+    },
+    // Amber
+    {
+        "#FFF8E1", // Shade50
+        "#FFECB3", // Shade100
+        "#FFE082", // Shade200
+        "#FFD54F", // Shade300
+        "#FFCA28", // Shade400
+        "#FFC107", // Shade500
+        "#FFB300", // Shade600
+        "#FFA000", // Shade700
+        "#FF8F00", // Shade800
+        "#FF6F00", // Shade900
+        "#FFE57F", // ShadeA100
+        "#FFD740", // ShadeA200
+        "#FFC400", // ShadeA400
+        "#FFAB00"  // ShadeA700
+    },
+    // Orange
+    {
+        "#FFF3E0", // Shade50
+        "#FFE0B2", // Shade100
+        "#FFCC80", // Shade200
+        "#FFB74D", // Shade300
+        "#FFA726", // Shade400
+        "#FF9800", // Shade500
+        "#FB8C00", // Shade600
+        "#F57C00", // Shade700
+        "#EF6C00", // Shade800
+        "#E65100", // Shade900
+        "#FFD180", // ShadeA100
+        "#FFAB40", // ShadeA200
+        "#FF9100", // ShadeA400
+        "#FF6D00"  // ShadeA700
+    },
+    // DeepOrange
+    {
+        "#FBE9E7", // Shade50
+        "#FFCCBC", // Shade100
+        "#FFAB91", // Shade200
+        "#FF8A65", // Shade300
+        "#FF7043", // Shade400
+        "#FF5722", // Shade500
+        "#F4511E", // Shade600
+        "#E64A19", // Shade700
+        "#D84315", // Shade800
+        "#BF360C", // Shade900
+        "#FF9E80", // ShadeA100
+        "#FF6E40", // ShadeA200
+        "#FF3D00", // ShadeA400
+        "#DD2C00"  // ShadeA700
+    },
+    // Brown
+    {
+        "#EFEBE9", // Shade50
+        "#D7CCC8", // Shade100
+        "#BCAAA4", // Shade200
+        "#A1887F", // Shade300
+        "#8D6E63", // Shade400
+        "#795548", // Shade500
+        "#6D4C41", // Shade600
+        "#5D4037", // Shade700
+        "#4E342E", // Shade800
+        "#3E2723", // Shade900
+        "#000000", // ShadeA100
+        "#000000", // ShadeA200
+        "#000000", // ShadeA400
+        "#000000"  // ShadeA700
+    },
+    // Grey
+    {
+        "#FAFAFA", // Shade50
+        "#F5F5F5", // Shade100
+        "#EEEEEE", // Shade200
+        "#E0E0E0", // Shade300
+        "#BDBDBD", // Shade400
+        "#9E9E9E", // Shade500
+        "#757575", // Shade600
+        "#616161", // Shade700
+        "#424242", // Shade800
+        "#212121", // Shade900
+        "#000000", // ShadeA100
+        "#000000", // ShadeA200
+        "#000000", // ShadeA400
+        "#000000"  // ShadeA700
+    },
+    // BlueGrey
+    {
+        "#ECEFF1", // Shade50
+        "#CFD8DC", // Shade100
+        "#B0BEC5", // Shade200
+        "#90A4AE", // Shade300
+        "#78909C", // Shade400
+        "#607D8B", // Shade500
+        "#546E7A", // Shade600
+        "#455A64", // Shade700
+        "#37474F", // Shade800
+        "#263238", // Shade900
+        "#000000", // ShadeA100
+        "#000000", // ShadeA200
+        "#000000", // ShadeA400
+        "#000000"  // ShadeA700
+    }
 };
 
 static const QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
@@ -150,263 +447,6 @@ QQuickMaterialStylePrivate::QQuickMaterialStylePrivate() :
     primary(defaultPrimary),
     accent(defaultAccent)
 {
-    if (colors.isEmpty()) {
-        typedef QQuickMaterialStyle Style;
-        colors[MaterialColor(Style::Red, Style::Shade50)] = "#FFEBEE";
-        colors[MaterialColor(Style::Red, Style::Shade100)] = "#FFCDD2";
-        colors[MaterialColor(Style::Red, Style::Shade200)] = "#EF9A9A";
-        colors[MaterialColor(Style::Red, Style::Shade300)] = "#E57373";
-        colors[MaterialColor(Style::Red, Style::Shade400)] = "#EF5350";
-        colors[MaterialColor(Style::Red, Style::Shade500)] = "#F44336";
-        colors[MaterialColor(Style::Red, Style::Shade600)] = "#E53935";
-        colors[MaterialColor(Style::Red, Style::Shade700)] = "#D32F2F";
-        colors[MaterialColor(Style::Red, Style::Shade800)] = "#C62828";
-        colors[MaterialColor(Style::Red, Style::Shade900)] = "#B71C1C";
-        colors[MaterialColor(Style::Red, Style::ShadeA100)] = "#FF8A80";
-        colors[MaterialColor(Style::Red, Style::ShadeA200)] = "#FF5252";
-        colors[MaterialColor(Style::Red, Style::ShadeA400)] = "#FF1744";
-        colors[MaterialColor(Style::Red, Style::ShadeA700)] = "#D50000";
-        colors[MaterialColor(Style::Pink, Style::Shade50)] = "#FCE4EC";
-        colors[MaterialColor(Style::Pink, Style::Shade100)] = "#F8BBD0";
-        colors[MaterialColor(Style::Pink, Style::Shade200)] = "#F48FB1";
-        colors[MaterialColor(Style::Pink, Style::Shade300)] = "#F06292";
-        colors[MaterialColor(Style::Pink, Style::Shade400)] = "#EC407A";
-        colors[MaterialColor(Style::Pink, Style::Shade500)] = "#E91E63";
-        colors[MaterialColor(Style::Pink, Style::Shade600)] = "#D81B60";
-        colors[MaterialColor(Style::Pink, Style::Shade700)] = "#C2185B";
-        colors[MaterialColor(Style::Pink, Style::Shade800)] = "#AD1457";
-        colors[MaterialColor(Style::Pink, Style::Shade900)] = "#880E4F";
-        colors[MaterialColor(Style::Pink, Style::ShadeA100)] = "#FF80AB";
-        colors[MaterialColor(Style::Pink, Style::ShadeA200)] = "#FF4081";
-        colors[MaterialColor(Style::Pink, Style::ShadeA400)] = "#F50057";
-        colors[MaterialColor(Style::Pink, Style::ShadeA700)] = "#C51162";
-        colors[MaterialColor(Style::Purple, Style::Shade50)] = "#F3E5F5";
-        colors[MaterialColor(Style::Purple, Style::Shade100)] = "#E1BEE7";
-        colors[MaterialColor(Style::Purple, Style::Shade200)] = "#CE93D8";
-        colors[MaterialColor(Style::Purple, Style::Shade300)] = "#BA68C8";
-        colors[MaterialColor(Style::Purple, Style::Shade400)] = "#AB47BC";
-        colors[MaterialColor(Style::Purple, Style::Shade500)] = "#9C27B0";
-        colors[MaterialColor(Style::Purple, Style::Shade600)] = "#8E24AA";
-        colors[MaterialColor(Style::Purple, Style::Shade700)] = "#7B1FA2";
-        colors[MaterialColor(Style::Purple, Style::Shade800)] = "#6A1B9A";
-        colors[MaterialColor(Style::Purple, Style::Shade900)] = "#4A148C";
-        colors[MaterialColor(Style::Purple, Style::ShadeA100)] = "#EA80FC";
-        colors[MaterialColor(Style::Purple, Style::ShadeA200)] = "#E040FB";
-        colors[MaterialColor(Style::Purple, Style::ShadeA400)] = "#D500F9";
-        colors[MaterialColor(Style::Purple, Style::ShadeA700)] = "#AA00FF";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade50)] = "#EDE7F6";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade100)] = "#D1C4E9";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade200)] = "#B39DDB";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade300)] = "#9575CD";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade400)] = "#7E57C2";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade500)] = "#673AB7";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade600)] = "#5E35B1";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade700)] = "#512DA8";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade800)] = "#4527A0";
-        colors[MaterialColor(Style::DeepPurple, Style::Shade900)] = "#311B92";
-        colors[MaterialColor(Style::DeepPurple, Style::ShadeA100)] = "#B388FF";
-        colors[MaterialColor(Style::DeepPurple, Style::ShadeA200)] = "#7C4DFF";
-        colors[MaterialColor(Style::DeepPurple, Style::ShadeA400)] = "#651FFF";
-        colors[MaterialColor(Style::DeepPurple, Style::ShadeA700)] = "#6200EA";
-        colors[MaterialColor(Style::Indigo, Style::Shade50)] = "#E8EAF6";
-        colors[MaterialColor(Style::Indigo, Style::Shade100)] = "#C5CAE9";
-        colors[MaterialColor(Style::Indigo, Style::Shade200)] = "#9FA8DA";
-        colors[MaterialColor(Style::Indigo, Style::Shade300)] = "#7986CB";
-        colors[MaterialColor(Style::Indigo, Style::Shade400)] = "#5C6BC0";
-        colors[MaterialColor(Style::Indigo, Style::Shade500)] = "#3F51B5";
-        colors[MaterialColor(Style::Indigo, Style::Shade600)] = "#3949AB";
-        colors[MaterialColor(Style::Indigo, Style::Shade700)] = "#303F9F";
-        colors[MaterialColor(Style::Indigo, Style::Shade800)] = "#283593";
-        colors[MaterialColor(Style::Indigo, Style::Shade900)] = "#1A237E";
-        colors[MaterialColor(Style::Indigo, Style::ShadeA100)] = "#8C9EFF";
-        colors[MaterialColor(Style::Indigo, Style::ShadeA200)] = "#536DFE";
-        colors[MaterialColor(Style::Indigo, Style::ShadeA400)] = "#3D5AFE";
-        colors[MaterialColor(Style::Indigo, Style::ShadeA700)] = "#304FFE";
-        colors[MaterialColor(Style::Blue, Style::Shade50)] = "#E3F2FD";
-        colors[MaterialColor(Style::Blue, Style::Shade100)] = "#BBDEFB";
-        colors[MaterialColor(Style::Blue, Style::Shade200)] = "#90CAF9";
-        colors[MaterialColor(Style::Blue, Style::Shade300)] = "#64B5F6";
-        colors[MaterialColor(Style::Blue, Style::Shade400)] = "#42A5F5";
-        colors[MaterialColor(Style::Blue, Style::Shade500)] = "#2196F3";
-        colors[MaterialColor(Style::Blue, Style::Shade600)] = "#1E88E5";
-        colors[MaterialColor(Style::Blue, Style::Shade700)] = "#1976D2";
-        colors[MaterialColor(Style::Blue, Style::Shade800)] = "#1565C0";
-        colors[MaterialColor(Style::Blue, Style::Shade900)] = "#0D47A1";
-        colors[MaterialColor(Style::Blue, Style::ShadeA100)] = "#82B1FF";
-        colors[MaterialColor(Style::Blue, Style::ShadeA200)] = "#448AFF";
-        colors[MaterialColor(Style::Blue, Style::ShadeA400)] = "#2979FF";
-        colors[MaterialColor(Style::Blue, Style::ShadeA700)] = "#2962FF";
-        colors[MaterialColor(Style::LightBlue, Style::Shade50)] = "#E1F5FE";
-        colors[MaterialColor(Style::LightBlue, Style::Shade100)] = "#B3E5FC";
-        colors[MaterialColor(Style::LightBlue, Style::Shade200)] = "#81D4FA";
-        colors[MaterialColor(Style::LightBlue, Style::Shade300)] = "#4FC3F7";
-        colors[MaterialColor(Style::LightBlue, Style::Shade400)] = "#29B6F6";
-        colors[MaterialColor(Style::LightBlue, Style::Shade500)] = "#03A9F4";
-        colors[MaterialColor(Style::LightBlue, Style::Shade600)] = "#039BE5";
-        colors[MaterialColor(Style::LightBlue, Style::Shade700)] = "#0288D1";
-        colors[MaterialColor(Style::LightBlue, Style::Shade800)] = "#0277BD";
-        colors[MaterialColor(Style::LightBlue, Style::Shade900)] = "#01579B";
-        colors[MaterialColor(Style::LightBlue, Style::ShadeA100)] = "#80D8FF";
-        colors[MaterialColor(Style::LightBlue, Style::ShadeA200)] = "#40C4FF";
-        colors[MaterialColor(Style::LightBlue, Style::ShadeA400)] = "#00B0FF";
-        colors[MaterialColor(Style::LightBlue, Style::ShadeA700)] = "#0091EA";
-        colors[MaterialColor(Style::Cyan, Style::Shade50)] = "#E0F7FA";
-        colors[MaterialColor(Style::Cyan, Style::Shade100)] = "#B2EBF2";
-        colors[MaterialColor(Style::Cyan, Style::Shade200)] = "#80DEEA";
-        colors[MaterialColor(Style::Cyan, Style::Shade300)] = "#4DD0E1";
-        colors[MaterialColor(Style::Cyan, Style::Shade400)] = "#26C6DA";
-        colors[MaterialColor(Style::Cyan, Style::Shade500)] = "#00BCD4";
-        colors[MaterialColor(Style::Cyan, Style::Shade600)] = "#00ACC1";
-        colors[MaterialColor(Style::Cyan, Style::Shade700)] = "#0097A7";
-        colors[MaterialColor(Style::Cyan, Style::Shade800)] = "#00838F";
-        colors[MaterialColor(Style::Cyan, Style::Shade900)] = "#006064";
-        colors[MaterialColor(Style::Cyan, Style::ShadeA100)] = "#84FFFF";
-        colors[MaterialColor(Style::Cyan, Style::ShadeA200)] = "#18FFFF";
-        colors[MaterialColor(Style::Cyan, Style::ShadeA400)] = "#00E5FF";
-        colors[MaterialColor(Style::Cyan, Style::ShadeA700)] = "#00B8D4";
-        colors[MaterialColor(Style::Teal, Style::Shade50)] = "#E0F2F1";
-        colors[MaterialColor(Style::Teal, Style::Shade100)] = "#B2DFDB";
-        colors[MaterialColor(Style::Teal, Style::Shade200)] = "#80CBC4";
-        colors[MaterialColor(Style::Teal, Style::Shade300)] = "#4DB6AC";
-        colors[MaterialColor(Style::Teal, Style::Shade400)] = "#26A69A";
-        colors[MaterialColor(Style::Teal, Style::Shade500)] = "#009688";
-        colors[MaterialColor(Style::Teal, Style::Shade600)] = "#00897B";
-        colors[MaterialColor(Style::Teal, Style::Shade700)] = "#00796B";
-        colors[MaterialColor(Style::Teal, Style::Shade800)] = "#00695C";
-        colors[MaterialColor(Style::Teal, Style::Shade900)] = "#004D40";
-        colors[MaterialColor(Style::Teal, Style::ShadeA100)] = "#A7FFEB";
-        colors[MaterialColor(Style::Teal, Style::ShadeA200)] = "#64FFDA";
-        colors[MaterialColor(Style::Teal, Style::ShadeA400)] = "#1DE9B6";
-        colors[MaterialColor(Style::Teal, Style::ShadeA700)] = "#00BFA5";
-        colors[MaterialColor(Style::Green, Style::Shade50)] = "#E8F5E9";
-        colors[MaterialColor(Style::Green, Style::Shade100)] = "#C8E6C9";
-        colors[MaterialColor(Style::Green, Style::Shade200)] = "#A5D6A7";
-        colors[MaterialColor(Style::Green, Style::Shade300)] = "#81C784";
-        colors[MaterialColor(Style::Green, Style::Shade400)] = "#66BB6A";
-        colors[MaterialColor(Style::Green, Style::Shade500)] = "#4CAF50";
-        colors[MaterialColor(Style::Green, Style::Shade600)] = "#43A047";
-        colors[MaterialColor(Style::Green, Style::Shade700)] = "#388E3C";
-        colors[MaterialColor(Style::Green, Style::Shade800)] = "#2E7D32";
-        colors[MaterialColor(Style::Green, Style::Shade900)] = "#1B5E20";
-        colors[MaterialColor(Style::Green, Style::ShadeA100)] = "#B9F6CA";
-        colors[MaterialColor(Style::Green, Style::ShadeA200)] = "#69F0AE";
-        colors[MaterialColor(Style::Green, Style::ShadeA400)] = "#00E676";
-        colors[MaterialColor(Style::Green, Style::ShadeA700)] = "#00C853";
-        colors[MaterialColor(Style::LightGreen, Style::Shade50)] = "#F1F8E9";
-        colors[MaterialColor(Style::LightGreen, Style::Shade100)] = "#DCEDC8";
-        colors[MaterialColor(Style::LightGreen, Style::Shade200)] = "#C5E1A5";
-        colors[MaterialColor(Style::LightGreen, Style::Shade300)] = "#AED581";
-        colors[MaterialColor(Style::LightGreen, Style::Shade400)] = "#9CCC65";
-        colors[MaterialColor(Style::LightGreen, Style::Shade500)] = "#8BC34A";
-        colors[MaterialColor(Style::LightGreen, Style::Shade600)] = "#7CB342";
-        colors[MaterialColor(Style::LightGreen, Style::Shade700)] = "#689F38";
-        colors[MaterialColor(Style::LightGreen, Style::Shade800)] = "#558B2F";
-        colors[MaterialColor(Style::LightGreen, Style::Shade900)] = "#33691E";
-        colors[MaterialColor(Style::LightGreen, Style::ShadeA100)] = "#CCFF90";
-        colors[MaterialColor(Style::LightGreen, Style::ShadeA200)] = "#B2FF59";
-        colors[MaterialColor(Style::LightGreen, Style::ShadeA400)] = "#76FF03";
-        colors[MaterialColor(Style::LightGreen, Style::ShadeA700)] = "#64DD17";
-        colors[MaterialColor(Style::Lime, Style::Shade50)] = "#F9FBE7";
-        colors[MaterialColor(Style::Lime, Style::Shade100)] = "#F0F4C3";
-        colors[MaterialColor(Style::Lime, Style::Shade200)] = "#E6EE9C";
-        colors[MaterialColor(Style::Lime, Style::Shade300)] = "#DCE775";
-        colors[MaterialColor(Style::Lime, Style::Shade400)] = "#D4E157";
-        colors[MaterialColor(Style::Lime, Style::Shade500)] = "#CDDC39";
-        colors[MaterialColor(Style::Lime, Style::Shade600)] = "#C0CA33";
-        colors[MaterialColor(Style::Lime, Style::Shade700)] = "#AFB42B";
-        colors[MaterialColor(Style::Lime, Style::Shade800)] = "#9E9D24";
-        colors[MaterialColor(Style::Lime, Style::Shade900)] = "#827717";
-        colors[MaterialColor(Style::Lime, Style::ShadeA100)] = "#F4FF81";
-        colors[MaterialColor(Style::Lime, Style::ShadeA200)] = "#EEFF41";
-        colors[MaterialColor(Style::Lime, Style::ShadeA400)] = "#C6FF00";
-        colors[MaterialColor(Style::Lime, Style::ShadeA700)] = "#AEEA00";
-        colors[MaterialColor(Style::Yellow, Style::Shade50)] = "#FFFDE7";
-        colors[MaterialColor(Style::Yellow, Style::Shade100)] = "#FFF9C4";
-        colors[MaterialColor(Style::Yellow, Style::Shade200)] = "#FFF59D";
-        colors[MaterialColor(Style::Yellow, Style::Shade300)] = "#FFF176";
-        colors[MaterialColor(Style::Yellow, Style::Shade400)] = "#FFEE58";
-        colors[MaterialColor(Style::Yellow, Style::Shade500)] = "#FFEB3B";
-        colors[MaterialColor(Style::Yellow, Style::Shade600)] = "#FDD835";
-        colors[MaterialColor(Style::Yellow, Style::Shade700)] = "#FBC02D";
-        colors[MaterialColor(Style::Yellow, Style::Shade800)] = "#F9A825";
-        colors[MaterialColor(Style::Yellow, Style::Shade900)] = "#F57F17";
-        colors[MaterialColor(Style::Yellow, Style::ShadeA100)] = "#FFFF8D";
-        colors[MaterialColor(Style::Yellow, Style::ShadeA200)] = "#FFFF00";
-        colors[MaterialColor(Style::Yellow, Style::ShadeA400)] = "#FFEA00";
-        colors[MaterialColor(Style::Yellow, Style::ShadeA700)] = "#FFD600";
-        colors[MaterialColor(Style::Amber, Style::Shade50)] = "#FFF8E1";
-        colors[MaterialColor(Style::Amber, Style::Shade100)] = "#FFECB3";
-        colors[MaterialColor(Style::Amber, Style::Shade200)] = "#FFE082";
-        colors[MaterialColor(Style::Amber, Style::Shade300)] = "#FFD54F";
-        colors[MaterialColor(Style::Amber, Style::Shade400)] = "#FFCA28";
-        colors[MaterialColor(Style::Amber, Style::Shade500)] = "#FFC107";
-        colors[MaterialColor(Style::Amber, Style::Shade600)] = "#FFB300";
-        colors[MaterialColor(Style::Amber, Style::Shade700)] = "#FFA000";
-        colors[MaterialColor(Style::Amber, Style::Shade800)] = "#FF8F00";
-        colors[MaterialColor(Style::Amber, Style::Shade900)] = "#FF6F00";
-        colors[MaterialColor(Style::Amber, Style::ShadeA100)] = "#FFE57F";
-        colors[MaterialColor(Style::Amber, Style::ShadeA200)] = "#FFD740";
-        colors[MaterialColor(Style::Amber, Style::ShadeA400)] = "#FFC400";
-        colors[MaterialColor(Style::Amber, Style::ShadeA700)] = "#FFAB00";
-        colors[MaterialColor(Style::Orange, Style::Shade50)] = "#FFF3E0";
-        colors[MaterialColor(Style::Orange, Style::Shade100)] = "#FFE0B2";
-        colors[MaterialColor(Style::Orange, Style::Shade200)] = "#FFCC80";
-        colors[MaterialColor(Style::Orange, Style::Shade300)] = "#FFB74D";
-        colors[MaterialColor(Style::Orange, Style::Shade400)] = "#FFA726";
-        colors[MaterialColor(Style::Orange, Style::Shade500)] = "#FF9800";
-        colors[MaterialColor(Style::Orange, Style::Shade600)] = "#FB8C00";
-        colors[MaterialColor(Style::Orange, Style::Shade700)] = "#F57C00";
-        colors[MaterialColor(Style::Orange, Style::Shade800)] = "#EF6C00";
-        colors[MaterialColor(Style::Orange, Style::Shade900)] = "#E65100";
-        colors[MaterialColor(Style::Orange, Style::ShadeA100)] = "#FFD180";
-        colors[MaterialColor(Style::Orange, Style::ShadeA200)] = "#FFAB40";
-        colors[MaterialColor(Style::Orange, Style::ShadeA400)] = "#FF9100";
-        colors[MaterialColor(Style::Orange, Style::ShadeA700)] = "#FF6D00";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade50)] = "#FBE9E7";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade100)] = "#FFCCBC";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade200)] = "#FFAB91";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade300)] = "#FF8A65";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade400)] = "#FF7043";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade500)] = "#FF5722";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade600)] = "#F4511E";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade700)] = "#E64A19";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade800)] = "#D84315";
-        colors[MaterialColor(Style::DeepOrange, Style::Shade900)] = "#BF360C";
-        colors[MaterialColor(Style::DeepOrange, Style::ShadeA100)] = "#FF9E80";
-        colors[MaterialColor(Style::DeepOrange, Style::ShadeA200)] = "#FF6E40";
-        colors[MaterialColor(Style::DeepOrange, Style::ShadeA400)] = "#FF3D00";
-        colors[MaterialColor(Style::DeepOrange, Style::ShadeA700)] = "#DD2C00";
-        colors[MaterialColor(Style::Brown, Style::Shade50)] = "#EFEBE9";
-        colors[MaterialColor(Style::Brown, Style::Shade100)] = "#D7CCC8";
-        colors[MaterialColor(Style::Brown, Style::Shade200)] = "#BCAAA4";
-        colors[MaterialColor(Style::Brown, Style::Shade300)] = "#A1887F";
-        colors[MaterialColor(Style::Brown, Style::Shade400)] = "#8D6E63";
-        colors[MaterialColor(Style::Brown, Style::Shade500)] = "#795548";
-        colors[MaterialColor(Style::Brown, Style::Shade600)] = "#6D4C41";
-        colors[MaterialColor(Style::Brown, Style::Shade700)] = "#5D4037";
-        colors[MaterialColor(Style::Brown, Style::Shade800)] = "#4E342E";
-        colors[MaterialColor(Style::Brown, Style::Shade900)] = "#3E2723";
-        colors[MaterialColor(Style::Grey, Style::Shade50)] = "#FAFAFA";
-        colors[MaterialColor(Style::Grey, Style::Shade100)] = "#F5F5F5";
-        colors[MaterialColor(Style::Grey, Style::Shade200)] = "#EEEEEE";
-        colors[MaterialColor(Style::Grey, Style::Shade300)] = "#E0E0E0";
-        colors[MaterialColor(Style::Grey, Style::Shade400)] = "#BDBDBD";
-        colors[MaterialColor(Style::Grey, Style::Shade500)] = "#9E9E9E";
-        colors[MaterialColor(Style::Grey, Style::Shade600)] = "#757575";
-        colors[MaterialColor(Style::Grey, Style::Shade700)] = "#616161";
-        colors[MaterialColor(Style::Grey, Style::Shade800)] = "#424242";
-        colors[MaterialColor(Style::Grey, Style::Shade900)] = "#212121";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade50)] = "#ECEFF1";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade100)] = "#CFD8DC";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade200)] = "#B0BEC5";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade300)] = "#90A4AE";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade400)] = "#78909C";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade500)] = "#607D8B";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade600)] = "#546E7A";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade700)] = "#455A64";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade800)] = "#37474F";
-        colors[MaterialColor(Style::BlueGrey, Style::Shade900)] = "#263238";
-    }
 }
 
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) :
@@ -755,8 +795,15 @@ QColor QQuickMaterialStyle::drawerBackgroundColor() const
 
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
-    Q_D(const QQuickMaterialStyle);
-    return d->colors.value(MaterialColor(color, shade));
+    int count = sizeof(colors) / sizeof(colors[0]);
+    if (color < 0 || color >= count)
+        return QColor();
+
+    count = sizeof(colors[0]) / sizeof(colors[0][0]);
+    if (shade < 0 || shade >= count)
+        return QColor();
+
+    return colors[color][shade];
 }
 
 void QQuickMaterialStyle::reparent(QQuickMaterialStyle *style)
