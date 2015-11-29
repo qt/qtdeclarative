@@ -710,8 +710,9 @@ QQuickShaderEffect::~QQuickShaderEffect()
     \qmlproperty string QtQuick::ShaderEffect::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
-    The default shader passes the texture coordinate along to the fragment
-    shader as "varying highp vec2 qt_TexCoord0".
+    The default shader expects the texture coordinate to be passed from the
+    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
+    sampler2D named "source".
 */
 
 void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
@@ -737,9 +738,8 @@ void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
     \qmlproperty string QtQuick::ShaderEffect::vertexShader
 
     This property holds the vertex shader's GLSL source code.
-    The default shader expects the texture coordinate to be passed from the
-    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
-    sampler2D named "source".
+    The default shader passes the texture coordinate along to the fragment
+    shader as "varying highp vec2 qt_TexCoord0".
 */
 
 void QQuickShaderEffect::setVertexShader(const QByteArray &code)
