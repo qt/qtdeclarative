@@ -63,6 +63,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_OBJECT
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
+    Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
@@ -75,6 +76,8 @@ public:
 
     QQuickItem *contentItem() const;
     QQmlListProperty<QObject> contentData();
+
+    QQuickItem *activeFocusControl() const;
 
     QQuickItem *header() const;
     void setHeader(QQuickItem *header);
@@ -91,6 +94,7 @@ public:
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
+    void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();
     void fontChanged();
@@ -103,6 +107,7 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickApplicationWindow)
     Q_DECLARE_PRIVATE(QQuickApplicationWindow)
+    Q_PRIVATE_SLOT(d_func(), void _q_updateActiveFocus())
     QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
@@ -111,7 +116,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuickApplicationWindow *window READ window NOTIFY windowChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem NOTIFY contentItemChanged FINAL)
-    Q_PROPERTY(QQuickItem *activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickItem *overlay READ overlay NOTIFY overlayChanged FINAL)
@@ -121,7 +126,7 @@ public:
 
     QQuickApplicationWindow *window() const;
     QQuickItem *contentItem() const;
-    QQuickItem *activeFocusItem() const;
+    QQuickItem *activeFocusControl() const;
     QQuickItem *header() const;
     QQuickItem *footer() const;
     QQuickItem *overlay() const;
@@ -129,7 +134,7 @@ public:
 Q_SIGNALS:
     void windowChanged();
     void contentItemChanged();
-    void activeFocusItemChanged();
+    void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();
     void overlayChanged();

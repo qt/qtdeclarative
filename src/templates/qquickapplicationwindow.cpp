@@ -37,6 +37,8 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquicktextarea_p.h"
+#include "qquicktextfield_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -93,6 +95,7 @@ public:
         , header(Q_NULLPTR)
         , footer(Q_NULLPTR)
         , overlay(Q_NULLPTR)
+        , activeFocusControl(Q_NULLPTR)
     { }
 
     void relayout();
@@ -108,12 +111,16 @@ public:
     }
     void resolveFont();
 
+    void _q_updateActiveFocus();
+    void setActiveFocusControl(QQuickItem *item);
+
     bool complete;
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
     QQuickOverlay *overlay;
     QFont font;
+    QQuickItem *activeFocusControl;
     QQuickApplicationWindow *q_ptr;
 };
 
@@ -165,10 +172,44 @@ void QQuickApplicationWindowPrivate::itemImplicitHeightChanged(QQuickItem *item)
     relayout();
 }
 
+void QQuickApplicationWindowPrivate::_q_updateActiveFocus()
+{
+    Q_Q(QQuickApplicationWindow);
+    QQuickItem *item = q->activeFocusItem();
+    while (item) {
+        QQuickControl *control = qobject_cast<QQuickControl *>(item);
+        if (control) {
+            setActiveFocusControl(control);
+            break;
+        }
+        QQuickTextField *textField = qobject_cast<QQuickTextField *>(item);
+        if (textField) {
+            setActiveFocusControl(textField);
+            break;
+        }
+        QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(item);
+        if (textArea) {
+            setActiveFocusControl(textArea);
+            break;
+        }
+        item = item->parentItem();
+    }
+}
+
+void QQuickApplicationWindowPrivate::setActiveFocusControl(QQuickItem *control)
+{
+    Q_Q(QQuickApplicationWindow);
+    if (activeFocusControl != control) {
+        activeFocusControl = control;
+        emit q->activeFocusControlChanged();
+    }
+}
+
 QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent) :
     QQuickWindowQmlImpl(parent), d_ptr(new QQuickApplicationWindowPrivate)
 {
     d_ptr->q_ptr = this;
+    connect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));
 }
 
 QQuickApplicationWindow::~QQuickApplicationWindow()
@@ -274,6 +315,25 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
         d->relayout();
     }
     return d->contentItem;
+}
+
+/*!
+    \qmlproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+
+    This property holds the control that currently has active focus, or \c null if there is
+    no control with active focus.
+
+    The difference between \L Window::activeFocusItem and ApplicationWindow::activeFocusControl
+    is that the former may point to a building block of a control, whereas the latter points
+    to the enclosing control. For example, when SpinBox has focus, activeFocusItem points to
+    the editor and acticeFocusControl to the SpinBox itself.
+
+    \sa Window::activeFocusItem
+*/
+QQuickItem *QQuickApplicationWindow::activeFocusControl() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->activeFocusControl;
 }
 
 /*!
@@ -392,16 +452,16 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     if (window != newWindow) {
         QQuickApplicationWindow *oldWindow = window;
         if (oldWindow) {
-            QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusItemChanged,
-                                q, &QQuickApplicationWindowAttached::activeFocusItemChanged);
+            QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                                q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
             QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
                                 q, &QQuickApplicationWindowAttached::headerChanged);
             QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
                                 q, &QQuickApplicationWindowAttached::footerChanged);
         }
         if (newWindow) {
-            QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusItemChanged,
-                             q, &QQuickApplicationWindowAttached::activeFocusItemChanged);
+            QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                             q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
             QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
                              q, &QQuickApplicationWindowAttached::headerChanged);
             QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
@@ -413,8 +473,8 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
         emit q->contentItemChanged();
         emit q->overlayChanged();
 
-        if ((oldWindow && oldWindow->activeFocusItem()) || (newWindow && newWindow->activeFocusItem()))
-            emit q->activeFocusItemChanged();
+        if ((oldWindow && oldWindow->activeFocusControl()) || (newWindow && newWindow->activeFocusControl()))
+            emit q->activeFocusControlChanged();
         if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
             emit q->headerChanged();
         if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
@@ -458,18 +518,27 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 }
 
 /*!
-    \qmlattachedproperty Item Qt.labs.controls::ApplicationWindow::activeFocusItem
+    \qmlattachedproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
 
-    This attached property holds the active focus item. The property can be attached
-    to any item. The value is \c null if the item is not in an ApplicationWindow, or
-    the window has no active focus.
+    This attached property holds the control that currently has active focus, or \c null
+    if there is no control with active focus. The property can be attached to any item.
+    The value is \c null if the item is not in an ApplicationWindow, or the window has
+    no active focus.
 
     \sa Window::activeFocusItem
 */
-QQuickItem *QQuickApplicationWindowAttached::activeFocusItem() const
+
+/*!
+    \qmlattachedproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
+
+    This attached property holds the active focus control. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow, or
+    the window has no active focus.
+*/
+QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    return d->window ? d->window->activeFocusItem() : Q_NULLPTR;
+    return d->window ? d->window->activeFocusControl() : Q_NULLPTR;
 }
 
 /*!
@@ -511,3 +580,5 @@ QQuickItem *QQuickApplicationWindowAttached::overlay() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickapplicationwindow_p.cpp"

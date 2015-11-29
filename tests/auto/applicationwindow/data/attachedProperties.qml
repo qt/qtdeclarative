@@ -43,15 +43,27 @@ import QtQuick.Window 2.2
 import Qt.labs.controls 1.0
 
 ApplicationWindow {
+    property alias childControl: childControl
     property alias childItem: childItem
     property alias childObject: childObject
 
-    Item {
+    Control {
+        id: childControl
+
+        property ApplicationWindow attached_window: ApplicationWindow.window
+        property Item attached_contentItem: ApplicationWindow.contentItem
+        property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
+        property Item attached_header: ApplicationWindow.header
+        property Item attached_footer: ApplicationWindow.footer
+        property Item attached_overlay: ApplicationWindow.overlay
+    }
+
+    Control {
         id: childItem
 
         property ApplicationWindow attached_window: ApplicationWindow.window
         property Item attached_contentItem: ApplicationWindow.contentItem
-        property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+        property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
         property Item attached_overlay: ApplicationWindow.overlay
@@ -62,13 +74,14 @@ ApplicationWindow {
 
         property ApplicationWindow attached_window: ApplicationWindow.window
         property Item attached_contentItem: ApplicationWindow.contentItem
-        property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+        property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
         property Item attached_overlay: ApplicationWindow.overlay
     }
 
     property alias childWindow: childWindow
+    property alias childWindowControl: childWindowControl
     property alias childWindowItem: childWindowItem
     property alias childWindowObject: childWindowObject
 
@@ -77,17 +90,28 @@ ApplicationWindow {
 
         property ApplicationWindow attached_window: ApplicationWindow.window
         property Item attached_contentItem: ApplicationWindow.contentItem
-        property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+        property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
         property Item attached_overlay: ApplicationWindow.overlay
 
-        Item {
+        Control {
+            id: childWindowControl
+
+            property ApplicationWindow attached_window: ApplicationWindow.window
+            property Item attached_contentItem: ApplicationWindow.contentItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
+            property Item attached_header: ApplicationWindow.header
+            property Item attached_footer: ApplicationWindow.footer
+            property Item attached_overlay: ApplicationWindow.overlay
+        }
+
+        Control {
             id: childWindowItem
 
             property ApplicationWindow attached_window: ApplicationWindow.window
             property Item attached_contentItem: ApplicationWindow.contentItem
-            property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
             property Item attached_overlay: ApplicationWindow.overlay
@@ -98,7 +122,7 @@ ApplicationWindow {
 
             property ApplicationWindow attached_window: ApplicationWindow.window
             property Item attached_contentItem: ApplicationWindow.contentItem
-            property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
             property Item attached_overlay: ApplicationWindow.overlay
@@ -106,6 +130,7 @@ ApplicationWindow {
     }
 
     property alias childAppWindow: childAppWindow
+    property alias childAppWindowControl: childAppWindowControl
     property alias childAppWindowItem: childAppWindowItem
     property alias childAppWindowObject: childAppWindowObject
 
@@ -114,17 +139,28 @@ ApplicationWindow {
 
         property ApplicationWindow attached_window: ApplicationWindow.window
         property Item attached_contentItem: ApplicationWindow.contentItem
-        property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+        property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
         property Item attached_overlay: ApplicationWindow.overlay
 
-        Item {
+        Control {
+            id: childAppWindowControl
+
+            property ApplicationWindow attached_window: ApplicationWindow.window
+            property Item attached_contentItem: ApplicationWindow.contentItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
+            property Item attached_header: ApplicationWindow.header
+            property Item attached_footer: ApplicationWindow.footer
+            property Item attached_overlay: ApplicationWindow.overlay
+        }
+
+        Control {
             id: childAppWindowItem
 
             property ApplicationWindow attached_window: ApplicationWindow.window
             property Item attached_contentItem: ApplicationWindow.contentItem
-            property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
             property Item attached_overlay: ApplicationWindow.overlay
@@ -135,7 +171,7 @@ ApplicationWindow {
 
             property ApplicationWindow attached_window: ApplicationWindow.window
             property Item attached_contentItem: ApplicationWindow.contentItem
-            property Item attached_activeFocusItem: ApplicationWindow.activeFocusItem
+            property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
             property Item attached_overlay: ApplicationWindow.overlay
