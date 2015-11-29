@@ -195,6 +195,8 @@ protected:
     void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
+    void init();
+
     bool m_hasTheme;
     bool m_hasAccent;
     QQuickUniversalStyle::Theme m_theme;

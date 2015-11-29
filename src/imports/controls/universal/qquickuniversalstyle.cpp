@@ -37,12 +37,13 @@
 #include "qquickuniversalstyle_p.h"
 
 #include <QtCore/qdebug.h>
+#include <QtCore/qsettings.h>
 #include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
-static const QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
-static const QQuickUniversalStyle::Accent DefaultAccent = QQuickUniversalStyle::Cobalt;
+static QQuickUniversalStyle::Theme DefaultTheme = QQuickUniversalStyle::Light;
+static QQuickUniversalStyle::Accent DefaultAccent = QQuickUniversalStyle::Cobalt;
 
 static QColor qquickuniversal_light_color(QQuickUniversalStyle::SystemColor role)
 {
@@ -136,7 +137,7 @@ static QColor qquickuniversal_accent_color(QQuickUniversalStyle::Accent accent)
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickStyle(parent),
     m_hasTheme(false), m_hasAccent(false), m_theme(DefaultTheme), m_accent(DefaultAccent)
 {
-    init(); // TODO: lazy init?
+    init();
 }
 
 QQuickUniversalStyle *QQuickUniversalStyle::qmlAttachedProperties(QObject *object)
@@ -372,6 +373,35 @@ void QQuickUniversalStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle
         inheritTheme(universal->theme());
         inheritAccent(universal->accent());
     }
+}
+
+template <typename Enum>
+static Enum readEnumValue(QSettings *settings, const QString &name, Enum fallback)
+{
+    Enum result = fallback;
+    if (settings->contains(name)) {
+        QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
+        bool ok = false;
+        int value = enumeration.keyToValue(settings->value(name).toByteArray(), &ok);
+        if (ok)
+            result = static_cast<Enum>(value);
+    }
+    return result;
+}
+
+void QQuickUniversalStyle::init()
+{
+    static bool defaultsInitialized = false;
+    if (!defaultsInitialized) {
+        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Universal"));
+        if (!settings.isNull()) {
+            DefaultTheme = m_theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), m_theme);
+            DefaultAccent = m_accent = readEnumValue<Accent>(settings.data(), QStringLiteral("Accent"), m_accent);
+        }
+        defaultsInitialized = true;
+    }
+
+    QQuickStyle::init(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE
