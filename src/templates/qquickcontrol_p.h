@@ -70,6 +70,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
+    Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
 
@@ -112,6 +113,9 @@ public:
 
     bool isMirrored() const;
 
+    Qt::FocusReason focusReason() const;
+    void setFocusReason(Qt::FocusReason reason);
+
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);
 
@@ -130,6 +134,7 @@ Q_SIGNALS:
     void spacingChanged();
     void localeChanged();
     void mirroredChanged();
+    void focusReasonChanged();
     void backgroundChanged();
     void contentItemChanged();
 
@@ -142,6 +147,9 @@ protected:
     void componentComplete() Q_DECL_OVERRIDE;
 
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+
+    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
+    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
 
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

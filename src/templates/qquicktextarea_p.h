@@ -65,6 +65,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
+    Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = Q_NULLPTR);
@@ -79,12 +80,16 @@ public:
     QString placeholderText() const;
     void setPlaceholderText(const QString &text);
 
+    Qt::FocusReason focusReason() const;
+    void setFocusReason(Qt::FocusReason reason);
+
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged();
     void implicitHeightChanged();
     void backgroundChanged();
     void placeholderTextChanged();
+    void focusReasonChanged();
     void pressAndHold(QQuickMouseEvent *event);
 
 protected:
@@ -93,6 +98,9 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
+
+    void focusInEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
+    void focusOutEvent(QFocusEvent *event) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

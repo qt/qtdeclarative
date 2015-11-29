@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
+    : background(Q_NULLPTR), focusReason(Qt::OtherFocusReason), accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -285,6 +285,40 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
     }
 }
 
+/*!
+    \qmlproperty enumeration Qt.labs.controls::TextArea::focusReason
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the control has \l {Item::activeFocus}
+          {active focus}, but the reason why the control either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \sa Item::activeFocus
+*/
+Qt::FocusReason QQuickTextArea::focusReason() const
+{
+    Q_D(const QQuickTextArea);
+    return d->focusReason;
+}
+
+void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickTextArea);
+    if (d->focusReason != reason) {
+        d->focusReason = reason;
+        emit focusReasonChanged();
+    }
+}
+
 void QQuickTextArea::classBegin()
 {
     Q_D(QQuickTextArea);
@@ -321,6 +355,18 @@ QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         clipNode->appendChildNode(textNode);
 
     return clipNode;
+}
+
+void QQuickTextArea::focusInEvent(QFocusEvent *event)
+{
+    QQuickTextEdit::focusInEvent(event);
+    setFocusReason(event->reason());
+}
+
+void QQuickTextArea::focusOutEvent(QFocusEvent *event)
+{
+    QQuickTextEdit::focusOutEvent(event);
+    setFocusReason(event->reason());
 }
 
 void QQuickTextArea::mousePressEvent(QMouseEvent *event)

@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
-    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
+    padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
     background(Q_NULLPTR), contentItem(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
@@ -654,6 +654,40 @@ bool QQuickControl::isMirrored() const
 }
 
 /*!
+    \qmlproperty enumeration Qt.labs.controls::Control::focusReason
+
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the control has \l {Item::activeFocus}
+          {active focus}, but the reason why the control either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \sa Item::activeFocus
+*/
+Qt::FocusReason QQuickControl::focusReason() const
+{
+    Q_D(const QQuickControl);
+    return d->focusReason;
+}
+
+void QQuickControl::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickControl);
+    if (d->focusReason != reason) {
+        d->focusReason = reason;
+        emit focusReasonChanged();
+    }
+}
+
+/*!
     \qmlproperty Item Qt.labs.controls::Control::background
 
     This property holds the background item.
@@ -726,6 +760,18 @@ void QQuickControl::componentComplete()
 QFont QQuickControl::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+}
+
+void QQuickControl::focusInEvent(QFocusEvent *event)
+{
+    QQuickItem::focusInEvent(event);
+    setFocusReason(event->reason());
+}
+
+void QQuickControl::focusOutEvent(QFocusEvent *event)
+{
+    QQuickItem::focusOutEvent(event);
+    setFocusReason(event->reason());
 }
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)

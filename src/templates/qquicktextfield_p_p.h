@@ -94,6 +94,7 @@ public:
 
     QQuickItem *background;
     QString placeholder;
+    Qt::FocusReason focusReason;
     QQuickPressAndHoldHelper pressAndHoldHelper;
     QQuickAccessibleAttached *accessibleAttached;
 };

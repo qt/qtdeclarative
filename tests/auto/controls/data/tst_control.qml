@@ -638,4 +638,30 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_focusReason_data() {
+        return [
+            { tag: "Control", qml: "import Qt.labs.controls 1.0; Control { }" },
+            { tag: "TextField", qml: "import Qt.labs.controls 1.0; TextField { }" },
+            { tag: "TextArea", qml: "import Qt.labs.controls 1.0; TextArea { }" },
+            { tag: "SpinBox", qml: "import Qt.labs.controls 1.0; SpinBox { }" },
+            { tag: "ComboBox", qml: "import Qt.labs.controls 1.0; ComboBox { }" }
+        ]
+    }
+
+    function test_focusReason(data) {
+        var control = Qt.createQmlObject(data.qml, testCase)
+        verify(control)
+
+        compare(control.focusReason, Qt.OtherFocusReason)
+        control.forceActiveFocus(Qt.MouseFocusReason)
+        compare(control.activeFocus, true)
+        compare(control.focusReason, Qt.MouseFocusReason)
+
+        testCase.forceActiveFocus(Qt.TabFocusReason)
+        compare(control.activeFocus, false)
+        compare(control.focusReason, Qt.TabFocusReason)
+
+        control.destroy()
+    }
 }
