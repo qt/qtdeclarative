@@ -114,9 +114,9 @@ protected:
         response.insert(QStringLiteral("running"), debugService->debuggerAgent.isRunning());
     }
 
-    void addRefs()
+    void addRefs(const QJsonArray &refs)
     {
-        response.insert(QStringLiteral("refs"), debugService->buildRefs());
+        response.insert(QStringLiteral("refs"), refs);
     }
 
     void createErrorResponse(const QString &msg)
@@ -271,28 +271,16 @@ public:
         int toFrame = arguments.value(QStringLiteral("toFrame")).toInt(fromFrame + 10);
         // no idea what the bottom property is for, so we'll ignore it.
 
-        QV4::Debugging::V4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-
-        QJsonArray frameArray;
-        QVector<QV4::StackFrame> frames = debugger->stackTrace(toFrame);
-        for (int i = fromFrame; i < toFrame && i < frames.size(); ++i)
-            frameArray.push_back(debugService->buildFrame(frames[i], i, debugger));
+        BacktraceJob job(debugService->collector(), fromFrame, toFrame);
+        debugService->debuggerAgent.firstDebugger()->runInEngine(&job);
 
         // response:
         addCommand();
         addRequestSequence();
         addSuccess(true);
         addRunning();
-        QJsonObject body;
-        if (frameArray.isEmpty()) {
-            body.insert(QStringLiteral("totalFrames"), 0);
-        } else {
-            body.insert(QStringLiteral("fromFrame"), fromFrame);
-            body.insert(QStringLiteral("toFrame"), fromFrame + frameArray.size());
-            body.insert(QStringLiteral("frames"), frameArray);
-        }
-        addBody(body);
-        addRefs();
+        addBody(job.returnValue());
+        addRefs(job.refs());
     }
 };
 
@@ -308,23 +296,27 @@ public:
         const int frameNr = arguments.value(QStringLiteral("number")).toInt(
                     debugService->selectedFrame());
 
-        QV4::Debugging::V4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-        QVector<QV4::StackFrame> frames = debugger->stackTrace(frameNr + 1);
-        if (frameNr < 0 || frameNr >= frames.size()) {
+        if (frameNr < 0) {
             createErrorResponse(QStringLiteral("frame command has invalid frame number"));
             return;
         }
 
+        FrameJob job(debugService->collector(), frameNr);
+        debugService->debuggerAgent.firstDebugger()->runInEngine(&job);
+        if (!job.wasSuccessful()) {
+            createErrorResponse(QStringLiteral("frame retrieval failed"));
+            return;
+        }
+
         debugService->selectFrame(frameNr);
-        QJsonObject frame = debugService->buildFrame(frames[frameNr], frameNr, debugger);
 
         // response:
         addCommand();
         addRequestSequence();
         addSuccess(true);
         addRunning();
-        addBody(frame);
-        addRefs();
+        addBody(job.returnValue());
+        addRefs(job.refs());
     }
 };
 
@@ -341,9 +333,7 @@ public:
                     debugService->selectedFrame());
         const int scopeNr = arguments.value(QStringLiteral("number")).toInt(0);
 
-        QV4::Debugging::V4Debugger *debugger = debugService->debuggerAgent.firstDebugger();
-        QVector<QV4::StackFrame> frames = debugger->stackTrace(frameNr + 1);
-        if (frameNr < 0 || frameNr >= frames.size()) {
+        if (frameNr < 0) {
             createErrorResponse(QStringLiteral("scope command has invalid frame number"));
             return;
         }
@@ -352,15 +342,20 @@ public:
             return;
         }
 
-        QJsonObject scope = debugService->buildScope(frameNr, scopeNr, debugger);
+        ScopeJob job(debugService->collector(), frameNr, scopeNr);
+        debugService->debuggerAgent.firstDebugger()->runInEngine(&job);
+        if (!job.wasSuccessful()) {
+            createErrorResponse(QStringLiteral("scope retrieval failed"));
+            return;
+        }
 
         // response:
         addCommand();
         addRequestSequence();
         addSuccess(true);
         addRunning();
-        addBody(scope);
-        addRefs();
+        addBody(job.returnValue());
+        addRefs(job.refs());
     }
 };
 
@@ -375,17 +370,19 @@ public:
         QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
         QJsonArray handles = arguments.value(QStringLiteral("handles")).toArray();
 
-        QJsonObject body;
-        foreach (const QJsonValue &handle, handles)
-            body[QString::number(handle.toInt())] = debugService->lookup(handle.toInt());
-
-        // response:
-        addCommand();
-        addRequestSequence();
-        addSuccess(true);
-        addRunning();
-        addBody(body);
-        addRefs();
+        ValueLookupJob job(handles, debugService->collector());
+        debugService->debuggerAgent.firstDebugger()->runInEngine(&job);
+        if (!job.exceptionMessage().isEmpty()) {
+            createErrorResponse(job.exceptionMessage());
+        } else {
+            // response:
+            addCommand();
+            addRequestSequence();
+            addSuccess(true);
+            addRunning();
+            addBody(job.returnValue());
+            addRefs(job.refs());
+        }
     }
 };
 
@@ -557,7 +554,6 @@ public:
             const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
 
             QV4DataCollector *collector = debugService->collector();
-            RefHolder holder(collector, debugService->refs());
             ExpressionEvalJob job(debugger->engine(), frame, expression, collector);
             debugger->runInEngine(&job);
             if (job.hasExeption()) {
@@ -567,8 +563,8 @@ public:
                 addRequestSequence();
                 addSuccess(true);
                 addRunning();
-                addBody(collector->lookupRef(debugService->refs()->last()));
-                addRefs();
+                addBody(job.returnValue());
+                addRefs(job.refs());
             }
         } else {
             createErrorResponse(QStringLiteral("Debugger has to be paused for evaluate to work."));
@@ -789,133 +785,9 @@ void QV4DebugServiceImpl::clearHandles(QV4::ExecutionEngine *engine)
     theCollector.reset(new QV4DataCollector(engine));
 }
 
-QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
-                                        QV4::Debugging::V4Debugger *debugger)
-{
-    QV4DataCollector::Ref ref;
-
-    QJsonObject frame;
-    frame[QLatin1String("index")] = frameNr;
-    frame[QLatin1String("debuggerFrame")] = false;
-    ref = theCollector->addFunctionRef(stackFrame.function);
-    collectedRefs.append(ref);
-    frame[QLatin1String("func")] = toRef(ref);
-    ref = theCollector->addScriptRef(stackFrame.source);
-    collectedRefs.append(ref);
-    frame[QLatin1String("script")] = toRef(ref);
-    frame[QLatin1String("line")] = stackFrame.line - 1;
-    if (stackFrame.column >= 0)
-        frame[QLatin1String("column")] = stackFrame.column;
-
-    QJsonArray scopes;
-    if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
-        RefHolder holder(theCollector.data(), &collectedRefs);
-        bool foundThis = false;
-        ThisCollectJob job(debugger->engine(), theCollector.data(), frameNr, &foundThis);
-        debugger->runInEngine(&job);
-        if (foundThis)
-            frame[QLatin1String("receiver")] = toRef(collectedRefs.last());
-
-        // Only type and index are used by Qt Creator, so we keep it easy:
-        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
-                QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
-        for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
-            int type = encodeScopeType(scopeTypes[i]);
-            if (type == -1)
-                continue;
-
-            QJsonObject scope;
-            scope[QLatin1String("index")] = i;
-            scope[QLatin1String("type")] = type;
-            scopes.push_back(scope);
-        }
-    }
-    frame[QLatin1String("scopes")] = scopes;
-
-    return frame;
-}
-
-int QV4DebugServiceImpl::encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType)
-{
-    switch (scopeType) {
-    case QV4::Heap::ExecutionContext::Type_GlobalContext:
-        return 0;
-        break;
-    case QV4::Heap::ExecutionContext::Type_CatchContext:
-        return 4;
-        break;
-    case QV4::Heap::ExecutionContext::Type_WithContext:
-        return 2;
-        break;
-    case QV4::Heap::ExecutionContext::Type_SimpleCallContext:
-    case QV4::Heap::ExecutionContext::Type_CallContext:
-        return 1;
-        break;
-    case QV4::Heap::ExecutionContext::Type_QmlContext:
-    default:
-        return -1;
-    }
-}
-
-QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr,
-                                        QV4::Debugging::V4Debugger *debugger)
-{
-    QJsonObject scope;
-
-    QJsonObject object;
-    RefHolder holder(theCollector.data(), &collectedRefs);
-    theCollector->collectScope(&object, debugger, frameNr, scopeNr);
-
-    if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
-        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
-                QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
-        scope[QLatin1String("type")] = encodeScopeType(scopeTypes[scopeNr]);
-    } else {
-        scope[QLatin1String("type")] = -1;
-    }
-    scope[QLatin1String("index")] = scopeNr;
-    scope[QLatin1String("frameIndex")] = frameNr;
-    scope[QLatin1String("object")] = object;
-
-    return scope;
-}
-
-QJsonValue QV4DebugServiceImpl::lookup(QV4DataCollector::Ref refId)
-{
-    RefHolder holder(theCollector.data(), &collectedRefs);
-    return theCollector->lookupRef(refId);
-}
-
-QJsonArray QV4DebugServiceImpl::buildRefs()
-{
-    QJsonArray refs;
-    std::sort(collectedRefs.begin(), collectedRefs.end());
-    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
-        QV4DataCollector::Ref ref = collectedRefs.at(i);
-        if (i > 0 && ref == collectedRefs.at(i - 1))
-            continue;
-        refs.append(lookup(ref));
-    }
-
-    collectedRefs.clear();
-    return refs;
-}
-
-QJsonValue QV4DebugServiceImpl::toRef(QV4DataCollector::Ref ref)
-{
-    QJsonObject dict;
-    dict.insert(QStringLiteral("ref"), qint64(ref));
-    return dict;
-}
-
 QV4DataCollector *QV4DebugServiceImpl::collector() const
 {
     return theCollector.data();
-}
-
-QV4DataCollector::Refs *QV4DebugServiceImpl::refs()
-{
-    return &collectedRefs;
 }
 
 void QV4DebugServiceImpl::selectFrame(int frameNr)

@@ -37,6 +37,9 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4debugging_p.h>
 
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+
 QT_BEGIN_NAMESPACE
 
 class QV4DataCollector
@@ -49,25 +52,27 @@ public:
     static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
     static QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(
             QV4::ExecutionEngine *engine, int frame);
+    static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
     ~QV4DataCollector();
 
-    void collect(const QV4::ScopedValue &value);
-
+    Ref collect(const QV4::ScopedValue &value);
+    bool isValidRef(Ref ref) const;
     QJsonObject lookupRef(Ref ref);
 
     Ref addFunctionRef(const QString &functionName);
     Ref addScriptRef(const QString &scriptName);
 
-    void collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger, int frameNr,
+    bool collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger, int frameNr,
                       int scopeNr);
+    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
+                           QV4::Debugging::V4Debugger *debugger);
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
+    QJsonArray flushCollectedRefs();
 
 private:
-    friend class RefHolder;
-
     Ref addRef(QV4::Value value, bool deduplicate = true);
     QV4::ReturnedValue getValue(Ref ref);
     bool lookupSpecialRef(Ref ref, QJsonObject *dict);
@@ -77,40 +82,81 @@ private:
     void collectArgumentsInContext();
 
     QV4::ExecutionEngine *m_engine;
-    Refs *m_collectedRefs;
+    Refs collectedRefs;
     QV4::PersistentValue values;
     typedef QHash<Ref, QJsonObject> SpecialRefs;
     SpecialRefs specialRefs;
 };
 
-class RefHolder {
+class CollectJob : public QV4::Debugging::V4Debugger::Job
+{
+protected:
+    QV4DataCollector *collector;
+    QJsonObject result;
+    QJsonArray collectedRefs;
 public:
-    RefHolder(QV4DataCollector *collector, QV4DataCollector::Refs *target) :
-        m_collector(collector), m_previousRefs(collector->m_collectedRefs)
-    {
-        m_collector->m_collectedRefs = target;
-    }
+    CollectJob(QV4DataCollector *collector) : collector(collector) {}
+    const QJsonObject &returnValue() const { return result; }
+    const QJsonArray &refs() const { return collectedRefs; }
+};
 
-    ~RefHolder()
-    {
-        std::swap(m_collector->m_collectedRefs, m_previousRefs);
-    }
+class BacktraceJob: public CollectJob
+{
+    int fromFrame;
+    int toFrame;
+public:
+    BacktraceJob(QV4DataCollector *collector, int fromFrame, int toFrame);
+    void run();
+};
 
-private:
-    QV4DataCollector *m_collector;
-    QV4DataCollector::Refs *m_previousRefs;
+class FrameJob: public CollectJob
+{
+    int frameNr;
+    bool success;
+
+public:
+    FrameJob(QV4DataCollector *collector, int frameNr);
+    void run();
+    bool wasSuccessful() const;
+};
+
+class ScopeJob: public CollectJob
+{
+    int frameNr;
+    int scopeNr;
+    bool success;
+
+public:
+    ScopeJob(QV4DataCollector *collector, int frameNr, int scopeNr);
+    void run();
+    bool wasSuccessful() const;
+};
+
+class ValueLookupJob: public CollectJob
+{
+    const QJsonArray handles;
+    QString exception;
+
+public:
+    ValueLookupJob(const QJsonArray &handles, QV4DataCollector *collector);
+    void run();
+    const QString &exceptionMessage() const;
 };
 
 class ExpressionEvalJob: public QV4::Debugging::V4Debugger::JavaScriptJob
 {
     QV4DataCollector *collector;
     QString exception;
+    QJsonObject value;
+    QJsonArray collectedRefs;
 
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
                       QV4DataCollector *collector);
     virtual void handleResult(QV4::ScopedValue &result);
     const QString &exceptionMessage() const;
+    const QJsonObject &returnValue() const;
+    const QJsonArray &refs() const;
 };
 
 class GatherSourcesJob: public QV4::Debugging::V4Debugger::Job
@@ -123,56 +169,16 @@ public:
     void run();
 };
 
-class ArgumentCollectJob: public QV4::Debugging::V4Debugger::Job
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    QStringList *names;
-    int frameNr;
-    int scopeNr;
-
-public:
-    ArgumentCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                       QStringList *names, int frameNr, int scopeNr);
-    void run();
-};
-
-class LocalCollectJob: public QV4::Debugging::V4Debugger::Job
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    QStringList *names;
-    int frameNr;
-    int scopeNr;
-
-public:
-    LocalCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, QStringList *names,
-                    int frameNr, int scopeNr);
-    void run();
-};
-
-class ThisCollectJob: public QV4::Debugging::V4Debugger::Job
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    int frameNr;
-    bool *foundThis;
-
-public:
-    ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, int frameNr,
-                   bool *foundThis);
-    void run();
-    bool myRun();
-};
-
 class ExceptionCollectJob: public QV4::Debugging::V4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
+    QV4DataCollector::Ref exception;
 
 public:
     ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector);
     void run();
+    QV4DataCollector::Ref exceptionValue() const;
 };
 
 QT_END_NAMESPACE

@@ -89,9 +89,30 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
     return types;
 }
 
+int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType)
+{
+    switch (scopeType) {
+    case QV4::Heap::ExecutionContext::Type_GlobalContext:
+        return 0;
+        break;
+    case QV4::Heap::ExecutionContext::Type_CatchContext:
+        return 4;
+        break;
+    case QV4::Heap::ExecutionContext::Type_WithContext:
+        return 2;
+        break;
+    case QV4::Heap::ExecutionContext::Type_SimpleCallContext:
+    case QV4::Heap::ExecutionContext::Type_CallContext:
+        return 1;
+        break;
+    case QV4::Heap::ExecutionContext::Type_QmlContext:
+    default:
+        return -1;
+    }
+}
 
 QV4DataCollector::QV4DataCollector(QV4::ExecutionEngine *engine)
-    : m_engine(engine), m_collectedRefs(Q_NULLPTR)
+    : m_engine(engine)
 {
     values.set(engine, engine->newArrayObject());
 }
@@ -100,10 +121,11 @@ QV4DataCollector::~QV4DataCollector()
 {
 }
 
-void QV4DataCollector::collect(const QV4::ScopedValue &value)
+QV4DataCollector::Ref QV4DataCollector::collect(const QV4::ScopedValue &value)
 {
-    if (m_collectedRefs)
-        m_collectedRefs->append(addRef(value));
+    Ref ref = addRef(value);
+    collectedRefs.append(ref);
+    return ref;
 }
 
 const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::ExecutionEngine *engine,
@@ -191,6 +213,7 @@ QV4DataCollector::Ref QV4DataCollector::addFunctionRef(const QString &functionNa
     dict.insert(QStringLiteral("type"), QStringLiteral("function"));
     dict.insert(QStringLiteral("name"), functionName);
     specialRefs.insert(ref, dict);
+    collectedRefs.append(ref);
 
     return ref;
 }
@@ -204,36 +227,133 @@ QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
     dict.insert(QStringLiteral("type"), QStringLiteral("script"));
     dict.insert(QStringLiteral("name"), scriptName);
     specialRefs.insert(ref, dict);
+    collectedRefs.append(ref);
 
     return ref;
 }
 
-void QV4DataCollector::collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger,
+bool QV4DataCollector::isValidRef(QV4DataCollector::Ref ref) const
+{
+    QV4::Scope scope(engine());
+    QV4::ScopedObject array(scope, values.value());
+    return ref < array->getLength();
+}
+
+bool QV4DataCollector::collectScope(QJsonObject *dict, QV4::Debugging::V4Debugger *debugger,
                                     int frameNr, int scopeNr)
 {
     QStringList names;
 
-    Refs refs;
+    QV4::Scope scope(engine());
     if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
-        RefHolder holder(this, &refs);
-        ArgumentCollectJob argumentsJob(m_engine, this, &names, frameNr, scopeNr);
-        debugger->runInEngine(&argumentsJob);
-        LocalCollectJob localsJob(m_engine, this, &names, frameNr, scopeNr);
-        debugger->runInEngine(&localsJob);
+        QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(engine(), frameNr), scopeNr));
+        if (!ctxt)
+            return false;
+
+        QV4::ScopedValue v(scope);
+        int nFormals = ctxt->formalCount();
+        for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
+            QString qName;
+            if (QV4::Identifier *name = ctxt->formals()[nFormals - i - 1])
+                qName = name->string;
+            names.append(qName);
+            v = ctxt->argument(i);
+            collect(v);
+        }
+
+        for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
+            QString qName;
+            if (QV4::Identifier *name = ctxt->variables()[i])
+                qName = name->string;
+            names.append(qName);
+            v = ctxt->d()->locals[i];
+            collect(v);
+        }
     }
 
-    QV4::Scope scope(engine());
     QV4::ScopedObject scopeObject(scope, engine()->newObject());
 
-    Q_ASSERT(names.size() == refs.size());
-    for (int i = 0, ei = refs.size(); i != ei; ++i)
+    Q_ASSERT(names.size() == collectedRefs.size());
+    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i)
         scopeObject->put(engine(), names.at(i),
-                         QV4::Value::fromReturnedValue(getValue(refs.at(i))));
+                         QV4::Value::fromReturnedValue(getValue(collectedRefs.at(i))));
 
     Ref scopeObjectRef = addRef(scopeObject);
     dict->insert(QStringLiteral("ref"), qint64(scopeObjectRef));
-    if (m_collectedRefs)
-        m_collectedRefs->append(scopeObjectRef);
+    collectedRefs.append(scopeObjectRef);
+    return true;
+}
+
+QJsonObject toRef(QV4DataCollector::Ref ref) {
+    QJsonObject dict;
+    dict.insert(QStringLiteral("ref"), qint64(ref));
+    return dict;
+}
+
+QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
+                                         QV4::Debugging::V4Debugger *debugger)
+{
+    QV4DataCollector::Ref ref;
+
+    QJsonObject frame;
+    frame[QLatin1String("index")] = frameNr;
+    frame[QLatin1String("debuggerFrame")] = false;
+    ref = addFunctionRef(stackFrame.function);
+    frame[QLatin1String("func")] = toRef(ref);
+    ref = addScriptRef(stackFrame.source);
+    frame[QLatin1String("script")] = toRef(ref);
+    frame[QLatin1String("line")] = stackFrame.line - 1;
+    if (stackFrame.column >= 0)
+        frame[QLatin1String("column")] = stackFrame.column;
+
+    QJsonArray scopes;
+    if (debugger->state() == QV4::Debugging::V4Debugger::Paused) {
+        QV4::Scope scope(engine());
+        QV4::ScopedContext ctxt(scope, findContext(engine(), frameNr));
+        while (ctxt) {
+            if (QV4::CallContext *cCtxt = ctxt->asCallContext()) {
+                if (cCtxt->d()->activation)
+                    break;
+            }
+            ctxt = ctxt->d()->outer;
+        }
+
+        if (ctxt) {
+            QV4::ScopedValue o(scope, ctxt->asCallContext()->d()->activation);
+            frame[QLatin1String("receiver")] = toRef(collect(o));
+        }
+
+        // Only type and index are used by Qt Creator, so we keep it easy:
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = getScopeTypes(engine(), frameNr);
+        for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
+            int type = encodeScopeType(scopeTypes[i]);
+            if (type == -1)
+                continue;
+
+            QJsonObject scope;
+            scope[QLatin1String("index")] = i;
+            scope[QLatin1String("type")] = type;
+            scopes.push_back(scope);
+        }
+    }
+    frame[QLatin1String("scopes")] = scopes;
+
+    return frame;
+}
+
+QJsonArray QV4DataCollector::flushCollectedRefs()
+{
+    QJsonArray refs;
+    std::sort(collectedRefs.begin(), collectedRefs.end());
+    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
+        QV4DataCollector::Ref ref = collectedRefs.at(i);
+        if (i > 0 && ref == collectedRefs.at(i - 1))
+            continue;
+        refs.append(lookupRef(ref));
+    }
+
+    collectedRefs.clear();
+    return refs;
 }
 
 QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicate)
@@ -316,12 +436,115 @@ QJsonObject QV4DataCollector::collectAsJson(const QString &name, const QV4::Scop
     if (value->isManaged() && !value->isString()) {
         Ref ref = addRef(value);
         dict.insert(QStringLiteral("ref"), qint64(ref));
-        if (m_collectedRefs)
-            m_collectedRefs->append(ref);
+        collectedRefs.append(ref);
     }
 
     collectProperty(value, engine(), dict);
     return dict;
+}
+
+BacktraceJob::BacktraceJob(QV4DataCollector *collector, int fromFrame, int toFrame) :
+    CollectJob(collector), fromFrame(fromFrame), toFrame(toFrame)
+{
+}
+
+void BacktraceJob::run()
+{
+    QJsonArray frameArray;
+    QVector<QV4::StackFrame> frames = collector->engine()->stackTrace(toFrame);
+    QV4::Debugging::V4Debugger *debugger =
+            qobject_cast<QV4::Debugging::V4Debugger *>(collector->engine()->debugger);
+    if (debugger) {
+        for (int i = fromFrame; i < toFrame && i < frames.size(); ++i)
+            frameArray.push_back(collector->buildFrame(frames[i], i, debugger));
+    }
+    if (frameArray.isEmpty()) {
+        result.insert(QStringLiteral("totalFrames"), 0);
+    } else {
+        result.insert(QStringLiteral("fromFrame"), fromFrame);
+        result.insert(QStringLiteral("toFrame"), fromFrame + frameArray.size());
+        result.insert(QStringLiteral("frames"), frameArray);
+    }
+    collectedRefs = collector->flushCollectedRefs();
+}
+
+FrameJob::FrameJob(QV4DataCollector *collector, int frameNr) :
+    CollectJob(collector), frameNr(frameNr), success(false)
+{
+}
+
+void FrameJob::run()
+{
+    QVector<QV4::StackFrame> frames = collector->engine()->stackTrace(frameNr + 1);
+    if (frameNr >= frames.length()) {
+        success = false;
+    } else {
+        QV4::Debugging::V4Debugger *debugger =
+                qobject_cast<QV4::Debugging::V4Debugger *>(collector->engine()->debugger);
+        if (debugger) {
+            result = collector->buildFrame(frames[frameNr], frameNr, debugger);
+            collectedRefs = collector->flushCollectedRefs();
+            success = true;
+        } else {
+            success = false;
+        }
+    }
+}
+
+bool FrameJob::wasSuccessful() const
+{
+    return success;
+}
+
+ScopeJob::ScopeJob(QV4DataCollector *collector, int frameNr, int scopeNr) :
+    CollectJob(collector), frameNr(frameNr), scopeNr(scopeNr), success(false)
+{
+}
+
+void ScopeJob::run()
+{
+    QJsonObject object;
+    QV4::Debugging::V4Debugger *debugger =
+            qobject_cast<QV4::Debugging::V4Debugger *>(collector->engine()->debugger);
+    success = (debugger && collector->collectScope(&object, debugger, frameNr, scopeNr));
+
+    if (success) {
+        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
+                QV4DataCollector::getScopeTypes(collector->engine(), frameNr);
+        result[QLatin1String("type")] = QV4DataCollector::encodeScopeType(scopeTypes[scopeNr]);
+    } else {
+        result[QLatin1String("type")] = -1;
+    }
+    result[QLatin1String("index")] = scopeNr;
+    result[QLatin1String("frameIndex")] = frameNr;
+    result[QLatin1String("object")] = object;
+    collectedRefs = collector->flushCollectedRefs();
+}
+
+bool ScopeJob::wasSuccessful() const
+{
+    return success;
+}
+
+ValueLookupJob::ValueLookupJob(const QJsonArray &handles, QV4DataCollector *collector) :
+    CollectJob(collector), handles(handles) {}
+
+void ValueLookupJob::run()
+{
+    foreach (const QJsonValue &handle, handles) {
+        QV4DataCollector::Ref ref = handle.toInt();
+        if (!collector->isValidRef(ref)) {
+            exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);
+            break;
+        }
+        result[QString::number(ref)] = collector->lookupRef(ref);
+    }
+    collectedRefs = collector->flushCollectedRefs();
+}
+
+const QString &ValueLookupJob::exceptionMessage() const
+{
+    return exception;
 }
 
 ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
@@ -336,12 +559,23 @@ void ExpressionEvalJob::handleResult(QV4::ScopedValue &result)
 {
     if (hasExeption())
         exception = result->toQStringNoThrow();
-    collector->collect(result);
+    value = collector->lookupRef(collector->collect(result));
+    collectedRefs = collector->flushCollectedRefs();
 }
 
 const QString &ExpressionEvalJob::exceptionMessage() const
 {
     return exception;
+}
+
+const QJsonObject &ExpressionEvalJob::returnValue() const
+{
+    return value;
+}
+
+const QJsonArray &ExpressionEvalJob::refs() const
+{
+    return collectedRefs;
 }
 
 GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine, int seq)
@@ -364,111 +598,21 @@ void GatherSourcesJob::run()
     emit debugger->sourcesCollected(debugger, sources, seq);
 }
 
-ArgumentCollectJob::ArgumentCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                                       QStringList *names, int frameNr, int scopeNr)
-    : engine(engine)
-    , collector(collector)
-    , names(names)
-    , frameNr(frameNr)
-    , scopeNr(scopeNr)
-{}
-
-void ArgumentCollectJob::run()
-{
-    if (frameNr < 0)
-        return;
-
-    QV4::Scope scope(engine);
-    QV4::Scoped<QV4::CallContext> ctxt(
-                scope, QV4DataCollector::findScope(QV4DataCollector::findContext(engine, frameNr), scopeNr));
-    if (!ctxt)
-        return;
-
-    QV4::ScopedValue v(scope);
-    int nFormals = ctxt->formalCount();
-    for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
-        QString qName;
-        if (QV4::Identifier *name = ctxt->formals()[nFormals - i - 1])
-            qName = name->string;
-        names->append(qName);
-        v = ctxt->argument(i);
-        collector->collect(v);
-    }
-}
-
-LocalCollectJob::LocalCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                                 QStringList *names, int frameNr, int scopeNr)
-    : engine(engine)
-    , collector(collector)
-    , names(names)
-    , frameNr(frameNr)
-    , scopeNr(scopeNr)
-{}
-
-void LocalCollectJob::run()
-{
-    if (frameNr < 0)
-        return;
-
-    QV4::Scope scope(engine);
-    QV4::Scoped<QV4::CallContext> ctxt(
-                scope, QV4DataCollector::findScope(QV4DataCollector::findContext(engine, frameNr), scopeNr));
-    if (!ctxt)
-        return;
-
-    QV4::ScopedValue v(scope);
-    for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
-        QString qName;
-        if (QV4::Identifier *name = ctxt->variables()[i])
-            qName = name->string;
-        names->append(qName);
-        v = ctxt->d()->locals[i];
-        collector->collect(v);
-    }
-}
-
-ThisCollectJob::ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                               int frameNr, bool *foundThis)
-    : engine(engine)
-    , collector(collector)
-    , frameNr(frameNr)
-    , foundThis(foundThis)
-{}
-
-void ThisCollectJob::run()
-{
-    *foundThis = myRun();
-}
-
-bool ThisCollectJob::myRun()
-{
-    QV4::Scope scope(engine);
-    QV4::ScopedContext ctxt(scope, QV4DataCollector::findContext(engine, frameNr));
-    while (ctxt) {
-        if (QV4::CallContext *cCtxt = ctxt->asCallContext())
-            if (cCtxt->d()->activation)
-                break;
-        ctxt = ctxt->d()->outer;
-    }
-
-    if (!ctxt)
-        return false;
-
-    QV4::ScopedValue o(scope, ctxt->asCallContext()->d()->activation);
-    collector->collect(o);
-    return true;
-}
-
 ExceptionCollectJob::ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector)
     : engine(engine)
     , collector(collector)
+    , exception(-1)
 {}
 
-void ExceptionCollectJob::run()
-{
+void ExceptionCollectJob::run() {
     QV4::Scope scope(engine);
     QV4::ScopedValue v(scope, *engine->exceptionValue);
-    collector->collect(v);
+    exception = collector->collect(v);
+}
+
+QV4DataCollector::Ref ExceptionCollectJob::exceptionValue() const
+{
+    return exception;
 }
 
 QT_END_NAMESPACE
