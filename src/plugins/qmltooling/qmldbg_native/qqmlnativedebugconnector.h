@@ -51,6 +51,7 @@ public:
     QQmlDebugService *service(const QString &name) const Q_DECL_OVERRIDE;
     void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
     void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    bool hasEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
     bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
     bool removeService(const QString &name) Q_DECL_OVERRIDE;
     bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
@@ -64,6 +65,7 @@ private:
     void announceObjectAvailability(const QString &objectType, QObject *object, bool available);
 
     QVector<QQmlDebugService *> m_services;
+    QVector<QJSEngine *> m_engines;
     bool m_blockingMode;
 };
 

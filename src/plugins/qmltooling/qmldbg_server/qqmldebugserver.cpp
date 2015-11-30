@@ -132,6 +132,7 @@ public:
 
     void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
     void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    bool hasEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
 
     bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
     bool removeService(const QString &name) Q_DECL_OVERRIDE;
@@ -161,6 +162,7 @@ private:
         EngineCondition() : numServices(0), condition(new QWaitCondition) {}
 
         bool waitForServices(QMutex *locked, int numEngines);
+        bool isWaiting() const { return numServices > 0; }
 
         void wake();
     private:
@@ -565,6 +567,8 @@ void QQmlDebugServerImpl::addEngine(QJSEngine *engine)
     Q_ASSERT(QThread::currentThread() != &m_thread);
 
     QMutexLocker locker(&m_helloMutex);
+    Q_ASSERT(!m_engineConditions.contains(engine));
+
     foreach (QQmlDebugService *service, m_plugins)
         service->engineAboutToBeAdded(engine);
 
@@ -580,6 +584,8 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
     Q_ASSERT(QThread::currentThread() != &m_thread);
 
     QMutexLocker locker(&m_helloMutex);
+    Q_ASSERT(m_engineConditions.contains(engine));
+
     foreach (QQmlDebugService *service, m_plugins)
         service->engineAboutToBeRemoved(engine);
 
@@ -587,6 +593,16 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
 
     foreach (QQmlDebugService *service, m_plugins)
         service->engineRemoved(engine);
+
+    m_engineConditions.remove(engine);
+}
+
+bool QQmlDebugServerImpl::hasEngine(QJSEngine *engine)
+{
+    QMutexLocker locker(&m_helloMutex);
+    QHash<QJSEngine *, EngineCondition>::ConstIterator i = m_engineConditions.constFind(engine);
+    // if we're still waiting the engine isn't fully "there", yet, nor fully removed.
+    return i != m_engineConditions.constEnd() && !i.value().isWaiting();
 }
 
 bool QQmlDebugServerImpl::addService(const QString &name, QQmlDebugService *service)

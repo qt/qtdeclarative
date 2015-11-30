@@ -225,6 +225,8 @@ QQmlDebugService *QQmlNativeDebugConnector::service(const QString &name) const
 
 void QQmlNativeDebugConnector::addEngine(QJSEngine *engine)
 {
+    Q_ASSERT(!m_engines.contains(engine));
+
     TRACE_PROTOCOL("Add engine to connector:" << engine);
     foreach (QQmlDebugService *service, m_services)
         service->engineAboutToBeAdded(engine);
@@ -233,10 +235,14 @@ void QQmlNativeDebugConnector::addEngine(QJSEngine *engine)
 
     foreach (QQmlDebugService *service, m_services)
         service->engineAdded(engine);
+
+    m_engines.append(engine);
 }
 
 void QQmlNativeDebugConnector::removeEngine(QJSEngine *engine)
 {
+    Q_ASSERT(m_engines.contains(engine));
+
     TRACE_PROTOCOL("Remove engine from connector:" << engine);
     foreach (QQmlDebugService *service, m_services)
         service->engineAboutToBeRemoved(engine);
@@ -245,6 +251,13 @@ void QQmlNativeDebugConnector::removeEngine(QJSEngine *engine)
 
     foreach (QQmlDebugService *service, m_services)
         service->engineRemoved(engine);
+
+    m_engines.removeOne(engine);
+}
+
+bool QQmlNativeDebugConnector::hasEngine(QJSEngine *engine)
+{
+    return m_engines.contains(engine);
 }
 
 void QQmlNativeDebugConnector::announceObjectAvailability(const QString &objectType,
