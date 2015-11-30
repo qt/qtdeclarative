@@ -176,6 +176,14 @@ QUrl QQuickStyleSelector::baseUrl() const
     return d->baseUrl;
 }
 
+QQuickStyleSelector *QQuickStyleSelector::instance(QObject *parent)
+{
+    QPointer<QQuickStyleSelector> self;
+    if (!self)
+        self = new QQuickStyleSelector(parent);
+    return self;
+}
+
 void QQuickStyleSelectorPrivate::updateSelectors()
 {
     if (!sharedData->staticSelectors.isEmpty())
