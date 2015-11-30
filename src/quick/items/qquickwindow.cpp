@@ -631,6 +631,15 @@ bool QQuickWindowPrivate::translateTouchToMouse(QQuickItem *item, QTouchEvent *e
                 if (mouseGrabberItem) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event, mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
+
+                    if (item->acceptHoverEvents() && p.screenPos() != QGuiApplicationPrivate::lastCursorPosition) {
+                        QPointF localMousePos(qInf(), qInf());
+                        if (QWindow *w = item->window())
+                            localMousePos = item->mapFromScene(w->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint()));
+                        QMouseEvent mm(QEvent::MouseMove, localMousePos, QGuiApplicationPrivate::lastCursorPosition,
+                                       Qt::NoButton, Qt::NoButton, event->modifiers());
+                        QCoreApplication::sendEvent(item, &mm);
+                    }
                     if (mouseGrabberItem) // might have ungrabbed due to event
                         mouseGrabberItem->ungrabMouse();
                     return me->isAccepted();
