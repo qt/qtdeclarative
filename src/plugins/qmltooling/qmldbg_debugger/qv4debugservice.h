@@ -69,7 +69,7 @@ public:
     explicit QV4DebugServiceImpl(QObject *parent = 0);
     ~QV4DebugServiceImpl() Q_DECL_OVERRIDE;
 
-    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
     void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
 
     void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
