@@ -83,10 +83,6 @@ public:
     void signalEmitted(const QString &signal) Q_DECL_OVERRIDE;
     void send(QJsonObject v8Payload);
 
-    QJsonObject buildScope(int frameNr, int scopeNr, QV4Debugger *debugger);
-    QJsonValue toRef(QV4DataCollector::Ref ref);
-
-    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr, QV4Debugger *debugger);
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
@@ -104,11 +100,9 @@ private:
                                   const QByteArray &message = QByteArray());
     void processCommand(const QByteArray &command, const QByteArray &data);
     V8CommandHandler *v8CommandHandler(const QString &command) const;
-    int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QStringList breakOnSignals;
     static int sequence;
-
     int theSelectedFrame;
 
     void addHandler(V8CommandHandler* handler);

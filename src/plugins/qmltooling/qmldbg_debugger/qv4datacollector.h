@@ -60,6 +60,7 @@ public:
     static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
     static QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(
             QV4::ExecutionEngine *engine, int frame);
+    static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
 
@@ -70,7 +71,8 @@ public:
     bool isValidRef(Ref ref) const;
     QJsonObject lookupRef(Ref ref);
 
-    void collectScope(QJsonObject *dict, QV4Debugger *debugger, int frameNr, int scopeNr);
+    bool collectScope(QJsonObject *dict, int frameNr, int scopeNr);
+    QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr);
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
     QJsonArray flushCollectedRefs();

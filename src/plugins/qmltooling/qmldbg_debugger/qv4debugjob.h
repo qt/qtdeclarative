@@ -72,20 +72,59 @@ protected:
     virtual void handleResult(QV4::ScopedValue &result) = 0;
 };
 
-class ValueLookupJob: public QV4DebugJob
+class CollectJob : public QV4DebugJob
 {
+protected:
     QV4DataCollector *collector;
-    const QJsonArray handles;
     QJsonObject result;
     QJsonArray collectedRefs;
+public:
+    CollectJob(QV4DataCollector *collector) : collector(collector) {}
+    const QJsonObject &returnValue() const { return result; }
+    const QJsonArray &refs() const { return collectedRefs; }
+};
+
+class BacktraceJob: public CollectJob
+{
+    int fromFrame;
+    int toFrame;
+public:
+    BacktraceJob(QV4DataCollector *collector, int fromFrame, int toFrame);
+    void run();
+};
+
+class FrameJob: public CollectJob
+{
+    int frameNr;
+    bool success;
+
+public:
+    FrameJob(QV4DataCollector *collector, int frameNr);
+    void run();
+    bool wasSuccessful() const;
+};
+
+class ScopeJob: public CollectJob
+{
+    int frameNr;
+    int scopeNr;
+    bool success;
+
+public:
+    ScopeJob(QV4DataCollector *collector, int frameNr, int scopeNr);
+    void run();
+    bool wasSuccessful() const;
+};
+
+class ValueLookupJob: public CollectJob
+{
+    const QJsonArray handles;
     QString exception;
 
 public:
     ValueLookupJob(const QJsonArray &handles, QV4DataCollector *collector);
     void run();
     const QString &exceptionMessage() const;
-    const QJsonObject &returnValue() const;
-    const QJsonArray &refs() const;
 };
 
 class ExpressionEvalJob: public JavaScriptJob
@@ -115,47 +154,6 @@ public:
     const QStringList &result() const;
 };
 
-class ArgumentCollectJob: public QV4DebugJob
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    QStringList *names;
-    int frameNr;
-    int scopeNr;
-
-public:
-    ArgumentCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                       QStringList *names, int frameNr, int scopeNr);
-    void run();
-};
-
-class LocalCollectJob: public QV4DebugJob
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    QStringList *names;
-    int frameNr;
-    int scopeNr;
-
-public:
-    LocalCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, QStringList *names,
-                    int frameNr, int scopeNr);
-    void run();
-};
-
-class ThisCollectJob: public QV4DebugJob
-{
-    QV4::ExecutionEngine *engine;
-    QV4DataCollector *collector;
-    int frameNr;
-    QV4DataCollector::Ref thisRef;
-
-public:
-    ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, int frameNr);
-    void run();
-    QV4DataCollector::Ref foundRef() const;
-};
-
 class ExceptionCollectJob: public QV4DebugJob
 {
     QV4::ExecutionEngine *engine;
@@ -176,8 +174,7 @@ public:
     EvalJob(QV4::ExecutionEngine *engine, const QString &script);
 
     virtual void handleResult(QV4::ScopedValue &result);
-    bool resultAsBoolean() const
-;
+    bool resultAsBoolean() const;
 };
 
 QT_END_NAMESPACE
