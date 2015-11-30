@@ -70,6 +70,9 @@ public:
     QJSEnginePrivate() : mutex(QMutex::Recursive) {}
     ~QJSEnginePrivate();
 
+    static void addToDebugServer(QJSEngine *q);
+    static void removeFromDebugServer(QJSEngine *q);
+
     // Locker locks the QQmlEnginePrivate data structures for read and write, if necessary.
     // Currently, locking is only necessary if the threaded loader is running concurrently.  If it is
     // either idle, or is running with the main thread blocked, no locking is necessary.  This way

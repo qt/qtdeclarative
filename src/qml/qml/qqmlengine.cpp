@@ -868,11 +868,6 @@ void QQmlEnginePrivate::init()
     v8engine()->setEngine(q);
 
     rootContext = new QQmlContext(q,true);
-
-    if (QCoreApplication::instance()->thread() == q->thread() && QQmlDebugConnector::instance()) {
-        QQmlDebugConnector::instance()->open();
-        QQmlDebugConnector::instance()->addEngine(q);
-    }
 }
 
 QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
@@ -924,6 +919,7 @@ QQmlEngine::QQmlEngine(QObject *parent)
 {
     Q_D(QQmlEngine);
     d->init();
+    QJSEnginePrivate::addToDebugServer(this);
 }
 
 /*!
@@ -948,9 +944,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
-    QQmlDebugConnector *server = QQmlDebugConnector::instance();
-    if (server)
-        server->removeEngine(this);
+    QJSEnginePrivate::removeFromDebugServer(this);
 
     d->typeLoader.invalidate();
 

@@ -43,6 +43,7 @@
 #include "private/qv4script_p.h"
 #include "private/qv4runtime_p.h"
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmldebugconnector_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -251,6 +252,7 @@ QJSEngine::QJSEngine()
     : QObject(*new QJSEnginePrivate, 0)
     , d(new QV8Engine(this))
 {
+    QJSEnginePrivate::addToDebugServer(this);
 }
 
 /*!
@@ -264,6 +266,7 @@ QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
     , d(new QV8Engine(this))
 {
+    QJSEnginePrivate::addToDebugServer(this);
 }
 
 /*!
@@ -284,6 +287,7 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 */
 QJSEngine::~QJSEngine()
 {
+    QJSEnginePrivate::removeFromDebugServer(this);
     delete d;
 }
 
@@ -669,6 +673,26 @@ QJSEnginePrivate::~QJSEnginePrivate()
 
     for (PropertyCacheIt iter = propertyCache.begin(), end = propertyCache.end(); iter != end; ++iter)
         (*iter)->release();
+}
+
+void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
+{
+    if (QCoreApplication::instance()->thread() != q->thread())
+        return;
+
+    QQmlDebugConnector *server = QQmlDebugConnector::instance();
+    if (!server || server->hasEngine(q))
+        return;
+
+    server->open();
+    server->addEngine(q);
+}
+
+void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
+{
+    QQmlDebugConnector *server = QQmlDebugConnector::instance();
+    if (server && server->hasEngine(q))
+        server->removeEngine(q);
 }
 
 QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)

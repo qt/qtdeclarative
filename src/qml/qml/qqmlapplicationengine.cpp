@@ -197,6 +197,7 @@ QQmlApplicationEngine::QQmlApplicationEngine(QObject *parent)
 {
     Q_D(QQmlApplicationEngine);
     d->init();
+    QJSEnginePrivate::addToDebugServer(this);
 }
 
 /*!
@@ -208,6 +209,7 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
 {
     Q_D(QQmlApplicationEngine);
     d->init();
+    QJSEnginePrivate::addToDebugServer(this);
     load(url);
 }
 
@@ -224,6 +226,7 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *p
 {
     Q_D(QQmlApplicationEngine);
     d->init();
+    QJSEnginePrivate::addToDebugServer(this);
     load(QUrl::fromLocalFile(filePath));
 }
 
@@ -233,6 +236,7 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *p
 QQmlApplicationEngine::~QQmlApplicationEngine()
 {
     Q_D(QQmlApplicationEngine);
+    QJSEnginePrivate::removeFromDebugServer(this);
     d->cleanUp();//Instantiated root objects must be deleted before the engine
 }
 
