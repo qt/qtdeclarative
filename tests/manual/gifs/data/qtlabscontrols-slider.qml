@@ -47,6 +47,8 @@ Window {
     height: slider.implicitHeight
     visible: true
 
+    property alias slider: slider
+
     Slider {
         id: slider
         anchors.centerIn: parent

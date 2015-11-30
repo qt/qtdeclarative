@@ -50,6 +50,6 @@ Window {
     Button {
         id: button
         text: pressed ? "Pressed" : "Normal"
-        width: 80
+        anchors.centerIn: parent
     }
 }
