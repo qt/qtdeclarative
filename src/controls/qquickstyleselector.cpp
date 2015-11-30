@@ -44,6 +44,8 @@
 #include <QtCore/QLocale>
 #include <QtCore/QDebug>
 
+#include <QtGui/private/qguiapplication_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QQuickStyleSelectorSharedData, sharedData);
@@ -57,6 +59,11 @@ QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
 QQuickStyleSelector::QQuickStyleSelector(QObject *parent)
     : QObject(*(new QQuickStyleSelectorPrivate()), parent)
 {
+    Q_D(QQuickStyleSelector);
+
+    d->style = QGuiApplicationPrivate::styleOverride;
+    if (d->style.isEmpty())
+        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
@@ -173,12 +180,6 @@ void QQuickStyleSelectorPrivate::updateSelectors()
 {
     if (!sharedData->staticSelectors.isEmpty())
         return; //Already loaded
-
-    QLatin1Char pathSep(',');
-    QStringList envSelectors = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"))
-                                .split(pathSep, QString::SkipEmptyParts);
-    if (envSelectors.count())
-        sharedData->staticSelectors << envSelectors;
 
     sharedData->staticSelectors << sharedData->preloadedStatics; //Potential for static selectors from other modules
 

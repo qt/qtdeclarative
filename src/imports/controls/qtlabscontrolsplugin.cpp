@@ -37,7 +37,6 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
-#include <QtGui/private/qguiapplication_p.h>
 
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
@@ -64,14 +63,9 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
 
-    QString styleOverride = QGuiApplicationPrivate::styleOverride;
-
     // TODO: read the style from application manifest file
     QQuickStyleSelector selector;
     selector.setBaseUrl(baseUrl());
-
-    if (!styleOverride.isEmpty())
-        selector.setStyle(styleOverride);
 
     qmlRegisterType(selector.select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
     qmlRegisterType(selector.select(QStringLiteral("/BusyIndicator.qml")), uri, 1, 0, "BusyIndicator");
