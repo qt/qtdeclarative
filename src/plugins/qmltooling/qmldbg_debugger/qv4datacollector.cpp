@@ -44,6 +44,9 @@
 
 QT_BEGIN_NAMESPACE
 
+const QV4DataCollector::Ref QV4DataCollector::s_invalidRef =
+        std::numeric_limits<QV4DataCollector::Ref>::max();
+
 QV4::CallContext *QV4DataCollector::findContext(QV4::ExecutionEngine *engine, int frame)
 {
     QV4::ExecutionContext *ctx = engine->currentContext;
@@ -90,21 +93,16 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
     return types;
 }
 
-
-QV4DataCollector::QV4DataCollector(QV4::ExecutionEngine *engine)
-    : m_engine(engine), m_collectedRefs(Q_NULLPTR)
+QV4DataCollector::QV4DataCollector(QV4::ExecutionEngine *engine) : m_engine(engine)
 {
-    values.set(engine, engine->newArrayObject());
+    m_values.set(engine, engine->newArrayObject());
 }
 
-QV4DataCollector::~QV4DataCollector()
+QV4DataCollector::Ref QV4DataCollector::collect(const QV4::ScopedValue &value)
 {
-}
-
-void QV4DataCollector::collect(const QV4::ScopedValue &value)
-{
-    if (m_collectedRefs)
-        m_collectedRefs->append(addRef(value));
+    Ref ref = addRef(value);
+    m_collectedRefs.append(ref);
+    return ref;
 }
 
 const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::ExecutionEngine *engine,
@@ -191,7 +189,8 @@ QV4DataCollector::Ref QV4DataCollector::addFunctionRef(const QString &functionNa
     dict.insert(QStringLiteral("handle"), qint64(ref));
     dict.insert(QStringLiteral("type"), QStringLiteral("function"));
     dict.insert(QStringLiteral("name"), functionName);
-    specialRefs.insert(ref, dict);
+    m_specialRefs.insert(ref, dict);
+    m_collectedRefs.append(ref);
 
     return ref;
 }
@@ -204,9 +203,17 @@ QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
     dict.insert(QStringLiteral("handle"), qint64(ref));
     dict.insert(QStringLiteral("type"), QStringLiteral("script"));
     dict.insert(QStringLiteral("name"), scriptName);
-    specialRefs.insert(ref, dict);
+    m_specialRefs.insert(ref, dict);
+    m_collectedRefs.append(ref);
 
     return ref;
+}
+
+bool QV4DataCollector::isValidRef(QV4DataCollector::Ref ref) const
+{
+    QV4::Scope scope(engine());
+    QV4::ScopedObject array(scope, m_values.value());
+    return ref < array->getLength();
 }
 
 void QV4DataCollector::collectScope(QJsonObject *dict, QV4Debugger *debugger, int frameNr,
@@ -214,9 +221,7 @@ void QV4DataCollector::collectScope(QJsonObject *dict, QV4Debugger *debugger, in
 {
     QStringList names;
 
-    Refs refs;
     if (debugger->state() == QV4Debugger::Paused) {
-        RefHolder holder(this, &refs);
         ArgumentCollectJob argumentsJob(m_engine, this, &names, frameNr, scopeNr);
         debugger->runInEngine(&argumentsJob);
         LocalCollectJob localsJob(m_engine, this, &names, frameNr, scopeNr);
@@ -226,15 +231,36 @@ void QV4DataCollector::collectScope(QJsonObject *dict, QV4Debugger *debugger, in
     QV4::Scope scope(engine());
     QV4::ScopedObject scopeObject(scope, engine()->newObject());
 
-    Q_ASSERT(names.size() == refs.size());
-    for (int i = 0, ei = refs.size(); i != ei; ++i)
+    Q_ASSERT(names.size() == m_collectedRefs.size());
+    for (int i = 0, ei = m_collectedRefs.size(); i != ei; ++i)
         scopeObject->put(engine(), names.at(i),
-                         QV4::Value::fromReturnedValue(getValue(refs.at(i))));
+                         QV4::Value::fromReturnedValue(getValue(m_collectedRefs.at(i))));
 
     Ref scopeObjectRef = addRef(scopeObject);
     dict->insert(QStringLiteral("ref"), qint64(scopeObjectRef));
-    if (m_collectedRefs)
-        m_collectedRefs->append(scopeObjectRef);
+    m_collectedRefs.append(scopeObjectRef);
+}
+
+QJsonArray QV4DataCollector::flushCollectedRefs()
+{
+    QJsonArray refs;
+    std::sort(m_collectedRefs.begin(), m_collectedRefs.end());
+    for (int i = 0, ei = m_collectedRefs.size(); i != ei; ++i) {
+        QV4DataCollector::Ref ref = m_collectedRefs.at(i);
+        if (i > 0 && ref == m_collectedRefs.at(i - 1))
+            continue;
+        refs.append(lookupRef(ref));
+    }
+
+    m_collectedRefs.clear();
+    return refs;
+}
+
+void QV4DataCollector::clear()
+{
+    m_values.set(engine(), engine()->newArrayObject());
+    m_collectedRefs.clear();
+    m_specialRefs.clear();
 }
 
 QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicate)
@@ -257,10 +283,10 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
     // if we wouldn't do this, the putIndexed won't work.
     ExceptionStateSaver resetExceptionState(engine());
     QV4::Scope scope(engine());
-    QV4::ScopedObject array(scope, values.value());
+    QV4::ScopedObject array(scope, m_values.value());
     if (deduplicate) {
         for (Ref i = 0; i < array->getLength(); ++i) {
-            if (array->getIndexed(i) == value.rawValue() && !specialRefs.contains(i))
+            if (array->getIndexed(i) == value.rawValue() && !m_specialRefs.contains(i))
                 return i;
         }
     }
@@ -273,15 +299,15 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
 QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
 {
     QV4::Scope scope(engine());
-    QV4::ScopedObject array(scope, values.value());
+    QV4::ScopedObject array(scope, m_values.value());
     Q_ASSERT(ref < array->getLength());
     return array->getIndexed(ref, Q_NULLPTR);
 }
 
 bool QV4DataCollector::lookupSpecialRef(Ref ref, QJsonObject *dict)
 {
-    SpecialRefs::const_iterator it = specialRefs.constFind(ref);
-    if (it == specialRefs.cend())
+    SpecialRefs::const_iterator it = m_specialRefs.constFind(ref);
+    if (it == m_specialRefs.cend())
         return false;
 
     *dict = it.value();
@@ -317,12 +343,39 @@ QJsonObject QV4DataCollector::collectAsJson(const QString &name, const QV4::Scop
     if (value->isManaged() && !value->isString()) {
         Ref ref = addRef(value);
         dict.insert(QStringLiteral("ref"), qint64(ref));
-        if (m_collectedRefs)
-            m_collectedRefs->append(ref);
+        m_collectedRefs.append(ref);
     }
 
     collectProperty(value, engine(), dict);
     return dict;
+}
+
+void ValueLookupJob::run()
+{
+    foreach (const QJsonValue &handle, handles) {
+        QV4DataCollector::Ref ref = handle.toInt();
+        if (!collector->isValidRef(ref)) {
+            exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);
+            break;
+        }
+        result[QString::number(ref)] = collector->lookupRef(ref);
+    }
+    collectedRefs = collector->flushCollectedRefs();
+}
+
+const QString &ValueLookupJob::exceptionMessage() const
+{
+    return exception;
+}
+
+const QJsonObject &ValueLookupJob::returnValue() const
+{
+    return result;
+}
+
+const QJsonArray &ValueLookupJob::refs() const
+{
+    return collectedRefs;
 }
 
 ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
@@ -333,16 +386,27 @@ ExpressionEvalJob::ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr,
 {
 }
 
-void ExpressionEvalJob::handleResult(QV4::ScopedValue &result)
+void ExpressionEvalJob::handleResult(QV4::ScopedValue &value)
 {
     if (hasExeption())
-        exception = result->toQStringNoThrow();
-    collector->collect(result);
+        exception = value->toQStringNoThrow();
+    result = collector->lookupRef(collector->collect(value));
+    collectedRefs = collector->flushCollectedRefs();
 }
 
 const QString &ExpressionEvalJob::exceptionMessage() const
 {
     return exception;
+}
+
+const QJsonObject &ExpressionEvalJob::returnValue() const
+{
+    return result;
+}
+
+const QJsonArray &ExpressionEvalJob::refs() const
+{
+    return collectedRefs;
 }
 
 GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine)
@@ -427,19 +491,14 @@ void LocalCollectJob::run()
 }
 
 ThisCollectJob::ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector,
-                               int frameNr, bool *foundThis)
+                               int frameNr)
     : engine(engine)
     , collector(collector)
     , frameNr(frameNr)
-    , foundThis(foundThis)
+    , thisRef(QV4DataCollector::s_invalidRef)
 {}
 
 void ThisCollectJob::run()
-{
-    *foundThis = myRun();
-}
-
-bool ThisCollectJob::myRun()
 {
     QV4::Scope scope(engine);
     QV4::ScopedContext ctxt(scope, QV4DataCollector::findContext(engine, frameNr));
@@ -451,23 +510,33 @@ bool ThisCollectJob::myRun()
     }
 
     if (!ctxt)
-        return false;
+        return;
 
     QV4::ScopedValue o(scope, ctxt->asCallContext()->d()->activation);
-    collector->collect(o);
-    return true;
+    thisRef = collector->collect(o);
+}
+
+QV4DataCollector::Ref ThisCollectJob::foundRef() const
+{
+    return thisRef;
 }
 
 ExceptionCollectJob::ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector)
     : engine(engine)
     , collector(collector)
+    , exception(QV4DataCollector::s_invalidRef)
 {}
 
 void ExceptionCollectJob::run()
 {
     QV4::Scope scope(engine);
     QV4::ScopedValue v(scope, *engine->exceptionValue);
-    collector->collect(v);
+    exception = collector->collect(v);
+}
+
+QV4DataCollector::Ref ExceptionCollectJob::exceptionValue() const
+{
+    return exception;
 }
 
 QT_END_NAMESPACE

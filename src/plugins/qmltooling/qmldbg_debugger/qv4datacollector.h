@@ -38,6 +38,9 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4persistent_p.h>
 
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+
 QT_BEGIN_NAMESPACE
 
 class QV4DataCollector
@@ -45,6 +48,7 @@ class QV4DataCollector
 public:
     typedef uint Ref;
     typedef QVector<uint> Refs;
+    static const Ref s_invalidRef;
 
     static QV4::CallContext *findContext(QV4::ExecutionEngine *engine, int frame);
     static QV4::Heap::CallContext *findScope(QV4::ExecutionContext *ctxt, int scope);
@@ -52,22 +56,21 @@ public:
             QV4::ExecutionEngine *engine, int frame);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
-    ~QV4DataCollector();
 
-    void collect(const QV4::ScopedValue &value);
-
-    QJsonObject lookupRef(Ref ref);
-
+    Ref collect(const QV4::ScopedValue &value);
     Ref addFunctionRef(const QString &functionName);
     Ref addScriptRef(const QString &scriptName);
+
+    bool isValidRef(Ref ref) const;
+    QJsonObject lookupRef(Ref ref);
 
     void collectScope(QJsonObject *dict, QV4Debugger *debugger, int frameNr, int scopeNr);
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
+    QJsonArray flushCollectedRefs();
+    void clear();
 
 private:
-    friend class RefHolder;
-
     Ref addRef(QV4::Value value, bool deduplicate = true);
     QV4::ReturnedValue getValue(Ref ref);
     bool lookupSpecialRef(Ref ref, QJsonObject *dict);
@@ -77,40 +80,43 @@ private:
     void collectArgumentsInContext();
 
     QV4::ExecutionEngine *m_engine;
-    Refs *m_collectedRefs;
-    QV4::PersistentValue values;
+    Refs m_collectedRefs;
+    QV4::PersistentValue m_values;
     typedef QHash<Ref, QJsonObject> SpecialRefs;
-    SpecialRefs specialRefs;
+    SpecialRefs m_specialRefs;
 };
 
-class RefHolder {
+class ValueLookupJob: public QV4Debugger::Job
+{
+    QV4DataCollector *collector;
+    const QJsonArray handles;
+    QJsonObject result;
+    QJsonArray collectedRefs;
+    QString exception;
+
 public:
-    RefHolder(QV4DataCollector *collector, QV4DataCollector::Refs *target) :
-        m_collector(collector), m_previousRefs(collector->m_collectedRefs)
-    {
-        m_collector->m_collectedRefs = target;
-    }
-
-    ~RefHolder()
-    {
-        std::swap(m_collector->m_collectedRefs, m_previousRefs);
-    }
-
-private:
-    QV4DataCollector *m_collector;
-    QV4DataCollector::Refs *m_previousRefs;
+    ValueLookupJob(const QJsonArray &handles, QV4DataCollector *collector) :
+        collector(collector), handles(handles) {}
+    void run();
+    const QString &exceptionMessage() const;
+    const QJsonObject &returnValue() const;
+    const QJsonArray &refs() const;
 };
 
 class ExpressionEvalJob: public QV4Debugger::JavaScriptJob
 {
     QV4DataCollector *collector;
     QString exception;
+    QJsonObject result;
+    QJsonArray collectedRefs;
 
 public:
     ExpressionEvalJob(QV4::ExecutionEngine *engine, int frameNr, const QString &expression,
                       QV4DataCollector *collector);
-    virtual void handleResult(QV4::ScopedValue &result);
+    virtual void handleResult(QV4::ScopedValue &value);
     const QString &exceptionMessage() const;
+    const QJsonObject &returnValue() const;
+    const QJsonArray &refs() const;
 };
 
 class GatherSourcesJob: public QV4Debugger::Job
@@ -157,23 +163,24 @@ class ThisCollectJob: public QV4Debugger::Job
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
     int frameNr;
-    bool *foundThis;
+    QV4DataCollector::Ref thisRef;
 
 public:
-    ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, int frameNr,
-                   bool *foundThis);
+    ThisCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector, int frameNr);
     void run();
-    bool myRun();
+    QV4DataCollector::Ref foundRef() const;
 };
 
 class ExceptionCollectJob: public QV4Debugger::Job
 {
     QV4::ExecutionEngine *engine;
     QV4DataCollector *collector;
+    QV4DataCollector::Ref exception;
 
 public:
     ExceptionCollectJob(QV4::ExecutionEngine *engine, QV4DataCollector *collector);
     void run();
+    QV4DataCollector::Ref exceptionValue() const;
 };
 
 QT_END_NAMESPACE

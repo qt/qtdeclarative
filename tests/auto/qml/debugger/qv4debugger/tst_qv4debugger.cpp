@@ -104,11 +104,8 @@ public:
     typedef QV4DataCollector::Refs Refs;
     typedef QV4DataCollector::Ref Ref;
     struct NamedRefs {
-        NamedRefs(QV4DataCollector *collector = 0): collector(collector) {}
-
         QStringList names;
-        Refs refs;
-        QV4DataCollector *collector;
+        QJsonArray refs;
 
         int size() const {
             Q_ASSERT(names.size() == refs.size());
@@ -126,7 +123,7 @@ public:
 
         QJsonObject rawValue(const QString &name) const {
             Q_ASSERT(contains(name));
-            return collector->lookupRef(refs.at(names.indexOf(name)));
+            return refs.at(names.indexOf(name)).toObject();
         }
 
         QJsonValue value(const QString &name) const {
@@ -143,7 +140,7 @@ public:
                 return;
             }
 
-            QJsonObject o = collector->lookupRef(refs.at(names.indexOf(name)));
+            QJsonObject o = refs.at(names.indexOf(name)).toObject();
             QJsonDocument d;
             d.setObject(o);
             qDebug() << name << "=" << d.toJson(QJsonDocument::Indented);
@@ -168,14 +165,10 @@ public slots:
         m_pauseReason = reason;
         m_statesWhenPaused << debugger->currentExecutionState();
 
-        if (debugger->state() == QV4Debugger::Paused &&
-                debugger->engine()->hasException) {
-            Refs refs;
-            RefHolder holder(&collector, &refs);
+        if (debugger->state() == QV4Debugger::Paused && debugger->engine()->hasException) {
             ExceptionCollectJob job(debugger->engine(), &collector);
             debugger->runInEngine(&job);
-            Q_ASSERT(refs.size() > 0);
-            m_thrownValue = refs.first();
+            m_thrownValue = job.exceptionValue();
         }
 
         foreach (const TestBreakPoint &bp, m_breakPointsToAddWhenPaused)
@@ -187,11 +180,11 @@ public slots:
         while (!m_expressionRequests.isEmpty()) {
             Q_ASSERT(debugger->state() == QV4Debugger::Paused);
             ExpressionRequest request = m_expressionRequests.takeFirst();
-            m_expressionResults << Refs();
-            RefHolder holder(&collector, &m_expressionResults.last());
             ExpressionEvalJob job(debugger->engine(), request.frameNr, request.expression,
                                   &collector);
             debugger->runInEngine(&job);
+            m_expressionResults << job.returnValue();
+            m_expressionRefs << job.refs();
         }
 
         if (m_captureContextInfo)
@@ -213,17 +206,17 @@ public:
     void captureContextInfo(QV4Debugger *debugger)
     {
         for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
-            m_capturedArguments.append(NamedRefs(&collector));
-            RefHolder argHolder(&collector, &m_capturedArguments.last().refs);
+            m_capturedArguments.append(NamedRefs());
             ArgumentCollectJob argumentsJob(debugger->engine(), &collector,
                                             &m_capturedArguments.last().names, i, 0);
             debugger->runInEngine(&argumentsJob);
+            m_capturedArguments.last().refs = collector.flushCollectedRefs();
 
-            m_capturedLocals.append(NamedRefs(&collector));
-            RefHolder localHolder(&collector, &m_capturedLocals.last().refs);
+            m_capturedLocals.append(NamedRefs());
             LocalCollectJob localsJob(debugger->engine(), &collector,
                                       &m_capturedLocals.last().names, i, 0);
             debugger->runInEngine(&localsJob);
+            m_capturedLocals.last().refs = collector.flushCollectedRefs();
         }
     }
 
@@ -250,7 +243,8 @@ public:
         int frameNr;
     };
     QVector<ExpressionRequest> m_expressionRequests;
-    QVector<Refs> m_expressionResults;
+    QList<QJsonObject> m_expressionResults;
+    QList<QJsonArray> m_expressionRefs;
     QV4Debugger *m_debugger;
 
     // Utility methods:
@@ -578,7 +572,7 @@ void tst_qv4debugger::readObject()
     QCOMPARE(b_tail.value("name").toString(), QStringLiteral("tail"));
     QVERIFY(b_tail.contains("ref"));
 
-    QJsonObject b_tail_value = frame0.collector->lookupRef(b_tail.value("ref").toInt());
+    QJsonObject b_tail_value = m_debuggerAgent->collector.lookupRef(b_tail.value("ref").toInt());
     QCOMPARE(b_tail_value.value("type").toString(), QStringLiteral("object"));
     QVERIFY(b_tail_value.contains("properties"));
     QJsonArray b_tail_props = b_tail_value.value("properties").toArray();
@@ -711,15 +705,13 @@ void tst_qv4debugger::evaluateExpression()
 
     evaluateJavaScript(script, "evaluateExpression");
 
-    QCOMPARE(m_debuggerAgent->m_expressionResults.count(), 2);
-    QCOMPARE(m_debuggerAgent->m_expressionResults[0].size(), 1);
-    QJsonObject result0 =
-            m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_expressionResults[0].first());
+    QCOMPARE(m_debuggerAgent->m_expressionRefs.count(), 2);
+    QCOMPARE(m_debuggerAgent->m_expressionRefs[0].size(), 1);
+    QJsonObject result0 = m_debuggerAgent->m_expressionRefs[0].first().toObject();
     QCOMPARE(result0.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(result0.value("value").toInt(), 10);
-    QCOMPARE(m_debuggerAgent->m_expressionResults[1].size(), 1);
-    QJsonObject result1 =
-            m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_expressionResults[1].first());
+    QCOMPARE(m_debuggerAgent->m_expressionRefs[1].size(), 1);
+    QJsonObject result1 = m_debuggerAgent->m_expressionRefs[1].first().toObject();
     QCOMPARE(result1.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(result1.value("value").toInt(), 20);
 }

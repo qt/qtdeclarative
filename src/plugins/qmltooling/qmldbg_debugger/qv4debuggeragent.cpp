@@ -63,7 +63,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
 {
     Q_UNUSED(reason);
 
-    m_debugService->clearHandles(debugger->engine());
+    debugger->collector()->clear();
 
     QJsonObject event, body, script;
     event.insert(QStringLiteral("type"), QStringLiteral("event"));

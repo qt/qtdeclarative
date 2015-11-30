@@ -55,6 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QV4DataCollector;
 class QV4Debugger : public QV4::Debugging::Debugger
 {
     Q_OBJECT
@@ -110,8 +111,10 @@ public:
     };
 
     QV4Debugger(QV4::ExecutionEngine *engine);
+    ~QV4Debugger();
 
     QV4::ExecutionEngine *engine() const;
+    QV4DataCollector *collector() const;
 
     void pause();
     void resume(Speed speed);
@@ -153,6 +156,9 @@ public:
 signals:
     void debuggerPaused(QV4Debugger *self, QV4Debugger::PauseReason reason);
 
+private slots:
+    void runJobUnpaused();
+
 private:
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
@@ -174,6 +180,7 @@ private:
 
     Job *m_gatherSources;
     Job *m_runningJob;
+    QV4DataCollector *m_collector;
     QWaitCondition m_jobIsRunning;
 };
 

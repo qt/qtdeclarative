@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qv4debugger.h"
+#include "qv4datacollector.h"
 
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4script_p.h>
@@ -127,6 +128,7 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     , m_returnedValue(engine, QV4::Primitive::undefinedValue())
     , m_gatherSources(0)
     , m_runningJob(0)
+    , m_collector(new QV4DataCollector(engine))
 {
     static int debuggerId = qRegisterMetaType<QV4Debugger*>();
     static int pauseReasonId = qRegisterMetaType<QV4Debugger::PauseReason>();
@@ -134,9 +136,19 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     Q_UNUSED(pauseReasonId);
 }
 
+QV4Debugger::~QV4Debugger()
+{
+    delete m_collector;
+}
+
 QV4::ExecutionEngine *QV4Debugger::engine() const
 {
     return m_engine;
+}
+
+QV4DataCollector *QV4Debugger::collector() const
+{
+    return m_collector;
 }
 
 void QV4Debugger::pause()
@@ -300,6 +312,14 @@ QV4::Function *QV4Debugger::getFunction() const
         return context->d()->engine->globalCode;
 }
 
+void QV4Debugger::runJobUnpaused()
+{
+    QMutexLocker locker(&m_lock);
+    if (m_runningJob)
+        m_runningJob->run();
+    m_jobIsRunning.wakeAll();
+}
+
 void QV4Debugger::pauseAndWait(PauseReason reason)
 {
     if (m_runningJob)
@@ -352,7 +372,10 @@ void QV4Debugger::runInEngine_havingLock(QV4Debugger::Job *job)
     Q_ASSERT(m_runningJob == 0);
 
     m_runningJob = job;
-    m_runningCondition.wakeAll();
+    if (state() == Paused)
+        m_runningCondition.wakeAll();
+    else
+        QMetaObject::invokeMethod(this, "runJobUnpaused", Qt::QueuedConnection);
     m_jobIsRunning.wait(&m_lock);
     m_runningJob = 0;
 }

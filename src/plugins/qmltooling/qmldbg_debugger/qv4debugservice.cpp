@@ -114,9 +114,9 @@ protected:
         response.insert(QStringLiteral("running"), debugService->debuggerAgent.isRunning());
     }
 
-    void addRefs()
+    void addRefs(const QJsonArray &refs)
     {
-        response.insert(QStringLiteral("refs"), debugService->buildRefs());
+        response.insert(QStringLiteral("refs"), refs);
     }
 
     void createErrorResponse(const QString &msg)
@@ -169,6 +169,7 @@ public:
         QJsonObject body;
         body.insert(QStringLiteral("V8Version"),
                     QLatin1String("this is not V8, this is V4 in Qt " QT_VERSION_STR));
+        body.insert(QStringLiteral("UnpausedEvaluate"), true);
         addBody(body);
     }
 };
@@ -296,7 +297,7 @@ public:
             body.insert(QStringLiteral("frames"), frameArray);
         }
         addBody(body);
-        addRefs();
+        addRefs(debugger->collector()->flushCollectedRefs());
     }
 };
 
@@ -333,7 +334,7 @@ public:
         addSuccess(true);
         addRunning();
         addBody(frame);
-        addRefs();
+        addRefs(debugger->collector()->flushCollectedRefs());
     }
 };
 
@@ -374,7 +375,7 @@ public:
         addSuccess(true);
         addRunning();
         addBody(scope);
-        addRefs();
+        addRefs(debugger->collector()->flushCollectedRefs());
     }
 };
 
@@ -389,17 +390,32 @@ public:
         QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
         QJsonArray handles = arguments.value(QStringLiteral("handles")).toArray();
 
-        QJsonObject body;
-        foreach (const QJsonValue &handle, handles)
-            body[QString::number(handle.toInt())] = debugService->lookup(handle.toInt());
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        if (!debugger) {
+            const QList<QV4Debugger *> &debuggers = debugService->debuggerAgent.debuggers();
+            if (debuggers.count() > 1) {
+                createErrorResponse(QStringLiteral("Cannot lookup values if multiple debuggers are running and none is paused"));
+                return;
+            } else if (debuggers.count() == 0) {
+                createErrorResponse(QStringLiteral("No debuggers available to lookup values"));
+                return;
+            }
+            debugger = debuggers.first();
+        }
 
-        // response:
-        addCommand();
-        addRequestSequence();
-        addSuccess(true);
-        addRunning();
-        addBody(body);
-        addRefs();
+        ValueLookupJob job(handles, debugger->collector());
+        debugger->runInEngine(&job);
+        if (!job.exceptionMessage().isEmpty()) {
+            createErrorResponse(job.exceptionMessage());
+        } else {
+            // response:
+            addCommand();
+            addRequestSequence();
+            addSuccess(true);
+            addRunning();
+            addBody(job.returnValue());
+            addRefs(job.refs());
+        }
     }
 };
 
@@ -587,27 +603,34 @@ public:
     virtual void handleRequest()
     {
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
-        if (debugger) {
-            QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-            QString expression = arguments.value(QStringLiteral("expression")).toString();
-            const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
 
-            QV4DataCollector *collector = debugService->collector();
-            RefHolder holder(collector, debugService->refs());
-            ExpressionEvalJob job(debugger->engine(), frame, expression, collector);
-            debugger->runInEngine(&job);
-            if (job.hasExeption()) {
-                createErrorResponse(job.exceptionMessage());
-            } else {
-                addCommand();
-                addRequestSequence();
-                addSuccess(true);
-                addRunning();
-                addBody(collector->lookupRef(debugService->refs()->last()));
-                addRefs();
+        if (!debugger) {
+            const QList<QV4Debugger *> &debuggers = debugService->debuggerAgent.debuggers();
+            if (debuggers.count() > 1) {
+                createErrorResponse(QStringLiteral("Cannot evaluate expressions if multiple debuggers are running and none is paused"));
+                return;
+            } else if (debuggers.count() == 0) {
+                createErrorResponse(QStringLiteral("No debuggers available to evaluate expressions"));
+                return;
             }
+            debugger = debuggers.first();
+        }
+
+        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
+        QString expression = arguments.value(QStringLiteral("expression")).toString();
+        const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
+
+        ExpressionEvalJob job(debugger->engine(), frame, expression, debugger->collector());
+        debugger->runInEngine(&job);
+        if (job.hasExeption()) {
+            createErrorResponse(job.exceptionMessage());
         } else {
-            createErrorResponse(QStringLiteral("Debugger has to be paused for evaluate to work."));
+            addCommand();
+            addRequestSequence();
+            addSuccess(true);
+            addRunning();
+            addBody(job.returnValue());
+            addRefs(job.refs());
         }
     }
 };
@@ -805,11 +828,6 @@ void QV4DebugServiceImpl::send(QJsonObject v8Payload)
     emit messageToClient(name(), packMessage("v8message", responseData));
 }
 
-void QV4DebugServiceImpl::clearHandles(QV4::ExecutionEngine *engine)
-{
-    theCollector.reset(new QV4DataCollector(engine));
-}
-
 QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, int frameNr,
                                             QV4Debugger *debugger)
 {
@@ -818,38 +836,34 @@ QJsonObject QV4DebugServiceImpl::buildFrame(const QV4::StackFrame &stackFrame, i
     QJsonObject frame;
     frame[QLatin1String("index")] = frameNr;
     frame[QLatin1String("debuggerFrame")] = false;
-    ref = theCollector->addFunctionRef(stackFrame.function);
-    collectedRefs.append(ref);
+    ref = debugger->collector()->addFunctionRef(stackFrame.function);
     frame[QLatin1String("func")] = toRef(ref);
-    ref = theCollector->addScriptRef(stackFrame.source);
-    collectedRefs.append(ref);
+    ref = debugger->collector()->addScriptRef(stackFrame.source);
     frame[QLatin1String("script")] = toRef(ref);
     frame[QLatin1String("line")] = stackFrame.line - 1;
     if (stackFrame.column >= 0)
         frame[QLatin1String("column")] = stackFrame.column;
 
     QJsonArray scopes;
-    if (debugger->state() == QV4Debugger::Paused) {
-        RefHolder holder(theCollector.data(), &collectedRefs);
-        bool foundThis = false;
-        ThisCollectJob job(debugger->engine(), theCollector.data(), frameNr, &foundThis);
-        debugger->runInEngine(&job);
-        if (foundThis)
-            frame[QLatin1String("receiver")] = toRef(collectedRefs.last());
+    Q_ASSERT (debugger->state() == QV4Debugger::Paused);
 
-        // Only type and index are used by Qt Creator, so we keep it easy:
-        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
-                QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
-        for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
-            int type = encodeScopeType(scopeTypes[i]);
-            if (type == -1)
-                continue;
+    ThisCollectJob job(debugger->engine(), debugger->collector(), frameNr);
+    debugger->runInEngine(&job);
+    if (job.foundRef() != QV4DataCollector::s_invalidRef)
+        frame[QLatin1String("receiver")] = toRef(job.foundRef());
 
-            QJsonObject scope;
-            scope[QLatin1String("index")] = i;
-            scope[QLatin1String("type")] = type;
-            scopes.push_back(scope);
-        }
+    // Only type and index are used by Qt Creator, so we keep it easy:
+    QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
+            QV4DataCollector::getScopeTypes(debugger->engine(), frameNr);
+    for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
+        int type = encodeScopeType(scopeTypes[i]);
+        if (type == -1)
+            continue;
+
+        QJsonObject scope;
+        scope[QLatin1String("index")] = i;
+        scope[QLatin1String("type")] = type;
+        scopes.push_back(scope);
     }
     frame[QLatin1String("scopes")] = scopes;
 
@@ -883,8 +897,7 @@ QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr, QV4Debugge
     QJsonObject scope;
 
     QJsonObject object;
-    RefHolder holder(theCollector.data(), &collectedRefs);
-    theCollector->collectScope(&object, debugger, frameNr, scopeNr);
+    debugger->collector()->collectScope(&object, debugger, frameNr, scopeNr);
 
     if (debugger->state() == QV4Debugger::Paused) {
         QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
@@ -900,42 +913,11 @@ QJsonObject QV4DebugServiceImpl::buildScope(int frameNr, int scopeNr, QV4Debugge
     return scope;
 }
 
-QJsonValue QV4DebugServiceImpl::lookup(QV4DataCollector::Ref refId)
-{
-    RefHolder holder(theCollector.data(), &collectedRefs);
-    return theCollector->lookupRef(refId);
-}
-
-QJsonArray QV4DebugServiceImpl::buildRefs()
-{
-    QJsonArray refs;
-    std::sort(collectedRefs.begin(), collectedRefs.end());
-    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
-        QV4DataCollector::Ref ref = collectedRefs.at(i);
-        if (i > 0 && ref == collectedRefs.at(i - 1))
-            continue;
-        refs.append(lookup(ref));
-    }
-
-    collectedRefs.clear();
-    return refs;
-}
-
 QJsonValue QV4DebugServiceImpl::toRef(QV4DataCollector::Ref ref)
 {
     QJsonObject dict;
     dict.insert(QStringLiteral("ref"), qint64(ref));
     return dict;
-}
-
-QV4DataCollector *QV4DebugServiceImpl::collector() const
-{
-    return theCollector.data();
-}
-
-QV4DataCollector::Refs *QV4DebugServiceImpl::refs()
-{
-    return &collectedRefs;
 }
 
 void QV4DebugServiceImpl::selectFrame(int frameNr)

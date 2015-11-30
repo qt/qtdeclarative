@@ -78,19 +78,13 @@ public:
     void send(QJsonObject v8Payload);
 
     QJsonObject buildScope(int frameNr, int scopeNr, QV4Debugger *debugger);
-    QJsonArray buildRefs();
-    QJsonValue lookup(QV4DataCollector::Ref refId);
     QJsonValue toRef(QV4DataCollector::Ref ref);
 
     QJsonObject buildFrame(const QV4::StackFrame &stackFrame, int frameNr, QV4Debugger *debugger);
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
-    void clearHandles(QV4::ExecutionEngine *engine);
-
-    QV4DataCollector *collector() const;
     QV4DebuggerAgent debuggerAgent;
-    QV4DataCollector::Refs *refs();
 
 protected:
     void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
@@ -108,9 +102,7 @@ private:
 
     QStringList breakOnSignals;
     static int sequence;
-    QV4DataCollector::Refs collectedRefs;
 
-    QScopedPointer<QV4DataCollector> theCollector;
     int theSelectedFrame;
 
     void addHandler(V8CommandHandler* handler);
