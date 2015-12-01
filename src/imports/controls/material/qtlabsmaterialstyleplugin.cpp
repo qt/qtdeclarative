@@ -37,7 +37,11 @@
 #include <QtQml/qqmlextensionplugin.h>
 
 #include "qquickmaterialstyle_p.h"
+#include "qquickmaterialtheme_p.h"
 #include "qquickmaterialprogressring_p.h"
+
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtLabsControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
 {
@@ -52,9 +56,22 @@ class QtLabsMaterialStylePlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    ~QtLabsMaterialStylePlugin();
     void registerTypes(const char *uri) Q_DECL_OVERRIDE;
     void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
+
+private:
+    QQuickProxyTheme *theme;
 };
+
+QtLabsMaterialStylePlugin::~QtLabsMaterialStylePlugin()
+{
+    if (theme) {
+        QPlatformTheme *old = theme->theme();
+        QGuiApplicationPrivate::platform_theme = old;
+        delete theme;
+    }
+}
 
 void QtLabsMaterialStylePlugin::registerTypes(const char *uri)
 {
@@ -67,6 +84,18 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
 {
     Q_UNUSED(engine);
     Q_UNUSED(uri);
+
+    QQuickStyleSelector *selector = QQuickStyleSelector::instance(this);
+    if (selector && selector->style() == QStringLiteral("material")) {
+        if (QFont(QStringLiteral("Roboto")).family() == QStringLiteral("Roboto")) {
+            QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
+            if (old) {
+                QQuickProxyTheme *theme = new QQuickMaterialTheme(old);
+                QGuiApplicationPrivate::platform_theme = theme;
+            }
+        }
+    }
+
     initResources();
 }
 

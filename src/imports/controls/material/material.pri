@@ -1,9 +1,11 @@
 HEADERS += \
     $$PWD/qquickmaterialstyle_p.h \
+    $$PWD/qquickmaterialtheme_p.h \
     $$PWD/qquickmaterialprogressring_p.h
 
 SOURCES += \
     $$PWD/qquickmaterialstyle.cpp \
+    $$PWD/qquickmaterialtheme.cpp \
     $$PWD/qquickmaterialprogressring.cpp
 
 QML_FILES += \

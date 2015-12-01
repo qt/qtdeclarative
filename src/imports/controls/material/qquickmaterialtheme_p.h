@@ -34,41 +34,40 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
+#ifndef QQUICKMATERIALTHEME_H
+#define QQUICKMATERIALTHEME_H
 
-T.TabButton {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/qfont.h>
+#include <QtLabsControls/private/qquickproxytheme_p.h>
 
-    padding: 6
+QT_BEGIN_NAMESPACE
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+class QQuickMaterialTheme :  public QQuickProxyTheme
+{
+public:
+    QQuickMaterialTheme(QPlatformTheme *theme);
 
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        color: !control.enabled ? control.Material.hintTextColor : control.pressed || control.checked ? control.Material.accentColor : control.Material.primaryTextColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [label]
+    ~QQuickMaterialTheme();
 
-    //! [background]
-    background: Item {
-        height: parent.height - 1
-        implicitHeight: 26
-    }
-    //! [background]
-}
+    const QFont *font(Font type = SystemFont) const Q_DECL_OVERRIDE;
+
+private:
+    QFont systemFont;
+    QFont dockWidgetTitleFont; // QQuickTabButton
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKMATERIALTHEME_H

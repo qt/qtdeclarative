@@ -3,7 +3,7 @@ TARGETPATH = Qt/labs/controls/material
 IMPORT_VERSION = 1.0
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private
+QT_PRIVATE += core-private gui-private qml-private quick-private labscontrols-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 

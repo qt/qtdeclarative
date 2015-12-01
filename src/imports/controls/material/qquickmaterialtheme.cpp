@@ -34,41 +34,31 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.material 1.0
+#include "qquickmaterialtheme_p.h"
 
-T.TabButton {
-    id: control
+#include <QtGui/qfont.h>
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+QT_BEGIN_NAMESPACE
 
-    padding: 6
-
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        color: !control.enabled ? control.Material.hintTextColor : control.pressed || control.checked ? control.Material.accentColor : control.Material.primaryTextColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-    //! [label]
-
-    //! [background]
-    background: Item {
-        height: parent.height - 1
-        implicitHeight: 26
-    }
-    //! [background]
+QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
+    : QQuickProxyTheme(theme)
+{
+    systemFont = QFont(QLatin1Literal("Roboto"));
+    dockWidgetTitleFont = QFont(QLatin1Literal("Roboto"), 10);
 }
+
+QQuickMaterialTheme::~QQuickMaterialTheme()
+{
+}
+
+const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
+{
+    switch (type) {
+    case QPlatformTheme::DockWidgetTitleFont:
+        return &dockWidgetTitleFont;
+    default:
+        return &systemFont;
+    }
+}
+
+QT_END_NAMESPACE
