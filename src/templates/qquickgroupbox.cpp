@@ -37,6 +37,8 @@
 #include "qquickgroupbox_p.h"
 #include "qquickframe_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -120,6 +122,11 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
             label->setParentItem(this);
         emit labelChanged();
     }
+}
+
+QFont QQuickGroupBox::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::MdiSubWindowTitleFont); // tmp
 }
 
 QT_END_NAMESPACE

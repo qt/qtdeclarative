@@ -136,6 +136,8 @@ Q_SIGNALS:
     void contentItemChanged();
 
 protected:
+    virtual QFont defaultFont() const;
+
     QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent);
 
     void componentComplete() Q_DECL_OVERRIDE;

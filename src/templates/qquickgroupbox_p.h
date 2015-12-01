@@ -73,6 +73,9 @@ Q_SIGNALS:
     void titleChanged();
     void labelChanged();
 
+protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickGroupBox)
     Q_DECLARE_PRIVATE(QQuickGroupBox)

@@ -68,6 +68,9 @@ public:
 Q_SIGNALS:
     void highlightedChanged();
 
+protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 private:
     Q_DISABLE_COPY(QQuickButton)
     Q_DECLARE_PRIVATE(QQuickButton)

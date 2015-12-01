@@ -37,6 +37,8 @@
 #include "qquickbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -122,6 +124,11 @@ void QQuickButton::setHighlighted(bool highlighted)
         d->highlighted = highlighted;
         emit highlightedChanged();
     }
+}
+
+QFont QQuickButton::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
 }
 
 QT_END_NAMESPACE

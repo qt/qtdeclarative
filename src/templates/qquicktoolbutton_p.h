@@ -58,6 +58,9 @@ class Q_LABSTEMPLATES_EXPORT QQuickToolButton : public QQuickButton
 
 public:
     explicit QQuickToolButton(QQuickItem *parent = Q_NULLPTR);
+
+protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
 };
 
 Q_DECLARE_TYPEINFO(QQuickToolButton, Q_COMPLEX_TYPE);

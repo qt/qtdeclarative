@@ -45,6 +45,9 @@
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
+
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
@@ -206,7 +209,14 @@ void QQuickControl::accessibilityActiveChanged(bool active)
 */
 QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
 {
-    QFont naturalFont = QGuiApplication::font();
+    QFont naturalFont = themeFont(QPlatformTheme::SystemFont);
+    if (const QQuickControl *qc = qobject_cast<const QQuickControl *>(q)) {
+        naturalFont = qc->defaultFont();
+    } else if (const QQuickLabel *label = qobject_cast<const QQuickLabel *>(q)) {
+        Q_UNUSED(label);
+        naturalFont = themeFont(QPlatformTheme::LabelFont);
+    }
+
     QQuickItem *p = q->parentItem();
     while (p) {
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
@@ -219,6 +229,16 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
 
     naturalFont.resolve(0);
     return naturalFont;
+}
+
+QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
+{
+    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
+        if (const QFont *font = theme->font(type))
+            return *font;
+    }
+
+    return QGuiApplication::font();
 }
 
 /*!
@@ -708,6 +728,11 @@ void QQuickControl::componentComplete()
     if (!d->accessibleAttached && QAccessible::isActive())
         accessibilityActiveChanged(true);
 #endif
+}
+
+QFont QQuickControl::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
 }
 
 void QQuickControl::mousePressEvent(QMouseEvent *event)

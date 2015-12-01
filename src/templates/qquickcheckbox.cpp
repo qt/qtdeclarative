@@ -37,6 +37,8 @@
 #include "qquickcheckbox_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -154,6 +156,11 @@ void QQuickCheckBox::setCheckState(Qt::CheckState state)
         if (d->checked != wasChecked)
             emit checkedChanged();
     }
+}
+
+QFont QQuickCheckBox::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::CheckBoxFont);
 }
 
 void QQuickCheckBox::checkStateSet()
