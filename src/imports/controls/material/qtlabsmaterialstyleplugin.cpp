@@ -85,7 +85,7 @@ void QtLabsMaterialStylePlugin::initializeEngine(QQmlEngine *engine, const char 
     Q_UNUSED(engine);
     Q_UNUSED(uri);
 
-    QQuickStyleSelector *selector = QQuickStyleSelector::instance(this);
+    QQuickStyleSelector *selector = QQuickStyleSelector::instance();
     if (selector && selector->style() == QStringLiteral("material")) {
         if (QFont(QStringLiteral("Roboto")).family() == QStringLiteral("Roboto")) {
             QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;

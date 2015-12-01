@@ -46,17 +46,17 @@
 // We mean it.
 //
 
-#include <QtCore/QObject>
-#include <QtCore/QStringList>
+#include <QtCore/qurl.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickStyleSelectorPrivate;
-class QQuickStyleSelector : public QObject
+class QQuickStyleSelector
 {
-    Q_OBJECT
 public:
-    explicit QQuickStyleSelector(QObject *parent = Q_NULLPTR);
+    explicit QQuickStyleSelector();
     ~QQuickStyleSelector();
 
     QString select(const QString &filePath) const;
@@ -69,12 +69,13 @@ public:
     void setBaseUrl(const QUrl &base);
     QUrl baseUrl() const;
 
-    static QQuickStyleSelector *instance(QObject *parent = Q_NULLPTR);
+    static QQuickStyleSelector *instance();
 
 private:
     QUrl select(const QUrl &filePath) const;
 
     Q_DECLARE_PRIVATE(QQuickStyleSelector)
+    QScopedPointer<QQuickStyleSelectorPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE

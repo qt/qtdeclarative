@@ -52,15 +52,12 @@ Q_GLOBAL_STATIC(QQuickStyleSelectorSharedData, sharedData);
 static QBasicMutex sharedDataMutex;
 
 QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
-    : QObjectPrivate()
 {
 }
 
-QQuickStyleSelector::QQuickStyleSelector(QObject *parent)
-    : QObject(*(new QQuickStyleSelectorPrivate()), parent)
+QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
     Q_D(QQuickStyleSelector);
-
     d->style = QGuiApplicationPrivate::styleOverride;
     if (d->style.isEmpty())
         d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
@@ -93,10 +90,10 @@ QUrl QQuickStyleSelector::select(const QUrl &filePath) const
     QUrl ret(filePath);
     if (isLocalScheme(filePath.scheme())) {
         QString equivalentPath = QLatin1Char(':') + filePath.path();
-        QString selectedPath = d->select(equivalentPath);
+        QString selectedPath = d->select(equivalentPath, allSelectors());
         ret.setPath(selectedPath.remove(0, 1));
     } else {
-        ret = QUrl::fromLocalFile(d->select(ret.toLocalFile()));
+        ret = QUrl::fromLocalFile(d->select(ret.toLocalFile(), allSelectors()));
     }
     return ret;
 }
@@ -127,16 +124,15 @@ static QString selectionHelper(const QString &path, const QString &fileName, con
     return path + fileName;
 }
 
-QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
+QString QQuickStyleSelectorPrivate::select(const QString &filePath, const QStringList &allSelectors) const
 {
-    Q_Q(const QQuickStyleSelector);
     QFileInfo fi(filePath);
     // If file doesn't exist, don't select
     if (!fi.exists())
         return filePath;
 
     QString ret = selectionHelper(fi.path().isEmpty() ? QString() : fi.path() + QLatin1Char('/'),
-            fi.fileName(), q->allSelectors());
+            fi.fileName(), allSelectors);
 
     if (!ret.isEmpty())
         return ret;
@@ -176,12 +172,10 @@ QUrl QQuickStyleSelector::baseUrl() const
     return d->baseUrl;
 }
 
-QQuickStyleSelector *QQuickStyleSelector::instance(QObject *parent)
+QQuickStyleSelector *QQuickStyleSelector::instance()
 {
-    QPointer<QQuickStyleSelector> self;
-    if (!self)
-        self = new QQuickStyleSelector(parent);
-    return self;
+    static QQuickStyleSelector self;
+    return &self;
 }
 
 void QQuickStyleSelectorPrivate::updateSelectors()
@@ -234,5 +228,3 @@ void QQuickStyleSelectorPrivate::addStatics(const QStringList &statics)
 }
 
 QT_END_NAMESPACE
-
-#include "moc_qquickstyleselector_p.cpp"

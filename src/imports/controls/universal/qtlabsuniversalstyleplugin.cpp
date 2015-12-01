@@ -81,7 +81,7 @@ void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    QQuickStyleSelector *selector = QQuickStyleSelector::instance(this);
+    QQuickStyleSelector *selector = QQuickStyleSelector::instance();
     if (selector && selector->style() == QStringLiteral("universal")) {
         if (QFont(QStringLiteral("Segoe UI")).family() == QStringLiteral("Segoe UI")) {
             QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;

@@ -60,15 +60,14 @@ struct QQuickStyleSelectorSharedData //Not QSharedData because currently is just
     QStringList preloadedStatics;
 };
 
-class QQuickStyleSelectorPrivate : QObjectPrivate
+class QQuickStyleSelectorPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickStyleSelector)
 public:
     static void updateSelectors();
     static QStringList platformSelectors();
     static void addStatics(const QStringList &); //For loading GUI statics from other Qt modules
     QQuickStyleSelectorPrivate();
-    QString select(const QString &filePath) const;
+    QString select(const QString &filePath, const QStringList &allSelectors) const;
 
     QString style;
     QUrl baseUrl;

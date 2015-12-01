@@ -64,7 +64,7 @@ void QtLabsControlsPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickButtonGroupAttached>();
 
     // TODO: read the style from application manifest file
-    QQuickStyleSelector *selector = QQuickStyleSelector::instance(this);
+    QQuickStyleSelector *selector = QQuickStyleSelector::instance();
     selector->setBaseUrl(baseUrl());
 
     qmlRegisterType(selector->select(QStringLiteral("/ApplicationWindow.qml")), uri, 1, 0, "ApplicationWindow");
