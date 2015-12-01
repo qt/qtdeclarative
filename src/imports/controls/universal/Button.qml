@@ -52,9 +52,6 @@ T.Button {
     rightPadding: 8
     bottomPadding: 4
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [label]
     label: Text {
         x: control.leftPadding

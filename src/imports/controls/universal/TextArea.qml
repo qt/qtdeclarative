@@ -56,9 +56,6 @@ T.TextArea {
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     color: !enabled ? Universal.chromeDisabledLowColor :
             activeFocus ? Universal.chromeBlackHighColor : Universal.baseHighColor
     selectionColor: Universal.accentColor

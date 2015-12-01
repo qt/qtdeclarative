@@ -56,9 +56,6 @@ T.ItemDelegate {
     rightPadding: 12
     bottomPadding: 13
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [indicator]
     indicator: Image {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2

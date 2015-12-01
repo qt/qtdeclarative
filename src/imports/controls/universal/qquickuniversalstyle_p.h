@@ -91,9 +91,6 @@ class QQuickUniversalStyle : public QObject, public QQuickItemChangeListener
     Q_PROPERTY(QColor listLowColor READ listLowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listMediumColor READ listMediumColor NOTIFY paletteChanged FINAL)
 
-    Q_PROPERTY(int fontSize READ fontSize CONSTANT FINAL)
-    Q_PROPERTY(QString fontFamily READ fontFamily CONSTANT FINAL)
-
 public:
     explicit QQuickUniversalStyle(QObject *parent = Q_NULLPTR);
     ~QQuickUniversalStyle();
@@ -192,9 +189,6 @@ public:
     };
 
     QColor getColor(SystemColor role) const;
-
-    int fontSize() const;
-    QString fontFamily() const;
 
 Q_SIGNALS:
     void themeChanged();

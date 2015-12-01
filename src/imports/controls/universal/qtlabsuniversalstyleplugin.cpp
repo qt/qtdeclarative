@@ -39,6 +39,10 @@
 #include "qquickuniversalprogressring_p.h"
 #include "qquickuniversalprogressstrip_p.h"
 #include "qquickuniversalstyle_p.h"
+#include "qquickuniversaltheme_p.h"
+
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtLabsControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
 {
@@ -53,9 +57,22 @@ class QtLabsUniversalStylePlugin: public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
 public:
+    ~QtLabsUniversalStylePlugin();
     void registerTypes(const char *uri) Q_DECL_OVERRIDE;
     void initializeEngine(QQmlEngine *engine, const char *uri) Q_DECL_OVERRIDE;
+
+private:
+    QQuickProxyTheme *theme;
 };
+
+QtLabsUniversalStylePlugin::~QtLabsUniversalStylePlugin()
+{
+    if (theme) {
+        QPlatformTheme *old = theme->theme();
+        QGuiApplicationPrivate::platform_theme = old;
+        delete theme;
+    }
+}
 
 void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 {
@@ -64,6 +81,17 @@ void QtLabsUniversalStylePlugin::registerTypes(const char *uri)
 
 void QtLabsUniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
+    QQuickStyleSelector *selector = QQuickStyleSelector::instance(this);
+    if (selector && selector->style() == QStringLiteral("universal")) {
+        if (QFont(QStringLiteral("Segoe UI")).family() == QStringLiteral("Segoe UI")) {
+            QPlatformTheme *old = QGuiApplicationPrivate::platform_theme;
+            if (old) {
+                QQuickProxyTheme *theme = new QQuickUniversalTheme(old);
+                QGuiApplicationPrivate::platform_theme = theme;
+            }
+        }
+    }
+
     initResources();
     engine->addImageProvider(QStringLiteral("universal"), new QQuickUniversalImageProvider);
 

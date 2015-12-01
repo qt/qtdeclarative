@@ -58,9 +58,6 @@ T.SpinBox {
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [validator]
     validator: IntValidator {
         locale: control.locale.name

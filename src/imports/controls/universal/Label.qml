@@ -41,9 +41,6 @@ import Qt.labs.controls.universal 1.0
 T.Label {
     id: control
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     color: !control.enabled ? Universal.baseLowColor : Universal.baseHighColor
     linkColor: Universal.accentColor
     renderType: Text.NativeRendering

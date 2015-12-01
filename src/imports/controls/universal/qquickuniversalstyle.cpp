@@ -37,7 +37,6 @@
 #include "qquickuniversalstyle_p.h"
 #include "qquickstyle_p.h"
 
-#include <QtGui/qfont.h>
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -369,20 +368,6 @@ QColor QQuickUniversalStyle::listMediumColor() const
 QColor QQuickUniversalStyle::getColor(SystemColor role) const
 {
     return m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role);
-}
-
-int QQuickUniversalStyle::fontSize() const
-{
-    return 15; // ControlContentThemeFontSize
-}
-
-QString QQuickUniversalStyle::fontFamily() const
-{
-#ifdef Q_OS_WIN
-    return QStringLiteral("Segoe UI"); // ContentControlThemeFontFamily
-#else
-    return QGuiApplication::font().family();
-#endif
 }
 
 void QQuickUniversalStyle::reparent(QQuickUniversalStyle *style)

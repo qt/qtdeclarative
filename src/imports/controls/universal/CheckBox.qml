@@ -53,9 +53,6 @@ T.CheckBox {
     padding: 6
     spacing: 8
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [indicator]
     indicator: Rectangle {
         id: normalRectangle

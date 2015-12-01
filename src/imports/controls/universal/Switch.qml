@@ -53,9 +53,6 @@ T.Switch {
     padding: 5
     spacing: 8
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [indicator]
     indicator: Rectangle {
         implicitWidth: 44

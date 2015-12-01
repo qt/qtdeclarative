@@ -34,35 +34,41 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+#ifndef QQUICKUNIVERSALTHEME_H
+#define QQUICKUNIVERSALTHEME_H
 
-T.TabButton {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/qfont.h>
+#include <QtLabsControls/private/qquickproxytheme_p.h>
 
-    padding: 12 // PivotItemMargin
+QT_BEGIN_NAMESPACE
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+class QQuickUniversalTheme :  public QQuickProxyTheme
+{
+public:
+    QQuickUniversalTheme(QPlatformTheme *theme);
 
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        color: control.checked || control.pressed ? control.Universal.baseHighColor : control.Universal.baseLowColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
-    }
-    //! [label]
-}
+    ~QQuickUniversalTheme();
+
+    const QFont *font(Font type = SystemFont) const Q_DECL_OVERRIDE;
+
+private:
+    QFont systemFont;
+    QFont mdiSubWindowTitleFont; // QQuickGroupBox
+    QFont dockWidgetTitleFont; // QQuickTabButton
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKUNIVERSALTHEME_H

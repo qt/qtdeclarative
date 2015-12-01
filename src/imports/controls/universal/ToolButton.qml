@@ -49,9 +49,6 @@ T.ToolButton {
 
     padding: 6
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [label]
     label: Text {
         x: control.leftPadding

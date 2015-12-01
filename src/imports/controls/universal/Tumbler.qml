@@ -45,9 +45,6 @@ T.Tumbler {
     implicitWidth: 60
     implicitHeight: 200
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-
     //! [delegate]
     delegate: Text {
         text: modelData

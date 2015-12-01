@@ -34,35 +34,38 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+#include "qquickuniversaltheme_p.h"
 
-T.TabButton {
-    id: control
+#include <QtGui/qfont.h>
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+QT_BEGIN_NAMESPACE
 
-    padding: 12 // PivotItemMargin
-
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        color: control.checked || control.pressed ? control.Universal.baseHighColor : control.Universal.baseLowColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
-    }
-    //! [label]
+QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
+    : QQuickProxyTheme(theme)
+{
+    systemFont = QFont(QLatin1Literal("Sege UI"));
+    systemFont.setPixelSize(15);
+    mdiSubWindowTitleFont = systemFont;
+    mdiSubWindowTitleFont.setWeight(QFont::DemiBold);
+    dockWidgetTitleFont = QFont(QLatin1Literal("Sege UI"));
+    dockWidgetTitleFont.setPixelSize(24);
+    dockWidgetTitleFont.setWeight(QFont::Light);
 }
+
+QQuickUniversalTheme::~QQuickUniversalTheme()
+{
+}
+
+const QFont *QQuickUniversalTheme::font(QPlatformTheme::Font type) const
+{
+    switch (type) {
+    case QPlatformTheme::MdiSubWindowTitleFont:
+        return &mdiSubWindowTitleFont;
+    case QPlatformTheme::DockWidgetTitleFont:
+        return &dockWidgetTitleFont;
+    default:
+        return &systemFont;
+    }
+}
+
+QT_END_NAMESPACE

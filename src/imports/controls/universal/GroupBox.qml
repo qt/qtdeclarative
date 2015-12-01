@@ -51,10 +51,6 @@ T.GroupBox {
     padding: 12
     topPadding: 12 + (label && title ? label.implicitHeight + spacing : 0)
 
-    font.pixelSize: Universal.fontSize
-    font.family: Universal.fontFamily
-//    font.weight: Font.DemiBold (TODO: don't want this to inherit...)
-
     //! [contentItem]
     contentItem: Item { }
     //! [contentItem]
