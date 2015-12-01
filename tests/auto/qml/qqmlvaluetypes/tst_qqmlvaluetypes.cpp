@@ -937,7 +937,7 @@ void tst_qqmlvaluetypes::color()
         QQmlComponent component(&engine, testFileUrl("color_compare.qml"));
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
-        QString colorString("#33e199");
+        QString colorString("#5733e199");
         QCOMPARE(object->property("colorToString").toString(), colorString);
         QCOMPARE(object->property("colorEqualsIdenticalRgba").toBool(), true);
         QCOMPARE(object->property("colorEqualsDifferentAlpha").toBool(), false);

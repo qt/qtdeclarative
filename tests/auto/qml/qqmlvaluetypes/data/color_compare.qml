@@ -15,12 +15,12 @@ MyTypeObject {
 
     // compare different color.toString()s
     property bool colorToStringEqualsColorString: (color.toString() == colorToString)                                     // true
-    property bool colorToStringEqualsDifferentAlphaString: (color.toString() == Qt.rgba(0.2, 0.88, 0.6, 0.44).toString()) // true
+    property bool colorToStringEqualsDifferentAlphaString: (color.toString() == Qt.rgba(0.2, 0.88, 0.6, 0.34).toString()) // true
     property bool colorToStringEqualsDifferentRgbaString: (color.toString() == Qt.rgba(0.3, 0.98, 0.7, 0.44).toString())  // false
 
     // compare colors to strings
     property bool colorEqualsColorString: (color == colorToString)                                     // false
-    property bool colorEqualsDifferentAlphaString: (color == Qt.rgba(0.2, 0.88, 0.6, 0.44).toString()) // false
+    property bool colorEqualsDifferentAlphaString: (color == Qt.rgba(0.2, 0.88, 0.6, 0.34).toString()) // false
     property bool colorEqualsDifferentRgbaString: (color == Qt.rgba(0.3, 0.98, 0.7, 0.44).toString())  // false
 
     // compare colors to various value types
