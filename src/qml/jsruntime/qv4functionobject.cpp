@@ -522,9 +522,7 @@ ReturnedValue SimpleScriptFunction::construct(const Managed *that, CallData *cal
     callData->thisObject = v4->newObject(ic, proto);
 
     CallContext::Data ctx(v4);
-#ifndef QT_NO_DEBUG
-    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
-#endif
+    ctx.mm_data = 0;
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
@@ -561,9 +559,7 @@ ReturnedValue SimpleScriptFunction::call(const Managed *that, CallData *callData
     Scoped<SimpleScriptFunction> f(scope, static_cast<const SimpleScriptFunction *>(that));
 
     CallContext::Data ctx(v4);
-#ifndef QT_NO_DEBUG
-    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
-#endif
+    ctx.mm_data = 0;
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->strictMode();
     ctx.callData = callData;
@@ -621,9 +617,7 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     ExecutionContextSaver ctxSaver(scope);
 
     CallContext::Data ctx(v4);
-#ifndef QT_NO_DEBUG
-    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
-#endif
+    ctx.mm_data = 0;
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
@@ -645,9 +639,7 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     ExecutionContextSaver ctxSaver(scope);
 
     CallContext::Data ctx(v4);
-#ifndef QT_NO_DEBUG
-    ctx.mm_data = 0; // make sure we don't run into the assertion in setVTable when allocating a context on the stack
-#endif
+    ctx.mm_data = 0;
     ctx.setVtable(CallContext::staticVTable());
     ctx.strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx.callData = callData;
