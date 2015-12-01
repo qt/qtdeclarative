@@ -36,6 +36,8 @@
 
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4script_p.h>
+#include <private/qqmlcontext_p.h>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,11 +71,38 @@ void QV4Debugger::JavaScriptJob::run()
     QV4::ExecutionContextSaver saver(scope);
 
     QV4::ExecutionContext *ctx = engine->currentContext;
-    if (frameNr > 0) {
-        for (int i = 0; i < frameNr; ++i) {
-            ctx = engine->parentContext(ctx);
+    QObject scopeObject;
+    if (frameNr < 0) { // Use QML context if available
+        QQmlEngine *qmlEngine = engine->qmlEngine();
+        if (qmlEngine) {
+            QQmlContext *qmlRootContext = qmlEngine->rootContext();
+            QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(qmlRootContext);
+
+            QV4::ScopedObject withContext(scope, engine->newObject());
+            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
+                QObject *object = ctxtPriv->instances.at(ii);
+                if (QQmlContext *context = qmlContext(object)) {
+                    if (QQmlContextData *cdata = QQmlContextData::get(context)) {
+                        QV4::ScopedValue v(scope, QV4::QObjectWrapper::wrap(engine, object));
+                        withContext->put(engine, cdata->findObjectId(object), v);
+                    }
+                }
+            }
+            if (!engine->qmlContext()) {
+                engine->pushContext(ctx->newQmlContext(QQmlContextData::get(qmlRootContext),
+                                                       &scopeObject));
+                ctx = engine->currentContext;
+            }
+            engine->pushContext(ctx->newWithContext(withContext->toObject(engine)));
+            ctx = engine->currentContext;
         }
-        engine->pushContext(ctx);
+    } else {
+        if (frameNr > 0) {
+            for (int i = 0; i < frameNr; ++i) {
+                ctx = engine->parentContext(ctx);
+            }
+            engine->pushContext(ctx);
+        }
     }
 
     QV4::Script script(ctx, this->script);

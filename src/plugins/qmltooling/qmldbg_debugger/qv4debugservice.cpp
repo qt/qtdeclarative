@@ -602,8 +602,11 @@ public:
 
     virtual void handleRequest()
     {
-        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
+        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
+        QString expression = arguments.value(QStringLiteral("expression")).toString();
+        int frame = -1;
 
+        QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
             const QList<QV4Debugger *> &debuggers = debugService->debuggerAgent.debuggers();
             if (debuggers.count() > 1) {
@@ -614,11 +617,9 @@ public:
                 return;
             }
             debugger = debuggers.first();
+        } else {
+            frame = arguments.value(QStringLiteral("frame")).toInt(0);
         }
-
-        QJsonObject arguments = req.value(QStringLiteral("arguments")).toObject();
-        QString expression = arguments.value(QStringLiteral("expression")).toString();
-        const int frame = arguments.value(QStringLiteral("frame")).toInt(0);
 
         ExpressionEvalJob job(debugger->engine(), frame, expression, debugger->collector());
         debugger->runInEngine(&job);

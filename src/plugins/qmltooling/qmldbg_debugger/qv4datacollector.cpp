@@ -39,6 +39,9 @@
 #include <private/qv4identifier_p.h>
 #include <private/qv4runtime_p.h>
 
+#include <private/qqmlcontext_p.h>
+#include <private/qqmlengine_p.h>
+
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
 
@@ -352,6 +355,17 @@ QJsonObject QV4DataCollector::collectAsJson(const QString &name, const QV4::Scop
 
 void ValueLookupJob::run()
 {
+    // Open a QML context if we don't have one, yet. We might run into QML objects when looking up
+    // refs and that will crash without a valid QML context. Mind that engine->qmlContext() is only
+    // set if the engine is currently executing QML code.
+    QScopedPointer<QObject> scopeObject;
+    QV4::ExecutionEngine *engine = collector->engine();
+    if (engine->qmlEngine() && !engine->qmlContext()) {
+        scopeObject.reset(new QObject);
+        engine->pushContext(engine->currentContext->newQmlContext(
+                                QQmlContextData::get(engine->qmlEngine()->rootContext()),
+                                scopeObject.data()));
+    }
     foreach (const QJsonValue &handle, handles) {
         QV4DataCollector::Ref ref = handle.toInt();
         if (!collector->isValidRef(ref)) {
@@ -361,6 +375,8 @@ void ValueLookupJob::run()
         result[QString::number(ref)] = collector->lookupRef(ref);
     }
     collectedRefs = collector->flushCollectedRefs();
+    if (scopeObject)
+        engine->popContext();
 }
 
 const QString &ValueLookupJob::exceptionMessage() const
