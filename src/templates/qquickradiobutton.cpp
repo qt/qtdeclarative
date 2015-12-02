@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquickradiobutton_p.h"
+#include "qquickcontrol_p_p.h"
+
+#include <QtGui/qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,7 +84,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa ExclusiveGroup, {Customizing RadioButton}, {Button Controls}
+    \sa ButtonGroup, {Customizing RadioButton}, {Button Controls}
 */
 
 QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
@@ -89,6 +92,11 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent) :
 {
     setCheckable(true);
     setAutoExclusive(true);
+}
+
+QFont QQuickRadioButton::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::RadioButtonFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

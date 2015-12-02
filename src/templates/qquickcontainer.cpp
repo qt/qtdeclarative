@@ -37,6 +37,8 @@
 #include "qquickcontainer_p.h"
 #include "qquickcontainer_p_p.h"
 
+#include <QtQuick/private/qquickflickable_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -51,6 +53,14 @@ QT_BEGIN_NAMESPACE
 
     \sa {Container Controls}
 */
+
+static QQuickItem *effectiveContentItem(QQuickItem *item)
+{
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(item);
+    if (flickable)
+        return flickable->contentItem();
+    return item;
+}
 
 QQuickContainerPrivate::QQuickContainerPrivate() : contentModel(Q_NULLPTR), currentIndex(-1), updatingCurrent(false)
 {
@@ -87,10 +97,13 @@ QQuickItem *QQuickContainerPrivate::itemAt(int index) const
 void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 {
     Q_Q(QQuickContainer);
-    contentData.append(item);
     if (!q->isContent(item))
         return;
+    contentData.append(item);
 
+    updatingCurrent = true;
+
+    item->setParentItem(effectiveContentItem(contentItem));
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
     contentModel->insert(index, item);
 
@@ -100,28 +113,36 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
         Q_Q(QQuickContainer);
         q->setCurrentIndex(index);
     }
+
+    updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::moveItem(int from, int to)
 {
     Q_Q(QQuickContainer);
+    int oldCurrent = currentIndex;
     contentModel->move(from, to);
+
     updatingCurrent = true;
-    if (from == currentIndex)
+
+    if (from == oldCurrent)
         q->setCurrentIndex(to);
-    else if (from < currentIndex && to >= currentIndex)
-        q->setCurrentIndex(currentIndex - 1);
-    else if (from > currentIndex && to <= currentIndex)
-        q->setCurrentIndex(currentIndex + 1);
+    else if (from < oldCurrent && to >= oldCurrent)
+        q->setCurrentIndex(oldCurrent - 1);
+    else if (from > oldCurrent && to <= oldCurrent)
+        q->setCurrentIndex(oldCurrent + 1);
+
     updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 {
     Q_Q(QQuickContainer);
-    contentData.removeOne(item);
     if (!q->isContent(item))
         return;
+    contentData.removeOne(item);
+
+    updatingCurrent = true;
 
     bool currentChanged = false;
     if (index == currentIndex) {
@@ -139,6 +160,8 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
 
     if (currentChanged)
         emit q->currentIndexChanged();
+
+    updatingCurrent = false;
 }
 
 void QQuickContainerPrivate::_q_currentIndexChanged()
@@ -151,7 +174,7 @@ void QQuickContainerPrivate::_q_currentIndexChanged()
 void QQuickContainerPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
 {
     // add dynamically reparented items (eg. by a Repeater)
-    if (!QQuickItemPrivate::get(child)->isTransparentForPositioner() && contentModel->indexOf(child, Q_NULLPTR) == -1)
+    if (!QQuickItemPrivate::get(child)->isTransparentForPositioner() && !contentData.contains(child))
         insertItem(contentModel->count(), child);
 }
 
@@ -166,7 +189,7 @@ void QQuickContainerPrivate::itemSiblingOrderChanged(QQuickItem *)
 {
     // reorder the restacked items (eg. by a Repeater)
     Q_Q(QQuickContainer);
-    QList<QQuickItem *> siblings = contentItem->childItems();
+    QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
     for (int i = 0; i < siblings.count(); ++i) {
         QQuickItem* sibling = siblings.at(i);
         int index = contentModel->indexOf(sibling, Q_NULLPTR);
@@ -189,7 +212,7 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
     if (item) {
         if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
             QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
-            item->setParentItem(p->contentItem);
+            item->setParentItem(effectiveContentItem(p->contentItem));
         } else if (p->contentModel->indexOf(item, Q_NULLPTR) == -1) {
             q->addItem(item);
         }
@@ -454,6 +477,9 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 
     if (oldItem) {
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
+        QQuickItem *oldContentItem = effectiveContentItem(oldItem);
+        if (oldContentItem != oldItem)
+            QQuickItemPrivate::get(oldContentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
 
         int signalIndex = oldItem->metaObject()->indexOfSignal("currentIndexChanged()");
         if (signalIndex != -1)
@@ -462,6 +488,9 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 
     if (newItem) {
         QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
+        QQuickItem *newContentItem = effectiveContentItem(newItem);
+        if (newContentItem != newItem)
+            QQuickItemPrivate::get(newContentItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
 
         int signalIndex = newItem->metaObject()->indexOfSignal("currentIndexChanged()");
         if (signalIndex != -1)
@@ -471,8 +500,13 @@ void QQuickContainer::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem
 
 bool QQuickContainer::isContent(QQuickItem *item) const
 {
-    Q_UNUSED(item);
-    return true;
+    // If the item has a QML context associated to it (it was created in QML),
+    // we add it to the content model. Otherwise, it's probably the default
+    // highlight item that is always created by the item views, which we need
+    // to exclude.
+    //
+    // TODO: Find a better way to identify/exclude the highlight item...
+    return qmlContext(item);
 }
 
 void QQuickContainer::itemAdded(int index, QQuickItem *item)

@@ -113,6 +113,21 @@
             \snippet Dial.qml handle
 
 
+    \section1 Customizing Drawer
+
+        Drawer can have a visual \l {Control::background}{background}
+        item. The navigation is implemented by the \l {Control::contentItem}
+        {content item}.
+
+        \section3 Background
+
+            \snippet Drawer.qml background
+
+        \section3 Content item
+
+            Drawer has no content item by default.
+
+
     \section1 Customizing Frame
 
         Frame consists of two visual items: \l {Control::background}{background}
@@ -155,6 +170,31 @@
             \snippet GroupBox.qml label
 
 
+    \section1 Customizing ItemDelegate
+
+        ItemDelegate consists of three visual items: \l {Control::background}{background},
+        \l {AbstractButton::label}{label} and \l {AbstractButton::indicator}{indicator}.
+        The indicator is only visible for \l {AbstractButton::checkable}{checkable} items.
+
+        \section3 Background
+
+            \image qtlabscontrols-itemdelegate-background.png
+
+            \snippet ItemDelegate.qml background
+
+        \section3 Label
+
+            \image qtlabscontrols-itemdelegate-label.png
+
+            \snippet ItemDelegate.qml label
+
+        \section3 Indicator
+
+            \image qtlabscontrols-itemdelegate-indicator.png
+
+            \snippet ItemDelegate.qml indicator
+
+
     \section1 Customizing Label
 
         Label can have a visual \l {Label::background}{background} item.
@@ -164,6 +204,23 @@
             \image qtlabscontrols-label-background.png
 
             Label has no background item by default.
+
+
+    \section1 Customizing Menu
+
+        Menu consists of a \l {Panel::}{contentItem}.
+
+        \section3 Content item
+
+            \image qtlabscontrols-menu-contentItem.png
+
+            \snippet Menu.qml contentItem
+
+
+    \section1 Customizing MenuItem
+
+        MenuItem can be customized in the same manner as
+        \l {Customizing Button}{Button}.
 
 
     \section1 Customizing PageIndicator

@@ -28,10 +28,9 @@
 import QtQuick 2.0
 import Qt.labs.controls 1.0
 
-Rectangle {
+Frame {
     width: 100
     height: 100
-    border.color: Theme.frameColor
 
     ScrollBar {
         size: 0.3

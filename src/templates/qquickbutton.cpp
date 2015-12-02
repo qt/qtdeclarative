@@ -37,6 +37,8 @@
 #include "qquickbutton_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -83,11 +85,50 @@ QT_BEGIN_NAMESPACE
 
 class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
 {
+public:
+    QQuickButtonPrivate();
+
+    bool highlighted;
 };
+
+QQuickButtonPrivate::QQuickButtonPrivate() :
+    highlighted(false)
+{
+}
 
 QQuickButton::QQuickButton(QQuickItem *parent) :
     QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
 {
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::Button::highlighted
+
+    This property holds whether the button is highlighted.
+
+    A button can be highlighted in order to draw the user's attention towards
+    it. It has no effect on keyboard interaction.
+
+    The default value is \c false.
+*/
+bool QQuickButton::isHighlighted() const
+{
+    Q_D(const QQuickButton);
+    return d->highlighted;
+}
+
+void QQuickButton::setHighlighted(bool highlighted)
+{
+    Q_D(QQuickButton);
+    if (highlighted != d->highlighted) {
+        d->highlighted = highlighted;
+        emit highlightedChanged();
+    }
+}
+
+QFont QQuickButton::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
 }
 
 QT_END_NAMESPACE

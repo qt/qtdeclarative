@@ -1,10 +1,15 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/qtlabscontrols">
-    <file>theme.json</file>
-</qresource>
-<qresource>
-    <file>images/spinner_small.png</file>
-    <file>images/spinner_medium.png</file>
-    <file>images/spinner_large.png</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>images/spinner_small.png</file>
+        <file>images/spinner_medium.png</file>
+        <file>images/spinner_large.png</file>
+        <file>images/check.png</file>
+        <file>images/check@2x.png</file>
+        <file>images/check@3x.png</file>
+        <file>images/check@4x.png</file>
+        <file>images/dial-indicator.png</file>
+        <file>images/dial-indicator@2x.png</file>
+        <file>images/dial-indicator@3x.png</file>
+        <file>images/dial-indicator@4x.png</file>
+    </qresource>
 </RCC>

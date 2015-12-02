@@ -57,9 +57,19 @@ class QQuickButtonPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
+    Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
 
 public:
     explicit QQuickButton(QQuickItem *parent = Q_NULLPTR);
+
+    bool isHighlighted() const;
+    void setHighlighted(bool highlighted);
+
+Q_SIGNALS:
+    void highlightedChanged();
+
+protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
 
 private:
     Q_DISABLE_COPY(QQuickButton)

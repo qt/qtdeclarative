@@ -35,12 +35,11 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Label {
     id: control
 
-    color: Theme.textColor
-    linkColor: Theme.focusColor // TODO
+    color: "#26282a"
+    linkColor: "#45a7d7" // TODO
 }

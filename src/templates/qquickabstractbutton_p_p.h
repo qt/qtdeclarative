@@ -48,12 +48,12 @@
 // We mean it.
 //
 
+#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAbstractButton;
-class QQuickExclusiveGroup;
+class QQuickButtonGroup;
 
 class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
@@ -62,11 +62,15 @@ class QQuickAbstractButtonPrivate : public QQuickControlPrivate
 public:
     QQuickAbstractButtonPrivate();
 
+    static QQuickAbstractButtonPrivate *get(QQuickAbstractButton *button)
+    {
+        return button->d_func();
+    }
+
     void startRepeatDelay();
     void startPressRepeat();
     void stopPressRepeat();
 
-    QQuickExclusiveGroup *exclusiveGroup() const;
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
@@ -82,6 +86,7 @@ public:
     Qt::MouseButton repeatButton;
     QQuickItem *label;
     QQuickItem *indicator;
+    QQuickButtonGroup *group;
 };
 
 Q_DECLARE_TYPEINFO(QQuickAbstractButtonPrivate, Q_COMPLEX_TYPE);

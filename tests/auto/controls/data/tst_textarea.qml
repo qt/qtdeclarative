@@ -61,20 +61,6 @@ TestCase {
         control.destroy()
     }
 
-    PressAndHoldTests { id: pah }
-
-    function test_pressAndHold() {
-        var control = textArea.createObject(testCase)
-        pah.basicPressAndHold(control)
-        control.destroy()
-    }
-
-    function test_pressAndHoldKeepsSelection() {
-        var control = textArea.createObject(testCase)
-        pah.pressAndHoldKeepsSelection(control)
-        control.destroy()
-    }
-
     function test_implicitSize() {
         var control = textArea.createObject(testCase)
         control.background.implicitWidth = 400

@@ -605,4 +605,55 @@ TestCase {
 
         control3.destroy()
     }
+
+    Component {
+        id: component4
+        T.Control {
+            id: item4
+            objectName: "item4"
+            property alias item4_2: _item4_2;
+            property alias item4_3: _item4_3;
+            property alias item4_4: _item4_4;
+            T.Control {
+                id: _item4_2
+                objectName: "_item4_2"
+                font.pixelSize: item4.font.pixelSize + 10
+                T.Control {
+                    id: _item4_3
+                    objectName: "_item4_3"
+                    font.pixelSize: item4.font.pixelSize - 1
+                }
+                T.Control {
+                    id: _item4_4
+                    objectName: "_item4_4"
+                }
+            }
+        }
+    }
+
+    function test_font_3() {
+        var control4 = component4.createObject(testCase)
+        verify(control4)
+        verify(control4.item4_2)
+        verify(control4.item4_3)
+        verify(control4.item4_4)
+
+        var family = control4.font.family
+        var ps = control4.font.pixelSize
+
+        compare(control4.item4_2.font.family, control4.font.family)
+        compare(control4.item4_3.font.family, control4.font.family)
+        compare(control4.item4_4.font.family, control4.font.family)
+
+        compare(control4.item4_2.font.pixelSize, control4.font.pixelSize + 10)
+        compare(control4.item4_3.font.pixelSize, control4.font.pixelSize - 1)
+        compare(control4.item4_4.font.pixelSize, control4.font.pixelSize + 10)
+
+        control4.item4_2.font.pixelSize = control4.font.pixelSize + 15
+        compare(control4.item4_2.font.pixelSize, control4.font.pixelSize + 15)
+        compare(control4.item4_3.font.pixelSize, control4.font.pixelSize - 1)
+        compare(control4.item4_4.font.pixelSize, control4.font.pixelSize + 15)
+
+        control4.destroy()
+    }
 }

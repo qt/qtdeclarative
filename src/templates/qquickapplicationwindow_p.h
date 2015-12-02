@@ -54,6 +54,8 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickApplicationWindowPrivate;
+class QQuickApplicationWindowAttached;
+class QQuickApplicationWindowAttachedPrivate;
 
 class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
@@ -62,6 +64,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_PROPERTY(QQmlListProperty<QObject> data READ contentData FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
+    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -76,6 +79,10 @@ public:
 
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
+
+    QQuickItem *overlay() const;
+
+    static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void headerChanged();
@@ -92,8 +99,44 @@ private:
     QScopedPointer<QQuickApplicationWindowPrivate> d_ptr;
 };
 
+class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindowAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQuickApplicationWindow *window READ window NOTIFY windowChanged FINAL)
+    Q_PROPERTY(QQuickItem *contentItem READ contentItem NOTIFY contentItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged FINAL)
+    Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
+    Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
+    Q_PROPERTY(QQuickItem *overlay READ overlay NOTIFY overlayChanged FINAL)
+
+public:
+    explicit QQuickApplicationWindowAttached(QObject *parent = Q_NULLPTR);
+
+    QQuickApplicationWindow *window() const;
+    QQuickItem *contentItem() const;
+    QQuickItem *activeFocusItem() const;
+    QQuickItem *header() const;
+    QQuickItem *footer() const;
+    QQuickItem *overlay() const;
+
+Q_SIGNALS:
+    void windowChanged();
+    void contentItemChanged();
+    void activeFocusItemChanged();
+    void headerChanged();
+    void footerChanged();
+    void overlayChanged();
+
+private:
+    Q_DISABLE_COPY(QQuickApplicationWindowAttached)
+    Q_DECLARE_PRIVATE(QQuickApplicationWindowAttached)
+};
+
 Q_DECLARE_TYPEINFO(QQuickApplicationWindow, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickApplicationWindowAttached, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPEINFO(QQuickApplicationWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H

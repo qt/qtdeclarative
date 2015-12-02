@@ -76,6 +76,9 @@ Q_SIGNALS:
     void backgroundChanged();
 
 protected:
+    void classBegin() Q_DECL_OVERRIDE;
+
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
 
 private:

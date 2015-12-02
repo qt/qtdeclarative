@@ -7,7 +7,10 @@ QML_FILES = \
     Drawer.qml \
     Frame.qml \
     GroupBox.qml \
+    ItemDelegate.qml \
     Label.qml \
+    Menu.qml \
+    MenuItem.qml \
     PageIndicator.qml \
     ProgressBar.qml \
     RadioButton.qml \
@@ -26,14 +29,3 @@ QML_FILES = \
     ToolBar.qml \
     ToolButton.qml \
     Tumbler.qml
-
-HEADERS += \
-    $$PWD/qquickfileselector_p.h \
-    $$PWD/qquickfileselector_p_p.h \
-    $$PWD/qquickthemedata_p.h \
-    $$PWD/qquicktheme_p.h
-
-SOURCES += \
-    $$PWD/qquickfileselector.cpp \
-    $$PWD/qquicktheme.cpp \
-    $$PWD/qquickthemedata.cpp

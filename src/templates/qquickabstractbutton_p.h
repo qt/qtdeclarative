@@ -69,6 +69,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickAbstractButton : public QQuickControl
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickAbstractButton();
 
     QString text() const;
     void setText(const QString &text);

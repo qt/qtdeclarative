@@ -93,12 +93,20 @@ TestCase {
         compare(vertical.position, 0.0)
         compare(vertical.active, false)
         compare(vertical.orientation, Qt.Vertical)
+        compare(vertical.x, 0)
+        compare(vertical.y, 0)
+        verify(vertical.width > 0)
+        verify(vertical.height > 0)
 
         container.ScrollBar.vertical = vertical
         compare(vertical.parent, container)
         compare(vertical.orientation, Qt.Vertical)
         compare(vertical.size, container.visibleArea.heightRatio)
         compare(vertical.position, container.visibleArea.yPosition)
+        compare(vertical.x, container.width - vertical.width)
+        compare(vertical.y, 0)
+        verify(vertical.width > 0)
+        compare(vertical.height, container.height)
 
         var horizontal = scrollBar.createObject()
         verify(!horizontal.parent)
@@ -106,12 +114,20 @@ TestCase {
         compare(horizontal.position, 0.0)
         compare(horizontal.active, false)
         compare(horizontal.orientation, Qt.Vertical)
+        compare(horizontal.x, 0)
+        compare(horizontal.y, 0)
+        verify(horizontal.width > 0)
+        verify(horizontal.height > 0)
 
         container.ScrollBar.horizontal = horizontal
         compare(horizontal.parent, container)
         compare(horizontal.orientation, Qt.Horizontal)
         compare(horizontal.size, container.visibleArea.widthRatio)
         compare(horizontal.position, container.visibleArea.xPosition)
+        compare(horizontal.x, 0)
+        compare(horizontal.y, container.height - horizontal.height)
+        compare(horizontal.width, container.width)
+        verify(horizontal.height > 0)
 
         var velocity = container.maximumFlickVelocity
 

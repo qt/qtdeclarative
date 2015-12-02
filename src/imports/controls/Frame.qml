@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.Frame {
@@ -58,9 +57,8 @@ T.Frame {
         width: parent.width
         height: parent.height
 
-        radius: 3
         color: "transparent"
-        border.color: control.Theme.frameColor
+        border.color: "#bdbebf"
     }
     //! [frame]
 }

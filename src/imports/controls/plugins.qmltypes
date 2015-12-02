@@ -8,59 +8,40 @@ import QtQuick.tooling 1.2
 
 Module {
     dependencies: [
+        "Qt.labs.controls.material 1.0",
+        "Qt.labs.controls.universal 1.0",
+        "Qt.labs.controls.universal.impl 1.0",
         "Qt.labs.templates 1.0",
+        "QtGraphicalEffects 1.0",
+        "QtGraphicalEffects.private 1.0",
         "QtQuick 2.6",
         "QtQuick.Window 2.2"
     ]
     Component {
-        name: "QQuickExclusiveGroup"
-        defaultProperty: "checkables"
+        name: "QQuickButtonGroup"
         prototype: "QObject"
-        exports: ["Qt.labs.controls/ExclusiveGroup 1.0"]
+        exports: ["Qt.labs.controls/ButtonGroup 1.0"]
         exportMetaObjectRevisions: [0]
-        attachedType: "QQuickExclusiveGroupAttached"
-        Property { name: "current"; type: "QObject"; isPointer: true }
-        Property { name: "checkables"; type: "QObject"; isList: true; isReadonly: true }
+        attachedType: "QQuickButtonGroupAttached"
+        Property { name: "checkedButton"; type: "QQuickAbstractButton"; isPointer: true }
+        Property { name: "buttons"; type: "QQuickAbstractButton"; isList: true; isReadonly: true }
         Method {
-            name: "addCheckable"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
+            name: "addButton"
+            Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
         }
         Method {
-            name: "removeCheckable"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
-        }
-        Method {
-            name: "isCheckable"
-            type: "bool"
-            Parameter { name: "object"; type: "QObject"; isPointer: true }
+            name: "removeButton"
+            Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
         }
     }
     Component {
-        name: "QQuickExclusiveGroupAttached"
+        name: "QQuickButtonGroupAttached"
         prototype: "QObject"
-        Property { name: "group"; type: "QQuickExclusiveGroup"; isPointer: true }
-    }
-    Component {
-        name: "QQuickThemeAttached"
-        prototype: "QObject"
-        exports: ["Qt.labs.controls/Theme 1.0"]
-        isCreatable: false
-        exportMetaObjectRevisions: [0]
-        Property { name: "accentColor"; type: "QColor" }
-        Property { name: "backgroundColor"; type: "QColor" }
-        Property { name: "baseColor"; type: "QColor" }
-        Property { name: "disabledColor"; type: "QColor" }
-        Property { name: "focusColor"; type: "QColor" }
-        Property { name: "frameColor"; type: "QColor" }
-        Property { name: "pressColor"; type: "QColor" }
-        Property { name: "selectedTextColor"; type: "QColor" }
-        Property { name: "selectionColor"; type: "QColor" }
-        Property { name: "shadowColor"; type: "QColor" }
-        Property { name: "textColor"; type: "QColor" }
+        Property { name: "group"; type: "QQuickButtonGroup"; isPointer: true }
     }
     Component {
         prototype: "QQuickApplicationWindow"
-        name: "Qt.labs.controls/ApplicationWindow"
+        name: "Qt.labs.controls/ApplicationWindow 1.0"
         exports: ["Qt.labs.controls/ApplicationWindow 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -68,7 +49,7 @@ Module {
     }
     Component {
         prototype: "QQuickBusyIndicator"
-        name: "Qt.labs.controls/BusyIndicator"
+        name: "Qt.labs.controls/BusyIndicator 1.0"
         exports: ["Qt.labs.controls/BusyIndicator 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -76,7 +57,7 @@ Module {
     }
     Component {
         prototype: "QQuickButton"
-        name: "Qt.labs.controls/Button"
+        name: "Qt.labs.controls/Button 1.0"
         exports: ["Qt.labs.controls/Button 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -84,7 +65,7 @@ Module {
     }
     Component {
         prototype: "QQuickCheckBox"
-        name: "Qt.labs.controls/CheckBox"
+        name: "Qt.labs.controls/CheckBox 1.0"
         exports: ["Qt.labs.controls/CheckBox 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -92,7 +73,7 @@ Module {
     }
     Component {
         prototype: "QQuickDial"
-        name: "Qt.labs.controls/Dial"
+        name: "Qt.labs.controls/Dial 1.0"
         exports: ["Qt.labs.controls/Dial 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -100,7 +81,7 @@ Module {
     }
     Component {
         prototype: "QQuickDrawer"
-        name: "Qt.labs.controls/Drawer"
+        name: "Qt.labs.controls/Drawer 1.0"
         exports: ["Qt.labs.controls/Drawer 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -108,7 +89,7 @@ Module {
     }
     Component {
         prototype: "QQuickFrame"
-        name: "Qt.labs.controls/Frame"
+        name: "Qt.labs.controls/Frame 1.0"
         exports: ["Qt.labs.controls/Frame 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -116,15 +97,23 @@ Module {
     }
     Component {
         prototype: "QQuickGroupBox"
-        name: "Qt.labs.controls/GroupBox"
+        name: "Qt.labs.controls/GroupBox 1.0"
         exports: ["Qt.labs.controls/GroupBox 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
         defaultProperty: "contentData"
     }
     Component {
+        prototype: "QQuickItemDelegate"
+        name: "Qt.labs.controls/ItemDelegate 1.0"
+        exports: ["Qt.labs.controls/ItemDelegate 1.0"]
+        exportMetaObjectRevisions: [0]
+        isComposite: true
+        defaultProperty: "data"
+    }
+    Component {
         prototype: "QQuickLabel"
-        name: "Qt.labs.controls/Label"
+        name: "Qt.labs.controls/Label 1.0"
         exports: ["Qt.labs.controls/Label 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -132,7 +121,7 @@ Module {
     }
     Component {
         prototype: "QQuickPageIndicator"
-        name: "Qt.labs.controls/PageIndicator"
+        name: "Qt.labs.controls/PageIndicator 1.0"
         exports: ["Qt.labs.controls/PageIndicator 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -140,7 +129,7 @@ Module {
     }
     Component {
         prototype: "QQuickProgressBar"
-        name: "Qt.labs.controls/ProgressBar"
+        name: "Qt.labs.controls/ProgressBar 1.0"
         exports: ["Qt.labs.controls/ProgressBar 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -148,7 +137,7 @@ Module {
     }
     Component {
         prototype: "QQuickRadioButton"
-        name: "Qt.labs.controls/RadioButton"
+        name: "Qt.labs.controls/RadioButton 1.0"
         exports: ["Qt.labs.controls/RadioButton 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -156,7 +145,7 @@ Module {
     }
     Component {
         prototype: "QQuickRangeSlider"
-        name: "Qt.labs.controls/RangeSlider"
+        name: "Qt.labs.controls/RangeSlider 1.0"
         exports: ["Qt.labs.controls/RangeSlider 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -164,7 +153,7 @@ Module {
     }
     Component {
         prototype: "QQuickScrollBar"
-        name: "Qt.labs.controls/ScrollBar"
+        name: "Qt.labs.controls/ScrollBar 1.0"
         exports: ["Qt.labs.controls/ScrollBar 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -172,7 +161,7 @@ Module {
     }
     Component {
         prototype: "QQuickScrollIndicator"
-        name: "Qt.labs.controls/ScrollIndicator"
+        name: "Qt.labs.controls/ScrollIndicator 1.0"
         exports: ["Qt.labs.controls/ScrollIndicator 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -180,7 +169,7 @@ Module {
     }
     Component {
         prototype: "QQuickSlider"
-        name: "Qt.labs.controls/Slider"
+        name: "Qt.labs.controls/Slider 1.0"
         exports: ["Qt.labs.controls/Slider 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -188,7 +177,7 @@ Module {
     }
     Component {
         prototype: "QQuickSpinBox"
-        name: "Qt.labs.controls/SpinBox"
+        name: "Qt.labs.controls/SpinBox 1.0"
         exports: ["Qt.labs.controls/SpinBox 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -196,7 +185,7 @@ Module {
     }
     Component {
         prototype: "QQuickStackView"
-        name: "Qt.labs.controls/StackView"
+        name: "Qt.labs.controls/StackView 1.0"
         exports: ["Qt.labs.controls/StackView 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -204,7 +193,7 @@ Module {
     }
     Component {
         prototype: "QQuickSwipeView"
-        name: "Qt.labs.controls/SwipeView"
+        name: "Qt.labs.controls/SwipeView 1.0"
         exports: ["Qt.labs.controls/SwipeView 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -212,7 +201,7 @@ Module {
     }
     Component {
         prototype: "QQuickSwitch"
-        name: "Qt.labs.controls/Switch"
+        name: "Qt.labs.controls/Switch 1.0"
         exports: ["Qt.labs.controls/Switch 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -220,7 +209,7 @@ Module {
     }
     Component {
         prototype: "QQuickTabBar"
-        name: "Qt.labs.controls/TabBar"
+        name: "Qt.labs.controls/TabBar 1.0"
         exports: ["Qt.labs.controls/TabBar 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -228,7 +217,7 @@ Module {
     }
     Component {
         prototype: "QQuickTabButton"
-        name: "Qt.labs.controls/TabButton"
+        name: "Qt.labs.controls/TabButton 1.0"
         exports: ["Qt.labs.controls/TabButton 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -236,7 +225,7 @@ Module {
     }
     Component {
         prototype: "QQuickTextArea"
-        name: "Qt.labs.controls/TextArea"
+        name: "Qt.labs.controls/TextArea 1.0"
         exports: ["Qt.labs.controls/TextArea 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -244,7 +233,7 @@ Module {
     }
     Component {
         prototype: "QQuickTextField"
-        name: "Qt.labs.controls/TextField"
+        name: "Qt.labs.controls/TextField 1.0"
         exports: ["Qt.labs.controls/TextField 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -252,7 +241,7 @@ Module {
     }
     Component {
         prototype: "QQuickToolBar"
-        name: "Qt.labs.controls/ToolBar"
+        name: "Qt.labs.controls/ToolBar 1.0"
         exports: ["Qt.labs.controls/ToolBar 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -260,7 +249,7 @@ Module {
     }
     Component {
         prototype: "QQuickToolButton"
-        name: "Qt.labs.controls/ToolButton"
+        name: "Qt.labs.controls/ToolButton 1.0"
         exports: ["Qt.labs.controls/ToolButton 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true
@@ -268,7 +257,7 @@ Module {
     }
     Component {
         prototype: "QQuickTumbler"
-        name: "Qt.labs.controls/Tumbler"
+        name: "Qt.labs.controls/Tumbler 1.0"
         exports: ["Qt.labs.controls/Tumbler 1.0"]
         exportMetaObjectRevisions: [0]
         isComposite: true

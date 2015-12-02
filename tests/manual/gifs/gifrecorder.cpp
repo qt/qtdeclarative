@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the tools applications of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -65,7 +65,7 @@ namespace {
 
 GifRecorder::GifRecorder() :
     QObject(Q_NULLPTR),
-    mView(Q_NULLPTR),
+    mWindow(Q_NULLPTR),
     mHighQuality(false),
     mRecordingDuration(0),
     mRecordCursor(false),
@@ -116,9 +116,9 @@ void GifRecorder::setQmlFileName(const QString &fileName)
     mQmlInputFileName = fileName;
 }
 
-void GifRecorder::setView(QQuickView *view)
+void GifRecorder::setView(QQuickWindow *view)
 {
-    this->mView = view;
+    this->mWindow = view;
 }
 
 /*!
@@ -134,6 +134,11 @@ void GifRecorder::setView(QQuickView *view)
 void GifRecorder::setHighQuality(bool highQuality)
 {
     mHighQuality = highQuality;
+}
+
+QQuickWindow *GifRecorder::window() const
+{
+    return mWindow;
 }
 
 namespace {
@@ -165,18 +170,19 @@ namespace {
 
 void GifRecorder::start()
 {
-    QVERIFY2(mView, "Must have a view to record");
-
     QDir gifQmlDir(mDataDirPath);
     QVERIFY(gifQmlDir.entryList().contains(mQmlInputFileName));
 
     const QString qmlPath = gifQmlDir.absoluteFilePath(mQmlInputFileName);
-    mView->setSource(QUrl::fromLocalFile(qmlPath));
-    QVERIFY(mView->rootObject());
+    mEngine.load(QUrl::fromLocalFile(qmlPath));
+    mWindow = qobject_cast<QQuickWindow*>(mEngine.rootObjects().first());
+    QVERIFY2(mWindow, "Top level item must be a window");
 
-    mView->show();
-    mView->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(mView, 500));
+    mWindow->setFlags(mWindow->flags() | Qt::FramelessWindowHint);
+
+    mWindow->show();
+    mWindow->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(mWindow, 500));
 
     if (mOutputFileBaseName.isEmpty()) {
         mOutputFileBaseName = mOutputDir.absoluteFilePath(mQmlInputFileName);
@@ -195,10 +201,10 @@ void GifRecorder::start()
     QString args = QLatin1String("-d %1 -v %2 -x %3 -y %4 -w %5 -h %6 %7");
     args = args.arg(QString::number(mRecordingDuration))
         .arg(mRecordCursor ? QStringLiteral("-c") : QString())
-        .arg(QString::number(mView->x()))
-        .arg(QString::number(mView->y()))
-        .arg(QString::number(mView->width()))
-        .arg(QString::number(mView->height()))
+        .arg(QString::number(mWindow->x()))
+        .arg(QString::number(mWindow->y()))
+        .arg(QString::number(mWindow->width()))
+        .arg(QString::number(mWindow->height()))
         .arg(mByzanzOutputFileName);
 
 
@@ -208,7 +214,7 @@ void GifRecorder::start()
     // manually from the command line by recording any section of the screen
     // without moving the mouse and then running avprobe on the resulting .flv.
     // Our workaround is to force view updates.
-    connect(&mEventTimer, SIGNAL(timeout()), mView, SLOT(update()));
+    connect(&mEventTimer, SIGNAL(timeout()), mWindow, SLOT(update()));
     mEventTimer.start(100);
 
     startProcess(mByzanzProcess, byzanzProcessName, args);
@@ -231,14 +237,14 @@ void GifRecorder::waitForFinish()
 
     if (mHighQuality) {
         // Indicate the end of recording and the beginning of conversion.
-        QQmlComponent busyComponent(mView->engine());
+        QQmlComponent busyComponent(&mEngine);
         busyComponent.setData("import QtQuick 2.6; import Qt.labs.controls 1.0; Rectangle { anchors.fill: parent; " \
             "BusyIndicator { width: 32; height: 32; anchors.centerIn: parent } }", QUrl());
         QCOMPARE(busyComponent.status(), QQmlComponent::Ready);
         QQuickItem *busyRect = qobject_cast<QQuickItem*>(busyComponent.create());
         QVERIFY(busyRect);
-        busyRect->setParentItem(mView->rootObject());
-        QSignalSpy spy(mView, SIGNAL(frameSwapped()));
+        busyRect->setParentItem(mWindow->contentItem());
+        QSignalSpy spy(mWindow, SIGNAL(frameSwapped()));
         QVERIFY(spy.wait());
 
         QProcess avconvProcess;

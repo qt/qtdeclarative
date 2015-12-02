@@ -61,23 +61,6 @@ TestCase {
         control.destroy()
     }
 
-    PressAndHoldTests { id: pah }
-
-    function test_pressAndHold() {
-        if (Qt.platform.os === "osx")
-            skip("QTBUG-47963");
-
-        var control = textField.createObject(testCase)
-        pah.basicPressAndHold(control)
-        control.destroy()
-    }
-
-    function test_pressAndHoldKeepsSelection() {
-        var control = textField.createObject(testCase)
-        pah.pressAndHoldKeepsSelection(control)
-        control.destroy()
-    }
-
     function test_implicitSize() {
         var control = textField.createObject(testCase)
         verify(control.implicitWidth > control.leftPadding + control.rightPadding)

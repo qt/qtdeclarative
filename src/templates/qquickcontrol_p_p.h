@@ -48,7 +48,10 @@
 // We mean it.
 //
 
+#include "qquickcontrol_p.h"
+
 #include <QtQuick/private/qquickitem_p.h>
+#include <qpa/qplatformtheme.h>
 
 #ifndef QT_NO_ACCESSIBILITY
 #include <QtGui/qaccessible.h>
@@ -98,6 +101,7 @@ public:
     }
     void resolveFont();
     static QFont naturalControlFont(const QQuickItem *);
+    static QFont themeFont(QPlatformTheme::Font type);
 
     QFont font;
     bool hasTopPadding;

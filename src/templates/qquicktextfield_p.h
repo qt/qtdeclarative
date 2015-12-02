@@ -88,6 +88,9 @@ Q_SIGNALS:
     void pressAndHold(QQuickMouseEvent *mouse);
 
 protected:
+    void classBegin() Q_DECL_OVERRIDE;
+
+    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) Q_DECL_OVERRIDE;
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;

@@ -39,11 +39,13 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
-Item {
+Window {
     width: busyIndicator.implicitWidth
     height: busyIndicator.implicitHeight
+    visible: true
 
     property alias busyIndicator: busyIndicator
 

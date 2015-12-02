@@ -5,6 +5,10 @@ SUBDIRS += \
     applicationwindow \
     calendar \
     controls \
+    material \
+    menu \
+    pressandhold \
     sanity \
     snippets \
-    theme
+    styles \
+    universal

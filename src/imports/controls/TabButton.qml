@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.TabButton {
@@ -45,6 +44,7 @@ T.TabButton {
                             label ? label.contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              label ? label.contentHeight + topPadding + bottomPadding : 0)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     padding: 6
 
@@ -60,7 +60,7 @@ T.TabButton {
         text: control.text
         font: control.font
         elide: Text.ElideRight
-        color: !control.enabled ? control.Theme.disabledColor : control.pressed ? control.Theme.accentColor : control.Theme.textColor
+        color: !control.enabled ? "#bdbebf" : control.pressed ? "#000000" : "#353637"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -70,7 +70,7 @@ T.TabButton {
     background: Rectangle {
         height: parent.height - 1
         implicitHeight: 26
-        color: control.Theme.backgroundColor
+        color: "#ffffff"
     }
     //! [background]
 }

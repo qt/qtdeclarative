@@ -277,6 +277,21 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
     }
 }
 
+void QQuickTextArea::classBegin()
+{
+    Q_D(QQuickTextArea);
+    QQuickTextEdit::classBegin();
+    d->resolveFont();
+}
+
+void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickTextArea);
+    QQuickTextEdit::itemChange(change, value);
+    if (change == ItemParentHasChanged && isComponentComplete())
+        d->resolveFont();
+}
+
 void QQuickTextArea::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTextArea);

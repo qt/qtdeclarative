@@ -42,376 +42,534 @@ import QtQuick 2.3
 import QtQuick.Window 2.2
 import QtQuick.Layouts 1.0
 import Qt.labs.controls 1.0
-//import Qt.labs.controls.material 1.0
-//import Qt.labs.controls.universal 1.0
+import Qt.labs.controls.material 1.0
+import Qt.labs.controls.universal 1.0
 
 ApplicationWindow {
     id: window
     visible: true
-    width: 700
+    width: 750
     height: 1000
 
-    Theme.backgroundColor: themeSwitch.checked ? "#444" : "#fff"
-    Theme.frameColor: themeSwitch.checked ? "#666" : "#ccc"
-    Theme.textColor: themeSwitch.checked ? "#eee" : "#111"
-    Theme.pressColor: themeSwitch.checked ? "#33ffffff" : "#33333333"
-    Theme.baseColor: themeSwitch.checked ? "#444" : "#eee"
+    Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
+    Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
 
-//    Material.theme: themeSwitch.checked ? Material.Dark : Material.Light
-//    Universal.theme: themeSwitch.checked ? Universal.Dark : Universal.Light
+    property int controlSpacing: 10
 
-    property int margins: 30
-    property int spacing: 10
+    header: ToolBar {
+        RowLayout {
+            anchors.fill: parent
 
-    Switch {
-        id: themeSwitch
-        text: "Light/Dark"
-        anchors.right: parent.right
+            ToolButton {
+                text: "Normal"
+                onClicked: menu.visible ? menu.hide() : menu.show()
+            }
+            ToolButton {
+                text: "Pressed"
+                pressed: true
+            }
+            ToolButton {
+                text: "Disabled"
+                enabled: false
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            Label {
+                text: "Light/Dark"
+            }
+            Switch {
+                id: themeSwitch
+            }
+        }
     }
 
-    Flow {
-        id: flow
+    footer: TabBar {
+        TabButton {
+            text: "Normal"
+        }
+        TabButton {
+            text: "Pressed"
+            pressed: true
+        }
+        TabButton {
+            text: "Disabled"
+            enabled: false
+        }
+    }
+
+    Menu {
+        id: menu
+        contentItem.x: 1
+        contentItem.y: header.height
+
+        MenuItem {
+            text: "Option 1"
+        }
+        MenuItem {
+            text: "Option 2"
+        }
+        MenuItem {
+            text: "Option 3"
+        }
+    }
+
+    Flickable {
         anchors.fill: parent
-        anchors.margins: 30
-        spacing: 30
+        topMargin: 30
+        leftMargin: 30
+        rightMargin: 30
+        bottomMargin: 30
+        contentHeight: flow.height
 
-        RowLayout {
-            BusyIndicator {
-            }
-            BusyIndicator {
-                enabled: false
-            }
-        }
+        Flow {
+            id: flow
+            width: parent.width
+            spacing: 30
 
-        RowLayout {
-            spacing: window.spacing
+            RowLayout {
+                spacing: window.controlSpacing
 
-            Button {
-                text: "Normal"
-            }
-            Button {
-                text: "Pressed"
-                pressed: true
-            }
-            Button {
-                text: "Disabled"
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            Frame {
-                Label {
-                    text: "Normal\nLabel"
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
-            Frame {
-                enabled: false
-
-                Label {
-                    text: "Disabled\nLabel"
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
-        }
-
-        RowLayout {
-            CheckBox {
-                text: "Normal"
-            }
-            CheckBox {
-                text: "Pressed"
-                pressed: true
-            }
-            CheckBox {
-                text: "Checked"
-                checked: true
-            }
-            CheckBox {
-                text: "Checked + Pressed"
-                checked: true
-                pressed: true
-            }
-            CheckBox {
-                text: "Disabled"
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            Dial {
-            }
-            Dial {
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            GroupBox {
-                title: "Normal"
-
-                Item {
-                    implicitWidth: 100
-                    implicitHeight: 100
-                }
-            }
-            GroupBox {
-                enabled: false
-                title: "Disabled"
-
-                Item {
-                    implicitWidth: 100
-                    implicitHeight: 100
-                }
-            }
-        }
-
-        RowLayout {
-            PageIndicator {
-                count: 5
-            }
-            PageIndicator {
-                count: 5
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            ProgressBar {
-                value: 0.5
-            }
-            ProgressBar {
-                value: 0.5
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            RadioButton {
-                text: "Normal"
-            }
-            RadioButton {
-                text: "Pressed"
-                pressed: true
-            }
-            RadioButton {
-                text: "Checked"
-                checked: true
-            }
-            RadioButton {
-                text: "Checked + Pressed"
-                checked: true
-                pressed: true
-            }
-            RadioButton {
-                text: "Disabled"
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            Frame {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 100
-
-                ScrollBar {
-                    size: 0.3
-                    position: 0.2
-                    active: true
-                    orientation: Qt.Vertical
-                    height: parent.height
-                    anchors.right: parent.right
-                }
-            }
-
-            Frame {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 100
-
-                ScrollBar {
-                    size: 0.3
-                    position: 0.2
-                    active: true
-                    orientation: Qt.Vertical
-                    height: parent.height
-                    anchors.right: parent.right
-                    pressed: true
-                }
-            }
-
-            Frame {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 100
-
-                ScrollBar {
-                    size: 0.3
-                    position: 0.2
-                    active: true
-                    orientation: Qt.Vertical
-                    height: parent.height
-                    anchors.right: parent.right
-                    enabled: false
-                }
-            }
-        }
-
-        RowLayout {
-            Rectangle {
-                width: 100
-                height: 100
-                color: "transparent"
-                border.color: "#cccccc"
-
-                ScrollIndicator {
-                    size: 0.3
-                    position: 0.2
-                    active: true
-                    orientation: Qt.Vertical
-                    height: parent.height
-                    anchors.right: parent.right
-                }
-            }
-
-            Rectangle {
-                width: 100
-                height: 100
-                color: "transparent"
-                border.color: "#cccccc"
-
-                ScrollIndicator {
-                    size: 0.3
-                    position: 0.2
-                    active: true
-                    orientation: Qt.Vertical
-                    height: parent.height
-                    anchors.right: parent.right
-                    enabled: false
-                }
-            }
-        }
-
-        RowLayout {
-            Slider {
-                value: 0.5
-            }
-            Slider {
-                value: 0.5
-                pressed: true
-            }
-            Slider {
-                value: 0.5
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            RangeSlider {
-                first.value: 0.25
-                second.value: 0.75
-            }
-            RangeSlider {
-                first.value: 0.25
-                first.pressed: true
-                second.value: 0.75
-            }
-            RangeSlider {
-                first.value: 0.25
-                second.value: 0.75
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            Switch {
-                text: "Normal"
-            }
-            Switch {
-                text: "Pressed"
-                pressed: true
-            }
-            Switch {
-                text: "Checked"
-                checked: true
-            }
-            Switch {
-                text: "Checked + Pressed"
-                checked: true
-                pressed: true
-            }
-            Switch {
-                text: "Disabled"
-                enabled: false
-            }
-        }
-
-        RowLayout {
-            TabBar {
-                TabButton {
+                Button {
                     text: "Normal"
                 }
-                TabButton {
+                Button {
                     text: "Pressed"
                     pressed: true
                 }
-                TabButton {
+                Button {
+                    text: "Checked"
+                    checked: true
+                }
+                Button {
+                    text: "CH + PR"
+                    checked: true
+                    pressed: true
+                }
+                Button {
+                    text: "Disabled"
+                    enabled: false
+                }
+                Button {
+                    text: "CH + DIS"
+                    enabled: false
+                    checked: true
+                }
+            }
+
+            RowLayout {
+                spacing: window.controlSpacing
+
+                Button {
+                    text: "HI"
+                    highlighted: true
+                }
+                Button {
+                    text: "HI + PR"
+                    highlighted: true
+                    pressed: true
+                }
+                Button {
+                    text: "HI + CH"
+                    highlighted: true
+                    checked: true
+                }
+                Button {
+                    text: "HI+CH+PR"
+                    highlighted: true
+                    pressed: true
+                    checked: true
+                }
+                Button {
+                    text: "HI + DIS"
+                    highlighted: true
+                    enabled: false
+                }
+                Button {
+                    text: "HI+CH+DIS"
+                    highlighted: true
+                    enabled: false
+                    checked: true
+                }
+            }
+
+            RowLayout {
+                CheckBox {
+                    text: "Normal"
+                }
+                CheckBox {
+                    text: "Pressed"
+                    pressed: true
+                }
+                CheckBox {
+                    text: "Checked"
+                    checked: true
+                }
+                CheckBox {
+                    text: "CH + PR"
+                    checked: true
+                    pressed: true
+                }
+                CheckBox {
+                    text: "Disabled"
+                    enabled: false
+                }
+                CheckBox {
+                    text: "CH + DIS"
+                    checked: true
+                    enabled: false
+                }
+            }
+
+            RowLayout {
+                RadioButton {
+                    text: "Normal"
+                }
+                RadioButton {
+                    text: "Pressed"
+                    pressed: true
+                }
+                RadioButton {
+                    text: "Checked"
+                    checked: true
+                }
+                RadioButton {
+                    text: "CH + PR"
+                    checked: true
+                    pressed: true
+                }
+                RadioButton {
+                    text: "Disabled"
+                    enabled: false
+                }
+                RadioButton {
+                    text: "CH + DIS"
+                    checked: true
+                    enabled: false
+                }
+            }
+
+            RowLayout {
+                Switch {
+                    text: "Normal"
+                }
+                Switch {
+                    text: "Pressed"
+                    pressed: true
+                }
+                Switch {
+                    text: "Checked"
+                    checked: true
+                }
+                Switch {
+                    text: "CH + PR"
+                    checked: true
+                    pressed: true
+                }
+                Switch {
                     text: "Disabled"
                     enabled: false
                 }
             }
-        }
 
-        RowLayout {
-            TextArea {
-                text: "Normal"
+            RowLayout {
+                ProgressBar {
+                    value: 0.5
+                }
+                ProgressBar {
+                    value: 0.5
+                    indeterminate: true
+                }
+                ProgressBar {
+                    value: 0.5
+                    enabled: false
+                }
             }
-            TextArea {
-                text: "Disabled"
-                enabled: false
-            }
-        }
 
-        RowLayout {
-            TextField {
-                text: "Normal"
+            RowLayout {
+                Slider {
+                    value: 0.5
+                }
+                Slider {
+                    value: 0.5
+                    pressed: true
+                }
+                Slider {
+                    value: 0.5
+                    enabled: false
+                }
             }
-            TextField {
-                text: "Disabled"
-                enabled: false
-            }
-        }
 
-        RowLayout {
-            ToolBar {
-                Row {
-                    ToolButton {
-                        text: "Normal!"
+            RowLayout {
+                RangeSlider {
+                    first.value: 0.25
+                    second.value: 0.75
+                }
+                RangeSlider {
+                    first.value: 0.25
+                    first.pressed: true
+                    second.value: 0.75
+                }
+                RangeSlider {
+                    first.value: 0.25
+                    second.value: 0.75
+                    enabled: false
+                }
+            }
+
+            RowLayout {
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        id: normalTextArea
+                        text: "Normal"
                     }
-                    ToolButton {
-                        text: "Pressed!"
-                        pressed: true
+                }
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        text: "Placeholder"
                     }
-                    ToolButton {
-                        text: "Disabled!"
+                }
+                Item {
+                    implicitWidth: normalGroupBox.width
+                    implicitHeight: normalTextArea.implicitHeight
+
+                    TextArea {
+                        text: "Disabled"
                         enabled: false
                     }
                 }
             }
-        }
 
-        RowLayout {
-            Frame {
-                Tumbler {
-                    model: 5
-                    implicitWidth: 100
-                    implicitHeight: 100
+            RowLayout {
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        id: normalTextField
+                        text: "Normal"
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        placeholderText: "Placeholder"
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalTextField.implicitHeight
+
+                    TextField {
+                        text: "Disabled"
+                        enabled: false
+                    }
                 }
             }
-            Frame {
-                Tumbler {
-                    model: 5
-                    implicitWidth: 100
-                    implicitHeight: 100
+
+            RowLayout {
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        id: normalSpinBox
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        up.pressed: true
+                    }
+                }
+                Item {
+                    implicitWidth: normalGroupBox.implicitWidth
+                    implicitHeight: normalSpinBox.implicitHeight
+
+                    SpinBox {
+                        enabled: false
+                    }
+                }
+            }
+
+            RowLayout {
+                GroupBox {
+                    id: normalGroupBox
+                    title: "Normal"
+
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+                GroupBox {
+                    enabled: false
+                    title: "Disabled"
+
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                        }
+                    }
+                }
+                GroupBox {
+                    enabled: false
+                    title: "."
+                    label.visible: false
+
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        PageIndicator {
+                            count: 5
+                            enabled: false
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                Frame {
+                    id: scrollBarFrame
+
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        Label {
+                            text: "Normal"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+                    }
+                }
+
+                Frame {
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+
+                        Label {
+                            text: "Pressed"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                            pressed: true
+                        }
+                    }
+                }
+
+                Frame {
+                    Item {
+                        implicitWidth: 200
+                        implicitHeight: 100
+                        enabled: false
+
+                        Label {
+                            text: "Disabled"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.3
+                            position: 0.2
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                Frame {
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: 100
+
+                    ScrollIndicator {
+                        size: 0.3
+                        position: 0.2
+                        active: true
+                        orientation: Qt.Vertical
+                        height: parent.height
+                        anchors.right: parent.right
+                    }
+                }
+
+                Frame {
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: 100
+
+                    ScrollIndicator {
+                        size: 0.3
+                        position: 0.2
+                        active: true
+                        orientation: Qt.Vertical
+                        height: parent.height
+                        anchors.right: parent.right
+                        enabled: false
+                    }
+                }
+            }
+
+            RowLayout {
+                Frame {
+                    Tumbler {
+                        model: 5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                    }
+                }
+                Frame {
+                    Tumbler {
+                        model: 5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                        enabled: false
+                    }
+                }
+            }
+
+            RowLayout {
+                Dial {
+                }
+                Dial {
                     enabled: false
                 }
             }

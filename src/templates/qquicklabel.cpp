@@ -205,6 +205,21 @@ void QQuickLabel::setBackground(QQuickItem *background)
     }
 }
 
+void QQuickLabel::classBegin()
+{
+    Q_D(QQuickLabel);
+    QQuickText::classBegin();
+    d->resolveFont();
+}
+
+void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickLabel);
+    QQuickText::itemChange(change, value);
+    if (change == ItemParentHasChanged && isComponentComplete())
+        d->resolveFont();
+}
+
 void QQuickLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickLabel);

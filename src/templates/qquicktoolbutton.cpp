@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquicktoolbutton_p.h"
+#include "qquickcontrol_p_p.h"
+
+#include <QtGui/qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,6 +79,11 @@ QT_BEGIN_NAMESPACE
 QQuickToolButton::QQuickToolButton(QQuickItem *parent) :
     QQuickButton(parent)
 {
+}
+
+QFont QQuickToolButton::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::ToolButtonFont);
 }
 
 QT_END_NAMESPACE

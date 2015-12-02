@@ -6,6 +6,7 @@ HEADERS += \
     $$PWD/qquickapplicationwindow_p.h \
     $$PWD/qquickbusyindicator_p.h \
     $$PWD/qquickbutton_p.h \
+    $$PWD/qquickbuttongroup_p.h \
     $$PWD/qquickcheckbox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
@@ -13,13 +14,19 @@ HEADERS += \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickdial_p.h \
     $$PWD/qquickdrawer_p.h \
-    $$PWD/qquickexclusivegroup_p.h \
     $$PWD/qquickframe_p.h \
     $$PWD/qquickframe_p_p.h \
     $$PWD/qquickgroupbox_p.h \
+    $$PWD/qquickitemdelegate_p.h \
     $$PWD/qquicklabel_p.h \
     $$PWD/qquicklabel_p_p.h \
+    $$PWD/qquickmenu_p.h \
+    $$PWD/qquickmenu_p_p.h \
+    $$PWD/qquickmenuitem_p.h \
+    $$PWD/qquickoverlay_p.h \
     $$PWD/qquickpageindicator_p.h \
+    $$PWD/qquickpanel_p.h \
+    $$PWD/qquickpanel_p_p.h \
     $$PWD/qquickpressandholdhelper_p.h \
     $$PWD/qquickprogressbar_p.h \
     $$PWD/qquickradiobutton_p.h \
@@ -47,16 +54,21 @@ SOURCES += \
     $$PWD/qquickapplicationwindow.cpp \
     $$PWD/qquickbusyindicator.cpp \
     $$PWD/qquickbutton.cpp \
+    $$PWD/qquickbuttongroup.cpp \
     $$PWD/qquickcheckbox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
     $$PWD/qquickdial.cpp \
     $$PWD/qquickdrawer.cpp \
-    $$PWD/qquickexclusivegroup.cpp \
     $$PWD/qquickframe.cpp \
     $$PWD/qquickgroupbox.cpp \
+    $$PWD/qquickitemdelegate.cpp \
     $$PWD/qquicklabel.cpp \
+    $$PWD/qquickmenu.cpp \
+    $$PWD/qquickmenuitem.cpp \
+    $$PWD/qquickoverlay.cpp \
     $$PWD/qquickpageindicator.cpp \
+    $$PWD/qquickpanel.cpp \
     $$PWD/qquickpressandholdhelper.cpp \
     $$PWD/qquickprogressbar.cpp \
     $$PWD/qquickradiobutton.cpp \

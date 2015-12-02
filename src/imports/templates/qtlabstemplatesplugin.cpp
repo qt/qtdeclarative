@@ -47,8 +47,12 @@
 #include <QtLabsTemplates/private/qquickdrawer_p.h>
 #include <QtLabsTemplates/private/qquickframe_p.h>
 #include <QtLabsTemplates/private/qquickgroupbox_p.h>
+#include <QtLabsTemplates/private/qquickitemdelegate_p.h>
 #include <QtLabsTemplates/private/qquicklabel_p.h>
+#include <QtLabsTemplates/private/qquickmenu_p.h>
+#include <QtLabsTemplates/private/qquickmenuitem_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
+#include <QtLabsTemplates/private/qquickpanel_p.h>
 #include <QtLabsTemplates/private/qquickprogressbar_p.h>
 #include <QtLabsTemplates/private/qquickradiobutton_p.h>
 #include <QtLabsTemplates/private/qquickrangeslider_p.h>
@@ -82,6 +86,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
 {
     qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickApplicationWindow>(uri, 1, 0, "ApplicationWindow");
+    qmlRegisterType<QQuickApplicationWindowAttached>();
     qmlRegisterType<QQuickBusyIndicator>(uri, 1, 0, "BusyIndicator");
     qmlRegisterType<QQuickButton>(uri, 1, 0, "Button");
     qmlRegisterType<QQuickCheckBox>(uri, 1, 0, "CheckBox");
@@ -91,8 +96,12 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDrawer>(uri, 1, 0, "Drawer");
     qmlRegisterType<QQuickFrame>(uri, 1, 0, "Frame");
     qmlRegisterType<QQuickGroupBox>(uri, 1, 0, "GroupBox");
+    qmlRegisterType<QQuickItemDelegate>(uri, 1, 0, "ItemDelegate");
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
+    qmlRegisterType<QQuickMenu>(uri, 1, 0, "Menu");
+    qmlRegisterType<QQuickMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
+    qmlRegisterType<QQuickPanel>(uri, 1, 0, "Panel");
     qmlRegisterType<QQuickProgressBar>(uri, 1, 0, "ProgressBar");
     qmlRegisterType<QQuickRadioButton>(uri, 1, 0, "RadioButton");
     qmlRegisterType<QQuickRangeSlider>(uri, 1, 0, "RangeSlider");
@@ -115,6 +124,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTumblerAttached>();
     qmlRegisterType<QQuickTumbler>(uri, 1, 0, "Tumbler");
 
+    qmlRegisterRevision<QQuickWindow, 2>(uri, 1, 0);
     qmlRegisterRevision<QQuickText, 6>(uri, 1, 0);
     qmlRegisterRevision<QQuickTextInput, 6>(uri, 1, 0);
     qmlRegisterRevision<QQuickTextEdit, 6>(uri, 1, 0);

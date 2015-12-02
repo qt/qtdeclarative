@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.ProgressBar {
@@ -69,7 +68,7 @@ T.ProgressBar {
                 height: 2
 
                 radius: 3
-                color: control.enabled ? control.Theme.accentColor : control.Theme.disabledColor
+                color: control.enabled ? "#353637" : "#bdbebf"
 
                 SequentialAnimation on offset {
                     loops: Animation.Infinite
@@ -98,7 +97,7 @@ T.ProgressBar {
         height: 6
 
         radius: 3
-        border.color: control.Theme.frameColor
+        border.color: "#bdbebf"
         color: "transparent"
     }
     //! [background]

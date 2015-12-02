@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.PageIndicator {
@@ -55,7 +54,7 @@ T.PageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: control.Theme.shadowColor // TODO
+        color: "#28282a" // TODO
 
         opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }

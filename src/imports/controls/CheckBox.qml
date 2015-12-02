@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import Qt.labs.controls 1.0
 import Qt.labs.templates 1.0 as T
 
 T.CheckBox {
@@ -48,34 +47,27 @@ T.CheckBox {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(label ? label.implicitHeight : 0,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    baselineOffset: label ? label.y + label.baselineOffset : 0
 
     padding: 6
     spacing: 6
+    opacity: enabled ? 1 : 0.2
 
     //! [indicator]
     indicator: Rectangle {
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 28
+        implicitHeight: 28
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        radius: 3
-        border.width: control.activeFocus ? 2 : 1
-        border.color: control.activeFocus ? control.Theme.focusColor : control.Theme.frameColor
-        color: control.Theme.backgroundColor
+        color: control.enabled ? (control.pressed ? "#bdbebf" : "#ffffff") : "#353637"
+        border.color: control.enabled ? (control.pressed ? "#26282a" : "#353637") : "transparent"
 
-        Rectangle {
+        Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            width: 12
-            height: 12
-            opacity: control.tristate && control.checkState === Qt.PartiallyChecked ? 0.5 : 1.0
-            color: Qt.tint(control.checked && !control.enabled ? control.Theme.disabledColor :
-                           control.checked && control.activeFocus ? control.Theme.focusColor :
-                           control.checked ? control.Theme.accentColor : control.Theme.baseColor,
-                           control.pressed ? control.Theme.pressColor : "transparent")
-            border.width: control.checked || control.pressed ? 0 : 1
-            border.color: control.Theme.frameColor
+            source: "qrc:/images/check.png"
+            visible: control.checked
         }
     }
     //! [indicator]
@@ -89,7 +81,7 @@ T.CheckBox {
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Theme.textColor : control.Theme.disabledColor
+        color: control.pressed ? "#26282a" : "#353637"
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

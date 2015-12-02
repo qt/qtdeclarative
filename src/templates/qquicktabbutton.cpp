@@ -35,6 +35,9 @@
 ****************************************************************************/
 
 #include "qquicktabbutton_p.h"
+#include "qquickcontrol_p_p.h"
+
+#include <QtGui/qpa/qplatformtheme.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +63,11 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent) :
 {
     setCheckable(true);
     setAutoExclusive(true);
+}
+
+QFont QQuickTabButton::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::DockWidgetTitleFont); // tmp
 }
 
 #ifndef QT_NO_ACCESSIBILITY

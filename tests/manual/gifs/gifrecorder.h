@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the tools applications of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -39,7 +39,8 @@
 
 #include <QObject>
 #include <QProcess>
-#include <QQuickView>
+#include <QQmlApplicationEngine>
+#include <QQuickWindow>
 #include <QDir>
 #include <QString>
 #include <QTimer>
@@ -57,8 +58,10 @@ public:
     void setOutputDir(const QDir &dir);
     void setOutputFileBaseName(const QString &fileBaseName);
     void setQmlFileName(const QString &fileName);
-    void setView(QQuickView *mView);
+    void setView(QQuickWindow *mWindow);
     void setHighQuality(bool highQuality);
+
+    QQuickWindow *window() const;
 
     void start();
     bool hasStarted() const;
@@ -75,7 +78,8 @@ private:
     QString mByzanzOutputFileName;
     QString mGifFileName;
     QString mQmlInputFileName;
-    QQuickView *mView;
+    QQmlApplicationEngine mEngine;
+    QQuickWindow *mWindow;
     bool mHighQuality;
     int mRecordingDuration;
     bool mRecordCursor;

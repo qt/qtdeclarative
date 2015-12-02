@@ -44,6 +44,50 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Drawer
+    \inherits Container
+    \instantiates QQuickDrawer
+    \inqmlmodule Qt.labs.controls
+    \ingroup qtlabscontrols-navigation
+    \ingroup qtlabscontrols-containers
+    \brief A side panel control.
+
+    Drawer provides a swipe-based side panel, similar to those often used in
+    touch interfaces to provide a central location for navigation.
+
+    \table
+    \row
+        \li \image qtlabscontrols-drawer-wireframe.png
+            Drawer can be positioned at any of the four edges of the content item. \br
+            In this image, it is against the left edge of the window.
+
+        \li \image qtlabscontrols-drawer-expanded-wireframe.png
+            The drawer is then opened by \e "dragging" it out from the left edge \br
+            of the window.
+    \endtable
+
+    In the image above, the application's contents are \e "pushed" across the
+    screen. This is achieved by applying a translation to the contents:
+
+    \code
+    transform: Translate {
+        x: (1.0 - drawer.position) * listview.width
+    }
+    \endcode
+
+    If you would like the application's contents to stay where they are when
+    the drawer is opened, don't apply a translation.
+
+    \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Container Controls}
+*/
+
+/*!
+    \qmlsignal Qt.labs.controls::Drawer::clicked()
+
+    This signal is emitted when the drawer is clicked.
+*/
+
 class QQuickDrawerPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickDrawer)
@@ -206,6 +250,17 @@ QQuickDrawer::QQuickDrawer(QQuickItem *parent) :
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
+/*!
+    \qmlproperty enumeration Qt.labs.controls::Drawer::edge
+
+    This property holds the edge of the content item at which the drawer will
+    open from. The acceptable values are:
+
+    \value Qt.TopEdge     The top edge of the content item.
+    \value Qt.LeftEdge    The left edge of the content item (default).
+    \value Qt.RightEdge   The right edge of the content item.
+    \value Qt.BottomEdge  The bottom edge of the content item.
+*/
 Qt::Edge QQuickDrawer::edge() const
 {
     Q_D(const QQuickDrawer);
@@ -223,6 +278,13 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
     }
 }
 
+/*!
+    \qmlproperty real Qt.labs.controls::Drawer::position
+
+    This property holds the position of the drawer relative to its final
+    destination. That is, the position will be \c 0 when the drawer
+    is fully closed, and \c 1 when fully open.
+*/
 qreal QQuickDrawer::position() const
 {
     Q_D(const QQuickDrawer);
@@ -241,6 +303,12 @@ void QQuickDrawer::setPosition(qreal position)
     }
 }
 
+
+/*!
+    \qmlproperty Item Qt.labs.controls::Drawer::contentItem
+
+    This property holds the content item that the drawer displays when opened.
+*/
 QQuickItem *QQuickDrawer::contentItem() const
 {
     Q_D(const QQuickDrawer);
@@ -261,6 +329,14 @@ void QQuickDrawer::setContentItem(QQuickItem *item)
     }
 }
 
+/*!
+    \qmlproperty Animation Qt.labs.controls::Drawer::animation
+
+    This property holds the animation for the \l position property. It is used
+    to animate the drawer's movement.
+
+    If no valid animation is set, the drawer's movement will not be animated.
+*/
 QQuickPropertyAnimation *QQuickDrawer::animation() const
 {
     Q_D(const QQuickDrawer);
@@ -281,6 +357,12 @@ void QQuickDrawer::setAnimation(QQuickPropertyAnimation *animation)
     }
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::Drawer::open()
+
+    This method opens the drawer, animating the movement if a valid
+    \l animation has been set.
+*/
 void QQuickDrawer::open()
 {
     Q_D(QQuickDrawer);
@@ -294,6 +376,12 @@ void QQuickDrawer::open()
     }
 }
 
+/*!
+    \qmlmethod void Qt.labs.controls::Drawer::close()
+
+    This method closes the drawer, animating the movement if a valid
+    \l animation has been set.
+*/
 void QQuickDrawer::close()
 {
     Q_D(QQuickDrawer);
