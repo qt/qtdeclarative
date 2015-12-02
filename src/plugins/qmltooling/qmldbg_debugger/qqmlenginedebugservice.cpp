@@ -427,7 +427,7 @@ QList<QObject*> QQmlEngineDebugServiceImpl::objectForLocationInfo(const QString 
     const QHash<int, QObject *> &hash = objectsForIds();
     for (QHash<int, QObject *>::ConstIterator i = hash.constBegin(); i != hash.constEnd(); ++i) {
         QQmlData *ddata = QQmlData::get(i.value());
-        if (ddata && ddata->outerContext) {
+        if (ddata && ddata->outerContext && ddata->outerContext->isValid()) {
             if (QFileInfo(ddata->outerContext->urlString()).fileName() == filename &&
                 ddata->lineNumber == lineNumber &&
                 ddata->columnNumber >= columnNumber) {
