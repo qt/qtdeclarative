@@ -237,6 +237,10 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!secondItem->hasActiveFocus());
     QVERIFY(thirdItem->hasActiveFocus());
+
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(visibleSpy.count(), 4);
+    QVERIFY(!menu->isVisible());
 }
 
 void tst_menu::menuButton()

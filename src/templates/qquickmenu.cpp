@@ -445,6 +445,9 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
         if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
         return true;
+    } else if (keyEvent->key() == Qt::Key_Escape) {
+        hide();
+        return true;
     }
 
     return false;
