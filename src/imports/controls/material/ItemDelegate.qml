@@ -146,6 +146,7 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
+        visible: control.pressed || control.highlighted
         color: control.pressed ? control.Material.flatButtonPressColor : control.Material.backgroundColor
     }
     //! [background]

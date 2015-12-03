@@ -87,8 +87,16 @@ T.ItemDelegate {
 
     //! [background]
     background: Rectangle {
-        visible: control.pressed
-        color: control.Universal.listMediumColor
+        visible: control.pressed || control.highlighted || control.activeFocus
+        color: control.pressed ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            visible: control.activeFocus || control.highlighted
+            color: control.Universal.accentColor
+            opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
+        }
+
     }
     //! [background]
 }
