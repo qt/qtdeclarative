@@ -42,6 +42,10 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtLabsTemplates/private/qquicklabel_p.h>
+#include <QtLabsTemplates/private/qquicktextarea_p.h>
+#include <QtLabsTemplates/private/qquicktextfield_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -59,6 +63,7 @@ private slots:
     void defaultFocus();
     void implicitFill();
     void attachedProperties();
+    void font();
 };
 
 void tst_applicationwindow::qmlCreation()
@@ -380,6 +385,62 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
+}
+
+void tst_applicationwindow::font()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("font.qml"));
+    QObject* created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickApplicationWindow* window = qobject_cast<QQuickApplicationWindow*>(created);
+    QVERIFY(window);
+    QVERIFY(!window->isVisible());
+    QCOMPARE(window->width(), 400);
+    QCOMPARE(window->height(), 400);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QFont font = window->font();
+
+    QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
+    QVERIFY(mainItem);
+    QCOMPARE(mainItem->width(), 400.0);
+    QCOMPARE(mainItem->height(), 400.0);
+    QCOMPARE(mainItem->font(), font);
+
+    QQuickControl *item2 = mainItem->property("item_2").value<QQuickControl*>();
+    QVERIFY(item2);
+    QQuickControl *item3 = mainItem->property("item_3").value<QQuickControl*>();
+    QVERIFY(item3);
+    QQuickTextArea *item4 = mainItem->property("item_4").value<QQuickTextArea*>();
+    QVERIFY(item4);
+    QQuickTextField *item5 = mainItem->property("item_5").value<QQuickTextField*>();
+    QVERIFY(item5);
+    QQuickLabel *item6 = mainItem->property("item_6").value<QQuickLabel*>();
+    QVERIFY(item6);
+
+    QCOMPARE(item2->font(), font);
+    QCOMPARE(item3->font(), font);
+    QCOMPARE(item4->font(), font);
+    QCOMPARE(item5->font(), font);
+    QCOMPARE(item6->font(), font);
+
+    int pointSize = font.pointSize();
+    font.setPixelSize(pointSize + 5);
+    window->setFont(font);
+
+    QCOMPARE(window->font(), font);
+    QCOMPARE(mainItem->font(), font);
+    QCOMPARE(item2->font(), font);
+    QCOMPARE(item3->font(), font);
+    QCOMPARE(item4->font(), font);
+    QCOMPARE(item5->font(), font);
+    QCOMPARE(item6->font(), font);
 }
 
 QTEST_MAIN(tst_applicationwindow)

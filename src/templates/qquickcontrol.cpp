@@ -44,6 +44,7 @@
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktextfield_p_p.h"
+#include "qquickapplicationwindow_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -218,13 +219,20 @@ QFont QQuickControlPrivate::naturalControlFont(const QQuickItem *q)
     }
 
     QQuickItem *p = q->parentItem();
+    bool found = false;
     while (p) {
         if (QQuickControl *qc = qobject_cast<QQuickControl *>(p)) {
             naturalFont = qc->font();
+            found = true;
             break;
         }
 
         p = p->parentItem();
+    }
+
+    if (!found) {
+        if (QQuickApplicationWindow *w = qobject_cast<QQuickApplicationWindow *>(q->window()))
+            naturalFont = w->font();
     }
 
     naturalFont.resolve(0);

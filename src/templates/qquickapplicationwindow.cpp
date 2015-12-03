@@ -36,6 +36,7 @@
 
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
+#include "qquickcontrol_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -79,11 +80,20 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) Q_DECL_OVERRIDE;
     void itemImplicitHeightChanged(QQuickItem *item) Q_DECL_OVERRIDE;
 
+    void updateFont(const QFont &);
+    inline void setFont_helper(const QFont &f) {
+        if (font.resolve() == f.resolve() && font == f)
+            return;
+        updateFont(f);
+    }
+    void resolveFont();
+
     bool complete;
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
     QQuickOverlay *overlay;
+    QFont font;
     QQuickApplicationWindow *q_ptr;
 };
 
@@ -239,6 +249,48 @@ QQuickItem *QQuickApplicationWindow::overlay() const
         d->relayout();
     }
     return d->overlay;
+}
+
+/*!
+    \qmlproperty font Qt.labs.controls::ApplicationWindow::font
+
+    This property holds the font currently set for the window.
+*/
+QFont QQuickApplicationWindow::font() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->font;
+}
+
+void QQuickApplicationWindow::setFont(const QFont &f)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->font == f)
+        return;
+
+    QFont resolvedFont = f.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    d->setFont_helper(resolvedFont);
+}
+
+void QQuickApplicationWindow::resetFont()
+{
+    setFont(QFont());
+}
+
+void QQuickApplicationWindowPrivate::resolveFont()
+{
+    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    setFont_helper(resolvedFont);
+}
+
+void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
+{
+    Q_Q(QQuickApplicationWindow);
+    font = f;
+
+    QQuickControlPrivate::updateFontRecur(q->contentItem(), f);
+
+    emit q->fontChanged();
 }
 
 QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
