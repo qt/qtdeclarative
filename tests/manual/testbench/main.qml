@@ -105,12 +105,15 @@ ApplicationWindow {
 
         MenuItem {
             text: "Option 1"
+            checkable: true
         }
         MenuItem {
             text: "Option 2"
+            checkable: true
         }
         MenuItem {
             text: "Option 3"
+            checkable: true
         }
     }
 
