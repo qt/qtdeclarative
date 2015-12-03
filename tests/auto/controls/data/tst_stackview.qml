@@ -744,4 +744,17 @@ TestCase {
 
         control.destroy()
     }
+
+    function test_failures() {
+        var control = stackView.createObject(testCase, {initialItem: component})
+        verify(control)
+
+        ignoreWarning("QQmlComponent: Component is not ready")
+        control.push("non-existent.qml")
+        ignoreWarning("QQmlComponent: Component is not ready")
+        control.replace("non-existent.qml")
+        control.pop()
+
+        control.destroy()
+    }
 }

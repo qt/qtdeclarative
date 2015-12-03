@@ -405,13 +405,13 @@ void QQuickStackViewPrivate::popTransition(QQuickStackElement *enter, QQuickStac
     }
 
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, viewBounds))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, viewBounds))
             completeTransition(exit, transitioner->removeTransition);
         else
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, QRectF()))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, QRectF()))
             completeTransition(enter, transitioner->removeDisplacedTransition);
         else
             enter->startTransition(transitioner);
@@ -437,13 +437,13 @@ void QQuickStackViewPrivate::pushTransition(QQuickStackElement *enter, QQuickSta
     }
 
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
             completeTransition(enter, transitioner->addTransition);
         else
             enter->startTransition(transitioner);
     }
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->addDisplacedTransition);
         else
             exit->startTransition(transitioner);
@@ -470,13 +470,13 @@ void QQuickStackViewPrivate::replaceTransition(QQuickStackElement *enter, QQuick
     }
 
     if (exit) {
-        if (immediate || !exit->prepareTransition(transitioner, QRectF()))
+        if (immediate || !exit->item || !exit->prepareTransition(transitioner, QRectF()))
             completeTransition(exit, transitioner->moveDisplacedTransition);
         else
             exit->startTransition(transitioner);
     }
     if (enter) {
-        if (immediate || !enter->prepareTransition(transitioner, viewBounds))
+        if (immediate || !enter->item || !enter->prepareTransition(transitioner, viewBounds))
             completeTransition(enter, transitioner->moveTransition);
         else
             enter->startTransition(transitioner);
