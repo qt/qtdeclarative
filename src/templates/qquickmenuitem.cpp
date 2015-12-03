@@ -37,6 +37,7 @@
 #include "qquickmenuitem_p.h"
 #include "qquickabstractbutton_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -87,6 +88,11 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent) :
     QQuickAbstractButton(parent)
 {
     connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuItem::triggered);
+}
+
+QFont QQuickMenuItem::defaultFont() const
+{
+    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuItemFont);
 }
 
 #ifndef QT_NO_ACCESSIBILITY

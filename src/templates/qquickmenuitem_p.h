@@ -65,6 +65,8 @@ Q_SIGNALS:
     void triggered();
 
 protected:
+    QFont defaultFont() const Q_DECL_OVERRIDE;
+
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
 #endif
