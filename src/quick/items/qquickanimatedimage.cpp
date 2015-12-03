@@ -67,7 +67,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
                                 .arg(current));
         }
         if (!requestedUrl.isEmpty()) {
-            if (QQuickPixmap::isCached(requestedUrl, QSize(), QQuickImageProviderOptions()))
+            if (QQuickPixmap::isCached(requestedUrl, QSize(), 0, QQuickImageProviderOptions()))
                 pixmap = new QQuickPixmap(engine, requestedUrl);
             else
                 pixmap = new QQuickPixmap(requestedUrl, movie->currentImage());
@@ -139,6 +139,8 @@ QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
     : QQuickImage(*(new QQuickAnimatedImagePrivate), parent)
 {
     connect(this, &QQuickImageBase::cacheChanged, this, &QQuickAnimatedImage::onCacheChanged);
+    connect(this, &QQuickImageBase::currentFrameChanged, this, &QQuickAnimatedImage::frameChanged);
+    connect(this, &QQuickImageBase::frameCountChanged, this, &QQuickAnimatedImage::frameCountChanged);
 }
 
 QQuickAnimatedImage::~QQuickAnimatedImage()
@@ -464,7 +466,7 @@ void QQuickAnimatedImage::movieUpdate()
 
     if (d->movie) {
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
-        emit frameChanged();
+        emit currentFrameChanged();
     }
 }
 

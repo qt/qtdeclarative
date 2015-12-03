@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,24 +48,35 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../shared"
+import QtQuick 2.14
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("BorderImage", "An image with scaled borders",  Qt.resolvedUrl("borderimage.qml"));
-            addExample("Image", "A showcase of the options available to Image", Qt.resolvedUrl("image.qml"));
-            addExample("Shadows", "Rectangles with a drop-shadow effect", Qt.resolvedUrl("shadows.qml"));
-            addExample("AnimatedImage", "An image which plays animated formats", Qt.resolvedUrl("animatedimage.qml"));
-            addExample("AnimatedSprite", "A simple sprite-based animation", Qt.resolvedUrl("animatedsprite.qml"));
-            addExample("SpriteSequence", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spritesequence.qml"));
-            addExample("FrameStepping", "A multi-frame non-animated image", Qt.resolvedUrl("framestepping.qml"));
-            addExample("MultiBorderImage", "A multi-frame image with scaled borders", Qt.resolvedUrl("multiframeborderimage.qml"));
+Rectangle {
+    width: 480
+    height: 320
+    Image {
+        id: img
+        anchors.centerIn: parent
+        cache: true
+        source: "content/multi.ico"
+
+        Shortcut {
+            sequence: StandardKey.MoveToNextPage
+            enabled: img.currentFrame < img.frameCount - 1
+            onActivated: img.currentFrame++
         }
+        Shortcut {
+            sequence: StandardKey.MoveToPreviousPage
+            enabled: img.currentFrame > 0
+            onActivated: img.currentFrame--
+        }
+    }
+
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.margins: 6
+        horizontalAlignment: Text.AlignHCenter
+        text: "frame " + (img.currentFrame + 1) + " of " + img.frameCount +
+              "\nPress PgUp/PgDn to switch frames"
     }
 }
