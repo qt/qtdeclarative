@@ -109,7 +109,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate() :
-    pressed(false), checked(false), checkable(false), autoExclusive(false), autoRepeat(false),
+    pressed(false), checked(false), checkable(false), highlighted(false), autoExclusive(false), autoRepeat(false),
     delayTimer(0), repeatTimer(0), repeatButton(Qt::NoButton), label(Q_NULLPTR), indicator(Q_NULLPTR), group(Q_NULLPTR)
 {
 }
@@ -293,6 +293,31 @@ void QQuickAbstractButton::setCheckable(bool checkable)
         d->checkable = checkable;
         setAccessibleProperty("checkable", checkable);
         emit checkableChanged();
+    }
+}
+
+/*!
+    \qmlproperty bool Qt.labs.controls::AbstractButton::highlighted
+
+    This property holds whether the button is highlighted.
+
+    A button can be highlighted in order to draw the user's attention towards
+    it. It has no effect on keyboard interaction.
+
+    The default value is \c false.
+*/
+bool QQuickAbstractButton::isHighlighted() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->highlighted;
+}
+
+void QQuickAbstractButton::setHighlighted(bool highlighted)
+{
+    Q_D(QQuickAbstractButton);
+    if (highlighted != d->highlighted) {
+        d->highlighted = highlighted;
+        emit highlightedChanged();
     }
 }
 
