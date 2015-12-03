@@ -60,6 +60,7 @@ T.Button {
         height: control.availableHeight
 
         text: control.text
+        font: control.font
         color: control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
