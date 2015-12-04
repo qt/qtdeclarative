@@ -165,7 +165,7 @@ void tst_Gifs::slider()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(4);
+    gifRecorder.setRecordingDuration(5);
     gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtlabscontrols-slider.qml");
 
@@ -202,7 +202,7 @@ void tst_Gifs::rangeSlider()
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);
     gifRecorder.setOutputDir(outputDir);
-    gifRecorder.setRecordingDuration(6);
+    gifRecorder.setRecordingDuration(7);
     gifRecorder.setHighQuality(true);
     gifRecorder.setQmlFileName("qtlabscontrols-rangeslider.qml");
 

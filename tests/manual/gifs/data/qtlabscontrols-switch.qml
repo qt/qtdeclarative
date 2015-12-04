@@ -43,8 +43,8 @@ import QtQuick.Window 2.0
 import Qt.labs.controls 1.0
 
 Window {
-    width: theSwitch.width
-    height: theSwitch.height
+    width: 100
+    height: 50
     visible: true
 
     Switch {
