@@ -122,14 +122,14 @@ QSGAdaptationBackendData *contextFactory()
             }
         }
 
-        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QMLSCENE_DEVICE"))
-            requestedBackend = QString::fromLocal8Bit(qgetenv("QMLSCENE_DEVICE"));
+        if (requestedBackend.isEmpty())
+            requestedBackend = qEnvironmentVariable("QMLSCENE_DEVICE");
 
         // A modern alternative. Scenegraph adaptations can represent backends
         // for different graphics APIs as well, instead of being specific to
         // some device or platform.
-        if (requestedBackend.isEmpty() && qEnvironmentVariableIsSet("QT_QUICK_BACKEND"))
-            requestedBackend = QString::fromLocal8Bit(qgetenv("QT_QUICK_BACKEND"));
+        if (requestedBackend.isEmpty())
+            requestedBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
 
         // If this platform does not support OpenGL, and no backend has been set
         // default to the software renderer
