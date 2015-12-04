@@ -125,7 +125,9 @@ bool isPathAbsolute(const QString &path)
 }
 
 // If the type does not already exist as a file import, add the type and return the new type
-QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeName, bool isCompositeSingleton, QList<QQmlError> *errors)
+QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeName,
+                        bool isCompositeSingleton, QList<QQmlError> *errors,
+                        int majorVersion=-1, int minorVersion=-1)
 {
     QUrl url(urlString);
     QQmlType *ret = QQmlMetaType::qmlType(url);
@@ -140,8 +142,8 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
             QQmlPrivate::RegisterCompositeSingletonType reg = {
                 url,
                 "", //Empty URI indicates loaded via file imports
-                -1,
-                -1,
+                majorVersion,
+                minorVersion,
                 buf.constData()
             };
             ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
@@ -149,8 +151,8 @@ QQmlType *getTypeForUrl(const QString &urlString, const QHashedStringRef& typeNa
             QQmlPrivate::RegisterCompositeType reg = {
                 url,
                 "", //Empty URI indicates loaded via file imports
-                -1,
-                -1,
+                majorVersion,
+                minorVersion,
                 buf.constData()
             };
             ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
@@ -416,6 +418,8 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
                 QQmlImports::CompositeSingletonReference ref;
                 ref.typeName = cit->typeName;
                 ref.prefix = set.prefix;
+                ref.majorVersion = cit->majorVersion;
+                ref.minorVersion = cit->minorVersion;
                 resultList.append(ref);
             }
         }
@@ -656,7 +660,10 @@ bool QQmlImportNamespace::Import::resolveType(QQmlTypeLoader *typeLoader,
         }
 
         if (candidate != end) {
-            QQmlType *returnType = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0);
+            int major = vmajor ? *vmajor : -1;
+            int minor = vminor ? *vminor : -1;
+            QQmlType *returnType = getTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
+                                                 major, minor);
             if (type_return)
                 *type_return = returnType;
             return returnType != 0;

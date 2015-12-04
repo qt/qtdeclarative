@@ -47,6 +47,7 @@ public:
 private slots:
     void initTestCase();
     void builtins();
+    void singleton();
 
 private:
     QString qmlplugindumpPath;
@@ -100,6 +101,19 @@ void tst_qmlplugindump::builtins()
 
     const QString &result = dumper.readAllStandardOutput();
     QVERIFY(result.contains(QLatin1String("Module {")));
+}
+
+void tst_qmlplugindump::singleton()
+{
+    QProcess dumper;
+    QStringList args;
+    args << QLatin1String("tests.dumper.CompositeSingleton") << QLatin1String("1.0")
+         << QLatin1String(".");
+    dumper.start(qmlplugindumpPath, args);
+    dumper.waitForFinished();
+
+    const QString &result = dumper.readAllStandardOutput();
+    QVERIFY(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")));
 }
 
 QTEST_MAIN(tst_qmlplugindump)

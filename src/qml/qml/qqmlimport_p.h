@@ -118,6 +118,8 @@ public:
     {
         QString typeName;
         QString prefix;
+        int majorVersion;
+        int minorVersion;
     };
 
     QList<CompositeSingletonReference> resolvedCompositeSingletons() const;
