@@ -60,7 +60,7 @@ T.CheckBox {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        color: control.enabled ? (control.pressed ? "#bdbebf" : "#ffffff") : "#353637"
+        color: control.enabled ? (control.pressed ? "#e4e4e4" : "#ffffff") : "#353637"
         border.color: control.enabled ? (control.pressed ? "#26282a" : "#353637") : "transparent"
 
         Image {
