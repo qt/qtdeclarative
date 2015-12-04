@@ -23,6 +23,7 @@
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
 #include <private/qquickprofiler_p.h>
+#include <QCoreApplication>
 
 RenderLoop::RenderLoop()
     : eventPending(false)
