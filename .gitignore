@@ -11,6 +11,7 @@
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/tst_controls
 /tests/auto/material/tst_material
+/tests/auto/menu/tst_menu
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/sanity/tst_sanity
 /tests/auto/snippets/tst_snippets
