@@ -114,7 +114,6 @@ public:
     qreal rightPadding;
     qreal bottomPadding;
     qreal spacing;
-    Qt::LayoutDirection layoutDirection;
     QLocale locale;
     QQuickItem *background;
     QQuickItem *contentItem;

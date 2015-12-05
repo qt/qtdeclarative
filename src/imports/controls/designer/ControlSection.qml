@@ -67,19 +67,5 @@ Section {
                 Layout.fillWidth: true
             }
         }
-
-        Label {
-            text: qsTr("Direction")
-            tooltip: qsTr("Layout direction of the control.")
-        }
-        SecondColumnLayout {
-            ComboBox {
-                backendValue: backendValues.layoutDirection
-                implicitWidth: 180
-                model: [ "LeftToRight", "RightToLeft" ]
-                scope: "Qt"
-                Layout.fillWidth: true
-            }
-        }
     }
 }

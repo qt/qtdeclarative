@@ -57,16 +57,6 @@ TestCase {
     }
 
     SignalSpy {
-        id: layoutDirectionSpy
-        signalName: "layoutDirectionChanged"
-    }
-
-    SignalSpy {
-        id: effectiveLayoutDirectionSpy
-        signalName: "effectiveLayoutDirectionChanged"
-    }
-
-    SignalSpy {
         id: mirroredSpy
         signalName: "mirroredChanged"
     }
@@ -213,54 +203,33 @@ TestCase {
         control.destroy()
     }
 
-    function test_layoutDirection() {
+    function test_mirrored() {
         var control = component.createObject(testCase)
         verify(control)
 
-        layoutDirectionSpy.target = control
-        effectiveLayoutDirectionSpy.target = control
         mirroredSpy.target = control
-
-        verify(layoutDirectionSpy.valid)
-        verify(effectiveLayoutDirectionSpy.valid)
         verify(mirroredSpy.valid)
 
+        control.locale = Qt.locale("en_US")
+        compare(control.locale.name, "en_US")
         verify(!control.LayoutMirroring.enabled)
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
 
-        control.layoutDirection = Qt.RightToLeft
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
+        control.locale = Qt.locale("ar_EG")
         compare(control.mirrored, true)
-        compare(layoutDirectionSpy.count, 1)
-        compare(effectiveLayoutDirectionSpy.count, 1)
         compare(mirroredSpy.count, 1)
 
         control.LayoutMirroring.enabled = true
-        compare(control.layoutDirection, Qt.RightToLeft)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
-        compare(control.mirrored, false)
-        compare(layoutDirectionSpy.count, 1)
-        compare(effectiveLayoutDirectionSpy.count, 2)
-        compare(mirroredSpy.count, 2)
-
-        control.layoutDirection = Qt.LeftToRight
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.RightToLeft)
         compare(control.mirrored, true)
-        compare(layoutDirectionSpy.count, 2)
-        compare(effectiveLayoutDirectionSpy.count, 3)
-        compare(mirroredSpy.count, 3)
+        compare(mirroredSpy.count, 1)
+
+        control.locale = Qt.locale("en_US")
+        compare(control.mirrored, true)
+        compare(mirroredSpy.count, 1)
 
         control.LayoutMirroring.enabled = false
-        compare(control.layoutDirection, Qt.LeftToRight)
-        compare(control.effectiveLayoutDirection, Qt.LeftToRight)
         compare(control.mirrored, false)
-        compare(layoutDirectionSpy.count, 2)
-        compare(effectiveLayoutDirectionSpy.count, 4)
-        compare(mirroredSpy.count, 4)
+        compare(mirroredSpy.count, 2)
 
         control.destroy()
     }

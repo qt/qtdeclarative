@@ -68,8 +68,6 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
@@ -109,10 +107,6 @@ public:
     void setSpacing(qreal spacing);
     void resetSpacing();
 
-    Qt::LayoutDirection layoutDirection() const;
-    Qt::LayoutDirection effectiveLayoutDirection() const;
-    void setLayoutDirection(Qt::LayoutDirection direction);
-
     QLocale locale() const;
     void setLocale(const QLocale &locale);
 
@@ -134,8 +128,6 @@ Q_SIGNALS:
     void rightPaddingChanged();
     void bottomPaddingChanged();
     void spacingChanged();
-    void layoutDirectionChanged();
-    void effectiveLayoutDirectionChanged();
     void localeChanged();
     void mirroredChanged();
     void backgroundChanged();

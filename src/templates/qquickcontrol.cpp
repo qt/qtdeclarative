@@ -68,8 +68,7 @@ QT_BEGIN_NAMESPACE
 QQuickControlPrivate::QQuickControlPrivate() :
     hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0),
-    layoutDirection(Qt::LeftToRight), background(Q_NULLPTR), contentItem(Q_NULLPTR),
-    accessibleAttached(Q_NULLPTR)
+    background(Q_NULLPTR), contentItem(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
 #ifndef QT_NO_ACCESSIBILITY
     QAccessible::installActivationObserver(this);
@@ -86,7 +85,8 @@ QQuickControlPrivate::~QQuickControlPrivate()
 void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
-    q->mirrorChange();
+    if (locale.textDirection() == Qt::LeftToRight)
+        q->mirrorChange();
 }
 
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
@@ -611,55 +611,6 @@ void QQuickControl::resetSpacing()
 }
 
 /*!
-    \qmlproperty enumeration Qt.labs.controls::Control::layoutDirection
-
-    This property holds the layout direction of the control.
-
-    Possible values:
-    \value Qt.LeftToRight Items are laid out from left to right. If the width of the row is explicitly set,
-    the left anchor remains to the left of the row (default).
-    \value Qt.RightToLeft Items are laid out from right to left. If the width of the row is explicitly set,
-    the right anchor remains to the right of the row.
-
-    \sa effectiveLayoutDirection
-*/
-Qt::LayoutDirection QQuickControl::layoutDirection() const
-{
-    Q_D(const QQuickControl);
-    return d->layoutDirection;
-}
-
-/*!
-    \qmlproperty enumeration Qt.labs.controls::Control::effectiveLayoutDirection
-    \readonly
-
-    This property holds the effective layout direction of the control.
-
-    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled}
-    for locale layouts, the visual layout direction of the control will be mirrored. However,
-    the \l layoutDirection property will remain unchanged.
-
-    \sa layoutDirection, {LayoutMirroring}{LayoutMirroring}
-*/
-Qt::LayoutDirection QQuickControl::effectiveLayoutDirection() const
-{
-    Q_D(const QQuickControl);
-    if (d->isMirrored())
-        return d->layoutDirection == Qt::RightToLeft ? Qt::LeftToRight : Qt::RightToLeft;
-    return d->layoutDirection;
-}
-
-void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
-{
-    Q_D(QQuickControl);
-    if (d->layoutDirection != direction) {
-        d->layoutDirection = direction;
-        emit layoutDirectionChanged();
-        mirrorChange();
-    }
-}
-
-/*!
     \qmlproperty Locale Qt.labs.calendar::Control::locale
 
     This property holds the locale of the control.
@@ -676,9 +627,12 @@ void QQuickControl::setLocale(const QLocale &locale)
 {
     Q_D(QQuickControl);
     if (d->locale != locale) {
+        bool wasMirrored = isMirrored();
         localeChange(locale, d->locale);
         d->locale = locale;
         emit localeChanged();
+        if (wasMirrored != isMirrored())
+            mirrorChange();
     }
 }
 
@@ -695,7 +649,8 @@ void QQuickControl::setLocale(const QLocale &locale)
 */
 bool QQuickControl::isMirrored() const
 {
-    return effectiveLayoutDirection() == Qt::RightToLeft;
+    Q_D(const QQuickControl);
+    return d->isMirrored() || d->locale.textDirection() == Qt::RightToLeft;
 }
 
 /*!
@@ -802,7 +757,6 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
 
 void QQuickControl::mirrorChange()
 {
-    emit effectiveLayoutDirectionChanged();
     emit mirroredChanged();
 }
 

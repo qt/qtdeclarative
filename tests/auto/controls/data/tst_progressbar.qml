@@ -159,17 +159,25 @@ TestCase {
         compare(control.value, 0.25)
         compare(control.visualPosition, 0.25)
 
-        control.layoutDirection = Qt.RightToLeft
+        // RTL locale
+        control.locale = Qt.locale("ar_EG")
         compare(control.visualPosition, 0.75)
 
+        // RTL locale + LayoutMirroring
         control.LayoutMirroring.enabled = true
-        compare(control.visualPosition, 0.25)
-
-        control.layoutDirection = Qt.LeftToRight
         compare(control.visualPosition, 0.75)
 
+        // LTR locale + LayoutMirroring
+        control.locale = Qt.locale("en_US")
+        compare(control.visualPosition, 0.75)
+
+        // LTR locale
         control.LayoutMirroring.enabled = false
         compare(control.visualPosition, 0.25)
+
+        // LayoutMirroring
+        control.LayoutMirroring.enabled = true
+        compare(control.visualPosition, 0.75)
 
         control.destroy()
     }
