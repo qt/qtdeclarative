@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
     WeekNumberColumn presents week numbers in a column. The week numbers
     are calculated for a given \l month and \l year, using the specified
-    \l locale.
+    \l {Control::locale}{locale}.
 
     \image qtlabscalendar-weeknumbercolumn.png
     \snippet qtlabscalendar-weeknumbercolumn.qml 1
@@ -102,7 +102,6 @@ QQuickWeekNumberColumn::QQuickWeekNumberColumn(QQuickItem *parent) :
     d->source = QVariant::fromValue(d->model);
     connect(d->model, &QQuickWeekNumberModel::monthChanged, this, &QQuickWeekNumberColumn::monthChanged);
     connect(d->model, &QQuickWeekNumberModel::yearChanged, this, &QQuickWeekNumberColumn::yearChanged);
-    connect(d->model, &QQuickWeekNumberModel::localeChanged, this, &QQuickWeekNumberColumn::localeChanged);
 }
 
 /*!
@@ -173,23 +172,6 @@ void QQuickWeekNumberColumn::setYear(int year)
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.calendar::WeekNumberColumn::locale
-
-    This property holds the locale that is used to calculate the week numbers.
-*/
-QLocale QQuickWeekNumberColumn::locale() const
-{
-    Q_D(const QQuickWeekNumberColumn);
-    return d->model->locale();
-}
-
-void QQuickWeekNumberColumn::setLocale(const QLocale &locale)
-{
-    Q_D(QQuickWeekNumberColumn);
-    d->model->setLocale(locale);
-}
-
-/*!
     \internal
     \qmlproperty model Qt.labs.calendar::WeekNumberColumn::source
 
@@ -256,6 +238,13 @@ void QQuickWeekNumberColumn::geometryChanged(const QRectF &newGeometry, const QR
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
+}
+
+void QQuickWeekNumberColumn::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickWeekNumberColumn);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->model->setLocale(newLocale);
 }
 
 void QQuickWeekNumberColumn::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)

@@ -48,6 +48,7 @@
 // We mean it.
 //
 
+#include <QtCore/qlocale.h>
 #include <QtQuick/qquickitem.h>
 #include <QtLabsTemplates/private/qtlabstemplatesglobal_p.h>
 
@@ -69,6 +70,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
+    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
@@ -111,6 +113,9 @@ public:
     Qt::LayoutDirection effectiveLayoutDirection() const;
     void setLayoutDirection(Qt::LayoutDirection direction);
 
+    QLocale locale() const;
+    void setLocale(const QLocale &locale);
+
     bool isMirrored() const;
 
     QQuickItem *background() const;
@@ -131,6 +136,7 @@ Q_SIGNALS:
     void spacingChanged();
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
+    void localeChanged();
     void mirroredChanged();
     void backgroundChanged();
     void contentItemChanged();
@@ -153,6 +159,7 @@ protected:
     virtual void mirrorChange();
     virtual void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding);
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
+    virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
 
 #ifndef QT_NO_ACCESSIBILITY
     virtual void accessibilityActiveChanged(bool active);

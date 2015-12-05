@@ -49,7 +49,6 @@
 //
 
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,7 +60,6 @@ class QQuickWeekNumberColumn : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(int month READ month WRITE setMonth NOTIFY monthChanged FINAL)
     Q_PROPERTY(int year READ year WRITE setYear NOTIFY yearChanged FINAL)
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
@@ -74,9 +72,6 @@ public:
     int year() const;
     void setYear(int year);
 
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
-
     QVariant source() const;
     void setSource(const QVariant &source);
 
@@ -86,13 +81,13 @@ public:
 Q_SIGNALS:
     void monthChanged();
     void yearChanged();
-    void localeChanged();
     void sourceChanged();
     void delegateChanged();
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) Q_DECL_OVERRIDE;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
 private:

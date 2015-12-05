@@ -656,4 +656,17 @@ TestCase {
 
         control4.destroy()
     }
+
+    function test_locale() {
+        var control = component.createObject(testCase)
+        verify(control)
+
+        control.locale = Qt.locale("en_US")
+        compare(control.locale.name, "en_US")
+
+        control.locale = Qt.locale("nb_NO")
+        compare(control.locale.name, "nb_NO")
+
+        control.destroy()
+    }
 }

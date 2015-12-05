@@ -113,7 +113,6 @@ public:
     int repeatTimer;
     QQuickSpinButton *up;
     QQuickSpinButton *down;
-    QLocale locale;
     QValidator *validator;
     QJSValue textFromValue;
     QJSValue valueFromText;
@@ -337,26 +336,6 @@ void QQuickSpinBox::setStepSize(int step)
 }
 
 /*!
-    \qmlproperty Locale Qt.labs.controls::SpinBox::locale
-
-    This property holds the locale that is used to format the value.
-*/
-QLocale QQuickSpinBox::locale() const
-{
-    Q_D(const QQuickSpinBox);
-    return d->locale;
-}
-
-void QQuickSpinBox::setLocale(const QLocale &locale)
-{
-    Q_D(QQuickSpinBox);
-    if (d->locale != locale) {
-        d->locale = locale;
-        emit localeChanged();
-    }
-}
-
-/*!
     \qmlproperty Validator Qt.labs.controls::SpinBox::validator
 
     This property holds the input text validator. By default, SpinBox uses
@@ -364,7 +343,7 @@ void QQuickSpinBox::setLocale(const QLocale &locale)
 
     \snippet SpinBox.qml validator
 
-    \sa textFromValue, valueFromText, locale
+    \sa textFromValue, valueFromText, {Control::locale}{locale}
 */
 QValidator *QQuickSpinBox::validator() const
 {
@@ -398,7 +377,7 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }
     \endcode
 
-    \sa valueFromText, validator, locale
+    \sa valueFromText, validator, {Control::locale}{locale}
 */
 QJSValue QQuickSpinBox::textFromValue() const
 {
@@ -434,7 +413,7 @@ void QQuickSpinBox::setTextFromValue(const QJSValue &callback)
     valueFromText: function(text, locale) { return Number.fromLocaleString(locale, text); }
     \endcode
 
-    \sa textFromValue, validator, locale
+    \sa textFromValue, validator, {Control::locale}{locale}
 */
 QJSValue QQuickSpinBox::valueFromText() const
 {

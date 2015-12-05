@@ -660,6 +660,29 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
 }
 
 /*!
+    \qmlproperty Locale Qt.labs.calendar::Control::locale
+
+    This property holds the locale of the control.
+
+    \sa mirrored, {LayoutMirroring}{LayoutMirroring}
+*/
+QLocale QQuickControl::locale() const
+{
+    Q_D(const QQuickControl);
+    return d->locale;
+}
+
+void QQuickControl::setLocale(const QLocale &locale)
+{
+    Q_D(QQuickControl);
+    if (d->locale != locale) {
+        localeChange(locale, d->locale);
+        d->locale = locale;
+        emit localeChanged();
+    }
+}
+
+/*!
     \qmlproperty bool Qt.labs.controls::Control::mirrored
     \readonly
 
@@ -668,7 +691,7 @@ void QQuickControl::setLayoutDirection(Qt::LayoutDirection direction)
     This property is provided for convenience. A control is considered mirrored
     when its visual layout direction is right-to-left.
 
-    \sa effectiveLayoutDirection, {LayoutMirroring}{LayoutMirroring}
+    \sa locale, {LayoutMirroring}{LayoutMirroring}
 */
 bool QQuickControl::isMirrored() const
 {
@@ -795,6 +818,12 @@ void QQuickControl::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
+}
+
+void QQuickControl::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_UNUSED(newLocale);
+    Q_UNUSED(oldLocale);
 }
 
 QT_END_NAMESPACE

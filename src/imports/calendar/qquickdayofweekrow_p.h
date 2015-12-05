@@ -49,7 +49,6 @@
 //
 
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
-#include <QtCore/qlocale.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,15 +58,11 @@ class QQuickDayOfWeekRowPrivate;
 class QQuickDayOfWeekRow : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(QLocale locale READ locale WRITE setLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QVariant source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
 
 public:
     explicit QQuickDayOfWeekRow(QQuickItem *parent = Q_NULLPTR);
-
-    QLocale locale() const;
-    void setLocale(const QLocale &locale);
 
     QVariant source() const;
     void setSource(const QVariant &source);
@@ -76,13 +71,13 @@ public:
     void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
-    void localeChanged();
     void sourceChanged();
     void delegateChanged();
 
 protected:
     void componentComplete() Q_DECL_OVERRIDE;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) Q_DECL_OVERRIDE;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) Q_DECL_OVERRIDE;
 
 private:
