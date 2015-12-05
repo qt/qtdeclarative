@@ -62,7 +62,20 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtlabscontrols-groupbox.qml 1
 
-    \sa {Customizing GroupBox}, {Container Controls}
+    \section2 Checkable GroupBox
+
+    Even though GroupBox has no built-in check box, it is straightforward
+    to create a checkable GroupBox by pairing it with a CheckBox.
+
+    \image qtlabscontrols-groupbox-checkable.png
+
+    It is a common pattern to enable or disable the groupbox's children when
+    its check box is toggled on/off, respectively, but the semantics of the
+    check box is left to the application to decide.
+
+    \snippet qtlabscontrols-groupbox-checkable.qml 1
+
+    \sa CheckBox, {Customizing GroupBox}, {Container Controls}
 */
 
 class QQuickGroupBoxPrivate : public QQuickFramePrivate
