@@ -108,7 +108,6 @@ void QQuickTurbulenceAffector::initializeGrid()
             for (int i=0; i<m_gridSize; i++)
                 free(m_field[i]);
             free(m_field);
-            m_system = 0;
         }
         if (m_vectorField) {
             for (int i=0; i<m_gridSize; i++)
