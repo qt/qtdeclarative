@@ -56,7 +56,7 @@ static inline int toDigit(char c)
 double integerFromString(const char *buf, int size, int radix)
 {
     if (size == 0)
-        return qSNaN();
+        return qQNaN();
 
     double sign = 1.0;
     int i = 0;
@@ -95,7 +95,7 @@ double integerFromString(const char *buf, int size, int radix)
         if (!qstrcmp(buf, "Infinity"))
             result = qInf();
         else
-            result = qSNaN();
+            result = qQNaN();
     } else {
         result = 0;
         double multiplier = 1;

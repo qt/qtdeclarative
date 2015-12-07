@@ -89,7 +89,7 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
 
-    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qSNaN()));
+    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qQNaN()));
     ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
     ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));

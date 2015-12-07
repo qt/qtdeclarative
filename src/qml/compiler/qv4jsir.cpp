@@ -558,7 +558,7 @@ Expr *BasicBlock::CONST(Type type, double value)
     } else if (type == NullType) {
         value = 0;
     } else if (type == UndefinedType) {
-        value = qSNaN();
+        value = qQNaN();
     }
 
     e->init(type, value);

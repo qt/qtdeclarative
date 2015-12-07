@@ -59,7 +59,7 @@ namespace Heap {
 struct DateObject : Object {
     DateObject()
     {
-        date = qSNaN();
+        date = qQNaN();
     }
 
     DateObject(const Value &date)

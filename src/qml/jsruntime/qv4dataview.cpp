@@ -285,7 +285,7 @@ ReturnedValue DataViewPrototype::method_setFloat(CallContext *ctx)
         return scope.engine->throwTypeError();
     idx += v->d()->byteOffset;
 
-    double val = ctx->argc() >= 2 ? ctx->args()[1].toNumber() : qSNaN();
+    double val = ctx->argc() >= 2 ? ctx->args()[1].toNumber() : qQNaN();
     bool littleEndian = ctx->argc() < 3 ? false : ctx->args()[2].toBoolean();
 
     if (sizeof(T) == 4) {

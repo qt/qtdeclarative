@@ -380,7 +380,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->d()->datum-> VARIABLE = ctx->argc() ? ctx->args()[0].toNumber() : qSNaN();\
+    r->d()->datum-> VARIABLE = ctx->argc() ? ctx->args()[0].toNumber() : qQNaN();\
     return QV4::Encode::undefined(); \
 }
 
@@ -401,7 +401,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
     if (!r || !r->d()->datum)\
         ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
 \
-    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qSNaN());\
+    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qQNaN());\
     return QV4::Encode::undefined(); \
 }
 

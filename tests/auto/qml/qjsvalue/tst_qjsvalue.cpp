@@ -540,7 +540,7 @@ void tst_QJSValue::toBoolean() // deprecated
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = eng.toScriptValue(qSNaN());
+        QJSValue number2 = eng.toScriptValue(qQNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
@@ -583,7 +583,7 @@ void tst_QJSValue::toBoolean() // deprecated
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = QJSValue(qSNaN());
+        QJSValue number2 = QJSValue(qQNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
@@ -633,7 +633,7 @@ void tst_QJSValue::toBool()
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = eng.toScriptValue(qSNaN());
+        QJSValue number2 = eng.toScriptValue(qQNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
@@ -676,7 +676,7 @@ void tst_QJSValue::toBool()
         QCOMPARE(number.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number), false);
 
-        QJSValue number2 = QJSValue(qSNaN());
+        QJSValue number2 = QJSValue(qQNaN());
         QCOMPARE(number2.toBool(), false);
         QCOMPARE(qjsvalue_cast<bool>(number2), false);
 
@@ -714,7 +714,7 @@ void tst_QJSValue::toInt()
         QCOMPARE(number.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(number), 123);
 
-        QJSValue number2 = eng.toScriptValue(qSNaN());
+        QJSValue number2 = eng.toScriptValue(qQNaN());
         QCOMPARE(number2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number2), 0);
 
@@ -776,7 +776,7 @@ void tst_QJSValue::toInt()
         QCOMPARE(number.toInt(), 123);
         QCOMPARE(qjsvalue_cast<qint32>(number), 123);
 
-        QJSValue number2 = QJSValue(qSNaN());
+        QJSValue number2 = QJSValue(qQNaN());
         QCOMPARE(number2.toInt(), 0);
         QCOMPARE(qjsvalue_cast<qint32>(number2), 0);
 
@@ -850,7 +850,7 @@ void tst_QJSValue::toUInt()
         QCOMPARE(number.toUInt(), quint32(123));
         QCOMPARE(qjsvalue_cast<quint32>(number), quint32(123));
 
-        QJSValue number2 = eng.toScriptValue(qSNaN());
+        QJSValue number2 = eng.toScriptValue(qQNaN());
         QCOMPARE(number2.toUInt(), quint32(0));
         QCOMPARE(qjsvalue_cast<quint32>(number2), quint32(0));
 
@@ -910,7 +910,7 @@ void tst_QJSValue::toUInt()
         QCOMPARE(number.toUInt(), quint32(123));
         QCOMPARE(qjsvalue_cast<quint32>(number), quint32(123));
 
-        QJSValue number2 = QJSValue(qSNaN());
+        QJSValue number2 = QJSValue(qQNaN());
         QCOMPARE(number2.toUInt(), quint32(0));
         QCOMPARE(qjsvalue_cast<quint32>(number2), quint32(0));
 
