@@ -2553,6 +2553,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     if (!m_program) {
         if (shared)
             m_loaded = true;
+        ctxt->destroy();
         return QV4::Encode::undefined();
     }
 
