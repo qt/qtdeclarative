@@ -50,29 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-
-void validateProperty(QObject *target, const QString &propertyName, QObject *binding)
-{
-    if (!target)
-        return;
-
-    const QMetaObject *mo = target->metaObject();
-    const int index = mo->indexOfProperty(propertyName.toUtf8());
-    if (index == -1) {
-        qmlInfo(binding) << "Property '" << propertyName << "' does not exist on " << QQmlMetaType::prettyTypeName(target) << ".";
-        return;
-    }
-
-    const QMetaProperty mp = mo->property(index);
-    if (!mp.isWritable()) {
-        qmlInfo(binding) << "Property '" << propertyName << "' on " << QQmlMetaType::prettyTypeName(target) << " is read-only.";
-        return;
-    }
-}
-
-}
-
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
@@ -86,8 +63,25 @@ public:
     QQmlNullableValue<QVariant> value;
     QQmlProperty prop;
     QQmlAbstractBinding::Ptr prevBind;
+
+    void validate(QObject *binding) const;
 };
 
+void QQmlBindPrivate::validate(QObject *binding) const
+{
+    if (!obj)
+        return;
+
+    if (!prop.isValid()) {
+        qmlInfo(binding) << "Property '" << propName << "' does not exist on " << QQmlMetaType::prettyTypeName(obj) << ".";
+        return;
+    }
+
+    if (!prop.isWritable()) {
+        qmlInfo(binding) << "Property '" << propName << "' on " << QQmlMetaType::prettyTypeName(obj) << " is read-only.";
+        return;
+    }
+}
 
 /*!
     \qmltype Binding
@@ -211,8 +205,8 @@ void QQmlBind::setObject(QObject *obj)
     }
     d->obj = obj;
     if (d->componentComplete) {
-        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+        d->validate(this);
     }
     eval();
 }
@@ -257,8 +251,8 @@ void QQmlBind::setProperty(const QString &p)
     }
     d->propName = p;
     if (d->componentComplete) {
-        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+        d->validate(this);
     }
     eval();
 }
@@ -299,8 +293,8 @@ void QQmlBind::componentComplete()
     Q_D(QQmlBind);
     d->componentComplete = true;
     if (!d->prop.isValid()) {
-        validateProperty(d->obj, d->propName, this);
         d->prop = QQmlProperty(d->obj, d->propName);
+        d->validate(this);
     }
     eval();
 }

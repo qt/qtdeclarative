@@ -352,10 +352,7 @@ Item {
     MouseArea {
         onWheel: {
             if (wheel.modifiers & Qt.ControlModifier) {
-                if (wheel.angleDelta.y > 0)
-                    zoomIn();
-                else
-                    zoomOut();
+                adjustZoom(wheel.angleDelta.y / 120);
             }
         }
     }

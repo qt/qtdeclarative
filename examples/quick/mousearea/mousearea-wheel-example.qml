@@ -64,10 +64,9 @@ Rectangle {
                     anchors.fill: parent
                     onWheel: {
                         if (wheel.modifiers & Qt.ControlModifier) {
-                            if (wheel.angleDelta.y > 0)
-                                parent.scaleFactor += 0.2;
-                            else if (parent.scaleFactor - 0.2 >= 0.2)
-                                parent.scaleFactor -= 0.2;
+                            parent.scaleFactor += 0.2 * wheel.angleDelta.y / 120;
+                            if (parent.scaleFactor < 0)
+                                parent.scaleFactor = 0;
                         }
                     }
                 }

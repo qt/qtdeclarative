@@ -10,5 +10,6 @@ Rectangle {
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignLeft
         font.pointSize: 12
+        font.family: "Times New Roman"
     }
 }

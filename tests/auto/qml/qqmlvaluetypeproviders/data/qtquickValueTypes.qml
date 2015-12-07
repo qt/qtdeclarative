@@ -112,7 +112,7 @@ QtObject {
         if (m != Qt.matrix4x4(4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7)) qtquickTypeSuccess = false;
         if (m.toString() != "QMatrix4x4(4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7)") qtquickTypeSuccess = false;
         c = "blue";
-        if (c.toString() != Qt.rgba(0,0,1,0).toString()) qtquickTypeSuccess = false;
+        if (c.toString() != Qt.rgba(0,0,1,1).toString()) qtquickTypeSuccess = false;
         if (c.toString() != "#0000FF" && c.toString() != "#0000ff") qtquickTypeSuccess = false; // color string converter is special
         // no string converter for fonts.
     }

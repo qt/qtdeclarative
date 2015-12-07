@@ -4278,8 +4278,10 @@ void QQuickItem::polish()
   */
 void QQuickItem::mapFromItem(QQmlV4Function *args) const
 {
-    if (args->length() == 0)
+    if (args->length() != 3 && args->length() != 5) {
+        args->v4engine()->throwTypeError();
         return;
+    }
 
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -4295,19 +4297,33 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapFromItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
+        args->v4engine()->throwTypeError();
         return;
     }
 
-    QV4::ScopedValue v(scope);
+    QV4::ScopedValue vx(scope, (*args)[1]);
+    QV4::ScopedValue vy(scope, (*args)[2]);
 
-    qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
-    qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
+    if (!vx->isNumber() || !vy->isNumber()) {
+        args->v4engine()->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
 
     QVariant result;
 
     if (args->length() > 3) {
-        qreal w = (v = (*args)[3])->asDouble();
-        qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
+        QV4::ScopedValue vw(scope, (*args)[3]);
+        QV4::ScopedValue vh(scope, (*args)[4]);
+        if (!vw->isNumber() || !vh->isNumber()) {
+            args->v4engine()->throwTypeError();
+            return;
+        }
+        qreal w = vw->asDouble();
+        qreal h = vh->asDouble();
+
         result = mapRectFromItem(itemObj, QRectF(x, y, w, h));
     } else {
         result = mapFromItem(itemObj, QPointF(x, y));
@@ -4350,8 +4366,10 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
   */
 void QQuickItem::mapToItem(QQmlV4Function *args) const
 {
-    if (args->length() == 0)
+    if (args->length() != 3 && args->length() != 5) {
+        args->v4engine()->throwTypeError();
         return;
+    }
 
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
@@ -4367,18 +4385,32 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
     if (!itemObj && !item->isNull()) {
         qmlInfo(this) << "mapToItem() given argument \"" << item->toQStringNoThrow()
                       << "\" which is neither null nor an Item";
+        args->v4engine()->throwTypeError();
         return;
     }
 
-    QV4::ScopedValue v(scope);
+    QV4::ScopedValue vx(scope, (*args)[1]);
+    QV4::ScopedValue vy(scope, (*args)[2]);
+
+    if (!vx->isNumber() || !vy->isNumber()) {
+        args->v4engine()->throwTypeError();
+        return;
+    }
+
+    qreal x = vx->asDouble();
+    qreal y = vy->asDouble();
+
     QVariant result;
 
-    qreal x = (args->length() > 1) ? (v = (*args)[1])->asDouble() : 0;
-    qreal y = (args->length() > 2) ? (v = (*args)[2])->asDouble() : 0;
-
     if (args->length() > 3) {
-        qreal w = (v = (*args)[3])->asDouble();
-        qreal h = (args->length() > 4) ? (v = (*args)[4])->asDouble() : 0;
+        QV4::ScopedValue vw(scope, (*args)[3]);
+        QV4::ScopedValue vh(scope, (*args)[4]);
+        if (!vw->isNumber() || !vh->isNumber()) {
+            args->v4engine()->throwTypeError();
+            return;
+        }
+        qreal w = vw->asDouble();
+        qreal h = vh->asDouble();
 
         result = mapRectToItem(itemObj, QRectF(x, y, w, h));
     } else {

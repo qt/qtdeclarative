@@ -859,11 +859,24 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(createdSubObject) + valueInterceptorCast);
                 QObject *target = createdSubObject->parent();
 
+                if (targetCorePropertyData.isAlias()) {
+                    int propIndex;
+                    QQmlPropertyPrivate::findAliasTarget(target, targetCorePropertyData.coreIndex, &target, &propIndex);
+                    QQmlData *data = QQmlData::get(target);
+                    if (!data || !data->propertyCache) {
+                        qWarning() << "can't resolve property alias for 'on' assignment";
+                        return false;
+                    }
+                    targetCorePropertyData = *data->propertyCache->property(propIndex);
+                }
+
                 QQmlProperty prop =
                     QQmlPropertyPrivate::restore(target, targetCorePropertyData, context);
+
                 vi->setTarget(prop);
-                QQmlVMEMetaObject *mo = QQmlVMEMetaObject::get(target);
-                Q_ASSERT(mo);
+                QQmlInterceptorMetaObject *mo = QQmlInterceptorMetaObject::get(target);
+                if (!mo)
+                    mo = new QQmlInterceptorMetaObject(target, QQmlData::get(target)->propertyCache);
                 mo->registerInterceptor(prop.index(), QQmlPropertyPrivate::valueTypeCoreIndex(prop), vi);
                 return true;
             }

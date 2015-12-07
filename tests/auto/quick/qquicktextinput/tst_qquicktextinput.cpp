@@ -5087,6 +5087,10 @@ void tst_qquicktextinput::keySequence_data()
             << standard.at(0) << QKeySequence(QKeySequence::DeleteStartOfWord) << 7 << 7
             << 4 << (standard.at(0).mid(0, 4) + standard.at(0).mid(7)) << QString()
             << QQuickTextInput::Normal << Qt::Key_Direction_L;
+    QTest::newRow("delete complete line")
+            << standard.at(0) << QKeySequence(QKeySequence::DeleteCompleteLine) << 0 << 0
+            << 0 << QString() << QString()
+            << QQuickTextInput::Normal << Qt::Key_Direction_L;
 }
 
 void tst_qquicktextinput::keySequence()

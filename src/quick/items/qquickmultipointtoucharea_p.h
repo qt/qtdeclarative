@@ -83,6 +83,7 @@ public:
           _qmlDefined(qmlDefined),
           _inUse(false),
           _pressed(false),
+          _startX(0.0), _startY(0.0),
           _previousX(0.0), _previousY(0.0),
           _sceneX(0.0), _sceneY(0.0)
     {}

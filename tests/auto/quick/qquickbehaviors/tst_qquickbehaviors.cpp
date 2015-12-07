@@ -76,6 +76,7 @@ private slots:
     void multipleChangesToValueType();
     void currentValue();
     void disabledWriteWhileRunning();
+    void aliasedProperty();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -574,6 +575,23 @@ void tst_qquickbehaviors::disabledWriteWhileRunning()
         QTest::qWait(200);
         QCOMPARE(myRect->x(), qreal(100));
     }
+}
+
+void tst_qquickbehaviors::aliasedProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("aliased.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
+
+    QQuickItemPrivate::get(rect.data())->setState("moved");
+    QScopedPointer<QQuickRectangle> acc(qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("acc")));
+    QScopedPointer<QQuickRectangle> range(qobject_cast<QQuickRectangle*>(acc->findChild<QQuickRectangle*>("range")));
+    QTRY_VERIFY(acc->property("value").toDouble() > 0);
+    QTRY_VERIFY(range->width() > 0);
+    QTRY_VERIFY(acc->property("value").toDouble() < 400);
+    QTRY_VERIFY(range->width() < 400);
+    //i.e. the behavior has been triggered
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

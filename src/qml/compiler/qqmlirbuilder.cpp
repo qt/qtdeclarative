@@ -1693,7 +1693,8 @@ static QV4::IR::Type resolveMetaObjectProperty(QQmlEnginePrivate *qmlEngine, QV4
         }
     }
 
-    if (qmlEngine && !(resolver->flags & LookupsExcludeProperties)) {
+    if (member->kind != QV4::IR::Member::MemberOfIdObjectsArray && member->kind != QV4::IR::Member::MemberOfSingletonObject &&
+        qmlEngine && !(resolver->flags & LookupsExcludeProperties)) {
         QQmlPropertyData *property = member->property;
         if (!property && metaObject) {
             if (QQmlPropertyData *candidate = metaObject->property(*member->name, /*object*/0, /*context*/0)) {

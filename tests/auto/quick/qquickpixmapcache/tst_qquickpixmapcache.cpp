@@ -148,7 +148,7 @@ void tst_qquickpixmapcache::single()
 
     QString expectedError;
     if (neterror) {
-        expectedError = "Error downloading " + target.toString() + " - server replied: Not found";
+        expectedError = "Error transferring " + target.toString() + " - server replied: Not found";
     } else if (!exists) {
         expectedError = "Cannot open: " + target.toString();
     }

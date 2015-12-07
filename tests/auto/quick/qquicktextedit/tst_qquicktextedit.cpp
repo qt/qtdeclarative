@@ -2368,8 +2368,8 @@ void tst_qquicktextedit::positionAt()
     secondLine.setLineWidth(texteditObject->width());
     layout.endLayout();
 
-    qreal y0;
-    qreal y1;
+    qreal y0 = 0;
+    qreal y1 = 0;
 
     switch (verticalAlignment) {
     case QQuickTextEdit::AlignTop:
@@ -5263,8 +5263,8 @@ void tst_qquicktextedit::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error downloading {{ServerBaseUrl}}/notexists.png - server replied: Not found";
-    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+        << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML TextEdit: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 
 void tst_qquicktextedit::embeddedImages()

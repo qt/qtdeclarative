@@ -1536,7 +1536,8 @@ bool QQuickTextInput::event(QEvent* ev)
             || ke == QKeySequence::SelectEndOfBlock
             || ke == QKeySequence::SelectStartOfDocument
             || ke == QKeySequence::SelectAll
-            || ke == QKeySequence::SelectEndOfDocument) {
+            || ke == QKeySequence::SelectEndOfDocument
+            || ke == QKeySequence::DeleteCompleteLine) {
             ke->accept();
             return true;
         } else if (ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier
@@ -4328,6 +4329,14 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
     else if (event == QKeySequence::DeleteStartOfWord) {
         if (!m_readOnly)
             deleteStartOfWord();
+    } else if (event == QKeySequence::DeleteCompleteLine) {
+        if (!m_readOnly) {
+            selectAll();
+#ifndef QT_NO_CLIPBOARD
+            copy();
+#endif
+            del();
+        }
     }
 #endif // QT_NO_SHORTCUT
     else {

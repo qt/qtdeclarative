@@ -75,6 +75,10 @@
 #include <qt_windows.h>
 #endif
 
+
+static const uint qtQmlMajorVersion = 2;
+static const uint qtQmlMinorVersion = 2;
+
 QString pluginImportPath;
 bool verbose = false;
 bool creatable = true;
@@ -1056,9 +1060,13 @@ int main(int argc, char *argv[])
         getDependencies(engine, pluginImportUri, pluginImportVersion, &dependencies);
     compactDependencies(&dependencies);
 
-    // load the QtQml 2.2 builtins and the dependencies
+    QString qtQmlImportString = QString::fromLatin1("import QtQml %1.%2")
+        .arg(qtQmlMajorVersion)
+        .arg(qtQmlMinorVersion);
+
+    // load the QtQml builtins and the dependencies
     {
-        QByteArray code("import QtQml 2.2");
+        QByteArray code(qtQmlImportString.toUtf8());
         foreach (const QString &moduleToImport, dependencies) {
             code.append("\nimport ");
             code.append(moduleToImport.toUtf8());
@@ -1089,14 +1097,40 @@ int main(int argc, char *argv[])
     QSet<const QMetaObject *> metas;
 
     if (action == Builtins) {
+        foreach (const QMetaObject *m, defaultReachable) {
+            if (m->className() == QLatin1String("Qt")) {
+                metas.insert(m);
+                break;
+            }
+        }
+    } else if (pluginImportUri == QLatin1String("QtQml")) {
+        bool ok = false;
+        const uint major = pluginImportVersion.split('.')[0].toUInt(&ok, 10);
+        if (!ok) {
+            std::cerr << "Malformed version string \""<< qPrintable(pluginImportVersion) << "\"."
+                      << std::endl;
+            return EXIT_INVALIDARGUMENTS;
+        }
+        if (major != qtQmlMajorVersion) {
+            std::cerr << "Unsupported version \"" << qPrintable(pluginImportVersion)
+                      << "\": Major version number must be \"" << qtQmlMajorVersion << "\"."
+                      << std::endl;
+            return EXIT_INVALIDARGUMENTS;
+        }
         metas = defaultReachable;
+        foreach (const QMetaObject *m, defaultReachable) {
+            if (m->className() == QLatin1String("Qt")) {
+                metas.remove(m);
+                break;
+            }
+        }
     } else {
         // find a valid QtQuick import
         QByteArray importCode;
         QQmlType *qtObjectType = QQmlMetaType::qmlType(&QObject::staticMetaObject);
         if (!qtObjectType) {
             std::cerr << "Could not find QtObject type" << std::endl;
-            importCode = QByteArray("import QtQml 2.2");
+            importCode = qtQmlImportString.toUtf8();
         } else {
             QString module = qtObjectType->qmlTypeName();
             module = module.mid(0, module.lastIndexOf(QLatin1Char('/')));

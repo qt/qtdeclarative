@@ -2050,7 +2050,7 @@ void tst_qquicktext::embeddedImages_data()
     QTest::newRow("local") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading {{ServerBaseUrl}}/notexists.png - server replied: Not found";
+                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
     QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
 }
 

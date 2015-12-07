@@ -668,7 +668,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 QQmlData::QQmlData()
     : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
-      hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
+      hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false), bindingBitsSize(0), bindingBits(0), notifyList(0), context(0), outerContext(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
       lineNumber(0), columnNumber(0), jsEngineId(0), compiledData(0), deferredData(0),
       propertyCache(0), guards(0), extendedData(0)
