@@ -104,6 +104,7 @@ private slots:
     void scriptActionBug();
     void groupAnimationNullChildBug();
     void scriptActionCrash();
+    void animatorInvalidTargetCrash();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1491,7 +1492,21 @@ void tst_qquickanimations::scriptActionCrash()
     delete obj;
 }
 
+// QTBUG-49364
+// Test that we don't crash when the target of an Animator becomes
+// invalid between the time the animator is started and the time the
+// animator job is actually started
+void tst_qquickanimations::animatorInvalidTargetCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("animatorInvalidTargetCrash.qml"));
+    QObject *obj = c.create();
 
+    //just testing that we don't crash
+    QTest::qWait(5000); //animator duration
+
+    delete obj;
+}
 
 QTEST_MAIN(tst_qquickanimations)
 

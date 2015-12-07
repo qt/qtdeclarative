@@ -152,7 +152,7 @@ protected:
     QQuickAnimatorJob();
     void debugAnimation(QDebug d) const Q_DECL_OVERRIDE;
 
-    QQuickItem *m_target;
+    QPointer<QQuickItem> m_target;
     QQuickAnimatorController *m_controller;
 
     qreal m_from;
