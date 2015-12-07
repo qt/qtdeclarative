@@ -347,8 +347,6 @@ qreal InspectTool::nextZoomScale(ZoomDirection direction)
         }
         return zoomScales.first();
     }
-
-    return 1.0f;
 }
 
 void InspectTool::initializeDrag(const QPointF &pos)
