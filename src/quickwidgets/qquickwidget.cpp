@@ -252,8 +252,15 @@ void QQuickWidgetPrivate::renderSceneGraph()
     }
 
     Q_ASSERT(offscreenSurface);
+
     render(true);
-    q->update(); // schedule composition
+
+#ifndef QT_NO_GRAPHICSVIEW
+    if (q->window()->graphicsProxyWidget())
+        QWidgetPrivate::nearestGraphicsProxyWidget(q)->update();
+    else
+#endif
+        q->update(); // schedule composition
 }
 
 QImage QQuickWidgetPrivate::grabFramebuffer()
