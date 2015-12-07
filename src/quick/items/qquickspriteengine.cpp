@@ -626,11 +626,11 @@ int QQuickStochasticEngine::nextState(int curState, int curThing)
         qreal r =(qreal) qrand() / (qreal) RAND_MAX;
         qreal total = 0.0;
         for (QVariantMap::const_iterator iter=m_states[curState]->m_to.constBegin();
-            iter!=m_states[curState]->m_to.constEnd(); iter++)
+            iter!=m_states[curState]->m_to.constEnd(); ++iter)
             total += (*iter).toReal();
         r*=total;
         for (QVariantMap::const_iterator iter= m_states[curState]->m_to.constBegin();
-                iter!=m_states[curState]->m_to.constEnd(); iter++){
+                iter!=m_states[curState]->m_to.constEnd(); ++iter){
             if (r < (*iter).toReal()){
                 bool superBreak = false;
                 for (int i=0; i<m_states.count(); i++){
@@ -689,7 +689,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
         dist = m_states.count();
     QQuickStochasticState* curState = m_states[curIdx];
     for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
-        iter!=curState->m_to.constEnd(); iter++){
+        iter!=curState->m_to.constEnd(); ++iter){
         if (iter.key() == goalName)
             for (int i=0; i<m_states.count(); i++)
                 if (m_states[i]->name() == goalName)
@@ -698,7 +698,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
     QSet<int> options;
     for (int i=1; i<dist; i++){
         for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
-            iter!=curState->m_to.constEnd(); iter++){
+            iter!=curState->m_to.constEnd(); ++iter){
             int option = -1;
             for (int j=0; j<m_states.count(); j++)//One place that could be a lot more efficient...
                 if (m_states[j]->name() == iter.key())
@@ -714,11 +714,11 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
             qreal r =(qreal) qrand() / (qreal) RAND_MAX;
             qreal total = 0;
             for (QSet<int>::const_iterator iter=options.constBegin();
-                iter!=options.constEnd(); iter++)
+                iter!=options.constEnd(); ++iter)
                 total += curState->m_to.value(m_states[(*iter)]->name()).toReal();
             r *= total;
             for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
-                iter!=curState->m_to.constEnd(); iter++){
+                iter!=curState->m_to.constEnd(); ++iter){
                 bool superContinue = true;
                 for (int j=0; j<m_states.count(); j++)
                     if (m_states[j]->name() == iter.key())
