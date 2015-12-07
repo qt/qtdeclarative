@@ -1244,7 +1244,7 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QByteArray &e
         imports->resolveType(scope, &type, 0, 0, 0);
         if (!type)
             return -1;
-        return type ? type->enumValue(compiler->enginePrivate(), QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+        return type->enumValue(compiler->enginePrivate(), QHashedCStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
     const QMetaObject *mo = StaticQtMetaObject::get();
