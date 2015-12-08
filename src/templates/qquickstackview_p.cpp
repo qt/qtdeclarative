@@ -139,16 +139,19 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         delete incubator;
         incubator = new QQuickStackIncubator(this);
         component->create(*incubator, context);
+    } else {
+        initialize();
     }
-    initialize();
     return item;
 }
 
 void QQuickStackElement::incubate(QObject *object)
 {
     item = qmlobject_cast<QQuickItem *>(object);
-    if (item)
+    if (item) {
         QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
+        initialize();
+    }
 }
 
 void QQuickStackElement::initialize()

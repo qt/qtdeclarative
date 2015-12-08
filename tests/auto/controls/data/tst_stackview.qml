@@ -757,4 +757,23 @@ TestCase {
 
         control.destroy()
     }
+
+    Component {
+        id: rectangle
+        Rectangle {
+            property color initialColor
+            Component.onCompleted: initialColor = color
+        }
+    }
+
+    function test_properties() {
+        var control = stackView.createObject(testCase)
+        verify(control)
+
+        var rect = control.push(rectangle, {color: "#ff0000"})
+        compare(rect.color, "#ff0000")
+        compare(rect.initialColor, "#ff0000")
+
+        control.destroy()
+    }
 }
