@@ -638,6 +638,13 @@ bool QQuickPaintedItem::isTextureProvider() const
 */
 QSGTextureProvider *QQuickPaintedItem::textureProvider() const
 {
+    // When Item::layer::enabled == true, QQuickItem will be a texture
+    // provider. In this case we should prefer to return the layer rather
+    // than the image itself. The layer will include any children and any
+    // the image's wrap and fill mode.
+    if (QQuickItem::isTextureProvider())
+        return QQuickItem::textureProvider();
+
     Q_D(const QQuickPaintedItem);
     QQuickWindow *w = window();
     if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
