@@ -696,7 +696,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
 }
 
 /*!
-    Return the list of errors that occurred during the last compile or create
+    Returns the list of errors that occurred during the last compile or create
     operation. An empty list is returned if isError() is not set.
 */
 QList<QQmlError> QQmlComponent::errors() const
