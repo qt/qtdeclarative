@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPANEL_P_H
-#define QQUICKPANEL_P_H
+#ifndef QQUICKPOPUP_P_H
+#define QQUICKPOPUP_P_H
 
 //
 //  W A R N I N G
@@ -54,10 +54,10 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
-class QQuickPanelPrivate;
+class QQuickPopupPrivate;
 class QQuickTransition;
 
-class Q_LABSTEMPLATES_EXPORT QQuickPanel : public QObject
+class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
@@ -68,8 +68,8 @@ class Q_LABSTEMPLATES_EXPORT QQuickPanel : public QObject
     Q_PROPERTY(QQuickTransition *hideTransition READ showTransition WRITE setHideTransition NOTIFY hideTransitionChanged FINAL)
 
 public:
-    explicit QQuickPanel(QObject *parent = Q_NULLPTR);
-    ~QQuickPanel();
+    explicit QQuickPopup(QObject *parent = Q_NULLPTR);
+    ~QQuickPopup();
 
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
@@ -109,13 +109,13 @@ public Q_SLOTS:
     void hide();
 
 protected:
-    QQuickPanel(QQuickPanelPrivate &dd, QObject *parent);
+    QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
 
 private:
-    Q_DISABLE_COPY(QQuickPanel)
-    Q_DECLARE_PRIVATE(QQuickPanel)
+    Q_DISABLE_COPY(QQuickPopup)
+    Q_DECLARE_PRIVATE(QQuickPopup)
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPANEL_P_H
+#endif // QQUICKPOPUP_P_H

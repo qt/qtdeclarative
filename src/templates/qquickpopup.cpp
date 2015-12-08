@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#include "qquickpanel_p.h"
-#include "qquickpanel_p_p.h"
+#include "qquickpopup_p.h"
+#include "qquickpopup_p_p.h"
 #include "qquickapplicationwindow_p.h"
 #include "qquickoverlay_p.h"
 #include <QtQml/qqmlinfo.h>
@@ -46,17 +46,17 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype Panel
+    \qmltype Popup
     \inherits QtObject
-    \instantiates QQuickPanel
+    \instantiates QQuickPopup
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-popups
-    \brief A popup panel.
+    \brief A popup control.
 
-    Panel is the base type of popup-like user interface controls.
+    Popup is the base type of popup-like user interface controls.
 */
 
-QQuickPanelPrivate::QQuickPanelPrivate()
+QQuickPopupPrivate::QQuickPopupPrivate()
     : QObjectPrivate()
     , contentItem(Q_NULLPTR)
     , overlay(Q_NULLPTR)
@@ -67,29 +67,29 @@ QQuickPanelPrivate::QQuickPanelPrivate()
     , transitionManager(this)
 { }
 
-QQuickPanelPrivate::~QQuickPanelPrivate()
+QQuickPopupPrivate::~QQuickPopupPrivate()
 { }
 
-void QQuickPanelPrivate::finalizeShowTransition()
+void QQuickPopupPrivate::finalizeShowTransition()
 {
     if (focus)
         contentItem->setFocus(true);
 }
 
-void QQuickPanelPrivate::finalizeHideTransition()
+void QQuickPopupPrivate::finalizeHideTransition()
 {
     overlay = Q_NULLPTR;
     contentItem->setParentItem(Q_NULLPTR);
     emit q_func()->visibleChanged();
 }
 
-QQuickPanelTransitionManager::QQuickPanelTransitionManager(QQuickPanelPrivate *priv)
+QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *priv)
     : QQuickTransitionManager()
     , state(Off)
     , pp(priv)
 { }
 
-void QQuickPanelTransitionManager::transitionShow()
+void QQuickPopupTransitionManager::transitionShow()
 {
     if (isRunning())
         return;
@@ -98,7 +98,7 @@ void QQuickPanelTransitionManager::transitionShow()
     transition(actions, pp->showTransition, pp->contentItem);
 }
 
-void QQuickPanelTransitionManager::transitionHide()
+void QQuickPopupTransitionManager::transitionHide()
 {
     if (isRunning())
         return;
@@ -107,7 +107,7 @@ void QQuickPanelTransitionManager::transitionHide()
     transition(actions, pp->hideTransition, pp->contentItem);
 }
 
-void QQuickPanelTransitionManager::finished()
+void QQuickPopupTransitionManager::finished()
 {
     if (state == Show)
         pp->finalizeShowTransition();
@@ -117,35 +117,35 @@ void QQuickPanelTransitionManager::finished()
     state = Off;
 }
 
-QQuickPanel::QQuickPanel(QObject *parent)
-    : QObject(*(new QQuickPanelPrivate), parent)
+QQuickPopup::QQuickPopup(QObject *parent)
+    : QObject(*(new QQuickPopupPrivate), parent)
 {
 }
 
-QQuickPanel::QQuickPanel(QQuickPanelPrivate &dd, QObject *parent)
+QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
 }
 
-QQuickPanel::~QQuickPanel()
+QQuickPopup::~QQuickPopup()
 {
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Panel::show()
+    \qmlmethod void Qt.labs.controls::Popup::show()
 
-    Shows the panel.
+    Shows the popup.
 */
-void QQuickPanel::show()
+void QQuickPopup::show()
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (!d->contentItem) {
-        qmlInfo(this) << "no panel content to show.";
+        qmlInfo(this) << "no popup content to show.";
         return;
     }
     if (d->overlay) {
         // FIXME qmlInfo needs to know about QQuickWindow and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "panel already showing in window") << d->overlay->window();
+        static_cast<QDebug>(qmlInfo(this) << "popup already showing in window") << d->overlay->window();
         return;
     }
 
@@ -163,7 +163,7 @@ void QQuickPanel::show()
         }
     }
     if (!win) {
-        qmlInfo(this) << "cannot find any window to show panel.";
+        qmlInfo(this) << "cannot find any window to show popup.";
         return;
     }
 
@@ -182,17 +182,17 @@ void QQuickPanel::show()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Panel::hide()
+    \qmlmethod void Qt.labs.controls::Popup::hide()
 
-    Hides the panel.
+    Hides the popup.
 */
-void QQuickPanel::hide()
+void QQuickPopup::hide()
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
 
     if (!d->overlay) {
-        // TODO This could mean we showed the panel item on a plain QQuickWindow
-        qmlInfo(this) << "trying to hide non-visible Panel.";
+        // TODO This could mean we showed the popup item on a plain QQuickWindow
+        qmlInfo(this) << "trying to hide non-visible Popup.";
         return;
     }
 
@@ -202,27 +202,27 @@ void QQuickPanel::hide()
 }
 
 /*!
-    \qmlproperty Item Qt.labs.controls::Panel::contentItem
+    \qmlproperty Item Qt.labs.controls::Popup::contentItem
 
-    This property holds the content item of the panel.
+    This property holds the content item of the popup.
 
-    The content item is the visual implementation of the panel. When the
-    panel is made visible, the content item is automatically reparented to
+    The content item is the visual implementation of the popup. When the
+    popup is made visible, the content item is automatically reparented to
     the \l {ApplicationWindow::overlay}{overlay item} of its application
     window.
 */
-QQuickItem *QQuickPanel::contentItem() const
+QQuickItem *QQuickPopup::contentItem() const
 {
-    Q_D(const QQuickPanel);
+    Q_D(const QQuickPopup);
     return d->contentItem;
 }
 
-void QQuickPanel::setContentItem(QQuickItem *item)
+void QQuickPopup::setContentItem(QQuickItem *item)
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (d->overlay) {
         // FIXME qmlInfo needs to know about QQuickItem and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "cannot set content item") << item << "while Panel is visible.";
+        static_cast<QDebug>(qmlInfo(this) << "cannot set content item") << item << "while Popup is visible.";
         return;
     }
     if (d->contentItem != item) {
@@ -235,19 +235,19 @@ void QQuickPanel::setContentItem(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Panel::focus
+    \qmlproperty bool Qt.labs.controls::Popup::focus
 
-    This property holds whether the panel has focus.
+    This property holds whether the popup has focus.
 */
-bool QQuickPanel::hasFocus() const
+bool QQuickPopup::hasFocus() const
 {
-    Q_D(const QQuickPanel);
+    Q_D(const QQuickPopup);
     return d->focus;
 }
 
-void QQuickPanel::setFocus(bool focus)
+void QQuickPopup::setFocus(bool focus)
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (d->focus == focus)
         return;
     d->focus = focus;
@@ -255,19 +255,19 @@ void QQuickPanel::setFocus(bool focus)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Panel::modal
+    \qmlproperty bool Qt.labs.controls::Popup::modal
 
-    This property holds whether the panel is modal.
+    This property holds whether the popup is modal.
 */
-bool QQuickPanel::isModal() const
+bool QQuickPopup::isModal() const
 {
-    Q_D(const QQuickPanel);
+    Q_D(const QQuickPopup);
     return d->modal;
 }
 
-void QQuickPanel::setModal(bool modal)
+void QQuickPopup::setModal(bool modal)
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (d->modal == modal)
         return;
     d->modal = modal;
@@ -275,30 +275,30 @@ void QQuickPanel::setModal(bool modal)
 }
 
 /*!
-    \qmlproperty bool Qt.labs.controls::Panel::visible
+    \qmlproperty bool Qt.labs.controls::Popup::visible
 
-    This property holds whether the panel is visible.
+    This property holds whether the popup is visible.
 */
-bool QQuickPanel::isVisible() const
+bool QQuickPopup::isVisible() const
 {
-    Q_D(const QQuickPanel);
+    Q_D(const QQuickPopup);
     return d->overlay != Q_NULLPTR /*&& !d->transitionManager.isRunning()*/;
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Panel::showTransition
+    \qmlproperty Transition Qt.labs.controls::Popup::showTransition
 
     This property holds the transition that is applied to the content item
-    when the panel is shown.
+    when the popup is shown.
 */
-QQuickTransition *QQuickPanel::showTransition() const
+QQuickTransition *QQuickPopup::showTransition() const
 {
     return d_func()->showTransition;
 }
 
-void QQuickPanel::setShowTransition(QQuickTransition *t)
+void QQuickPopup::setShowTransition(QQuickTransition *t)
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (d->showTransition == t)
         return;
     d->showTransition = t;
@@ -306,19 +306,19 @@ void QQuickPanel::setShowTransition(QQuickTransition *t)
 }
 
 /*!
-    \qmlproperty Transition Qt.labs.controls::Panel::hideTransition
+    \qmlproperty Transition Qt.labs.controls::Popup::hideTransition
 
     This property holds the transition that is applied to the content item
-    when the panel is hidden.
+    when the popup is hidden.
 */
-QQuickTransition *QQuickPanel::hideTransition() const
+QQuickTransition *QQuickPopup::hideTransition() const
 {
     return d_func()->hideTransition;
 }
 
-void QQuickPanel::setHideTransition(QQuickTransition *t)
+void QQuickPopup::setHideTransition(QQuickTransition *t)
 {
-    Q_D(QQuickPanel);
+    Q_D(QQuickPopup);
     if (d->hideTransition == t)
         return;
     d->hideTransition = t;
@@ -327,4 +327,4 @@ void QQuickPanel::setHideTransition(QQuickTransition *t)
 
 QT_END_NAMESPACE
 
-#include "moc_qquickpanel_p.cpp"
+#include "moc_qquickpopup_p.cpp"

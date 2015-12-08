@@ -37,7 +37,7 @@
 #include "qquickcombobox_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquickabstractbutton_p.h"
-#include "qquickpanel_p.h"
+#include "qquickpopup_p.h"
 
 #include <QtCore/qregexp.h>
 #include <QtQml/qjsvalue.h>
@@ -123,12 +123,12 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
 public:
     QQuickComboBoxPrivate() : pressed(false), ownModel(false), hasDisplayText(false),
         hideTimer(0), highlightedIndex(-1), currentIndex(-1), delegateModel(Q_NULLPTR),
-        delegate(Q_NULLPTR), panel(Q_NULLPTR) { }
+        delegate(Q_NULLPTR), popup(Q_NULLPTR) { }
 
-    bool isPanelVisible() const;
-    void showPanel();
-    void hidePanel(bool accept);
-    void togglePanel(bool accept);
+    bool isPopupVisible() const;
+    void showPopup();
+    void hidePopup(bool accept);
+    void togglePopup(bool accept);
 
     void pressedOutside();
     void itemClicked();
@@ -155,26 +155,26 @@ public:
     QQuickItem *pressedItem;
     QQmlInstanceModel *delegateModel;
     QQmlComponent *delegate;
-    QQuickPanel *panel;
+    QQuickPopup *popup;
 };
 
-bool QQuickComboBoxPrivate::isPanelVisible() const
+bool QQuickComboBoxPrivate::isPopupVisible() const
 {
-    return panel && panel->isVisible();
+    return popup && popup->isVisible();
 }
 
-void QQuickComboBoxPrivate::showPanel()
+void QQuickComboBoxPrivate::showPopup()
 {
-    if (panel && !panel->isVisible())
-        panel->show();
+    if (popup && !popup->isVisible())
+        popup->show();
     setHighlightedIndex(currentIndex);
 }
 
-void QQuickComboBoxPrivate::hidePanel(bool accept)
+void QQuickComboBoxPrivate::hidePopup(bool accept)
 {
     Q_Q(QQuickComboBox);
-    if (panel && panel->isVisible())
-        panel->hide();
+    if (popup && popup->isVisible())
+        popup->hide();
     if (accept) {
         q->setCurrentIndex(highlightedIndex);
         emit q->activated(currentIndex);
@@ -182,15 +182,15 @@ void QQuickComboBoxPrivate::hidePanel(bool accept)
     setHighlightedIndex(-1);
 }
 
-void QQuickComboBoxPrivate::togglePanel(bool accept)
+void QQuickComboBoxPrivate::togglePopup(bool accept)
 {
-    if (!panel)
+    if (!popup)
         return;
 
-    if (panel->isVisible())
-        hidePanel(accept);
+    if (popup->isVisible())
+        hidePopup(accept);
     else
-        showPanel();
+        showPopup();
 }
 
 void QQuickComboBoxPrivate::pressedOutside()
@@ -207,7 +207,7 @@ void QQuickComboBoxPrivate::itemClicked()
     if (index != -1) {
         setHighlightedIndex(index);
         emit q->highlighted(index);
-        hidePanel(true);
+        hidePopup(true);
     }
 }
 
@@ -246,7 +246,7 @@ void QQuickComboBoxPrivate::updateCurrentText()
 void QQuickComboBoxPrivate::increase()
 {
     Q_Q(QQuickComboBox);
-    if (isPanelVisible()) {
+    if (isPopupVisible()) {
         if (highlightedIndex < q->count() - 1) {
             setHighlightedIndex(highlightedIndex + 1);
             emit q->highlighted(highlightedIndex);
@@ -262,7 +262,7 @@ void QQuickComboBoxPrivate::increase()
 void QQuickComboBoxPrivate::decrease()
 {
     Q_Q(QQuickComboBox);
-    if (isPanelVisible()) {
+    if (isPopupVisible()) {
         if (highlightedIndex > 0) {
             setHighlightedIndex(highlightedIndex - 1);
             emit q->highlighted(highlightedIndex);
@@ -560,27 +560,27 @@ void QQuickComboBox::setDelegate(QQmlComponent* delegate)
 }
 
 /*!
-    \qmlproperty Panel Qt.labs.controls::ComboBox::panel
+    \qmlproperty Popup Qt.labs.controls::ComboBox::popup
 
-    This property holds the popup panel.
+    This property holds the popup.
 
     \sa {Customizing ComboBox}
 */
-QQuickPanel *QQuickComboBox::panel() const
+QQuickPopup *QQuickComboBox::popup() const
 {
     Q_D(const QQuickComboBox);
-    return d->panel;
+    return d->popup;
 }
 
-void QQuickComboBox::setPanel(QQuickPanel *panel)
+void QQuickComboBox::setPopup(QQuickPopup *popup)
 {
     Q_D(QQuickComboBox);
-    if (d->panel != panel) {
-        delete d->panel;
-        if (panel)
-            QObjectPrivate::connect(panel, &QQuickPanel::pressedOutside, d, &QQuickComboBoxPrivate::pressedOutside);
-        d->panel = panel;
-        emit panelChanged();
+    if (d->popup != popup) {
+        delete d->popup;
+        if (popup)
+            QObjectPrivate::connect(popup, &QQuickPopup::pressedOutside, d, &QQuickComboBoxPrivate::pressedOutside);
+        d->popup = popup;
+        emit popupChanged();
     }
 }
 
@@ -667,7 +667,7 @@ void QQuickComboBox::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickItem::focusOutEvent(event);
-    d->hidePanel(false);
+    d->hidePopup(false);
     setPressed(false);
 }
 
@@ -675,7 +675,7 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::keyPressEvent(event);
-    if (!d->panel)
+    if (!d->popup)
         return;
 
     switch (event->key()) {
@@ -686,7 +686,7 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        if (d->isPanelVisible())
+        if (d->isPopupVisible())
             setPressed(true);
         event->accept();
         break;
@@ -709,23 +709,23 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::keyReleaseEvent(event);
-    if (!d->panel || event->isAutoRepeat())
+    if (!d->popup || event->isAutoRepeat())
         return;
 
     switch (event->key()) {
     case Qt::Key_Space:
-        d->togglePanel(true);
+        d->togglePopup(true);
         setPressed(false);
         event->accept();
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        d->hidePanel(true);
+        d->hidePopup(true);
         setPressed(false);
         event->accept();
         break;
     case Qt::Key_Escape:
-        d->hidePanel(false);
+        d->hidePopup(false);
         setPressed(false);
         event->accept();
         break;
@@ -752,9 +752,9 @@ void QQuickComboBox::mouseReleaseEvent(QMouseEvent *event)
     QQuickControl::mouseReleaseEvent(event);
     if (d->pressed) {
         setPressed(false);
-        if (!d->isPanelVisible())
+        if (!d->isPopupVisible())
             forceActiveFocus(Qt::MouseFocusReason);
-        d->togglePanel(false);
+        d->togglePopup(false);
     }
 }
 
@@ -772,7 +772,7 @@ void QQuickComboBox::timerEvent(QTimerEvent *event)
         killTimer(d->hideTimer);
         d->hideTimer = 0;
         if (!d->pressed)
-            d->hidePanel(false);
+            d->hidePopup(false);
     }
 }
 

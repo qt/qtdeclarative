@@ -36,7 +36,6 @@
 
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
-#include "qquickpanel_p_p.h"
 #include "qquickmenuitem_p.h"
 
 #include <QtGui/qevent.h>
@@ -50,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Menu
-    \inherits Panel
+    \inherits Popup
     \instantiates QQuickMenu
     \inqmlmodule Qt.labs.controls
     \ingroup qtlabscontrols-menus
@@ -268,7 +267,7 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
             QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
             if (menuItem) {
                 QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, p, &QQuickMenuPrivate::onItemPressed);
-                QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPanel::hide);
+                QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::hide);
                 QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, p, &QQuickMenuPrivate::onItemActiveFocusChanged);
             }
         }
@@ -296,7 +295,7 @@ void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 }
 
 QQuickMenu::QQuickMenu(QObject *parent) :
-    QQuickPanel(*(new QQuickMenuPrivate), parent)
+    QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     Q_D(QQuickMenu);
     connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::hide);

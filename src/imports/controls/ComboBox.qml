@@ -85,7 +85,7 @@ T.ComboBox {
             width: parent.width
             height: parent.height
             opacity: control.enabled ? 1.0 : 0.2
-            color: control.pressed || panel.visible ? "#585A5C" : "#353637"
+            color: control.pressed || popup.visible ? "#585A5C" : "#353637"
         }
 
         Image {
@@ -96,11 +96,10 @@ T.ComboBox {
     }
     //! [background]
 
-    //! [panel]
-    panel: T.Panel {
-        id: popup
+    //! [popup]
+    popup: T.Popup {
         contentItem: Rectangle {
-            // TODO: Panel::anchors
+            // TODO: Popup::anchors
             readonly property var above: popup.visible ? control.mapToItem(null, 0, -height + 1) : Qt.point(0, 0)
             readonly property var below: popup.visible ? control.mapToItem(null, 0, control.height - 1) : Qt.point(0, 0)
 
@@ -129,5 +128,5 @@ T.ComboBox {
             }
         }
     }
-    //! [panel]
+    //! [popup]
 }

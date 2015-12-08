@@ -104,7 +104,7 @@ TestCase {
         compare(control.highlightedIndex, -1)
         compare(control.currentText, "")
         verify(control.delegate)
-        verify(control.panel)
+        verify(control.popup)
 
         control.destroy()
     }
@@ -342,7 +342,7 @@ TestCase {
         compare(highlightedSpy.count, 0)
         compare(activatedSpy.count, 0)
 
-        // show panel
+        // show popup
         keyClick(Qt.Key_Space)
 
         compare(control.currentIndex, 0)
@@ -400,7 +400,7 @@ TestCase {
         compare(highlightedSpy.signalArguments[0][0], 1)
         highlightedSpy.clear()
 
-        // hide panel
+        // hide popup
         keyClick(Qt.Key_Space)
 
         compare(control.currentIndex, 1)
@@ -431,54 +431,54 @@ TestCase {
         verify(control.activeFocus)
 
         compare(control.pressed, false)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
 
-        // show panel
+        // show popup
         keyPress(data.key1)
         compare(control.pressed, data.showPress)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
         keyRelease(data.key1)
         compare(control.pressed, false)
-        compare(control.panel.visible, data.showPopup)
+        compare(control.popup.visible, data.showPopup)
 
-        // hide panel
+        // hide popup
         keyPress(data.key2)
         compare(control.pressed, data.hidePress)
-        compare(control.panel.visible, data.showPopup)
+        compare(control.popup.visible, data.showPopup)
         keyRelease(data.key2)
         compare(control.pressed, false)
-        compare(control.panel.visible, !data.hidePopup)
+        compare(control.popup.visible, !data.hidePopup)
 
         control.destroy()
     }
 
-    function test_panel() {
+    function test_popup() {
         var control = comboBox.createObject(window.contentItem, {model: 3})
         verify(control)
 
         // show below
         mousePress(control)
         compare(control.pressed, true)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
         mouseRelease(control)
         compare(control.pressed, false)
-        compare(control.panel.visible, true)
-        verify(control.panel.contentItem.y >= control.y)
+        compare(control.popup.visible, true)
+        verify(control.popup.contentItem.y >= control.y)
 
         // hide
         mouseClick(control)
         compare(control.pressed, false)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
 
         // show above
         control.y = window.height - control.height
         mousePress(control)
         compare(control.pressed, true)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
         mouseRelease(control)
         compare(control.pressed, false)
-        compare(control.panel.visible, true)
-        verify(control.panel.contentItem.y < control.y)
+        compare(control.popup.visible, true)
+        verify(control.popup.contentItem.y < control.y)
 
         control.destroy()
     }
@@ -494,9 +494,9 @@ TestCase {
         verify(highlightedSpy.valid)
 
         mouseClick(control)
-        compare(control.panel.visible, true)
+        compare(control.popup.visible, true)
 
-        var content = control.panel.contentItem
+        var content = control.popup.contentItem
         waitForRendering(content)
 
         // press - move - release outside - not activated - not closed
@@ -509,7 +509,7 @@ TestCase {
         mouseRelease(content, content.width * 2)
         compare(activatedSpy.count, 0)
         compare(highlightedSpy.count, 0)
-        compare(control.panel.visible, true)
+        compare(control.popup.visible, true)
 
         // press - move - release inside - activated - closed
         mousePress(content)
@@ -521,7 +521,7 @@ TestCase {
         mouseRelease(content)
         compare(activatedSpy.count, 1)
         compare(highlightedSpy.count, 1)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
 
         control.destroy()
     }
@@ -530,16 +530,16 @@ TestCase {
         var control = comboBox.createObject(window.contentItem, {model: 3})
         verify(control)
 
-        // click - gain focus - show panel
+        // click - gain focus - show popup
         mouseClick(control)
         verify(control.activeFocus)
-        compare(control.panel.visible, true)
+        compare(control.popup.visible, true)
 
-        // lose focus - hide panel
+        // lose focus - hide popup
         window.contentItem.forceActiveFocus()
         verify(window.contentItem.activeFocus)
         verify(!control.activeFocus)
-        compare(control.panel.visible, false)
+        compare(control.popup.visible, false)
 
         control.destroy()
     }

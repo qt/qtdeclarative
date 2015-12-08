@@ -31,15 +31,15 @@ import Qt.labs.controls 1.0
 Item {
     id: root
     width: combo.width
-    height: combo.height + combo.panel.contentItem.height
+    height: combo.height + combo.popup.contentItem.height
     ComboBox {
         id: combo
         model: ["First", "Second", "Third"]
-        panel.contentItem.parent: root
-        panel.contentItem.y: combo.height
+        popup.contentItem.parent: root
+        popup.contentItem.y: combo.height
     }
     Rectangle {
-        parent: combo.panel.contentItem
+        parent: combo.popup.contentItem
         anchors.fill: parent
         color: 'transparent'
         border.color: 'red'

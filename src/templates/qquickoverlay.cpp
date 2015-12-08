@@ -35,14 +35,14 @@
 ****************************************************************************/
 
 #include "qquickoverlay_p.h"
-#include "qquickpanel_p.h"
+#include "qquickpopup_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
-    : QQuickItem(parent), m_modalPanels(0)
+    : QQuickItem(parent), m_modalPopups(0)
 {
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
@@ -53,70 +53,70 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 {
     QQuickItem::itemChange(change, data);
 
-    QQuickItem *panelItem = const_cast<QQuickItem *>(data.item);
-    QQuickPanel *panel = Q_NULLPTR;
+    QQuickItem *contentItem = const_cast<QQuickItem *>(data.item);
+    QQuickPopup *popup = Q_NULLPTR;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
-        panel = qobject_cast<QQuickPanel *>(panelItem->parent());
+        popup = qobject_cast<QQuickPopup *>(contentItem->parent());
         setVisible(!childItems().isEmpty());
     }
-    if (!panel)
+    if (!popup)
         return;
 
     if (change == ItemChildAddedChange) {
-        if (QQuickPanel *prevPanel = m_panels.value(panelItem)) {
-            qmlInfo(panel).nospace() << "Panel is sharing item " << panelItem << " with " << prevPanel
+        if (QQuickPopup *prevPopup = m_popups.value(contentItem)) {
+            qmlInfo(popup).nospace() << "Popup is sharing item " << contentItem << " with " << prevPopup
                                      << ". This is not supported and strange things are about to happen.";
             return;
         }
 
-        m_panels.insert(panelItem, panel);
-        if (panel->isModal())
-            ++m_modalPanels;
+        m_popups.insert(contentItem, popup);
+        if (popup->isModal())
+            ++m_modalPopups;
 
-        connect(this, &QQuickOverlay::pressed, panel, &QQuickPanel::pressedOutside);
-        connect(this, &QQuickOverlay::released, panel, &QQuickPanel::releasedOutside);
+        connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
+        connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
     } else if (change == ItemChildRemovedChange) {
-        Q_ASSERT(panel == m_panels.value(panelItem));
+        Q_ASSERT(popup == m_popups.value(contentItem));
 
-        disconnect(this, &QQuickOverlay::pressed, panel, &QQuickPanel::pressedOutside);
-        disconnect(this, &QQuickOverlay::released, panel, &QQuickPanel::releasedOutside);
+        disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
+        disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
 
-        if (panel->isModal())
-            --m_modalPanels;
-        m_panels.remove(panelItem);
+        if (popup->isModal())
+            --m_modalPopups;
+        m_popups.remove(contentItem);
     }
 }
 
 void QQuickOverlay::keyPressEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    event->setAccepted(m_modalPopups > 0);
 }
 
 void QQuickOverlay::keyReleaseEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    event->setAccepted(m_modalPopups > 0);
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    event->setAccepted(m_modalPopups > 0);
     emit pressed();
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    event->setAccepted(m_modalPopups > 0);
 }
 
 void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPanels > 0);
+    event->setAccepted(m_modalPopups > 0);
     emit released();
 }
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
-    if (m_modalPanels == 0)
+    if (m_modalPopups == 0)
         return false;
     // TODO Filter touch events
     if (event->type() != QEvent::MouseButtonPress)
@@ -128,15 +128,15 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     const QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
     const QList<QQuickItem *> &sortedChildren = priv->paintOrderChildItems();
     for (int i = sortedChildren.count() - 1; i >= 0; --i) {
-        QQuickItem *panelItem = sortedChildren[i];
-        if (panelItem == item)
+        QQuickItem *contentItem = sortedChildren[i];
+        if (contentItem == item)
             break;
 
-        QQuickPanel *panel = m_panels.value(panelItem);
-        if (panel) {
-            emit panel->pressedOutside();
+        QQuickPopup *popup = m_popups.value(contentItem);
+        if (popup) {
+            emit popup->pressedOutside();
 
-            if (!modalBlocked && panel->isModal())
+            if (!modalBlocked && popup->isModal())
                 modalBlocked = true;
         }
     }

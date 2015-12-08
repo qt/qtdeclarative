@@ -86,9 +86,9 @@ T.ComboBox {
 
         border.width: 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed || panel.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
+                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed || panel.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.pressed || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 2
@@ -110,11 +110,10 @@ T.ComboBox {
     }
     //! [background]
 
-    //! [panel]
-    panel: T.Panel {
-        id: popup
+    //! [popup]
+    popup: T.Popup {
         contentItem: Rectangle {
-            // TODO: Panel::anchors
+            // TODO: Popup::anchors
             readonly property var above: popup.visible ? control.mapToItem(null, 0, control.height - height) : Qt.point(0, 0)
             readonly property var below: popup.visible ? control.mapToItem(null, 0, 0) : Qt.point(0, 0)
 
@@ -138,5 +137,5 @@ T.ComboBox {
             }
         }
     }
-    //! [panel]
+    //! [popup]
 }

@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPanel;
+class QQuickPopup;
 class QQmlInstanceModel;
 class QQuickComboBoxPrivate;
 
@@ -69,7 +69,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QString displayText READ displayText WRITE setDisplayText RESET resetDisplayText NOTIFY displayTextChanged FINAL)
     Q_PROPERTY(QString textRole READ textRole WRITE setTextRole NOTIFY textRoleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
-    Q_PROPERTY(QQuickPanel *panel READ panel WRITE setPanel NOTIFY panelChanged FINAL)
+    Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = Q_NULLPTR);
@@ -100,8 +100,8 @@ public:
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
-    QQuickPanel *panel() const;
-    void setPanel(QQuickPanel *panel);
+    QQuickPopup *popup() const;
+    void setPopup(QQuickPopup *popup);
 
     Q_INVOKABLE QString textAt(int index) const;
     Q_INVOKABLE int find(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly) const;
@@ -117,7 +117,7 @@ Q_SIGNALS:
     void displayTextChanged();
     void textRoleChanged();
     void delegateChanged();
-    void panelChanged();
+    void popupChanged();
 
     void activated(int index);
     void highlighted(int index);

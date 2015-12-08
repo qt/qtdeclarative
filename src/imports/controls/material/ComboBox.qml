@@ -109,11 +109,10 @@ T.ComboBox {
     }
     //! [background]
 
-    //! [panel]
-    panel: T.Panel {
-        id: popup
+    //! [popup]
+    popup: T.Popup {
         contentItem: Rectangle {
-            // TODO: Panel::anchors
+            // TODO: Popup::anchors
             readonly property var above: popup.visible ? control.mapToItem(null, 0, -height) : Qt.point(0, 0)
             readonly property var below: popup.visible ? control.mapToItem(null, 0, control.height) : Qt.point(0, 0)
 
@@ -150,5 +149,5 @@ T.ComboBox {
             }
         }
     }
-    //! [panel]
+    //! [popup]
 }

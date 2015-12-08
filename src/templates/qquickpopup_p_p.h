@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPANEL_P_P_H
-#define QQUICKPANEL_P_P_H
+#ifndef QQUICKPOPUP_P_P_H
+#define QQUICKPOPUP_P_P_H
 
 //
 //  W A R N I N G
@@ -56,14 +56,14 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickTransition;
 class QQuickTransitionManager;
-class QQuickPanel;
-class QQuickPanelPrivate;
+class QQuickPopup;
+class QQuickPopupPrivate;
 class QQuickOverlay;
 
-class QQuickPanelTransitionManager : public QQuickTransitionManager
+class QQuickPopupTransitionManager : public QQuickTransitionManager
 {
 public:
-    QQuickPanelTransitionManager(QQuickPanelPrivate *);
+    QQuickPopupTransitionManager(QQuickPopupPrivate *);
     void transitionShow();
     void transitionHide();
 
@@ -76,16 +76,16 @@ private:
     };
 
     TransitionState state;
-    QQuickPanelPrivate *pp;
+    QQuickPopupPrivate *pp;
 };
 
-class QQuickPanelPrivate : public QObjectPrivate
+class QQuickPopupPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickPanel)
+    Q_DECLARE_PUBLIC(QQuickPopup)
 
 public:
-    QQuickPanelPrivate();
-    ~QQuickPanelPrivate();
+    QQuickPopupPrivate();
+    ~QQuickPopupPrivate();
 
     void finalizeShowTransition();
     void finalizeHideTransition();
@@ -96,10 +96,10 @@ public:
     bool modal;
     QQuickTransition *showTransition;
     QQuickTransition *hideTransition;
-    QQuickPanelTransitionManager transitionManager;
+    QQuickPopupTransitionManager transitionManager;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPANEL_P_P_H
+#endif // QQUICKPOPUP_P_P_H
 

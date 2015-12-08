@@ -50,14 +50,14 @@
 
 #include <QtQml/qqmllist.h>
 
-#include "qquickpanel_p.h"
+#include "qquickpopup_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QQuickMenuItem;
 class QQuickMenuPrivate;
 
-class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPanel
+class Q_LABSTEMPLATES_EXPORT QQuickMenu : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)

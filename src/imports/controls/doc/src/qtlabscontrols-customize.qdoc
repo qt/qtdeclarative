@@ -99,7 +99,7 @@
     \section1 Customizing ComboBox
 
         ComboBox consists of \l {Control::background}{background},
-        \l {Control::contentItem}{content item}, \l {ComboBox::panel}{panel},
+        \l {Control::contentItem}{content item}, \l {ComboBox::popup}{popup},
         and \l {ComboBox::delegate}{delegate}.
 
         \section3 Background
@@ -114,11 +114,11 @@
 
             \snippet ComboBox.qml contentItem
 
-        \section3 Panel
+        \section3 Popup
 
-            \image qtlabscontrols-combobox-panel.png
+            \image qtlabscontrols-combobox-popup.png
 
-            \snippet ComboBox.qml panel
+            \snippet ComboBox.qml popup
 
         \section3 Delegate
 
@@ -240,7 +240,7 @@
 
     \section1 Customizing Menu
 
-        Menu consists of a \l {Panel::}{contentItem}.
+        Menu consists of a \l {Popup::}{contentItem}.
 
         \section3 Content item
 

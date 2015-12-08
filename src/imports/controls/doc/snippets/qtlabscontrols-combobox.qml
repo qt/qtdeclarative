@@ -31,13 +31,13 @@ import Qt.labs.controls 1.0
 Item {
     id: root
     width: combo.width
-    height: combo.height + combo.panel.contentItem.height
+    height: combo.height + combo.popup.contentItem.height
     //! [1]
     ComboBox {
         id: combo
         model: ["First", "Second", "Third"]
-        panel.contentItem.parent: root
-        panel.contentItem.y: combo.height
+        popup.contentItem.parent: root
+        popup.contentItem.y: combo.height
     }
     //! [1]
 }

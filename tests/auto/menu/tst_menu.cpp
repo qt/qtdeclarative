@@ -149,7 +149,7 @@ void tst_menu::mouse()
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
 
     // Try pressing within the menu and releasing outside of it; it should close.
-    // TODO: won't work until QQuickPanel::releasedOutside() actually gets emitted
+    // TODO: won't work until QQuickPopup::releasedOutside() actually gets emitted
 //    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
 //    QVERIFY(firstItem->hasActiveFocus());
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
