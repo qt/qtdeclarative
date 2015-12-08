@@ -306,7 +306,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \value Null This QQmlComponent has no data. Call loadUrl() or setData() to add QML content.
     \value Ready This QQmlComponent is ready and create() may be called.
     \value Loading This QQmlComponent is loading network data.
-    \value Error An error has occurred. Call errors() to retrieve a list of \{QQmlError}{errors}.
+    \value Error An error has occurred. Call errors() to retrieve a list of \l {QQmlError}{errors}.
 */
 
 /*!
