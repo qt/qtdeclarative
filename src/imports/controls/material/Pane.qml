@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Templates module of the Qt Toolkit.
+** This file is part of the Qt Labs Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,72 +34,28 @@
 **
 ****************************************************************************/
 
-#include "qquickframe_p.h"
-#include "qquickframe_p_p.h"
+import QtQuick 2.6
+import Qt.labs.templates 1.0 as T
+import Qt.labs.controls.material 1.0
 
-QT_BEGIN_NAMESPACE
+T.Frame {
+    id: control
 
-/*!
-    \qmltype Frame
-    \inherits Pane
-    \instantiates QQuickFrame
-    \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
-    \brief A frame control.
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    Frame is used to layout a logical group of controls together, within a
-    visual frame. Frame does not provide a layout of its own, but requires
-    you to position its contents, for instance by creating a \l RowLayout
-    or a \l ColumnLayout.
+    contentWidth: contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0
+    contentHeight: contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0
 
-    If only a single item is used within a Frame, it will resize to fit the
-    implicit size of its contained item. This makes it particularly suitable
-    for use together with layouts.
+    padding: 6
 
-    \image qtlabscontrols-frame.png
+    //! [contentItem]
+    contentItem: Item { }
+    //! [contentItem]
 
-    \snippet qtlabscontrols-frame.qml 1
-
-    \sa {Customizing Frame}, {Container Controls}
-*/
-
-QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
-{
-}
-
-QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickPane(*(new QQuickFramePrivate), parent)
-{
-}
-
-QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickPane(dd, parent)
-{
-}
-
-/*!
-    \qmlproperty Item Qt.labs.controls::Frame::frame
-
-    This property holds the visual frame item.
-
-    \sa {Customizing Frame}
-*/
-QQuickItem *QQuickFrame::frame() const
-{
-    Q_D(const QQuickFrame);
-    return d->frame;
-}
-
-void QQuickFrame::setFrame(QQuickItem *frame)
-{
-    Q_D(QQuickFrame);
-    if (d->frame != frame) {
-        delete d->frame;
-        d->frame = frame;
-        if (frame && !frame->parentItem())
-            frame->setParentItem(this);
-        emit frameChanged();
+    //! [background]
+    background: Rectangle {
+        color: control.Material.backgroundColor
     }
+    //! [background]
 }
-
-QT_END_NAMESPACE

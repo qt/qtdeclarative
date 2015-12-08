@@ -11,6 +11,7 @@ QML_FILES += \
     $$PWD/Label.qml \
     $$PWD/Menu.qml \
     $$PWD/MenuItem.qml \
+    $$PWD/Pane.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \

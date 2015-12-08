@@ -34,72 +34,39 @@
 **
 ****************************************************************************/
 
-#include "qquickframe_p.h"
-#include "qquickframe_p_p.h"
+#ifndef QQUICKPANE_P_P_H
+#define QQUICKPANE_P_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype Frame
-    \inherits Pane
-    \instantiates QQuickFrame
-    \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
-    \brief A frame control.
+class QQuickPane;
 
-    Frame is used to layout a logical group of controls together, within a
-    visual frame. Frame does not provide a layout of its own, but requires
-    you to position its contents, for instance by creating a \l RowLayout
-    or a \l ColumnLayout.
-
-    If only a single item is used within a Frame, it will resize to fit the
-    implicit size of its contained item. This makes it particularly suitable
-    for use together with layouts.
-
-    \image qtlabscontrols-frame.png
-
-    \snippet qtlabscontrols-frame.qml 1
-
-    \sa {Customizing Frame}, {Container Controls}
-*/
-
-QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
+class Q_LABSTEMPLATES_EXPORT QQuickPanePrivate : public QQuickControlPrivate
 {
-}
+    Q_DECLARE_PUBLIC(QQuickPane)
 
-QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickPane(*(new QQuickFramePrivate), parent)
-{
-}
+public:
+    QQuickPanePrivate();
 
-QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickPane(dd, parent)
-{
-}
+    qreal contentWidth;
+    qreal contentHeight;
+};
 
-/*!
-    \qmlproperty Item Qt.labs.controls::Frame::frame
-
-    This property holds the visual frame item.
-
-    \sa {Customizing Frame}
-*/
-QQuickItem *QQuickFrame::frame() const
-{
-    Q_D(const QQuickFrame);
-    return d->frame;
-}
-
-void QQuickFrame::setFrame(QQuickItem *frame)
-{
-    Q_D(QQuickFrame);
-    if (d->frame != frame) {
-        delete d->frame;
-        d->frame = frame;
-        if (frame && !frame->parentItem())
-            frame->setParentItem(this);
-        emit frameChanged();
-    }
-}
+Q_DECLARE_TYPEINFO(QQuickPanePrivate, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
+
+#endif // QQUICKPANE_P_P_H

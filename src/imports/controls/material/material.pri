@@ -20,6 +20,7 @@ QML_FILES += \
     $$PWD/GroupBox.qml \
     $$PWD/ItemDelegate.qml \
     $$PWD/Label.qml \
+    $$PWD/Pane.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \

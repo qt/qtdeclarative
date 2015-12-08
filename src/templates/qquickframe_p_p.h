@@ -48,23 +48,19 @@
 // We mean it.
 //
 
-#include <QtLabsTemplates/private/qquickcontrol_p_p.h>
+#include <QtLabsTemplates/private/qquickpane_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickFrame;
 
-class Q_LABSTEMPLATES_EXPORT QQuickFramePrivate : public QQuickControlPrivate
+class Q_LABSTEMPLATES_EXPORT QQuickFramePrivate : public QQuickPanePrivate
 {
     Q_DECLARE_PUBLIC(QQuickFrame)
 
 public:
     QQuickFramePrivate();
 
-    void init();
-
-    qreal contentWidth;
-    qreal contentHeight;
     QQuickItem *frame;
 };
 

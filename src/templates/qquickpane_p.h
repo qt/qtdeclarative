@@ -34,72 +34,69 @@
 **
 ****************************************************************************/
 
-#include "qquickframe_p.h"
-#include "qquickframe_p_p.h"
+#ifndef QQUICKPANE_P_H
+#define QQUICKPANE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmltype Frame
-    \inherits Pane
-    \instantiates QQuickFrame
-    \inqmlmodule Qt.labs.controls
-    \ingroup qtlabscontrols-containers
-    \brief A frame control.
+class QQuickPanePrivate;
 
-    Frame is used to layout a logical group of controls together, within a
-    visual frame. Frame does not provide a layout of its own, but requires
-    you to position its contents, for instance by creating a \l RowLayout
-    or a \l ColumnLayout.
-
-    If only a single item is used within a Frame, it will resize to fit the
-    implicit size of its contained item. This makes it particularly suitable
-    for use together with layouts.
-
-    \image qtlabscontrols-frame.png
-
-    \snippet qtlabscontrols-frame.qml 1
-
-    \sa {Customizing Frame}, {Container Controls}
-*/
-
-QQuickFramePrivate::QQuickFramePrivate() : frame(Q_NULLPTR)
+class Q_LABSTEMPLATES_EXPORT QQuickPane : public QQuickControl
 {
-}
+    Q_OBJECT
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    Q_CLASSINFO("DefaultProperty", "contentData")
 
-QQuickFrame::QQuickFrame(QQuickItem *parent) :
-    QQuickPane(*(new QQuickFramePrivate), parent)
-{
-}
+public:
+    explicit QQuickPane(QQuickItem *parent = Q_NULLPTR);
 
-QQuickFrame::QQuickFrame(QQuickFramePrivate &dd, QQuickItem *parent) :
-    QQuickPane(dd, parent)
-{
-}
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
 
-/*!
-    \qmlproperty Item Qt.labs.controls::Frame::frame
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
 
-    This property holds the visual frame item.
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
 
-    \sa {Customizing Frame}
-*/
-QQuickItem *QQuickFrame::frame() const
-{
-    Q_D(const QQuickFrame);
-    return d->frame;
-}
+Q_SIGNALS:
+    void contentWidthChanged();
+    void contentHeightChanged();
+    void contentChildrenChanged();
 
-void QQuickFrame::setFrame(QQuickItem *frame)
-{
-    Q_D(QQuickFrame);
-    if (d->frame != frame) {
-        delete d->frame;
-        d->frame = frame;
-        if (frame && !frame->parentItem())
-            frame->setParentItem(this);
-        emit frameChanged();
-    }
-}
+protected:
+    QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent);
+
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) Q_DECL_OVERRIDE;
+
+#ifndef QT_NO_ACCESSIBILITY
+    QAccessible::Role accessibleRole() const Q_DECL_OVERRIDE;
+#endif
+
+private:
+    Q_DISABLE_COPY(QQuickPane)
+    Q_DECLARE_PRIVATE(QQuickPane)
+};
+
+Q_DECLARE_TYPEINFO(QQuickPane, Q_COMPLEX_TYPE);
 
 QT_END_NAMESPACE
+
+#endif // QQUICKPANE_P_H

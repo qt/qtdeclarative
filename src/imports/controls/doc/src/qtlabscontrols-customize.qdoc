@@ -260,6 +260,17 @@
         TODO
 
 
+    \section1 Customizing Pane
+
+        Pane consists of a \l {Control::background}{background}.
+
+        \section3 Background
+
+            \image qtlabscontrols-pane-background.png
+
+            \snippet Pane.qml background
+
+
     \section1 Customizing ProgressBar
 
         ProgressBar consists of two visual items: \l {Control::background}{background}

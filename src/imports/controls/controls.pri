@@ -12,6 +12,7 @@ QML_FILES = \
     Label.qml \
     Menu.qml \
     MenuItem.qml \
+    Pane.qml \
     PageIndicator.qml \
     ProgressBar.qml \
     RadioButton.qml \
