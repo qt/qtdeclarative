@@ -105,6 +105,7 @@ private slots:
     void groupAnimationNullChildBug();
     void scriptActionCrash();
     void animatorInvalidTargetCrash();
+    void defaultPropertyWarning();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1506,6 +1507,25 @@ void tst_qquickanimations::animatorInvalidTargetCrash()
     QTest::qWait(5000); //animator duration
 
     delete obj;
+}
+
+Q_DECLARE_METATYPE(QList<QQmlError>)
+
+// QTBUG-22141
+void tst_qquickanimations::defaultPropertyWarning()
+{
+    QQmlEngine engine;
+
+    qRegisterMetaType<QList<QQmlError> >();
+
+    QSignalSpy warnings(&engine, SIGNAL(warnings(QList<QQmlError>)));
+    QVERIFY(warnings.isValid());
+
+    QQmlComponent component(&engine, testFileUrl("defaultRotationAnimation.qml"));
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem*>(component.create()));
+    QVERIFY(root);
+
+    QVERIFY(warnings.isEmpty());
 }
 
 QTEST_MAIN(tst_qquickanimations)
