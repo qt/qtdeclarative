@@ -139,7 +139,7 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
 
 QFont QQuickGroupBox::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::MdiSubWindowTitleFont); // tmp
+    return QQuickControlPrivate::themeFont(QPlatformTheme::GroupBoxTitleFont);
 }
 
 QT_END_NAMESPACE

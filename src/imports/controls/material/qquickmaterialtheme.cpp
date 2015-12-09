@@ -44,7 +44,7 @@ QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
     systemFont = QFont(QLatin1Literal("Roboto"));
-    dockWidgetTitleFont = QFont(QLatin1Literal("Roboto"), 10);
+    tabButtonFont = QFont(QLatin1Literal("Roboto"), 10);
 }
 
 QQuickMaterialTheme::~QQuickMaterialTheme()
@@ -54,8 +54,8 @@ QQuickMaterialTheme::~QQuickMaterialTheme()
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
 {
     switch (type) {
-    case QPlatformTheme::DockWidgetTitleFont:
-        return &dockWidgetTitleFont;
+    case QPlatformTheme::TabButtonFont:
+        return &tabButtonFont;
     default:
         return &systemFont;
     }
