@@ -185,6 +185,10 @@ TestCase {
         }
     }
 
+    function eventErrorMessage(actual, expected) {
+        return "actual event:" + JSON.stringify(actual) + ", expected event:" + JSON.stringify(expected)
+    }
+
     function test_events() {
         var control = eventButton.createObject(testCase)
         verify(control)
@@ -193,7 +197,8 @@ TestCase {
         verify(control.activeFocus)
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
-        compare(control.lastPress, { x: control.width / 2, y: control.height / 2, button: Qt.LeftButton, buttons: Qt.LeftButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false })
+        var expected = { x: control.width / 2, y: control.height / 2, button: Qt.LeftButton, buttons: Qt.LeftButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
+        compare(control.lastPress, expected, eventErrorMessage(control.lastPress, expected))
         compare(control.lastRelease, undefined)
         compare(control.lastClick, undefined)
         compare(control.lastDoubleClick, undefined)
@@ -210,14 +215,17 @@ TestCase {
 
         mouseRelease(control, control.width / 4, control.height / 4, Qt.LeftButton)
         compare(control.lastPress, undefined)
-        compare(control.lastRelease, { x: control.width / 4, y: control.height / 4, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false })
-        compare(control.lastClick, { x: control.width / 4, y: control.height / 4, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true })
+        expected = { x: control.width / 4, y: control.height / 4, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
+        compare(control.lastRelease, expected, eventErrorMessage(control.lastRelease, expected))
+        expected = { x: control.width / 4, y: control.height / 4, button: Qt.LeftButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true }
+        compare(control.lastClick, expected, eventErrorMessage(control.lastClick, expected))
         compare(control.lastDoubleClick, undefined)
 
         control.reset()
 
         keyPress(Qt.Key_Space)
-        compare(control.lastPress, { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false })
+        expected = { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
+        compare(control.lastPress, expected, eventErrorMessage(control.lastPress, expected))
         compare(control.lastRelease, undefined)
         compare(control.lastClick, undefined)
         compare(control.lastDoubleClick, undefined)
@@ -226,8 +234,10 @@ TestCase {
 
         keyRelease(Qt.Key_Space)
         compare(control.lastPress, undefined)
-        compare(control.lastRelease, { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false })
-        compare(control.lastClick, { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true })
+        expected = { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: false }
+        compare(control.lastRelease, expected, eventErrorMessage(control.lastRelease, expected))
+        expected = { x: control.width / 2, y: control.height / 2, button: Qt.NoButton, buttons: Qt.NoButton, modifiers: Qt.NoModifier, wasHeld: false, isClick: true }
+        compare(control.lastClick, expected, eventErrorMessage(control.lastClick, expected))
         compare(control.lastDoubleClick, undefined)
 
         control.destroy()
