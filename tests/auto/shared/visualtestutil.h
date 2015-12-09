@@ -42,6 +42,10 @@
 
 #include <QtQuick/private/qquickitem_p.h>
 
+#include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
+
+#include "util.h"
+
 namespace QQuickVisualTestUtil
 {
     QQuickItem *findVisibleChild(QQuickItem *parent, const QString &objectName);
@@ -104,6 +108,28 @@ namespace QQuickVisualTestUtil
             items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
         return items;
     }
+
+    class QQuickApplicationHelper
+    {
+    public:
+        QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath) :
+            component(&engine)
+        {
+            component.loadUrl(testCase->testFileUrl(testFilePath));
+            QObject *rootObject = component.create();
+            cleanup.reset(rootObject);
+            QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create ApplicationWindow: %1").arg(component.errorString())));
+
+            window = qobject_cast<QQuickApplicationWindow*>(rootObject);
+            QVERIFY(window);
+            QVERIFY(!window->isVisible());
+        }
+
+        QQmlEngine engine;
+        QQmlComponent component;
+        QScopedPointer<QObject> cleanup;
+        QQuickApplicationWindow *window;
+    };
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

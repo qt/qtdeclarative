@@ -52,28 +52,6 @@
 
 using namespace QQuickVisualTestUtil;
 
-class ApplicationHelper
-{
-public:
-    ApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath = QLatin1String("applicationwindow.qml")) :
-        component(&engine)
-    {
-        component.loadUrl(testCase->testFileUrl(testFilePath));
-        QObject *rootObject = component.create();
-        cleanup.reset(rootObject);
-        QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create ApplicationWindow: %1").arg(component.errorString())));
-
-        window = qobject_cast<QQuickApplicationWindow*>(rootObject);
-        QVERIFY(window);
-        QVERIFY(!window->isVisible());
-    }
-
-    QQmlEngine engine;
-    QQmlComponent component;
-    QScopedPointer<QObject> cleanup;
-    QQuickApplicationWindow *window;
-};
-
 class tst_menu : public QQmlDataTest
 {
     Q_OBJECT
@@ -89,7 +67,7 @@ private slots:
 
 void tst_menu::defaults()
 {
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickMenu *emptyMenu = helper.window->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
@@ -98,7 +76,7 @@ void tst_menu::defaults()
 
 void tst_menu::mouse()
 {
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
@@ -170,7 +148,7 @@ void tst_menu::contextMenuKeyboard()
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
 
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
@@ -248,7 +226,7 @@ void tst_menu::menuButton()
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
 
-    ApplicationHelper helper(this);
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
     QQuickApplicationWindow *window = helper.window;
     window->show();
