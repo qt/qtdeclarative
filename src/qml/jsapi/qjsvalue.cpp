@@ -1147,6 +1147,9 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 bool QJSValue::deleteProperty(const QString &name)
 {
     QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
+    if (!engine)
+        return false;
+
     Scope scope(engine);
     ScopedObject o(scope, QJSValuePrivate::getValue(this));
     if (!o)
