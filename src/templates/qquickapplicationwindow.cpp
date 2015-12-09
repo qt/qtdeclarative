@@ -57,6 +57,26 @@ QT_BEGIN_NAMESPACE
 
     \image qtlabscontrols-applicationwindow-wireframe.png
 
+    \qml
+    import Qt.labs.controls 1.0
+
+    ApplicationWindow {
+        visible: true
+
+        header: ToolBar {
+            // ...
+        }
+
+        footer: TabBar {
+            // ...
+        }
+
+        StackView {
+            anchors.fill: parent
+        }
+    }
+    \endqml
+
     \note By default, an ApplicationWindow is not visible.
 
     \sa {Container Controls}
@@ -163,8 +183,8 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 /*!
     \qmlproperty Item Qt.labs.controls::ApplicationWindow::header
 
-    A header item for the window, for example a title bar, menu or tool-bar.
-    By default this property is empty, no header will be shown.
+    This property holds the window header item. The header item is positioned to
+    the top, and resized to the width of the window. The default value is \c null.
 
     \sa footer
 */
@@ -196,8 +216,8 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
 /*!
     \qmlproperty Item Qt.labs.controls::ApplicationWindow::footer
 
-    A footer item for the window, for example a status bar or menu.
-    By default this property is empty, no footer will be shown.
+    This property holds the window footer item. The footer item is positioned to
+    the bottom, and resized to the width of the window. The default value is \c null.
 
     \sa header
 */
@@ -226,11 +246,26 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
     }
 }
 
+/*!
+    \qmlproperty list<Object> Qt.labs.controls::ApplicationWindow::contentData
+    \default
+
+    This default property holds the list of all objects declared as children of
+    the window.
+
+    \sa contentItem
+*/
 QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
 {
     return QQuickItemPrivate::get(contentItem())->data();
 }
 
+/*!
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::contentItem
+    \readonly
+
+    This property holds the window content item.
+*/
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
@@ -241,6 +276,15 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
     return d->contentItem;
 }
 
+/*!
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::overlay
+    \readonly
+
+    This property holds the window overlay item. Popups are automatically
+    reparented to the overlay.
+
+    \sa Popup
+*/
 QQuickItem *QQuickApplicationWindow::overlay() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
@@ -255,6 +299,17 @@ QQuickItem *QQuickApplicationWindow::overlay() const
     \qmlproperty font Qt.labs.controls::ApplicationWindow::font
 
     This property holds the font currently set for the window.
+
+    The default font depends on the system environment. QGuiApplication maintains a system/theme
+    font which serves as a default for all application windows. You can also set the default font
+    for windows by passing a custom font to QGuiApplication::setFont(), before loading any QML.
+    Finally, the font is matched against Qt's font database to find the best match.
+
+    ApplicationWindow propagates explicit font properties to child controls. If you change a specific
+    property on the window's font, that property propagates to all child controls in the window,
+    overriding any system defaults for that property.
+
+    \sa Control::font
 */
 QFont QQuickApplicationWindow::font() const
 {

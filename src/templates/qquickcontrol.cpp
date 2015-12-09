@@ -375,7 +375,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     controls can maintain consistency with the native platform's native look and feel. It's common
     that different platforms, or different styles, define different fonts for an application.
 
-    The default font depends on the system environment. QGuiApplication maintains a system/theme
+    The default font depends on the system environment. ApplicationWindow maintains a system/theme
     font which serves as a default for all controls. There may also be special font defaults for
     certain types of controls. You can also set the default font for controls by passing a custom
     font to QGuiApplication::setFont(), before loading the QML. Finally, the font is matched
