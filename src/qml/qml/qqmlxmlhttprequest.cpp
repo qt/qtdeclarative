@@ -1983,8 +1983,6 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_get_response(CallContext *ctx)
     } else {
         return QV4::Encode(scope.engine->newString(QString()));
     }
-
-    return Encode::undefined();
 }
 
 
