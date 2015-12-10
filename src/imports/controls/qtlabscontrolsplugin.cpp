@@ -38,7 +38,11 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
 
+#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 #include <QtLabsTemplates/private/qquickbuttongroup_p.h>
+#include <QtLabsTemplates/private/qquickcontainer_p.h>
+#include <QtLabsTemplates/private/qquickcontrol_p.h>
+#include <QtLabsTemplates/private/qquickpopup_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
 static inline void initResources()
@@ -60,8 +64,12 @@ public:
 
 void QtLabsControlsPlugin::registerTypes(const char *uri)
 {
+    qmlRegisterType<QQuickAbstractButton>(uri, 1, 0, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup>(uri, 1, 0, "ButtonGroup");
     qmlRegisterType<QQuickButtonGroupAttached>();
+    qmlRegisterType<QQuickContainer>(uri, 1, 0, "Container");
+    qmlRegisterType<QQuickControl>(uri, 1, 0, "Control");
+    qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");
 
     // TODO: read the style from application manifest file
     QQuickStyleSelector *selector = QQuickStyleSelector::instance();
