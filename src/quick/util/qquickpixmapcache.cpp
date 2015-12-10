@@ -1140,6 +1140,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, texture, readSize, requestSize, autoTransform, UsePluginDefault);
                 }
+                break;
             }
 
             case QQuickImageProvider::Image:
@@ -1149,6 +1150,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestSize, autoTransform, UsePluginDefault);
                 }
+                break;
             }
             case QQuickImageProvider::Pixmap:
             {
@@ -1157,6 +1159,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                     *ok = true;
                     return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()), readSize, requestSize, autoTransform, UsePluginDefault);
                 }
+                break;
             }
             case QQuickImageProvider::ImageResponse:
             {
