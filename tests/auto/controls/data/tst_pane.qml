@@ -79,6 +79,19 @@ TestCase {
         }
     }
 
+    Component {
+        id: pressPane
+        MouseArea {
+            width: 200
+            height: 200
+            property int pressCount
+            onPressed: ++pressCount
+            Pane {
+                anchors.fill: parent
+            }
+        }
+    }
+
     function test_empty() {
         var control = pane.createObject(testCase)
         verify(control)
@@ -110,6 +123,21 @@ TestCase {
         compare(control.contentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
+
+        control.destroy()
+    }
+
+    function test_press() {
+        var control = pressPane.createObject(testCase)
+        verify(control)
+
+        compare(control.pressCount, 0)
+        mouseClick(control)
+        compare(control.pressCount, 0)
+
+        control.children[0].enabled = false
+        mouseClick(control)
+        compare(control.pressCount, 1)
 
         control.destroy()
     }

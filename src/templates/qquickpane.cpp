@@ -71,12 +71,14 @@ QQuickPane::QQuickPane(QQuickItem *parent) :
     QQuickControl(*(new QQuickPanePrivate), parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
+    setAcceptedMouseButtons(Qt::AllButtons);
 }
 
 QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent) :
     QQuickControl(dd, parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
+    setAcceptedMouseButtons(Qt::AllButtons);
 }
 
 /*!
