@@ -50,8 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-
 namespace QV4 {
 
 class Serialize {

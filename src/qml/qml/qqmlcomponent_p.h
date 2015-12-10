@@ -63,8 +63,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-
 class QQmlComponent;
 class QQmlEngine;
 class QQmlCompiledData;

@@ -53,7 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
 class QQmlValueType;
 
 namespace QV4 {

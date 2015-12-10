@@ -58,7 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
 class QMetaProperty;
 class QQmlEngine;
 class QJSEngine;

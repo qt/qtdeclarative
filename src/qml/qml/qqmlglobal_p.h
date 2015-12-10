@@ -227,8 +227,6 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
     static_cast<QQmlGraphics_DerivedObject *>(object)->setParent_noEvent(parent);
 }
 
-
-class QV8Engine;
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
 {
 public:

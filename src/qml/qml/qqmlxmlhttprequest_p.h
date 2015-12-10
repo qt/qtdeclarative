@@ -53,8 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
-
 void *qt_add_qmlxmlhttprequest(QV4::ExecutionEngine *engine);
 void qt_rem_qmlxmlhttprequest(QV4::ExecutionEngine *engine, void *);
 

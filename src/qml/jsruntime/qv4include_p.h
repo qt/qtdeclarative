@@ -58,7 +58,6 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QNetworkAccessManager;
 class QNetworkReply;
-class QV8Engine;
 class QV4Include : public QObject
 {
     Q_OBJECT
