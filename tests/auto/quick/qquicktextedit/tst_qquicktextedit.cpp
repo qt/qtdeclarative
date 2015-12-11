@@ -286,6 +286,9 @@ QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
 
 tst_qquicktextedit::tst_qquicktextedit()
 {
+    qRegisterMetaType<QQuickTextEdit::TextFormat>();
+    qRegisterMetaType<QQuickTextEdit::SelectionMode>();
+
     standard << "the quick brown fox jumped over the lazy dog"
              << "the quick brown fox\n jumped over the lazy dog"
              << "Hello, world!"
@@ -596,7 +599,7 @@ void tst_qquicktextedit::textFormat()
         QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
         QVERIFY(edit);
 
-        QSignalSpy spy(edit, SIGNAL(textFormatChanged(TextFormat)));
+        QSignalSpy spy(edit, &QQuickTextEdit::textFormatChanged);
 
         QCOMPARE(edit->textFormat(), QQuickTextEdit::PlainText);
 
@@ -2113,7 +2116,7 @@ void tst_qquicktextedit::mouseSelectionMode_accessors()
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(object.data());
     QVERIFY(edit);
 
-    QSignalSpy spy(edit, SIGNAL(mouseSelectionModeChanged(SelectionMode)));
+    QSignalSpy spy(edit, &QQuickTextEdit::mouseSelectionModeChanged);
 
     QCOMPARE(edit->mouseSelectionMode(), QQuickTextEdit::SelectCharacters);
 
