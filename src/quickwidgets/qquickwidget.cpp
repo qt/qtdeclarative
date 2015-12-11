@@ -1220,6 +1220,7 @@ bool QQuickWidget::event(QEvent *e)
         }
         break;
 
+    case QEvent::Show:
     case QEvent::Move:
         d->updatePosition();
         break;
