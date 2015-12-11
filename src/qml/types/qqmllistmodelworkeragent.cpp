@@ -161,9 +161,7 @@ void QQmlListModelWorkerAgent::move(int from, int to, int count)
 
 void QQmlListModelWorkerAgent::sync()
 {
-    Sync *s = new Sync;
-    s->data = data;
-    s->list = m_copy;
+    Sync *s = new Sync(data, m_copy);
     data.changes.clear();
 
     mutex.lock();

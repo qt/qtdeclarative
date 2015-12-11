@@ -129,7 +129,11 @@ private:
     Data data;
 
     struct Sync : public QEvent {
-        Sync() : QEvent(QEvent::User) {}
+        Sync(const Data &d, QQmlListModel *l)
+            : QEvent(QEvent::User)
+            , data(d)
+            , list(l)
+        {}
         Data data;
         QQmlListModel *list;
     };
