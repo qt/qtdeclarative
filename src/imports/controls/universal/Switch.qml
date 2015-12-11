@@ -53,6 +53,8 @@ T.Switch {
     padding: 5
     spacing: 8
 
+    property bool useSystemFocusVisuals: true
+
     //! [indicator]
     indicator: Rectangle {
         implicitWidth: 44

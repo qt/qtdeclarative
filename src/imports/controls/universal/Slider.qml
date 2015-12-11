@@ -50,6 +50,8 @@ T.Slider {
 
     padding: 6
 
+    property bool useSystemFocusVisuals: true
+
     //! [handle]
     handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24

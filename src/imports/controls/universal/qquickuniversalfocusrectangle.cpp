@@ -34,52 +34,33 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+#include "qquickuniversalfocusrectangle_p.h"
 
-T.Button {
-    id: control
+#include <QtGui/qpainter.h>
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+QT_BEGIN_NAMESPACE
 
-    topPadding: 4
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 4
-
-    property bool useSystemFocusVisuals: true
-
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
-
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
-
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
-    }
-    //! [label]
-
-    //! [background]
-    background: Rectangle {
-        implicitWidth: 32
-        implicitHeight: 32
-
-        color: control.pressed ? control.Universal.baseMediumLowColor :
-               control.enabled && (control.highlighted || control.checked) ? control.Universal.accentColor :
-                                                                             control.Universal.baseLowColor
-    }
-    //! [background]
+QQuickUniversalFocusRectangle::QQuickUniversalFocusRectangle(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
+{
 }
+
+void QQuickUniversalFocusRectangle::paint(QPainter *painter)
+{
+    const QRect bounds = boundingRect().toAlignedRect().adjusted(0, 0, -1, -1);
+
+    QPen pen;
+    pen.setWidth(1);
+    pen.setDashPattern(QVector<qreal>() << 1 << 1);
+
+    pen.setColor(Qt::white);
+    painter->setPen(pen);
+    painter->drawRect(bounds);
+
+    pen.setColor(Qt::black);
+    pen.setDashOffset(1);
+    painter->setPen(pen);
+    painter->drawRect(bounds);
+}
+
+QT_END_NAMESPACE

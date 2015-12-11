@@ -31,6 +31,7 @@ QML_FILES += \
     $$PWD/Tumbler.qml
 
 HEADERS += \
+    $$PWD/qquickuniversalfocusrectangle_p.h \
     $$PWD/qquickuniversalimageprovider_p.h \
     $$PWD/qquickuniversalprogressring_p.h \
     $$PWD/qquickuniversalprogressstrip_p.h \
@@ -38,6 +39,7 @@ HEADERS += \
     $$PWD/qquickuniversaltheme_p.h
 
 SOURCES += \
+    $$PWD/qquickuniversalfocusrectangle.cpp \
     $$PWD/qquickuniversalimageprovider.cpp \
     $$PWD/qquickuniversalprogressring.cpp \
     $$PWD/qquickuniversalprogressstrip.cpp \

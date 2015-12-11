@@ -34,52 +34,34 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.templates 1.0 as T
-import Qt.labs.controls.universal 1.0
+#ifndef QQUICKUNIVERSALFOCUSRECTANGLE_P_H
+#define QQUICKUNIVERSALFOCUSRECTANGLE_P_H
 
-T.Button {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
-    baselineOffset: label ? label.y + label.baselineOffset : 0
+#include <QtQuick/qquickpainteditem.h>
 
-    topPadding: 4
-    leftPadding: 8
-    rightPadding: 8
-    bottomPadding: 4
+QT_BEGIN_NAMESPACE
 
-    property bool useSystemFocusVisuals: true
+class QQuickUniversalFocusRectangle : public QQuickPaintedItem
+{
+    Q_OBJECT
 
-    //! [label]
-    label: Text {
-        x: control.leftPadding
-        y: control.topPadding
-        width: control.availableWidth
-        height: control.availableHeight
+public:
+    QQuickUniversalFocusRectangle(QQuickItem *parent = Q_NULLPTR);
 
-        text: control.text
-        font: control.font
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
+    void paint(QPainter *painter) Q_DECL_OVERRIDE;
+};
 
-        color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
-    }
-    //! [label]
+QT_END_NAMESPACE
 
-    //! [background]
-    background: Rectangle {
-        implicitWidth: 32
-        implicitHeight: 32
-
-        color: control.pressed ? control.Universal.baseMediumLowColor :
-               control.enabled && (control.highlighted || control.checked) ? control.Universal.accentColor :
-                                                                             control.Universal.baseLowColor
-    }
-    //! [background]
-}
+#endif // QQUICKUNIVERSALFOCUSRECTANGLE_P_H

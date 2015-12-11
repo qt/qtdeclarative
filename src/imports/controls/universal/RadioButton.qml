@@ -53,6 +53,8 @@ T.RadioButton {
     padding: 6
     spacing: 8
 
+    property bool useSystemFocusVisuals: true
+
     //! [indicator]
     indicator: Rectangle {
         id: outerEllipse
