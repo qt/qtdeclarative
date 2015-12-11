@@ -339,6 +339,7 @@ IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
     : illegalNames(illegalNames)
     , _object(0)
     , _propertyDeclaration(0)
+    , pool(0)
     , jsGenerator(0)
 {
 }
