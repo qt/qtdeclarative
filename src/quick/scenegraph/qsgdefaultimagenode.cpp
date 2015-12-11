@@ -287,7 +287,8 @@ void QSGDefaultImageNode::preprocess()
     QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
     if (t) {
         doDirty = t->updateTexture();
-        updateGeometry();
+        if (doDirty)
+            updateGeometry();
     }
     bool alpha = m_material.flags() & QSGMaterial::Blending;
     if (m_material.texture() && alpha != m_material.texture()->hasAlphaChannel()) {
