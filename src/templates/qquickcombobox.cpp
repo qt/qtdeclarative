@@ -166,7 +166,7 @@ bool QQuickComboBoxPrivate::isPopupVisible() const
 void QQuickComboBoxPrivate::showPopup()
 {
     if (popup && !popup->isVisible())
-        popup->show();
+        popup->open();
     setHighlightedIndex(currentIndex);
 }
 
@@ -174,7 +174,7 @@ void QQuickComboBoxPrivate::hidePopup(bool accept)
 {
     Q_Q(QQuickComboBox);
     if (popup && popup->isVisible())
-        popup->hide();
+        popup->close();
     if (accept) {
         q->setCurrentIndex(highlightedIndex);
         emit q->activated(currentIndex);

@@ -65,7 +65,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickPopup : public QObject
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged)
     Q_PROPERTY(bool visible READ isVisible NOTIFY visibleChanged)
     Q_PROPERTY(QQuickTransition *showTransition READ showTransition WRITE setShowTransition NOTIFY showTransitionChanged FINAL)
-    Q_PROPERTY(QQuickTransition *hideTransition READ showTransition WRITE setHideTransition NOTIFY hideTransitionChanged FINAL)
+    Q_PROPERTY(QQuickTransition *hideTransition READ hideTransition WRITE setHideTransition NOTIFY hideTransitionChanged FINAL)
 
 public:
     explicit QQuickPopup(QObject *parent = Q_NULLPTR);
@@ -105,8 +105,8 @@ Q_SIGNALS:
 
 
 public Q_SLOTS:
-    void show();
-    void hide();
+    void open();
+    void close();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

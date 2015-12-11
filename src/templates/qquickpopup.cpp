@@ -132,11 +132,11 @@ QQuickPopup::~QQuickPopup()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Popup::show()
+    \qmlmethod void Qt.labs.controls::Popup::open()
 
-    Shows the popup.
+    Opens the popup.
 */
-void QQuickPopup::show()
+void QQuickPopup::open()
 {
     Q_D(QQuickPopup);
     if (!d->contentItem) {
@@ -145,7 +145,7 @@ void QQuickPopup::show()
     }
     if (d->overlay) {
         // FIXME qmlInfo needs to know about QQuickWindow and/or QObject
-        static_cast<QDebug>(qmlInfo(this) << "popup already showing in window") << d->overlay->window();
+        static_cast<QDebug>(qmlInfo(this) << "popup already open in window") << d->overlay->window();
         return;
     }
 
@@ -163,7 +163,7 @@ void QQuickPopup::show()
         }
     }
     if (!win) {
-        qmlInfo(this) << "cannot find any window to show popup.";
+        qmlInfo(this) << "cannot find any window to open popup in.";
         return;
     }
 
@@ -171,7 +171,7 @@ void QQuickPopup::show()
         d->overlay = static_cast<QQuickOverlay *>(appWin->overlay());
         d->contentItem->setParentItem(d->overlay);
     } else {
-        // FIXME Maybe try to show it somehow on that window
+        // FIXME Maybe try to open it in that window somehow
         qmlInfo(this) << "is not in an ApplicationWindow.";
         return;
     }
@@ -182,17 +182,17 @@ void QQuickPopup::show()
 }
 
 /*!
-    \qmlmethod void Qt.labs.controls::Popup::hide()
+    \qmlmethod void Qt.labs.controls::Popup::close()
 
-    Hides the popup.
+    Closes the popup.
 */
-void QQuickPopup::hide()
+void QQuickPopup::close()
 {
     Q_D(QQuickPopup);
 
     if (!d->overlay) {
-        // TODO This could mean we showed the popup item on a plain QQuickWindow
-        qmlInfo(this) << "trying to hide non-visible Popup.";
+        // TODO This could mean we opened the popup item in a plain QQuickWindow
+        qmlInfo(this) << "trying to close non-visible Popup.";
         return;
     }
 
@@ -289,7 +289,7 @@ bool QQuickPopup::isVisible() const
     \qmlproperty Transition Qt.labs.controls::Popup::showTransition
 
     This property holds the transition that is applied to the content item
-    when the popup is shown.
+    when the popup is opened.
 */
 QQuickTransition *QQuickPopup::showTransition() const
 {
@@ -309,7 +309,7 @@ void QQuickPopup::setShowTransition(QQuickTransition *t)
     \qmlproperty Transition Qt.labs.controls::Popup::hideTransition
 
     This property holds the transition that is applied to the content item
-    when the popup is hidden.
+    when the popup is closed.
 */
 QQuickTransition *QQuickPopup::hideTransition() const
 {

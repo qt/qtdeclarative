@@ -76,6 +76,6 @@ ApplicationWindow {
         x: 250
         visible: false
         text: "Open Menu"
-        onClicked: menu.show()
+        onClicked: menu.open()
     }
 }

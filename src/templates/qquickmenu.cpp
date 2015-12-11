@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     Button {
         id: fileButton
         text: "File"
-        onClicked: menu.show()
+        onClicked: menu.open()
     }
     Menu {
         id: menu
@@ -267,7 +267,7 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
             QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
             if (menuItem) {
                 QObjectPrivate::connect(menuItem, &QQuickMenuItem::pressed, p, &QQuickMenuPrivate::onItemPressed);
-                QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::hide);
+                QObject::connect(menuItem, &QQuickMenuItem::triggered, q, &QQuickPopup::close);
                 QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, p, &QQuickMenuPrivate::onItemActiveFocusChanged);
             }
         }
@@ -298,8 +298,8 @@ QQuickMenu::QQuickMenu(QObject *parent) :
     QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     Q_D(QQuickMenu);
-    connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::hide);
-    connect(this, &QQuickMenu::releasedOutside, this, &QQuickMenu::hide);
+    connect(this, &QQuickMenu::pressedOutside, this, &QQuickMenu::close);
+    connect(this, &QQuickMenu::releasedOutside, this, &QQuickMenu::close);
     QObjectPrivate::connect(this, &QQuickMenu::contentItemChanged, d, &QQuickMenuPrivate::onContentItemChanged);
 }
 
@@ -445,7 +445,7 @@ bool QQuickMenu::eventFilter(QObject *object, QEvent *event)
             QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
         return true;
     } else if (keyEvent->key() == Qt::Key_Escape) {
-        hide();
+        close();
         return true;
     }
 

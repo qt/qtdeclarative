@@ -83,7 +83,7 @@ void tst_menu::mouse()
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
-    menu->show();
+    menu->open();
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
 
@@ -107,7 +107,7 @@ void tst_menu::mouse()
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -121,7 +121,7 @@ void tst_menu::mouse()
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -163,7 +163,7 @@ void tst_menu::contextMenuKeyboard()
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 
     menu->setFocus(true);
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));
@@ -190,7 +190,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!secondItem->hasActiveFocus());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
-    menu->show();
+    menu->open();
     QCOMPARE(visibleSpy.count(), 3);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()));

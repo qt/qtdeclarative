@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     Button {
         id: fileButton
         text: "File"
-        onClicked: menu.show()
+        onClicked: menu.open()
     }
     Menu {
         id: menu

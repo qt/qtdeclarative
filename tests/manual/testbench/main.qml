@@ -62,7 +62,7 @@ ApplicationWindow {
 
             ToolButton {
                 text: "Normal"
-                onClicked: menu.visible ? menu.hide() : menu.show()
+                onClicked: menu.visible ? menu.close() : menu.open()
             }
             ToolButton {
                 text: "Pressed"
