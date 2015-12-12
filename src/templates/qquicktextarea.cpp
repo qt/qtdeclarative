@@ -70,6 +70,14 @@ QT_BEGIN_NAMESPACE
     \sa TextField, {Customizing TextArea}, {Input Controls}
 */
 
+/*!
+    \qmlsignal Qt.labs.controls::TextArea::pressAndHold(MouseEvent mouse)
+
+    This signal is emitted when there is a long press (the delay depends on the platform plugin).
+    The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
+    position of the press, and which button is pressed.
+*/
+
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
     : background(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
