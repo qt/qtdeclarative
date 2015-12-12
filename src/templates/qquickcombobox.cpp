@@ -666,7 +666,7 @@ int QQuickComboBox::find(const QString &text, Qt::MatchFlags flags) const
 void QQuickComboBox::focusOutEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
-    QQuickItem::focusOutEvent(event);
+    QQuickControl::focusOutEvent(event);
     d->hidePopup(false);
     setPressed(false);
 }
