@@ -323,7 +323,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
     This property holds the control that currently has active focus, or \c null if there is
     no control with active focus.
 
-    The difference between \L Window::activeFocusItem and ApplicationWindow::activeFocusControl
+    The difference between \l Window::activeFocusItem and ApplicationWindow::activeFocusControl
     is that the former may point to a building block of a control, whereas the latter points
     to the enclosing control. For example, when SpinBox has focus, activeFocusItem points to
     the editor and acticeFocusControl to the SpinBox itself.
