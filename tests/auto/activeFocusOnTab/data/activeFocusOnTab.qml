@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 import QtQuick 2.5
-import QtQuick.Layouts 1.2
 import Qt.labs.controls 1.0
 
 Item {
@@ -76,7 +75,7 @@ Item {
             id: groupbox1
             objectName: "groupbox1"
             title: "grouppox1"
-            ColumnLayout {
+            Column {
                 anchors.fill: parent
                 CheckBox {
                     id: checkbox1
@@ -113,7 +112,7 @@ Item {
             id: groupbox2
             objectName: "groupbox2"
             title: "groupbox2"
-            ColumnLayout {
+            Column {
                 anchors.fill: parent
                 RadioButton {
                     id: radiobutton1
