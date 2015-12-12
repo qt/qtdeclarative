@@ -335,7 +335,7 @@ ApplicationWindow {
                     implicitHeight: normalTextArea.implicitHeight
 
                     TextArea {
-                        text: "Placeholder"
+                        placeholderText: "Placeholder"
                     }
                 }
                 Item {
