@@ -280,8 +280,8 @@ QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
 
 bool QV4DataCollector::lookupSpecialRef(Ref ref, QJsonObject *dict)
 {
-    SpecialRefs::const_iterator it = specialRefs.find(ref);
-    if (it == specialRefs.end())
+    SpecialRefs::const_iterator it = specialRefs.constFind(ref);
+    if (it == specialRefs.cend())
         return false;
 
     *dict = it.value();

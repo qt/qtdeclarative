@@ -280,9 +280,8 @@ void QQmlNativeDebugConnector::announceObjectAvailability(const QString &objectT
 bool QQmlNativeDebugConnector::addService(const QString &name, QQmlDebugService *service)
 {
     TRACE_PROTOCOL("Add service to connector: " << qPrintable(name) << service);
-    for (QVector<QQmlDebugService *>::ConstIterator i = m_services.begin(); i != m_services.end();
-         ++i) {
-        if ((*i)->name() == name)
+    for (auto it = m_services.cbegin(), end = m_services.cend(); it != end; ++it) {
+        if ((*it)->name() == name)
             return false;
     }
 
