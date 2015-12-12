@@ -96,7 +96,7 @@ T.ComboBox {
             width: parent.width - 4
             height: parent.height - 4
 
-            visible: control.activeFocus
+            visible: control.activeFocus && (control.focusReason === Qt.TabFocusReason || control.focusReason === Qt.BacktabFocusReason)
             color: control.Universal.accentColor
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
