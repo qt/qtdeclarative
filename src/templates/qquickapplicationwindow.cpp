@@ -527,14 +527,6 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 
     \sa Window::activeFocusItem
 */
-
-/*!
-    \qmlattachedproperty Control Qt.labs.controls::ApplicationWindow::activeFocusControl
-
-    This attached property holds the active focus control. The property can be attached
-    to any item. The value is \c null if the item is not in an ApplicationWindow, or
-    the window has no active focus.
-*/
 QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
     Q_D(const QQuickApplicationWindowAttached);
