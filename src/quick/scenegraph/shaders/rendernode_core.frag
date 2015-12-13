@@ -4,7 +4,7 @@ uniform sampler2D tex;
 
 in vec2 t;
 
-out vec4 color;
+out vec4 fragColor;
 
 void main()
 {
