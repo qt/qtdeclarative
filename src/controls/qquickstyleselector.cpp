@@ -60,13 +60,13 @@ QQuickStyleSelectorPrivate::QQuickStyleSelectorPrivate()
 QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
     Q_D(QQuickStyleSelector);
-    d->style = QGuiApplicationPrivate::styleOverride;
+    d->style = QGuiApplicationPrivate::styleOverride.toLower();
     if (d->style.isEmpty())
-        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
+        d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE")).toLower();
     if (d->style.isEmpty()) {
         QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Controls"));
         if (settings)
-            d->style = settings->value(QStringLiteral("Style")).toString();
+            d->style = settings->value(QStringLiteral("Style")).toString().toLower();
     }
 }
 
