@@ -43,8 +43,10 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QLocale>
 #include <QtCore/QDebug>
+#include <QtCore/QSettings>
 
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +63,11 @@ QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivat
     d->style = QGuiApplicationPrivate::styleOverride;
     if (d->style.isEmpty())
         d->style = QString::fromLatin1(qgetenv("QT_LABS_CONTROLS_STYLE"));
+    if (d->style.isEmpty()) {
+        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Controls"));
+        if (settings)
+            d->style = settings->value(QStringLiteral("Style")).toString();
+    }
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
