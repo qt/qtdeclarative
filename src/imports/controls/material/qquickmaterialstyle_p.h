@@ -214,6 +214,8 @@ protected:
     void parentStyleChange(QQuickStyle *newParent, QQuickStyle *oldParent) Q_DECL_OVERRIDE;
 
 private:
+    void init();
+
     bool m_explicitTheme;
     bool m_explicitPrimary;
     bool m_explicitAccent;

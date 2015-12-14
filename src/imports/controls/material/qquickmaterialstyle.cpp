@@ -36,6 +36,7 @@
 
 #include "qquickmaterialstyle_p.h"
 
+#include <QtCore/qsettings.h>
 #include <QtLabsControls/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -381,9 +382,9 @@ static const QColor colors[][14] = {
     }
 };
 
-static const QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
-static const QQuickMaterialStyle::Color defaultPrimary = QQuickMaterialStyle::BlueGrey;
-static const QQuickMaterialStyle::Color defaultAccent = QQuickMaterialStyle::Teal;
+static QQuickMaterialStyle::Theme defaultTheme = QQuickMaterialStyle::Light;
+static QQuickMaterialStyle::Color defaultPrimary = QQuickMaterialStyle::BlueGrey;
+static QQuickMaterialStyle::Color defaultAccent = QQuickMaterialStyle::Teal;
 static const QColor backgroundColorLight = "#FFFAFAFA";
 static const QColor backgroundColorDark = "#FF303030";
 static const QColor dialogColorLight = "#FFFFFFFF";
@@ -423,7 +424,7 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickStyle(parent),
     m_primary(defaultPrimary),
     m_accent(defaultAccent)
 {
-    init(); // TODO: lazy init?
+    init();
 }
 
 QQuickMaterialStyle *QQuickMaterialStyle::qmlAttachedProperties(QObject *object)
@@ -751,6 +752,36 @@ void QQuickMaterialStyle::parentStyleChange(QQuickStyle *newParent, QQuickStyle 
         inheritAccent(material->accent());
         inheritTheme(material->theme());
     }
+}
+
+template <typename Enum>
+static Enum readEnumValue(QSettings *settings, const QString &name, Enum fallback)
+{
+    Enum result = fallback;
+    if (settings->contains(name)) {
+        QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
+        bool ok = false;
+        int value = enumeration.keyToValue(settings->value(name).toByteArray(), &ok);
+        if (ok)
+            result = static_cast<Enum>(value);
+    }
+    return result;
+}
+
+void QQuickMaterialStyle::init()
+{
+    static bool defaultsInitialized = false;
+    if (!defaultsInitialized) {
+        QSharedPointer<QSettings> settings = QQuickStyle::settings(QStringLiteral("Material"));
+        if (!settings.isNull()) {
+            defaultTheme = m_theme = readEnumValue<Theme>(settings.data(), QStringLiteral("Theme"), m_theme);
+            defaultAccent = m_accent = readEnumValue<Color>(settings.data(), QStringLiteral("Accent"), m_accent);
+            defaultPrimary = m_primary = readEnumValue<Color>(settings.data(), QStringLiteral("Primary"), m_primary);
+        }
+        defaultsInitialized = true;
+    }
+
+    QQuickStyle::init(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE
