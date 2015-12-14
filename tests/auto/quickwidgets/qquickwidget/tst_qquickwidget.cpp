@@ -59,6 +59,7 @@ private slots:
     void engine();
     void readback();
     void renderingSignals();
+    void grabBeforeShow();
 };
 
 
@@ -295,6 +296,14 @@ void tst_qquickwidget::renderingSignals()
     QTRY_VERIFY(beforeRenderingSpy.size() > 0);
     QTRY_VERIFY(beforeSyncSpy.size() > 0);
     QTRY_VERIFY(afterRenderingSpy.size() > 0);
+}
+
+// QTBUG-49929, verify that Qt Designer grabbing the contents before drag
+// does not crash due to missing GL contexts or similar.
+void tst_qquickwidget::grabBeforeShow()
+{
+    QQuickWidget widget;
+    QVERIFY(!widget.grab().isNull());
 }
 
 QTEST_MAIN(tst_qquickwidget)
