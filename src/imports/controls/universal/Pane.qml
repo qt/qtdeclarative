@@ -55,7 +55,7 @@ T.Frame {
 
     //! [background]
     background: Rectangle {
-        color: Universal.altHighColor
+        color: control.Universal.altHighColor
     }
     //! [background]
 }
