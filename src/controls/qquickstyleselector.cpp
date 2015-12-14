@@ -179,12 +179,6 @@ QUrl QQuickStyleSelector::baseUrl() const
     return d->baseUrl;
 }
 
-QQuickStyleSelector *QQuickStyleSelector::instance()
-{
-    static QQuickStyleSelector self;
-    return &self;
-}
-
 void QQuickStyleSelectorPrivate::updateSelectors()
 {
     if (!sharedData->staticSelectors.isEmpty())

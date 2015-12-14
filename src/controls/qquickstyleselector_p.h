@@ -69,8 +69,6 @@ public:
     void setBaseUrl(const QUrl &base);
     QUrl baseUrl() const;
 
-    static QQuickStyleSelector *instance();
-
 private:
     QUrl select(const QUrl &filePath) const;
 
