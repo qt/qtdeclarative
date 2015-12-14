@@ -127,6 +127,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickScrollBarAttached : public QObject
 
 public:
     explicit QQuickScrollBarAttached(QQuickFlickable *flickable);
+    ~QQuickScrollBarAttached();
 
     QQuickScrollBar *horizontal() const;
     void setHorizontal(QQuickScrollBar *horizontal);

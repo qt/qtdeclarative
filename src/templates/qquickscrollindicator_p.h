@@ -115,6 +115,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickScrollIndicatorAttached : public QObject
 
 public:
     explicit QQuickScrollIndicatorAttached(QQuickFlickable *flickable);
+    ~QQuickScrollIndicatorAttached();
 
     QQuickScrollIndicator *horizontal() const;
     void setHorizontal(QQuickScrollIndicator *horizontal);
