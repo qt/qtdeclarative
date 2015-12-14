@@ -1,0 +1,339 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the examples of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:BSD$
+** You may use this file under the terms of the BSD license as follows:
+**
+** "Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are
+** met:
+**   * Redistributions of source code must retain the above copyright
+**     notice, this list of conditions and the following disclaimer.
+**   * Redistributions in binary form must reproduce the above copyright
+**     notice, this list of conditions and the following disclaimer in
+**     the documentation and/or other materials provided with the
+**     distribution.
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
+**     from this software without specific prior written permission.
+**
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+import QtQuick 2.6
+import QtQuick.Layouts 1.3
+import Qt.labs.controls 1.0
+import Qt.labs.controls.material 1.0
+import Qt.labs.controls.universal 1.0
+import Qt.labs.settings 1.0
+
+ApplicationWindow {
+    id: window
+    width: 360
+    height: 520
+    visible: true
+    title: "Qt Labs Controls"
+
+    Settings {
+        id: settings
+        property string style: "Universal"
+    }
+
+    header: ToolBar {
+        RowLayout {
+            spacing: 20
+            anchors.fill: parent
+
+            ToolButton {
+                label: Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/images/drawer.png"
+                }
+                onClicked: drawer.open()
+            }
+
+            Label {
+                id: titleLabel
+                text: "Gallery"
+                font.pixelSize: 20
+                elide: Label.ElideRight
+                horizontalAlignment: Qt.AlignHCenter
+                verticalAlignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+            }
+
+            ToolButton {
+                label: Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/images/menu.png"
+                }
+                onClicked: optionsMenu.open()
+            }
+        }
+    }
+
+    Drawer {
+        id: drawer
+
+        Pane {
+            padding: 0
+            width: window.width / 3 * 2
+            height: window.height
+
+            ListView {
+                id: listView
+                currentIndex: -1
+                anchors.fill: parent
+
+                delegate: ItemDelegate {
+                    width: parent.width
+                    text: model.title
+                    highlighted: ListView.isCurrentItem
+                    onClicked: {
+                        if (listView.currentIndex != index) {
+                            listView.currentIndex = index
+                            titleLabel.text = model.title
+                            stackView.replace(model.source)
+                        }
+                        drawer.close()
+                    }
+                }
+
+                model: ListModel {
+                    ListElement { title: "BusyIndicator"; source: "qrc:/pages/BusyIndicatorPage.qml" }
+                    ListElement { title: "Button"; source: "qrc:/pages/ButtonPage.qml" }
+                    ListElement { title: "CheckBox"; source: "qrc:/pages/CheckBoxPage.qml" }
+                    ListElement { title: "ComboBox"; source: "qrc:/pages/ComboBoxPage.qml" }
+                    ListElement { title: "Dial"; source: "qrc:/pages/DialPage.qml" }
+                    ListElement { title: "Drawer"; source: "qrc:/pages/DrawerPage.qml" }
+                    ListElement { title: "Frame"; source: "qrc:/pages/FramePage.qml" }
+                    ListElement { title: "GroupBox"; source: "qrc:/pages/GroupBoxPage.qml" }
+                    ListElement { title: "ItemDelegate"; source: "qrc:/pages/ItemDelegatePage.qml" }
+                    ListElement { title: "Label"; source: "qrc:/pages/LabelPage.qml" }
+                    ListElement { title: "Menu"; source: "qrc:/pages/MenuPage.qml" }
+                    ListElement { title: "PageIndicator"; source: "qrc:/pages/PageIndicatorPage.qml" }
+                    ListElement { title: "Pane"; source: "qrc:/pages/PanePage.qml" }
+                    ListElement { title: "Popup"; source: "qrc:/pages/PopupPage.qml" }
+                    ListElement { title: "ProgressBar"; source: "qrc:/pages/ProgressBarPage.qml" }
+                    ListElement { title: "RadioButton"; source: "qrc:/pages/RadioButtonPage.qml" }
+                    ListElement { title: "RangeSlider"; source: "qrc:/pages/RangeSliderPage.qml" }
+                    ListElement { title: "ScrollBar"; source: "qrc:/pages/ScrollBarPage.qml" }
+                    ListElement { title: "ScrollIndicator"; source: "qrc:/pages/ScrollIndicatorPage.qml" }
+                    ListElement { title: "Slider"; source: "qrc:/pages/SliderPage.qml" }
+                    ListElement { title: "SpinBox"; source: "qrc:/pages/SpinBoxPage.qml" }
+                    ListElement { title: "StackView"; source: "qrc:/pages/StackViewPage.qml" }
+                    ListElement { title: "SwipeView"; source: "qrc:/pages/SwipeViewPage.qml" }
+                    ListElement { title: "Switch"; source: "qrc:/pages/SwitchPage.qml" }
+                    ListElement { title: "TabBar"; source: "qrc:/pages/TabBarPage.qml" }
+                    ListElement { title: "TextArea"; source: "qrc:/pages/TextAreaPage.qml" }
+                    ListElement { title: "TextField"; source: "qrc:/pages/TextFieldPage.qml" }
+                    ListElement { title: "ToolBar"; source: "qrc:/pages/ToolBarPage.qml" }
+                    ListElement { title: "Tumbler"; source: "qrc:/pages/TumblerPage.qml" }
+                }
+
+                ScrollIndicator.vertical: ScrollIndicator { }
+            }
+        }
+        onClicked: close()
+    }
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+
+        initialItem: Pane {
+            id: pane
+            anchors.fill: parent
+
+            Image {
+                id: logo
+                width: pane.availableWidth / 2
+                height: pane.availableHeight / 2
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: -50
+                fillMode: Image.PreserveAspectFit
+                source: "qrc:/images/qt-logo.png"
+            }
+
+            Label {
+                color: "#26282a"
+                text: "Qt Labs Controls provides a set of controls that can be used to build complete interfaces in Qt Quick."
+                anchors.margins: 20
+                anchors.top: logo.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: arrow.top
+                horizontalAlignment: Label.AlignHCenter
+                verticalAlignment: Label.AlignVCenter
+                wrapMode: Label.Wrap
+            }
+
+            Image {
+                id: arrow
+                source: "qrc:/images/arrow.png"
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+            }
+        }
+    }
+
+    Popup {
+        id: settingsPopup
+        modal: true
+        focus: true
+        onPressedOutside: close()
+
+        contentItem: Pane {
+            x: (window.width - width) / 2
+            y: window.height / 6
+            width: window.width / 3 * 2
+            contentHeight: settingsColumn.implicitHeight
+
+            Keys.onEscapePressed: settingsPopup.close()
+
+
+            ColumnLayout {
+                id: settingsColumn
+                spacing: 20
+                anchors.fill: parent
+
+                Label {
+                    text: "Settings"
+                    font.bold: true
+                }
+
+                RowLayout {
+                    spacing: 10
+
+                    Label {
+                        text: "Style:"
+                    }
+
+                    ComboBox {
+                        id: styleBox
+                        property int styleIndex: -1
+                        model: ["Default", "Material", "Universal"]
+                        Component.onCompleted: {
+                            styleIndex = find(settings.style)
+                            if (styleIndex !== -1)
+                                currentIndex = styleIndex
+                        }
+                        Layout.fillWidth: true
+                    }
+                }
+
+                Label {
+                    text: "Restart required"
+                    opacity: restartButton.opacity
+                    horizontalAlignment: Label.AlignHCenter
+                    verticalAlignment: Label.AlignVCenter
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                RowLayout {
+                    spacing: 20
+
+                    Button {
+                        id: restartButton
+                        text: "Restart"
+                        opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
+                        onClicked: {
+                            settings.style = styleBox.displayText
+                            app.restart()
+                        }
+                        Layout.preferredWidth: 0
+                        Layout.fillWidth: true
+                    }
+
+                    Button {
+                        id: cancelButton
+                        text: "Cancel"
+                        onClicked: {
+                            styleBox.currentIndex = styleBox.styleIndex
+                            settingsPopup.close()
+                        }
+                        Layout.preferredWidth: 0
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+    }
+
+    Popup {
+        id: aboutDialog
+        modal: true
+        focus: true
+        onPressedOutside: close()
+
+        contentItem: Pane {
+            x: (window.width - width) / 2
+            y: (window.height - height) / 2
+            width: window.width / 3 * 2
+            contentHeight: aboutColumn.implicitHeight
+
+            Keys.onEscapePressed: aboutDialog.close()
+
+            Column {
+                id: aboutColumn
+
+                spacing: 20
+                anchors.fill: parent
+
+                Label {
+                    text: "About"
+                    font.bold: true
+                }
+
+                Label {
+                    width: parent.width
+                    text: "The Qt Labs Controls module is a technology preview of the next generation user interface controls based on Qt Quick."
+                    wrapMode: Label.Wrap
+                    font.pixelSize: 12
+                }
+
+                Label {
+                    width: parent.width
+                    text: "In comparison to the desktop oriented Qt Quick Controls 1, the experimental Qt Labs "
+                        + "Controls are an order of magnitude simpler, lighter and faster, and are primarily targeting embedded "
+                        + "and mobile platforms."
+                    wrapMode: Label.Wrap
+                    font.pixelSize: 12
+                }
+            }
+        }
+    }
+
+    Menu {
+        id: optionsMenu
+        contentItem.x: contentItem.parent ? (contentItem.parent.width - contentItem.width) : 0
+
+        MenuItem {
+            text: "Settings"
+            onTriggered: settingsPopup.open()
+        }
+        MenuItem {
+            text: "About"
+            onTriggered: aboutDialog.open()
+        }
+    }
+}

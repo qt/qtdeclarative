@@ -5,6 +5,8 @@
 /lib
 /mkspecs
 
+/examples/controls/gallery/gallery
+
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/activeFocusOnTab/tst_activeFocusOnTab
 /tests/auto/applicationwindow/tst_applicationwindow
