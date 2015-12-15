@@ -45,6 +45,8 @@
 #include <QtLabsTemplates/private/qquickpopup_p.h>
 #include <QtLabsControls/private/qquickstyleselector_p.h>
 
+#include "qquickbusyindicatorring_p.h"
+
 static inline void initResources()
 {
     Q_INIT_RESOURCE(qtlabscontrolsplugin);
@@ -113,6 +115,10 @@ void QtLabsControlsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     Q_UNUSED(engine);
     Q_UNUSED(uri);
     initResources();
+
+    const QByteArray import = QByteArray(uri) + ".impl";
+    qmlRegisterType<QQuickBusyIndicatorRing>(import, 1, 0, "BusyRing");
+    qmlRegisterType<QQuickBusyIndicatorAnimator>(import, 1, 0, "BusyRingAnimator");
 }
 
 QT_END_NAMESPACE

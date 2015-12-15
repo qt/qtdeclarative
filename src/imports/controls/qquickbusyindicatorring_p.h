@@ -3,7 +3,7 @@
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Controls module of the Qt Toolkit.
+** This file is part of the Qt Quick Controls module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,32 +34,50 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import Qt.labs.controls 1.0
-import Qt.labs.controls.impl 1.0
-import Qt.labs.templates 1.0 as T
+#ifndef QQUICKBUSYINDICATOR_P_H
+#define QQUICKBUSYINDICATOR_P_H
 
-T.BusyIndicator {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
-    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickanimatorjob_p.h>
 
-    padding: 6
+QT_BEGIN_NAMESPACE
 
-    //! [contentItem]
-    contentItem: BusyRing {
-        id: ring
-        implicitWidth: 48
-        implicitHeight: 48
-        opacity: control.running ? 1 : 0
+class QQuickBusyIndicatorRing : public QQuickItem
+{
+    Q_OBJECT
 
-        Behavior on opacity { OpacityAnimator { duration: 250 } }
+public:
+    explicit QQuickBusyIndicatorRing(QQuickItem *parent = Q_NULLPTR);
+    ~QQuickBusyIndicatorRing();
 
-        BusyRingAnimator {
-            target: ring
-            running: control.visible && control.running
-        }
-    }
-    //! [contentItem]
-}
+protected:
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+};
+
+class QQuickBusyIndicatorAnimator : public QQuickAnimator
+{
+public:
+    QQuickBusyIndicatorAnimator(QObject *parent = Q_NULLPTR);
+
+protected:
+    QString propertyName() const Q_DECL_OVERRIDE;
+    QQuickAnimatorJob *createJob() const Q_DECL_OVERRIDE;
+};
+
+Q_DECLARE_TYPEINFO(QQuickBusyIndicatorRing, Q_COMPLEX_TYPE);
+Q_DECLARE_TYPEINFO(QQuickBusyIndicatorAnimator, Q_COMPLEX_TYPE);
+
+QT_END_NAMESPACE
+
+#endif // QQUICKBUSYINDICATOR_P_H
