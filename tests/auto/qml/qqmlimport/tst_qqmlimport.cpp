@@ -43,6 +43,7 @@ class tst_QQmlImport : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void importPathOrder();
     void testDesignerSupported();
     void uiFormatLoading();
     void cleanup();
@@ -125,6 +126,29 @@ void tst_QQmlImport::uiFormatLoading()
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     delete test;
+}
+
+void tst_QQmlImport::importPathOrder()
+{
+    QStringList expectedImportPaths;
+    QString appDirPath = QCoreApplication::applicationDirPath();
+    QString qml2Imports = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#ifdef Q_OS_WIN
+    // The drive letter has a different case as QQmlImport will
+    // cause it to be converted after passing through QUrl
+    appDirPath[0] = appDirPath[0].toUpper();
+    qml2Imports[0] = qml2Imports[0].toUpper();
+#endif
+    expectedImportPaths << appDirPath
+                        << QLatin1String("qrc:/qt-project.org/imports")
+                        << qml2Imports;
+    QQmlEngine engine;
+    QCOMPARE(expectedImportPaths, engine.importPathList());
+
+    // Add an import path
+    engine.addImportPath(QT_QMLTEST_DATADIR);
+    expectedImportPaths.prepend(QT_QMLTEST_DATADIR);
+    QCOMPARE(expectedImportPaths, engine.importPathList());
 }
 
 QTEST_MAIN(tst_QQmlImport)

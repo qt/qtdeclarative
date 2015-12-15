@@ -1563,7 +1563,6 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 : engine(e)
 {
     filePluginPath << QLatin1String(".");
-    addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
 
     QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
@@ -1582,6 +1581,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
             addImportPath(paths.at(ii));
     }
 
+    addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());
 }
 
