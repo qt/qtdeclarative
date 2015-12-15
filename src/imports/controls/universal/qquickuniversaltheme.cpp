@@ -43,11 +43,11 @@ QT_BEGIN_NAMESPACE
 QQuickUniversalTheme::QQuickUniversalTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
-    systemFont = QFont(QLatin1Literal("Sege UI"));
+    systemFont = QFont(QLatin1Literal("Segoe UI"));
     systemFont.setPixelSize(15);
     groupBoxTitleFont = systemFont;
     groupBoxTitleFont.setWeight(QFont::DemiBold);
-    tabButtonFont = QFont(QLatin1Literal("Sege UI"));
+    tabButtonFont = QFont(QLatin1Literal("Segoe UI"));
     tabButtonFont.setPixelSize(24);
     tabButtonFont.setWeight(QFont::Light);
 }
