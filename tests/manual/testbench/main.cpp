@@ -52,8 +52,7 @@ int main(int argc, char *argv[])
 
     // These must be set before running.
     // TODO: move style selection into app UI and use settings to save choices.
-    // qsetenv("QT_QUICK_FILE_SELECTORS", "material");
-    // qsetenv("QT_LABS_CONTROLS_STYLE", "material");
+    // qputenv("QT_LABS_CONTROLS_STYLE", "material");
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
