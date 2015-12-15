@@ -44,6 +44,10 @@ T.ApplicationWindow {
 
     color: Universal.altHighColor
 
+    overlay.background: Rectangle {
+        color: window.Universal.baseLowColor
+    }
+
     FocusRectangle {
         parent: window.activeFocusControl
         width: parent ? parent.width : 0

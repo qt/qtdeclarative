@@ -37,6 +37,7 @@
 #include "qquickoverlay_p.h"
 #include "qquickpopup_p.h"
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlproperty.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -48,11 +49,22 @@ class QQuickOverlayPrivate : public QQuickItemPrivate
 public:
     QQuickOverlayPrivate();
 
+    void resizeBackground();
+
+    QQuickItem *background;
     QHash<QQuickItem *, QQuickPopup *> popups;
     int modalPopups;
 };
 
+void QQuickOverlayPrivate::resizeBackground()
+{
+    Q_Q(QQuickOverlay);
+    background->setWidth(q->width());
+    background->setHeight(q->height());
+}
+
 QQuickOverlayPrivate::QQuickOverlayPrivate() :
+    background(Q_NULLPTR),
     modalPopups(0)
 {
 }
@@ -63,6 +75,31 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
     setVisible(false);
+}
+
+
+QQuickItem *QQuickOverlay::background() const
+{
+    Q_D(const QQuickOverlay);
+    return d->background;
+}
+
+void QQuickOverlay::setBackground(QQuickItem *background)
+{
+    Q_D(QQuickOverlay);
+    if (d->background != background) {
+        delete d->background;
+        d->background = background;
+        if (background) {
+            background->setOpacity(0.0);
+            background->setParentItem(this);
+            if (qFuzzyIsNull(background->z()))
+                background->setZ(-1);
+            if (isComponentComplete())
+                d->resizeBackground();
+        }
+        emit backgroundChanged();
+    }
 }
 
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
@@ -102,6 +139,18 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
             --d->modalPopups;
         d->popups.remove(contentItem);
     }
+
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    if (d->background)
+        QQmlProperty::write(d->background, QStringLiteral("opacity"), d->modalPopups > 0 ? 1.0 : 0.0);
+}
+
+void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickOverlay);
+    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    if (d->background)
+        d->resizeBackground();
 }
 
 void QQuickOverlay::keyPressEvent(QKeyEvent *event)

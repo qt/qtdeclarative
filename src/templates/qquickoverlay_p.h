@@ -58,16 +58,22 @@ class QQuickOverlayPrivate;
 class Q_LABSTEMPLATES_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
+    Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = Q_NULLPTR);
 
+    QQuickItem *background() const;
+    void setBackground(QQuickItem *background);
+
 Q_SIGNALS:
+    void backgroundChanged();
     void pressed();
     void released();
 
 protected:
     void itemChange(ItemChange change, const ItemChangeData &data) Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &oldGeometry, const QRectF &newGeometry) Q_DECL_OVERRIDE;
 
     void keyPressEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;

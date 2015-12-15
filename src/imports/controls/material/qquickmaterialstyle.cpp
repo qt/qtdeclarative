@@ -730,6 +730,11 @@ QColor QQuickMaterialStyle::comboBoxColor() const
     return m_theme == Light ? "#ffffff" : backgroundColorDark;
 }
 
+QColor QQuickMaterialStyle::backgroundDimColor() const
+{
+    return m_theme == Light ? "#99303030" : "#99fafafa";
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);

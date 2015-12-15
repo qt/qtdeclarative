@@ -42,4 +42,8 @@ T.ApplicationWindow {
     id: window
 
     color: "#ffffff"
+
+    overlay.background: Rectangle {
+        color: "#7f28282a"
+    }
 }

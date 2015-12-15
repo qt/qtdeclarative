@@ -337,10 +337,12 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 }
 
 /*!
+    \qmlpropertygroup Qt.labs.controls::ApplicationWindow::overlay
     \qmlproperty Item Qt.labs.controls::ApplicationWindow::overlay
-    \readonly
+    \qmlproperty Item Qt.labs.controls::ApplicationWindow::overlay.background
 
-    This property holds the window overlay item. Popups are automatically
+    This property holds the window overlay item and its background that implements the
+    background dimming when any modal popups are open. Popups are automatically
     reparented to the overlay.
 
     \sa Popup

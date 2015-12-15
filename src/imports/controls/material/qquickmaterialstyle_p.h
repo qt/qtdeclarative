@@ -93,6 +93,7 @@ class QQuickMaterialStyle : public QQuickStyle
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor drawerBackgroundColor READ drawerBackgroundColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor comboBoxColor READ comboBoxColor NOTIFY paletteChanged FINAL)
+    Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
 
 public:
     enum Theme {
@@ -201,6 +202,7 @@ public:
     QColor scrollBarPressedColor() const;
     QColor drawerBackgroundColor() const;
     QColor comboBoxColor() const;
+    QColor backgroundDimColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade) const;
 
