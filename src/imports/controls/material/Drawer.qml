@@ -41,15 +41,9 @@ import Qt.labs.controls.material 1.0
 T.Drawer {
     id: control
 
+    parent: T.ApplicationWindow.overlay
     width: parent ? parent.width : 0 // TODO: Window.width
     height: parent ? parent.height : 0 // TODO: Window.height
-
-    //! [background]
-    background: Rectangle {
-        color: control.Material.drawerBackgroundColor
-        opacity: position * 0.75
-    }
-    //! [background]
 
     // TODO: make this a proper transition
     animation: SmoothedAnimation {

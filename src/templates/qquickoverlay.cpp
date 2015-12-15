@@ -36,6 +36,7 @@
 
 #include "qquickoverlay_p.h"
 #include "qquickpopup_p.h"
+#include "qquickdrawer_p.h"
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -49,12 +50,31 @@ class QQuickOverlayPrivate : public QQuickItemPrivate
 public:
     QQuickOverlayPrivate();
 
+    void updateBackground();
     void resizeBackground();
 
     QQuickItem *background;
+    QVector<QQuickDrawer *> drawers;
     QHash<QQuickItem *, QQuickPopup *> popups;
     int modalPopups;
 };
+
+void QQuickOverlayPrivate::updateBackground()
+{
+    if (!background)
+        return;
+
+    qreal level = 0.0;
+    if (modalPopups > 0) {
+        level = 1.0;
+    } else {
+        foreach (QQuickDrawer *drawer, drawers)
+            level = qMax(level, drawer->position());
+    }
+
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    QQmlProperty::write(background, QStringLiteral("opacity"), level);
+}
 
 void QQuickOverlayPrivate::resizeBackground()
 {
@@ -110,7 +130,19 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     QQuickItem *contentItem = const_cast<QQuickItem *>(data.item);
     QQuickPopup *popup = Q_NULLPTR;
     if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
-        popup = qobject_cast<QQuickPopup *>(contentItem->parent());
+        QQuickDrawer *drawer = qobject_cast<QQuickDrawer *>(data.item);
+        if (drawer) {
+            if (change == ItemChildAddedChange) {
+                QObjectPrivate::connect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::updateBackground);
+                d->drawers.append(drawer);
+            } else {
+                QObjectPrivate::disconnect(drawer, &QQuickDrawer::positionChanged, d, &QQuickOverlayPrivate::updateBackground);
+                d->drawers.removeOne(drawer);
+            }
+            d->updateBackground();
+        } else {
+            popup = qobject_cast<QQuickPopup *>(contentItem->parent());
+        }
         setVisible(!childItems().isEmpty());
     }
     if (!popup)
@@ -140,9 +172,7 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         d->popups.remove(contentItem);
     }
 
-    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    if (d->background)
-        QQmlProperty::write(d->background, QStringLiteral("opacity"), d->modalPopups > 0 ? 1.0 : 0.0);
+    d->updateBackground();
 }
 
 void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
