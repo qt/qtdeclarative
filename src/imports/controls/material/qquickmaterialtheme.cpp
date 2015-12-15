@@ -43,8 +43,8 @@ QT_BEGIN_NAMESPACE
 QQuickMaterialTheme::QQuickMaterialTheme(QPlatformTheme *theme)
     : QQuickProxyTheme(theme)
 {
-    systemFont = QFont(QLatin1Literal("Roboto"));
-    tabButtonFont = QFont(QLatin1Literal("Roboto"), 10);
+    systemFont = QFont(QStringLiteral("Roboto"));
+    tabButtonFont = QFont(QStringLiteral("Roboto"), 10);
 }
 
 QQuickMaterialTheme::~QQuickMaterialTheme()
