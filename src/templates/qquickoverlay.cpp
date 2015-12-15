@@ -41,8 +41,24 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickOverlayPrivate : public QQuickItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickOverlay)
+
+public:
+    QQuickOverlayPrivate();
+
+    QHash<QQuickItem *, QQuickPopup *> popups;
+    int modalPopups;
+};
+
+QQuickOverlayPrivate::QQuickOverlayPrivate() :
+    modalPopups(0)
+{
+}
+
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
-    : QQuickItem(parent), m_modalPopups(0)
+    : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
     setAcceptedMouseButtons(Qt::AllButtons);
     setFiltersChildMouseEvents(true);
@@ -51,6 +67,7 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
 
 void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
 {
+    Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
     QQuickItem *contentItem = const_cast<QQuickItem *>(data.item);
@@ -63,60 +80,66 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         return;
 
     if (change == ItemChildAddedChange) {
-        if (QQuickPopup *prevPopup = m_popups.value(contentItem)) {
+        if (QQuickPopup *prevPopup = d->popups.value(contentItem)) {
             qmlInfo(popup).nospace() << "Popup is sharing item " << contentItem << " with " << prevPopup
                                      << ". This is not supported and strange things are about to happen.";
             return;
         }
 
-        m_popups.insert(contentItem, popup);
+        d->popups.insert(contentItem, popup);
         if (popup->isModal())
-            ++m_modalPopups;
+            ++d->modalPopups;
 
         connect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         connect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
     } else if (change == ItemChildRemovedChange) {
-        Q_ASSERT(popup == m_popups.value(contentItem));
+        Q_ASSERT(popup == d->popups.value(contentItem));
 
         disconnect(this, &QQuickOverlay::pressed, popup, &QQuickPopup::pressedOutside);
         disconnect(this, &QQuickOverlay::released, popup, &QQuickPopup::releasedOutside);
 
         if (popup->isModal())
-            --m_modalPopups;
-        m_popups.remove(contentItem);
+            --d->modalPopups;
+        d->popups.remove(contentItem);
     }
 }
 
 void QQuickOverlay::keyPressEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPopups > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::keyReleaseEvent(QKeyEvent *event)
 {
-    event->setAccepted(m_modalPopups > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPopups > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
     emit pressed();
 }
 
 void QQuickOverlay::mouseMoveEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPopups > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
 }
 
 void QQuickOverlay::mouseReleaseEvent(QMouseEvent *event)
 {
-    event->setAccepted(m_modalPopups > 0);
+    Q_D(QQuickOverlay);
+    event->setAccepted(d->modalPopups > 0);
     emit released();
 }
 
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
-    if (m_modalPopups == 0)
+    Q_D(QQuickOverlay);
+    if (d->modalPopups == 0)
         return false;
     // TODO Filter touch events
     if (event->type() != QEvent::MouseButtonPress)
@@ -132,7 +155,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
         if (contentItem == item)
             break;
 
-        QQuickPopup *popup = m_popups.value(contentItem);
+        QQuickPopup *popup = d->popups.value(contentItem);
         if (popup) {
             emit popup->pressedOutside();
 

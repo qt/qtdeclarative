@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPopup;
+class QQuickOverlayPrivate;
 
 class QQuickOverlay : public QQuickItem
 {
@@ -77,8 +77,7 @@ protected:
 
 private:
     Q_DISABLE_COPY(QQuickOverlay)
-    QHash<QQuickItem *, QQuickPopup *> m_popups;
-    int m_modalPopups;
+    Q_DECLARE_PRIVATE(QQuickOverlay)
 };
 
 QT_END_NAMESPACE
