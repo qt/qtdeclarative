@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qv4debugger.h"
+#include "qv4debugjob.h"
 #include "qv4datacollector.h"
 
 #include <private/qv4scopedvalue_p.h>
@@ -56,97 +57,6 @@ inline bool operator==(const QV4Debugger::BreakPoint &a,
     return a.lineNumber == b.lineNumber && a.fileName == b.fileName;
 }
 
-QV4Debugger::JavaScriptJob::JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr,
-                                         const QString &script)
-    : engine(engine)
-    , frameNr(frameNr)
-    , script(script)
-    , resultIsException(false)
-{}
-
-void QV4Debugger::JavaScriptJob::run()
-{
-    QV4::Scope scope(engine);
-
-    QV4::ExecutionContextSaver saver(scope);
-
-    QV4::ExecutionContext *ctx = engine->currentContext;
-    QObject scopeObject;
-    if (frameNr < 0) { // Use QML context if available
-        QQmlEngine *qmlEngine = engine->qmlEngine();
-        if (qmlEngine) {
-            QQmlContext *qmlRootContext = qmlEngine->rootContext();
-            QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(qmlRootContext);
-
-            QV4::ScopedObject withContext(scope, engine->newObject());
-            for (int ii = 0; ii < ctxtPriv->instances.count(); ++ii) {
-                QObject *object = ctxtPriv->instances.at(ii);
-                if (QQmlContext *context = qmlContext(object)) {
-                    if (QQmlContextData *cdata = QQmlContextData::get(context)) {
-                        QV4::ScopedValue v(scope, QV4::QObjectWrapper::wrap(engine, object));
-                        withContext->put(engine, cdata->findObjectId(object), v);
-                    }
-                }
-            }
-            if (!engine->qmlContext()) {
-                engine->pushContext(ctx->newQmlContext(QQmlContextData::get(qmlRootContext),
-                                                       &scopeObject));
-                ctx = engine->currentContext;
-            }
-            engine->pushContext(ctx->newWithContext(withContext->toObject(engine)));
-            ctx = engine->currentContext;
-        }
-    } else {
-        if (frameNr > 0) {
-            for (int i = 0; i < frameNr; ++i) {
-                ctx = engine->parentContext(ctx);
-            }
-            engine->pushContext(ctx);
-        }
-    }
-
-    QV4::Script script(ctx, this->script);
-    script.strictMode = ctx->d()->strictMode;
-    // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
-    // is a side-effect of inheritContext.
-    script.inheritContext = true;
-    script.parse();
-    QV4::ScopedValue result(scope);
-    if (!scope.engine->hasException)
-        result = script.run();
-    if (scope.engine->hasException) {
-        result = scope.engine->catchException();
-        resultIsException = true;
-    }
-    handleResult(result);
-}
-
-bool QV4Debugger::JavaScriptJob::hasExeption() const
-{
-    return resultIsException;
-}
-
-class EvalJob: public QV4Debugger::JavaScriptJob
-{
-    bool result;
-
-public:
-    EvalJob(QV4::ExecutionEngine *engine, const QString &script)
-        : QV4Debugger::JavaScriptJob(engine, /*frameNr*/-1, script)
-        , result(false)
-    {}
-
-    virtual void handleResult(QV4::ScopedValue &result)
-    {
-        this->result = result->toBoolean();
-    }
-
-    bool resultAsBoolean() const
-    {
-        return result;
-    }
-};
-
 QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     : m_engine(engine)
     , m_state(Running)
@@ -157,7 +67,7 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     , m_returnedValue(engine, QV4::Primitive::undefinedValue())
     , m_gatherSources(0)
     , m_runningJob(0)
-    , m_collector(new QV4DataCollector(engine))
+    , m_collector(engine)
 {
     static int debuggerId = qRegisterMetaType<QV4Debugger*>();
     static int pauseReasonId = qRegisterMetaType<QV4Debugger::PauseReason>();
@@ -165,19 +75,19 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     Q_UNUSED(pauseReasonId);
 }
 
-QV4Debugger::~QV4Debugger()
-{
-    delete m_collector;
-}
-
 QV4::ExecutionEngine *QV4Debugger::engine() const
 {
     return m_engine;
 }
 
-QV4DataCollector *QV4Debugger::collector() const
+const QV4DataCollector *QV4Debugger::collector() const
 {
-    return m_collector;
+    return &m_collector;
+}
+
+QV4DataCollector *QV4Debugger::collector()
+{
+    return &m_collector;
 }
 
 void QV4Debugger::pause()
@@ -389,13 +299,13 @@ bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
     return evilJob.resultAsBoolean();
 }
 
-void QV4Debugger::runInEngine(QV4Debugger::Job *job)
+void QV4Debugger::runInEngine(QV4DebugJob *job)
 {
     QMutexLocker locker(&m_lock);
     runInEngine_havingLock(job);
 }
 
-void QV4Debugger::runInEngine_havingLock(QV4Debugger::Job *job)
+void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
 {
     Q_ASSERT(job);
     Q_ASSERT(m_runningJob == 0);
@@ -407,10 +317,6 @@ void QV4Debugger::runInEngine_havingLock(QV4Debugger::Job *job)
         QMetaObject::invokeMethod(this, "runJobUnpaused", Qt::QueuedConnection);
     m_jobIsRunning.wait(&m_lock);
     m_runningJob = 0;
-}
-
-QV4Debugger::Job::~Job()
-{
 }
 
 QT_END_NAMESPACE

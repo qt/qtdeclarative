@@ -45,6 +45,7 @@
 // We mean it.
 //
 
+#include "qv4datacollector.h"
 #include <private/qv4debugging_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4context_p.h>
@@ -55,6 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QV4DebugJob;
 class QV4DataCollector;
 class QV4Debugger : public QV4::Debugging::Debugger
 {
@@ -64,29 +66,6 @@ public:
         BreakPoint(const QString &fileName, int line);
         QString fileName;
         int lineNumber;
-    };
-
-    class Job
-    {
-    public:
-        virtual ~Job();
-        virtual void run() = 0;
-    };
-
-    class JavaScriptJob: public Job
-    {
-        QV4::ExecutionEngine *engine;
-        int frameNr;
-        const QString &script;
-        bool resultIsException;
-
-    public:
-        JavaScriptJob(QV4::ExecutionEngine *engine, int frameNr, const QString &script);
-        void run();
-        bool hasExeption() const;
-
-    protected:
-        virtual void handleResult(QV4::ScopedValue &result) = 0;
     };
 
     enum State {
@@ -111,10 +90,10 @@ public:
     };
 
     QV4Debugger(QV4::ExecutionEngine *engine);
-    ~QV4Debugger();
 
     QV4::ExecutionEngine *engine() const;
-    QV4DataCollector *collector() const;
+    const QV4DataCollector *collector() const;
+    QV4DataCollector *collector();
 
     void pause();
     void resume(Speed speed);
@@ -141,7 +120,7 @@ public:
     QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
     QV4::Function *getFunction() const;
-    void runInEngine(Job *job);
+    void runInEngine(QV4DebugJob *job);
 
     // compile-time interface
     void maybeBreakAtInstruction() Q_DECL_OVERRIDE;
@@ -163,7 +142,7 @@ private:
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
     bool reallyHitTheBreakPoint(const QString &filename, int linenr);
-    void runInEngine_havingLock(QV4Debugger::Job *job);
+    void runInEngine_havingLock(QV4DebugJob *job);
 
     QV4::ExecutionEngine *m_engine;
     QV4::PersistentValue m_currentContext;
@@ -178,9 +157,9 @@ private:
     QHash<BreakPoint, QString> m_breakPoints;
     QV4::PersistentValue m_returnedValue;
 
-    Job *m_gatherSources;
-    Job *m_runningJob;
-    QV4DataCollector *m_collector;
+    QV4DebugJob *m_gatherSources;
+    QV4DebugJob *m_runningJob;
+    QV4DataCollector m_collector;
     QWaitCondition m_jobIsRunning;
 };
 

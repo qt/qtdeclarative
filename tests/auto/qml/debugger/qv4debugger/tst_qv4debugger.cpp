@@ -34,6 +34,7 @@
 
 #include "qv4datacollector.h"
 #include "qv4debugger.h"
+#include "qv4debugjob.h"
 
 #include <QJSEngine>
 #include <QQmlEngine>

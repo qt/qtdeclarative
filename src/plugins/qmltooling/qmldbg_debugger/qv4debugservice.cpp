@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include "qv4debugservice.h"
+#include "qv4debugjob.h"
 #include "qqmlengine.h"
 #include "qqmldebugpacket.h"
 

@@ -14,8 +14,8 @@ SOURCES += \
     $$PWD/qv4debugservice.cpp \
     $$PWD/qv4debugger.cpp \
     $$PWD/qv4debuggeragent.cpp \
-    $$PWD/qv4datacollector.cpp
-
+    $$PWD/qv4datacollector.cpp \
+    $$PWD/qv4debugjob.cpp
 
 HEADERS += \
     $$PWD/../shared/qqmlconfigurabledebugservice.h \
@@ -28,7 +28,8 @@ HEADERS += \
     $$PWD/qv4debugservice.h \
     $$PWD/qv4debugger.h \
     $$PWD/qv4debuggeragent.h \
-    $$PWD/qv4datacollector.h
+    $$PWD/qv4datacollector.h \
+    $$PWD/qv4debugjob.h
 
 INCLUDEPATH += $$PWD \
     $$PWD/../shared
