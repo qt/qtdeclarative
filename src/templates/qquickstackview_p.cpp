@@ -139,6 +139,8 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         delete incubator;
         incubator = new QQuickStackIncubator(this);
         component->create(*incubator, context);
+        if (component->isError())
+            qWarning() << qPrintable(component->errorString().trimmed());
     } else {
         initialize();
     }

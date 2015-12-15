@@ -750,9 +750,13 @@ TestCase {
         verify(control)
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        control.push("non-existent.qml")
+        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 File not found")
+        control.push(Qt.resolvedUrl("non-existent.qml"))
+
         ignoreWarning("QQmlComponent: Component is not ready")
-        control.replace("non-existent.qml")
+        ignoreWarning(Qt.resolvedUrl("non-existent.qml") + ":-1 File not found")
+        control.replace(Qt.resolvedUrl("non-existent.qml"))
+
         control.pop()
 
         control.destroy()
