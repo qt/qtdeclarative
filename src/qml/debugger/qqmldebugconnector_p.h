@@ -72,7 +72,7 @@ public:
 
     virtual void addEngine(QJSEngine *engine) = 0;
     virtual void removeEngine(QJSEngine *engine) = 0;
-    virtual bool hasEngine(QJSEngine *engine) = 0;
+    virtual bool hasEngine(QJSEngine *engine) const = 0;
 
     virtual bool addService(const QString &name, QQmlDebugService *service) = 0;
     virtual bool removeService(const QString &name) = 0;

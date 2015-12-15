@@ -255,7 +255,7 @@ void QQmlNativeDebugConnector::removeEngine(QJSEngine *engine)
     m_engines.removeOne(engine);
 }
 
-bool QQmlNativeDebugConnector::hasEngine(QJSEngine *engine)
+bool QQmlNativeDebugConnector::hasEngine(QJSEngine *engine) const
 {
     return m_engines.contains(engine);
 }

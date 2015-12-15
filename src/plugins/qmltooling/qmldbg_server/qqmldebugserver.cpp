@@ -132,7 +132,7 @@ public:
 
     void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
     void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
-    bool hasEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
+    bool hasEngine(QJSEngine *engine) const Q_DECL_OVERRIDE;
 
     bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
     bool removeService(const QString &name) Q_DECL_OVERRIDE;
@@ -183,7 +183,7 @@ private:
 
     QHash<QJSEngine *, EngineCondition> m_engineConditions;
 
-    QMutex m_helloMutex;
+    mutable QMutex m_helloMutex;
     QWaitCondition m_helloCondition;
     QQmlDebugServerThread m_thread;
     QPacketProtocol *m_protocol;
@@ -597,7 +597,7 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
     m_engineConditions.remove(engine);
 }
 
-bool QQmlDebugServerImpl::hasEngine(QJSEngine *engine)
+bool QQmlDebugServerImpl::hasEngine(QJSEngine *engine) const
 {
     QMutexLocker locker(&m_helloMutex);
     QHash<QJSEngine *, EngineCondition>::ConstIterator i = m_engineConditions.constFind(engine);
