@@ -74,30 +74,33 @@ T.ComboBox {
     //! [contentItem]
 
     //! [background]
-    background: Rectangle {
+    background: Item {
         implicitWidth: 120
         implicitHeight: 32
 
-        radius: 2
-        color: control.Material.comboBoxColor
+        Rectangle {
+            id: rect
+            width: parent.width
+            height: parent.height
+            radius: 2
+            color: control.Material.comboBoxColor
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 400
+            Behavior on color {
+                ColorAnimation {
+                    duration: 400
+                }
             }
         }
 
-        layer.enabled: control.enabled
-        layer.effect: DropShadow {
+        DropShadow {
+            source: rect
+            visible: control.enabled
+            width: parent.width
+            height: parent.height
             verticalOffset: 1
             color: control.Material.dropShadowColor
             samples: control.pressed ? 15 : 9
             spread: 0.5
-
-            // TODO: Doesn't work because of QTBUG-49072
-            Behavior on radius {
-                NumberAnimation { duration: 1000 }
-            }
         }
 
         Image {
@@ -111,7 +114,7 @@ T.ComboBox {
 
     //! [popup]
     popup: T.Popup {
-        contentItem: Rectangle {
+        contentItem: Item {
             // TODO: Popup::anchors
             readonly property var above: popup.visible ? control.mapToItem(null, 0, -height) : Qt.point(0, 0)
             readonly property var below: popup.visible ? control.mapToItem(null, 0, control.height) : Qt.point(0, 0)
@@ -121,19 +124,22 @@ T.ComboBox {
             width: control.width
             height: listview.height
 
-            color: control.Material.comboBoxColor
+            Rectangle {
+                id: panel
+                width: parent.width
+                height: parent.height
+                color: control.Material.comboBoxColor
+            }
 
-            layer.enabled: control.enabled
-            layer.effect: DropShadow {
+            DropShadow {
+                source: panel
+                visible: control.enabled
+                width: parent.width
+                height: parent.height
                 verticalOffset: 1
                 color: control.Material.dropShadowColor
                 samples: 15
                 spread: 0.5
-
-                // TODO: Doesn't work because of QTBUG-49072
-                Behavior on radius {
-                    NumberAnimation { duration: 1000 }
-                }
             }
 
             ListView {
