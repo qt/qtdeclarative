@@ -49,12 +49,13 @@
 //
 
 #include <QtQuick/qquickitem.h>
+#include <QtLabsTemplates/private/qquickabstractbutton_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickOverlayPrivate;
 
-class QQuickOverlay : public QQuickItem
+class Q_LABSTEMPLATES_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
 

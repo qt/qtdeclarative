@@ -42,6 +42,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
+#include <QtLabsTemplates/private/qquickoverlay_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p.h>
 #include <QtLabsTemplates/private/qquicklabel_p.h>
 #include <QtLabsTemplates/private/qquicktextarea_p.h>

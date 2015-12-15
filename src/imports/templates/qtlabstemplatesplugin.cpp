@@ -52,6 +52,7 @@
 #include <QtLabsTemplates/private/qquicklabel_p.h>
 #include <QtLabsTemplates/private/qquickmenu_p.h>
 #include <QtLabsTemplates/private/qquickmenuitem_p.h>
+#include <QtLabsTemplates/private/qquickoverlay_p.h>
 #include <QtLabsTemplates/private/qquickpageindicator_p.h>
 #include <QtLabsTemplates/private/qquickpane_p.h>
 #include <QtLabsTemplates/private/qquickpopup_p.h>
@@ -103,6 +104,7 @@ void QtLabsTemplatesPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickLabel>(uri, 1, 0, "Label");
     qmlRegisterType<QQuickMenu>(uri, 1, 0, "Menu");
     qmlRegisterType<QQuickMenuItem>(uri, 1, 0, "MenuItem");
+    qmlRegisterType<QQuickOverlay>();
     qmlRegisterType<QQuickPageIndicator>(uri, 1, 0, "PageIndicator");
     qmlRegisterType<QQuickPane>(uri, 1, 0, "Pane");
     qmlRegisterType<QQuickPopup>(uri, 1, 0, "Popup");

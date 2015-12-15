@@ -54,6 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickOverlay;
 class QQuickApplicationWindowPrivate;
 class QQuickApplicationWindowAttached;
 class QQuickApplicationWindowAttachedPrivate;
@@ -66,7 +67,7 @@ class Q_LABSTEMPLATES_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImp
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *overlay READ overlay CONSTANT FINAL)
+    Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged)
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -85,7 +86,7 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
-    QQuickItem *overlay() const;
+    QQuickOverlay *overlay() const;
 
     QFont font() const;
     void setFont(const QFont &);

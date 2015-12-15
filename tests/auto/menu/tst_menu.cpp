@@ -46,6 +46,7 @@
 #include "../shared/visualtestutil.h"
 
 #include <QtLabsTemplates/private/qquickapplicationwindow_p.h>
+#include <QtLabsTemplates/private/qquickoverlay_p.h>
 #include <QtLabsTemplates/private/qquickbutton_p.h>
 #include <QtLabsTemplates/private/qquickmenu_p.h>
 #include <QtLabsTemplates/private/qquickmenuitem_p.h>

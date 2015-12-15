@@ -345,7 +345,7 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 
     \sa Popup
 */
-QQuickItem *QQuickApplicationWindow::overlay() const
+QQuickOverlay *QQuickApplicationWindow::overlay() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->overlay) {
