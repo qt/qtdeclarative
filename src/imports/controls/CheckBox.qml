@@ -66,7 +66,7 @@ T.CheckBox {
         Image {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            source: "qrc:/images/check.png"
+            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/check.png"
             visible: control.checked
         }
     }

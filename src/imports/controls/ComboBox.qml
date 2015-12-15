@@ -91,7 +91,7 @@ T.ComboBox {
         Image {
             x: parent.width - width - control.rightPadding
             y: (parent.height - height) / 2
-            source: "qrc:/images/drop-indicator.png"
+            source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/drop-indicator.png"
         }
     }
     //! [background]

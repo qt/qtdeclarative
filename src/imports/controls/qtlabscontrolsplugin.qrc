@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/qt-project.org/imports/Qt/labs/controls">
         <file>images/spinner_small.png</file>
         <file>images/spinner_medium.png</file>
         <file>images/spinner_large.png</file>

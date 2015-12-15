@@ -65,7 +65,7 @@ T.Dial {
         y: background.height / 2 - handle.height / 2
         width: 14
         height: 10
-        source: "qrc:/images/dial-indicator.png"
+        source: "qrc:/qt-project.org/imports/Qt/labs/controls/images/dial-indicator.png"
         antialiasing: true
         transform: [
             Translate {

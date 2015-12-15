@@ -60,9 +60,9 @@ T.BusyIndicator {
             y: (parent.height - height) / 2
             width: Math.min(parent.width, parent.height)
             height: width
-            source: width <= 32 ? "qrc:/images/spinner_small.png" :
-                    width >= 48 ? "qrc:/images/spinner_large.png" :
-                                  "qrc:/images/spinner_medium.png"
+            source: width <= 32 ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/spinner_small.png" :
+                    width >= 48 ? "qrc:/qt-project.org/imports/Qt/labs/controls/images/spinner_large.png" :
+                                  "qrc:/qt-project.org/imports/Qt/labs/controls/images/spinner_medium.png"
 
             RotationAnimator on rotation {
                 duration: 800
