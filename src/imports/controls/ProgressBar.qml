@@ -45,8 +45,6 @@ T.ProgressBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding
 
-    padding: 6
-
     //! [indicator]
     indicator: Item {
         x: control.leftPadding
@@ -62,12 +60,11 @@ T.ProgressBar {
             Rectangle {
                 property real offset: indeterminate ? 0 : control.position
 
-                x: 2 + (indeterminate ? offset * parent.width - 4 : 0)
+                x: indeterminate ? offset * parent.width : 0
                 y: (parent.height - height) / 2
-                width: offset * (parent.width - x) - 2
-                height: 2
+                width: offset * (parent.width - x)
+                height: 6
 
-                radius: 3
                 color: control.enabled ? "#353637" : "#bdbebf"
 
                 SequentialAnimation on offset {
@@ -96,9 +93,7 @@ T.ProgressBar {
         width: control.availableWidth
         height: 6
 
-        radius: 3
-        border.color: "#bdbebf"
-        color: "transparent"
+        color: "#e4e4e4"
     }
     //! [background]
 }
