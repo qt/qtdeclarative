@@ -89,6 +89,8 @@ public:
     bool removal;
     bool ownItem;
     bool ownComponent;
+    bool widthValid;
+    bool heightValid;
     QQmlContext *context;
     QQmlComponent *component;
     QQmlIncubator *incubator;

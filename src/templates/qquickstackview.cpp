@@ -870,15 +870,10 @@ void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     Q_D(QQuickStackView);
     foreach (QQuickStackElement *element, d->elements) {
         if (element->item) {
-            QQuickItemPrivate *p = QQuickItemPrivate::get(element->item);
-            if (!p->widthValid) {
+            if (!element->widthValid)
                 element->item->setWidth(newGeometry.width());
-                p->widthValid = false;
-            }
-            if (!p->heightValid) {
+            if (!element->heightValid)
                 element->item->setHeight(newGeometry.height());
-                p->heightValid = false;
-            }
         }
     }
 }

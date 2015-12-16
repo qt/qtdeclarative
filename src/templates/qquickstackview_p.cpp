@@ -69,7 +69,7 @@ private:
 };
 
 QQuickStackElement::QQuickStackElement() : QQuickItemViewTransitionableItem(Q_NULLPTR),
-    index(-1), init(false), removal(false), ownItem(false), ownComponent(false),
+    index(-1), init(false), removal(false), ownItem(false), ownComponent(false), widthValid(false), heightValid(false),
     context(Q_NULLPTR), component(Q_NULLPTR), incubator(Q_NULLPTR), view(Q_NULLPTR),
     status(QQuickStackView::Inactive)
 {
@@ -162,14 +162,10 @@ void QQuickStackElement::initialize()
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    if (!p->widthValid) {
+    if (!(widthValid = p->widthValid))
         item->setWidth(view->width());
-        p->widthValid = false;
-    }
-    if (!p->heightValid) {
+    if (!(heightValid = p->heightValid))
         item->setHeight(view->height());
-        p->heightValid = false;
-    }
     item->setParentItem(view);
     p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
 
