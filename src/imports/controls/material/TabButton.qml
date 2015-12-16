@@ -42,9 +42,9 @@ T.TabButton {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0)
+                            label ? label.contentWidth + leftPadding + rightPadding : 0)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             label ? label.implicitHeight + topPadding + bottomPadding : 0)
+                             label ? label.contentHeight + topPadding + bottomPadding : 0)
     baselineOffset: label ? label.y + label.baselineOffset : 0
 
     padding: 6
