@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickControlPrivate::QQuickControlPrivate() :
-    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false),
+    hasTopPadding(false), hasLeftPadding(false), hasRightPadding(false), hasBottomPadding(false), hasLocale(false),
     padding(0), topPadding(0), leftPadding(0), rightPadding(0), bottomPadding(0), spacing(0), focusReason(Qt::OtherFocusReason),
     background(Q_NULLPTR), contentItem(Q_NULLPTR), accessibleAttached(Q_NULLPTR)
 {
@@ -361,8 +361,11 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 {
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
-    if (change == ItemParentHasChanged && isComponentComplete())
+    if (change == ItemParentHasChanged && isComponentComplete()) {
         d->resolveFont();
+        if (!d->hasLocale)
+            d->locale = d->calcLocale();
+    }
 }
 
 /*!
@@ -626,13 +629,65 @@ QLocale QQuickControl::locale() const
 void QQuickControl::setLocale(const QLocale &locale)
 {
     Q_D(QQuickControl);
-    if (d->locale != locale) {
-        bool wasMirrored = isMirrored();
-        localeChange(locale, d->locale);
-        d->locale = locale;
-        emit localeChanged();
-        if (wasMirrored != isMirrored())
-            mirrorChange();
+    if (d->hasLocale && d->locale == locale)
+        return;
+
+    d->updateLocale(locale, true); // explicit=true
+}
+
+void QQuickControl::resetLocale()
+{
+    Q_D(QQuickControl);
+    if (!d->hasLocale)
+        return;
+
+    d->updateLocale(d->calcLocale(), false); // explicit=false
+}
+
+QLocale QQuickControlPrivate::calcLocale() const
+{
+    Q_Q(const QQuickControl);
+    QQuickItem *p = q->parentItem();
+    while (p) {
+        if (QQuickControl *qc = qobject_cast<QQuickControl *>(p))
+            return qc->locale();
+
+        QVariant v = p->property("locale");
+        if (v.isValid() && v.userType() == QMetaType::QLocale)
+            return v.toLocale();
+
+        p = p->parentItem();
+    }
+
+    return QLocale();
+}
+
+void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
+{
+    Q_Q(QQuickControl);
+    if (!e && hasLocale)
+        return;
+
+    QLocale old = q->locale();
+    hasLocale = e;
+    if (old != l) {
+        bool wasMirrored = q->isMirrored();
+        q->localeChange(l, old);
+        locale = l;
+        QQuickControlPrivate::updateLocaleRecur(q, l);
+        emit q->localeChanged();
+        if (wasMirrored != q->isMirrored())
+            q->mirrorChange();
+    }
+}
+
+void QQuickControlPrivate::updateLocaleRecur(QQuickItem *item, const QLocale &l)
+{
+    foreach (QQuickItem *child, item->childItems()) {
+        if (QQuickControl *control = qobject_cast<QQuickControl *>(child))
+            QQuickControlPrivate::get(control)->updateLocale(l, false);
+        else
+            updateLocaleRecur(child, l);
     }
 }
 
