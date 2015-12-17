@@ -76,9 +76,9 @@ Module {
         Property { name: "rightPadding"; type: "double" }
         Property { name: "bottomPadding"; type: "double" }
         Property { name: "spacing"; type: "double" }
-        Property { name: "layoutDirection"; type: "Qt::LayoutDirection" }
-        Property { name: "effectiveLayoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
+        Property { name: "locale"; type: "QLocale" }
         Property { name: "mirrored"; type: "bool"; isReadonly: true }
+        Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
     }
@@ -88,7 +88,6 @@ Module {
         prototype: "QQuickControl"
         exports: ["Qt.labs.calendar/AbstractDayOfWeekRow 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "locale"; type: "QLocale" }
         Property { name: "source"; type: "QVariant" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
     }
@@ -100,7 +99,6 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "month"; type: "int" }
         Property { name: "year"; type: "int" }
-        Property { name: "locale"; type: "QLocale" }
         Property { name: "source"; type: "QVariant" }
         Property { name: "title"; type: "string" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
@@ -129,7 +127,6 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "month"; type: "int" }
         Property { name: "year"; type: "int" }
-        Property { name: "locale"; type: "QLocale" }
         Property { name: "source"; type: "QVariant" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
     }

@@ -12,10 +12,13 @@ Module {
         name: "QQuickAbstractButton"
         defaultProperty: "data"
         prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/AbstractButton 1.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "text"; type: "string" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "checked"; type: "bool" }
         Property { name: "checkable"; type: "bool" }
+        Property { name: "highlighted"; type: "bool" }
         Property { name: "autoExclusive"; type: "bool" }
         Property { name: "autoRepeat"; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
@@ -45,10 +48,24 @@ Module {
         prototype: "QQuickWindowQmlImpl"
         exports: ["Qt.labs.templates/ApplicationWindow 1.0"]
         exportMetaObjectRevisions: [0]
+        attachedType: "QQuickApplicationWindowAttached"
         Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "activeFocusControl"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
+        Property { name: "overlay"; type: "QQuickOverlay"; isReadonly: true; isPointer: true }
+        Property { name: "font"; type: "QFont" }
+    }
+    Component {
+        name: "QQuickApplicationWindowAttached"
+        prototype: "QObject"
+        Property { name: "window"; type: "QQuickApplicationWindow"; isReadonly: true; isPointer: true }
+        Property { name: "contentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "activeFocusControl"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "header"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "footer"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "overlay"; type: "QQuickItem"; isReadonly: true; isPointer: true }
     }
     Component {
         name: "QQuickBusyIndicator"
@@ -57,7 +74,6 @@ Module {
         exports: ["Qt.labs.templates/BusyIndicator 1.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "running"; type: "bool" }
-        Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
     }
     Component {
         name: "QQuickButton"
@@ -76,6 +92,48 @@ Module {
         Property { name: "checkState"; type: "Qt::CheckState" }
     }
     Component {
+        name: "QQuickComboBox"
+        defaultProperty: "data"
+        prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/ComboBox 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "count"; type: "int"; isReadonly: true }
+        Property { name: "model"; type: "QVariant" }
+        Property { name: "delegateModel"; type: "QQmlInstanceModel"; isReadonly: true; isPointer: true }
+        Property { name: "pressed"; type: "bool" }
+        Property { name: "highlightedIndex"; type: "int"; isReadonly: true }
+        Property { name: "currentIndex"; type: "int" }
+        Property { name: "currentText"; type: "string"; isReadonly: true }
+        Property { name: "displayText"; type: "string" }
+        Property { name: "textRole"; type: "string" }
+        Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+        Property { name: "popup"; type: "QQuickPopup"; isPointer: true }
+        Signal {
+            name: "activated"
+            Parameter { name: "index"; type: "int" }
+        }
+        Signal {
+            name: "highlighted"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "textAt"
+            type: "string"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "find"
+            type: "int"
+            Parameter { name: "text"; type: "string" }
+            Parameter { name: "flags"; type: "Qt::MatchFlags" }
+        }
+        Method {
+            name: "find"
+            type: "int"
+            Parameter { name: "text"; type: "string" }
+        }
+    }
+    Component {
         name: "QQuickContainer"
         defaultProperty: "contentData"
         prototype: "QQuickControl"
@@ -87,7 +145,6 @@ Module {
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }
         Property { name: "currentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
-        Property { name: "exclusive"; type: "bool" }
         Method {
             name: "setCurrentIndex"
             Parameter { name: "index"; type: "int" }
@@ -131,9 +188,9 @@ Module {
         Property { name: "rightPadding"; type: "double" }
         Property { name: "bottomPadding"; type: "double" }
         Property { name: "spacing"; type: "double" }
-        Property { name: "layoutDirection"; type: "Qt::LayoutDirection" }
-        Property { name: "effectiveLayoutDirection"; type: "Qt::LayoutDirection"; isReadonly: true }
+        Property { name: "locale"; type: "QLocale" }
         Property { name: "mirrored"; type: "bool"; isReadonly: true }
+        Property { name: "focusReason"; type: "Qt::FocusReason" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
     }
@@ -180,14 +237,10 @@ Module {
     Component {
         name: "QQuickFrame"
         defaultProperty: "contentData"
-        prototype: "QQuickControl"
+        prototype: "QQuickPane"
         exports: ["Qt.labs.templates/Frame 1.0"]
         exportMetaObjectRevisions: [0]
-        Property { name: "contentWidth"; type: "double" }
-        Property { name: "contentHeight"; type: "double" }
         Property { name: "frame"; type: "QQuickItem"; isPointer: true }
-        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
-        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
     }
     Component {
         name: "QQuickGroupBox"
@@ -362,6 +415,13 @@ Module {
         }
     }
     Component {
+        name: "QQuickItemDelegate"
+        defaultProperty: "data"
+        prototype: "QQuickAbstractButton"
+        exports: ["Qt.labs.templates/ItemDelegate 1.0"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
         name: "QQuickLabel"
         defaultProperty: "data"
         prototype: "QQuickText"
@@ -369,6 +429,54 @@ Module {
         exportMetaObjectRevisions: [0]
         Property { name: "font"; type: "QFont" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
+    }
+    Component {
+        name: "QQuickMenu"
+        defaultProperty: "contentData"
+        prototype: "QQuickPopup"
+        exports: ["Qt.labs.templates/Menu 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "contentModel"; type: "QVariant"; isReadonly: true }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Method {
+            name: "itemAt"
+            type: "QQuickItem*"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "addItem"
+            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
+        }
+        Method {
+            name: "insertItem"
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "item"; type: "QQuickItem"; isPointer: true }
+        }
+        Method {
+            name: "moveItem"
+            Parameter { name: "from"; type: "int" }
+            Parameter { name: "to"; type: "int" }
+        }
+        Method {
+            name: "removeItem"
+            Parameter { name: "index"; type: "int" }
+        }
+    }
+    Component {
+        name: "QQuickMenuItem"
+        defaultProperty: "data"
+        prototype: "QQuickAbstractButton"
+        exports: ["Qt.labs.templates/MenuItem 1.0"]
+        exportMetaObjectRevisions: [0]
+        Signal { name: "triggered" }
+    }
+    Component {
+        name: "QQuickOverlay"
+        defaultProperty: "data"
+        prototype: "QQuickItem"
+        Property { name: "background"; type: "QQuickItem"; isPointer: true }
+        Signal { name: "pressed" }
+        Signal { name: "released" }
     }
     Component {
         name: "QQuickPageIndicator"
@@ -380,6 +488,36 @@ Module {
         Property { name: "currentIndex"; type: "int" }
         Property { name: "interactive"; type: "bool" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
+    }
+    Component {
+        name: "QQuickPane"
+        defaultProperty: "contentData"
+        prototype: "QQuickControl"
+        exports: ["Qt.labs.templates/Pane 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "contentWidth"; type: "double" }
+        Property { name: "contentHeight"; type: "double" }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+    }
+    Component {
+        name: "QQuickPopup"
+        prototype: "QObject"
+        exports: ["Qt.labs.templates/Popup 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
+        Property { name: "focus"; type: "bool" }
+        Property { name: "modal"; type: "bool" }
+        Property { name: "visible"; type: "bool"; isReadonly: true }
+        Property { name: "showTransition"; type: "QQuickTransition"; isPointer: true }
+        Property { name: "hideTransition"; type: "QQuickTransition"; isPointer: true }
+        Signal { name: "pressedOutside" }
+        Signal { name: "releasedOutside" }
+        Signal { name: "clickedOutside" }
+        Signal { name: "aboutToShow" }
+        Signal { name: "aboutToHide" }
+        Method { name: "open" }
+        Method { name: "close" }
     }
     Component {
         name: "QQuickProgressBar"
@@ -534,7 +672,6 @@ Module {
         Property { name: "to"; type: "int" }
         Property { name: "value"; type: "int" }
         Property { name: "stepSize"; type: "int" }
-        Property { name: "locale"; type: "QLocale" }
         Property { name: "validator"; type: "QValidator"; isPointer: true }
         Property { name: "textFromValue"; type: "QJSValue" }
         Property { name: "valueFromText"; type: "QJSValue" }
@@ -858,6 +995,7 @@ Module {
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholderText"; type: "string" }
+        Property { name: "focusReason"; type: "Qt::FocusReason" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1135,6 +1273,7 @@ Module {
         Property { name: "implicitHeight"; type: "double" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "placeholderText"; type: "string" }
+        Property { name: "focusReason"; type: "Qt::FocusReason" }
         Signal {
             name: "pressAndHold"
             Parameter { name: "mouse"; type: "QQuickMouseEvent"; isPointer: true }
