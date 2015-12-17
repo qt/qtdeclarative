@@ -40,6 +40,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtLabsTemplates/private/qquickcontrol_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -88,7 +89,7 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the drawer is clicked.
 */
 
-class QQuickDrawerPrivate : public QQuickControlPrivate
+class QQuickDrawerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
@@ -100,6 +101,8 @@ public:
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
+
+    void itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &) Q_DECL_OVERRIDE;
 
     Qt::Edge edge;
     qreal offset;
@@ -242,6 +245,11 @@ bool QQuickDrawerPrivate::handleMouseReleaseEvent(QQuickItem *item, QMouseEvent 
     return wasGrabbed;
 }
 
+void QQuickDrawerPrivate::itemGeometryChanged(QQuickItem *, const QRectF &, const QRectF &)
+{
+    updateContent();
+}
+
 QQuickDrawer::QQuickDrawer(QQuickItem *parent) :
     QQuickControl(*(new QQuickDrawerPrivate), parent)
 {
@@ -319,12 +327,17 @@ void QQuickDrawer::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickDrawer);
     if (d->content != item) {
-        delete d->content;
+        if (d->content) {
+            QQuickItemPrivate::get(d->content)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+            delete d->content;
+        }
         d->content = item;
-        if (item)
+        if (item) {
             item->setParentItem(this);
-        if (isComponentComplete())
-            d->updateContent();
+            QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(d, QQuickItemPrivate::SizeChange);
+            if (isComponentComplete())
+                d->updateContent();
+        }
         emit contentItemChanged();
     }
 }
