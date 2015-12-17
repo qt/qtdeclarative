@@ -341,8 +341,8 @@ bool Binop::int32Binop(IR::Expr *leftSource, IR::Expr *rightSource, IR::Expr *ta
                         case IR::OpBitXor:
                         case IR::OpAdd:
                         case IR::OpMul:
-                            break;
                             inplaceOpWithAddress = true;
+                            break;
                         default:
                             break;
                         }
