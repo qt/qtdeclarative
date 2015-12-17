@@ -69,6 +69,15 @@ ApplicationWindow {
                 pressed: true
             }
             ToolButton {
+                text: "Checked"
+                checkable: true
+                checked: true
+            }
+            ToolButton {
+                text: "Highlighted"
+                highlighted: true
+            }
+            ToolButton {
                 text: "Disabled"
                 enabled: false
             }
