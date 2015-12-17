@@ -58,22 +58,6 @@
     may occur due to differences in available system fonts and font rendering
     engines.
 
-    \section2 Usage
-
-    In order to run an application with the Universal style, either pass
-    a \c -style command line argument, or set the \c QT_LABS_CONTROLS_STYLE
-    environment variable.
-
-    \code
-    ./app -style universal
-    \endcode
-
-    or
-
-    \code
-    QT_LABS_CONTROLS_STYLE=universal ./app
-    \endcode
-
     \section2 Customization
 
     The Universal style allows customizing two attributes, \l {theme-attached-prop}{theme}
@@ -181,4 +165,10 @@
     \value Universal.Dark Dark theme
 
     \endstyleproperty
+
+    \section1 Related Information
+
+    \list
+      \li \l{Styling Qt Labs Controls}
+    \endlist
 */

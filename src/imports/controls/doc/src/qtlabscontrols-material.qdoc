@@ -57,22 +57,6 @@
     may occur due to differences in available system fonts and font rendering
     engines.
 
-    \section2 Usage
-
-    In order to run an application with the Material style, either pass
-    a \c -style command line argument, or set the \c QT_LABS_CONTROLS_STYLE
-    environment variable.
-
-    \code
-    ./app -style material
-    \endcode
-
-    or
-
-    \code
-    QT_LABS_CONTROLS_STYLE=material ./app
-    \endcode
-
     \section2 Customization
 
     The Material style allows customizing two attributes, \l {theme-attached-prop}{theme}
@@ -179,4 +163,10 @@
     \value Material.Dark Dark theme
 
     \endstyleproperty
+
+    \section1 Related Information
+
+    \list
+      \li \l{Styling Qt Labs Controls}
+    \endlist
 */

@@ -82,9 +82,12 @@
     available to the context of the current QML engine. See QQmlContext for
     more information.
 
-    \section2 Deploying Qt Labs Controls
+    \section1 Important Concepts in Qt Labs Controls
 
-    TODO
+    \list
+      \li \l{Styling Qt Labs Controls}
+      \li \l{Differences between Qt Quick Controls}
+    \endlist
 
     \section1 Related Information
 
@@ -92,7 +95,6 @@
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
       \li \l{Qt Labs Calendar}
-      \li \l{Differences between Qt Quick Controls}
       \li \l{Qt Labs Controls QML Types}{Qt Labs Controls QML Types}
     \endlist
 */
