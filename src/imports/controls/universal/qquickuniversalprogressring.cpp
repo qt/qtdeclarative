@@ -121,7 +121,7 @@ void QQuickUniversalProgressRingAnimatorJob::updateCurrentTime(int time)
 
         if (visible) {
             int phaseIndex, remain = time, elapsed = 0;
-            for (phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
+            for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
                 if (remain <= m_phases[phaseIndex].duration + begin)
                     break;
                 remain -= m_phases[phaseIndex].duration;

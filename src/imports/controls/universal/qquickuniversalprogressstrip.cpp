@@ -148,7 +148,7 @@ void QQuickUniversalProgressStripAnimatorJob::updateCurrentTime(int time)
         if (visible) {
             {
                 int phaseIndex, remain = time, elapsed = 0;
-                for (phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
+                for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
                     if (remain <= m_borderPhases[phaseIndex].duration + begin)
                         break;
                     remain -= m_borderPhases[phaseIndex].duration;
@@ -171,7 +171,7 @@ void QQuickUniversalProgressStripAnimatorJob::updateCurrentTime(int time)
                 curve.addCubicBezierSegment(QPointF(0.4, 0.0), QPointF(0.6, 1.0), QPointF(1.0, 1.0));
 
                 int phaseIndex, remain = time, elapsed = 0;
-                for (phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
+                for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
                     if (remain <= m_ellipsePhases[phaseIndex].duration + begin)
                         break;
                     remain -= m_ellipsePhases[phaseIndex].duration;
