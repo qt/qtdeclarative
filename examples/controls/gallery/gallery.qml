@@ -126,11 +126,8 @@ ApplicationWindow {
                     ListElement { title: "Drawer"; source: "qrc:/pages/DrawerPage.qml" }
                     ListElement { title: "Frame"; source: "qrc:/pages/FramePage.qml" }
                     ListElement { title: "GroupBox"; source: "qrc:/pages/GroupBoxPage.qml" }
-                    ListElement { title: "ItemDelegate"; source: "qrc:/pages/ItemDelegatePage.qml" }
-                    ListElement { title: "Label"; source: "qrc:/pages/LabelPage.qml" }
                     ListElement { title: "Menu"; source: "qrc:/pages/MenuPage.qml" }
                     ListElement { title: "PageIndicator"; source: "qrc:/pages/PageIndicatorPage.qml" }
-                    ListElement { title: "Pane"; source: "qrc:/pages/PanePage.qml" }
                     ListElement { title: "Popup"; source: "qrc:/pages/PopupPage.qml" }
                     ListElement { title: "ProgressBar"; source: "qrc:/pages/ProgressBarPage.qml" }
                     ListElement { title: "RadioButton"; source: "qrc:/pages/RadioButtonPage.qml" }
@@ -145,7 +142,6 @@ ApplicationWindow {
                     ListElement { title: "TabBar"; source: "qrc:/pages/TabBarPage.qml" }
                     ListElement { title: "TextArea"; source: "qrc:/pages/TextAreaPage.qml" }
                     ListElement { title: "TextField"; source: "qrc:/pages/TextFieldPage.qml" }
-                    ListElement { title: "ToolBar"; source: "qrc:/pages/ToolBarPage.qml" }
                     ListElement { title: "Tumbler"; source: "qrc:/pages/TumblerPage.qml" }
                 }
 

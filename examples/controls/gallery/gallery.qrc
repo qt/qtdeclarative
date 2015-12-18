@@ -30,11 +30,8 @@
         <file>pages/DrawerPage.qml</file>
         <file>pages/FramePage.qml</file>
         <file>pages/GroupBoxPage.qml</file>
-        <file>pages/ItemDelegatePage.qml</file>
-        <file>pages/LabelPage.qml</file>
         <file>pages/MenuPage.qml</file>
         <file>pages/PageIndicatorPage.qml</file>
-        <file>pages/PanePage.qml</file>
         <file>pages/PopupPage.qml</file>
         <file>pages/ProgressBarPage.qml</file>
         <file>pages/RadioButtonPage.qml</file>
@@ -49,7 +46,6 @@
         <file>pages/TabBarPage.qml</file>
         <file>pages/TextAreaPage.qml</file>
         <file>pages/TextFieldPage.qml</file>
-        <file>pages/ToolBarPage.qml</file>
         <file>pages/TumblerPage.qml</file>
     </qresource>
 </RCC>
