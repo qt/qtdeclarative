@@ -42,42 +42,22 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QSettings>
-#include <QProcess>
-
-class GalleryApplication : public QGuiApplication
-{
-    Q_OBJECT
-
-public:
-    GalleryApplication(int &argc, char *argv[]) : QGuiApplication(argc, argv)
-    {
-        setApplicationName("Gallery");
-        setOrganizationName("QtProject");
-    }
-
-public slots:
-    void restart()
-    {
-        QProcess::startDetached(applicationFilePath());
-        quit();
-    }
-};
 
 int main(int argc, char *argv[])
 {
+    QGuiApplication::setApplicationName("Gallery");
+    QGuiApplication::setOrganizationName("QtProject");
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    GalleryApplication app(argc, argv);
+
+    QGuiApplication app(argc, argv);
 
     QSettings settings;
     qputenv("QT_LABS_CONTROLS_STYLE", settings.value("style").toByteArray());
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("app", &app);
     engine.load(QUrl("qrc:/gallery.qml"));
     if (engine.rootObjects().isEmpty())
         return -1;
 
     return app.exec();
 }
-
-#include "gallery.moc"

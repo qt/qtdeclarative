@@ -198,6 +198,7 @@ ApplicationWindow {
         onPressedOutside: close()
 
         contentItem: Pane {
+            id: settingsPane
             x: (window.width - width) / 2
             y: window.height / 6
             width: Math.min(window.width, window.height) / 3 * 2
@@ -238,7 +239,7 @@ ApplicationWindow {
 
                 Label {
                     text: "Restart required"
-                    opacity: restartButton.opacity
+                    opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
                     horizontalAlignment: Label.AlignHCenter
                     verticalAlignment: Label.AlignVCenter
                     Layout.fillWidth: true
@@ -246,15 +247,14 @@ ApplicationWindow {
                 }
 
                 RowLayout {
-                    spacing: 20
+                    spacing: 10
 
                     Button {
-                        id: restartButton
-                        text: "Restart"
-                        opacity: styleBox.currentIndex !== styleBox.styleIndex ? 1.0 : 0.0
+                        id: okButton
+                        text: "Ok"
                         onClicked: {
                             settings.style = styleBox.displayText
-                            app.restart()
+                            settingsPopup.close()
                         }
                         Layout.preferredWidth: 0
                         Layout.fillWidth: true
