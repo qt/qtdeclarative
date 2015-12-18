@@ -43,10 +43,23 @@ import QtGraphicalEffects 1.0
 T.Menu {
     id: control
 
+    showTransition: Transition {
+        // grow_fade_in
+        NumberAnimation { property: "scale"; from: 0.9; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }
+        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; easing.type: Easing.OutCubic; duration: 150 }
+    }
+
+    hideTransition: Transition {
+        // shrink_fade_out
+        NumberAnimation { property: "scale"; from: 1.0; to: 0.9; easing.type: Easing.OutQuint; duration: 220 }
+        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
+    }
+
     //! [contentItem]
     contentItem: Item {
         implicitWidth: 200
         implicitHeight: Math.min(listview.contentHeight, 200)
+        transformOrigin: Item.Top
 
         Rectangle {
             id: panel
